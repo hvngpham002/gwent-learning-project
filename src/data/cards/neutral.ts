@@ -9,8 +9,8 @@ export const neutralHeroes = [
         type: CardType.HERO,
         strength: 15,
         row: RowPosition.CLOSE,
-        ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/neutral/geralt.png'
+        ability: CardAbility.MUSTER_ROACH,
+        imageUrl: 'src/assets/images/neutral/Geralt.png'
     },
     {
         id: 'neutral_hero_02',
@@ -19,8 +19,8 @@ export const neutralHeroes = [
         type: CardType.HERO,
         strength: 15,
         row: RowPosition.CLOSE,
-        ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/neutral/ciri.png'
+        ability: CardAbility.MUSTER_ROACH,
+        imageUrl: 'src/assets/images/neutral/Cirilla_Fiona_Elen_Riannon.jpg'
     },
     {
         id: 'neutral_hero_03',
@@ -30,7 +30,7 @@ export const neutralHeroes = [
         strength: 7,
         row: RowPosition.RANGED,
         ability: CardAbility.MEDIC,
-        imageUrl: '/assets/cards/neutral/yennefer.png'
+        imageUrl: 'src/assets/images/neutral/Yennefer.png'
     },
     {
         id: 'neutral_hero_04',
@@ -40,7 +40,7 @@ export const neutralHeroes = [
         strength: 7,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/neutral/triss.png'
+        imageUrl: 'src/assets/images/neutral/Triss.png'
     },
     {
         id: 'neutral_hero_05',
@@ -50,7 +50,7 @@ export const neutralHeroes = [
         strength: 0,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: '/assets/cards/neutral/triss.png'
+        imageUrl: 'src/assets/images/neutral/Mysterious_Elf.png'
     }
 ];
 
@@ -63,7 +63,7 @@ export const neutralUnits = [
         strength: 2,
         row: RowPosition.CLOSE,
         ability: CardAbility.COMMANDERS_HORN,
-        imageUrl: '/assets/cards/neutral/dandelion.png'
+        imageUrl: 'src/assets/images/neutral/dandelion.png'
     },
     {
         id: 'neutral_unit_02',
@@ -73,7 +73,7 @@ export const neutralUnits = [
         strength: 6,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/neutral/vesemir.png'
+        imageUrl: 'src/assets/images/neutral/vesemir.png'
     },
     {
         id: 'neutral_unit_03',
@@ -83,7 +83,7 @@ export const neutralUnits = [
         strength: 5,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/neutral/zoltan.png'
+        imageUrl: 'src/assets/images/neutral/zoltan.png'
     },
     {
         id: 'neutral_unit_04',
@@ -93,7 +93,7 @@ export const neutralUnits = [
         strength: 5,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/neutral/regis.png'
+        imageUrl: 'src/assets/images/neutral/emiel_regis.png'
     },
     {
         id: 'neutral_unit_05',
@@ -103,8 +103,69 @@ export const neutralUnits = [
         strength: 5,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/neutral/regis.png'
-    }
+        imageUrl: 'src/assets/images/neutral/bovine_defense_force.png'
+    },
+    {
+        id: 'neutral_unit_06',
+        name: 'Cow',
+        faction: Faction.NEUTRAL,
+        type: CardType.UNIT,
+        strength: 0,
+        row: RowPosition.CLOSE,
+        ability: CardAbility.AVENGER,
+        imageUrl: 'src/assets/images/neutral/cow.png'
+    },
+    {
+        id: 'neutral_unit_07',
+        name: 'Olgierd von Everec',
+        faction: Faction.NEUTRAL,
+        type: CardType.UNIT,
+        strength: 0,
+        row: RowPosition.CLOSE,
+        availableRows: [RowPosition.CLOSE, RowPosition.RANGED],
+        ability: CardAbility.AGILE,
+        imageUrl: 'src/assets/images/neutral/olgierd_von_everec.png'
+    },
+    {
+        id: 'neutral_unit_08',
+        name: 'Roach',
+        faction: Faction.NEUTRAL,
+        type: CardType.UNIT,
+        strength: 3,
+        row: RowPosition.CLOSE,
+        ability: CardAbility.NONE,
+        imageUrl: 'src/assets/images/neutral/roach.png'
+    },
+    {
+        id: 'neutral_unit_09',
+        name: 'Villentretenmerth',
+        faction: Faction.NEUTRAL,
+        type: CardType.UNIT,
+        strength: 3,
+        row: RowPosition.CLOSE,
+        ability: CardAbility.SCORCH_CLOSE,
+        imageUrl: 'src/assets/images/neutral/villentretenmerth.png'
+    },
+    {
+        id: 'neutral_unit_10',
+        name: 'Gaunter O\'Dimm',
+        faction: Faction.NEUTRAL,
+        type: CardType.UNIT,
+        strength: 3,
+        row: RowPosition.SIEGE,
+        ability: CardAbility.MUSTER,
+        imageUrl: 'src/assets/images/neutral/gaunt_odimm.png'
+    },
+    {
+        id: 'neutral_unit_11',
+        name: 'Gaunter O\'Dimm: Darkness',
+        faction: Faction.NEUTRAL,
+        type: CardType.UNIT,
+        strength: 3,
+        row: RowPosition.RANGED,
+        ability: CardAbility.MUSTER,
+        imageUrl: 'src/assets/images/neutral/gaunter_odimm_darkness.png'
+    },
 ];
 
 export const neutralSpecials = [
@@ -115,7 +176,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.DECOY,
-        imageUrl: '/assets/cards/neutral/decoy.png',
+        imageUrl: 'src/assets/images/neutral/decoy.png',
         description: 'Swap with a non-Hero unit on your side of the battlefield'
     },
     {
@@ -125,7 +186,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.SCORCH,
-        imageUrl: '/assets/cards/neutral/scorch.png',
+        imageUrl: 'src/assets/images/neutral/scorch.png',
         description: 'Destroys the strongest card(s) on the battlefield'
     },
     {
@@ -135,7 +196,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.COMMANDERS_HORN,
-        imageUrl: '/assets/cards/neutral/commanders_horn.png',
+        imageUrl: 'src/assets/images/neutral/commanders_horn.png',
         description: 'Doubles the strength of all unit cards in a row'
     },
     {
@@ -145,7 +206,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.FOG,
-        imageUrl: '/assets/cards/neutral/fog.png',
+        imageUrl: 'src/assets/images/neutral/impenetrable_fog.png',
         description: 'Sets the strength of all Ranged Combat units to 1'
     },
     {
@@ -155,7 +216,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.RAIN,
-        imageUrl: '/assets/cards/neutral/rain.png',
+        imageUrl: 'src/assets/images/neutral/torrential_rain.png',
         description: 'Sets the strength of all Siege units to 1'
     },
     {
@@ -165,7 +226,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.FROST,
-        imageUrl: '/assets/cards/neutral/frost.png',
+        imageUrl: 'src/assets/images/neutral/biting_frost.png',
         description: 'Sets the strength of all Close Combat units to 1'
     },
     {
@@ -175,8 +236,18 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.CLEAR_WEATHER,
-        imageUrl: '/assets/cards/neutral/clear_weather.png',
+        imageUrl: 'src/assets/images/neutral/clear_weather.png',
         description: 'Removes all Weather Card effects'
+    },
+    {
+        id: 'neutral_special_08',
+        name: 'Skellige Storm',
+        faction: Faction.NEUTRAL,
+        type: CardType.SPECIAL,
+        strength: 0,
+        ability: CardAbility.SKELLIGE_STORM,  // Would need to be added to enum
+        imageUrl: 'src/assets/images/neutral/skellige_storm.png',
+        description: 'Sets the strength of all Ranged and Siege units to 1'
     }
 ];
 

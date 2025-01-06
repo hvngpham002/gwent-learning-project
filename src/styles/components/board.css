@@ -1,0 +1,91 @@
+.game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--color-background);
+  color: white;
+}
+
+.board-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: var(--spacing-xl);
+  gap: var(--spacing-lg);
+}
+
+.player-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.player-area--opponent {
+  transform: rotate(180deg);
+}
+
+.battle-row {
+  display: flex;
+  min-height: 120px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: var(--spacing-sm);
+  gap: var(--spacing-sm);
+}
+
+.hand-area {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  align-items: center;
+  padding-top: 10px; 
+  padding-bottom: 10px; 
+  overflow-x: auto;
+  overflow-y: hidden; /* Hide vertical scrollbar */
+  max-width: calc(100% - 200px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.hand-area::-webkit-scrollbar {
+  height: 8px;
+}
+
+.hand-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hand-area::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.score-display {
+  position: absolute;
+  right: var(--spacing-xl);
+  padding: var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.weather-area {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: rgba(0, 0, 0, 0.2);
+  min-height: 80px;
+}
+
+.hand-container {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: var(--spacing-sm);
+}
+
+.deck-card {
+  position: relative;
+}

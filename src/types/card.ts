@@ -28,10 +28,15 @@ export enum CardAbility {
     MORALE_BOOST = 'morale_boost', // +1 to all units in row
     SPY = 'spy',                   // Place on opponent's field, draw 2 cards
     MUSTER = 'muster',             // Play all cards with same name from deck
+    MUSTER_ROACH = 'muster_roach',
     AGILE = 'agile',               // Can be placed in multiple rows
+    AVENGER = 'avenger',               // Can be placed in multiple rows
+    SCORCH_CLOSE = 'scorch_close',
     
     // Special card abilities (can also appear on units)
     SCORCH = 'scorch',             // Destroy card(s) with highest strength
+    SKELLIGE_STORM = 'skellige_storm',
+
     COMMANDERS_HORN = 'commanders_horn', // Double strength of all units in row
     DECOY = 'decoy',               // Swap with a non-Hero unit
     FROST = 'frost',               // Sets Close Combat units to 1
@@ -99,7 +104,7 @@ export interface PlayerState {
     deck: Card[];
     hand: Card[];
     discard: Card[];
-    leader: LeaderCard;
+    leader: LeaderCard | null;
     passed: boolean;
     lives: number;
 }

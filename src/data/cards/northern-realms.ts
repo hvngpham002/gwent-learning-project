@@ -9,7 +9,7 @@ export const northernRealmsLeaders = [
         type: CardType.LEADER,
         strength: 0,
         ability: LeaderAbility.PLAY_FOG,
-        imageUrl: '',
+        imageUrl: 'src/assets/images/northern_realms/leaders/Foltest_King_of_Temeria.png',
         description: 'Pick an Impenetrable Fog card from your deck and play it instantly.',
         used: false
     },
@@ -20,7 +20,7 @@ export const northernRealmsLeaders = [
         type: CardType.LEADER,
         strength: 0,
         ability: LeaderAbility.CLEAR_WEATHER,
-        imageUrl: '/assets/cards/northern-realms/foltest_commander.png',
+        imageUrl: 'src/assets/images/northern_realms/leaders/Foltest_Lord_Commander_of_the_North.png',
         description: 'Clear any weather effects in play.',
         used: false
     },
@@ -31,7 +31,7 @@ export const northernRealmsLeaders = [
         type: CardType.LEADER,
         strength: 0,
         ability: LeaderAbility.SCORCH_RANGED,
-        imageUrl: '/assets/cards/northern-realms/foltest_commander.png',
+        imageUrl: 'src/assets/images/northern_realms/leaders/Foltest_Son_of_Medell.png',
         description: 'Destroy your enemy\'s strongest Ranged Combat unit(s) if the combined strength of all his or her Ranged Combat units is 10 or more.',
         used: false
     },
@@ -42,7 +42,7 @@ export const northernRealmsLeaders = [
         type: CardType.LEADER,
         strength: 0,
         ability: LeaderAbility.DOUBLE_SIEGE,
-        imageUrl: '/assets/cards/northern-realms/foltest_siege.png',
+        imageUrl: 'src/assets/images/northern_realms/leaders/Foltest_the_Siegemaster.png',
         description: 'Doubles the strength of all your Siege units (unless a Commander\'s Horn is also present on that row).',
         used: false
     },
@@ -53,7 +53,7 @@ export const northernRealmsLeaders = [
         type: CardType.LEADER,
         strength: 0,
         ability: LeaderAbility.SCORCH_SIEGE,
-        imageUrl: '/assets/cards/northern-realms/foltest_siege.png',
+        imageUrl: 'src/assets/images/northern_realms/leaders/Foltest_the_Steel-Forged.png',
         description: 'Destroy your enemy\'s strongest Siege unit(s) if the combined strength of all his or her Siege units is 10 or more.',
         used: false
     }
@@ -68,7 +68,7 @@ export const northernRealmsHeroes = [
         strength: 10,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/philippa.png'
+        imageUrl: 'src/assets/images/northern_realms/heroes/Philippa_Eilhart.png'
     },
     {
         id: 'nr_hero_02',
@@ -78,7 +78,7 @@ export const northernRealmsHeroes = [
         strength: 10,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/vernon_roche.png'
+        imageUrl: 'src/assets/images/northern_realms/heroes/Vernon_Roche.png'
     },
     {
         id: 'nr_hero_03',
@@ -88,7 +88,7 @@ export const northernRealmsHeroes = [
         strength: 10,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/john_natalis.png'
+        imageUrl: 'src/assets/images/northern_realms/heroes/John_Natalis.png'
     },
     {
         id: 'nr_hero_04',
@@ -98,7 +98,7 @@ export const northernRealmsHeroes = [
         strength: 10,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/esterad.png'
+        imageUrl: 'src/assets/images/northern_realms/heroes/Esterad_Thyssen.png'
     }
 ];
 
@@ -112,7 +112,7 @@ export const northernRealmsUnits = [
         strength: 1,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/blue_stripes_commando.png'
+        imageUrl: 'src/assets/images/northern_realms/redanian_foot_soldier.png'
     },
     {
         id: 'nr_unit_02',
@@ -122,7 +122,7 @@ export const northernRealmsUnits = [
         strength: 1,
         row: RowPosition.CLOSE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: '/assets/cards/northern-realms/blue_stripes_commando.png'
+        imageUrl: 'src/assets/images/northern_realms/poor_fucking_infantry.png'
     },
     {
         id: 'nr_unit_03',
@@ -132,7 +132,7 @@ export const northernRealmsUnits = [
         strength: 4,
         row: RowPosition.CLOSE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: '/assets/cards/northern-realms/blue_stripes_commando.png'
+        imageUrl: 'src/assets/images/northern_realms/blue_stripes_commando.png'
     },
     {
         id: 'nr_unit_04',
@@ -142,7 +142,7 @@ export const northernRealmsUnits = [
         strength: 5,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: '/assets/cards/northern-realms/stennis.png'
+        imageUrl: 'src/assets/images/northern_realms/prince_stennis.png'
     },
     {
         id: 'nr_unit_05',
@@ -152,7 +152,7 @@ export const northernRealmsUnits = [
         strength: 6,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/siegfried.png'
+        imageUrl: 'src/assets/images/northern_realms/siegfried_of_denesle.png'
     },
     {
         id: 'nr_unit_06',
@@ -162,7 +162,7 @@ export const northernRealmsUnits = [
         strength: 7,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: '/assets/cards/northern-realms/dijkstra.png'
+        imageUrl: 'src/assets/images/northern_realms/sigismund_dijkstra.png'
     },
     {
         id: 'nr_unit_07',
@@ -172,7 +172,7 @@ export const northernRealmsUnits = [
         strength: 8,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/ves.png'
+        imageUrl: 'src/assets/images/northern_realms/ves.png'
     },
     {
         id: 'nr_unit_08',
@@ -182,7 +182,7 @@ export const northernRealmsUnits = [
         strength: 9,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/yarpen.png'
+        imageUrl: 'src/assets/images/northern_realms/yarpen_zigrin.png'
     },
     // Ranged Units
     {
@@ -193,7 +193,7 @@ export const northernRealmsUnits = [
         strength: 10,
         row: RowPosition.RANGED,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: '/assets/cards/northern-realms/crinfrid_reaver.png'
+        imageUrl: 'src/assets/images/northern_realms/crinfrid_reavers_dragon_hunter.png'
     },
     {
         id: 'nr_unit_10',
@@ -203,7 +203,7 @@ export const northernRealmsUnits = [
         strength: 11,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/crinfrid_reaver.png'
+        imageUrl: 'src/assets/images/northern_realms/dethmold.png'
     },
     {
         id: 'nr_unit_13',
@@ -213,7 +213,7 @@ export const northernRealmsUnits = [
         strength: 12,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/keira_metz.png'
+        imageUrl: 'src/assets/images/northern_realms/keira_metz.png'
     },
     {
         id: 'nr_unit_13',
@@ -223,7 +223,7 @@ export const northernRealmsUnits = [
         strength: 13,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/keira_metz.png'
+        imageUrl: 'src/assets/images/northern_realms/sabrina_glevissig.png'
     },
     {
         id: 'nr_unit_13',
@@ -233,7 +233,7 @@ export const northernRealmsUnits = [
         strength: 14,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/keira_metz.png'
+        imageUrl: 'src/assets/images/northern_realms/sheldon_skaggs.png'
     },
     {
         id: 'nr_unit_13',
@@ -243,7 +243,7 @@ export const northernRealmsUnits = [
         strength: 15,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/keira_metz.png'
+        imageUrl: 'src/assets/images/northern_realms/sile_de_tansarville.png'
     },
     // Siege Units
     {
@@ -254,7 +254,7 @@ export const northernRealmsUnits = [
         strength: 16,
         row: RowPosition.SIEGE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/thaler.png'
+        imageUrl: 'src/assets/images/northern_realms/ballista.png'
     },
     {
         id: 'nr_unit_09',
@@ -264,7 +264,7 @@ export const northernRealmsUnits = [
         strength: 17,
         row: RowPosition.SIEGE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: '/assets/cards/northern-realms/thaler.png'
+        imageUrl: 'src/assets/images/northern_realms/catapult.png'
     },
     {
         id: 'nr_unit_09',
@@ -274,7 +274,7 @@ export const northernRealmsUnits = [
         strength: 18,
         row: RowPosition.SIEGE,
         ability: CardAbility.MEDIC,
-        imageUrl: '/assets/cards/northern-realms/thaler.png'
+        imageUrl: 'src/assets/images/northern_realms/dun_banner_medic.png'
     },
     {
         id: 'nr_unit_09',
@@ -284,7 +284,7 @@ export const northernRealmsUnits = [
         strength: 19,
         row: RowPosition.SIEGE,
         ability: CardAbility.MORALE_BOOST,
-        imageUrl: '/assets/cards/northern-realms/thaler.png'
+        imageUrl: 'src/assets/images/northern_realms/kaedweni_siege_expert.png'
     },
     {
         id: 'nr_unit_09',
@@ -294,7 +294,7 @@ export const northernRealmsUnits = [
         strength: 20,
         row: RowPosition.SIEGE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/thaler.png'
+        imageUrl: 'src/assets/images/northern_realms/siege_tower.png'
     },
     {
         id: 'nr_unit_09',
@@ -304,7 +304,7 @@ export const northernRealmsUnits = [
         strength: 21,
         row: RowPosition.SIEGE,
         ability: CardAbility.SPY,
-        imageUrl: '/assets/cards/northern-realms/thaler.png'
+        imageUrl: 'src/assets/images/northern_realms/thaler.png'
     },
     {
         id: 'nr_unit_14',
@@ -314,7 +314,7 @@ export const northernRealmsUnits = [
         strength: 22,
         row: RowPosition.SIEGE,
         ability: CardAbility.NONE,
-        imageUrl: '/assets/cards/northern-realms/trebuchet.png'
+        imageUrl: 'src/assets/images/northern_realms/trebuchet.png'
     },
 ];
 
