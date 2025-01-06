@@ -258,7 +258,7 @@ export const northernRealmsUnits = [
     },
     {
         id: 'nr_unit_09',
-        name: '	Catapult',
+        name: 'Catapult',
         faction: Faction.NORTHERN_REALMS,
         type: CardType.UNIT,
         strength: 17,

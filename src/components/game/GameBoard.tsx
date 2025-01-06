@@ -128,7 +128,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div className="game-container">
       <div className="board-container">
-        <PlayerHand 
+        <PlayerHand
           cards={gameState.player.hand}
           deck={gameState.player.deck}
           onCardClick={onCardClick}

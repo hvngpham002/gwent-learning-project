@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card } from '@/types/card';
+import { Card, CardAbility, CardType, Faction } from '@/types/card';
 import GwentCard from '../card/GwentCard';
 import '@/styles/components/board.css';
 
@@ -22,7 +22,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
     <div className="hand-container">
       <div className="hand-area">
         {cards.map(card => (
-          <GwentCard 
+          <GwentCard
             key={card.id}
             card={card}
             isPlayable={isActive}
@@ -32,16 +32,15 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
         ))}
       </div>
       <div className="deck-card">
-        <GwentCard 
+      <GwentCard
           card={{
             id: 'deck-back',
             name: 'Deck',
-            faction: deck[0]?.faction,
-            type: deck[0]?.type,
+            faction: deck[0]?.faction ?? Faction.NEUTRAL,
+            type: CardType.SPECIAL as CardType.SPECIAL,
             imageUrl: 'src/assets/images/closed_card.jpeg',
             strength: 0,
-            ability: deck[0]?.ability,
-            row: deck[0]?.row
+            ability: CardAbility.NONE
           }}
           isPlayable={false}
         />
