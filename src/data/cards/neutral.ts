@@ -100,7 +100,7 @@ export const neutralUnits = [
         name: 'Bovine Defense Force',
         faction: Faction.NEUTRAL,
         type: CardType.UNIT,
-        strength: 5,
+        strength: 8,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
         imageUrl: 'src/assets/images/neutral/bovine_defense_force.png'
@@ -120,7 +120,7 @@ export const neutralUnits = [
         name: 'Olgierd von Everec',
         faction: Faction.NEUTRAL,
         type: CardType.UNIT,
-        strength: 0,
+        strength: 6,
         row: RowPosition.CLOSE,
         availableRows: [RowPosition.CLOSE, RowPosition.RANGED],
         ability: CardAbility.AGILE,
@@ -151,7 +151,7 @@ export const neutralUnits = [
         name: 'Gaunter O\'Dimm',
         faction: Faction.NEUTRAL,
         type: CardType.UNIT,
-        strength: 3,
+        strength: 2,
         row: RowPosition.SIEGE,
         ability: CardAbility.MUSTER,
         imageUrl: 'src/assets/images/neutral/gaunt_odimm.png'

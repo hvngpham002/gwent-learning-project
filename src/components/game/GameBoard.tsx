@@ -1,45 +1,16 @@
-// import React from 'react';
-// import { Card, GameState } from '@/types/card';
-// import PlayerHand from '../player/PlayerHand';
-
-// interface GameBoardProps {
-//   gameState: GameState;
-//   onCardClick: (card: Card) => void;
-//   selectedCard: Card | null;
-// }
-
-// const GameBoard: React.FC<GameBoardProps> = ({
-//   gameState,
-//   onCardClick,
-//   selectedCard
-// }) => {
-//   return (
-//     <div className="game-container">
-//       <div className="board-container">
-//         <PlayerHand
-//           cards={gameState.player.hand}
-//           deck={gameState.player.deck}
-//           onCardClick={onCardClick}
-//           isActive={gameState.currentTurn === 'player'}
-//           selectedCard={selectedCard}
-//         />
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default GameBoard;
-
 import React from 'react';
 import { Card, GameState, RowPosition } from '@/types/card';
 import PlayerHand from '../player/PlayerHand';
 import PlayerArea from '../player/PlayerArea';
+import PlayerStatus from './PlayerStatus';
 import '@/styles/components/board.css';
+import '@/styles/components/hand.css';
 
 interface GameBoardProps {
   gameState: GameState;
   onCardClick: (card: Card) => void;
   onRowClick: (row: RowPosition) => void;
+  onPass: () => void;
   selectedCard: Card | null;
 }
 
@@ -47,46 +18,50 @@ const GameBoard: React.FC<GameBoardProps> = ({
   gameState,
   onCardClick,
   onRowClick,
+  onPass,
   selectedCard
 }) => {
-  const totalPlayerScore = Object.values(gameState.playerBoard).reduce(
-    (total, row) => total + row.cards.reduce((sum: any, card: { strength: any; }) => sum + card.strength, 0),
-    0
-  );
-
-  const totalOpponentScore = Object.values(gameState.opponentBoard).reduce(
-    (total, row) => total + row.cards.reduce((sum: any, card: { strength: any; }) => sum + card.strength, 0),
-    0
-  );
-
   return (
     <div className="game-container">
-      <div className="board-container">
-        {/* Score Display */}
-        <div className="score-display">
-          {totalOpponentScore} - {totalPlayerScore}
+      <div className="game-layout">
+        {/* Left sidebar with player statuses */}
+        <div className="game-sidebar">
+          <PlayerStatus
+            player={gameState.opponent}
+            isOpponent={true}
+          />
+          <div className="weather-area">
+            {/* Weather cards will be rendered here */}
+            {Array.from(gameState.activeWeatherEffects).map(effect => (
+              <div key={effect}>
+                {/* Weather card component will go here */}
+              </div>
+            ))}
+          </div>
+          <PlayerStatus
+            player={gameState.player}
+            onPass={onPass}
+          />
         </div>
 
-        {/* Opponent's Area */}
-        <PlayerArea
-          boardState={gameState.opponentBoard}
-          isOpponent={true}
-        />
-        {/* Weather Effects Area */}
-        <div className="weather-area" />
-        {/* Player's Area */}
-        <PlayerArea
-          boardState={gameState.playerBoard}
-          onRowClick={onRowClick}
-        />
-        {/* Player's Hand */}
-        <PlayerHand
-          cards={gameState.player.hand}
-          deck={gameState.player.deck}
-          onCardClick={onCardClick}
-          isActive={gameState.currentTurn === 'player'}
-          selectedCard={selectedCard}
-        />
+        {/* Main board area */}
+        <div className="board-area">
+          <PlayerArea
+            boardState={gameState.opponentBoard}
+            isOpponent={true}
+          />
+          <PlayerArea
+            boardState={gameState.playerBoard}
+            onRowClick={onRowClick}
+          />
+          <PlayerHand
+            cards={gameState.player.hand}
+            deck={gameState.player.deck}
+            onCardClick={onCardClick}
+            isActive={gameState.currentTurn === 'player'}
+            selectedCard={selectedCard}
+          />
+        </div>
       </div>
     </div>
   );

@@ -45,7 +45,7 @@ const GameManager = () => {
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    
+  
     if (gameState.currentTurn === 'opponent' && 
         gameState.gamePhase === 'playing' && 
         !gameState.opponent.passed) {
@@ -67,28 +67,31 @@ const GameManager = () => {
   }, [gameState.currentTurn, gameState.gamePhase]);
 
   const initializeGame = () => {
-    const playerDeck = shuffle(createInitialDeck());
-    const opponentDeck = shuffle(createInitialDeck());
+    const playerDeckWithLeader = createInitialDeck();
+    const opponentDeckWithLeader = createInitialDeck();
+
+    const playerDeck = shuffle(playerDeckWithLeader.deck);
+    const opponentDeck = shuffle(opponentDeckWithLeader.deck);
 
     // Initial draw of 10 cards
     const playerHand = playerDeck.splice(0, 10);
     const opponentHand = opponentDeck.splice(0, 10);
-
-    const startingTurn = Math.random() < 0.5 ? 'player' : 'opponent';
 
     setGameState(prev => ({
       ...prev,
       player: {
         ...prev.player,
         deck: playerDeck,
-        hand: playerHand
+        hand: playerHand,
+        leader: playerDeckWithLeader.leader
       },
       opponent: {
         ...prev.opponent,
         deck: opponentDeck,
-        hand: opponentHand
+        hand: opponentHand,
+        leader: opponentDeckWithLeader.leader
       },
-      currentTurn: startingTurn,
+      currentTurn: Math.random() < 0.5 ? 'player' : 'opponent',
       gamePhase: 'playing'
     }));
   };
@@ -97,7 +100,7 @@ const GameManager = () => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
     }
-    
+
     // Only allow unit or hero cards to be selected
     if (card.type === CardType.UNIT || card.type === CardType.HERO) {
       setSelectedCard(card);
@@ -112,7 +115,7 @@ const GameManager = () => {
     // Check if the card is a unit or hero card
     if (selectedCard.type === CardType.UNIT || selectedCard.type === CardType.HERO) {
       const unitCard = selectedCard as UnitCard;
-      
+
       // Check if the card can be played in the selected row
       if (unitCard.row === row || unitCard.availableRows?.includes(row)) {
         playCard(unitCard, row);
@@ -152,7 +155,7 @@ const GameManager = () => {
     if (playableCards.length === 0) return null;
 
     // For now, just play the highest strength card
-    return playableCards.reduce((highest, current) => 
+    return playableCards.reduce((highest, current) =>
       current.strength > highest.strength ? current : highest
     );
   };
@@ -218,8 +221,9 @@ const GameManager = () => {
       gameState={gameState}
       onCardClick={handleCardClick}
       onRowClick={handleRowClick}
+      onPass={handlePass}
       selectedCard={selectedCard}
-    />
+  />
   );
 };
 

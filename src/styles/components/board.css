@@ -1,17 +1,40 @@
 .game-container {
   display: flex;
   flex-direction: column;
-  max-height: 100vh;
+  height: 100vh;
   background-color: var(--color-background);
   color: white;
   padding: 20px;
 }
 
-.board-container {
+.game-layout {
+  display: flex;
+  gap: var(--spacing-lg);
+}
+
+.game-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.weather-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  min-height: 120px;
+  padding: var(--spacing-md);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  width: 192px;
+}
+
+.board-area {
   display: flex;
   flex-direction: column;
   flex: 1;
   gap: var(--spacing-lg);
+  min-width: 0; /* Prevent flex item from overflowing */
 }
 
 .player-area {
@@ -37,74 +60,11 @@
   padding: var(--spacing-sm);
   gap: var(--spacing-sm);
   background: rgba(0, 0, 0, 0.3);
+  flex-wrap: wrap;
 }
 
 .battle-row:hover {
   border-color: rgba(255, 255, 255, 0.4);
-}
-
-.weather-area {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-sm);
-  min-height: 80px;
-  padding: var(--spacing-md);
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 8px;
-}
-
-.hand-container {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  padding: var(--spacing-md);
-  border-radius: 8px;
-}
-
-.hand-area {
-  display: flex;
-  align-items: center;
-  padding: var(--spacing-sm);
-  overflow-x: auto;
-  gap: var(--spacing-sm);
-  background: rgba(0, 0, 0, 0.2);
-  flex: 1;
-}
-
-.deck-container {
-  flex-shrink: 0;
-  position: relative;
-  width: 145px;
-}
-
-.deck-card {
-  position: relative;
-  width: 100%;
-}
-
-.deck-count {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 5px 10px;
-  border-radius: 4px;
-  z-index: 2;
-}
-
-.score-display {
-  position: absolute;
-  top: var(--spacing-lg);
-  right: var(--spacing-lg);
-  padding: var(--spacing-md);
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 4px;
-  font-size: 24px;
-  font-weight: bold;
 }
 
 .row-score {

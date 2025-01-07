@@ -1,0 +1,42 @@
+.hand-container {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: var(--spacing-md);
+    border-radius: 8px;
+  }
+  
+  .hand-area {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm);
+    overflow-x: auto;
+    gap: var(--spacing-sm);
+    background: rgba(0, 0, 0, 0.2);
+    flex: 1;
+  }
+  
+  .deck-container {
+    flex-shrink: 0;
+    position: relative;
+    width: 145px;
+  }
+  
+  .deck-card {
+    position: relative;
+    width: 100%;
+  }
+  
+  .deck-count {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 5px 10px;
+    border-radius: 4px;
+    z-index: 2;
+  }
