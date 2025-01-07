@@ -5,25 +5,25 @@
     --color-card-border-leader: #9b59b6;
     --color-card-border-special: #3498db;
     --color-card-border-unit: #95a5a6;
-    
+
     /* Spacing */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
-  
+
     /* Card Dimensions */
     --card-width: 160px;
     --card-height: 240px;
-    
+
     /* Z-index layers */
     --z-index-base: 1;
     --z-index-card: 2;
     --z-index-card-hover: 3;
     --z-index-modal: 100;
   }
-  
+
   body {
     margin: 0;
     padding: 0;

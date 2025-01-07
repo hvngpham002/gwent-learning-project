@@ -12,7 +12,7 @@ export const shuffle = <T,>(array: T[]): T[] => {
     }
     return newArray;
   };
-  
+
   /**
    * Calculate total strength for a row of cards
    * Takes into account weather effects and special abilities
@@ -20,26 +20,26 @@ export const shuffle = <T,>(array: T[]): T[] => {
   export const calculateRowStrength = (cards: UnitCard[], weatherEffect: boolean, hornActive: boolean): number => {
     return cards.reduce((total, card) => {
       let strength = weatherEffect ? 1 : card.strength;
-      
+
       // Apply horn effect if active
       if (hornActive && card.type !== CardType.HERO) {
         strength *= 2;
       }
-      
+
       // Add moral boost effects
       const moraleBoostCount = cards.filter(c => c.ability === CardAbility.MORALE_BOOST).length;
       if (card.type !== CardType.HERO) {
         strength += moraleBoostCount;
       }
-      
+
       // Handle tight bond
       if (card.ability === CardAbility.TIGHT_BOND) {
-        const bondCount = cards.filter(c => c.name === card.name).length;
-        if (bondCount > 1) {
-          strength *= bondCount;
+        const sameNameCount = cards.filter(c => c.name === card.name).length;
+        if (sameNameCount > 1) {
+          strength *= sameNameCount;
         }
       }
-      
+
       return total + strength;
     }, 0);
   };

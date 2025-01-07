@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Card, PlayerState, GameState, BoardState, RowPosition } from '@/types/card';
+import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard } from '@/types/card';
 import GameBoard from './GameBoard';
 import { shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
+import '@/styles/components/board.css';
+import '@/styles/components/card.css';
 
 const initialPlayerState: PlayerState = {
   deck: [],
@@ -42,19 +44,37 @@ const GameManager = () => {
   }, []);
 
   useEffect(() => {
-    if (gameState.currentTurn === 'opponent' && gameState.gamePhase === 'playing') {
-      handleOpponentTurn();
+    let timeoutId: NodeJS.Timeout;
+    
+    if (gameState.currentTurn === 'opponent' && 
+        gameState.gamePhase === 'playing' && 
+        !gameState.opponent.passed) {
+      timeoutId = setTimeout(() => {
+        const bestCard = findBestCard(gameState.opponent.hand);
+        if (bestCard) {
+          playOpponentCard(bestCard, bestCard.row);
+        } else {
+          handleOpponentPass();
+        }
+      }, 1000);
     }
-  }, [gameState.currentTurn]);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [gameState.currentTurn, gameState.gamePhase]);
 
   const initializeGame = () => {
-
     const playerDeck = shuffle(createInitialDeck());
     const opponentDeck = shuffle(createInitialDeck());
 
     // Initial draw of 10 cards
     const playerHand = playerDeck.splice(0, 10);
     const opponentHand = opponentDeck.splice(0, 10);
+
+    const startingTurn = Math.random() < 0.5 ? 'player' : 'opponent';
 
     setGameState(prev => ({
       ...prev,
@@ -68,6 +88,7 @@ const GameManager = () => {
         deck: opponentDeck,
         hand: opponentHand
       },
+      currentTurn: startingTurn,
       gamePhase: 'playing'
     }));
   };
@@ -76,61 +97,81 @@ const GameManager = () => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
     }
-    setSelectedCard(card);
+    
+    // Only allow unit or hero cards to be selected
+    if (card.type === CardType.UNIT || card.type === CardType.HERO) {
+      setSelectedCard(card);
+    }
   };
 
   const handleRowClick = (row: RowPosition) => {
-    if (!selectedCard || !('row' in selectedCard)) {
+    if (!selectedCard || gameState.currentTurn !== 'player') {
       return;
     }
 
-    if (selectedCard.row === row || (selectedCard.availableRows?.includes(row))) {
-      playCard(selectedCard, row);
+    // Check if the card is a unit or hero card
+    if (selectedCard.type === CardType.UNIT || selectedCard.type === CardType.HERO) {
+      const unitCard = selectedCard as UnitCard;
+      
+      // Check if the card can be played in the selected row
+      if (unitCard.row === row || unitCard.availableRows?.includes(row)) {
+        playCard(unitCard, row);
+      }
     }
   };
 
-  const playCard = (card: Card, row: RowPosition) => {
+  const playCard = (card: UnitCard, row: RowPosition) => {
     // Remove card from hand
     const newHand = gameState.player.hand.filter(c => c.id !== card.id);
 
-    // Add card to appropriate row if it's a unit card
-    if ('row' in card) {
-      setGameState(prev => ({
-        ...prev,
-        player: {
-          ...prev.player,
-          hand: newHand
-        },
-        playerBoard: {
-          ...prev.playerBoard,
-          [row]: {
-            ...prev.playerBoard[row],
-            cards: [...prev.playerBoard[row].cards, card]
-          }
-        },
-        currentTurn: 'opponent'
-      }));
-    }
+    setGameState(prev => ({
+      ...prev,
+      player: {
+        ...prev.player,
+        hand: newHand
+      },
+      playerBoard: {
+        ...prev.playerBoard,
+        [row]: {
+          ...prev.playerBoard[row],
+          cards: [...prev.playerBoard[row].cards, card]
+        }
+      },
+      currentTurn: 'opponent'
+    }));
 
     setSelectedCard(null);
-    // Here you would also handle special card abilities
+  };
+
+  const findBestCard = (hand: Card[]): UnitCard | null => {
+    // Filter for playable cards (units and heroes)
+    const playableCards = hand.filter(
+      card => card.type === CardType.UNIT || card.type === CardType.HERO
+    ) as UnitCard[];
+
+    if (playableCards.length === 0) return null;
+
+    // For now, just play the highest strength card
+    return playableCards.reduce((highest, current) => 
+      current.strength > highest.strength ? current : highest
+    );
   };
 
   const handleOpponentTurn = () => {
-    // Basic AI implementation
-    // This would be expanded based on game rules and strategy
+    // Add a delay to make the opponent's turn more natural
     setTimeout(() => {
-      // Simple example: play the first valid card
-      const card = gameState.opponent.hand[0];
-      if (card && 'row' in card) {
-        const row = card.row;
-        playOpponentCard(card, row);
+      const bestCard = findBestCard(gameState.opponent.hand);
+
+      if (bestCard) {
+        playOpponentCard(bestCard, bestCard.row);
+      } else {
+        // If no playable cards, pass
+        handleOpponentPass();
       }
     }, 1000);
   };
 
-  const playOpponentCard = (card: Card, row: RowPosition) => {
-    // Similar to playCard but for opponent
+  const playOpponentCard = (card: UnitCard, row: RowPosition) => {
     const newHand = gameState.opponent.hand.filter(c => c.id !== card.id);
 
     setGameState(prev => ({
@@ -161,11 +202,22 @@ const GameManager = () => {
     }));
   };
 
+  const handleOpponentPass = () => {
+    setGameState(prev => ({
+      ...prev,
+      opponent: {
+        ...prev.opponent,
+        passed: true
+      },
+      currentTurn: 'player'
+    }));
+  };
+
   return (
     <GameBoard
       gameState={gameState}
       onCardClick={handleCardClick}
-      // onRowClick={handleRowClick}
+      onRowClick={handleRowClick}
       selectedCard={selectedCard}
     />
   );

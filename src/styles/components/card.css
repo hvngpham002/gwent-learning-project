@@ -22,17 +22,3 @@
   object-fit: contain;
   border-radius: 8px;
 }
-
-.deck-count {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-size: 24px;
-  font-weight: bold;
-  background: rgba(0, 0, 0, 0.7);
-  padding: 5px 10px;
-  border-radius: 4px;
-  z-index: 2;
-}

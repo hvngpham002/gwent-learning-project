@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardAbility, CardType, Faction } from '@/types/card';
 import GwentCard from '../card/GwentCard';
 import '@/styles/components/board.css';
+import '@/styles/components/card.css';
 
 interface PlayerHandProps {
   cards: Card[];
@@ -18,6 +19,16 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   isActive,
   selectedCard
 }) => {
+  const deckCard: Card = {
+    id: 'deck-back',
+    name: 'Deck',
+    faction: deck[0]?.faction ?? Faction.NEUTRAL,
+    type: CardType.SPECIAL,
+    imageUrl: 'src/assets/images/closed_card.jpeg',
+    strength: 0,
+    ability: CardAbility.NONE
+  };
+
   return (
     <div className="hand-container">
       <div className="hand-area">
@@ -31,17 +42,9 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
           />
         ))}
       </div>
-      <div className="deck-card">
-      <GwentCard
-          card={{
-            id: 'deck-back',
-            name: 'Deck',
-            faction: deck[0]?.faction ?? Faction.NEUTRAL,
-            type: CardType.SPECIAL as CardType.SPECIAL,
-            imageUrl: 'src/assets/images/closed_card.jpeg',
-            strength: 0,
-            ability: CardAbility.NONE
-          }}
+      <div className="deck-container">
+        <GwentCard
+          card={deckCard}
           isPlayable={false}
         />
         <div className="deck-count">{deck.length}</div>

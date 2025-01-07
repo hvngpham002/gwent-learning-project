@@ -141,7 +141,7 @@ export const neutralUnits = [
         name: 'Villentretenmerth',
         faction: Faction.NEUTRAL,
         type: CardType.UNIT,
-        strength: 3,
+        strength: 7,
         row: RowPosition.CLOSE,
         ability: CardAbility.SCORCH_CLOSE,
         imageUrl: 'src/assets/images/neutral/villentretenmerth.png'
@@ -161,7 +161,7 @@ export const neutralUnits = [
         name: 'Gaunter O\'Dimm: Darkness',
         faction: Faction.NEUTRAL,
         type: CardType.UNIT,
-        strength: 3,
+        strength: 4,
         row: RowPosition.RANGED,
         ability: CardAbility.MUSTER,
         imageUrl: 'src/assets/images/neutral/gaunter_odimm_darkness.png'
