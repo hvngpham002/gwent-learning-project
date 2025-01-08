@@ -5,6 +5,7 @@ import { drawCards, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
 import useAI from '@/hooks/useAI';
 import { calculateTotalScore } from '@/utils/gameHelpers';
+import { handleDecoyAction } from '@/hooks/useGameLogic';
 
 const initialPlayerState: PlayerState = {
   deck: [],
@@ -149,32 +150,35 @@ const GameManager = () => {
     }));
   };
 
+
   const handleCardClick = (card: Card) => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
     }
 
-    // Add this: If clicking the same card, deselect it
+    // If clicking the same card, deselect it
     if (selectedCard?.id === card.id) {
       setSelectedCard(null);
       setIsDecoyActive(false);
       return;
     }
 
+    // Handle decoy selection
     if (card.type === CardType.SPECIAL && card.ability === CardAbility.DECOY) {
       setSelectedCard(card);
       setIsDecoyActive(true);
       return;
     }
 
+    // Handle unit/hero selection
     if (card.type === CardType.UNIT || card.type === CardType.HERO) {
-      // Add this verification
+      // Verify card is actually in hand before selecting it
       if (gameState.player.hand.find(c => c.id === card.id)) {
         setSelectedCard(card);
         setIsDecoyActive(false);
       }
     }
-}
+  };
 
   const isValidDecoyTarget = (card: Card): boolean => {
     return card.type === CardType.UNIT;  // Only allow regular unit cards, heroes are a different type
@@ -185,46 +189,16 @@ const GameManager = () => {
       return;
     }
 
-    // Remove decoy from hand
-    const newHand = gameState.player.hand.filter(c => c.id !== selectedCard.id);
+    const newGameState = handleDecoyAction(gameState, selectedCard, card, true);
 
-    // Create a unique ID for the returned card by adding a timestamp
-    const returnedCard = {
-      ...card,
-      id: `${card.id}_${Date.now()}`
-    };
-
-    // Remove clicked unit from board
-    const newRow = {
-      ...gameState.playerBoard[row],
-      cards: gameState.playerBoard[row].cards.filter(c => c.id !== card.id)
-    };
-
-    // Place decoy in unit's position and add unit back to hand
-    setGameState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        hand: [...newHand, returnedCard]  // Use the card with unique ID
-      },
-      playerBoard: {
-        ...prev.playerBoard,
-        [row]: {
-          ...newRow,
-          cards: [...newRow.cards, { 
-            ...selectedCard,
-            strength: 0,
-            row: row,
-            type: CardType.UNIT
-          } as UnitCard]
-        }
-      },
+    setGameState({
+      ...newGameState,
       currentTurn: 'opponent'
-    }));
+    });
 
     setSelectedCard(null);
     setIsDecoyActive(false);
-};
+  };
 
   const handleRowClick = (row: RowPosition) => {
     if (!selectedCard || gameState.currentTurn !== 'player') {

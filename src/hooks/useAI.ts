@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
-import { Card, UnitCard, CardType, CardAbility, GameState, RowPosition } from '@/types/card';
+import { Card, UnitCard, CardType, CardAbility, GameState, RowPosition, SpecialCard } from '@/types/card';
 import { calculateTotalScore, drawCards } from '@/utils/gameHelpers';
+import { handleDecoyAction } from './useGameLogic';
 
 const useAI = (
   gameState: GameState,
@@ -9,24 +10,88 @@ const useAI = (
 ) => {
 
   // Find best card for AI to play
-  const findBestCard = useCallback((hand: Card[]): UnitCard | null => {
-    const playableCards = hand.filter(
-      card => card.type === CardType.UNIT || card.type === CardType.HERO
-    ) as UnitCard[];
+    const findBestCard = useCallback((hand: Card[]): (UnitCard | SpecialCard | null) => {
+        // First, filter to only UnitCard and SpecialCard types
+        const playableCards = hand.filter(
+        (card): card is UnitCard | SpecialCard =>
+        card.type === CardType.UNIT ||
+        card.type === CardType.SPECIAL
+        );
 
-    if (playableCards.length === 0) return null;
+        if (playableCards.length === 0) return null;
 
-    // Prioritize spy cards
-    const spyCards = playableCards.filter(card => card.ability === CardAbility.SPY);
-    if (spyCards.length > 0) {
-      return spyCards[0];
-    }
+        // First priority: Play decoy on valuable units
+        const decoyCard = playableCards.find(card =>
+        card.type === CardType.SPECIAL && card.ability === CardAbility.DECOY
+        );
 
-    // If no spy cards, play highest strength card
-    return playableCards.reduce((highest, current) =>
-      current.strength > highest.strength ? current : highest
+        if (decoyCard) {
+        const bestTarget = findBestDecoyTarget(gameState, false);
+        if (bestTarget) {
+            return decoyCard;
+        }
+        }
+
+        // Second priority: Play spy cards
+        const spyCards = playableCards.filter((card): card is UnitCard =>
+            card.type === CardType.UNIT &&
+            card.ability === CardAbility.SPY
+        );
+
+        if (spyCards.length > 0) {
+        return spyCards[0];
+        }
+
+        // Last priority: Play highest strength unit
+        const unitCards = playableCards.filter(
+        (card): card is UnitCard => card.type === CardType.UNIT
+        );
+
+        if (unitCards.length === 0) return null;
+
+        return unitCards.reduce((highest, current) =>
+        current.strength > highest.strength ? current : highest
+        );
+    }, [gameState]);
+
+  const findBestDecoyTarget = (gameState: GameState, isPlayer: boolean): UnitCard | null => {
+    const board = isPlayer ? gameState.playerBoard : gameState.opponentBoard;
+    const allUnits: { card: UnitCard; row: RowPosition }[] = [];
+
+    // Collect all valid units from each row
+    Object.entries(board).forEach(([rowKey, rowState]) => {
+      const row = rowKey as RowPosition;
+      rowState.cards
+        .filter((card: { type: CardType; }) => card.type === CardType.UNIT)
+        .forEach((card: UnitCard) => {
+          allUnits.push({ card: card as UnitCard, row });
+        });
+    });
+
+    if (allUnits.length === 0) return null;
+
+    // Prioritize:
+    // 1. High-value units that opponent might target (strength > 7)
+    // 2. Units with special abilities (spy, medic, etc.)
+    // 3. Highest strength unit if no special targets found
+
+    // First check for high-value units
+    const highValueTarget = allUnits.find(({ card }) => card.strength > 7);
+    if (highValueTarget) return highValueTarget.card;
+
+    // Then check for units with useful abilities
+    const specialAbilityTarget = allUnits.find(({ card }) => 
+      card.ability === CardAbility.MEDIC || 
+      card.ability === CardAbility.SPY ||
+      card.ability === CardAbility.TIGHT_BOND
     );
-  }, []);
+    if (specialAbilityTarget) return specialAbilityTarget.card;
+
+    // Finally, just return the highest strength unit
+    return allUnits.reduce((highest, current) => 
+      current.card.strength > highest.card.strength ? current : highest
+    ).card;
+  };
 
   const handleOpponentPass = useCallback(() => {
     console.log('Opponent is passing');
@@ -117,18 +182,39 @@ const useAI = (
       gameState.activeWeatherEffects, handleOpponentPass, setGameState]);
 
   // Function to make AI take its turn
-  const makeOpponentMove = useCallback(() => {
-    const bestCard = findBestCard(gameState.opponent.hand);
-    if (bestCard) {
-      if (bestCard.ability === CardAbility.SPY) {
-        playOpponentSpyCard(bestCard, bestCard.row);
-      } else {
-        playOpponentCard(bestCard, bestCard.row);
-      }
-    } else {
-      handleOpponentPass();
-    }
-  }, [findBestCard, gameState.opponent.hand, handleOpponentPass, playOpponentCard, playOpponentSpyCard]);
+    const makeOpponentMove = useCallback(() => {
+        const bestCard = findBestCard(gameState.opponent.hand);
+        if (!bestCard) {
+        handleOpponentPass();
+        return;
+        }
+
+        // Handle different card types
+        if (bestCard.type === CardType.SPECIAL) {
+        if (bestCard.ability === CardAbility.DECOY) {
+            const bestTarget = findBestDecoyTarget(gameState, false);
+            if (bestTarget) {
+            const newState = handleDecoyAction(gameState, bestCard, bestTarget, false);
+            setGameState({
+                ...newState,
+                currentTurn: 'player'
+            });
+            return;
+            }
+        }
+        // If no good target found for special card, find another card to play
+        makeOpponentMove();
+        return;
+        }
+
+        // Now we know it's a UnitCard
+        const unitCard = bestCard as UnitCard;
+        if (unitCard.ability === CardAbility.SPY) {
+        playOpponentSpyCard(unitCard, unitCard.row);
+        } else {
+        playOpponentCard(unitCard, unitCard.row);
+        }
+    }, [findBestCard, gameState, handleOpponentPass, playOpponentCard, playOpponentSpyCard, setGameState]);
 
   return {
     makeOpponentMove,
