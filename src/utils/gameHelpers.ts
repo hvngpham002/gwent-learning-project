@@ -43,7 +43,7 @@ export const shuffle = <T,>(array: T[]): T[] => {
       return total + strength;
     }, 0);
   };
-  
+
   /**
    * Calculate total score for a player
    * Takes into account all rows and effects
@@ -52,14 +52,13 @@ export const shuffle = <T,>(array: T[]): T[] => {
     const hasFrost = weatherEffects.has(CardAbility.FROST);
     const hasFog = weatherEffects.has(CardAbility.FOG);
     const hasRain = weatherEffects.has(CardAbility.RAIN);
-  
-    return (
+      return (
       calculateRowStrength(boardState.close.cards, hasFrost, boardState.close.hornActive) +
       calculateRowStrength(boardState.ranged.cards, hasFog, boardState.ranged.hornActive) +
       calculateRowStrength(boardState.siege.cards, hasRain, boardState.siege.hornActive)
     );
   };
-  
+
   /**
    * Check if a card can be played in a specific row
    */

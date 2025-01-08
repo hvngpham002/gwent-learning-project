@@ -32,7 +32,7 @@ export enum CardAbility {
     AGILE = 'agile',               // Can be placed in multiple rows
     AVENGER = 'avenger',               // Can be placed in multiple rows
     SCORCH_CLOSE = 'scorch_close',
-    
+
     // Special card abilities (can also appear on units)
     SCORCH = 'scorch',             // Destroy card(s) with highest strength
     SKELLIGE_STORM = 'skellige_storm',
@@ -43,7 +43,7 @@ export enum CardAbility {
     FOG = 'fog',                   // Sets Ranged units to 1
     RAIN = 'rain',                 // Sets Siege units to 1
     CLEAR_WEATHER = 'clear_weather', // Clears all weather effects
-    
+
     NONE = 'none'                  // No special ability
 }
 

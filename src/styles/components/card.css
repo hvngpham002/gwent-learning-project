@@ -1,7 +1,7 @@
 .card {
   position: relative;
-  width: 145px;
-  height: 240px;
+  width: 96px;
+  height: 180px;
   transition: transform 0.2s;
   flex-shrink: 0;
 }

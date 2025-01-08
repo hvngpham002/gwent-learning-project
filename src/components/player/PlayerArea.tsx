@@ -23,7 +23,6 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
         key={position}
         className={`battle-row battle-row--${position}`}
         onClick={() => onRowClick?.(position)}
-        style={{ minHeight: '120px' }}
       >
         {rowCards.map(card => (
           <GwentCard

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Card, GameState, RowPosition } from '@/types/card';
+import { Card, CardAbility, CardType, Faction, GameState, RowPosition } from '@/types/card';
 import PlayerHand from '../player/PlayerHand';
 import PlayerArea from '../player/PlayerArea';
 import PlayerStatus from './PlayerStatus';
 import '@/styles/components/board.css';
 import '@/styles/components/hand.css';
+import GwentCard from '../card/GwentCard';
 
 interface GameBoardProps {
   gameState: GameState;
@@ -14,21 +15,45 @@ interface GameBoardProps {
   selectedCard: Card | null;
 }
 
+
+
 const GameBoard: React.FC<GameBoardProps> = ({
   gameState,
   onCardClick,
   onRowClick,
-  onPass,
   selectedCard
 }) => {
+
+  const deckCard: Card = {
+    id: 'deck-back',
+    name: 'Deck',
+    faction: gameState.player.deck[0]?.faction ?? Faction.NEUTRAL,
+    type: CardType.SPECIAL,
+    imageUrl: 'src/assets/images/closed_card.jpeg',
+    strength: 0,
+    ability: CardAbility.NONE
+  };
+
+  const discardCard: Card = {
+    id: 'deck-discard',
+    name: 'Deck',
+    faction: gameState.player.deck[0]?.faction ?? Faction.NEUTRAL,
+    type: CardType.SPECIAL,
+    imageUrl: 'src/assets/images/other-graveyard.png',
+    strength: 0,
+    ability: CardAbility.NONE
+  };
+
   return (
     <div className="game-container">
       <div className="game-layout">
         {/* Left sidebar with player statuses */}
         <div className="game-sidebar">
           <PlayerStatus
-            player={gameState.opponent}
-            isOpponent={true}
+              player={gameState.opponent}
+              board={gameState.opponentBoard}
+              weatherEffects={gameState.activeWeatherEffects}
+              isOpponent={true}
           />
           <div className="weather-area">
             {/* Weather cards will be rendered here */}
@@ -39,8 +64,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
             ))}
           </div>
           <PlayerStatus
-            player={gameState.player}
-            onPass={onPass}
+             player={gameState.player}
+             board={gameState.playerBoard}
+             weatherEffects={gameState.activeWeatherEffects}
+             isOpponent={false}
           />
         </div>
 
@@ -56,11 +83,44 @@ const GameBoard: React.FC<GameBoardProps> = ({
           />
           <PlayerHand
             cards={gameState.player.hand}
-            deck={gameState.player.deck}
             onCardClick={onCardClick}
             isActive={gameState.currentTurn === 'player'}
             selectedCard={selectedCard}
           />
+        </div>
+        <div className='board-sidebar'>
+          <div className="deck-container">
+            <div className='deck-cards'>
+              <GwentCard
+                card={discardCard}
+                isPlayable={false}
+              />
+              <div className="deck-count">{gameState.opponent.discard.length}</div>
+            </div>
+            <div className='deck-cards'>
+              <GwentCard
+                card={deckCard}
+                isPlayable={false}
+              />
+              <div className="deck-count">{gameState.opponent.deck.length}</div>
+            </div>
+          </div>
+          <div className="deck-container">
+            <div className='deck-cards'>
+              <GwentCard
+                card={discardCard}
+                isPlayable={false}
+              />
+              <div className="deck-count">{gameState.player.discard.length}</div>
+            </div>
+            <div className='deck-cards'>
+              <GwentCard
+                card={deckCard}
+                isPlayable={false}
+              />
+              <div className="deck-count">{gameState.player.deck.length}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

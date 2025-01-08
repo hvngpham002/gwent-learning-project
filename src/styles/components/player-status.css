@@ -2,53 +2,90 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
-    width: 192px;
+    width: 170px;
     background: rgba(0, 0, 0, 0.2);
-    padding: var(--spacing-md);
     border-radius: 8px;
+    padding: var(--spacing-sm);
   }
-  
+
   .player-info {
     display: flex;
-    align-items: center;
     gap: var(--spacing-sm);
   }
-  
+
   .player-avatar {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: #4a4a4a;
   }
 
   .player-avatar img {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
   }
 
   .player-name {
+    font-size: 16px;
     color: white;
     font-weight: bold;
   }
-  
-  .player-score {
-    font-size: 24px;
-    font-weight: bold;
-    color: #ffd700;
+
+  .player-deck {
+    font-size: small;
+    margin: 0;
   }
-  
+
+  .player-name-deck {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .leader-score-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .player-score {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    top: 30%;
+    left: 95%;
+    color: black;
+    font-weight: bold;
+    font-size: xx-large;
+    border: 1px solid #d7a451;
+    border-radius: 100%;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 50px;
+    background-color: #d7a451;
+    z-index: 999;
+  }
+
   .player-lives {
     display: flex;
     gap: var(--spacing-sm);
+    justify-content: space-between;
   }
-  
+
+  .lives-container {
+    display: flex;
+    gap: 10px;
+  }
+
   .life-token {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
-    background: #ffd700;
+    background: #7b1a16;
   }
-  
+
   .leader-card {
     position: relative;
     width: 100%;
@@ -57,13 +94,21 @@
     overflow: hidden;
     background: rgba(155, 89, 182, 0.2);
   }
-  
+
   .leader-card img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
-  
+
+  .leader--notPassed {
+    opacity: 100%;
+  }
+
+  .leader--passed {
+    opacity: 60%;
+  }
+
   .leader-ability-button {
     background: green;
     width: 100%;
@@ -75,11 +120,11 @@
     font-weight: bold;
     font-size: 14px;
   }
-  
+
   button:hover {
     background: rgba(255, 255, 255, 0.2);
   }
-  
+
   .pass-button {
     width: 100%;
     background: #8b0000;
@@ -90,9 +135,29 @@
     font-weight: bold;
     cursor: pointer;
   }
-    
+
   .passed-status {
+    top: 30%;
+    left: 28%;
+    position: absolute;
     text-align: center;
-    color: #808080;
+    color: #d7a451;
     font-weight: bold;
+    background-color: #8b0000;
+    padding: var(--spacing-sm);
+    font-size: larger;
+  }
+
+  .hand-size {
+    color: #d7a451;
+    font-weight: bold;
+    font-size: x-large;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .hand-size img {
+     width: 30px;
+     width: 30px;
   }

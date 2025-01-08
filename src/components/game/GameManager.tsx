@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard } from '@/types/card';
+import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility } from '@/types/card';
 import GameBoard from './GameBoard';
 import { shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
@@ -32,7 +32,7 @@ const GameManager = () => {
     opponentScore: 0,
     currentTurn: Math.random() < 0.5 ? 'player' : 'opponent',
     gamePhase: 'setup',
-    activeWeatherEffects: new Set()
+    activeWeatherEffects: new Set<CardAbility>()
   });
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
@@ -45,14 +45,18 @@ const GameManager = () => {
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-  
-    if (gameState.currentTurn === 'opponent' && 
-        gameState.gamePhase === 'playing' && 
+
+    if (gameState.currentTurn === 'opponent' &&
+        gameState.gamePhase === 'playing' &&
         !gameState.opponent.passed) {
       timeoutId = setTimeout(() => {
         const bestCard = findBestCard(gameState.opponent.hand);
         if (bestCard) {
-          playOpponentCard(bestCard, bestCard.row);
+          if (bestCard.ability === CardAbility.SPY) {
+            playOpponentSpyCard(bestCard, bestCard.row);
+          } else {
+            playOpponentCard(bestCard, bestCard.row);
+          }
         } else {
           handleOpponentPass();
         }
@@ -96,12 +100,36 @@ const GameManager = () => {
     }));
   };
 
+  const drawCards = (numCards: number, currentState: GameState, player: 'player' | 'opponent'): GameState => {
+    const newState = { ...currentState };
+    const playerState = player === 'player' ? newState.player : newState.opponent;
+
+    // Draw the specified number of cards
+    const newCards = playerState.deck.slice(0, numCards);
+    const remainingDeck = playerState.deck.slice(numCards);
+
+    if (player === 'player') {
+      newState.player = {
+        ...playerState,
+        hand: [...playerState.hand, ...newCards],
+        deck: remainingDeck
+      };
+    } else {
+      newState.opponent = {
+        ...playerState,
+        hand: [...playerState.hand, ...newCards],
+        deck: remainingDeck
+      };
+    }
+
+    return newState;
+  };
+
   const handleCardClick = (card: Card) => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
     }
 
-    // Only allow unit or hero cards to be selected
     if (card.type === CardType.UNIT || card.type === CardType.HERO) {
       setSelectedCard(card);
     }
@@ -112,15 +140,88 @@ const GameManager = () => {
       return;
     }
 
-    // Check if the card is a unit or hero card
     if (selectedCard.type === CardType.UNIT || selectedCard.type === CardType.HERO) {
       const unitCard = selectedCard as UnitCard;
 
       // Check if the card can be played in the selected row
       if (unitCard.row === row || unitCard.availableRows?.includes(row)) {
-        playCard(unitCard, row);
+        if (unitCard.ability === CardAbility.SPY) {
+          playSpyCard(unitCard, row);
+        } else {
+          playCard(unitCard, row);
+        }
       }
     }
+  };
+
+  const playSpyCard = (card: UnitCard, row: RowPosition) => {
+    // Remove card from player's hand
+    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
+
+    // First update the game state to place the spy card on opponent's board
+    setGameState(prevState => {
+      // Place card on opponent's board
+      const updatedState = {
+        ...prevState,
+        player: {
+          ...prevState.player,
+          hand: newHand
+        },
+        opponentBoard: {
+          ...prevState.opponentBoard,
+          [row]: {
+            ...prevState.opponentBoard[row],
+            cards: [...prevState.opponentBoard[row].cards, card]
+          }
+        }
+      };
+
+      // Draw two cards for the player
+      return drawCards(2, updatedState, 'player');
+    });
+
+    setSelectedCard(null);
+
+    // After spy card is played, it becomes opponent's turn
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
+        currentTurn: 'opponent'
+      }));
+    }, 500);
+  };
+
+  const playOpponentSpyCard = (card: UnitCard, row: RowPosition) => {
+    const newHand = gameState.opponent.hand.filter(c => c.id !== card.id);
+
+    setGameState(prevState => {
+      // Place card on player's board
+      const updatedState = {
+        ...prevState,
+        opponent: {
+          ...prevState.opponent,
+          hand: newHand
+        },
+        playerBoard: {
+          ...prevState.playerBoard,
+          [row]: {
+            ...prevState.playerBoard[row],
+            cards: [...prevState.playerBoard[row].cards, card]
+          }
+        }
+      };
+
+      // Draw two cards for the opponent
+      return drawCards(2, updatedState, 'opponent');
+    });
+
+    // After spy card is played, it becomes player's turn
+    setTimeout(() => {
+      setGameState(prev => ({
+        ...prev,
+        currentTurn: 'player'
+      }));
+    }, 500);
   };
 
   const playCard = (card: UnitCard, row: RowPosition) => {
@@ -147,31 +248,22 @@ const GameManager = () => {
   };
 
   const findBestCard = (hand: Card[]): UnitCard | null => {
-    // Filter for playable cards (units and heroes)
     const playableCards = hand.filter(
       card => card.type === CardType.UNIT || card.type === CardType.HERO
     ) as UnitCard[];
 
     if (playableCards.length === 0) return null;
 
-    // For now, just play the highest strength card
+    // Prioritize spy cards
+    const spyCards = playableCards.filter(card => card.ability === CardAbility.SPY);
+    if (spyCards.length > 0) {
+      return spyCards[0];
+    }
+
+    // If no spy cards, play highest strength card
     return playableCards.reduce((highest, current) =>
       current.strength > highest.strength ? current : highest
     );
-  };
-
-  const handleOpponentTurn = () => {
-    // Add a delay to make the opponent's turn more natural
-    setTimeout(() => {
-      const bestCard = findBestCard(gameState.opponent.hand);
-
-      if (bestCard) {
-        playOpponentCard(bestCard, bestCard.row);
-      } else {
-        // If no playable cards, pass
-        handleOpponentPass();
-      }
-    }, 1000);
   };
 
   const playOpponentCard = (card: UnitCard, row: RowPosition) => {
