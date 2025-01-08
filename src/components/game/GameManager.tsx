@@ -36,6 +36,7 @@ const GameManager = () => {
   });
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+  const [isDecoyActive, setIsDecoyActive] = useState(false);
 
   const handleRoundEnd = () => {
     setGameState(prev => {
@@ -153,10 +154,77 @@ const GameManager = () => {
       return;
     }
 
-    if (card.type === CardType.UNIT || card.type === CardType.HERO) {
-      setSelectedCard(card);
+    // Add this: If clicking the same card, deselect it
+    if (selectedCard?.id === card.id) {
+      setSelectedCard(null);
+      setIsDecoyActive(false);
+      return;
     }
+
+    if (card.type === CardType.SPECIAL && card.ability === CardAbility.DECOY) {
+      setSelectedCard(card);
+      setIsDecoyActive(true);
+      return;
+    }
+
+    if (card.type === CardType.UNIT || card.type === CardType.HERO) {
+      // Add this verification
+      if (gameState.player.hand.find(c => c.id === card.id)) {
+        setSelectedCard(card);
+        setIsDecoyActive(false);
+      }
+    }
+}
+
+  const isValidDecoyTarget = (card: Card): boolean => {
+    return card.type === CardType.UNIT;  // Only allow regular unit cards, heroes are a different type
   };
+
+  const handleBoardUnitClick = (card: UnitCard, row: RowPosition) => {
+    if (!isDecoyActive || !selectedCard || !isValidDecoyTarget(card)) {
+      return;
+    }
+
+    // Remove decoy from hand
+    const newHand = gameState.player.hand.filter(c => c.id !== selectedCard.id);
+
+    // Create a unique ID for the returned card by adding a timestamp
+    const returnedCard = {
+      ...card,
+      id: `${card.id}_${Date.now()}`
+    };
+
+    // Remove clicked unit from board
+    const newRow = {
+      ...gameState.playerBoard[row],
+      cards: gameState.playerBoard[row].cards.filter(c => c.id !== card.id)
+    };
+
+    // Place decoy in unit's position and add unit back to hand
+    setGameState(prev => ({
+      ...prev,
+      player: {
+        ...prev.player,
+        hand: [...newHand, returnedCard]  // Use the card with unique ID
+      },
+      playerBoard: {
+        ...prev.playerBoard,
+        [row]: {
+          ...newRow,
+          cards: [...newRow.cards, { 
+            ...selectedCard,
+            strength: 0,
+            row: row,
+            type: CardType.UNIT
+          } as UnitCard]
+        }
+      },
+      currentTurn: 'opponent'
+    }));
+
+    setSelectedCard(null);
+    setIsDecoyActive(false);
+};
 
   const handleRowClick = (row: RowPosition) => {
     if (!selectedCard || gameState.currentTurn !== 'player') {
@@ -177,6 +245,16 @@ const GameManager = () => {
   };
 
   const playSpyCard = (card: UnitCard, row: RowPosition) => {
+
+    setSelectedCard(null);
+    setIsDecoyActive(false);
+
+    // Add this verification
+    if (!gameState.player.hand.find(c => c.id === card.id)) {
+      console.warn('Attempted to play card not in hand:', card.id);
+      return;
+    }
+
     const newHand = gameState.player.hand.filter(c => c.id !== card.id);
 
     setGameState(prevState => {
@@ -211,6 +289,16 @@ const GameManager = () => {
   };
 
   const playCard = (card: UnitCard, row: RowPosition) => {
+
+    setSelectedCard(null);
+    setIsDecoyActive(false);
+
+    // Add this verification
+    if (!gameState.player.hand.find(c => c.id === card.id)) {
+      console.warn('Attempted to play card not in hand:', card.id);
+      return;
+    }
+
     const newHand = gameState.player.hand.filter(c => c.id !== card.id);
 
     setGameState(prev => ({
@@ -252,8 +340,10 @@ const GameManager = () => {
       gameState={gameState}
       onCardClick={handleCardClick}
       onRowClick={handleRowClick}
+      onBoardUnitClick={handleBoardUnitClick}
       onPass={handlePass}
       selectedCard={selectedCard}
+      isDecoyActive={isDecoyActive}
     />
   );
 };

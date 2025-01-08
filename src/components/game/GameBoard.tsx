@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardAbility, CardType, Faction, GameState, RowPosition } from '@/types/card';
+import { Card, CardAbility, CardType, Faction, GameState, RowPosition, UnitCard } from '@/types/card';
 import PlayerHand from '../player/PlayerHand';
 import PlayerArea from '../player/PlayerArea';
 import PlayerStatus from './PlayerStatus';
@@ -11,16 +11,20 @@ interface GameBoardProps {
   gameState: GameState;
   onCardClick: (card: Card) => void;
   onRowClick: (row: RowPosition) => void;
+  onBoardUnitClick: (card: UnitCard, row: RowPosition) => void;
   onPass: () => void;
   selectedCard: Card | null;
+  isDecoyActive: boolean;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
   gameState,
   onCardClick,
   onRowClick,
+  onBoardUnitClick,
   onPass,
-  selectedCard
+  selectedCard,
+  isDecoyActive
 }) => {
 
   const deckCard: Card = {
@@ -81,6 +85,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
           <PlayerArea
             boardState={gameState.playerBoard}
             onRowClick={onRowClick}
+            onUnitClick={onBoardUnitClick}
+            isDecoyActive={isDecoyActive}
           />
           <PlayerHand
             cards={gameState.player.hand}

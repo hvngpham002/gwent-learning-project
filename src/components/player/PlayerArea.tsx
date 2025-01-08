@@ -7,13 +7,17 @@ import '@/styles/components/board.css';
 interface PlayerAreaProps {
   boardState: BoardState;
   onRowClick?: (row: RowPosition) => void;
+  onUnitClick?: (card: UnitCard, row: RowPosition) => void;
   isOpponent?: boolean;
+  isDecoyActive?: boolean;
 }
 
 const PlayerArea: React.FC<PlayerAreaProps> = ({
   boardState,
   onRowClick,
-  isOpponent = false
+  onUnitClick,
+  isOpponent = false,
+  isDecoyActive = false
 }) => {
   const renderRow = (rowCards: UnitCard[], position: RowPosition) => {
     const rowStrength = calculateRowStrength(rowCards, false, boardState[position].hornActive);
@@ -22,13 +26,14 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
       <div
         key={position}
         className={`battle-row battle-row--${position}`}
-        onClick={() => onRowClick?.(position)}
+        onClick={() => !isDecoyActive && onRowClick?.(position)}
       >
         {rowCards.map(card => (
           <GwentCard
             key={card.id}
             card={card}
-            isPlayable={false}
+            isPlayable={isDecoyActive && !isOpponent && card.type !== 'hero'}
+            onClick={() => isDecoyActive && onUnitClick?.(card, position)}
           />
         ))}
         {rowStrength > 0 && (
@@ -40,20 +45,20 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
     );
   };
 
-  if(isOpponent) {
+  if (isOpponent) {
     return (
-        <div className={`player-area`}>
-            <div className="player-area__rows">
-                {renderRow(boardState.siege.cards, RowPosition.SIEGE)}
-                {renderRow(boardState.ranged.cards, RowPosition.RANGED)}
-                {renderRow(boardState.close.cards, RowPosition.CLOSE)}
-            </div>
+      <div className="player-area">
+        <div className="player-area__rows">
+          {renderRow(boardState.siege.cards, RowPosition.SIEGE)}
+          {renderRow(boardState.ranged.cards, RowPosition.RANGED)}
+          {renderRow(boardState.close.cards, RowPosition.CLOSE)}
         </div>
-    )
+      </div>
+    );
   }
 
   return (
-    <div className={`player-area`}>
+    <div className="player-area">
       <div className="player-area__rows">
         {renderRow(boardState.close.cards, RowPosition.CLOSE)}
         {renderRow(boardState.ranged.cards, RowPosition.RANGED)}
