@@ -70,7 +70,7 @@ export const createInitialDeck = (): DeckWithLeader => {
     }
 
     const catapult = northernRealmsDeck.units.find(u => u.name === 'Catapult');
-    console.log(catapult)
+    
     if (catapult) {
         // Create three separate cards with the correct type
         const cards: UnitCard[] = [

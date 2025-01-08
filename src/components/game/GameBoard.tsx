@@ -15,12 +15,11 @@ interface GameBoardProps {
   selectedCard: Card | null;
 }
 
-
-
 const GameBoard: React.FC<GameBoardProps> = ({
   gameState,
   onCardClick,
   onRowClick,
+  onPass,
   selectedCard
 }) => {
 
@@ -54,6 +53,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
               board={gameState.opponentBoard}
               weatherEffects={gameState.activeWeatherEffects}
               isOpponent={true}
+              onPass={onPass}
           />
           <div className="weather-area">
             {/* Weather cards will be rendered here */}
@@ -68,6 +68,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
              board={gameState.playerBoard}
              weatherEffects={gameState.activeWeatherEffects}
              isOpponent={false}
+             onPass={onPass}
           />
         </div>
 

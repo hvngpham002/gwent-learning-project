@@ -1,4 +1,4 @@
-import { BoardState, Card, CardAbility, CardType, RowPosition, UnitCard } from "@/types/card";
+import { BoardState, Card, CardAbility, CardType, GameState, RowPosition, UnitCard } from "@/types/card";
 
 /**
  * Fisher-Yates shuffle algorithm
@@ -68,4 +68,36 @@ export const shuffle = <T,>(array: T[]): T[] => {
       return card.row === row || (card.availableRows?.includes(row) ?? false);
     }
     return false;
+  };
+
+
+  export const drawCards = (
+    numCards: number,
+    currentState: GameState,
+    player: 'player' | 'opponent'
+  ): GameState => {
+    const playerState = player === 'player' ? currentState.player : currentState.opponent;
+
+    const newCards = playerState.deck.slice(0, numCards);
+    const remainingDeck = playerState.deck.slice(numCards);
+
+    if (player === 'player') {
+      return {
+        ...currentState,
+        player: {
+          ...playerState,
+          hand: [...playerState.hand, ...newCards],
+          deck: remainingDeck
+        }
+      };
+    } else {
+      return {
+        ...currentState,
+        opponent: {
+          ...playerState,
+          hand: [...playerState.hand, ...newCards],
+          deck: remainingDeck
+        }
+      };
+    }
   };

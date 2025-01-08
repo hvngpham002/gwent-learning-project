@@ -27,6 +27,27 @@ const PlayerStatus = ({
     !player.passed && '--notPassed',
   ].filter(Boolean).join('');
 
+  const deckName = (player: PlayerState): string => {
+    if (!player.leader) {
+      return 'Unknown Deck';
+    }
+
+    switch(player.leader.faction) {
+      case 'northern_realms':
+        return 'Northern Realms';
+      case 'nilfgaard':
+        return 'Nilfgaardian Empire';
+      case 'monsters':
+        return 'Monsters';
+      case 'scoiatael':
+        return 'Scoia\'tael';
+      case 'skellige':
+        return 'Skellige';
+      default:
+        return 'Unknown Faction';
+    }
+  };
+
   return (
     <div className="player-status">
       <div className="player-info">
@@ -37,7 +58,7 @@ const PlayerStatus = ({
           <div className="player-name">
             {isOpponent ? 'Opponent' : 'Player'}
           </div>
-          <p className='player-deck'>Nilfgaardian Empire</p>
+          <p className='player-deck'>{ deckName(player)} </p>
         </div>
       </div>
       <div className="player-lives">
@@ -78,7 +99,10 @@ const PlayerStatus = ({
        </React.Fragment>
       )}
       {!isOpponent && !player.passed && (
-        <button className="pass-button" onClick={onPass}>
+        <button
+          className="pass-button"
+          onClick={() => onPass && onPass()}  // Update this line
+        >
           Pass
         </button>
       )}

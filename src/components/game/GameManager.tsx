@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility } from '@/types/card';
 import GameBoard from './GameBoard';
-import { shuffle } from '@/utils/gameHelpers';
+import { drawCards, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
-import '@/styles/components/board.css';
-import '@/styles/components/card.css';
+import useAI from '@/hooks/useAI';
+import { calculateTotalScore } from '@/utils/gameHelpers';
 
 const initialPlayerState: PlayerState = {
   deck: [],
@@ -32,10 +32,70 @@ const GameManager = () => {
     opponentScore: 0,
     currentTurn: Math.random() < 0.5 ? 'player' : 'opponent',
     gamePhase: 'setup',
-    activeWeatherEffects: new Set<CardAbility>()
+    activeWeatherEffects: new Set()
   });
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
+
+  const handleRoundEnd = () => {
+    setGameState(prev => {
+      const playerScore = calculateTotalScore(prev.playerBoard, prev.activeWeatherEffects);
+      const opponentScore = calculateTotalScore(prev.opponentBoard, prev.activeWeatherEffects);
+
+      console.log('Final scores:', { player: playerScore, opponent: opponentScore });
+
+      // Determine who loses life tokens
+      let newPlayerLives = prev.player.lives;
+      let newOpponentLives = prev.opponent.lives;
+
+      if (playerScore > opponentScore) {
+        newOpponentLives--;
+      } else if (opponentScore > playerScore) {
+        newPlayerLives--;
+      } else {
+        newPlayerLives--;
+        newOpponentLives--;
+      }
+
+      // Collect cards for discard
+      const playerDiscardPile = [
+        ...prev.player.discard,
+        ...prev.playerBoard.close.cards,
+        ...prev.playerBoard.ranged.cards,
+        ...prev.playerBoard.siege.cards,
+      ];
+
+      const opponentDiscardPile = [
+        ...prev.opponent.discard,
+        ...prev.opponentBoard.close.cards,
+        ...prev.opponentBoard.ranged.cards,
+        ...prev.opponentBoard.siege.cards,
+      ];
+
+      return {
+        ...prev,
+        player: {
+          ...prev.player,
+          passed: false,
+          lives: newPlayerLives,
+          discard: playerDiscardPile
+        },
+        opponent: {
+          ...prev.opponent,
+          passed: false,
+          lives: newOpponentLives,
+          discard: opponentDiscardPile
+        },
+        playerBoard: initialBoardState,
+        opponentBoard: initialBoardState,
+        currentRound: prev.currentRound + 1,
+        currentTurn: Math.random() < 0.5 ? 'player' : 'opponent',
+        activeWeatherEffects: new Set()
+      };
+    });
+  };
+
+  const { makeOpponentMove } = useAI(gameState, handleRoundEnd, setGameState);
 
   useEffect(() => {
     if (gameState.gamePhase === 'setup') {
@@ -49,18 +109,7 @@ const GameManager = () => {
     if (gameState.currentTurn === 'opponent' &&
         gameState.gamePhase === 'playing' &&
         !gameState.opponent.passed) {
-      timeoutId = setTimeout(() => {
-        const bestCard = findBestCard(gameState.opponent.hand);
-        if (bestCard) {
-          if (bestCard.ability === CardAbility.SPY) {
-            playOpponentSpyCard(bestCard, bestCard.row);
-          } else {
-            playOpponentCard(bestCard, bestCard.row);
-          }
-        } else {
-          handleOpponentPass();
-        }
-      }, 1000);
+      timeoutId = setTimeout(makeOpponentMove, 1000);
     }
 
     return () => {
@@ -68,7 +117,7 @@ const GameManager = () => {
         clearTimeout(timeoutId);
       }
     };
-  }, [gameState.currentTurn, gameState.gamePhase]);
+  }, [gameState.currentTurn, gameState.gamePhase, gameState.opponent.passed, makeOpponentMove]);
 
   const initializeGame = () => {
     const playerDeckWithLeader = createInitialDeck();
@@ -77,7 +126,6 @@ const GameManager = () => {
     const playerDeck = shuffle(playerDeckWithLeader.deck);
     const opponentDeck = shuffle(opponentDeckWithLeader.deck);
 
-    // Initial draw of 10 cards
     const playerHand = playerDeck.splice(0, 10);
     const opponentHand = opponentDeck.splice(0, 10);
 
@@ -100,31 +148,6 @@ const GameManager = () => {
     }));
   };
 
-  const drawCards = (numCards: number, currentState: GameState, player: 'player' | 'opponent'): GameState => {
-    const newState = { ...currentState };
-    const playerState = player === 'player' ? newState.player : newState.opponent;
-
-    // Draw the specified number of cards
-    const newCards = playerState.deck.slice(0, numCards);
-    const remainingDeck = playerState.deck.slice(numCards);
-
-    if (player === 'player') {
-      newState.player = {
-        ...playerState,
-        hand: [...playerState.hand, ...newCards],
-        deck: remainingDeck
-      };
-    } else {
-      newState.opponent = {
-        ...playerState,
-        hand: [...playerState.hand, ...newCards],
-        deck: remainingDeck
-      };
-    }
-
-    return newState;
-  };
-
   const handleCardClick = (card: Card) => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
@@ -143,7 +166,6 @@ const GameManager = () => {
     if (selectedCard.type === CardType.UNIT || selectedCard.type === CardType.HERO) {
       const unitCard = selectedCard as UnitCard;
 
-      // Check if the card can be played in the selected row
       if (unitCard.row === row || unitCard.availableRows?.includes(row)) {
         if (unitCard.ability === CardAbility.SPY) {
           playSpyCard(unitCard, row);
@@ -155,13 +177,11 @@ const GameManager = () => {
   };
 
   const playSpyCard = (card: UnitCard, row: RowPosition) => {
-    // Remove card from player's hand
     const newHand = gameState.player.hand.filter(c => c.id !== card.id);
 
-    // First update the game state to place the spy card on opponent's board
     setGameState(prevState => {
-      // Place card on opponent's board
-      const updatedState = {
+      // First place the spy card
+      const stateAfterPlay = {
         ...prevState,
         player: {
           ...prevState.player,
@@ -176,13 +196,12 @@ const GameManager = () => {
         }
       };
 
-      // Draw two cards for the player
-      return drawCards(2, updatedState, 'player');
+      // Then draw 2 cards using the helper function
+      return drawCards(2, stateAfterPlay, 'player');
     });
 
     setSelectedCard(null);
 
-    // After spy card is played, it becomes opponent's turn
     setTimeout(() => {
       setGameState(prev => ({
         ...prev,
@@ -191,41 +210,7 @@ const GameManager = () => {
     }, 500);
   };
 
-  const playOpponentSpyCard = (card: UnitCard, row: RowPosition) => {
-    const newHand = gameState.opponent.hand.filter(c => c.id !== card.id);
-
-    setGameState(prevState => {
-      // Place card on player's board
-      const updatedState = {
-        ...prevState,
-        opponent: {
-          ...prevState.opponent,
-          hand: newHand
-        },
-        playerBoard: {
-          ...prevState.playerBoard,
-          [row]: {
-            ...prevState.playerBoard[row],
-            cards: [...prevState.playerBoard[row].cards, card]
-          }
-        }
-      };
-
-      // Draw two cards for the opponent
-      return drawCards(2, updatedState, 'opponent');
-    });
-
-    // After spy card is played, it becomes player's turn
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        currentTurn: 'player'
-      }));
-    }, 500);
-  };
-
   const playCard = (card: UnitCard, row: RowPosition) => {
-    // Remove card from hand
     const newHand = gameState.player.hand.filter(c => c.id !== card.id);
 
     setGameState(prev => ({
@@ -247,46 +232,11 @@ const GameManager = () => {
     setSelectedCard(null);
   };
 
-  const findBestCard = (hand: Card[]): UnitCard | null => {
-    const playableCards = hand.filter(
-      card => card.type === CardType.UNIT || card.type === CardType.HERO
-    ) as UnitCard[];
-
-    if (playableCards.length === 0) return null;
-
-    // Prioritize spy cards
-    const spyCards = playableCards.filter(card => card.ability === CardAbility.SPY);
-    if (spyCards.length > 0) {
-      return spyCards[0];
+  const handlePass = () => {
+    if (gameState.currentTurn !== 'player' || gameState.player.passed) {
+      return;
     }
 
-    // If no spy cards, play highest strength card
-    return playableCards.reduce((highest, current) =>
-      current.strength > highest.strength ? current : highest
-    );
-  };
-
-  const playOpponentCard = (card: UnitCard, row: RowPosition) => {
-    const newHand = gameState.opponent.hand.filter(c => c.id !== card.id);
-
-    setGameState(prev => ({
-      ...prev,
-      opponent: {
-        ...prev.opponent,
-        hand: newHand
-      },
-      opponentBoard: {
-        ...prev.opponentBoard,
-        [row]: {
-          ...prev.opponentBoard[row],
-          cards: [...prev.opponentBoard[row].cards, card]
-        }
-      },
-      currentTurn: 'player'
-    }));
-  };
-
-  const handlePass = () => {
     setGameState(prev => ({
       ...prev,
       player: {
@@ -297,17 +247,6 @@ const GameManager = () => {
     }));
   };
 
-  const handleOpponentPass = () => {
-    setGameState(prev => ({
-      ...prev,
-      opponent: {
-        ...prev.opponent,
-        passed: true
-      },
-      currentTurn: 'player'
-    }));
-  };
-
   return (
     <GameBoard
       gameState={gameState}
@@ -315,7 +254,7 @@ const GameManager = () => {
       onRowClick={handleRowClick}
       onPass={handlePass}
       selectedCard={selectedCard}
-  />
+    />
   );
 };
 
