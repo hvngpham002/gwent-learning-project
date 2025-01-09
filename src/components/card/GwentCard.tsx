@@ -9,11 +9,11 @@ interface CardProps {
   isSelected?: boolean;
 }
 
-const GwentCard: React.FC<CardProps> = ({ 
-  card, 
-  onClick, 
+const GwentCard: React.FC<CardProps> = ({
+  card,
+  onClick,
   isPlayable = true,
-  isSelected = false 
+  isSelected = false
 }) => {
   const cardClassName = [
     'card',
@@ -23,12 +23,12 @@ const GwentCard: React.FC<CardProps> = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <div 
+    <div
       className={cardClassName}
       onClick={isPlayable ? onClick : undefined}
     >
-      <img 
-        src={card.imageUrl} 
+      <img
+        src={card.imageUrl}
         alt={card.name}
         className="card__image"
       />

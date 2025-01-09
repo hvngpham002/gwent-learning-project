@@ -97,7 +97,8 @@ export const shuffle = <T,>(array: T[]): T[] => {
           ...playerState,
           hand: [...playerState.hand, ...newCards],
           deck: remainingDeck
-        }
+        },
+        currentTurn: currentState.player.passed ? 'opponent' : 'player'
       };
     }
   };

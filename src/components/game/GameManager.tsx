@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility } from '@/types/card';
+import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard } from '@/types/card';
 import GameBoard from './GameBoard';
 import { drawCards, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
@@ -170,6 +170,13 @@ const GameManager = () => {
       return;
     }
 
+    // Handle horn selection
+    if (card.type === CardType.SPECIAL && card.ability === CardAbility.COMMANDERS_HORN) {
+      console.log("Commander Horn's Selected.");
+      setSelectedCard(card);
+      setIsDecoyActive(false);
+    }
+
     // Handle unit/hero selection
     if (card.type === CardType.UNIT || card.type === CardType.HERO) {
       // Verify card is actually in hand before selecting it
@@ -216,6 +223,45 @@ const GameManager = () => {
         }
       }
     }
+
+    if (selectedCard.type === CardType.SPECIAL && selectedCard.ability === CardAbility.COMMANDERS_HORN){
+      const specialCard = selectedCard as SpecialCard
+      playHornCard(specialCard, row);
+      console.log("PLAY HORN AT:" + row)
+    }
+  };
+
+  const playHornCard = (card: SpecialCard, row: RowPosition) => {
+
+    setSelectedCard(null);
+    setIsDecoyActive(false);
+
+    // Add this verification
+    if (!gameState.player.hand.find(c => c.id === card.id)) {
+      console.warn('Attempted to play card not in hand:', card.id);
+      return;
+    }
+
+    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
+
+    setGameState(prev => ({
+      ...prev,
+      player: {
+        ...prev.player,
+        hand: newHand
+      },
+      playerBoard: {
+        ...prev.playerBoard,
+        [row]: {
+          ...prev.playerBoard[row],
+          cards: [...prev.playerBoard[row].cards], // Keep existing cards
+          hornActive: true,
+        }
+      },
+      currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
+    }));
+
+    setSelectedCard(null);
   };
 
   const playSpyCard = (card: UnitCard, row: RowPosition) => {
@@ -254,12 +300,11 @@ const GameManager = () => {
 
     setSelectedCard(null);
 
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        currentTurn: 'opponent'
-      }));
-    }, 500);
+    setGameState(prev => ({
+      ...prev,
+      currentTurn: 'opponent'
+    }));
+
   };
 
   const playCard = (card: UnitCard, row: RowPosition) => {
@@ -288,7 +333,7 @@ const GameManager = () => {
           cards: [...prev.playerBoard[row].cards, card]
         }
       },
-      currentTurn: 'opponent'
+      currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
     }));
 
     setSelectedCard(null);

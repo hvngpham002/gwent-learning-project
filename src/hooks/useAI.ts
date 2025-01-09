@@ -135,13 +135,6 @@ const useAI = (
       return drawCards(2, stateAfterPlay, 'opponent');
     });
 
-    // After spy card is played, it becomes player's turn
-    setTimeout(() => {
-      setGameState(prev => ({
-        ...prev,
-        currentTurn: 'player'
-      }));
-    }, 500);
   }, [gameState.opponent.hand, setGameState]);
 
   const playOpponentCard = useCallback((card: UnitCard, row: RowPosition) => {
@@ -197,7 +190,7 @@ const useAI = (
             const newState = handleDecoyAction(gameState, bestCard, bestTarget, false);
             setGameState({
                 ...newState,
-                currentTurn: 'player'
+                currentTurn: gameState.player.passed ? 'opponent' : 'player'
             });
             return;
             }

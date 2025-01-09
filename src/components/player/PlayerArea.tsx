@@ -1,5 +1,5 @@
 import React from 'react';
-import { BoardState, RowPosition, UnitCard } from '@/types/card';
+import { BoardState, CardAbility, CardType, Faction, RowPosition, SpecialCard, UnitCard } from '@/types/card';
 import GwentCard from '../card/GwentCard';
 import { calculateRowStrength } from '@/utils/gameHelpers';
 import '@/styles/components/board.css';
@@ -12,6 +12,17 @@ interface PlayerAreaProps {
   isDecoyActive?: boolean;
 }
 
+const hornCard: SpecialCard = {
+  id: 'neutral_special_03',
+  name: "Commander's Horn",
+  faction: Faction.NEUTRAL,
+  type: CardType.SPECIAL,
+  strength: 0,
+  ability: CardAbility.COMMANDERS_HORN,
+  imageUrl: 'src/assets/images/neutral/commanders_horn.png',
+  description: 'Doubles the strength of all unit cards in a row'
+};
+
 const PlayerArea: React.FC<PlayerAreaProps> = ({
   boardState,
   onRowClick,
@@ -19,7 +30,8 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
   isOpponent = false,
   isDecoyActive = false
 }) => {
-  const renderRow = (rowCards: UnitCard[], position: RowPosition) => {
+  const renderRow = (rowCards: UnitCard[], position: RowPosition, hornActive: boolean) => {
+    
     const rowStrength = calculateRowStrength(rowCards, false, boardState[position].hornActive);
 
     return (
@@ -28,6 +40,15 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
         className={`battle-row battle-row--${position}`}
         onClick={() => !isDecoyActive && onRowClick?.(position)}
       >
+        <div className='horn-area'>
+          {hornActive ? (
+            <GwentCard
+              key='neutral_special_03'
+              card={hornCard}
+              isPlayable={false}
+            />
+          ) : <img src="/src/assets/avatars/horn.png" />}
+        </div>
         {rowCards.map(card => (
           <GwentCard
             key={card.id}
@@ -49,9 +70,9 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
     return (
       <div className="player-area">
         <div className="player-area__rows">
-          {renderRow(boardState.siege.cards, RowPosition.SIEGE)}
-          {renderRow(boardState.ranged.cards, RowPosition.RANGED)}
-          {renderRow(boardState.close.cards, RowPosition.CLOSE)}
+          {renderRow(boardState.siege.cards, RowPosition.SIEGE, boardState.siege.hornActive )}
+          {renderRow(boardState.ranged.cards, RowPosition.RANGED, boardState.ranged.hornActive)}
+          {renderRow(boardState.close.cards, RowPosition.CLOSE, boardState.close.hornActive)}
         </div>
       </div>
     );
@@ -60,9 +81,9 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
   return (
     <div className="player-area">
       <div className="player-area__rows">
-        {renderRow(boardState.close.cards, RowPosition.CLOSE)}
-        {renderRow(boardState.ranged.cards, RowPosition.RANGED)}
-        {renderRow(boardState.siege.cards, RowPosition.SIEGE)}
+        {renderRow(boardState.close.cards, RowPosition.CLOSE, boardState.close.hornActive)}
+        {renderRow(boardState.ranged.cards, RowPosition.RANGED, boardState.ranged.hornActive)}
+        {renderRow(boardState.siege.cards, RowPosition.SIEGE, boardState.siege.hornActive)}
       </div>
     </div>
   );

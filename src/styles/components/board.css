@@ -85,3 +85,12 @@
   height: 40px;
   margin-left: auto;
 }
+
+.horn-area {
+  border-right: solid rgba(255, 255, 255, 0.2);
+  width: 100px;
+}
+
+.horn-area img {
+  width: 100%;
+}
