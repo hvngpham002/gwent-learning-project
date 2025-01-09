@@ -184,7 +184,7 @@ const GameManager = () => {
     return card.type === CardType.UNIT;  // Only allow regular unit cards, heroes are a different type
   };
 
-  const handleBoardUnitClick = (card: UnitCard, row: RowPosition) => {
+  const handleBoardUnitClick = (card: UnitCard) => {
     if (!isDecoyActive || !selectedCard || !isValidDecoyTarget(card)) {
       return;
     }
@@ -307,6 +307,10 @@ const GameManager = () => {
       },
       currentTurn: 'opponent'
     }));
+
+    if (gameState.opponent.passed) {
+      setTimeout(handleRoundEnd, 500);
+    }
   };
 
   return (
