@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardAbility, CardType, Faction } from '@/types/card';
+import { Card } from '@/types/card';
 import GwentCard from '../card/GwentCard';
 import '@/styles/components/board.css';
 import '@/styles/components/card.css';

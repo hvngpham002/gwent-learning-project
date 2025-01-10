@@ -9,6 +9,7 @@ interface PlayerStatusProps {
   weatherEffects: Set<CardAbility>;
   isOpponent?: boolean;
   onPass?: () => void;
+  opponentScore?: number;
 }
 
 const PlayerStatus = ({
@@ -16,7 +17,8 @@ const PlayerStatus = ({
   board,
   weatherEffects,
   isOpponent = false,
-  onPass
+  onPass,
+  opponentScore
 }: PlayerStatusProps) => {
 
   const totalScore = calculateTotalScore(board, weatherEffects);
@@ -83,7 +85,7 @@ const PlayerStatus = ({
                 alt={player.leader.name}
               />
           </div>
-          <div className="player-score">
+          <div className={`player-score ${totalScore < (opponentScore ?? 0) ? 'losing-score' : 'winning-score'}`}>
                 {totalScore}
           </div>
           <div>

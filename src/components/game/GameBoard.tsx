@@ -6,6 +6,7 @@ import PlayerStatus from './PlayerStatus';
 import '@/styles/components/board.css';
 import '@/styles/components/hand.css';
 import GwentCard from '../card/GwentCard';
+import { calculateTotalScore } from '@/utils/gameHelpers';
 
 interface GameBoardProps {
   gameState: GameState;
@@ -58,6 +59,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
               weatherEffects={gameState.activeWeatherEffects}
               isOpponent={true}
               onPass={onPass}
+              opponentScore={calculateTotalScore(gameState.playerBoard, gameState.activeWeatherEffects)}
           />
           <div className="weather-area">
             {/* Weather cards will be rendered here */}
@@ -73,6 +75,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
              weatherEffects={gameState.activeWeatherEffects}
              isOpponent={false}
              onPass={onPass}
+             opponentScore={calculateTotalScore(gameState.opponentBoard, gameState.activeWeatherEffects)}
           />
         </div>
 

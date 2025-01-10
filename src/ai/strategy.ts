@@ -241,6 +241,28 @@ export class AIStrategyCoordinator {
     
     if (state.player.passed) {
         console.log('Player has passed - analyzing whether to continue...');
+
+        if (pointsNeeded > 12) {  // If we need more than 12 points
+            console.log('Large point deficit analysis:', {
+                pointsNeeded,
+                cardAdvantage,
+                cardsInHand: state.opponent.hand.length
+            });
+    
+            // Only fight if we have both:
+            // 1. Enough cards to realistically win
+            // 2. Not at a severe card disadvantage
+            const canWinRound = (state.opponent.hand.length * 8) >= pointsNeeded;
+            const healthyCardCount = cardAdvantage >= -1;
+    
+            if (canWinRound && healthyCardCount) {
+                console.log('Committing to win large deficit');
+                return false;  // Fight for the round
+            } else {
+                console.log('Too expensive to catch up, preserving cards');
+                return true;   // Pass immediately
+            }
+        }
         
         if (currentBoardScore > playerBoardScore) {
             console.log('AI is already winning, deciding to pass');

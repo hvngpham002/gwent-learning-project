@@ -17,7 +17,9 @@ export enum CardType {
     UNIT = 'unit',
     SPECIAL = 'special',
     LEADER = 'leader',
-    HERO = 'hero'
+    HERO = 'hero',
+    DECOY = "decoy",
+    SPY = "spy"
 }
 
 // Unified abilities for both unit and special cards
@@ -30,7 +32,7 @@ export enum CardAbility {
     MUSTER = 'muster',             // Play all cards with same name from deck
     MUSTER_ROACH = 'muster_roach',
     AGILE = 'agile',               // Can be placed in multiple rows
-    AVENGER = 'avenger',               // Can be placed in multiple rows
+    AVENGER = 'avenger',           // Can be placed in multiple rows
     SCORCH_CLOSE = 'scorch_close',
 
     // Special card abilities (can also appear on units)

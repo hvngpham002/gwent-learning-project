@@ -103,7 +103,7 @@ const GameManager = () => {
     if (gameState.gamePhase === 'setup') {
       initializeGame();
     }
-  }, []);
+  }, [gameState.gamePhase]);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
