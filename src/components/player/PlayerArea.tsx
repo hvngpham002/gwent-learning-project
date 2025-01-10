@@ -31,7 +31,7 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
   isDecoyActive = false
 }) => {
   const renderRow = (rowCards: UnitCard[], position: RowPosition, hornActive: boolean) => {
-    
+
     const rowStrength = calculateRowStrength(rowCards, false, boardState[position].hornActive);
 
     return (
