@@ -89,6 +89,9 @@
 .horn-area {
   border-right: solid rgba(255, 255, 255, 0.2);
   width: 100px;
+}
+
+.horn-area.default {
   display: flex;
   justify-content: center;
   align-items: center;

@@ -40,7 +40,7 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
         className={`battle-row battle-row--${position}`}
         onClick={() => !isDecoyActive && onRowClick?.(position)}
       >
-        <div className='horn-area'>
+        <div className={`horn-area ${hornActive ? '' : 'default'}`}>
           {hornActive ? (
             <GwentCard
               key='neutral_special_03'

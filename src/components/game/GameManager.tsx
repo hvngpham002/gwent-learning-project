@@ -164,17 +164,22 @@ const GameManager = () => {
     }
 
     // Handle decoy selection
-    if (card.type === CardType.SPECIAL && card.ability === CardAbility.DECOY) {
-      setSelectedCard(card);
-      setIsDecoyActive(true);
-      return;
-    }
-
-    // Handle horn selection
-    if (card.type === CardType.SPECIAL && card.ability === CardAbility.COMMANDERS_HORN) {
-      console.log("Commander Horn's Selected.");
-      setSelectedCard(card);
-      setIsDecoyActive(false);
+    if (card.type === CardType.SPECIAL) {
+      switch (card.ability){
+        case (CardAbility.DECOY):
+          setSelectedCard(card);
+          setIsDecoyActive(true);
+          return;
+        case (CardAbility.COMMANDERS_HORN):
+          setSelectedCard(card);
+          setIsDecoyActive(false);
+          return;
+        case (CardAbility.FROST):
+          setSelectedCard(card);
+          console.log("Frost's Selected.");
+          setIsDecoyActive(false);
+          return;
+      }
     }
 
     // Handle unit/hero selection
@@ -188,7 +193,7 @@ const GameManager = () => {
   };
 
   const isValidDecoyTarget = (card: Card): boolean => {
-    return card.type === CardType.UNIT;  // Only allow regular unit cards, heroes are a different type
+    return card.type === CardType.UNIT && card.ability !== CardAbility.DECOY;
   };
 
   const handleBoardUnitClick = (card: UnitCard) => {
@@ -209,6 +214,10 @@ const GameManager = () => {
 
   const handleRowClick = (row: RowPosition) => {
     if (!selectedCard || gameState.currentTurn !== 'player') {
+      return;
+    }
+
+    if (selectedCard.type === CardType.SPECIAL && selectedCard.ability === CardAbility.DECOY) {
       return;
     }
 
