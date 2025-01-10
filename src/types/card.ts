@@ -57,6 +57,11 @@ export enum LeaderAbility {
     PLAY_FROST = 'play_frost',
     PLAY_FOG = 'play_fog',
     PLAY_RAIN = 'play_rain',
+
+    CANCEL_LEADER = 'cancel_leader',
+    LOOK_THREE_CARDS = 'look_three_cards',
+    DRAW_OPPONENT_DISCARD = 'draw_opponent_discard',
+    RANDOM_MEDIC = 'random_medic'
 }
 
 export interface BaseCard {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard } from '@/types/card';
+import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction } from '@/types/card';
 import GameBoard from './GameBoard';
 import { drawCards, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
@@ -122,8 +122,8 @@ const GameManager = () => {
   }, [gameState.currentTurn, gameState.gamePhase, gameState.opponent.passed, makeOpponentMove]);
 
   const initializeGame = () => {
-    const playerDeckWithLeader = createInitialDeck();
-    const opponentDeckWithLeader = createInitialDeck();
+    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
+    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
 
     const playerDeck = shuffle(playerDeckWithLeader.deck);
     const opponentDeck = shuffle(opponentDeckWithLeader.deck);
