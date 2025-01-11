@@ -88,16 +88,14 @@ const PlayerStatus = ({
           <div className={`player-score ${totalScore < (opponentScore ?? 0) ? 'losing-score' : 'winning-score'}`}>
                 {totalScore}
           </div>
-          <div>
-              {!player.leader.used && !isOpponent && (
-                  <button
-                  className="leader-ability-button"
-                  onClick={() => {/* Handle leader ability */}}
-                  >
-                      Use Leader Card
-                  </button>
-              )}
-          </div>
+            {!player.leader.used && !isOpponent && (
+                <button
+                className="leader-ability-button"
+                onClick={() => {/* Handle leader ability */}}
+                >
+                    Use Leader Card
+                </button>
+            )}
        </React.Fragment>
       )}
       {!isOpponent && !player.passed && (

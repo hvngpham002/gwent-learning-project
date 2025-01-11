@@ -35,33 +35,33 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
     const rowStrength = calculateRowStrength(rowCards, false, boardState[position].hornActive);
 
     return (
-      <div
-        key={position}
-        className={`battle-row battle-row--${position}`}
-        onClick={() => !isDecoyActive && onRowClick?.(position)}
-      >
-        <div className={`horn-area ${hornActive ? '' : 'default'}`}>
-          {hornActive ? (
-            <GwentCard
-              key='neutral_special_03'
-              card={hornCard}
-              isPlayable={false}
-            />
-          ) : <img src="/src/assets/avatars/horn.png" />}
-        </div>
-        {rowCards.map(card => (
-          <GwentCard
-            key={card.id}
-            card={card}
-            isPlayable={isDecoyActive && !isOpponent && card.type !== 'hero'}
-            onClick={() => isDecoyActive && onUnitClick?.(card, position)}
-          />
-        ))}
-        {rowStrength > 0 && (
-          <div className="row-score">
+      <div className="battle-row-container">
+         <div className="row-score">
             {rowStrength}
+        </div>
+        <div
+          key={position}
+          className={`battle-row battle-row--${position}`}
+          onClick={() => !isDecoyActive && onRowClick?.(position)}
+        >
+          <div className={`horn-area ${hornActive ? '' : 'default'}`}>
+            {hornActive ? (
+              <GwentCard
+                key='neutral_special_03'
+                card={hornCard}
+                isPlayable={false}
+              />
+            ) : <img src="/src/assets/avatars/horn.png" />}
           </div>
-        )}
+          {rowCards.map(card => (
+            <GwentCard
+              key={card.id}
+              card={card}
+              isPlayable={isDecoyActive && !isOpponent && card.type !== 'hero'}
+              onClick={() => isDecoyActive && onUnitClick?.(card, position)}
+            />
+          ))}
+        </div>
       </div>
     );
   };

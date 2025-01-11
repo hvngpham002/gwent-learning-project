@@ -109,6 +109,7 @@ export interface BoardState {
 
 export interface PlayerState {
     deck: Card[];
+    faction: Faction;
     hand: Card[];
     discard: Card[];
     leader: LeaderCard | null;

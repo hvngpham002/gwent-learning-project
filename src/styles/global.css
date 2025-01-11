@@ -7,15 +7,10 @@
     --color-card-border-unit: #95a5a6;
 
     /* Spacing */
-    --spacing-xs: 4px;
     --spacing-sm: 5px;
-    --spacing-md: 16px;
+    --spacing-md: 10px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
-
-    /* Card Dimensions */
-    --card-width: 160px;
-    --card-height: 240px;
 
     /* Z-index layers */
     --z-index-base: 1;

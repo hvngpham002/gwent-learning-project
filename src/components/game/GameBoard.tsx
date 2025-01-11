@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardAbility, CardType, Faction, GameState, RowPosition, UnitCard } from '@/types/card';
+import { Card, CardAbility, CardType, Faction, GameState, RowPosition, SpecialCard, UnitCard } from '@/types/card';
 import PlayerHand from '../player/PlayerHand';
 import PlayerArea from '../player/PlayerArea';
 import PlayerStatus from './PlayerStatus';
@@ -7,6 +7,7 @@ import '@/styles/components/board.css';
 import '@/styles/components/hand.css';
 import GwentCard from '../card/GwentCard';
 import { calculateTotalScore } from '@/utils/gameHelpers';
+import { neutralDeck } from "@/data/cards/neutral";
 
 interface GameBoardProps {
   gameState: GameState;
@@ -28,12 +29,52 @@ const GameBoard: React.FC<GameBoardProps> = ({
   isDecoyActive
 }) => {
 
-  const deckCard: Card = {
-    id: 'deck-back',
-    name: 'Deck',
-    faction: gameState.player.deck[0]?.faction ?? Faction.NEUTRAL,
+  const playerImageUrl = () => {
+    switch(gameState.player.faction) {
+      case Faction.NILFGAARD:
+        return 'src/assets/images/nilfgaard/default-nilfgaard.png';
+      case Faction.MONSTERS:
+        return 'src/assets/images/monster/default-monster.png';
+      case Faction.NORTHERN_REALMS:
+        return 'src/assets/images/northern_realms/default-northern_realms.png';
+      case Faction.SCOIATAEL:
+        return 'src/assets/images/scoiatael/default-scoiatael.png';
+      default:
+        return 'src/assets/images/neutral/default-neutral.png';
+    }
+  }
+
+  const opponentImageUrl = () => {
+    switch(gameState.opponent.faction) {
+      case Faction.NILFGAARD:
+        return 'src/assets/images/nilfgaard/default-nilfgaard.png';
+      case Faction.MONSTERS:
+        return 'src/assets/images/monster/default-monster.png';
+      case Faction.NORTHERN_REALMS:
+        return 'src/assets/images/northern_realms/default-northern_realms.png';
+      case Faction.SCOIATAEL:
+        return 'src/assets/images/scoiatael/default-scoiatael.png';
+      default:
+        return 'src/assets/images/neutral/default-neutral.png';
+    }
+  }
+
+  const playerDeckCard: Card = {
+    id: 'player-deck-back',
+    name: 'Player Deck',
+    faction: gameState.player.faction ?? Faction.NEUTRAL,
     type: CardType.SPECIAL,
-    imageUrl: 'src/assets/images/closed_card.jpeg',
+    imageUrl: playerImageUrl(),
+    strength: 0,
+    ability: CardAbility.NONE
+  };
+
+  const opponentdeckCard: Card = {
+    id: 'opponent-deck-back',
+    name: 'Opponent Deck',
+    faction: gameState.opponent.faction ?? Faction.NEUTRAL,
+    type: CardType.SPECIAL,
+    imageUrl: opponentImageUrl(),
     strength: 0,
     ability: CardAbility.NONE
   };
@@ -62,12 +103,40 @@ const GameBoard: React.FC<GameBoardProps> = ({
               opponentScore={calculateTotalScore(gameState.playerBoard, gameState.activeWeatherEffects)}
           />
           <div className="weather-area">
-            {/* Weather cards will be rendered here */}
-            {Array.from(gameState.activeWeatherEffects).map(effect => (
-              <div key={effect}>
-                {/* Weather card component will go here */}
-              </div>
-            ))}
+            <div className='weather-row'>
+                {Array.from(gameState.activeWeatherEffects).map(effect => {
+                  const weatherCard = neutralDeck.specials.find(s => s.ability === effect);
+                  if (!weatherCard) return null;
+                  return (
+                    <GwentCard
+                      card={weatherCard as SpecialCard}
+                      isPlayable={false}
+                      key={effect}
+                    />
+                  );
+                })}
+                <GwentCard
+                  card={
+                    neutralDeck.specials.find(s => s.ability === CardAbility.FROST) as SpecialCard
+                  }
+                  isPlayable={false}
+                  isSelected={undefined}
+                />
+                <GwentCard
+                  card={
+                    neutralDeck.specials.find(s => s.ability === CardAbility.FOG) as SpecialCard
+                  }
+                  isPlayable={false}
+                  isSelected={undefined}
+                />
+                <GwentCard
+                  card={
+                    neutralDeck.specials.find(s => s.ability === CardAbility.RAIN) as SpecialCard
+                  }
+                  isPlayable={false}
+                  isSelected={undefined}
+                />
+            </div>
           </div>
           <PlayerStatus
              player={gameState.player}
@@ -109,7 +178,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
             <div className='deck-cards'>
               <GwentCard
-                card={deckCard}
+                card={opponentdeckCard} 
                 isPlayable={false}
               />
               <div className="deck-count">{gameState.opponent.deck.length}</div>
@@ -125,7 +194,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
             <div className='deck-cards'>
               <GwentCard
-                card={deckCard}
+                card={playerDeckCard}
                 isPlayable={false}
               />
               <div className="deck-count">{gameState.player.deck.length}</div>

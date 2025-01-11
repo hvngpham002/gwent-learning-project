@@ -13,7 +13,8 @@ const initialPlayerState: PlayerState = {
   discard: [],
   leader: null,
   passed: false,
-  lives: 2
+  lives: 2,
+  faction: Faction.NEUTRAL,
 };
 
 const initialBoardState: BoardState = {
@@ -137,13 +138,15 @@ const GameManager = () => {
         ...prev.player,
         deck: playerDeck,
         hand: playerHand,
-        leader: playerDeckWithLeader.leader
+        leader: playerDeckWithLeader.leader,
+        faction: playerDeckWithLeader.leader.faction
       },
       opponent: {
         ...prev.opponent,
         deck: opponentDeck,
         hand: opponentHand,
-        leader: opponentDeckWithLeader.leader
+        leader: opponentDeckWithLeader.leader,
+        faction: opponentDeckWithLeader.leader.faction
       },
       currentTurn: Math.random() < 0.5 ? 'player' : 'opponent',
       gamePhase: 'playing'
@@ -176,7 +179,12 @@ const GameManager = () => {
           return;
         case (CardAbility.FROST):
           setSelectedCard(card);
-          console.log("Frost's Selected.");
+          console.log("Frost Selected.");
+          setIsDecoyActive(false);
+          return;
+        case (CardAbility.CLEAR_WEATHER):
+          setSelectedCard(card);
+          console.log("Clear weather Selected.");
           setIsDecoyActive(false);
           return;
       }
@@ -233,11 +241,22 @@ const GameManager = () => {
       }
     }
 
-    if (selectedCard.type === CardType.SPECIAL && selectedCard.ability === CardAbility.COMMANDERS_HORN){
-      const specialCard = selectedCard as SpecialCard
-      playHornCard(specialCard, row);
-      console.log("PLAY HORN AT:" + row)
+    if (selectedCard.type === CardType.SPECIAL) {
+
+      const specialCard = selectedCard as SpecialCard;
+
+      switch (selectedCard.ability) {
+        case (CardAbility.COMMANDERS_HORN):
+          playHornCard(specialCard, row);
+          console.log("PLAY HORN AT:" + row)
+          break;
+        case (CardAbility.FROST):
+          // playFrostCard(specialCard, row);
+          console.log("PLAY FROST")
+          break;
+      }
     }
+
   };
 
   const playHornCard = (card: SpecialCard, row: RowPosition) => {
