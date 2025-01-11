@@ -228,6 +228,24 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
         deck.push(...cards);
     }
 
+    const fog = neutralDeck.specials.find(s => s.name === 'Impenetrable Fog');
+    if (fog) {
+        const cards: SpecialCard[] = [
+            { ...fog, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...fog, id: fog.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+        ];
+        deck.push(...cards);
+    }
+
+    const rain = neutralDeck.specials.find(s => s.name === 'Torrential Rain');
+    if (rain) {
+        const cards: SpecialCard[] = [
+            { ...rain, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...rain, id: rain.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+        ];
+        deck.push(...cards);
+    }
+
     const clear = neutralDeck.specials.find(s => s.name === 'Clear Weather');
     if (clear) {
         const cards: SpecialCard[] = [

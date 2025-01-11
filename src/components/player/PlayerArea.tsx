@@ -68,7 +68,11 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
         </div>
         <div
           key={rowPosition}
-          className={`battle-row battle-row--${rowPosition}`}
+          className={`battle-row battle-row--${rowPosition} ${
+            rowPosition === RowPosition.CLOSE && weatherState.has(CardAbility.FROST) ? 'battle-row--frost' :
+            rowPosition === RowPosition.RANGED && weatherState.has(CardAbility.FOG) ? 'battle-row--fog' :
+            rowPosition === RowPosition.SIEGE && weatherState.has(CardAbility.RAIN) ? 'battle-row--rain' : ''
+          }`}
           onClick={() => canClickRow() && onRowClick?.(rowPosition)}
         >
           <div className={`horn-area ${row.hornActive ? '' : 'default'}`}>

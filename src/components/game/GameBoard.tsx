@@ -95,7 +95,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
     if (!selectedCard || selectedCard.type !== CardType.SPECIAL) return false;
     return selectedCard.ability === CardAbility.FROST ||
            selectedCard.ability === CardAbility.FOG ||
-           selectedCard.ability === CardAbility.RAIN;
+           selectedCard.ability === CardAbility.RAIN ||
+           selectedCard.ability === CardAbility.CLEAR_WEATHER;
   };
 
   return (

@@ -182,6 +182,16 @@ const GameManager = () => {
           console.log("Frost Selected.");
           setIsDecoyActive(false);
           return;
+        case (CardAbility.FOG):
+          setSelectedCard(card);
+          console.log("Fog Selected.");
+          setIsDecoyActive(false);
+          return;
+        case (CardAbility.RAIN):
+          setSelectedCard(card);
+          console.log("Rain Selected.");
+          setIsDecoyActive(false);
+          return;
         case (CardAbility.CLEAR_WEATHER):
           setSelectedCard(card);
           console.log("Clear weather Selected.");
@@ -263,11 +273,13 @@ const GameManager = () => {
     if (!selectedCard || selectedCard.type !== CardType.SPECIAL) return;
 
     const ability = selectedCard.ability;
-    if (ability === CardAbility.FROST || 
-        ability === CardAbility.FOG || 
-        ability === CardAbility.RAIN) {
+    if (ability === CardAbility.FROST ||
+        ability === CardAbility.FOG ||
+        ability === CardAbility.RAIN ||
+        ability === CardAbility.CLEAR_WEATHER) {
       playWeatherCard(selectedCard);
     }
+
   };
 
   const playWeatherCard = (card: SpecialCard) => {
@@ -287,7 +299,7 @@ const GameManager = () => {
         ...prev.player,
         hand: newHand
       },
-      activeWeatherEffects: new Set([...prev.activeWeatherEffects, card.ability]),
+      activeWeatherEffects: card.ability === CardAbility.CLEAR_WEATHER? new Set() : new Set([...prev.activeWeatherEffects, card.ability]),
       currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
     }));
   }
@@ -434,3 +446,4 @@ const GameManager = () => {
 };
 
 export default GameManager;
+

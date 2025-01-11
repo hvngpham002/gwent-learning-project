@@ -97,6 +97,18 @@
   border-color: rgba(255, 255, 255, 0.6);
 }
 
+.battle-row--frost {
+  background: #31425C;
+}
+
+.battle-row--fog {
+  background: #888886;
+}
+
+.battle-row--rain {
+  background: #4E5E5D;
+}
+
 .weather-row--playable:hover {
   border-color: rgba(255, 255, 255, 0.8);
   background: rgba(255, 255, 255, 0.1);
@@ -121,6 +133,7 @@
 .horn-area {
   border-right: solid rgba(255, 255, 255, 0.2);
   width: 100px;
+  background: #180F07 !important;
 }
 
 .horn-area.default {

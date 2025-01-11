@@ -14,20 +14,26 @@ const useAI = (
 
   const handleOpponentPass = useCallback(() => {
     console.log('Opponent is passing');
-
-    setGameState(prev => ({
-      ...prev,
-      opponent: {
-        ...prev.opponent,
-        passed: true
-      },
-      currentTurn: 'player'
-    }));
-
-    if (gameState.player.passed) {
-      setTimeout(onRoundEnd, 500);
-    }
-  }, [gameState.player.passed, onRoundEnd, setGameState]);
+  
+    // Use functional update to ensure state consistency
+    setGameState(prev => {
+      const newState = {
+        ...prev,
+        opponent: {
+          ...prev.opponent,
+          passed: true
+        },
+        currentTurn: prev.player.passed ? prev.currentTurn : 'player'
+      };
+  
+      // If both players have passed, schedule round end
+      if (prev.player.passed) {
+        setTimeout(() => onRoundEnd(), 500);
+      }
+  
+      return newState;
+    });
+  }, [onRoundEnd, setGameState]);
 
   const playCard = useCallback((decision: PlayDecision) => {
     const { card, row, targetCard } = decision;
