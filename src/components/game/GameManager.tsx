@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction } from '@/types/card';
 import GameBoard from './GameBoard';
-import { drawCards, shuffle } from '@/utils/gameHelpers';
+import { canPlayWeatherInRow, drawCards, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
 import useAI from '@/hooks/useAI';
 import { calculateTotalScore } from '@/utils/gameHelpers';
@@ -242,22 +242,55 @@ const GameManager = () => {
     }
 
     if (selectedCard.type === CardType.SPECIAL) {
-
       const specialCard = selectedCard as SpecialCard;
 
       switch (selectedCard.ability) {
-        case (CardAbility.COMMANDERS_HORN):
+        case CardAbility.COMMANDERS_HORN:
           playHornCard(specialCard, row);
-          console.log("PLAY HORN AT:" + row)
           break;
-        case (CardAbility.FROST):
-          // playFrostCard(specialCard, row);
-          console.log("PLAY FROST")
+        case CardAbility.FROST:
+        case CardAbility.FOG:
+        case CardAbility.RAIN:
+          if (canPlayWeatherInRow(specialCard.ability, row)) {
+            playWeatherCard(specialCard);
+          }
           break;
       }
     }
-
   };
+
+  const handleWeatherRowClick = () => {
+    if (!selectedCard || selectedCard.type !== CardType.SPECIAL) return;
+
+    const ability = selectedCard.ability;
+    if (ability === CardAbility.FROST || 
+        ability === CardAbility.FOG || 
+        ability === CardAbility.RAIN) {
+      playWeatherCard(selectedCard);
+    }
+  };
+
+  const playWeatherCard = (card: SpecialCard) => {
+    setSelectedCard(null);
+    setIsDecoyActive(false);
+
+    if (!gameState.player.hand.find(c => c.id === card.id)) {
+      console.warn('Attempted to play card not in hand:', card.id);
+      return;
+    }
+
+    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
+
+    setGameState(prev => ({
+      ...prev,
+      player: {
+        ...prev.player,
+        hand: newHand
+      },
+      activeWeatherEffects: new Set([...prev.activeWeatherEffects, card.ability]),
+      currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
+    }));
+  }
 
   const playHornCard = (card: SpecialCard, row: RowPosition) => {
 
@@ -391,6 +424,7 @@ const GameManager = () => {
       gameState={gameState}
       onCardClick={handleCardClick}
       onRowClick={handleRowClick}
+      onWeatherRowClick={handleWeatherRowClick}
       onBoardUnitClick={handleBoardUnitClick}
       onPass={handlePass}
       selectedCard={selectedCard}

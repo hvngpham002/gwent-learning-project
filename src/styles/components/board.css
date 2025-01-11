@@ -88,6 +88,20 @@
   min-width: 302px;
 }
 
+.weather-row:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.weather-row--playable {
+  cursor: pointer;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.weather-row--playable:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .row-score {
   position: absolute;
   top: 35px;

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card } from '@/types/card';
+import { Card, CardType, CardAbility, UnitCard } from '@/types/card';
+import { calculateUnitStrength } from '@/utils/gameHelpers';
 import '@/styles/components/card.css';
 
 interface CardProps {
@@ -7,13 +8,21 @@ interface CardProps {
   onClick?: () => void;
   isPlayable?: boolean;
   isSelected?: boolean;
+  weatherEffect?: boolean;
+  hornActive?: boolean;
+  moraleBoostCount?: number;
+  cardsInRow?: UnitCard[];  // New prop to check for tight bonds
 }
 
 const GwentCard: React.FC<CardProps> = ({
   card,
   onClick,
   isPlayable = true,
-  isSelected = false
+  isSelected = false,
+  weatherEffect = false,
+  hornActive = false,
+  moraleBoostCount = 0,
+  cardsInRow = []
 }) => {
   const cardClassName = [
     'card',
@@ -21,6 +30,24 @@ const GwentCard: React.FC<CardProps> = ({
     !isPlayable && 'card--disabled',
     isSelected && 'card--selected'
   ].filter(Boolean).join(' ');
+
+  const getDisplayStrength = () => {
+    if (card.type === CardType.UNIT) {
+      const unitCard = card as UnitCard;
+      const sameNameCount = unitCard.ability === CardAbility.TIGHT_BOND
+        ? cardsInRow.filter(c => c.name === unitCard.name).length
+        : 1;
+
+      return calculateUnitStrength(
+        unitCard,
+        weatherEffect,
+        hornActive,
+        moraleBoostCount,
+        sameNameCount
+      );
+    }
+    return null;
+  };
 
   return (
     <div
@@ -32,6 +59,11 @@ const GwentCard: React.FC<CardProps> = ({
         alt={card.name}
         className="card__image"
       />
+      {card.type === CardType.UNIT && (
+        <div className='card__strength'>
+          {getDisplayStrength()}
+        </div>
+      )}
     </div>
   );
 };

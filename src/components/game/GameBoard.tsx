@@ -14,6 +14,7 @@ interface GameBoardProps {
   onCardClick: (card: Card) => void;
   onRowClick: (row: RowPosition) => void;
   onBoardUnitClick: (card: UnitCard, row: RowPosition) => void;
+  onWeatherRowClick: () => void;  // Add this
   onPass: () => void;
   selectedCard: Card | null;
   isDecoyActive: boolean;
@@ -23,6 +24,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   gameState,
   onCardClick,
   onRowClick,
+  onWeatherRowClick,
   onBoardUnitClick,
   onPass,
   selectedCard,
@@ -89,6 +91,13 @@ const GameBoard: React.FC<GameBoardProps> = ({
     ability: CardAbility.NONE
   };
 
+  const canPlayWeather = () => {
+    if (!selectedCard || selectedCard.type !== CardType.SPECIAL) return false;
+    return selectedCard.ability === CardAbility.FROST ||
+           selectedCard.ability === CardAbility.FOG ||
+           selectedCard.ability === CardAbility.RAIN;
+  };
+
   return (
     <div className="game-container">
       <div className="game-layout">
@@ -103,39 +112,18 @@ const GameBoard: React.FC<GameBoardProps> = ({
               opponentScore={calculateTotalScore(gameState.playerBoard, gameState.activeWeatherEffects)}
           />
           <div className="weather-area">
-            <div className='weather-row'>
-                {Array.from(gameState.activeWeatherEffects).map(effect => {
-                  const weatherCard = neutralDeck.specials.find(s => s.ability === effect);
-                  if (!weatherCard) return null;
-                  return (
-                    <GwentCard
-                      card={weatherCard as SpecialCard}
-                      isPlayable={false}
-                      key={effect}
-                    />
-                  );
-                })}
-                <GwentCard
-                  card={
-                    neutralDeck.specials.find(s => s.ability === CardAbility.FROST) as SpecialCard
-                  }
-                  isPlayable={false}
-                  isSelected={undefined}
-                />
-                <GwentCard
-                  card={
-                    neutralDeck.specials.find(s => s.ability === CardAbility.FOG) as SpecialCard
-                  }
-                  isPlayable={false}
-                  isSelected={undefined}
-                />
-                <GwentCard
-                  card={
-                    neutralDeck.specials.find(s => s.ability === CardAbility.RAIN) as SpecialCard
-                  }
-                  isPlayable={false}
-                  isSelected={undefined}
-                />
+            <div className={`weather-row ${canPlayWeather() ? 'weather-row--playable' : ''}`} onClick={() => canPlayWeather() && onWeatherRowClick?.()}>
+              {Array.from(gameState.activeWeatherEffects).map(effect => {
+                const weatherCard = neutralDeck.specials.find(s => s.ability === effect);
+                if (!weatherCard) return null;
+                return (
+                  <GwentCard
+                    card={weatherCard as SpecialCard}
+                    isPlayable={false}
+                    key={effect}
+                  />
+                );
+              })}
             </div>
           </div>
           <PlayerStatus
@@ -152,10 +140,12 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <div className="board-area">
           <PlayerArea
             boardState={gameState.opponentBoard}
+            weatherState={gameState.activeWeatherEffects}
             isOpponent={true}
           />
           <PlayerArea
             boardState={gameState.playerBoard}
+            weatherState={gameState.activeWeatherEffects}
             onRowClick={onRowClick}
             onUnitClick={onBoardUnitClick}
             isDecoyActive={isDecoyActive}
@@ -178,7 +168,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
             <div className='deck-cards'>
               <GwentCard
-                card={opponentdeckCard} 
+                card={opponentdeckCard}
                 isPlayable={false}
               />
               <div className="deck-count">{gameState.opponent.deck.length}</div>

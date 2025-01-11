@@ -4,7 +4,7 @@ import { BoardState, Card, CardAbility, CardType, GameState, RowPosition, UnitCa
  * Fisher-Yates shuffle algorithm
  * Takes an array of any type and returns a new shuffled array
  */
-export const shuffle = <T,>(array: T[]): T[] => {
+  export const shuffle = <T,>(array: T[]): T[] => {
     const newArray = [...array];
     for (let i = newArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -13,13 +13,53 @@ export const shuffle = <T,>(array: T[]): T[] => {
     return newArray;
   };
 
+  export const calculateUnitStrength = (
+    card: UnitCard, 
+    weatherEffect: boolean, 
+    hornActive: boolean,
+    moraleBoostCount: number = 0,
+    sameNameCardsInRow: number = 1  // New parameter
+  ): number => {
+    if (card.type === CardType.HERO) {
+      return card.strength; // Heroes are immune to effects
+    }
+  
+    let strength = card.strength;
+  
+    // Apply weather effect first
+    if (weatherEffect) {
+      strength = 1;
+    }
+  
+    // Apply tight bond multiplier
+    if (card.ability === CardAbility.TIGHT_BOND && sameNameCardsInRow > 1) {
+      strength *= sameNameCardsInRow;
+    }
+  
+    // Apply horn effect if active
+    if (hornActive) {
+      strength *= 2;
+    }
+  
+    // Add morale boost
+    strength += moraleBoostCount;
+  
+    return strength;
+  };
+
+
   /**
    * Calculate total strength for a row of cards
    * Takes into account weather effects and special abilities
    */
   export const calculateRowStrength = (cards: UnitCard[], weatherEffect: boolean, hornActive: boolean): number => {
     return cards.reduce((total, card) => {
-      let strength = weatherEffect ? 1 : card.strength;
+
+      let strength = card.strength;
+
+      if (card.type === CardType.UNIT) {
+        strength = weatherEffect ? 1 : card.strength;
+      }
 
       // Apply horn effect if active
       if (hornActive && card.type !== CardType.HERO) {
@@ -100,5 +140,18 @@ export const shuffle = <T,>(array: T[]): T[] => {
         },
         currentTurn: currentState.player.passed ? 'opponent' : 'player'
       };
+    }
+  };
+
+  export const canPlayWeatherInRow = (ability: CardAbility, row: RowPosition): boolean => {
+    switch (ability) {
+      case CardAbility.FROST:
+        return row === RowPosition.CLOSE;
+      case CardAbility.FOG:
+        return row === RowPosition.RANGED;
+      case CardAbility.RAIN:
+        return row === RowPosition.SIEGE;
+      default:
+        return false;
     }
   };

@@ -9,6 +9,7 @@
 .card--playable:hover {
   transform: scale(1.1);
   z-index: var(--z-index-card-hover);
+  cursor: pointer;
 }
 
 .card--selected {
@@ -21,4 +22,22 @@
   height: 100%;
   object-fit: contain;
   border-radius: 8px;
+}
+
+.card__strength {
+  position: absolute;
+  bottom: 87%;
+  right: 76%;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 100%;
+  padding: 4px;
+  background-color: white;
+  color: black;
+  width: 11px;
+  height: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

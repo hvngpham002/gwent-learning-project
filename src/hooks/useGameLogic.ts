@@ -1,4 +1,4 @@
-import { Card, CardType, GameState, RowPosition, UnitCard } from "@/types/card";
+import { Card, CardType, GameState, RowPosition, SpecialCard, UnitCard } from "@/types/card";
 
 export interface SpecialCardAction {
   selectedCard: Card;
@@ -52,10 +52,8 @@ export const handleDecoyAction = (
         ...newRow,
         cards: [...newRow.cards, {
           ...decoyCard,
-          strength: 0,
-          row: targetRow,
-          type: CardType.UNIT
-        } as UnitCard]
+          type: CardType.SPECIAL
+        } as SpecialCard]
       }
     }
   };

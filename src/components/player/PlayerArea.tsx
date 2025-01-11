@@ -1,15 +1,17 @@
 import React from 'react';
-import { BoardState, CardAbility, CardType, Faction, RowPosition, SpecialCard, UnitCard } from '@/types/card';
+import { BoardState, Card, CardAbility, CardType, Faction, RowPosition, SpecialCard, UnitCard } from '@/types/card';
 import GwentCard from '../card/GwentCard';
-import { calculateRowStrength } from '@/utils/gameHelpers';
+import { calculateRowStrength, canPlayWeatherInRow } from '@/utils/gameHelpers';
 import '@/styles/components/board.css';
 
 interface PlayerAreaProps {
   boardState: BoardState;
+  weatherState: Set<CardAbility>;
   onRowClick?: (row: RowPosition) => void;
   onUnitClick?: (card: UnitCard, row: RowPosition) => void;
   isOpponent?: boolean;
   isDecoyActive?: boolean;
+  selectedCard?: Card;
 }
 
 const hornCard: SpecialCard = {
@@ -25,27 +27,52 @@ const hornCard: SpecialCard = {
 
 const PlayerArea: React.FC<PlayerAreaProps> = ({
   boardState,
+  weatherState,
   onRowClick,
   onUnitClick,
   isOpponent = false,
-  isDecoyActive = false
+  isDecoyActive = false,
+  selectedCard
 }) => {
-  const renderRow = (rowCards: UnitCard[], position: RowPosition, hornActive: boolean) => {
+  const renderRow = (rowPosition: RowPosition) => {
+    const row = boardState[rowPosition];
+    const weatherEffect = (
+      (rowPosition === RowPosition.CLOSE && weatherState.has(CardAbility.FROST)) ||
+      (rowPosition === RowPosition.RANGED && weatherState.has(CardAbility.FOG)) ||
+      (rowPosition === RowPosition.SIEGE && weatherState.has(CardAbility.RAIN))
+    );
 
-    const rowStrength = calculateRowStrength(rowCards, false, boardState[position].hornActive);
+    const moraleBoostCount = row.cards.filter(c =>
+      c.type === CardType.UNIT && c.ability === CardAbility.MORALE_BOOST
+    ).length;
+
+    const rowStrength = calculateRowStrength(row.cards, weatherEffect, row.hornActive);
+
+    const canClickRow = () => {
+      if (isDecoyActive) return false;
+      if (!onRowClick) return false;
+
+      if (selectedCard?.type === CardType.SPECIAL) {
+        const ability = selectedCard.ability;
+        if (ability === CardAbility.FROST || ability === CardAbility.FOG || ability === CardAbility.RAIN) {
+          return canPlayWeatherInRow(ability, rowPosition);
+        }
+      }
+      return true;
+    };
 
     return (
       <div className="battle-row-container">
-         <div className="row-score">
-            {rowStrength}
+        <div className="row-score">
+          {rowStrength}
         </div>
         <div
-          key={position}
-          className={`battle-row battle-row--${position}`}
-          onClick={() => !isDecoyActive && onRowClick?.(position)}
+          key={rowPosition}
+          className={`battle-row battle-row--${rowPosition}`}
+          onClick={() => canClickRow() && onRowClick?.(rowPosition)}
         >
-          <div className={`horn-area ${hornActive ? '' : 'default'}`}>
-            {hornActive ? (
+          <div className={`horn-area ${row.hornActive ? '' : 'default'}`}>
+            {row.hornActive ? (
               <GwentCard
                 key='neutral_special_03'
                 card={hornCard}
@@ -53,12 +80,16 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
               />
             ) : <img src="/src/assets/avatars/horn.png" />}
           </div>
-          {rowCards.map(card => (
+          {row.cards.map(card => (
             <GwentCard
               key={card.id}
               card={card}
-              isPlayable={isDecoyActive && !isOpponent && card.type !== 'hero'}
-              onClick={() => isDecoyActive && onUnitClick?.(card, position)}
+              isPlayable={isDecoyActive && !isOpponent && card.type !== CardType.HERO}
+              onClick={() => isDecoyActive && onUnitClick?.(card as UnitCard, rowPosition)}
+              weatherEffect={weatherEffect}
+              hornActive={row.hornActive}
+              moraleBoostCount={moraleBoostCount}
+              cardsInRow={row.cards}
             />
           ))}
         </div>
@@ -70,9 +101,9 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
     return (
       <div className="player-area">
         <div className="player-area__rows">
-          {renderRow(boardState.siege.cards, RowPosition.SIEGE, boardState.siege.hornActive )}
-          {renderRow(boardState.ranged.cards, RowPosition.RANGED, boardState.ranged.hornActive)}
-          {renderRow(boardState.close.cards, RowPosition.CLOSE, boardState.close.hornActive)}
+          {renderRow(RowPosition.SIEGE)}
+          {renderRow(RowPosition.RANGED)}
+          {renderRow(RowPosition.CLOSE)}
         </div>
       </div>
     );
@@ -81,9 +112,9 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
   return (
     <div className="player-area">
       <div className="player-area__rows">
-        {renderRow(boardState.close.cards, RowPosition.CLOSE, boardState.close.hornActive)}
-        {renderRow(boardState.ranged.cards, RowPosition.RANGED, boardState.ranged.hornActive)}
-        {renderRow(boardState.siege.cards, RowPosition.SIEGE, boardState.siege.hornActive)}
+        {renderRow(RowPosition.CLOSE)}
+        {renderRow(RowPosition.RANGED)}
+        {renderRow(RowPosition.SIEGE)}
       </div>
     </div>
   );
