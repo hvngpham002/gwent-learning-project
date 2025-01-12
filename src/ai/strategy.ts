@@ -1,6 +1,6 @@
 // src/ai/strategy.ts
 import { Card, CardType, CardAbility, GameState, UnitCard, RowPosition } from '@/types/card';
-import { calculateRowStrength, calculateTotalScore } from '@/utils/gameHelpers';
+import { calculateRowStrength, calculateTotalScore, calculateWeatherImpact, findScorchTargets } from '@/utils/gameHelpers';
 
 export interface PlayDecision {
   card: Card;
@@ -47,6 +47,77 @@ class CommanderHornStrategy extends Strategy {
       card,
       row: bestRow,
       score: maxScoreIncrease
+    };
+  }
+}
+
+class WeatherStrategy extends Strategy {
+  evaluate(state: GameState, card: Card): PlayDecision | null {
+    if (card.type !== CardType.SPECIAL || 
+        ![CardAbility.FROST, CardAbility.FOG, CardAbility.RAIN, CardAbility.CLEAR_WEATHER].includes(card.ability)) {
+      return null;
+    }
+
+    // Clear weather logic
+    if (card.ability === CardAbility.CLEAR_WEATHER) {
+      let totalImpact = 0;
+      state.activeWeatherEffects.forEach(effect => {
+        totalImpact += calculateWeatherImpact(state, effect, true);
+      });
+
+      // Only clear weather if it's significantly hurting us
+      if (totalImpact < -8) {
+        return {
+          card,
+          score: Math.abs(totalImpact)
+        };
+      }
+      return null;
+    }
+
+    // Regular weather card logic
+    const impact = calculateWeatherImpact(state, card.ability, true);
+    
+    // Don't play weather if impact is too small
+    if (impact < 6) return null;
+
+    return {
+      card,
+      score: impact
+    };
+  }
+}
+
+class ScorchStrategy extends Strategy {
+  evaluate(state: GameState, card: Card): PlayDecision | null {
+    if (card.type !== CardType.SPECIAL || card.ability !== CardAbility.SCORCH) {
+      return null;
+    }
+
+    const targets = findScorchTargets(state);
+    
+    // Don't scorch if we would lose more strength than opponent
+    let ourLoss = 0;
+    let theirLoss = 0;
+    
+    targets.cards.forEach(target => {
+      const isOurs = Object.values(state.opponentBoard).some(row => 
+        row.cards.some((c: { id: string; }) => c.id === target.id)
+      );
+      if (isOurs) {
+        ourLoss += targets.strength;
+      } else {
+        theirLoss += targets.strength;
+      }
+    });
+
+    // Only scorch if net benefit is positive
+    const netBenefit = theirLoss - ourLoss;
+    if (netBenefit <= 4) return null;
+
+    return {
+      card,
+      score: netBenefit
     };
   }
 }
@@ -135,18 +206,18 @@ class UnitStrategy extends Strategy {
         if (card.type !== CardType.UNIT || card.ability === CardAbility.SPY) {
             return null;
         }
-    
+
         const unitCard = card as UnitCard;
         let score = this.evaluateUnitValue(unitCard, state);
-    
+
         // Special scoring only for 0-0 tie when player passes
         const currentBoardScore = calculateTotalScore(state.opponentBoard, state.activeWeatherEffects);
-        if (state.player.passed && 
-            state.playerScore === 0 && 
+        if (state.player.passed &&
+            state.playerScore === 0 &&
             currentBoardScore === 0) {
             // Give highest priority to lowest strength non-spy unit
             score = 30 - unitCard.strength;
-            
+
             // Additional bonus for units without special abilities
             if (unitCard.ability === CardAbility.NONE) {
                 score += 10;
@@ -159,7 +230,7 @@ class UnitStrategy extends Strategy {
                 score += 5; // Bonus for cards that can win in one play
             }
         }
-    
+
         return {
             card: unitCard,
             row: unitCard.row,
@@ -196,6 +267,8 @@ export class AIStrategyCoordinator {
   constructor() {
     this.strategies = [
       new SpyStrategy(),
+      new WeatherStrategy(),
+      new ScorchStrategy(),
       new DecoyStrategy(),
       new CommanderHornStrategy(),
       new UnitStrategy()
@@ -238,7 +311,7 @@ export class AIStrategyCoordinator {
         cardsInHand: state.opponent.hand.length,
         playerCards: state.player.hand.length
     });
-    
+
     if (state.player.passed) {
         console.log('Player has passed - analyzing whether to continue...');
 
@@ -248,13 +321,13 @@ export class AIStrategyCoordinator {
                 cardAdvantage,
                 cardsInHand: state.opponent.hand.length
             });
-    
+
             // Only fight if we have both:
             // 1. Enough cards to realistically win
             // 2. Not at a severe card disadvantage
             const canWinRound = (state.opponent.hand.length * 8) >= pointsNeeded;
             const healthyCardCount = cardAdvantage >= -1;
-    
+
             if (canWinRound && healthyCardCount) {
                 console.log('Committing to win large deficit');
                 return false;  // Fight for the round
@@ -263,7 +336,7 @@ export class AIStrategyCoordinator {
                 return true;   // Pass immediately
             }
         }
-        
+
         if (currentBoardScore > playerBoardScore) {
             console.log('AI is already winning, deciding to pass');
             return true;
@@ -279,8 +352,8 @@ export class AIStrategyCoordinator {
 
             // Special case for 0-0
             if (playerBoardScore === 0 && currentBoardScore === 0) {
-                return state.opponentBoard.close.cards.length > 0 || 
-                       state.opponentBoard.ranged.cards.length > 0 || 
+                return state.opponentBoard.close.cards.length > 0 ||
+                       state.opponentBoard.ranged.cards.length > 0 ||
                        state.opponentBoard.siege.cards.length > 0;
             }
 

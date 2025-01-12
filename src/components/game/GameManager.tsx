@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction } from '@/types/card';
 import GameBoard from './GameBoard';
-import { canPlayWeatherInRow, drawCards, shuffle } from '@/utils/gameHelpers';
+import { canPlayWeatherInRow, drawCards, findHighestStrengthUnits, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
 import useAI from '@/hooks/useAI';
 import { calculateTotalScore } from '@/utils/gameHelpers';
 import { handleDecoyAction } from '@/hooks/useGameLogic';
+import DisclaimerModal from '../DisclaimerModal';
+import React from 'react';
 
 const initialPlayerState: PlayerState = {
   deck: [],
@@ -123,8 +125,8 @@ const GameManager = () => {
   }, [gameState.currentTurn, gameState.gamePhase, gameState.opponent.passed, makeOpponentMove]);
 
   const initializeGame = () => {
-    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
-    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
+    const playerDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
+    const opponentDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
 
     const playerDeck = shuffle(playerDeckWithLeader.deck);
     const opponentDeck = shuffle(opponentDeckWithLeader.deck);
@@ -168,6 +170,9 @@ const GameManager = () => {
 
     // Handle decoy selection
     if (card.type === CardType.SPECIAL) {
+
+      setIsDecoyActive(false);
+
       switch (card.ability){
         case (CardAbility.DECOY):
           setSelectedCard(card);
@@ -175,27 +180,22 @@ const GameManager = () => {
           return;
         case (CardAbility.COMMANDERS_HORN):
           setSelectedCard(card);
-          setIsDecoyActive(false);
           return;
         case (CardAbility.FROST):
           setSelectedCard(card);
-          console.log("Frost Selected.");
-          setIsDecoyActive(false);
           return;
         case (CardAbility.FOG):
           setSelectedCard(card);
-          console.log("Fog Selected.");
-          setIsDecoyActive(false);
           return;
         case (CardAbility.RAIN):
           setSelectedCard(card);
-          console.log("Rain Selected.");
-          setIsDecoyActive(false);
           return;
         case (CardAbility.CLEAR_WEATHER):
           setSelectedCard(card);
-          console.log("Clear weather Selected.");
-          setIsDecoyActive(false);
+          return;
+        case (CardAbility.SCORCH):
+          setSelectedCard(card);
+          console.log("Scorch Selected.");
           return;
       }
     }
@@ -210,22 +210,17 @@ const GameManager = () => {
     }
   };
 
+
+
   const isValidDecoyTarget = (card: Card): boolean => {
     return card.type === CardType.UNIT && card.ability !== CardAbility.DECOY;
   };
 
   const handleBoardUnitClick = (card: UnitCard) => {
-    if (!isDecoyActive || !selectedCard || !isValidDecoyTarget(card)) {
-      return;
-    }
+    if (!isDecoyActive || !selectedCard || !isValidDecoyTarget(card)) return;
 
-    const newGameState = handleDecoyAction(gameState, selectedCard, card, true);
-
-    setGameState({
-      ...newGameState,
-      currentTurn: 'opponent'
-    });
-
+    const newState = handleDecoyAction(gameState, selectedCard, card, true);
+    setGameState(newState);
     setSelectedCard(null);
     setIsDecoyActive(false);
   };
@@ -264,6 +259,9 @@ const GameManager = () => {
           if (canPlayWeatherInRow(specialCard.ability, row)) {
             playWeatherCard(specialCard);
           }
+          break;
+        case CardAbility.SCORCH:
+          playScorchCard(specialCard);
           break;
       }
     }
@@ -337,6 +335,75 @@ const GameManager = () => {
     setSelectedCard(null);
   };
 
+  const playScorchCard = (card: SpecialCard) => {
+    setSelectedCard(null);
+    setIsDecoyActive(false);
+
+    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
+    const { cards: cardsToScorch } = findHighestStrengthUnits(gameState);
+
+    setGameState(prev => {
+      // Create new state with scorched cards removed from their rows
+      const newState = {
+        ...prev,
+        player: {
+          ...prev.player,
+          hand: newHand,
+          discard: [
+            ...prev.player.discard,
+            ...cardsToScorch.filter(card =>
+              Object.values(prev.playerBoard).some(row =>
+                row.cards.some((c: { id: string; }) => c.id === card.id)
+              )
+            )
+          ]
+        },
+        opponent: {
+          ...prev.opponent,
+          discard: [
+            ...prev.opponent.discard,
+            ...cardsToScorch.filter(card =>
+              Object.values(prev.opponentBoard).some(row =>
+                row.cards.some((c: { id: string; }) => c.id === card.id)
+              )
+            )
+          ]
+        },
+        playerBoard: {
+          close: {
+            ...prev.playerBoard.close,
+            cards: prev.playerBoard.close.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
+          },
+          ranged: {
+            ...prev.playerBoard.ranged,
+            cards: prev.playerBoard.ranged.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
+          },
+          siege: {
+            ...prev.playerBoard.siege,
+            cards: prev.playerBoard.siege.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
+          }
+        },
+        opponentBoard: {
+          close: {
+            ...prev.opponentBoard.close,
+            cards: prev.opponentBoard.close.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
+          },
+          ranged: {
+            ...prev.opponentBoard.ranged,
+            cards: prev.opponentBoard.ranged.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
+          },
+          siege: {
+            ...prev.opponentBoard.siege,
+            cards: prev.opponentBoard.siege.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
+          }
+        },
+        currentTurn: gameState.opponent.passed ? 'player' : 'opponent' as 'player' | 'opponent'
+      };
+
+      return newState;
+    });
+  };
+
   const playSpyCard = (card: UnitCard, row: RowPosition) => {
 
     setSelectedCard(null);
@@ -375,7 +442,7 @@ const GameManager = () => {
 
     setGameState(prev => ({
       ...prev,
-      currentTurn: 'opponent'
+      currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
     }));
 
   };
@@ -432,16 +499,21 @@ const GameManager = () => {
   };
 
   return (
-    <GameBoard
-      gameState={gameState}
-      onCardClick={handleCardClick}
-      onRowClick={handleRowClick}
-      onWeatherRowClick={handleWeatherRowClick}
-      onBoardUnitClick={handleBoardUnitClick}
-      onPass={handlePass}
-      selectedCard={selectedCard}
-      isDecoyActive={isDecoyActive}
-    />
+    <React.Fragment>
+      <DisclaimerModal />
+      <GameBoard
+        gameState={gameState}
+        onCardClick={handleCardClick}
+        onRowClick={handleRowClick}
+        onWeatherRowClick={handleWeatherRowClick}
+        onBoardUnitClick={handleBoardUnitClick}
+        onPass={handlePass}
+        selectedCard={selectedCard}
+        isDecoyActive={isDecoyActive}
+      />
+    </React.Fragment>
+
+
   );
 };
 

@@ -39,7 +39,7 @@ export const handleDecoyAction = (
     cards: gameState[boardKey][targetRow].cards.filter(c => c.id !== targetCard.id)
   };
 
-  // Create new game state
+  // Create new game state with proper turn handling
   return {
     ...gameState,
     [playerKey]: {
@@ -55,6 +55,10 @@ export const handleDecoyAction = (
           type: CardType.SPECIAL
         } as SpecialCard]
       }
-    }
+    },
+    // Keep turn with player if opponent has passed
+    currentTurn: isPlayer && gameState.opponent.passed ? 'player' :
+                !isPlayer && gameState.player.passed ? 'opponent' :
+                isPlayer ? 'opponent' : 'player'
   };
 };

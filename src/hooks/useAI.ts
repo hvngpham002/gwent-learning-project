@@ -1,7 +1,7 @@
 // src/hooks/useAI.ts
 import { useCallback, useMemo } from 'react';
 import { UnitCard, CardType, GameState, RowPosition, CardAbility } from '@/types/card';
-import { drawCards } from '@/utils/gameHelpers';
+import { drawCards, findScorchTargets } from '@/utils/gameHelpers';
 import { handleDecoyAction } from './useGameLogic';
 import { AIStrategyCoordinator, PlayDecision  } from '../ai/strategy';
 
@@ -40,12 +40,10 @@ const useAI = (
 
     // Handle different card types
     if (card.type === CardType.SPECIAL) {
+
       if (card.ability === CardAbility.DECOY && targetCard) {
         const newState = handleDecoyAction(gameState, card, targetCard, false);
-        setGameState({
-          ...newState,
-          currentTurn: gameState.player.passed ? 'opponent' : 'player'
-        });
+        setGameState(newState);
         return;
       }
 
@@ -68,6 +66,72 @@ const useAI = (
           currentTurn: gameState.player.passed ? 'opponent' : 'player'
         }));
         return;
+      }
+
+      if (card.type === CardType.SPECIAL) {
+        // Handle weather cards
+        if ([CardAbility.FROST, CardAbility.FOG, CardAbility.RAIN, CardAbility.CLEAR_WEATHER].includes(card.ability)) {
+          const newHand = gameState.opponent.hand.filter(c => c.id !== card.id);
+          setGameState(prev => ({
+            ...prev,
+            opponent: {
+              ...prev.opponent,
+              hand: newHand
+            },
+            activeWeatherEffects: card.ability === CardAbility.CLEAR_WEATHER
+              ? new Set()
+              : new Set([...prev.activeWeatherEffects, card.ability]),
+            currentTurn: gameState.player.passed ? 'opponent' : 'player'
+          }));
+          return;
+        }
+
+        // Handle scorch
+        if (card.ability === CardAbility.SCORCH) {
+          const newHand = gameState.opponent.hand.filter(c => c.id !== card.id);
+          const { cards: scorchTargets } = findScorchTargets(gameState);
+
+          setGameState((prev: GameState) => {
+            const newState: GameState = {
+              ...prev,
+              opponent: {
+                ...prev.opponent,
+                hand: newHand
+              },
+              playerBoard: {
+                close: {
+                  ...prev.playerBoard.close,
+                  cards: prev.playerBoard.close.cards.filter(c => !scorchTargets.some((sc: { id: string; }) => sc.id === c.id))
+                },
+                ranged: {
+                  ...prev.playerBoard.ranged,
+                  cards: prev.playerBoard.ranged.cards.filter(c => !scorchTargets.some((sc: { id: string; }) => sc.id === c.id))
+                },
+                siege: {
+                  ...prev.playerBoard.siege,
+                  cards: prev.playerBoard.siege.cards.filter(c => !scorchTargets.some((sc: { id: string; }) => sc.id === c.id))
+                }
+              },
+              opponentBoard: {
+                close: {
+                  ...prev.opponentBoard.close,
+                  cards: prev.opponentBoard.close.cards.filter(c => !scorchTargets.some((sc: { id: string; }) => sc.id === c.id))
+                },
+                ranged: {
+                  ...prev.opponentBoard.ranged,
+                  cards: prev.opponentBoard.ranged.cards.filter(c => !scorchTargets.some((sc: { id: string; }) => sc.id === c.id))
+                },
+                siege: {
+                  ...prev.opponentBoard.siege,
+                  cards: prev.opponentBoard.siege.cards.filter(c => !scorchTargets.some((sc: { id: string; }) => sc.id === c.id))
+                }
+              },
+              currentTurn: gameState.player.passed ? 'opponent' : 'player'
+            };
+            return newState;
+          });
+          return;
+        }
       }
     }
 
@@ -118,7 +182,7 @@ const useAI = (
 
 const makeOpponentMove = useCallback(() => {
   console.log('=== AI Turn Start ===');
-  
+
   // Check if we should pass
   const shouldPassDecision = strategyCoordinator.shouldPass(gameState);
   console.log('Pass decision:', {

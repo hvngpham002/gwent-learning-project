@@ -1,4 +1,4 @@
-import { BoardState, Card, CardAbility, CardType, GameState, RowPosition, UnitCard } from "@/types/card";
+import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPosition, UnitCard } from "@/types/card";
 
 /**
  * Fisher-Yates shuffle algorithm
@@ -14,36 +14,36 @@ import { BoardState, Card, CardAbility, CardType, GameState, RowPosition, UnitCa
   };
 
   export const calculateUnitStrength = (
-    card: UnitCard, 
-    weatherEffect: boolean, 
+    card: UnitCard,
+    weatherEffect: boolean,
     hornActive: boolean,
     moraleBoostCount: number = 0,
-    sameNameCardsInRow: number = 1  // New parameter
+    sameNameCardsInRow: number = 1
   ): number => {
     if (card.type === CardType.HERO) {
       return card.strength; // Heroes are immune to effects
     }
-  
+
     let strength = card.strength;
-  
+
     // Apply weather effect first
     if (weatherEffect) {
       strength = 1;
     }
-  
+
     // Apply tight bond multiplier
     if (card.ability === CardAbility.TIGHT_BOND && sameNameCardsInRow > 1) {
       strength *= sameNameCardsInRow;
     }
-  
+
     // Apply horn effect if active
     if (hornActive) {
       strength *= 2;
     }
-  
+
     // Add morale boost
     strength += moraleBoostCount;
-  
+
     return strength;
   };
 
@@ -54,31 +54,21 @@ import { BoardState, Card, CardAbility, CardType, GameState, RowPosition, UnitCa
    */
   export const calculateRowStrength = (cards: UnitCard[], weatherEffect: boolean, hornActive: boolean): number => {
     return cards.reduce((total, card) => {
-
-      let strength = card.strength;
-
-      if (card.type === CardType.UNIT) {
-        strength = weatherEffect ? 1 : card.strength;
-      }
-
-      // Apply horn effect if active
-      if (hornActive && card.type !== CardType.HERO) {
-        strength *= 2;
-      }
-
-      // Add moral boost effects
+      // Calculate morale boost count once per row
       const moraleBoostCount = cards.filter(c => c.ability === CardAbility.MORALE_BOOST).length;
-      if (card.type !== CardType.HERO) {
-        strength += moraleBoostCount;
-      }
 
-      // Handle tight bond
-      if (card.ability === CardAbility.TIGHT_BOND) {
-        const sameNameCount = cards.filter(c => c.name === card.name).length;
-        if (sameNameCount > 1) {
-          strength *= sameNameCount;
-        }
-      }
+      // Calculate same name cards count for tight bond
+      const sameNameCardsInRow = card.ability === CardAbility.TIGHT_BOND
+        ? cards.filter(c => c.name === card.name).length
+        : 1;
+
+      const strength = calculateUnitStrength(
+        card,
+        weatherEffect,
+        hornActive,
+        moraleBoostCount,
+        sameNameCardsInRow
+      );
 
       return total + strength;
     }, 0);
@@ -154,4 +144,142 @@ import { BoardState, Card, CardAbility, CardType, GameState, RowPosition, UnitCa
       default:
         return false;
     }
+  };
+
+
+  export const findHighestStrengthUnits = (gameState: GameState): { cards: UnitCard[], strength: number } => {
+    let highestStrength = 0;
+    let highestStrengthUnits: UnitCard[] = [];
+
+    // Helper to process each row
+    const processRow = (
+      row: { cards: Card[] },
+      weatherEffect: boolean,
+      hornActive: boolean
+    ) => {
+      row.cards.forEach(card => {
+        if (card.type === CardType.UNIT) { // Only process unit cards, not heroes
+          const unitCard = card as UnitCard;
+          const moraleBoostCount = row.cards.filter(c =>
+            c.type === CardType.UNIT && (c as UnitCard).ability === CardAbility.MORALE_BOOST
+          ).length;
+
+          const sameNameCardsInRow = row.cards.filter(c => c.name === card.name).length;
+
+          const strength = calculateUnitStrength(
+            unitCard,
+            weatherEffect,
+            hornActive,
+            moraleBoostCount,
+            sameNameCardsInRow
+          );
+
+          if (strength > highestStrength) {
+            highestStrength = strength;
+            highestStrengthUnits = [unitCard];
+          } else if (strength === highestStrength) {
+            highestStrengthUnits.push(unitCard);
+          }
+        }
+      });
+    };
+
+    // Check each row with appropriate weather effects
+    const hasFrost = gameState.activeWeatherEffects.has(CardAbility.FROST);
+    const hasFog = gameState.activeWeatherEffects.has(CardAbility.FOG);
+    const hasRain = gameState.activeWeatherEffects.has(CardAbility.RAIN);
+
+    // Process player board
+    processRow(gameState.playerBoard.close, hasFrost, gameState.playerBoard.close.hornActive);
+    processRow(gameState.playerBoard.ranged, hasFog, gameState.playerBoard.ranged.hornActive);
+    processRow(gameState.playerBoard.siege, hasRain, gameState.playerBoard.siege.hornActive);
+
+    // Process opponent board
+    processRow(gameState.opponentBoard.close, hasFrost, gameState.opponentBoard.close.hornActive);
+    processRow(gameState.opponentBoard.ranged, hasFog, gameState.opponentBoard.ranged.hornActive);
+    processRow(gameState.opponentBoard.siege, hasRain, gameState.opponentBoard.siege.hornActive);
+
+    return { cards: highestStrengthUnits, strength: highestStrength };
+  };
+
+  export const getWeatherAffectedRows = (ability: CardAbility): RowPosition[] => {
+    switch (ability) {
+      case CardAbility.FROST:
+        return [RowPosition.CLOSE];
+      case CardAbility.FOG:
+        return [RowPosition.RANGED];
+      case CardAbility.RAIN:
+        return [RowPosition.SIEGE];
+      case CardAbility.SKELLIGE_STORM:
+        return [RowPosition.RANGED, RowPosition.SIEGE];
+      default:
+        return [];
+    }
+  };
+  
+  export const calculateWeatherImpact = (
+    gameState: GameState,
+    weatherAbility: CardAbility,
+    forOpponent: boolean
+  ): number => {
+    const affectedRows = getWeatherAffectedRows(weatherAbility);
+    const board = forOpponent ? gameState.playerBoard : gameState.opponentBoard;
+    
+    let currentStrength = 0;
+    let weatheredStrength = 0;
+  
+    affectedRows.forEach(row => {
+      const rowCards = board[row].cards.filter(card => card.type !== CardType.HERO);
+      currentStrength += calculateRowStrength(rowCards, false, board[row].hornActive);
+      weatheredStrength += calculateRowStrength(rowCards, true, board[row].hornActive);
+    });
+  
+    return currentStrength - weatheredStrength;
+  };
+  
+  export const findScorchTargets = (gameState: GameState): { cards: UnitCard[], strength: number } => {
+    const allUnits: UnitCard[] = [];
+    let maxStrength = 0;
+  
+    // Helper to process each row
+    const processRow = (
+      row: BoardRow,
+      weatherEffect: boolean,
+      hornActive: boolean
+    ) => {
+      row.cards.forEach(card => {
+        if (card.type === CardType.UNIT) {
+          const unitCard = card as UnitCard;
+          const strength = calculateUnitStrength(
+            unitCard,
+            weatherEffect,
+            hornActive,
+            row.cards.filter(c => c.type === CardType.UNIT && (c as UnitCard).ability === CardAbility.MORALE_BOOST).length,
+            row.cards.filter(c => c.name === card.name).length
+          );
+  
+          if (strength > maxStrength) {
+            maxStrength = strength;
+            allUnits.length = 0;
+            allUnits.push(unitCard);
+          } else if (strength === maxStrength) {
+            allUnits.push(unitCard);
+          }
+        }
+      });
+    };
+  
+    // Process all rows from both boards
+    [gameState.playerBoard, gameState.opponentBoard].forEach(board => {
+      Object.entries(board).forEach(([row, rowState]) => {
+        const weatherEffect = gameState.activeWeatherEffects.has(
+          row === RowPosition.CLOSE ? CardAbility.FROST :
+          row === RowPosition.RANGED ? CardAbility.FOG :
+          CardAbility.RAIN
+        );
+        processRow(rowState, weatherEffect, rowState.hornActive);
+      });
+    });
+  
+    return { cards: allUnits, strength: maxStrength };
   };
