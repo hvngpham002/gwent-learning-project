@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction } from '@/types/card';
 import GameBoard from './GameBoard';
-import { canPlayWeatherInRow, drawCards, findHighestStrengthUnits, shuffle } from '@/utils/gameHelpers';
+import { canPlayWeatherInRow, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
 import useAI from '@/hooks/useAI';
 import { calculateTotalScore } from '@/utils/gameHelpers';
-import { handleDecoyAction } from '@/hooks/useGameLogic';
+import { handleDecoyAction, playCard as playCardHelper } from '@/hooks/useGameLogic';
 import DisclaimerModal from '../DisclaimerModal';
 import React from 'react';
 
@@ -44,6 +44,10 @@ const GameManager = () => {
 
   const handleRoundEnd = () => {
     setGameState(prev => {
+
+    // Prevent multiple executions in the same round
+    if (prev.gamePhase !== 'roundEnd') return prev;
+
       const playerScore = calculateTotalScore(prev.playerBoard, prev.activeWeatherEffects);
       const opponentScore = calculateTotalScore(prev.opponentBoard, prev.activeWeatherEffects);
 
@@ -79,6 +83,7 @@ const GameManager = () => {
 
       return {
         ...prev,
+        gamePhase: 'playing',
         player: {
           ...prev.player,
           passed: false,
@@ -103,30 +108,46 @@ const GameManager = () => {
   const { makeOpponentMove } = useAI(gameState, handleRoundEnd, setGameState);
 
   useEffect(() => {
-    if (gameState.gamePhase === 'setup') {
+    // Only initialize once at the start
+    if (gameState.gamePhase === 'setup' && 
+        gameState.player.hand.length === 0 && 
+        gameState.opponent.hand.length === 0) {
       initializeGame();
     }
-  }, [gameState.gamePhase]);
+  }, [gameState.gamePhase, gameState.opponent.hand.length, gameState.player.hand.length]);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-
+    
+    // Only log if game is in playing phase and there's a meaningful turn change
+    if (gameState.gamePhase === 'playing') {
+      console.log('=== Turn Change ===', {
+        phase: gameState.gamePhase,
+        currentTurn: gameState.currentTurn,
+        playerPassed: gameState.player.passed,
+        opponentPassed: gameState.opponent.passed,
+        playerHandSize: gameState.player.hand.length,
+        opponentHandSize: gameState.opponent.hand.length,
+        timestamp: new Date().toISOString()
+      });
+    }
+  
     if (gameState.currentTurn === 'opponent' &&
         gameState.gamePhase === 'playing' &&
         !gameState.opponent.passed) {
       timeoutId = setTimeout(makeOpponentMove, 1000);
     }
-
+  
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
     };
-  }, [gameState.currentTurn, gameState.gamePhase, gameState.opponent.passed, makeOpponentMove]);
+  }, [gameState.currentTurn, gameState.gamePhase, gameState.opponent.hand.length, gameState.opponent.passed, gameState.player.hand.length, gameState.player.passed, makeOpponentMove]);
 
   const initializeGame = () => {
-    const playerDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
-    const opponentDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
+    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
+    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
 
     const playerDeck = shuffle(playerDeckWithLeader.deck);
     const opponentDeck = shuffle(opponentDeckWithLeader.deck);
@@ -284,218 +305,89 @@ const GameManager = () => {
     setSelectedCard(null);
     setIsDecoyActive(false);
 
-    if (!gameState.player.hand.find(c => c.id === card.id)) {
-      console.warn('Attempted to play card not in hand:', card.id);
-      return;
-    }
+    const newState = playCardHelper({
+      gameState,
+      card,
+      isPlayer: true
+    });
 
-    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
-
-    setGameState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        hand: newHand
-      },
-      activeWeatherEffects: card.ability === CardAbility.CLEAR_WEATHER? new Set() : new Set([...prev.activeWeatherEffects, card.ability]),
-      currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
-    }));
-  }
+    setGameState(newState);
+  };
 
   const playHornCard = (card: SpecialCard, row: RowPosition) => {
-
     setSelectedCard(null);
     setIsDecoyActive(false);
 
-    // Add this verification
-    if (!gameState.player.hand.find(c => c.id === card.id)) {
-      console.warn('Attempted to play card not in hand:', card.id);
-      return;
-    }
-
-    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
-
-    setGameState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        hand: newHand
-      },
-      playerBoard: {
-        ...prev.playerBoard,
-        [row]: {
-          ...prev.playerBoard[row],
-          cards: [...prev.playerBoard[row].cards], // Keep existing cards
-          hornActive: true,
-        }
-      },
-      currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
-    }));
-
-    setSelectedCard(null);
+    const newState = playCardHelper({
+      gameState,
+      card,
+      row,
+      isPlayer: true
+    });
+    setGameState(newState);
   };
 
   const playScorchCard = (card: SpecialCard) => {
     setSelectedCard(null);
     setIsDecoyActive(false);
 
-    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
-    const { cards: cardsToScorch } = findHighestStrengthUnits(gameState);
-
-    setGameState(prev => {
-      // Create new state with scorched cards removed from their rows
-      const newState = {
-        ...prev,
-        player: {
-          ...prev.player,
-          hand: newHand,
-          discard: [
-            ...prev.player.discard,
-            ...cardsToScorch.filter(card =>
-              Object.values(prev.playerBoard).some(row =>
-                row.cards.some((c: { id: string; }) => c.id === card.id)
-              )
-            )
-          ]
-        },
-        opponent: {
-          ...prev.opponent,
-          discard: [
-            ...prev.opponent.discard,
-            ...cardsToScorch.filter(card =>
-              Object.values(prev.opponentBoard).some(row =>
-                row.cards.some((c: { id: string; }) => c.id === card.id)
-              )
-            )
-          ]
-        },
-        playerBoard: {
-          close: {
-            ...prev.playerBoard.close,
-            cards: prev.playerBoard.close.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
-          },
-          ranged: {
-            ...prev.playerBoard.ranged,
-            cards: prev.playerBoard.ranged.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
-          },
-          siege: {
-            ...prev.playerBoard.siege,
-            cards: prev.playerBoard.siege.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
-          }
-        },
-        opponentBoard: {
-          close: {
-            ...prev.opponentBoard.close,
-            cards: prev.opponentBoard.close.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
-          },
-          ranged: {
-            ...prev.opponentBoard.ranged,
-            cards: prev.opponentBoard.ranged.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
-          },
-          siege: {
-            ...prev.opponentBoard.siege,
-            cards: prev.opponentBoard.siege.cards.filter(c => !cardsToScorch.some(sc => sc.id === c.id))
-          }
-        },
-        currentTurn: gameState.opponent.passed ? 'player' : 'opponent' as 'player' | 'opponent'
-      };
-
-      return newState;
+    const newState = playCardHelper({
+      gameState,
+      card,
+      isPlayer: true
     });
+    setGameState(newState);
   };
 
   const playSpyCard = (card: UnitCard, row: RowPosition) => {
-
     setSelectedCard(null);
     setIsDecoyActive(false);
 
-    // Add this verification
-    if (!gameState.player.hand.find(c => c.id === card.id)) {
-      console.warn('Attempted to play card not in hand:', card.id);
-      return;
-    }
-
-    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
-
-    setGameState(prevState => {
-      // First place the spy card
-      const stateAfterPlay = {
-        ...prevState,
-        player: {
-          ...prevState.player,
-          hand: newHand
-        },
-        opponentBoard: {
-          ...prevState.opponentBoard,
-          [row]: {
-            ...prevState.opponentBoard[row],
-            cards: [...prevState.opponentBoard[row].cards, card]
-          }
-        }
-      };
-
-      // Then draw 2 cards using the helper function
-      return drawCards(2, stateAfterPlay, 'player');
+    const newState = playCardHelper({
+      gameState,
+      card,
+      row,
+      isPlayer: true
     });
-
-    setSelectedCard(null);
-
-    setGameState(prev => ({
-      ...prev,
-      currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
-    }));
-
+    setGameState(newState);
   };
 
   const playCard = (card: UnitCard, row: RowPosition) => {
-
     setSelectedCard(null);
     setIsDecoyActive(false);
 
-    // Add this verification
-    if (!gameState.player.hand.find(c => c.id === card.id)) {
-      console.warn('Attempted to play card not in hand:', card.id);
-      return;
-    }
-
-    const newHand = gameState.player.hand.filter(c => c.id !== card.id);
-
-    setGameState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        hand: newHand
-      },
-      playerBoard: {
-        ...prev.playerBoard,
-        [row]: {
-          ...prev.playerBoard[row],
-          cards: [...prev.playerBoard[row].cards, card]
-        }
-      },
-      currentTurn: gameState.opponent.passed ? 'player' : 'opponent'
-    }));
-
-    setSelectedCard(null);
+    const newState = playCardHelper({
+      gameState,
+      card,
+      row,
+      isPlayer: true
+    });
+    setGameState(newState);
   };
 
   const handlePass = () => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
     }
-
-    setGameState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        passed: true
-      },
-      currentTurn: 'opponent'
-    }));
-
-    if (gameState.opponent.passed) {
-      setTimeout(handleRoundEnd, 500);
-    }
+  
+    setGameState((prev: GameState) => {
+      const newState: GameState = {
+        ...prev,
+        player: {
+          ...prev.player,
+          passed: true
+        },
+        currentTurn: 'opponent'
+      };
+  
+      // Only trigger round end if opponent has already passed
+      if (prev.opponent.passed) {
+        newState.gamePhase = 'roundEnd';
+        setTimeout(() => handleRoundEnd(), 500);
+      }
+  
+      return newState;
+    });
   };
 
   return (

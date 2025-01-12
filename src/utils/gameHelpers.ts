@@ -216,7 +216,7 @@ import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPositi
         return [];
     }
   };
-  
+
   export const calculateWeatherImpact = (
     gameState: GameState,
     weatherAbility: CardAbility,
@@ -224,23 +224,23 @@ import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPositi
   ): number => {
     const affectedRows = getWeatherAffectedRows(weatherAbility);
     const board = forOpponent ? gameState.playerBoard : gameState.opponentBoard;
-    
+
     let currentStrength = 0;
     let weatheredStrength = 0;
-  
+
     affectedRows.forEach(row => {
       const rowCards = board[row].cards.filter(card => card.type !== CardType.HERO);
       currentStrength += calculateRowStrength(rowCards, false, board[row].hornActive);
       weatheredStrength += calculateRowStrength(rowCards, true, board[row].hornActive);
     });
-  
+
     return currentStrength - weatheredStrength;
   };
-  
+
   export const findScorchTargets = (gameState: GameState): { cards: UnitCard[], strength: number } => {
     const allUnits: UnitCard[] = [];
     let maxStrength = 0;
-  
+
     // Helper to process each row
     const processRow = (
       row: BoardRow,
@@ -257,7 +257,7 @@ import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPositi
             row.cards.filter(c => c.type === CardType.UNIT && (c as UnitCard).ability === CardAbility.MORALE_BOOST).length,
             row.cards.filter(c => c.name === card.name).length
           );
-  
+
           if (strength > maxStrength) {
             maxStrength = strength;
             allUnits.length = 0;
@@ -268,7 +268,7 @@ import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPositi
         }
       });
     };
-  
+
     // Process all rows from both boards
     [gameState.playerBoard, gameState.opponentBoard].forEach(board => {
       Object.entries(board).forEach(([row, rowState]) => {
@@ -280,6 +280,6 @@ import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPositi
         processRow(rowState, weatherEffect, rowState.hornActive);
       });
     });
-  
+
     return { cards: allUnits, strength: maxStrength };
   };

@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardAbility, CardType, Faction, GameState, RowPosition, SpecialCard, UnitCard } from '@/types/card';
 import PlayerHand from '../player/PlayerHand';
 import PlayerArea from '../player/PlayerArea';
-import PlayerStatus from './PlayerStatus';
+import PlayerStatus from '../player/PlayerStatus';
 import '@/styles/components/board.css';
 import '@/styles/components/hand.css';
 import GwentCard from '../card/GwentCard';
