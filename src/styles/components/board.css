@@ -145,3 +145,39 @@
 .horn-area img {
   width: 100%;
 }
+
+.selected-card-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.selected-card-image {
+  padding: var(--spacing-sm);
+}
+
+.selected-card-image img {
+  width: 200px;
+  height: 378px;
+}
+
+.selected-card-description {
+  font-size: 14px;
+  color: white;
+  text-wrap: wrap;
+  text-align: center;
+  width: 200px;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: var(--spacing-sm);
+}
+
+.selected-card-name {
+  display: block;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  margin-bottom: var(--spacing-sm);
+}

@@ -68,7 +68,8 @@ export const northernRealmsHeroes = [
         strength: 10,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/northern_realms/heroes/Philippa_Eilhart.png'
+        imageUrl: 'src/assets/images/northern_realms/heroes/Philippa_Eilhart.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
         id: 'nr_hero_02',
@@ -78,7 +79,8 @@ export const northernRealmsHeroes = [
         strength: 10,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/northern_realms/heroes/Vernon_Roche.png'
+        imageUrl: 'src/assets/images/northern_realms/heroes/Vernon_Roche.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
         id: 'nr_hero_03',
@@ -88,7 +90,8 @@ export const northernRealmsHeroes = [
         strength: 10,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/northern_realms/heroes/John_Natalis.png'
+        imageUrl: 'src/assets/images/northern_realms/heroes/John_Natalis.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
         id: 'nr_hero_04',
@@ -98,7 +101,8 @@ export const northernRealmsHeroes = [
         strength: 10,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/northern_realms/heroes/Esterad_Thyssen.png'
+        imageUrl: 'src/assets/images/northern_realms/heroes/Esterad_Thyssen.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     }
 ];
 
@@ -122,7 +126,8 @@ export const northernRealmsUnits = [
         strength: 1,
         row: RowPosition.CLOSE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: 'src/assets/images/northern_realms/poor_fucking_infantry.png'
+        imageUrl: 'src/assets/images/northern_realms/poor_fucking_infantry.png',
+        description: 'Tight Bond: Place next to a card with the same name to double the strength of both cards.'
     },
     {
         id: 'nr_unit_03',
@@ -132,7 +137,8 @@ export const northernRealmsUnits = [
         strength: 4,
         row: RowPosition.CLOSE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: 'src/assets/images/northern_realms/blue_stripes_commando.png'
+        imageUrl: 'src/assets/images/northern_realms/blue_stripes_commando.png',
+        description: 'Tight Bond: Place next to a card with the same name to double the strength of both cards.'
     },
     {
         id: 'nr_unit_04',
@@ -142,7 +148,8 @@ export const northernRealmsUnits = [
         strength: 5,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: 'src/assets/images/northern_realms/prince_stennis.png'
+        imageUrl: 'src/assets/images/northern_realms/prince_stennis.png',
+        description: 'Spy: Place on your opponent\'s battlefield and draw 2 cards from your deck.'
     },
     {
         id: 'nr_unit_05',
@@ -162,7 +169,8 @@ export const northernRealmsUnits = [
         strength: 4,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: 'src/assets/images/northern_realms/sigismund_dijkstra.png'
+        imageUrl: 'src/assets/images/northern_realms/sigismund_dijkstra.png',
+        description: 'Spy: Place on your opponent\'s battlefield and draw 2 cards from your deck.'
     },
     {
         id: 'nr_unit_07',
@@ -193,7 +201,8 @@ export const northernRealmsUnits = [
         strength: 5,
         row: RowPosition.RANGED,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: 'src/assets/images/northern_realms/crinfrid_reavers_dragon_hunter.png'
+        imageUrl: 'src/assets/images/northern_realms/crinfrid_reavers_dragon_hunter.png',
+        description: 'Tight Bond: Place next to a card with the same name to double the strength of both cards.'
     },
     {
         id: 'nr_unit_10',
@@ -264,7 +273,8 @@ export const northernRealmsUnits = [
         strength: 8,
         row: RowPosition.SIEGE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: 'src/assets/images/northern_realms/catapult.png'
+        imageUrl: 'src/assets/images/northern_realms/catapult.png',
+        description: 'Tight Bond: Place next to a card with the same name to double the strength of both cards.'
     },
     {
         id: 'nr_unit_17',
@@ -274,7 +284,8 @@ export const northernRealmsUnits = [
         strength: 5,
         row: RowPosition.SIEGE,
         ability: CardAbility.MEDIC,
-        imageUrl: 'src/assets/images/northern_realms/dun_banner_medic.png'
+        imageUrl: 'src/assets/images/northern_realms/dun_banner_medic.png',
+        description: 'Medic: Choose one card from your discard pile and play it instantly (no Heroes or Special Cards).'
     },
     {
         id: 'nr_unit_18',
@@ -284,7 +295,8 @@ export const northernRealmsUnits = [
         strength: 1,
         row: RowPosition.SIEGE,
         ability: CardAbility.MORALE_BOOST,
-        imageUrl: 'src/assets/images/northern_realms/kaedweni_siege_expert.png'
+        imageUrl: 'src/assets/images/northern_realms/kaedweni_siege_expert.png',
+        description: 'Morale Boost: Add +1 to the strength of all your units in the row (excluding itself).'
     },
     {
         id: 'nr_unit_19',
@@ -304,7 +316,8 @@ export const northernRealmsUnits = [
         strength: 1,
         row: RowPosition.SIEGE,
         ability: CardAbility.SPY,
-        imageUrl: 'src/assets/images/northern_realms/thaler.png'
+        imageUrl: 'src/assets/images/northern_realms/thaler.png',
+        description: 'Spy: Place on your opponent\'s battlefield and draw 2 cards from your deck.'
     },
     {
         id: 'nr_unit_21',

@@ -1,6 +1,6 @@
 // src/hooks/useAI.ts
 import { useCallback, useMemo } from 'react';
-import {  GameState } from '@/types/card';
+import {  Card, GameState } from '@/types/card';
 import { playCard as playCardHelper } from './useGameLogic';
 import { AIStrategyCoordinator, PlayDecision  } from '../ai/strategy';
 import { calculateTotalScore } from '@/utils/gameHelpers';
@@ -8,7 +8,8 @@ import { calculateTotalScore } from '@/utils/gameHelpers';
 const useAI = (
   gameState: GameState,
   onRoundEnd: () => void,
-  setGameState: React.Dispatch<React.SetStateAction<GameState>>
+  setGameState: React.Dispatch<React.SetStateAction<GameState>>,
+  setSelectedCard: React.Dispatch<React.SetStateAction<Card | null>>
 ) => {
   const strategyCoordinator = useMemo(() => new AIStrategyCoordinator(), []);
 
@@ -36,15 +37,21 @@ const useAI = (
   }, [onRoundEnd, setGameState]);
 
   const playCard = useCallback((decision: PlayDecision) => {
-    const newState = playCardHelper({
-      gameState,
-      card: decision.card,
-      row: decision.row,
-      targetCard: decision.targetCard,
-      isPlayer: false
-    });
-    setGameState(newState);
-  }, [gameState, setGameState]);
+
+    setSelectedCard(decision.card);
+    
+    setTimeout(() => {
+      const newState = playCardHelper({
+        gameState,
+        card: decision.card,
+        row: decision.row,
+        targetCard: decision.targetCard,
+        isPlayer: false
+      });
+      setGameState(newState);
+      setSelectedCard(null);
+    }, 1000);
+  }, [gameState, setGameState, setSelectedCard]);
 
   const makeOpponentMove = useCallback(() => {
     console.log('=== AI Turn Start ===', {

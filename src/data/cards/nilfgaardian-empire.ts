@@ -53,7 +53,8 @@ export const nilfgaardianEmpireHeroes = [
         strength: 10,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/nilfgaard/heroes/Letho_of_Gulet.png'
+        imageUrl: 'src/assets/images/nilfgaard/heroes/Letho_of_Gulet.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
         id: 'nilfgaard_hero_02',
@@ -63,7 +64,8 @@ export const nilfgaardianEmpireHeroes = [
         strength: 10,
         row: RowPosition.CLOSE,
         ability: CardAbility.MEDIC,
-        imageUrl: 'src/assets/images/nilfgaard/heroes/Menno_Coehoorn.png'
+        imageUrl: 'src/assets/images/nilfgaard/heroes/Menno_Coehoorn.png',
+        description: 'Medic: Choose one card from your discard pile and play it instantly (no Heroes or Special Cards).'
     },
     {
         id: 'nilfgaard_hero_03',
@@ -73,7 +75,8 @@ export const nilfgaardianEmpireHeroes = [
         strength: 10,
         row: RowPosition.SIEGE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/nilfgaard/heroes/Morvran_Voorhis.png'
+        imageUrl: 'src/assets/images/nilfgaard/heroes/Morvran_Voorhis.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
         id: 'nilfgaard_hero_04',
@@ -83,7 +86,8 @@ export const nilfgaardianEmpireHeroes = [
         strength: 10,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/nilfgaard/heroes/Tibor_Eggebracht.png'
+        imageUrl: 'src/assets/images/nilfgaard/heroes/Tibor_Eggebracht.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     }
 ];
 
@@ -146,7 +150,8 @@ export const nilfgaardianEmpireUnits = [
         strength: 1,
         row: RowPosition.RANGED,
         ability: CardAbility.MEDIC,
-        imageUrl: 'src/assets/images/nilfgaard/etolian_auxiliary_archers.png'
+        imageUrl: 'src/assets/images/nilfgaard/etolian_auxiliary_archers.png',
+        description: 'Medic: Choose one card from your discard pile and play it instantly (no Heroes or Special Cards).'
     },
     {
         id: 'nilfgaard_unit_07',
@@ -176,7 +181,8 @@ export const nilfgaardianEmpireUnits = [
         strength: 3,
         row: RowPosition.CLOSE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: 'src/assets/images/nilfgaard/impera_brigade_guard.png'
+        imageUrl: 'src/assets/images/nilfgaard/impera_brigade_guard.png',
+        description: 'Tight Bond: Place next to a card with the same name to double the strength of both cards.'
     },
     {
         id: 'nilfgaard_unit_10',
@@ -196,7 +202,8 @@ export const nilfgaardianEmpireUnits = [
         strength: 2,
         row: RowPosition.CLOSE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: 'src/assets/images/nilfgaard/nausicaa_cavalry_rider.png'
+        imageUrl: 'src/assets/images/nilfgaard/nausicaa_cavalry_rider.png',
+        description: 'Tight Bond: Place next to a card with the same name to double the strength of both cards.'
     },
     {
         id: 'nilfgaard_unit_12',
@@ -246,7 +253,8 @@ export const nilfgaardianEmpireUnits = [
         strength: 7,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: 'src/assets/images/nilfgaard/shilard_fitz-oesterlen.png'
+        imageUrl: 'src/assets/images/nilfgaard/shilard_fitz-oesterlen.png',
+        description: 'Spy: Place on your opponent\'s battlefield and draw 2 cards from your deck.'
     },
     {
         id: 'nilfgaard_unit_17',
@@ -266,7 +274,8 @@ export const nilfgaardianEmpireUnits = [
         strength: 0,
         row: RowPosition.SIEGE,
         ability: CardAbility.MEDIC,
-        imageUrl: 'src/assets/images/nilfgaard/siege_technician.png'
+        imageUrl: 'src/assets/images/nilfgaard/siege_technician.png',
+        description: 'Medic: Choose one card from your discard pile and play it instantly (no Heroes or Special Cards).'
     },
     {
         id: 'nilfgaard_unit_19',
@@ -276,7 +285,8 @@ export const nilfgaardianEmpireUnits = [
         strength: 9,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: 'src/assets/images/nilfgaard/stefan_skellen.png'
+        imageUrl: 'src/assets/images/nilfgaard/stefan_skellen.png',
+        description: 'Spy: Place on your opponent\'s battlefield and draw 2 cards from your deck.'
     },
     {
         id: 'nilfgaard_unit_20',
@@ -306,7 +316,8 @@ export const nilfgaardianEmpireUnits = [
         strength: 4,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: 'src/assets/images/nilfgaard/vattier_de_rideaux.png'
+        imageUrl: 'src/assets/images/nilfgaard/vattier_de_rideaux.png',
+        description: 'Spy: Place on your opponent\'s battlefield and draw 2 cards from your deck.'
     },
     {
         id: 'nilfgaard_unit_23',
@@ -326,7 +337,8 @@ export const nilfgaardianEmpireUnits = [
         strength: 5,
         row: RowPosition.CLOSE,
         ability: CardAbility.TIGHT_BOND,
-        imageUrl: 'src/assets/images/nilfgaard/young_emmisary.png'
+        imageUrl: 'src/assets/images/nilfgaard/young_emmisary.png',
+        description: 'Tight Bond: Place next to a card with the same name to double the strength of both cards.'
     }
 ];
 

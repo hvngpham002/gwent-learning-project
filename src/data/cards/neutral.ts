@@ -10,7 +10,8 @@ export const neutralHeroes = [
         strength: 15,
         row: RowPosition.CLOSE,
         ability: CardAbility.MUSTER_ROACH,
-        imageUrl: 'src/assets/images/neutral/Geralt.png'
+        imageUrl: 'src/assets/images/neutral/Geralt.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
         id: 'neutral_hero_02',
@@ -20,7 +21,8 @@ export const neutralHeroes = [
         strength: 15,
         row: RowPosition.CLOSE,
         ability: CardAbility.MUSTER_ROACH,
-        imageUrl: 'src/assets/images/neutral/Cirilla_Fiona_Elen_Riannon.jpg'
+        imageUrl: 'src/assets/images/neutral/Cirilla_Fiona_Elen_Riannon.jpg',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
         id: 'neutral_hero_03',
@@ -30,7 +32,8 @@ export const neutralHeroes = [
         strength: 7,
         row: RowPosition.RANGED,
         ability: CardAbility.MEDIC,
-        imageUrl: 'src/assets/images/neutral/Yennefer.png'
+        imageUrl: 'src/assets/images/neutral/Yennefer.png',
+        description: 'Medic: Choose one card from your discard pile and play it instantly (no Heroes or Special Cards).'
     },
     {
         id: 'neutral_hero_04',
@@ -40,7 +43,8 @@ export const neutralHeroes = [
         strength: 7,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/neutral/Triss.png'
+        imageUrl: 'src/assets/images/neutral/Triss.png',
+        description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
         id: 'neutral_hero_05',
@@ -50,7 +54,8 @@ export const neutralHeroes = [
         strength: 0,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: 'src/assets/images/neutral/Mysterious_Elf.png'
+        imageUrl: 'src/assets/images/neutral/Mysterious_Elf.png',
+        description: 'Spy: Place on your opponent\'s battlefield and draw 2 cards from your deck.'
     }
 ];
 
@@ -124,7 +129,8 @@ export const neutralUnits = [
         row: RowPosition.CLOSE,
         availableRows: [RowPosition.CLOSE, RowPosition.RANGED],
         ability: CardAbility.AGILE,
-        imageUrl: 'src/assets/images/neutral/olgierd_von_everec.png'
+        imageUrl: 'src/assets/images/neutral/olgierd_von_everec.png',
+        description: 'Medic: Adds +1 to all units in the row (excluding itself).'
     },
     {
         id: 'neutral_unit_08',
@@ -144,7 +150,8 @@ export const neutralUnits = [
         strength: 7,
         row: RowPosition.CLOSE,
         ability: CardAbility.SCORCH_CLOSE,
-        imageUrl: 'src/assets/images/neutral/villentretenmerth.png'
+        imageUrl: 'src/assets/images/neutral/villentretenmerth.png',
+        description: 'Scorch - Close Combat: Destroy your enemy\'s strongest Close Combat unit(s) if the combined strength of all his or her Close Combat units is 10 or more.'
     },
     {
         id: 'neutral_unit_10',
@@ -154,7 +161,8 @@ export const neutralUnits = [
         strength: 2,
         row: RowPosition.SIEGE,
         ability: CardAbility.MUSTER,
-        imageUrl: 'src/assets/images/neutral/gaunt_odimm.png'
+        imageUrl: 'src/assets/images/neutral/gaunt_odimm.png',
+        description: 'Muster: Find any cards with the same name in your deck and play them instantly. '
     },
     {
         id: 'neutral_unit_11',
@@ -164,7 +172,8 @@ export const neutralUnits = [
         strength: 4,
         row: RowPosition.RANGED,
         ability: CardAbility.MUSTER,
-        imageUrl: 'src/assets/images/neutral/gaunter_odimm_darkness.png'
+        imageUrl: 'src/assets/images/neutral/gaunter_odimm_darkness.png',
+        description: 'Muster: Find any cards with the same name in your deck and play them instantly. '
     },
 ];
 

@@ -105,12 +105,12 @@ const GameManager = () => {
     });
   };
 
-  const { makeOpponentMove } = useAI(gameState, handleRoundEnd, setGameState);
+  const { makeOpponentMove } = useAI(gameState, handleRoundEnd, setGameState, setSelectedCard);
 
   useEffect(() => {
     // Only initialize once at the start
-    if (gameState.gamePhase === 'setup' && 
-        gameState.player.hand.length === 0 && 
+    if (gameState.gamePhase === 'setup' &&
+        gameState.player.hand.length === 0 &&
         gameState.opponent.hand.length === 0) {
       initializeGame();
     }
@@ -118,7 +118,7 @@ const GameManager = () => {
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    
+
     // Only log if game is in playing phase and there's a meaningful turn change
     if (gameState.gamePhase === 'playing') {
       console.log('=== Turn Change ===', {
@@ -131,13 +131,13 @@ const GameManager = () => {
         timestamp: new Date().toISOString()
       });
     }
-  
+
     if (gameState.currentTurn === 'opponent' &&
         gameState.gamePhase === 'playing' &&
         !gameState.opponent.passed) {
       timeoutId = setTimeout(makeOpponentMove, 1000);
     }
-  
+
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
