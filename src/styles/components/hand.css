@@ -14,6 +14,9 @@
   background: rgba(0, 0, 0, 0.2);
   flex: 1;
   height: 160px;
+  /* Add custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #d7a451 rgba(0, 0, 0, 0.2);
 }
 
 .deck-container {

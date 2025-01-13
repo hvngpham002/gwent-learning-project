@@ -10,6 +10,7 @@
 .game-layout {
   display: flex;
   gap: var(--spacing-sm);
+  position: relative;
 }
 
 .game-sidebar {
@@ -70,6 +71,10 @@
   background: rgba(0, 0, 0, 0.3);
   overflow-y: hidden;
   overflow-x: auto;
+
+  /* Add custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #d7a451 rgba(0, 0, 0, 0.2);
 }
 
 .battle-row:hover {
@@ -181,3 +186,86 @@
   color: white;
   margin-bottom: var(--spacing-sm);
 }
+
+.game-cards-selector-container {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 85%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: var(--spacing-sm);
+  border-radius: 8px;
+}
+
+.card-selector-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.card-selector-container {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-direction: row;
+  overflow-x: auto;
+  padding: var(--spacing-sm);
+  min-height: 200px;
+  /* Add custom scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: #d7a451 rgba(0, 0, 0, 0.2);
+}
+
+.card-selector-image img {
+  width: 200px;
+  height: 378px;
+}
+
+/* .card::-webkit-scrollbar {
+  height: 8px;
+}
+
+.card::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.card::-webkit-scrollbar-thumb {
+  background-color: #d7a451;
+  border-radius: 4px;
+} */
+
+.card-selector-title {
+  font-size: 24px;
+  color: #d7a451;
+  text-align: center;
+  padding: var(--spacing-sm);
+}
+
+.card-selector-button-container {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm);
+}
+
+.card-selector-button {
+  background: #d7a451;
+  color: black;
+  padding: 8px 24px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.card-selector-button:hover {
+  background: #b88c3f;
+}
+

@@ -8,6 +8,7 @@ import '@/styles/components/hand.css';
 import GwentCard from '../card/GwentCard';
 import { calculateTotalScore } from '@/utils/gameHelpers';
 import { neutralDeck } from "@/data/cards/neutral";
+import GameCardsSelector from './GameCardsSelector';
 
 interface GameBoardProps {
   gameState: GameState;
@@ -102,6 +103,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div className="game-container">
       <div className="game-layout">
+        <GameCardsSelector gameState={gameState} />
         {/* Left sidebar with player statuses */}
         <div className="game-sidebar">
           <PlayerStatus
@@ -179,7 +181,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
             <div className='selected-card-container'>
               <div className='selected-card-image'>
                 <img src={selectedCard?.imageUrl} alt={selectedCard?.name} />
-            </div>
+              </div>
             <div className='selected-card-description'>
               <span className='selected-card-name'>{selectedCard?.name}</span>
              {selectedCard?.description}
