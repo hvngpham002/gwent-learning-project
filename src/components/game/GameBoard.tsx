@@ -12,6 +12,7 @@ import GameCardsSelector from './GameCardsSelector';
 
 interface GameBoardProps {
   gameState: GameState;
+  setGameState: (state: GameState | ((prev: GameState) => GameState)) => void;
   onCardClick: (card: Card) => void;
   onRowClick: (row: RowPosition) => void;
   onBoardUnitClick: (card: UnitCard, row: RowPosition) => void;
@@ -19,17 +20,32 @@ interface GameBoardProps {
   onPass: () => void;
   selectedCard: Card | null;
   isDecoyActive: boolean;
+  cardsSelector: {
+    title: string;
+    show: boolean;
+  };
+  setCardsSelector: (cardsSelector: {
+    title: string;
+    show: boolean;
+  }) => void;
+  handleDiscardPile: () => void;
+  onRedraw: (selectedCards: Card[]) => void;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
   gameState,
+  setGameState,
   onCardClick,
   onRowClick,
   onWeatherRowClick,
   onBoardUnitClick,
   onPass,
   selectedCard,
-  isDecoyActive
+  isDecoyActive,
+  cardsSelector,
+  setCardsSelector,
+  handleDiscardPile,
+  onRedraw
 }) => {
 
   const playerImageUrl = () => {
@@ -103,7 +119,15 @@ const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div className="game-container">
       <div className="game-layout">
-        <GameCardsSelector gameState={gameState} />
+          {cardsSelector.show &&
+              <GameCardsSelector
+                  setCardsSelector={setCardsSelector}
+                  gameState={gameState}
+                  title={cardsSelector.title}
+                  onRedraw={onRedraw}
+                  setGameState={setGameState}
+              />
+          }
         {/* Left sidebar with player statuses */}
         <div className="game-sidebar">
           <PlayerStatus
@@ -191,8 +215,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
           <div className="deck-container">
             <div className='deck-cards'>
               <GwentCard
+                onClick={handleDiscardPile}
                 card={discardCard}
-                isPlayable={false}
+                isPlayable={true}
               />
               <div className="deck-count">{gameState.player.discard.length}</div>
             </div>

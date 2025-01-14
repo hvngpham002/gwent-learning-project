@@ -126,6 +126,6 @@ export interface GameState {
     playerScore: number;
     opponentScore: number;
     currentTurn: 'player' | 'opponent';
-    gamePhase: 'setup' | 'playing' | 'roundEnd' | 'gameEnd';
+    gamePhase: 'setup' | 'playing' | 'roundEnd' | 'gameEnd'
     activeWeatherEffects: Set<CardAbility>;  // Track active weather effects (FROST, FOG, RAIN)
 }

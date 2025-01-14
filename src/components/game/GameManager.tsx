@@ -41,6 +41,17 @@ const GameManager = () => {
 
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [isDecoyActive, setIsDecoyActive] = useState(false);
+  const [cardsSelector, setCardsSelector] = useState({
+    title: '',
+    show: false
+  });
+
+  const handleDiscardPile = () => {
+    setCardsSelector({
+      title: "discard-view",
+      show: true
+    });
+  }
 
   const handleRoundEnd = () => {
     setGameState(prev => {
@@ -113,6 +124,10 @@ const GameManager = () => {
         gameState.player.hand.length === 0 &&
         gameState.opponent.hand.length === 0) {
       initializeGame();
+      setCardsSelector({
+        title: "redraw",
+        show: true
+      });
     }
   }, [gameState.gamePhase, gameState.opponent.hand.length, gameState.player.hand.length]);
 
@@ -172,7 +187,7 @@ const GameManager = () => {
         faction: opponentDeckWithLeader.leader.faction
       },
       currentTurn: Math.random() < 0.5 ? 'player' : 'opponent',
-      gamePhase: 'playing'
+      gamePhase: 'setup'
     }));
   };
 
@@ -390,11 +405,49 @@ const GameManager = () => {
     });
   };
 
+  const handleRedraw = (selectedCards: Card[]) => {
+    console.log('=== GameManager Redraw ===', {
+        selectedCards,
+        currentHand: gameState.player.hand,
+        currentDeck: gameState.player.deck,
+        timestamp: new Date().toISOString()
+    });
+
+    setGameState(prev => {
+        const newHand = prev.player.hand.filter(
+            card => !selectedCards.find(sc => sc.id === card.id)
+        );
+        const newDeck = [...prev.player.deck, ...selectedCards];
+        const shuffledDeck = shuffle(newDeck);
+        const drawnCards = shuffledDeck.slice(0, selectedCards.length);
+        const remainingDeck = shuffledDeck.slice(selectedCards.length);
+
+        console.log('=== After Redraw Calculation ===', {
+            newHand,
+            drawnCards,
+            remainingDeckSize: remainingDeck.length,
+            timestamp: new Date().toISOString()
+        });
+
+        return {
+            ...prev,
+            player: {
+                ...prev.player,
+                hand: [...newHand, ...drawnCards],
+                deck: remainingDeck
+            }
+        };
+    });
+};
+
   return (
     <React.Fragment>
       <DisclaimerModal />
       <GameBoard
         gameState={gameState}
+        setGameState={setGameState}
+        cardsSelector={cardsSelector}
+        setCardsSelector={setCardsSelector}
         onCardClick={handleCardClick}
         onRowClick={handleRowClick}
         onWeatherRowClick={handleWeatherRowClick}
@@ -402,6 +455,8 @@ const GameManager = () => {
         onPass={handlePass}
         selectedCard={selectedCard}
         isDecoyActive={isDecoyActive}
+        handleDiscardPile={handleDiscardPile}
+        onRedraw={handleRedraw}
       />
     </React.Fragment>
 

@@ -215,7 +215,7 @@
   flex-direction: row;
   overflow-x: auto;
   padding: var(--spacing-sm);
-  min-height: 200px;
+  overflow-y: hidden;
   /* Add custom scrollbar styling */
   scrollbar-width: thin;
   scrollbar-color: #d7a451 rgba(0, 0, 0, 0.2);
@@ -225,20 +225,6 @@
   width: 200px;
   height: 378px;
 }
-
-/* .card::-webkit-scrollbar {
-  height: 8px;
-}
-
-.card::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-.card::-webkit-scrollbar-thumb {
-  background-color: #d7a451;
-  border-radius: 4px;
-} */
 
 .card-selector-title {
   font-size: 24px;
@@ -267,5 +253,21 @@
 
 .card-selector-button:hover {
   background: #b88c3f;
+}
+
+.card-selector-image {
+  cursor: pointer;
+  transition: transform 0.2s;
+  border: 2px solid transparent;
+  border-radius: 8px;
+}
+
+.card-selector-image.selected {
+  border-color: #d7a451;
+  transform: scale(1.05);
+}
+
+.card-selector-image:hover {
+  transform: scale(1.05);
 }
 
