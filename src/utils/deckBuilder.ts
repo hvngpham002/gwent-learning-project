@@ -223,7 +223,7 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     if (frost) {
         const cards: SpecialCard[] = [
             { ...frost, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...frost, id: frost.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+            { ...frost, id: frost.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
         ];
         deck.push(...cards);
     }

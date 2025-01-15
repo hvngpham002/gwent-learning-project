@@ -161,8 +161,8 @@ const GameManager = () => {
   }, [gameState.currentTurn, gameState.gamePhase, gameState.opponent.hand.length, gameState.opponent.passed, gameState.player.hand.length, gameState.player.passed, makeOpponentMove]);
 
   const initializeGame = () => {
-    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
-    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
+    const playerDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
+    const opponentDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
 
     const playerDeck = shuffle(playerDeckWithLeader.deck);
     const opponentDeck = shuffle(opponentDeckWithLeader.deck);
@@ -384,7 +384,7 @@ const GameManager = () => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
     }
-  
+
     setGameState((prev: GameState) => {
       const newState: GameState = {
         ...prev,
@@ -394,13 +394,13 @@ const GameManager = () => {
         },
         currentTurn: 'opponent'
       };
-  
+
       // Only trigger round end if opponent has already passed
       if (prev.opponent.passed) {
         newState.gamePhase = 'roundEnd';
         setTimeout(() => handleRoundEnd(), 500);
       }
-  
+
       return newState;
     });
   };

@@ -1,9 +1,9 @@
 // src/hooks/useAI.ts
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {  Card, GameState } from '@/types/card';
 import { playCard as playCardHelper } from './useGameLogic';
 import { AIStrategyCoordinator, PlayDecision  } from '../ai/strategy';
-import { calculateTotalScore } from '@/utils/gameHelpers';
+import { calculateTotalScore, shuffle } from '@/utils/gameHelpers';
 
 const useAI = (
   gameState: GameState,
@@ -11,7 +11,60 @@ const useAI = (
   setGameState: React.Dispatch<React.SetStateAction<GameState>>,
   setSelectedCard: React.Dispatch<React.SetStateAction<Card | null>>
 ) => {
+
   const strategyCoordinator = useMemo(() => new AIStrategyCoordinator(), []);
+  const [aiRedrawComplete, setAiRedrawComplete] = useState(false);
+
+  useEffect(() => {
+    if (gameState.gamePhase === 'setup' && 
+        gameState.opponent.hand.length > 0 && 
+        !aiRedrawComplete) {
+      setTimeout(() => {
+        handleAIRedraw(gameState, setGameState, strategyCoordinator);
+        setAiRedrawComplete(true);
+      }, 1000);
+    }
+  }, [gameState, gameState.gamePhase, gameState.opponent.hand.length, setGameState, strategyCoordinator, aiRedrawComplete]);
+
+  const handleAIRedraw = (
+    gameState: GameState,
+    setGameState: React.Dispatch<React.SetStateAction<GameState>>,
+    strategyCoordinator: AIStrategyCoordinator
+  ) => {
+    const cardsToRedraw = strategyCoordinator.evaluateRedraw(gameState);
+    
+    if (cardsToRedraw.length > 0) {
+      console.log('=== AI Executing Redraw ===');
+      
+      const newHand = gameState.opponent.hand.filter(
+        card => !cardsToRedraw.find(rc => rc.id === card.id)
+      );
+
+      const newDeck = [...gameState.opponent.deck, ...cardsToRedraw];
+      const shuffledDeck = shuffle(newDeck);
+      const drawnCards = shuffledDeck.slice(0, cardsToRedraw.length);
+      const remainingDeck = shuffledDeck.slice(cardsToRedraw.length);
+  
+      setGameState(prev => ({
+        ...prev,
+        opponent: {
+          ...prev.opponent,
+          hand: [...newHand, ...drawnCards],
+          deck: remainingDeck
+        },
+      }));
+
+      console.log('new hand:', [...newHand, ...drawnCards].map(card => ({
+        name: card.name,
+        type: card.type,
+        strength: 'strength' in card ? card.strength : 'N/A',
+        ability: card.ability
+      })));
+      
+    } else {
+      console.log('AI decided not to redraw any cards');
+    }
+  };
 
   const handleOpponentPass = useCallback(() => {
     console.log('Opponent is passing');
@@ -28,18 +81,19 @@ const useAI = (
       };
 
       if (prev.player.passed) {
-        // Move the timeout outside of setState
-        requestAnimationFrame(() => onRoundEnd());
+        setTimeout(() => onRoundEnd(), 500);
       }
 
       return newState;
     });
+
+
   }, [onRoundEnd, setGameState]);
 
   const playCard = useCallback((decision: PlayDecision) => {
 
     setSelectedCard(decision.card);
-    
+
     setTimeout(() => {
       const newState = playCardHelper({
         gameState,
@@ -51,6 +105,7 @@ const useAI = (
       setGameState(newState);
       setSelectedCard(null);
     }, 1000);
+
   }, [gameState, setGameState, setSelectedCard]);
 
   const makeOpponentMove = useCallback(() => {

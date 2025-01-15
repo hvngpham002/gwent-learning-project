@@ -14,6 +14,80 @@ abstract class Strategy {
   abstract evaluate(state: GameState, card: Card): PlayDecision | null;
 }
 
+class RedrawStrategy extends Strategy {
+  evaluate(state: GameState, card: Card): PlayDecision | null {
+    let redrawScore = 0;
+
+    // Check for redundant weather cards first
+    const copiesInHand = state.opponent.hand.filter(c => c.name === card.name).length;
+    if (copiesInHand > 1 && 
+        card.type === CardType.SPECIAL && 
+        [CardAbility.FROST, CardAbility.FOG, CardAbility.RAIN, CardAbility.CLEAR_WEATHER].includes(card.ability)) {
+      return {
+        card,
+        score: 10
+      };
+    }
+
+    // Only proceed with unit evaluation if it's a unit card
+    if (card.type !== CardType.UNIT) return null;
+
+    const unitCard = card as UnitCard;
+
+    // Handle tight bond cards without pairs
+    if (unitCard.ability === CardAbility.TIGHT_BOND) {
+      if (copiesInHand === 1) {
+        // Single tight bond card is bad
+        redrawScore += 8;
+        // Additional score for lower strength tight bonds
+        const strengthPenalty = Math.max(0, 8 - unitCard.strength);
+        redrawScore += strengthPenalty;
+      } else if (copiesInHand === 2) {
+        // Keep pairs together - don't redraw
+        return null;
+      } else if (copiesInHand === 3) {
+        // Having 3 copies is ideal for one type of tight_bond
+        // Only consider redrawing if we have another complete set
+        const otherTightBondPairs = state.opponent.hand
+          .filter(c => c.ability === CardAbility.TIGHT_BOND && c.name !== card.name)
+          .reduce((acc, curr) => {
+            acc[curr.name] = (acc[curr.name] || 0) + 1;
+            return acc;
+          }, {} as Record<string, number>);
+    
+        const hasAnotherCompleteSet = Object.values(otherTightBondPairs).some(count => count >= 2);
+        if (hasAnotherCompleteSet) {
+          redrawScore += 4; // Lower priority for redundant tight_bond set
+        } else {
+          return null; // Keep the only tight_bond set we have
+        }
+      }
+    }
+
+    // Low strength units with no abilities are prime candidates
+    if (unitCard.strength <= 4 && unitCard.ability === CardAbility.NONE) {
+      redrawScore += 8;
+    }
+
+    // Don't redraw spies or medics
+    if (unitCard.ability === CardAbility.SPY || unitCard.ability === CardAbility.MEDIC) {
+      return null;
+    }
+
+    // Don't redraw muster cards
+    if (unitCard.ability === CardAbility.MUSTER || unitCard.ability === CardAbility.MUSTER_ROACH) {
+      return null;
+    }
+
+    if (redrawScore === 0) return null;
+
+    return {
+      card: unitCard,
+      score: redrawScore
+    };
+  }
+}
+
 // Strategy for Commander's Horn
 class CommanderHornStrategy extends Strategy {
   evaluate(state: GameState, card: Card): PlayDecision | null {
@@ -263,6 +337,7 @@ class UnitStrategy extends Strategy {
 // Main AI Strategy Coordinator
 export class AIStrategyCoordinator {
   private strategies: Strategy[];
+  private redrawStrategy: RedrawStrategy;
 
   constructor() {
     this.strategies = [
@@ -273,6 +348,7 @@ export class AIStrategyCoordinator {
       new CommanderHornStrategy(),
       new UnitStrategy()
     ];
+    this.redrawStrategy = new RedrawStrategy();
   }
 
   evaluateHand(state: GameState): PlayDecision | null {
@@ -293,6 +369,49 @@ export class AIStrategyCoordinator {
     });
 
     return bestDecision;
+  }
+
+  evaluateRedraw(state: GameState): Card[] {
+    const cardsToRedraw: Card[] = [];
+    console.log('=== AI Redraw Analysis ===');
+    console.log('Initial hand:', state.opponent.hand.map(card => ({
+      name: card.name,
+      type: card.type,
+      strength: 'strength' in card ? card.strength : 'N/A',
+      ability: card.ability
+    })));
+
+    // We can redraw up to 2 cards
+    for (let i = 0; i < 2; i++) {
+      let bestRedrawDecision: PlayDecision | null = null;
+      
+      const remainingHand = state.opponent.hand.filter(
+        handCard => !cardsToRedraw.some(redrawCard => redrawCard.id === handCard.id)
+      );
+      
+      for (const card of remainingHand) {
+        const decision = this.redrawStrategy.evaluate(state, card);
+        if (decision && (!bestRedrawDecision || decision.score > bestRedrawDecision.score)) {
+          bestRedrawDecision = decision;
+        }
+      }
+
+      if (bestRedrawDecision) {
+        const redrawCard = bestRedrawDecision.card;
+        cardsToRedraw.push(redrawCard);
+        console.log(`Redrawing card ${i + 1}:`, {
+          name: redrawCard.name,
+          type: redrawCard.type,
+          strength: 'strength' in redrawCard ? redrawCard.strength : 'N/A',
+          ability: redrawCard.ability,
+          score: bestRedrawDecision.score
+        });
+      } else {
+        break;
+      }
+    }
+
+    return cardsToRedraw;
   }
 
   shouldPass(state: GameState): boolean {

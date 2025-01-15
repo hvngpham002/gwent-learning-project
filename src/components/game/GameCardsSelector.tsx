@@ -34,13 +34,13 @@ const GameCardsSelector = ({gameState, title, setCardsSelector, onRedraw, setGam
     const handleRedraw = () => {
         if (selectedCards.length > 0) {
             const newCount = redrawnCount + 1;
-            
+
             onRedraw(selectedCards);
-            
+
             Promise.resolve().then(() => {
                 setSelectedCards([]);
                 setRedrawnCount(newCount);
-                
+
                 if (newCount >= 2) {
                     setGameState((prev: GameState) => ({
                         ...prev,
@@ -51,7 +51,7 @@ const GameCardsSelector = ({gameState, title, setCardsSelector, onRedraw, setGam
             });
         }
     };
-    
+
     return (
         <div className='game-cards-selector-container'>
             <div className='card-selector-content'>
