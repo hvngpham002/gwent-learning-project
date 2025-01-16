@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction } from '@/types/card';
 import GameBoard from './GameBoard';
 import { canPlayWeatherInRow, shuffle } from '@/utils/gameHelpers';
@@ -116,6 +116,8 @@ const GameManager = () => {
     });
   };
 
+  console.log(gameState.opponent.discard)
+
   const { makeOpponentMove } = useAI(gameState, handleRoundEnd, setGameState, setSelectedCard);
 
   useEffect(() => {
@@ -131,10 +133,11 @@ const GameManager = () => {
     }
   }, [gameState.gamePhase, gameState.opponent.hand.length, gameState.player.hand.length]);
 
+  const isAIMoving = useRef(false);
+
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-
-    // Only log if game is in playing phase and there's a meaningful turn change
+  
     if (gameState.gamePhase === 'playing') {
       console.log('=== Turn Change ===', {
         phase: gameState.gamePhase,
@@ -146,19 +149,29 @@ const GameManager = () => {
         timestamp: new Date().toISOString()
       });
     }
-
+  
     if (gameState.currentTurn === 'opponent' &&
         gameState.gamePhase === 'playing' &&
         !gameState.opponent.passed) {
-      setTimeout(makeOpponentMove, 1000);
+      
+      // Only use isAIMoving check when player hasn't passed
+      if (!gameState.player.passed && isAIMoving.current) {
+        return;
+      }
+  
+      isAIMoving.current = true;
+      timeoutId = setTimeout(() => {
+        makeOpponentMove();
+        isAIMoving.current = false;
+      }, 1000);
     }
-
+  
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
     };
-  }, [gameState.currentTurn, gameState.gamePhase, gameState.opponent.hand.length, gameState.opponent.passed, gameState.player.hand.length, gameState.player.passed, makeOpponentMove]);
+  }, [gameState, makeOpponentMove]);
 
   const initializeGame = () => {
     const playerDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
@@ -231,8 +244,8 @@ const GameManager = () => {
     }
 
     // Handle medic ability
-    if ((card.type === CardType.UNIT || card.type === CardType.HERO) && 
-    card.ability === CardAbility.MEDIC && 
+    if ((card.type === CardType.UNIT || card.type === CardType.HERO) &&
+    card.ability === CardAbility.MEDIC &&
     gameState.player.discard.length > 0) {
       const validTargets = gameState.player.discard.filter(c => c.type === CardType.UNIT && c.ability !== CardAbility.DECOY);
       if (validTargets.length > 0) {

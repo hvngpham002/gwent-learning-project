@@ -7,6 +7,7 @@ export interface PlayDecision {
   row?: RowPosition;
   targetCard?: UnitCard;
   score: number;
+  medicTarget?: UnitCard;
 }
 
 // Base class for all strategies
@@ -276,31 +277,27 @@ class DecoyStrategy extends Strategy {
 
 class HeroStrategy extends Strategy {
   evaluate(state: GameState, card: Card): PlayDecision | null {
-      if (card.type !== CardType.HERO) {
-          return null;
-      }
+    if (card.type !== CardType.HERO) {
+      return null;
+    }
 
-      const heroCard = card as UnitCard;
-      let score = heroCard.strength * 1.5; // Heroes are valuable, give them a 50% boost in priority
+    const heroCard = card as UnitCard;
+    
+    // Defer to MedicStrategy for medic heroes
+    if (heroCard.ability === CardAbility.MEDIC) {
+      return null;
+    }
 
-      // Special handling for spy heroes
-      if (heroCard.ability === CardAbility.SPY) {
-          return {
-              card: heroCard,
-              row: heroCard.row,
-              score: 20 // Higher priority than regular spies (15) due to being a hero
-          };
-      }
+    let score = heroCard.strength * 1.5;
 
-      // Special handling for medic heroes
-      if (heroCard.ability === CardAbility.MEDIC) {
-          const hasValidTargets = state.opponent.discard.some(
-              card => card.type === CardType.UNIT
-          );
-          if (hasValidTargets) {
-              score += 10;
-          }
-      }
+    // Special handling for spy heroes
+    if (heroCard.ability === CardAbility.SPY) {
+      return {
+        card: heroCard,
+        row: heroCard.row,
+        score: 20
+      };
+    }
 
       // Increase priority if we're behind
       const currentBoardScore = calculateTotalScore(state.opponentBoard, state.activeWeatherEffects);
@@ -313,6 +310,79 @@ class HeroStrategy extends Strategy {
           row: heroCard.row,
           score
       };
+  }
+}
+
+class MedicStrategy extends Strategy {
+  evaluate(state: GameState, card: Card): PlayDecision | null {
+    // Allow both unit and hero cards with medic ability
+    if ((card.type !== CardType.UNIT && card.type !== CardType.HERO) || 
+        card.ability !== CardAbility.MEDIC) {
+      return null;
+    }
+
+    const unitCard = card as UnitCard;
+    const validTargets = state.opponent.discard.filter(c =>
+      c.type === CardType.UNIT
+    );
+
+    console.log('=== Medic Strategy Evaluation ===', {
+      medicCard: card.name,
+      discardPileSize: state.opponent.discard.length,
+      validTargets: validTargets.map(t => ({
+        name: t.name,
+        type: t.type,
+        strength: 'strength' in t ? t.strength : 'N/A',
+        ability: t.ability
+      }))
+    });
+
+    if (validTargets.length === 0) {
+      console.log('No valid targets for medic card');
+      return null;
+    }
+
+    // Evaluate each potential target
+    let bestTarget: Card | null = null;
+    let bestScore = -1;
+
+    for (const target of validTargets) {
+      let score = 0;
+      const targetCard = target as UnitCard;
+
+      // Prioritize spies (highest priority)
+      if (targetCard.ability === CardAbility.SPY) {
+        score += 12;
+      }
+      // Prioritize other medics for chain revival
+      else if (targetCard.ability === CardAbility.MEDIC) {
+        score += 15;
+      }
+      // Prioritize high strength units
+      else {
+        score += targetCard.strength;
+        // Bonus for special abilities
+        if (targetCard.ability !== CardAbility.NONE) {
+          score += 3;
+        }
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestTarget = targetCard;
+      }
+    }
+
+    if (!bestTarget) {
+      return null;
+    }
+
+    return {
+      card: unitCard,
+      row: unitCard.row,
+      score: bestScore + 5, // Base score for playing medic
+      medicTarget: bestTarget as UnitCard
+    };
   }
 }
 
@@ -394,6 +464,7 @@ export class AIStrategyCoordinator {
   constructor() {
     this.strategies = [
       new SpyStrategy(),
+      new MedicStrategy(),
       new UnitStrategy(),
       new HeroStrategy(),
       new WeatherStrategy(),

@@ -107,6 +107,7 @@ const useAI = (
         row: decision.row,
         targetCard: decision.targetCard,
         isPlayer: false,
+        decision: decision
       });
       setGameState(newState);
     };

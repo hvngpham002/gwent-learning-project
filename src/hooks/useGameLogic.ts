@@ -1,3 +1,4 @@
+import { PlayDecision } from "@/ai/strategy";
 import { Card, CardAbility, CardType, GameState, RowPosition, SpecialCard, UnitCard } from "@/types/card";
 import { drawCards, findCloseScorchTargets, findScorchTargets } from "@/utils/gameHelpers";
 
@@ -124,6 +125,7 @@ export interface PlayCardParams {
   row?: RowPosition;
   targetCard?: UnitCard;
   isPlayer: boolean;
+  decision?: PlayDecision;
 }
 
 export const playCard = ({
@@ -132,6 +134,7 @@ export const playCard = ({
   row,
   targetCard,
   isPlayer,
+  decision
 }: PlayCardParams): GameState => {
   const playerKey = isPlayer ? 'player' : 'opponent';
   const boardKey = isPlayer ? 'playerBoard' : 'opponentBoard';
@@ -207,39 +210,80 @@ export const playCard = ({
     if (card.ability === CardAbility.SCORCH) {
       const newHand = gameState[playerKey].hand.filter(c => c.id !== card.id);
       const { cards: scorchTargets } = findScorchTargets(gameState);
-
+    
+      // Separate scorched cards by owner
+      const playerScorchedCards = scorchTargets.filter(target =>
+        Object.values(gameState.playerBoard).some(row =>
+          row.cards.some((c: { id: string; }) => c.id === target.id)
+        )
+      );
+    
+      const opponentScorchedCards = scorchTargets.filter(target =>
+        Object.values(gameState.opponentBoard).some(row =>
+          row.cards.some((c: { id: string; }) => c.id === target.id)
+        )
+      );
+    
       return {
         ...gameState,
-        [playerKey]: {
-          ...gameState[playerKey],
-          hand: newHand
+        player: {
+          ...gameState.player,
+          // Only modify the player's hand/discard if they played the card
+          ...(playerKey === 'player' ? {
+            hand: newHand,
+            discard: [...gameState.player.discard, ...playerScorchedCards, card]
+          } : {
+            discard: [...gameState.player.discard, ...playerScorchedCards]
+          })
+        },
+        opponent: {
+          ...gameState.opponent,
+          // Only modify the opponent's hand/discard if they played the card
+          ...(playerKey === 'opponent' ? {
+            hand: newHand,
+            discard: [...gameState.opponent.discard, ...opponentScorchedCards, card]
+          } : {
+            discard: [...gameState.opponent.discard, ...opponentScorchedCards]
+          })
         },
         playerBoard: {
           close: {
             ...gameState.playerBoard.close,
-            cards: gameState.playerBoard.close.cards.filter(c => !scorchTargets.some(sc => sc.id === c.id))
+            cards: gameState.playerBoard.close.cards.filter(c => 
+              !scorchTargets.some(sc => sc.id === c.id)
+            )
           },
           ranged: {
             ...gameState.playerBoard.ranged,
-            cards: gameState.playerBoard.ranged.cards.filter(c => !scorchTargets.some(sc => sc.id === c.id))
+            cards: gameState.playerBoard.ranged.cards.filter(c => 
+              !scorchTargets.some(sc => sc.id === c.id)
+            )
           },
           siege: {
             ...gameState.playerBoard.siege,
-            cards: gameState.playerBoard.siege.cards.filter(c => !scorchTargets.some(sc => sc.id === c.id))
+            cards: gameState.playerBoard.siege.cards.filter(c => 
+              !scorchTargets.some(sc => sc.id === c.id)
+            )
           }
         },
         opponentBoard: {
           close: {
             ...gameState.opponentBoard.close,
-            cards: gameState.opponentBoard.close.cards.filter(c => !scorchTargets.some(sc => sc.id === c.id))
+            cards: gameState.opponentBoard.close.cards.filter(c => 
+              !scorchTargets.some(sc => sc.id === c.id)
+            )
           },
           ranged: {
             ...gameState.opponentBoard.ranged,
-            cards: gameState.opponentBoard.ranged.cards.filter(c => !scorchTargets.some(sc => sc.id === c.id))
+            cards: gameState.opponentBoard.ranged.cards.filter(c => 
+              !scorchTargets.some(sc => sc.id === c.id)
+            )
           },
           siege: {
             ...gameState.opponentBoard.siege,
-            cards: gameState.opponentBoard.siege.cards.filter(c => !scorchTargets.some(sc => sc.id === c.id))
+            cards: gameState.opponentBoard.siege.cards.filter(c => 
+              !scorchTargets.some(sc => sc.id === c.id)
+            )
           }
         },
         currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey
@@ -251,6 +295,95 @@ export const playCard = ({
   if ((card.type === CardType.UNIT || card.type === CardType.HERO) && row) {
     const unitCard = card as UnitCard ;
     const newHand = gameState[playerKey].hand.filter(c => c.id !== card.id);
+
+    if (unitCard.ability === CardAbility.MEDIC) {
+      const newHand = gameState[playerKey].hand.filter(c => c.id !== card.id);
+      const medicTarget = (isPlayer ? null : decision?.medicTarget) as UnitCard;
+      
+      // Play the medic card first
+      const stateAfterMedic = {
+        ...gameState,
+        [playerKey]: {
+          ...gameState[playerKey],
+          hand: newHand,
+          discard: gameState[playerKey].discard.filter(c => c.id !== (medicTarget?.id ?? ''))
+        },
+        [boardKey]: {
+          ...gameState[boardKey],
+          [row]: {
+            ...gameState[boardKey][row],
+            cards: [...gameState[boardKey][row].cards, unitCard]
+          }
+        }
+      };
+    
+      // If AI is playing and has a target, play it
+      if (!isPlayer && medicTarget) {
+        let stateAfterSpy;
+        let scorchResult;
+        const oppositeBoard = isPlayer ? 'opponentBoard' : 'playerBoard';
+    
+    
+        // Handle special abilities of revived card
+        switch (medicTarget.ability) {
+          case CardAbility.SPY:
+            stateAfterSpy = {
+              ...stateAfterMedic,
+              [oppositeBoard]: {
+                ...stateAfterMedic[oppositeBoard],
+                [medicTarget.row]: {
+                  ...stateAfterMedic[oppositeBoard][medicTarget.row],
+                  cards: [...stateAfterMedic[oppositeBoard][medicTarget.row].cards, medicTarget]
+                }
+              }
+            };
+            return drawCards(2, stateAfterSpy, playerKey);
+    
+          case CardAbility.SCORCH_CLOSE:
+            scorchResult = findCloseScorchTargets(stateAfterMedic, isPlayer);
+            if (scorchResult) {
+              const { cards: scorchTargets } = scorchResult;
+              return {
+                ...stateAfterMedic,
+                [boardKey]: {
+                  ...stateAfterMedic[boardKey],
+                  [medicTarget.row]: {
+                    ...stateAfterMedic[boardKey][medicTarget.row],
+                    cards: [...stateAfterMedic[boardKey][medicTarget.row].cards, medicTarget]
+                  }
+                },
+                [oppositeBoard]: {
+                  ...stateAfterMedic[oppositeBoard],
+                  close: {
+                    ...stateAfterMedic[oppositeBoard].close,
+                    cards: stateAfterMedic[oppositeBoard].close.cards.filter(
+                      c => !scorchTargets.some(sc => sc.id === c.id)
+                    )
+                  }
+                }
+              };
+            }
+            break;
+    
+          // Add other special abilities as needed
+        }
+    
+        // Default case - normal unit placement
+        return {
+          ...stateAfterMedic,
+          [boardKey]: {
+            ...stateAfterMedic[boardKey],
+            [medicTarget.row]: {
+              ...stateAfterMedic[boardKey][medicTarget.row],
+              cards: [...stateAfterMedic[boardKey][medicTarget.row].cards, medicTarget]
+            }
+          },
+          currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey
+        };
+      }
+    
+      return stateAfterMedic;
+    }
 
     if (unitCard.ability === CardAbility.SPY) {
       const oppositeBoard = isPlayer ? 'opponentBoard' : 'playerBoard';
@@ -350,7 +483,7 @@ export const playCard = ({
           },
           [oppositePlayer]: {
             ...gameState[oppositePlayer],
-            discard: [                           
+            discard: [
               ...gameState[oppositePlayer].discard,
               ...scorchTargets
             ]
