@@ -155,6 +155,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           </div>
           <PlayerStatus
              player={gameState.player}
+             turn={gameState.currentTurn}
              board={gameState.playerBoard}
              weatherEffects={gameState.activeWeatherEffects}
              isOpponent={false}

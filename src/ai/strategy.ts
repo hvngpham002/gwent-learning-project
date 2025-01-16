@@ -274,6 +274,48 @@ class DecoyStrategy extends Strategy {
 }
 }
 
+class HeroStrategy extends Strategy {
+  evaluate(state: GameState, card: Card): PlayDecision | null {
+      if (card.type !== CardType.HERO) {
+          return null;
+      }
+
+      const heroCard = card as UnitCard;
+      let score = heroCard.strength * 1.5; // Heroes are valuable, give them a 50% boost in priority
+
+      // Special handling for spy heroes
+      if (heroCard.ability === CardAbility.SPY) {
+          return {
+              card: heroCard,
+              row: heroCard.row,
+              score: 20 // Higher priority than regular spies (15) due to being a hero
+          };
+      }
+
+      // Special handling for medic heroes
+      if (heroCard.ability === CardAbility.MEDIC) {
+          const hasValidTargets = state.opponent.discard.some(
+              card => card.type === CardType.UNIT
+          );
+          if (hasValidTargets) {
+              score += 10;
+          }
+      }
+
+      // Increase priority if we're behind
+      const currentBoardScore = calculateTotalScore(state.opponentBoard, state.activeWeatherEffects);
+      if (state.playerScore > currentBoardScore) {
+          score += 5; // Additional priority when we need to catch up
+      }
+
+      return {
+          card: heroCard,
+          row: heroCard.row,
+          score
+      };
+  }
+}
+
 // Strategy for regular unit cards
 class UnitStrategy extends Strategy {
     evaluate(state: GameState, card: Card): PlayDecision | null {
@@ -342,6 +384,7 @@ export class AIStrategyCoordinator {
   constructor() {
     this.strategies = [
       new SpyStrategy(),
+      new HeroStrategy(),
       new WeatherStrategy(),
       new ScorchStrategy(),
       new DecoyStrategy(),

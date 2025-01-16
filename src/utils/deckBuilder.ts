@@ -136,6 +136,9 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
         deck.push(...cards);
     }
 
+    const gaunter = neutralDeck.units.find(u => u.name === "Gaunter O'Dimm");
+    if (gaunter) deck.push({ ...gaunter, type: CardType.UNIT as CardType.UNIT });
+
     const villentretenmerth = neutralDeck.units.find(u => u.name === 'Villentretenmerth');
     if (villentretenmerth) deck.push({ ...villentretenmerth, type: CardType.UNIT as CardType.UNIT });
 
@@ -177,6 +180,7 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     // Neutral units
     const villentretenmerth = neutralDeck.units.find(u => u.name === 'Villentretenmerth');
     if (villentretenmerth) deck.push({ ...villentretenmerth, type: CardType.UNIT as CardType.UNIT });
+
     const gaunterDarkness = neutralDeck.units.find(u => u.name === 'Gaunter O\'Dimm: Darkness');
     if (gaunterDarkness) {
         const cards: UnitCard[] = [
@@ -185,6 +189,9 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
         ];
         deck.push(...cards);
     }
+
+    const gaunter = neutralDeck.units.find(u => u.name === 'Gaunter O\'Dimm');
+    if (gaunter) deck.push({ ...gaunter, type: CardType.UNIT as CardType.UNIT });
 
     // Units
     const youngEmissary = nilfgaardianEmpireDeck.units.find(u => u.name === 'Young Emissary');
@@ -227,24 +234,6 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
         ];
         deck.push(...cards);
     }
-
-    // const fog = neutralDeck.specials.find(s => s.name === 'Impenetrable Fog');
-    // if (fog) {
-    //     const cards: SpecialCard[] = [
-    //         { ...fog, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-    //         { ...fog, id: fog.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
-    //     ];
-    //     deck.push(...cards);
-    // }
-
-    // const rain = neutralDeck.specials.find(s => s.name === 'Torrential Rain');
-    // if (rain) {
-    //     const cards: SpecialCard[] = [
-    //         { ...rain, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-    //         { ...rain, id: rain.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
-    //     ];
-    //     deck.push(...cards);
-    // }
 
     const clear = neutralDeck.specials.find(s => s.name === 'Clear Weather');
     if (clear) {

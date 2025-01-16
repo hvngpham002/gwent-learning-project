@@ -91,21 +91,30 @@ const useAI = (
   }, [onRoundEnd, setGameState]);
 
   const playCard = useCallback((decision: PlayDecision) => {
-
     setSelectedCard(decision.card);
-
-    setTimeout(() => {
+  
+    const updateStates = async () => {
+      await new Promise<void>(resolve => {
+        setTimeout(() => {
+          setSelectedCard(null);
+          resolve();
+        }, 1000);
+      });
+  
       const newState = playCardHelper({
         gameState,
         card: decision.card,
         row: decision.row,
         targetCard: decision.targetCard,
-        isPlayer: false
+        isPlayer: false,
       });
       setGameState(newState);
-      setSelectedCard(null);
-    }, 1000);
-
+    };
+  
+    setTimeout(() => {
+      updateStates();
+    }, 500);
+  
   }, [gameState, setGameState, setSelectedCard]);
 
   const makeOpponentMove = useCallback(() => {

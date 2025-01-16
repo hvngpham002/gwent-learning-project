@@ -1,8 +1,24 @@
 .hand-container {
-  display: flex;
+  position: relative;
   gap: 32px;
   padding: var(--spacing-sm);
   border-radius: 8px;
+}
+
+.hand-area__opponent-turn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #d7a451;
+  font-size: 30px;
+  font-weight: bold;
 }
 
 .hand-area {

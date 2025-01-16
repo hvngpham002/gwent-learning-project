@@ -19,6 +19,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
 }) => {
   return (
     <div className="hand-container">
+      {!isActive && <div className="hand-area__opponent-turn">Opponent's turn</div>}
       <div className="hand-area">
         {cards.map(card => (
           <GwentCard

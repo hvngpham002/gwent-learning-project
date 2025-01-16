@@ -8,6 +8,60 @@ export interface SpecialCardAction {
   newGameState: GameState;
 }
 
+export const findMusterCards = (
+  card: UnitCard,
+  hand: Card[],
+  deck: Card[]
+): UnitCard[] => {
+  const musterCards: UnitCard[] = [];
+  const cardName = card.name;
+
+  // If this is a variant card (longer name that contains the base card name)
+  const baseCardName = findBaseCardName(cardName, [...hand, ...deck]);
+
+  if (cardName === baseCardName) {
+    // Base card can find all variants
+    const handMatches = hand.filter(c =>
+      c.id !== card.id &&
+      c.name.startsWith(baseCardName)
+    ) as UnitCard[];
+
+    const deckMatches = deck.filter(c =>
+      c.name.startsWith(baseCardName)
+    ) as UnitCard[];
+
+    musterCards.push(...handMatches, ...deckMatches);
+  } else {
+    // Variant cards can only find exact matches
+    const handMatches = hand.filter(c =>
+      c.id !== card.id &&
+      c.name === cardName
+    ) as UnitCard[];
+
+    const deckMatches = deck.filter(c =>
+      c.name === cardName
+    ) as UnitCard[];
+
+    musterCards.push(...handMatches, ...deckMatches);
+  }
+
+  return musterCards;
+};
+
+// Helper function to find the base card name
+const findBaseCardName = (cardName: string, allCards: Card[]): string => {
+  // Sort all card names by length (shortest first)
+  const allNames = [...new Set(allCards.map(c => c.name))].sort((a, b) => a.length - b.length);
+
+  // Find the shortest name that is contained in the current card name
+  const baseName = allNames.find(name =>
+    cardName.startsWith(name) &&
+    allCards.some(c => c.name === name && (c as UnitCard).ability === CardAbility.MUSTER)
+  );
+
+  return baseName || cardName;
+};
+
 export const handleDecoyAction = (
   gameState: GameState,
   decoyCard: Card,
@@ -77,7 +131,7 @@ export const playCard = ({
   card,
   row,
   targetCard,
-  isPlayer
+  isPlayer,
 }: PlayCardParams): GameState => {
   const playerKey = isPlayer ? 'player' : 'opponent';
   const boardKey = isPlayer ? 'playerBoard' : 'opponentBoard';
@@ -216,6 +270,52 @@ export const playCard = ({
         currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey as "player" | "opponent"
       };
       return drawCards(2, stateAfterPlay, playerKey);
+    }
+
+    if (unitCard.ability === CardAbility.MUSTER) {
+      const musterCards = findMusterCards(
+        unitCard,
+        gameState[playerKey].hand,
+        gameState[playerKey].deck
+      );
+
+      // Remove muster cards from hand and deck
+      const newHand = gameState[playerKey].hand.filter(c =>
+        !musterCards.some(mc => mc.id === c.id) &&
+        c.id !== card.id
+      );
+      const newDeck = gameState[playerKey].deck.filter(c =>
+        !musterCards.some(mc => mc.id === c.id)
+      );
+
+      // Add all muster cards to their appropriate rows
+      const newBoardState = { ...gameState[boardKey] };
+
+      // Place each muster card in its correct row
+      musterCards.forEach(musterCard => {
+        const targetRow = musterCard.row;
+        newBoardState[targetRow] = {
+          ...newBoardState[targetRow],
+          cards: [...newBoardState[targetRow].cards, musterCard]
+        };
+      });
+
+      // Place the original card
+      newBoardState[row] = {
+        ...newBoardState[row],
+        cards: [...newBoardState[row].cards, unitCard]
+      };
+
+      return {
+        ...gameState,
+        [playerKey]: {
+          ...gameState[playerKey],
+          hand: newHand,
+          deck: newDeck
+        },
+        [boardKey]: newBoardState,
+        currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey
+      };
     }
 
     return {

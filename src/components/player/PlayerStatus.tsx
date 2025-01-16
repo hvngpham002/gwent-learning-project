@@ -10,6 +10,7 @@ interface PlayerStatusProps {
   isOpponent?: boolean;
   onPass?: () => void;
   opponentScore?: number;
+  turn?: string;
 }
 
 const PlayerStatus = ({
@@ -18,7 +19,8 @@ const PlayerStatus = ({
   weatherEffects,
   isOpponent = false,
   onPass,
-  opponentScore
+  opponentScore,
+  turn
 }: PlayerStatusProps) => {
 
   const totalScore = calculateTotalScore(board, weatherEffects);
@@ -92,6 +94,7 @@ const PlayerStatus = ({
                 <button
                 className="leader-ability-button"
                 onClick={() => {/* Handle leader ability */}}
+                disabled={turn !== 'player'}
                 >
                     Use Leader Card
                 </button>
@@ -102,6 +105,7 @@ const PlayerStatus = ({
         <button
           className="pass-button"
           onClick={() => onPass && onPass()}  // Update this line
+          disabled={turn !== 'player'}
         >
           Pass
         </button>

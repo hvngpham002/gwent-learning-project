@@ -150,7 +150,7 @@ const GameManager = () => {
     if (gameState.currentTurn === 'opponent' &&
         gameState.gamePhase === 'playing' &&
         !gameState.opponent.passed) {
-      timeoutId = setTimeout(makeOpponentMove, 1000);
+      setTimeout(makeOpponentMove, 1000);
     }
 
     return () => {
@@ -196,53 +196,44 @@ const GameManager = () => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
     }
-
+  
+    // Verify card is in player's hand before any selection
+    const cardInHand = gameState.player.hand.find(c => c.id === card.id);
+    if (!cardInHand) {
+      return;
+    }
+  
     // If clicking the same card, deselect it
     if (selectedCard?.id === card.id) {
       setSelectedCard(null);
       setIsDecoyActive(false);
       return;
     }
-
+  
     // Handle decoy selection
     if (card.type === CardType.SPECIAL) {
-
       setIsDecoyActive(false);
-
-      switch (card.ability){
+  
+      switch (card.ability) {
         case (CardAbility.DECOY):
           setSelectedCard(card);
           setIsDecoyActive(true);
           return;
         case (CardAbility.COMMANDERS_HORN):
-          setSelectedCard(card);
-          return;
         case (CardAbility.FROST):
-          setSelectedCard(card);
-          return;
         case (CardAbility.FOG):
-          setSelectedCard(card);
-          return;
         case (CardAbility.RAIN):
-          setSelectedCard(card);
-          return;
         case (CardAbility.CLEAR_WEATHER):
-          setSelectedCard(card);
-          return;
         case (CardAbility.SCORCH):
           setSelectedCard(card);
-          console.log("Scorch Selected.");
           return;
       }
     }
-
+  
     // Handle unit/hero selection
     if (card.type === CardType.UNIT || card.type === CardType.HERO) {
-      // Verify card is actually in hand before selecting it
-      if (gameState.player.hand.find(c => c.id === card.id)) {
-        setSelectedCard(card);
-        setIsDecoyActive(false);
-      }
+      setSelectedCard(card);
+      setIsDecoyActive(false);
     }
   };
 
