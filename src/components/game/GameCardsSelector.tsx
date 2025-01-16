@@ -1,4 +1,4 @@
-import { Card, GameState } from '@/types/card';
+import { Card, CardType, GameState } from '@/types/card';
 import { useState } from 'react'
 
 interface GameCardsSelectorProps {
@@ -7,8 +7,9 @@ interface GameCardsSelectorProps {
     setCardsSelector: (cardsSelector: { title: string; show: boolean }) => void;
     onRedraw: (selectedCards: Card[]) => void;
     setGameState: (state: GameState | ((prev: GameState) => GameState)) => void;
+    onMedicSelect?: (selectedCards: Card[]) => void;
 }
-const GameCardsSelector = ({gameState, title, setCardsSelector, onRedraw, setGameState}: GameCardsSelectorProps) => {
+const GameCardsSelector = ({gameState, title, setCardsSelector, onRedraw, setGameState, onMedicSelect}: GameCardsSelectorProps) => {
     const [selectedCards, setSelectedCards] = useState<Card[]>([]);
     const [redrawnCount, setRedrawnCount] = useState<number>(0);
 
@@ -18,13 +19,17 @@ const GameCardsSelector = ({gameState, title, setCardsSelector, onRedraw, setGam
                 return `Choose a card to redraw. ${redrawnCount}/2`;
             case 'discard-view':
                 return `Discard Pile`;
+            case 'medic':
+                return `Choose a card from the discard pile to play.`;
             default:
                 return title;
         }
     }
 
     const handleCardSelect = (card: Card) => {
-        if (selectedCards.find(c => c.id === card.id)) {
+        if (title === 'medic') {
+            setSelectedCards([card]);
+        }else if (selectedCards.find(c => c.id === card.id)) {
             setSelectedCards(selectedCards.filter(c => c.id !== card.id));
         } else if (selectedCards.length < 1) {
             setSelectedCards([...selectedCards, card]);
@@ -58,6 +63,20 @@ const GameCardsSelector = ({gameState, title, setCardsSelector, onRedraw, setGam
                 <div className='card-selector-title'>{getTitle(title)}</div>
                 <div className='card-selector-container'>
 
+                    {title === 'medic' && (
+                        gameState.player.discard
+                        .filter(card => card.type === CardType.UNIT)
+                        .map((card: Card) => (
+                            <div
+                            key={card.id}
+                            className={`card-selector-image ${selectedCards.find(c => c.id === card.id) ? 'selected' : ''}`}
+                            onClick={() => handleCardSelect(card)}
+                            >
+                            <img src={card.imageUrl} alt={card.name} />
+                            </div>
+                        ))
+                    )}
+
                     {title === 'redraw' && gameState.player.hand.map((card: Card) => (
                         <div
                             key={card.id}
@@ -85,6 +104,15 @@ const GameCardsSelector = ({gameState, title, setCardsSelector, onRedraw, setGam
                     )}
                 </div>
                 <div className='card-selector-button-container'>
+                    {title === 'medic' && (
+                        <button
+                            className='card-selector-button'
+                            disabled={selectedCards.length === 0}
+                            onClick={() => onMedicSelect?.(selectedCards)}
+                        >
+                        Revive
+                        </button>
+                    )}
                     {title === 'redraw' && (
                         <button
                             className='card-selector-button'

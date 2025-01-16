@@ -1,5 +1,5 @@
 import { Card, CardAbility, CardType, GameState, RowPosition, SpecialCard, UnitCard } from "@/types/card";
-import { drawCards, findScorchTargets } from "@/utils/gameHelpers";
+import { drawCards, findCloseScorchTargets, findScorchTargets } from "@/utils/gameHelpers";
 
 export interface SpecialCardAction {
   selectedCard: Card;
@@ -316,6 +316,48 @@ export const playCard = ({
         [boardKey]: newBoardState,
         currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey
       };
+    }
+
+    if (unitCard.ability === CardAbility.SCORCH_CLOSE) {
+      const scorchResult = findCloseScorchTargets(gameState, isPlayer);
+      
+      if (scorchResult) {
+        const { cards: scorchTargets } = scorchResult;
+        const oppositeBoard = isPlayer ? 'opponentBoard' : 'playerBoard';
+        const oppositePlayer = isPlayer ? 'opponent' : 'player';
+    
+        return {
+          ...gameState,
+          [playerKey]: {
+            ...gameState[playerKey],
+            hand: newHand
+          },
+          [boardKey]: {
+            ...gameState[boardKey],
+            [row]: {
+              ...gameState[boardKey][row],
+              cards: [...gameState[boardKey][row].cards, unitCard]
+            }
+          },
+          [oppositeBoard]: {
+            ...gameState[oppositeBoard],
+            close: {
+              ...gameState[oppositeBoard].close,
+              cards: gameState[oppositeBoard].close.cards.filter(
+                c => !scorchTargets.some(sc => sc.id === c.id)
+              )
+            }
+          },
+          [oppositePlayer]: {
+            ...gameState[oppositePlayer],
+            discard: [                           
+              ...gameState[oppositePlayer].discard,
+              ...scorchTargets
+            ]
+          },
+          currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey
+        };
+      }
     }
 
     return {

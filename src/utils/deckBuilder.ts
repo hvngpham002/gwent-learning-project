@@ -42,10 +42,10 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     const ciri = neutralDeck.heroes.find(h => h.name === 'Cirilla Fiona Elen Riannon');
     const yennefer = neutralDeck.heroes.find(h => h.name === 'Yennefer of Vengerberg');
     const mysteriousElf = neutralDeck.heroes.find(h => h.name === 'Mysterious Elf');
-    if (geralt) deck.push({ ...geralt, type: CardType.HERO as CardType.HERO });
-    if (ciri) deck.push({ ...ciri, type: CardType.HERO as CardType.HERO });
-    if (yennefer) deck.push({ ...yennefer, type: CardType.HERO as CardType.HERO });
-    if (mysteriousElf) deck.push({ ...mysteriousElf, type: CardType.HERO as CardType.HERO });
+    if (geralt) deck.push({ ...geralt, id: geralt.id + '_nr', type: CardType.HERO as CardType.HERO });
+    if (ciri) deck.push({ ...ciri, id: ciri.id + '_nr', type: CardType.HERO as CardType.HERO });
+    if (yennefer) deck.push({ ...yennefer, id: yennefer.id + '_nr', type: CardType.HERO as CardType.HERO });
+    if (mysteriousElf) deck.push({ ...mysteriousElf, id: mysteriousElf.id + '_nr', type: CardType.HERO as CardType.HERO });
 
     // Spy units
     const princeStenis = northernRealmsDeck.units.find(u => u.name === 'Prince Stennis');
@@ -88,8 +88,8 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     if (catapult) {
         // Create three separate cards with the correct type
         const cards: UnitCard[] = [
-            { ...catapult, type: CardType.UNIT as CardType.UNIT },
-            { ...catapult, id: catapult.id + '_2', type: CardType.UNIT as CardType.UNIT },
+            { ...catapult, id: catapult.id + '_nr', type: CardType.UNIT as CardType.UNIT },
+            { ...catapult, id: catapult.id + '_nr' + '_2', type: CardType.UNIT as CardType.UNIT },
         ];
         deck.push(...cards);
     }
@@ -99,8 +99,8 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     const decoy = neutralDeck.specials.find(s => s.name === 'Decoy');
     if (decoy) {
         const cards: SpecialCard[] = [
-            { ...decoy, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...decoy, id: decoy.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+            { ...decoy, id: decoy.id + '_nr', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...decoy, id: decoy.id + '_nr' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
         ];
         deck.push(...cards);
     }
@@ -109,8 +109,8 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     const horn = neutralDeck.specials.find(s => s.name === "Commander's Horn");
     if (horn) {
         const cards: SpecialCard[] = [
-            { ...horn, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...horn, id: horn.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+            { ...horn, id: horn.id + '_nr', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...horn, id: horn.id + '_nr' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
         ];
         deck.push(...cards);
     }
@@ -119,8 +119,8 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     const scorch = neutralDeck.specials.find(s => s.name === 'Scorch');
     if (scorch) {
         const cards: SpecialCard[] = [
-            { ...scorch, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...scorch, id: scorch.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+            { ...scorch, id: scorch.id + '_nr', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...scorch, id: scorch.id + '_nr' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
         ];
         deck.push(...cards);
     }
@@ -130,17 +130,17 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     if (gaunterDarkness) {
         // Create three separate cards with the correct type
         const cards: UnitCard[] = [
-            { ...gaunterDarkness, type: CardType.UNIT as CardType.UNIT },
-            { ...gaunterDarkness, id: gaunterDarkness.id + '_2', type: CardType.UNIT as CardType.UNIT }
+            { ...gaunterDarkness, id: gaunterDarkness.id + '_nr', type: CardType.UNIT as CardType.UNIT },
+            { ...gaunterDarkness, id: gaunterDarkness.id + '_nr' + '_2', type: CardType.UNIT as CardType.UNIT }
         ];
         deck.push(...cards);
     }
 
     const gaunter = neutralDeck.units.find(u => u.name === "Gaunter O'Dimm");
-    if (gaunter) deck.push({ ...gaunter, type: CardType.UNIT as CardType.UNIT });
+    if (gaunter) deck.push({ ...gaunter, id: gaunter.id + '_nr', type: CardType.UNIT as CardType.UNIT });
 
     const villentretenmerth = neutralDeck.units.find(u => u.name === 'Villentretenmerth');
-    if (villentretenmerth) deck.push({ ...villentretenmerth, type: CardType.UNIT as CardType.UNIT });
+    if (villentretenmerth) deck.push({ ...villentretenmerth, id: villentretenmerth.id + '_nr', type: CardType.UNIT as CardType.UNIT });
 
     return {
         deck,
@@ -153,16 +153,16 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
 
     // Neutral heroes
     const geralt = neutralDeck.heroes.find(h => h.name === 'Geralt of Rivia');
-    if (geralt) deck.push({ ...geralt, type: CardType.HERO as CardType.HERO });
+    if (geralt) deck.push({ ...geralt, id: geralt.id + '_ne', type: CardType.HERO as CardType.HERO });
 
     const ciri = neutralDeck.heroes.find(h => h.name === 'Cirilla Fiona Elen Riannon');
-    if (ciri) deck.push({ ...ciri, type: CardType.HERO as CardType.HERO });
+    if (ciri) deck.push({ ...ciri, id: ciri.id + '_ne', type: CardType.HERO as CardType.HERO });
 
     const yennefer = neutralDeck.heroes.find(h => h.name === 'Yennefer of Vengerberg');
-    if (yennefer) deck.push({ ...yennefer, type: CardType.HERO as CardType.HERO });
+    if (yennefer) deck.push({ ...yennefer, id: yennefer.id + '_ne', type: CardType.HERO as CardType.HERO });
 
     const mysteriousElf = neutralDeck.heroes.find(h => h.name === 'Mysterious Elf');
-    if (mysteriousElf) deck.push({ ...mysteriousElf, type: CardType.HERO as CardType.HERO });
+    if (mysteriousElf) deck.push({ ...mysteriousElf, id: mysteriousElf.id + '_ne', type: CardType.HERO as CardType.HERO });
 
     // Heroes
     const emhyr = nilfgaardianEmpireDeck.heroes.find(h => h.name === 'Emhyr var Emreis');
@@ -179,19 +179,19 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
 
     // Neutral units
     const villentretenmerth = neutralDeck.units.find(u => u.name === 'Villentretenmerth');
-    if (villentretenmerth) deck.push({ ...villentretenmerth, type: CardType.UNIT as CardType.UNIT });
+    if (villentretenmerth) deck.push({ ...villentretenmerth, id: villentretenmerth.id + '_ne', type: CardType.UNIT as CardType.UNIT });
 
     const gaunterDarkness = neutralDeck.units.find(u => u.name === 'Gaunter O\'Dimm: Darkness');
     if (gaunterDarkness) {
         const cards: UnitCard[] = [
-            { ...gaunterDarkness, type: CardType.UNIT as CardType.UNIT },
-            { ...gaunterDarkness, id: gaunterDarkness.id + '_2', type: CardType.UNIT as CardType.UNIT }
+            { ...gaunterDarkness, id: gaunterDarkness.id + '_ne', type: CardType.UNIT as CardType.UNIT },
+            { ...gaunterDarkness, id: gaunterDarkness.id + '_ne' + '_2', type: CardType.UNIT as CardType.UNIT }
         ];
         deck.push(...cards);
     }
 
     const gaunter = neutralDeck.units.find(u => u.name === 'Gaunter O\'Dimm');
-    if (gaunter) deck.push({ ...gaunter, type: CardType.UNIT as CardType.UNIT });
+    if (gaunter) deck.push({ ...gaunter, id: gaunter.id + '_ne', type: CardType.UNIT as CardType.UNIT });
 
     // Units
     const youngEmissary = nilfgaardianEmpireDeck.units.find(u => u.name === 'Young Emissary');
@@ -229,8 +229,8 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     const frost = neutralDeck.specials.find(s => s.name === 'Biting Frost');
     if (frost) {
         const cards: SpecialCard[] = [
-            { ...frost, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...frost, id: frost.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...frost, id: frost.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...frost, id: frost.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
         ];
         deck.push(...cards);
     }
@@ -238,8 +238,8 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     const clear = neutralDeck.specials.find(s => s.name === 'Clear Weather');
     if (clear) {
         const cards: SpecialCard[] = [
-            { ...clear, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...clear, id: clear.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+            { ...clear, id: clear.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...clear, id: clear.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
         ];
         deck.push(...cards);
     }
@@ -248,8 +248,8 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     const decoy = neutralDeck.specials.find(s => s.name === 'Decoy');
     if (decoy) {
         const cards: SpecialCard[] = [
-            { ...decoy, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...decoy, id: decoy.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+            { ...decoy, id: decoy.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...decoy, id: decoy.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
         ];
         deck.push(...cards);
     }
@@ -258,8 +258,8 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     const horn = neutralDeck.specials.find(s => s.name === "Commander's Horn");
     if (horn) {
         const cards: SpecialCard[] = [
-            { ...horn, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...horn, id: horn.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+            { ...horn, id: horn.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...horn, id: horn.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
         ];
         deck.push(...cards);
     }
@@ -268,8 +268,8 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     const scorch = neutralDeck.specials.find(s => s.name === 'Scorch');
     if (scorch) {
         const cards: SpecialCard[] = [
-            { ...scorch, type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...scorch, id: scorch.id + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+            { ...scorch, id: scorch.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...scorch, id: scorch.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
         ];
         deck.push(...cards);
     }

@@ -229,12 +229,70 @@ const GameManager = () => {
           return;
       }
     }
-  
+
+    // Handle medic ability
+    if ((card.type === CardType.UNIT || card.type === CardType.HERO) && 
+    card.ability === CardAbility.MEDIC && 
+    gameState.player.discard.length > 0) {
+      const validTargets = gameState.player.discard.filter(c => c.type === CardType.UNIT && c.ability !== CardAbility.DECOY);
+      if (validTargets.length > 0) {
+        setSelectedCard(card);
+        setCardsSelector({
+          title: 'medic',
+          show: true
+        });
+        return;
+      }
+    }
+
     // Handle unit/hero selection
     if (card.type === CardType.UNIT || card.type === CardType.HERO) {
       setSelectedCard(card);
       setIsDecoyActive(false);
     }
+  };
+
+  const handleMedicCardSelect = (selectedCards: Card[]) => {
+    if (!selectedCard || selectedCards.length !== 1) return;
+  
+    const medicCard = selectedCard;
+    const reviveCard = selectedCards[0] as UnitCard;
+  
+    // Remove medic card from hand
+    const newHand = gameState.player.hand.filter(c => c.id !== medicCard.id);
+    
+    // Remove revived card from discard
+    const newDiscard = gameState.player.discard.filter(c => c.id !== reviveCard.id);
+  
+    // Create initial state update
+    const stateUpdate = {
+      ...gameState,
+      player: {
+        ...gameState.player,
+        hand: newHand,
+        discard: newDiscard
+      }
+    };
+  
+    // Play the medic card first
+    const stateAfterMedic = playCardHelper({
+      gameState: stateUpdate,
+      card: medicCard,
+      row: (medicCard as UnitCard).row,
+      isPlayer: true
+    });
+  
+    // Then play the revived card
+    const finalState = playCardHelper({
+      gameState: stateAfterMedic,
+      card: reviveCard,
+      row: reviveCard.row,
+      isPlayer: true
+    });
+  
+    setGameState(finalState);
+    setSelectedCard(null);
+    setCardsSelector({ title: '', show: false });
   };
 
 
@@ -448,6 +506,7 @@ const GameManager = () => {
         isDecoyActive={isDecoyActive}
         handleDiscardPile={handleDiscardPile}
         onRedraw={handleRedraw}
+        onMedicSelect={handleMedicCardSelect}
       />
     </React.Fragment>
 

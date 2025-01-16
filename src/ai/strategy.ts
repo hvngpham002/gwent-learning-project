@@ -1,6 +1,6 @@
 // src/ai/strategy.ts
 import { Card, CardType, CardAbility, GameState, UnitCard, RowPosition } from '@/types/card';
-import { calculateRowStrength, calculateTotalScore, calculateWeatherImpact, findScorchTargets } from '@/utils/gameHelpers';
+import { calculateRowStrength, calculateTotalScore, calculateWeatherImpact, findCloseScorchTargets, findScorchTargets } from '@/utils/gameHelpers';
 
 export interface PlayDecision {
   card: Card;
@@ -318,61 +318,71 @@ class HeroStrategy extends Strategy {
 
 // Strategy for regular unit cards
 class UnitStrategy extends Strategy {
-    evaluate(state: GameState, card: Card): PlayDecision | null {
-        if (card.type !== CardType.UNIT || card.ability === CardAbility.SPY) {
-            return null;
-        }
+  evaluate(state: GameState, card: Card): PlayDecision | null {
+      if (card.type !== CardType.UNIT || card.ability === CardAbility.SPY) {
+          return null;
+      }
 
-        const unitCard = card as UnitCard;
-        let score = this.evaluateUnitValue(unitCard, state);
+      const unitCard = card as UnitCard;
 
-        // Special scoring only for 0-0 tie when player passes
-        const currentBoardScore = calculateTotalScore(state.opponentBoard, state.activeWeatherEffects);
-        if (state.player.passed &&
-            state.playerScore === 0 &&
-            currentBoardScore === 0) {
-            // Give highest priority to lowest strength non-spy unit
-            score = 30 - unitCard.strength;
+      // Special handling for SCORCH_CLOSE ability
+      if (unitCard.ability === CardAbility.SCORCH_CLOSE) {
+          const scorchResult = findCloseScorchTargets(state, false);
+          if (scorchResult) {
+              const { cards: targets, strength } = scorchResult;
+              const netBenefit = strength * targets.length;
+              if (netBenefit >= 4) {
+                  return {
+                      card: unitCard,
+                      row: unitCard.row,
+                      score: netBenefit + unitCard.strength + 10 
+                  };
+              }
+          }
+      }
 
-            // Additional bonus for units without special abilities
-            if (unitCard.ability === CardAbility.NONE) {
-                score += 10;
-            }
-        } else if (state.player.passed) {
-            // In other passing situations, evaluate normally but with slight preference
-            // for stronger cards when we need to catch up
-            const pointsNeeded = state.playerScore - currentBoardScore + 1;
-            if (unitCard.strength >= pointsNeeded) {
-                score += 5; // Bonus for cards that can win in one play
-            }
-        }
+      let score = this.evaluateUnitValue(unitCard, state);
 
-        return {
-            card: unitCard,
-            row: unitCard.row,
-            score
-        };
-    }
+      // Rest of the existing logic
+      const currentBoardScore = calculateTotalScore(state.opponentBoard, state.activeWeatherEffects);
+      if (state.player.passed &&
+          state.playerScore === 0 &&
+          currentBoardScore === 0) {
+          score = 30 - unitCard.strength;
+          if (unitCard.ability === CardAbility.NONE) {
+              score += 10;
+          }
+      } else if (state.player.passed) {
+          const pointsNeeded = state.playerScore - currentBoardScore + 1;
+          if (unitCard.strength >= pointsNeeded) {
+              score += 5;
+          }
+      }
+
+      return {
+          card: unitCard,
+          row: unitCard.row,
+          score
+      };
+  }
 
   private evaluateUnitValue(card: UnitCard, state: GameState): number {
-    let score = card.strength;
+      let score = card.strength;
 
-    // Bonus for tight bond potential
-    if (card.ability === CardAbility.TIGHT_BOND) {
-      const sameNameCount = state.opponentBoard[card.row].cards
-        .filter(c => c.name === card.name).length;
-      if (sameNameCount > 0) {
-        score *= (sameNameCount + 1);
+      if (card.ability === CardAbility.TIGHT_BOND) {
+          const sameNameCount = state.opponentBoard[card.row].cards
+              .filter(c => c.name === card.name).length;
+          if (sameNameCount > 0) {
+              score *= (sameNameCount + 1);
+          }
       }
-    }
 
-    // Bonus for morale boost synergy
-    if (card.ability === CardAbility.MORALE_BOOST) {
-      const rowUnitCount = state.opponentBoard[card.row].cards.length;
-      score += rowUnitCount;
-    }
+      if (card.ability === CardAbility.MORALE_BOOST) {
+          const rowUnitCount = state.opponentBoard[card.row].cards.length;
+          score += rowUnitCount;
+      }
 
-    return score;
+      return score;
   }
 }
 
@@ -384,6 +394,7 @@ export class AIStrategyCoordinator {
   constructor() {
     this.strategies = [
       new SpyStrategy(),
+      new UnitStrategy(),
       new HeroStrategy(),
       new WeatherStrategy(),
       new ScorchStrategy(),

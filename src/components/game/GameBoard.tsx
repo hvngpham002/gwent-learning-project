@@ -30,6 +30,7 @@ interface GameBoardProps {
   }) => void;
   handleDiscardPile: () => void;
   onRedraw: (selectedCards: Card[]) => void;
+  onMedicSelect: (selectedCards: Card[]) => void;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
@@ -45,7 +46,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
   cardsSelector,
   setCardsSelector,
   handleDiscardPile,
-  onRedraw
+  onRedraw,
+  onMedicSelect
 }) => {
 
   const playerImageUrl = () => {
@@ -126,6 +128,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   title={cardsSelector.title}
                   onRedraw={onRedraw}
                   setGameState={setGameState}
+                  onMedicSelect={onMedicSelect}
               />
           }
         {/* Left sidebar with player statuses */}

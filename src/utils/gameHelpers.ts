@@ -283,3 +283,84 @@ import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPositi
 
     return { cards: allUnits, strength: maxStrength };
   };
+
+  export const findRowScorchTargets = (
+    row: BoardRow,
+    weatherEffect: boolean,
+    hornActive: boolean
+  ): { cards: UnitCard[], strength: number } => {
+    const allUnits: UnitCard[] = [];
+    let maxStrength = 0;
+  
+    row.cards.forEach(card => {
+      if (card.type === CardType.UNIT) {
+        const unitCard = card as UnitCard;
+        const strength = calculateUnitStrength(
+          unitCard,
+          weatherEffect,
+          hornActive,
+          row.cards.filter(c => c.type === CardType.UNIT && (c as UnitCard).ability === CardAbility.MORALE_BOOST).length,
+          row.cards.filter(c => c.name === card.name).length
+        );
+  
+        if (strength > maxStrength) {
+          maxStrength = strength;
+          allUnits.length = 0;
+          allUnits.push(unitCard);
+        } else if (strength === maxStrength) {
+          allUnits.push(unitCard);
+        }
+      }
+    });
+  
+    return { cards: allUnits, strength: maxStrength };
+  };
+
+  export const findCloseScorchTargets = (
+    gameState: GameState,
+    isPlayer: boolean
+  ): { cards: UnitCard[], strength: number } | null => {
+    // Get the opponent's close combat row
+    const targetBoard = isPlayer ? gameState.opponentBoard : gameState.playerBoard;
+    const row = targetBoard.close;
+    const weatherEffect = gameState.activeWeatherEffects.has(CardAbility.FROST);
+  
+    // Calculate total row strength including heroes
+    const totalRowStrength = calculateRowStrength(row.cards, weatherEffect, row.hornActive);
+  
+    // If total strength is less than 10, return null
+    if (totalRowStrength < 10) {
+      return null;
+    }
+  
+    // Find highest strength non-hero units
+    const allUnits: UnitCard[] = [];
+    let maxStrength = 0;
+  
+    row.cards.forEach(card => {
+      // Only target non-hero units
+      if (card.type === CardType.UNIT) {
+        const unitCard = card as UnitCard;
+        const strength = calculateUnitStrength(
+          unitCard,
+          weatherEffect,
+          row.hornActive,
+          row.cards.filter(c => 
+            c.type === CardType.UNIT && 
+            (c as UnitCard).ability === CardAbility.MORALE_BOOST
+          ).length,
+          row.cards.filter(c => c.name === card.name).length
+        );
+  
+        if (strength > maxStrength) {
+          maxStrength = strength;
+          allUnits.length = 0;
+          allUnits.push(unitCard);
+        } else if (strength === maxStrength) {
+          allUnits.push(unitCard);
+        }
+      }
+    });
+  
+    return allUnits.length > 0 ? { cards: allUnits, strength: maxStrength } : null;
+  };
