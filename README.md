@@ -1,50 +1,139 @@
-# React + TypeScript + Vite
+# Gwent Card Game - Learning Project 🎮
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based implementation of the card game Gwent, inspired by The Witcher 3: Wild Hunt. This project serves as an educational exercise in modern web development and game logic implementation.
 
-Currently, two official plugins are available:
+## ⚠️ Important Disclaimer
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+This is a non-commercial fan project created solely for educational purposes and portfolio demonstration:
+- Not affiliated with CD PROJEKT RED
+- All Witcher-related intellectual property belongs to CD PROJEKT RED
+- Not for commercial use
+- Created for learning and portfolio demonstration only
 
-## Expanding the ESLint configuration
+## ✨ Features
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+### 🎲 Game Mechanics
+* Complete implementation of basic Gwent gameplay rules
+* AI opponent with strategic decision-making
+* Weather effects system
+* Card abilities (Spy, Tight Bond, Morale Boost, etc.)
+* Multiple factions (Northern Realms, Nilfgaard)
 
-- Configure the top-level `parserOptions` property like this:
+### ⚛️ Modern React Architecture
+* Built with Vite for fast development and optimized builds
+* TypeScript for type safety and better development experience
+* Component-based architecture with custom hooks
+* State management using React hooks and context
+* Proper separation of concerns (game logic, UI, AI)
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### 🎨 UI/UX Features
+* Responsive design that adapts to screen size
+* Interactive card placement and selection
+* Visual feedback for game state changes
+* Smooth animations for card movements
+* Faction-specific styling and theming
+
+## 🛠️ Technologies Used
+
+### Core
+* React 18
+* TypeScript
+* Vite
+* SWC
+
+### Styling
+* CSS Modules
+* Tailwind CSS for utility classes
+* Styled Components for dynamic styling
+
+### Development Tools
+* ESLint with TypeScript support
+* Path aliases for clean imports
+* Modern JavaScript features (ES2022+)
+
+## 🎯 Design Patterns & Architecture
+
+### React Patterns
+* Custom hooks for complex logic (useGameLogic, useAI)
+* Component composition for reusability
+* Controlled components for form handling
+* Error boundaries for graceful error handling
+
+### Game Logic Patterns
+* State machine for game flow
+* Strategy pattern for AI decision making
+* Observer pattern for game events
+* Factory pattern for card creation
+
+### Code Organization
+```
+├── src/
+│   ├── components/     # React components
+│   │   ├── card/      # Card-related components
+│   │   ├── game/      # Game management components
+│   │   └── player/    # Player-related components
+│   ├── hooks/         # Custom React hooks
+│   ├── utils/         # Utility functions
+│   ├── types/         # TypeScript type definitions
+│   ├── styles/        # Global styles and CSS modules
+│   └── ai/            # AI strategy implementation
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+## 🚀 Getting Started
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+1. Clone the repository:
+```bash
+git clone [repository-url]
 ```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Start the development server:
+```bash
+npm run dev
+```
+
+4. Build for production:
+```bash
+npm run build
+```
+
+## 🧪 Technical Highlights
+
+### AI Implementation
+* Multi-strategy decision making
+* Card value evaluation system
+* Situational awareness for weather effects
+* Adaptive play style based on game state
+
+### Game Logic
+* Comprehensive rule enforcement
+* Special card ability handling
+* Score calculation system
+* Round management
+
+### Performance Optimizations
+* Efficient card rendering
+* Memoization of expensive calculations
+* Optimized state updates
+* Proper React reconciliation usage
+
+## 📄 License
+
+This project is licensed under MIT for the codebase. All Witcher-related content, including card names, descriptions, and game mechanics, are intellectual property of CD PROJEKT RED.
+
+## 🙏 Acknowledgements
+
+* CD PROJEKT RED for creating The Witcher series and the original Gwent mini-game
+* React and Vite communities for excellent documentation and tools
+* TypeScript team for providing great type safety tools
+* All contributors and reviewers
+
+## 📫 Contact
+
+Viet Hung Pham - hung.v.pham002@gmail.com
+
+Project Link: [[Repository URL](https://github.com/HungVPham/gwent-learning-project)]
