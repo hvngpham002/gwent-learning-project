@@ -296,17 +296,26 @@ export const playCard = ({
     const unitCard = card as UnitCard ;
     const newHand = gameState[playerKey].hand.filter(c => c.id !== card.id);
 
+    const validTargets = gameState[playerKey].discard.filter(c => 
+      c.type === CardType.UNIT && 
+      c.ability !== CardAbility.DECOY
+    );
+
     if (unitCard.ability === CardAbility.MEDIC) {
       const newHand = gameState[playerKey].hand.filter(c => c.id !== card.id);
       const medicTarget = (isPlayer ? null : decision?.medicTarget) as UnitCard;
-      
+      const chainedTargets = (isPlayer ? null : decision?.chainedMedicTargets) || [];
+    
       // Play the medic card first
-      const stateAfterMedic = {
+      let stateAfterMedic = {
         ...gameState,
         [playerKey]: {
           ...gameState[playerKey],
           hand: newHand,
-          discard: gameState[playerKey].discard.filter(c => c.id !== (medicTarget?.id ?? ''))
+          discard: gameState[playerKey].discard.filter(c => 
+            c.id !== (medicTarget?.id ?? '') && 
+            !chainedTargets.some(ct => ct.id === c.id)
+          )
         },
         [boardKey]: {
           ...gameState[boardKey],
@@ -314,75 +323,87 @@ export const playCard = ({
             ...gameState[boardKey][row],
             cards: [...gameState[boardKey][row].cards, unitCard]
           }
-        }
+        },
+        ...(validTargets.length === 0 && {
+          currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey as "player" | "opponent"
+        })
       };
     
       // If AI is playing and has a target, play it
       if (!isPlayer && medicTarget) {
-        let stateAfterSpy;
-        let scorchResult;
-        const oppositeBoard = isPlayer ? 'opponentBoard' : 'playerBoard';
+        // Handle the first medic target using existing logic
+        stateAfterMedic = handleMedicTarget(stateAfterMedic, medicTarget);
     
+        // Handle any chained medic targets
+        chainedTargets.forEach(chainTarget => {
+          stateAfterMedic = handleMedicTarget(stateAfterMedic, chainTarget);
+        });
     
-        // Handle special abilities of revived card
-        switch (medicTarget.ability) {
-          case CardAbility.SPY:
-            stateAfterSpy = {
-              ...stateAfterMedic,
-              [oppositeBoard]: {
-                ...stateAfterMedic[oppositeBoard],
-                [medicTarget.row]: {
-                  ...stateAfterMedic[oppositeBoard][medicTarget.row],
-                  cards: [...stateAfterMedic[oppositeBoard][medicTarget.row].cards, medicTarget]
-                }
-              }
-            };
-            return drawCards(2, stateAfterSpy, playerKey);
-    
-          case CardAbility.SCORCH_CLOSE:
-            scorchResult = findCloseScorchTargets(stateAfterMedic, isPlayer);
-            if (scorchResult) {
-              const { cards: scorchTargets } = scorchResult;
-              return {
-                ...stateAfterMedic,
-                [boardKey]: {
-                  ...stateAfterMedic[boardKey],
-                  [medicTarget.row]: {
-                    ...stateAfterMedic[boardKey][medicTarget.row],
-                    cards: [...stateAfterMedic[boardKey][medicTarget.row].cards, medicTarget]
-                  }
-                },
-                [oppositeBoard]: {
-                  ...stateAfterMedic[oppositeBoard],
-                  close: {
-                    ...stateAfterMedic[oppositeBoard].close,
-                    cards: stateAfterMedic[oppositeBoard].close.cards.filter(
-                      c => !scorchTargets.some(sc => sc.id === c.id)
-                    )
-                  }
-                }
-              };
-            }
-            break;
-    
-          // Add other special abilities as needed
-        }
-    
-        // Default case - normal unit placement
-        return {
-          ...stateAfterMedic,
-          [boardKey]: {
-            ...stateAfterMedic[boardKey],
-            [medicTarget.row]: {
-              ...stateAfterMedic[boardKey][medicTarget.row],
-              cards: [...stateAfterMedic[boardKey][medicTarget.row].cards, medicTarget]
-            }
-          },
-          currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey
-        };
+        return stateAfterMedic;
       }
     
       return stateAfterMedic;
+    }
+    
+    // Helper function to handle a single medic target using existing logic
+    function handleMedicTarget(state: GameState, target: UnitCard): GameState {
+      const oppositeBoard = isPlayer ? 'opponentBoard' : 'playerBoard';
+    
+      switch (target.ability) {
+        case CardAbility.SPY:
+          { const stateAfterSpy = {
+            ...state,
+            [oppositeBoard]: {
+              ...state[oppositeBoard],
+              [target.row]: {
+                ...state[oppositeBoard][target.row],
+                cards: [...state[oppositeBoard][target.row].cards, target]
+              }
+            }
+          };
+          return drawCards(2, stateAfterSpy, playerKey); }
+    
+        case CardAbility.SCORCH_CLOSE:
+          { const scorchResult = findCloseScorchTargets(state, isPlayer);
+          if (scorchResult) {
+            const { cards: scorchTargets } = scorchResult;
+            return {
+              ...state,
+              [boardKey]: {
+                ...state[boardKey],
+                [target.row]: {
+                  ...state[boardKey][target.row],
+                  cards: [...state[boardKey][target.row].cards, target]
+                }
+              },
+              [oppositeBoard]: {
+                ...state[oppositeBoard],
+                close: {
+                  ...state[oppositeBoard].close,
+                  cards: state[oppositeBoard].close.cards.filter(
+                    c => !scorchTargets.some(sc => sc.id === c.id)
+                  )
+                }
+              }
+            };
+          }
+          break; }
+    
+        default:
+          return {
+            ...state,
+            [boardKey]: {
+              ...state[boardKey],
+              [target.row]: {
+                ...state[boardKey][target.row],
+                cards: [...state[boardKey][target.row].cards, target]
+              }
+            },
+            currentTurn: state[oppositeKey].passed ? playerKey : oppositeKey
+          };
+      }
+    
+      return state;
     }
 
     if (unitCard.ability === CardAbility.SPY) {

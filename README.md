@@ -37,14 +37,10 @@ This is a non-commercial fan project created solely for educational purposes and
 
 ### Core
 * React 18
+* Plain Ole' CSS
 * TypeScript
 * Vite
 * SWC
-
-### Styling
-* CSS Modules
-* Tailwind CSS for utility classes
-* Styled Components for dynamic styling
 
 ### Development Tools
 * ESLint with TypeScript support

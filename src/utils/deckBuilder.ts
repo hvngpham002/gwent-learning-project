@@ -58,7 +58,7 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     // Northern Realms Unit
     const dunBannerMedic = northernRealmsDeck.units.find(u => u.name === 'Dun Banner Medic');
     if (dunBannerMedic) deck.push({ ...dunBannerMedic, type: CardType.UNIT as CardType.UNIT });
-
+    
     // Blue Stripes Commando (3 copies)
     const blueStripes = northernRealmsDeck.units.find(u => u.name === 'Blue Stripes Commando');
     if (blueStripes) {

@@ -364,3 +364,13 @@ import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPositi
   
     return allUnits.length > 0 ? { cards: allUnits, strength: maxStrength } : null;
   };
+
+  // Helper function to check if a card can trigger medic ability
+export const canTriggerMedic = (card: Card): boolean => {
+  return (
+    (card.type === CardType.UNIT || card.type === CardType.HERO) &&
+    card.ability === CardAbility.MEDIC
+  );
+};
+
+

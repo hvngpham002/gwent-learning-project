@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction } from '@/types/card';
 import GameBoard from './GameBoard';
-import { canPlayWeatherInRow, shuffle } from '@/utils/gameHelpers';
+import { canPlayWeatherInRow, canTriggerMedic, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
 import useAI from '@/hooks/useAI';
 import { calculateTotalScore } from '@/utils/gameHelpers';
@@ -174,8 +174,8 @@ const GameManager = () => {
   }, [gameState, makeOpponentMove]);
 
   const initializeGame = () => {
-    const playerDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
-    const opponentDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
+    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
+    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
 
     const playerDeck = shuffle(playerDeckWithLeader.deck);
     const opponentDeck = shuffle(opponentDeckWithLeader.deck);
@@ -265,50 +265,95 @@ const GameManager = () => {
     }
   };
 
-  const handleMedicCardSelect = (selectedCards: Card[]) => {
-    if (!selectedCard || selectedCards.length !== 1) return;
+  const handleMedicChain = async (
+    gameState: GameState,
+    medicCard: Card,
+    selectedTarget: UnitCard,
+    isPlayer: boolean,
+    onStateUpdate: (state: GameState) => void,
+    onShowSelector: (show: boolean, title: string) => void,
+    onSelectCard: (card: Card | null) => void
+  ): Promise<GameState> => {
+    // Remove medic card from hand and target from discard
+    const playerKey = isPlayer ? 'player' : 'opponent';
+    const newDiscard = gameState[playerKey].discard.filter(c => c.id !== selectedTarget.id);
   
-    const medicCard = selectedCard;
-    const reviveCard = selectedCards[0] as UnitCard;
-  
-    // Remove medic card from hand
-    const newHand = gameState.player.hand.filter(c => c.id !== medicCard.id);
-    
-    // Remove revived card from discard
-    const newDiscard = gameState.player.discard.filter(c => c.id !== reviveCard.id);
-  
-    // Create initial state update
-    const stateUpdate = {
+    // Create initial state with medic card removed and target removed from discard
+    let updatedState = {
       ...gameState,
-      player: {
-        ...gameState.player,
-        hand: newHand,
+      [playerKey]: {
+        ...gameState[playerKey],
         discard: newDiscard
       }
     };
   
-    // Play the medic card first
-    const stateAfterMedic = playCardHelper({
-      gameState: stateUpdate,
+    // Play only the medic card
+    updatedState = playCardHelper({
+      gameState: updatedState,
       card: medicCard,
       row: (medicCard as UnitCard).row,
-      isPlayer: true
+      isPlayer
     });
   
-    // Then play the revived card
-    const finalState = playCardHelper({
-      gameState: stateAfterMedic,
-      card: reviveCard,
-      row: reviveCard.row,
-      isPlayer: true
-    });
+    // Now handle the revived card
+    if (canTriggerMedic(selectedTarget)) {
+      // Set the card as selected so it can be played normally through the game flow
+      onSelectCard(selectedTarget);
+      // Add it to hand temporarily so it can be played
+      updatedState = {
+        ...updatedState,
+        [playerKey]: {
+          ...updatedState[playerKey],
+          hand: [...updatedState[playerKey].hand, selectedTarget]
+        }
+      };
+      onShowSelector(true, 'medic');
+    } else {
+      // For non-medic cards, play them directly
+      updatedState = playCardHelper({
+        gameState: updatedState,
+        card: selectedTarget,
+        row: selectedTarget.row,
+        isPlayer
+      });
+      onSelectCard(null);
+      onShowSelector(false, '');
+    }
   
-    setGameState(finalState);
-    setSelectedCard(null);
-    setCardsSelector({ title: '', show: false });
+    onStateUpdate(updatedState);
+    return updatedState;
   };
 
+// Updated version of handleMedicCardSelect for GameManager
+  const handleMedicCardSelect = async (selectedCards: Card[]) => {
+    if (!selectedCard || selectedCards.length !== 1) return;
 
+    const medicCard = selectedCard;
+    const reviveCard = selectedCards[0] as UnitCard;
+
+    await handleMedicChain(
+      gameState,
+      medicCard,
+      reviveCard,
+      true,
+      (newState: GameState) => {
+        setGameState(newState);
+      },
+      (show: boolean, title: string) => {
+        setCardsSelector({ show, title });
+      },
+      (card: Card | null) => {
+        setSelectedCard(card);
+        if (!card) {
+          // If no card is selected, set game turn
+          setGameState(prev => ({
+            ...prev,
+            currentTurn: prev.opponent.passed ? 'player' : 'opponent'
+          }));
+        }
+      }
+    );
+  };
 
   const isValidDecoyTarget = (card: Card): boolean => {
     return card.type === CardType.UNIT && card.ability !== CardAbility.DECOY;

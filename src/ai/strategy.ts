@@ -8,6 +8,7 @@ export interface PlayDecision {
   targetCard?: UnitCard;
   score: number;
   medicTarget?: UnitCard;
+  chainedMedicTargets?: UnitCard[];
 }
 
 // Base class for all strategies
@@ -314,74 +315,124 @@ class HeroStrategy extends Strategy {
 }
 
 class MedicStrategy extends Strategy {
+  private simulateMedicChain(
+    initialCard: Card,
+    state: GameState,
+    chainedCards: Set<string> = new Set()
+  ): { targets: UnitCard[], totalScore: number } {
+    // Prevent infinite loops and invalid cards
+    if (chainedCards.has(initialCard.id) || 
+        (initialCard.type !== CardType.UNIT && initialCard.type !== CardType.HERO) || 
+        initialCard.ability !== CardAbility.MEDIC) {
+      return { targets: [], totalScore: 0 };
+    }
+
+    chainedCards.add(initialCard.id);
+    
+    // Find valid targets excluding already chained cards
+    const validTargets = state.opponent.discard.filter(c =>
+      c.type === CardType.UNIT &&
+      !chainedCards.has(c.id)
+    ) as UnitCard[];
+
+    if (validTargets.length === 0) {
+      return { targets: [], totalScore: 0 };
+    }
+
+    // Evaluate each potential target
+    let bestTarget: UnitCard | null = null;
+    let bestScore = -1;
+    let chainResults: { targets: UnitCard[], totalScore: number } = { targets: [], totalScore: 0 };
+
+    for (const target of validTargets) {
+      let score = 0;
+
+      // First priority: Chain with other medics
+      if (target.ability === CardAbility.MEDIC) {
+        score = 15;
+        // Simulate the chain from this medic
+        const nextChain = this.simulateMedicChain(target, state, chainedCards);
+        score += nextChain.totalScore;
+        
+        if (score > bestScore) {
+          bestScore = score;
+          bestTarget = target;
+          chainResults = nextChain;
+        }
+      }
+      // Second priority: Spies (only if no medics available)
+      else if (target.ability === CardAbility.SPY && bestScore < 0) {
+        score = 12;
+        if (score > bestScore) {
+          bestScore = score;
+          bestTarget = target;
+          chainResults = { targets: [], totalScore: score };
+        }
+      }
+      // Last priority: Other units (only if no medics or spies available)
+      else if (bestScore < 0) {
+        score = target.strength;
+        if (target.ability !== CardAbility.NONE) {
+          score += 3;
+        }
+        if (score > bestScore) {
+          bestScore = score;
+          bestTarget = target;
+          chainResults = { targets: [], totalScore: score };
+        }
+      }
+    }
+
+    if (!bestTarget) {
+      return { targets: [], totalScore: 0 };
+    }
+
+    // Construct the chain
+    return {
+      targets: [bestTarget, ...chainResults.targets],
+      totalScore: bestScore + 5 // Base score for each medic in chain
+    };
+  }
+
   evaluate(state: GameState, card: Card): PlayDecision | null {
-    // Allow both unit and hero cards with medic ability
     if ((card.type !== CardType.UNIT && card.type !== CardType.HERO) || 
         card.ability !== CardAbility.MEDIC) {
       return null;
     }
 
-    const unitCard = card as UnitCard;
-    const validTargets = state.opponent.discard.filter(c =>
-      c.type === CardType.UNIT
-    );
-
     console.log('=== Medic Strategy Evaluation ===', {
       medicCard: card.name,
       discardPileSize: state.opponent.discard.length,
-      validTargets: validTargets.map(t => ({
-        name: t.name,
-        type: t.type,
-        strength: 'strength' in t ? t.strength : 'N/A',
-        ability: t.ability
-      }))
+      validTargets: state.opponent.discard
+        .filter(c => c.type === CardType.UNIT)
+        .map(t => ({
+          name: t.name,
+          type: t.type,
+          strength: 'strength' in t ? t.strength : 'N/A',
+          ability: t.ability
+        }))
     });
 
-    if (validTargets.length === 0) {
+    const { targets, totalScore } = this.simulateMedicChain(card, state);
+    
+    if (targets.length === 0) {
       console.log('No valid targets for medic card');
       return null;
     }
 
-    // Evaluate each potential target
-    let bestTarget: Card | null = null;
-    let bestScore = -1;
-
-    for (const target of validTargets) {
-      let score = 0;
-      const targetCard = target as UnitCard;
-
-      // Prioritize spies (highest priority)
-      if (targetCard.ability === CardAbility.SPY) {
-        score += 12;
-      }
-      // Prioritize other medics for chain revival
-      else if (targetCard.ability === CardAbility.MEDIC) {
-        score += 15;
-      }
-      // Prioritize high strength units
-      else {
-        score += targetCard.strength;
-        // Bonus for special abilities
-        if (targetCard.ability !== CardAbility.NONE) {
-          score += 3;
-        }
-      }
-
-      if (score > bestScore) {
-        bestScore = score;
-        bestTarget = targetCard;
-      }
-    }
-
-    if (!bestTarget) {
-      return null;
-    }
+    console.log('=== Medic Chain Found ===', {
+      initialCard: card.name,
+      chainLength: targets.length,
+      chainTargets: targets.map(t => t.name),
+      totalScore
+    });
 
     return {
-      card: unitCard,
-      row: unitCard.row,
-      score: bestScore + 5, // Base score for playing medic
-      medicTarget: bestTarget as UnitCard
+      card: card as UnitCard,
+      row: (card as UnitCard).row,
+      score: totalScore,
+      medicTarget: targets[0],
+      chainedMedicTargets: targets.slice(1)
     };
   }
 }
