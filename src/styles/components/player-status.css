@@ -108,11 +108,7 @@
     object-fit: cover;
   }
 
-  .leader--notPassed {
-    opacity: 100%;
-  }
-
-  .leader--passed {
+  .leader--used {
     opacity: 60%;
   }
 
@@ -153,6 +149,17 @@
     background-color: #8b0000;
     padding: var(--spacing-sm);
     font-size: larger;
+  }
+
+  .leader-status {
+    top: 90%;
+    left: 12%;
+    position: absolute;
+    text-align: center;
+    color: black;
+    font-weight: bold;
+    background-color: grey;
+    padding: var(--spacing-sm);
   }
 
   .hand-size {

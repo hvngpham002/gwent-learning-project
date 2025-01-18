@@ -1,5 +1,5 @@
 import { PlayDecision } from "@/ai/strategy";
-import { Card, CardAbility, CardType, GameState, RowPosition, SpecialCard, UnitCard } from "@/types/card";
+import { Card, CardAbility, CardType, GameState, LeaderAbility, LeaderCard, RowPosition, SpecialCard, UnitCard } from "@/types/card";
 import { drawCards, findCloseScorchTargets, findScorchTargets } from "@/utils/gameHelpers";
 
 export interface SpecialCardAction {
@@ -162,6 +162,34 @@ export const playCard = ({
     });
     return newState;
   };
+
+  if (card.type === CardType.LEADER) {
+    const leaderCard = card as LeaderCard;
+    let newState = {
+      ...gameState,
+      [playerKey]: {
+        ...gameState[playerKey],
+        leader: {
+          ...leaderCard,
+          used: true
+        }
+      },
+      currentTurn: gameState[oppositeKey].passed ? playerKey : oppositeKey as "player" | "opponent"
+    };
+  
+    // Handle specific leader abilities
+    switch (leaderCard.ability) {
+      case LeaderAbility.CLEAR_WEATHER:
+        newState = {
+          ...newState,
+          activeWeatherEffects: new Set()
+        };
+        break;
+      // Add other leader abilities here in the future
+    }
+  
+    return newState;
+  }
 
   // Handle different card types
   if (card.type === CardType.SPECIAL) {

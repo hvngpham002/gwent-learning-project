@@ -245,10 +245,28 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
 
     // Weather cards
     const frost = neutralDeck.specials.find(s => s.name === 'Biting Frost');
-    if (frost) deck.push({ ...frost, id: frost.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 });
+    // if (frost) deck.push({ ...frost, id: frost.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 });
+
+    if(frost) {
+        const cards: SpecialCard[] = [
+            { ...frost, id: frost.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...frost, id: frost.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...frost, id: frost.id + '_ne' + '_3', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+        ];
+        deck.push(...cards);
+    }
 
     const rain = neutralDeck.specials.find(s => s.name === 'Torrential Rain');
-    if (rain) deck.push({ ...rain, id: rain.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 });
+    // if (rain) deck.push({ ...rain, id: rain.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 });
+
+    if (rain) {
+        const cards: SpecialCard[] = [
+            { ...rain, id: rain.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...rain, id: rain.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...rain, id: rain.id + '_ne' + '_3', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+        ];
+        deck.push(...cards);
+    }
 
     const clear = neutralDeck.specials.find(s => s.name === 'Clear Weather');
     if (clear) {

@@ -127,6 +127,32 @@ const useAI = (
       weatherEffects: Array.from(gameState.activeWeatherEffects),
       currentTurn: gameState.currentTurn
     });
+
+     // Check leader ability first if not used
+     if (gameState.opponent.leader && !gameState.opponent.leader.used) {
+      console.log('=== AI Leader Card Analysis ===', {
+        leaderName: gameState.opponent.leader.name,
+        leaderAbility: gameState.opponent.leader.ability,
+        weatherEffects: Array.from(gameState.activeWeatherEffects),
+        currentScore: calculateTotalScore(gameState.opponentBoard, gameState.activeWeatherEffects)
+      });
+    
+      const leaderDecision = strategyCoordinator.evaluateLeader(gameState);
+      console.log('Leader decision result:', {
+        willPlay: !!leaderDecision,
+        score: leaderDecision?.score || 'N/A'
+      });
+    
+      if (leaderDecision) {
+        console.log('Playing leader ability:', {
+          leader: gameState.opponent.leader.name,
+          ability: gameState.opponent.leader.ability,
+          score: leaderDecision.score
+        });
+        playCard(leaderDecision);
+        return;
+      }
+    }
   
     // Add detailed hand logging
     console.log('=== AI Hand Analysis ===', {

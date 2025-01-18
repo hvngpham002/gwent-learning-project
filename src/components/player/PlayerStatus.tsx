@@ -31,8 +31,8 @@ const PlayerStatus = ({
 
   const cardClassName = [
     'leader',
-    player.passed && '--passed',
-    !player.passed && '--notPassed',
+    player.leader?.used && '--used',
+    !player.leader?.used && '--notUsed',
   ].filter(Boolean).join('');
 
   console.log(turn);

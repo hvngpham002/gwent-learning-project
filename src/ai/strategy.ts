@@ -1,5 +1,5 @@
 // src/ai/strategy.ts
-import { Card, CardType, CardAbility, GameState, UnitCard, RowPosition } from '@/types/card';
+import { Card, CardType, CardAbility, GameState, UnitCard, RowPosition, LeaderAbility, LeaderCard } from '@/types/card';
 import { calculateRowStrength, calculateTotalScore, calculateWeatherImpact, findCloseScorchTargets, findScorchTargets } from '@/utils/gameHelpers';
 
 export interface PlayDecision {
@@ -14,6 +14,67 @@ export interface PlayDecision {
 // Base class for all strategies
 abstract class Strategy {
   abstract evaluate(state: GameState, card: Card): PlayDecision | null;
+}
+
+class LeaderStrategy extends Strategy {
+  evaluate(state: GameState, card: Card): PlayDecision | null {
+    console.log('=== Leader Strategy Evaluation ===', {
+      cardName: card.name,
+      cardType: card.type,
+      isLeader: card.type === CardType.LEADER,
+      isUsed: card.type === CardType.LEADER ? (card as LeaderCard).used : 'N/A',
+      ability: card.type === CardType.LEADER ? (card as LeaderCard).ability : 'N/A'
+    });
+
+    if (card.type !== CardType.LEADER || card.used) {
+      console.log('Rejecting leader card:', card.type !== CardType.LEADER ? 'Not a leader card' : 'Already used');
+      return null;
+    }
+
+    const leaderCard = card as LeaderCard;
+
+    switch (leaderCard.ability) {
+      case LeaderAbility.CLEAR_WEATHER:
+        { const decision = this.evaluateClearWeather(state, leaderCard);
+        console.log('Clear weather leader evaluation:', {
+          decision: decision ? 'Playing' : 'Not playing',
+          score: decision?.score || 'N/A'
+        });
+        return decision; }
+      default:
+        console.log('Unhandled leader ability:', leaderCard.ability);
+        return null;
+    }
+  }
+
+  private evaluateClearWeather(state: GameState, card: LeaderCard): PlayDecision | null {
+    let opponentImpact = 0;
+    let playerImpact = 0;
+  
+    state.activeWeatherEffects.forEach(effect => {
+      opponentImpact += calculateWeatherImpact(state, effect, true);
+      playerImpact += calculateWeatherImpact(state, effect, false);
+    });
+  
+    const netBenefit = playerImpact - opponentImpact;
+  
+    console.log('Clear weather impact analysis:', {
+      opponentImpact,
+      playerImpact,
+      netBenefit,
+      weatherEffects: Array.from(state.activeWeatherEffects),
+      willPlay: netBenefit > 10
+    });
+  
+    // Only play if the net benefit is positive and significant
+    if (netBenefit > 10) {
+      return {
+        card,
+        score: netBenefit + 5 // Add bonus for being a leader ability
+      };
+    }
+    return null;
+  }
 }
 
 class RedrawStrategy extends Strategy {
@@ -511,6 +572,7 @@ class UnitStrategy extends Strategy {
 export class AIStrategyCoordinator {
   private strategies: Strategy[];
   private redrawStrategy: RedrawStrategy;
+  private leaderStrategy: LeaderStrategy;
 
   constructor() {
     this.strategies = [
@@ -518,23 +580,23 @@ export class AIStrategyCoordinator {
       new MedicStrategy(),
       new UnitStrategy(),
       new HeroStrategy(),
-      new WeatherStrategy(),
-      new ScorchStrategy(),
       new DecoyStrategy(),
       new CommanderHornStrategy(),
-      new UnitStrategy()
+      new WeatherStrategy(),
+      new ScorchStrategy(),
     ];
     this.redrawStrategy = new RedrawStrategy();
+    this.leaderStrategy = new LeaderStrategy();
   }
 
-  evaluateHand(state: GameState): PlayDecision | null {
-    const hand = state.opponent.hand;
-    if (hand.length === 0) return null;
-
+  evaluateHand(state: GameState, cards?: Card[]): PlayDecision | null {
+    const cardsToEvaluate = cards || state.opponent.hand;
+    if (cardsToEvaluate.length === 0) return null;
+  
     let bestDecision: PlayDecision | null = null;
     let highestScore = -1;
-
-    hand.forEach(card => {
+  
+    cardsToEvaluate.forEach(card => {
       this.strategies.forEach(strategy => {
         const decision = strategy.evaluate(state, card);
         if (decision && decision.score > highestScore) {
@@ -543,8 +605,15 @@ export class AIStrategyCoordinator {
         }
       });
     });
-
+  
     return bestDecision;
+  }
+
+  evaluateLeader(state: GameState): PlayDecision | null {
+    if (!state.opponent.leader || state.opponent.leader.used) {
+      return null;
+    }
+    return this.leaderStrategy.evaluate(state, state.opponent.leader);
   }
 
   evaluateRedraw(state: GameState): Card[] {
