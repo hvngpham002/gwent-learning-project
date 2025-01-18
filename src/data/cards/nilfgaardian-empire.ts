@@ -24,7 +24,8 @@ export const nilfgaardianEmpireLeaders = [
         faction: Faction.NILFGAARD,
         type: CardType.LEADER,
         ability: LeaderAbility.DRAW_OPPONENT_DISCARD,
-        imageUrl: 'src/assets/images/nilfgaard/leaders/Emhyr_var_Emreis_the_Relentless.png'
+        imageUrl: 'src/assets/images/nilfgaard/leaders/Emhyr_var_Emreis_the_Relentless.png',
+        description: 'Draw a card from your opponent\'s discard pile.'
     },
     {
         id: 'nilfgaard_leader_04',

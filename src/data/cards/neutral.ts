@@ -128,9 +128,9 @@ export const neutralUnits = [
         strength: 6,
         row: RowPosition.CLOSE,
         availableRows: [RowPosition.CLOSE, RowPosition.RANGED],
-        ability: CardAbility.AGILE,
+        ability: CardAbility.MORALE_BOOST,
         imageUrl: 'src/assets/images/neutral/olgierd_von_everec.png',
-        description: 'Medic: Adds +1 to all units in the row (excluding itself).'
+        description: 'Morale Boost: Adds +1 to all units in the row (excluding itself).'
     },
     {
         id: 'neutral_unit_08',

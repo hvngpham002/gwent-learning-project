@@ -33,18 +33,18 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     const vernonRoche = northernRealmsDeck.heroes.find(h => h.name === 'Vernon Roche');
     const esteradThyssen = northernRealmsDeck.heroes.find(h => h.name === 'Esterad Thyssen');
     const phillippaEilhart = northernRealmsDeck.heroes.find(h => h.name === 'Philippa Eilhart');
+    const keiraMetz = northernRealmsDeck.heroes.find(h => h.name === 'Keira Metz');
     if (vernonRoche) deck.push({ ...vernonRoche, type: CardType.HERO as CardType.HERO });
     if (esteradThyssen) deck.push({ ...esteradThyssen, type: CardType.HERO as CardType.HERO });
     if (phillippaEilhart) deck.push({ ...phillippaEilhart, type: CardType.HERO as CardType.HERO });
+    if (keiraMetz) deck.push({ ...keiraMetz, type: CardType.HERO as CardType.HERO });
 
     // Neutral heroes
     const geralt = neutralDeck.heroes.find(h => h.name === 'Geralt of Rivia');
-    const ciri = neutralDeck.heroes.find(h => h.name === 'Cirilla Fiona Elen Riannon');
-    const yennefer = neutralDeck.heroes.find(h => h.name === 'Yennefer of Vengerberg');
+    const triss = neutralDeck.heroes.find(h => h.name === 'Triss Merigold');
     const mysteriousElf = neutralDeck.heroes.find(h => h.name === 'Mysterious Elf');
     if (geralt) deck.push({ ...geralt, id: geralt.id + '_nr', type: CardType.HERO as CardType.HERO });
-    if (ciri) deck.push({ ...ciri, id: ciri.id + '_nr', type: CardType.HERO as CardType.HERO });
-    if (yennefer) deck.push({ ...yennefer, id: yennefer.id + '_nr', type: CardType.HERO as CardType.HERO });
+    if (triss) deck.push({ ...triss, id: triss.id + '_nr', type: CardType.HERO as CardType.HERO });
     if (mysteriousElf) deck.push({ ...mysteriousElf, id: mysteriousElf.id + '_nr', type: CardType.HERO as CardType.HERO });
 
     // Spy units
@@ -58,7 +58,7 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     // Northern Realms Unit
     const dunBannerMedic = northernRealmsDeck.units.find(u => u.name === 'Dun Banner Medic');
     if (dunBannerMedic) deck.push({ ...dunBannerMedic, type: CardType.UNIT as CardType.UNIT });
-    
+
     // Blue Stripes Commando (3 copies)
     const blueStripes = northernRealmsDeck.units.find(u => u.name === 'Blue Stripes Commando');
     if (blueStripes) {
@@ -125,6 +125,21 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
         deck.push(...cards);
     }
 
+    const frost = neutralDeck.specials.find(s => s.name === 'Biting Frost');
+    if (frost) deck.push({ ...frost, id: frost.id + '_nr', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 });
+
+    const fog = neutralDeck.specials.find(s => s.name === 'Impenetrable Fog');
+    if (fog) deck.push({ ...fog, id: fog.id + '_nr', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 });
+
+    const clear = neutralDeck.specials.find(s => s.name === 'Clear Weather');
+    if (clear) {
+        const cards: SpecialCard[] = [
+            { ...clear, id: clear.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
+            { ...clear, id: clear.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 }
+        ];
+        deck.push(...cards);
+    }
+
     // Additional neutral units
     const gaunterDarkness = neutralDeck.units.find(u => u.name === "Gaunter O'Dimm: Darkness");
     if (gaunterDarkness) {
@@ -142,6 +157,9 @@ const defaultNorthernRealmsDeck = (): DeckWithLeader => {
     const villentretenmerth = neutralDeck.units.find(u => u.name === 'Villentretenmerth');
     if (villentretenmerth) deck.push({ ...villentretenmerth, id: villentretenmerth.id + '_nr', type: CardType.UNIT as CardType.UNIT });
 
+    const olgierd = neutralDeck.units.find(u => u.name === 'Olgierd von Everec');
+    if (olgierd) deck.push({ ...olgierd, id: olgierd.id + '_nr', type: CardType.UNIT as CardType.UNIT });
+
     return {
         deck,
         leader: { ...leader, type: CardType.LEADER as CardType.LEADER, strength: 0, used: false  }
@@ -152,9 +170,6 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     const deck: Card[] = [];
 
     // Neutral heroes
-    const geralt = neutralDeck.heroes.find(h => h.name === 'Geralt of Rivia');
-    if (geralt) deck.push({ ...geralt, id: geralt.id + '_ne', type: CardType.HERO as CardType.HERO });
-
     const ciri = neutralDeck.heroes.find(h => h.name === 'Cirilla Fiona Elen Riannon');
     if (ciri) deck.push({ ...ciri, id: ciri.id + '_ne', type: CardType.HERO as CardType.HERO });
 
@@ -193,6 +208,9 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
     const gaunter = neutralDeck.units.find(u => u.name === 'Gaunter O\'Dimm');
     if (gaunter) deck.push({ ...gaunter, id: gaunter.id + '_ne', type: CardType.UNIT as CardType.UNIT });
 
+    const olgierd = neutralDeck.units.find(u => u.name === 'Olgierd von Everec');
+    if (olgierd) deck.push({ ...olgierd, id: olgierd.id + '_ne', type: CardType.UNIT as CardType.UNIT });
+
     // Units
     const youngEmissary = nilfgaardianEmpireDeck.units.find(u => u.name === 'Young Emissary');
     if (youngEmissary) {
@@ -227,13 +245,10 @@ const defaultNilfgaardDeck = (): DeckWithLeader => {
 
     // Weather cards
     const frost = neutralDeck.specials.find(s => s.name === 'Biting Frost');
-    if (frost) {
-        const cards: SpecialCard[] = [
-            { ...frost, id: frost.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-            { ...frost, id: frost.id + '_ne' + '_2', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 },
-        ];
-        deck.push(...cards);
-    }
+    if (frost) deck.push({ ...frost, id: frost.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 });
+
+    const rain = neutralDeck.specials.find(s => s.name === 'Torrential Rain');
+    if (rain) deck.push({ ...rain, id: rain.id + '_ne', type: CardType.SPECIAL as CardType.SPECIAL, strength: 0 });
 
     const clear = neutralDeck.specials.find(s => s.name === 'Clear Weather');
     if (clear) {

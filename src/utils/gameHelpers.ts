@@ -17,35 +17,41 @@ import { BoardRow, BoardState, Card, CardAbility, CardType, GameState, RowPositi
     card: UnitCard,
     weatherEffect: boolean,
     hornActive: boolean,
-    moraleBoostCount: number = 0,
-    sameNameCardsInRow: number = 1
+    moraleBoostCount: number,
+    sameNameCardsInRow: number
   ): number => {
     if (card.type === CardType.HERO) {
       return card.strength; // Heroes are immune to effects
     }
-
+  
     let strength = card.strength;
-
+  
     // Apply weather effect first
     if (weatherEffect) {
       strength = 1;
     }
-
+  
     // Apply tight bond multiplier
     if (card.ability === CardAbility.TIGHT_BOND && sameNameCardsInRow > 1) {
       strength *= sameNameCardsInRow;
     }
-
+  
     // Apply horn effect if active
     if (hornActive) {
       strength *= 2;
     }
-
-    // Add morale boost
-    strength += moraleBoostCount;
-
+  
+    // Add morale boost, but exclude the card itself if it has morale boost
+    if (card.ability === CardAbility.MORALE_BOOST) {
+      // If this card has morale boost, only add boosts from other morale boost cards
+      strength += (moraleBoostCount - 1);
+    } else {
+      // For non-morale boost cards, add all morale boosts
+      strength += moraleBoostCount;
+    }
+  
     return strength;
-  };
+  }
 
 
   /**

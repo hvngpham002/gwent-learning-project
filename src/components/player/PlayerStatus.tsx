@@ -1,4 +1,4 @@
-import { BoardState, CardAbility, PlayerState } from '@/types/card';
+import { BoardState, Card, CardAbility, PlayerState } from '@/types/card';
 import '@/styles/components/player-status.css';
 import { calculateTotalScore } from '@/utils/gameHelpers';
 import React from 'react';
@@ -11,6 +11,8 @@ interface PlayerStatusProps {
   onPass?: () => void;
   opponentScore?: number;
   turn?: string;
+  setSelectedCard: (card: Card | null) => void;
+  onLeaderAbility: () => void;
 }
 
 const PlayerStatus = ({
@@ -20,7 +22,9 @@ const PlayerStatus = ({
   isOpponent = false,
   onPass,
   opponentScore,
-  turn
+  turn,
+  setSelectedCard,
+  onLeaderAbility
 }: PlayerStatusProps) => {
 
   const totalScore = calculateTotalScore(board, weatherEffects);
@@ -30,6 +34,14 @@ const PlayerStatus = ({
     player.passed && '--passed',
     !player.passed && '--notPassed',
   ].filter(Boolean).join('');
+
+  console.log(turn);
+
+  const handleLeaderCardClick = () => {
+    if (turn === 'player') {
+      setSelectedCard(player.leader);
+    }
+  };
 
   const deckName = (player: PlayerState): string => {
     if (!player.leader) {
@@ -51,7 +63,7 @@ const PlayerStatus = ({
         return 'Unknown Faction';
     }
   };
-
+  
   return (
     <div className="player-status">
       <div className="player-info">
@@ -80,7 +92,7 @@ const PlayerStatus = ({
       <div className='leader-score-container'>
       {player.leader && (
        <React.Fragment>
-          <div className="leader-card">
+          <div onClick={handleLeaderCardClick} className={`leader-card`}>
               <img
                 className={cardClassName}
                 src={player.leader.imageUrl}
@@ -93,7 +105,7 @@ const PlayerStatus = ({
             {!player.leader.used && !isOpponent && (
                 <button
                 className="leader-ability-button"
-                onClick={() => {/* Handle leader ability */}}
+                onClick={onLeaderAbility}
                 disabled={turn !== 'player'}
                 >
                     Use Leader Card

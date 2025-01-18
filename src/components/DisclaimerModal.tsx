@@ -24,6 +24,7 @@ const Modal = styled.div`
   padding: 1.5rem;
   color: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
 `;
 
 const Title = styled.h2`
@@ -107,9 +108,10 @@ const DisclaimerModal: React.FC = () => {
               <li>Not for commercial use</li>
               <li>A fan project intended for learning and portfolio demonstration</li>
             </ul>
+            With that being said, how about a round of Gwent?
           </p>
         </Content>
-        <Button onClick={handleAccept}>I Understand</Button>
+        <Button onClick={handleAccept}>*Nods Silently*</Button>
       </Modal>
     </Overlay>
   );

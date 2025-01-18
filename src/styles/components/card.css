@@ -7,7 +7,7 @@
 }
 
 .card--playable:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
   z-index: var(--z-index-card-hover);
   cursor: pointer;
 }

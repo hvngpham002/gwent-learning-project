@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction } from '@/types/card';
+import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction, LeaderAbility } from '@/types/card';
 import GameBoard from './GameBoard';
 import { canPlayWeatherInRow, canTriggerMedic, shuffle } from '@/utils/gameHelpers';
 import { createInitialDeck } from '@/utils/deckBuilder';
@@ -545,7 +545,17 @@ const GameManager = () => {
             }
         };
     });
-};
+  };
+
+  const handleLeaderAbility = () => {
+    console.log('Leader ability clicked');
+    if (gameState.player.leader?.ability === LeaderAbility.DRAW_OPPONENT_DISCARD) {
+      setCardsSelector({
+        title: 'draw_opponent_discard',
+        show: true
+      });
+    }
+  };
 
   return (
     <React.Fragment>
@@ -561,10 +571,12 @@ const GameManager = () => {
         onBoardUnitClick={handleBoardUnitClick}
         onPass={handlePass}
         selectedCard={selectedCard}
+        setSelectedCard={setSelectedCard}
         isDecoyActive={isDecoyActive}
         handleDiscardPile={handleDiscardPile}
         onRedraw={handleRedraw}
         onMedicSelect={handleMedicCardSelect}
+        onLeaderAbility={handleLeaderAbility}
       />
     </React.Fragment>
 

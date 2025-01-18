@@ -19,6 +19,7 @@ interface GameBoardProps {
   onWeatherRowClick: () => void;  // Add this
   onPass: () => void;
   selectedCard: Card | null;
+  setSelectedCard: (card: Card | null) => void;
   isDecoyActive: boolean;
   cardsSelector: {
     title: string;
@@ -31,6 +32,7 @@ interface GameBoardProps {
   handleDiscardPile: () => void;
   onRedraw: (selectedCards: Card[]) => void;
   onMedicSelect: (selectedCards: Card[]) => void;
+  onLeaderAbility: () => void;
 }
 
 const GameBoard: React.FC<GameBoardProps> = ({
@@ -42,12 +44,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
   onBoardUnitClick,
   onPass,
   selectedCard,
+  setSelectedCard,
   isDecoyActive,
   cardsSelector,
   setCardsSelector,
   handleDiscardPile,
   onRedraw,
-  onMedicSelect
+  onMedicSelect,
+  onLeaderAbility
 }) => {
 
   const playerImageUrl = () => {
@@ -135,11 +139,14 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <div className="game-sidebar">
           <PlayerStatus
               player={gameState.opponent}
+              turn={gameState.currentTurn}
               board={gameState.opponentBoard}
               weatherEffects={gameState.activeWeatherEffects}
               isOpponent={true}
               onPass={onPass}
               opponentScore={calculateTotalScore(gameState.playerBoard, gameState.activeWeatherEffects)}
+              setSelectedCard={setSelectedCard}
+              onLeaderAbility={() => {}}
           />
           <div className="weather-area">
             <div className={`weather-row ${canPlayWeather() ? 'weather-row--playable' : ''}`} onClick={() => canPlayWeather() && onWeatherRowClick?.()}>
@@ -164,6 +171,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
              isOpponent={false}
              onPass={onPass}
              opponentScore={calculateTotalScore(gameState.opponentBoard, gameState.activeWeatherEffects)}
+             setSelectedCard={setSelectedCard}
+             onLeaderAbility={onLeaderAbility}
           />
         </div>
 

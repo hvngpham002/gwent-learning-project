@@ -63,7 +63,7 @@
     text-align: center;
     vertical-align: middle;
     line-height: 55px;
-    z-index: 999;
+    z-index: 998;
   }
 
   .player-score.winning-score {
@@ -94,14 +94,17 @@
 
   .leader-card {
     position: relative;
-    border-radius: 8px;
-    overflow: hidden;
     align-self: center;
+  }
+
+  .leader-card img:hover {
+    cursor: pointer;
+    outline: 2px solid #d7a451;
   }
 
   .leader-card img {
     width: 185px;
-    height: 261px;
+    height: 260px;
     object-fit: cover;
   }
 
