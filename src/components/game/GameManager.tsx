@@ -56,9 +56,8 @@ const GameManager = () => {
 
   const handleRoundEnd = () => {
     setGameState(prev => {
-
-    // Prevent multiple executions in the same round
-    if (prev.gamePhase !== 'roundEnd') return prev;
+      // Prevent multiple executions in the same round
+      if (prev.gamePhase !== 'roundEnd') return prev;
 
       const playerScore = calculateTotalScore(prev.playerBoard, prev.activeWeatherEffects);
       const opponentScore = calculateTotalScore(prev.opponentBoard, prev.activeWeatherEffects);
@@ -73,19 +72,37 @@ const GameManager = () => {
 
       if (playerScore > opponentScore) {
         newOpponentLives--;
+        console.log('Player wins round');
       } else if (opponentScore > playerScore) {
         newPlayerLives--;
+        console.log('Opponent wins round');
       } else {
         newPlayerLives--;
         newOpponentLives--;
+        console.log('Round ends in draw');
       }
 
+      // Check for game end
       if (newPlayerLives === 0 || newOpponentLives === 0) {
+        let winner: 'player' | 'opponent' | 'draw' = 'draw';
+        
         if (newPlayerLives === 0 && newOpponentLives > 0) {
           newOpponentGameScore++;
+          winner = 'opponent';
         } else if (newOpponentLives === 0 && newPlayerLives > 0) {
           newPlayerGameScore++;
+          winner = 'player';
         }
+
+        // Update local storage with game scores
+        const storedScores = JSON.parse(localStorage.getItem('gwentScores') || '{"player": 0, "opponent": 0}');
+        const newScores = {
+          player: storedScores.player + (winner === 'player' ? 1 : 0),
+          opponent: storedScores.opponent + (winner === 'opponent' ? 1 : 0)
+        };
+        localStorage.setItem('gwentScores', JSON.stringify(newScores));
+        console.log('Game over - Winner:', winner, 'All-time scores:', newScores);
+
         // Initialize new game after a short delay
         setTimeout(() => {
           initializeGame(newPlayerGameScore, newOpponentGameScore);
@@ -93,7 +110,7 @@ const GameManager = () => {
             title: "redraw",
             show: true
           });
-        }, 1500);
+        }, 1000);
       }
 
       // Collect cards for discard
@@ -183,11 +200,18 @@ const GameManager = () => {
   }, [setAiRedrawComplete]);
   
   useEffect(() => {
+
+    const storedScores = JSON.parse(localStorage.getItem('gwentScores') || '{"player": 0, "opponent": 0}');
+    const scores = {
+      player: storedScores.player,
+      opponent: storedScores.opponent
+    };
+
     // Only initialize once at the start
     if (gameState.gamePhase === 'setup' &&
         gameState.player.hand.length === 0 &&
         gameState.opponent.hand.length === 0) {
-      initializeGame(0, 0);
+      initializeGame(Number(scores.player), Number(scores.opponent));
       setCardsSelector({
         title: "redraw",
         show: true
@@ -212,22 +236,23 @@ const GameManager = () => {
       });
     }
   
-    if (gameState.currentTurn === 'opponent' &&
-        gameState.gamePhase === 'playing' &&
-        !gameState.opponent.passed) {
-      
-      // Only use isAIMoving check when player hasn't passed
+      const shouldMakeMove = 
+      gameState.currentTurn === 'opponent' &&
+      gameState.gamePhase === 'playing' &&
+      !gameState.opponent.passed;
+
+    if (shouldMakeMove) {
       if (!gameState.player.passed && isAIMoving.current) {
         return;
       }
-  
+
       isAIMoving.current = true;
       timeoutId = setTimeout(() => {
         makeOpponentMove();
         isAIMoving.current = false;
       }, 1000);
     }
-  
+
     return () => {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -238,7 +263,7 @@ const GameManager = () => {
   
 
 
-  const handleCardClick = (card: Card) => {
+  const handleCardClick = useCallback((card: Card) => {
     if (gameState.currentTurn !== 'player' || gameState.player.passed) {
       return;
     }
@@ -296,7 +321,7 @@ const GameManager = () => {
       setSelectedCard(card);
       setIsDecoyActive(false);
     }
-  };
+  }, [gameState.currentTurn, gameState.player.discard, gameState.player.hand, gameState.player.passed, selectedCard?.id]);
 
   const handleMedicChain = async (
     gameState: GameState,
