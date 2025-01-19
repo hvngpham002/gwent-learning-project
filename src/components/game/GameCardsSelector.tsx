@@ -62,7 +62,6 @@ const GameCardsSelector = ({
   };
 
   const handleDrawOpponentDiscard = () => {
-    console.log(selectedCards);
     if (selectedCards.length > 0) {
       setSelectedCards([]);
       setGameState((prev) => ({

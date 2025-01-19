@@ -140,26 +140,8 @@ export const playCard = ({
   const boardKey = isPlayer ? 'playerBoard' : 'opponentBoard';
   const oppositeKey = isPlayer ? 'opponent' : 'player';
 
-  console.log('=== Play Card Action ===', {
-    player: isPlayer ? 'Player' : 'AI',
-    cardName: card.name,
-    cardType: card.type,
-    row,
-    currentTurn: gameState.currentTurn,
-    playerPassed: gameState.player.passed,
-    opponentPassed: gameState.opponent.passed,
-    timestamp: new Date().toISOString()
-  });
-
   // Add return state logging
   const logStateAndReturn = (newState: GameState) => {
-    console.log('=== State After Play ===', {
-      nextTurn: newState.currentTurn,
-      playerHandSize: newState.player.hand.length,
-      opponentHandSize: newState.opponent.hand.length,
-      playerPassed: newState.player.passed,
-      opponentPassed: newState.opponent.passed
-    });
     return newState;
   };
 

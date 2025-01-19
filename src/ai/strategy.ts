@@ -18,16 +18,9 @@ abstract class Strategy {
 
 class LeaderStrategy extends Strategy {
   evaluate(state: GameState, card: Card): PlayDecision | null {
-    console.log('=== Leader Strategy Evaluation ===', {
-      cardName: card.name,
-      cardType: card.type,
-      isLeader: card.type === CardType.LEADER,
-      isUsed: card.type === CardType.LEADER ? (card as LeaderCard).used : 'N/A',
-      ability: card.type === CardType.LEADER ? (card as LeaderCard).ability : 'N/A'
-    });
+
 
     if (card.type !== CardType.LEADER || card.used) {
-      console.log('Rejecting leader card:', card.type !== CardType.LEADER ? 'Not a leader card' : 'Already used');
       return null;
     }
 
@@ -36,13 +29,8 @@ class LeaderStrategy extends Strategy {
     switch (leaderCard.ability) {
       case LeaderAbility.CLEAR_WEATHER:
         { const decision = this.evaluateClearWeather(state, leaderCard);
-        console.log('Clear weather leader evaluation:', {
-          decision: decision ? 'Playing' : 'Not playing',
-          score: decision?.score || 'N/A'
-        });
         return decision; }
       default:
-        console.log('Unhandled leader ability:', leaderCard.ability);
         return null;
     }
   }
@@ -57,14 +45,6 @@ class LeaderStrategy extends Strategy {
     });
   
     const netBenefit = playerImpact - opponentImpact;
-  
-    console.log('Clear weather impact analysis:', {
-      opponentImpact,
-      playerImpact,
-      netBenefit,
-      weatherEffects: Array.from(state.activeWeatherEffects),
-      willPlay: netBenefit > 10
-    });
   
     // Only play if the net benefit is positive and significant
     if (netBenefit > 10) {
@@ -461,32 +441,11 @@ class MedicStrategy extends Strategy {
       return null;
     }
 
-    console.log('=== Medic Strategy Evaluation ===', {
-      medicCard: card.name,
-      discardPileSize: state.opponent.discard.length,
-      validTargets: state.opponent.discard
-        .filter(c => c.type === CardType.UNIT)
-        .map(t => ({
-          name: t.name,
-          type: t.type,
-          strength: 'strength' in t ? t.strength : 'N/A',
-          ability: t.ability
-        }))
-    });
-
     const { targets, totalScore } = this.simulateMedicChain(card, state);
     
     if (targets.length === 0) {
-      console.log('No valid targets for medic card');
       return null;
     }
-
-    console.log('=== Medic Chain Found ===', {
-      initialCard: card.name,
-      chainLength: targets.length,
-      chainTargets: targets.map(t => t.name),
-      totalScore
-    });
 
     return {
       card: card as UnitCard,
@@ -618,13 +577,6 @@ export class AIStrategyCoordinator {
 
   evaluateRedraw(state: GameState): Card[] {
     const cardsToRedraw: Card[] = [];
-    console.log('=== AI Redraw Analysis ===');
-    console.log('Initial hand:', state.opponent.hand.map(card => ({
-      name: card.name,
-      type: card.type,
-      strength: 'strength' in card ? card.strength : 'N/A',
-      ability: card.ability
-    })));
 
     // We can redraw up to 2 cards
     for (let i = 0; i < 2; i++) {
@@ -644,13 +596,6 @@ export class AIStrategyCoordinator {
       if (bestRedrawDecision) {
         const redrawCard = bestRedrawDecision.card;
         cardsToRedraw.push(redrawCard);
-        console.log(`Redrawing card ${i + 1}:`, {
-          name: redrawCard.name,
-          type: redrawCard.type,
-          strength: 'strength' in redrawCard ? redrawCard.strength : 'N/A',
-          ability: redrawCard.ability,
-          score: bestRedrawDecision.score
-        });
       } else {
         break;
       }
@@ -665,26 +610,9 @@ export class AIStrategyCoordinator {
     const pointsNeeded = playerBoardScore - currentBoardScore + 1;
     const cardAdvantage = state.opponent.hand.length - state.player.hand.length;
 
-    console.log('=== AI Pass Decision Analysis ===');
-    console.log('Current State:', {
-        playerBoardScore,
-        currentBoardScore,
-        pointsNeeded,
-        cardAdvantage,
-        roundNumber: state.currentRound,
-        cardsInHand: state.opponent.hand.length,
-        playerCards: state.player.hand.length
-    });
-
     if (state.player.passed) {
-        console.log('Player has passed - analyzing whether to continue...');
 
         if (pointsNeeded > 12) {  // If we need more than 12 points
-            console.log('Large point deficit analysis:', {
-                pointsNeeded,
-                cardAdvantage,
-                cardsInHand: state.opponent.hand.length
-            });
 
             // Only fight if we have both:
             // 1. Enough cards to realistically win
@@ -693,16 +621,13 @@ export class AIStrategyCoordinator {
             const healthyCardCount = cardAdvantage >= -1;
 
             if (canWinRound && healthyCardCount) {
-                console.log('Committing to win large deficit');
                 return false;  // Fight for the round
             } else {
-                console.log('Too expensive to catch up, preserving cards');
                 return true;   // Pass immediately
             }
         }
 
         if (currentBoardScore > playerBoardScore) {
-            console.log('AI is already winning, deciding to pass');
             return true;
         }
 
@@ -710,7 +635,6 @@ export class AIStrategyCoordinator {
         if (state.currentRound === 1) {
             // Card preservation threshold
             if (state.opponent.hand.length <= 6) {
-                console.log('Preserving minimum hand size (6) in round 1');
                 return true;
             }
 
@@ -722,22 +646,14 @@ export class AIStrategyCoordinator {
             }
 
             const cardsNeededToWin = Math.ceil(pointsNeeded / 8);  // average 8 points per card
-            console.log('Catch-up analysis:', {
-                pointsNeeded,
-                cardsNeededToWin,
-                cardAdvantage,
-                cardsInHand: state.opponent.hand.length
-            });
 
             // Don't fight if we need too many cards
             if (cardsNeededToWin >= 4) {
-                console.log('Need too many cards to catch up');
                 return true;
             }
 
             // Fight if we have card advantage or minimal disadvantage and can catch up
             if (cardAdvantage >= -1 && cardsNeededToWin <= 2) {
-                console.log('Good position to catch up');
                 return false;
             }
 

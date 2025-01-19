@@ -62,8 +62,6 @@ const GameManager = () => {
       const playerScore = calculateTotalScore(prev.playerBoard, prev.activeWeatherEffects);
       const opponentScore = calculateTotalScore(prev.opponentBoard, prev.activeWeatherEffects);
 
-      console.log('Final scores:', { player: playerScore, opponent: opponentScore });
-
       // Determine who loses life tokens
       let newPlayerLives = prev.player.lives;
       let newOpponentLives = prev.opponent.lives;
@@ -72,14 +70,11 @@ const GameManager = () => {
 
       if (playerScore > opponentScore) {
         newOpponentLives--;
-        console.log('Player wins round');
       } else if (opponentScore > playerScore) {
         newPlayerLives--;
-        console.log('Opponent wins round');
       } else {
         newPlayerLives--;
         newOpponentLives--;
-        console.log('Round ends in draw');
       }
 
       // Check for game end
@@ -101,8 +96,6 @@ const GameManager = () => {
           opponent: storedScores.opponent + (winner === 'opponent' ? 1 : 0)
         };
         localStorage.setItem('gwentScores', JSON.stringify(newScores));
-        console.log('Game over - Winner:', winner, 'All-time scores:', newScores);
-
         // Initialize new game after a short delay
         setTimeout(() => {
           initializeGame(newPlayerGameScore, newOpponentGameScore);
@@ -223,19 +216,7 @@ const GameManager = () => {
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-  
-    if (gameState.gamePhase === 'playing') {
-      console.log('=== Turn Change ===', {
-        phase: gameState.gamePhase,
-        currentTurn: gameState.currentTurn,
-        playerPassed: gameState.player.passed,
-        opponentPassed: gameState.opponent.passed,
-        playerHandSize: gameState.player.hand.length,
-        opponentHandSize: gameState.opponent.hand.length,
-        timestamp: new Date().toISOString()
-      });
-    }
-  
+    
       const shouldMakeMove = 
       gameState.currentTurn === 'opponent' &&
       gameState.gamePhase === 'playing' &&
@@ -571,12 +552,6 @@ const GameManager = () => {
   };
 
   const handleRedraw = (selectedCards: Card[]) => {
-    console.log('=== GameManager Redraw ===', {
-        selectedCards,
-        currentHand: gameState.player.hand,
-        currentDeck: gameState.player.deck,
-        timestamp: new Date().toISOString()
-    });
 
     setGameState(prev => {
         const newHand = prev.player.hand.filter(
@@ -586,13 +561,6 @@ const GameManager = () => {
         const shuffledDeck = shuffle(newDeck);
         const drawnCards = shuffledDeck.slice(0, selectedCards.length);
         const remainingDeck = shuffledDeck.slice(selectedCards.length);
-
-        console.log('=== After Redraw Calculation ===', {
-            newHand,
-            drawnCards,
-            remainingDeckSize: remainingDeck.length,
-            timestamp: new Date().toISOString()
-        });
 
         return {
             ...prev,
@@ -606,7 +574,6 @@ const GameManager = () => {
   };
 
   const handleLeaderAbility = () => {
-    console.log('Leader ability clicked');
     if (gameState.player.leader?.ability === LeaderAbility.DRAW_OPPONENT_DISCARD) {
       setCardsSelector({
         title: 'draw_opponent_discard',
