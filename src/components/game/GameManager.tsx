@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, PlayerState, GameState, BoardState, RowPosition, CardType, UnitCard, CardAbility, SpecialCard, Faction, LeaderAbility } from '@/types/card';
 import GameBoard from './GameBoard';
 import { canPlayWeatherInRow, canTriggerMedic, shuffle } from '@/utils/gameHelpers';
@@ -17,6 +17,7 @@ const initialPlayerState: PlayerState = {
   passed: false,
   lives: 2,
   faction: Faction.NEUTRAL,
+  gameScore: 0
 };
 
 const initialBoardState: BoardState = {
@@ -67,6 +68,8 @@ const GameManager = () => {
       // Determine who loses life tokens
       let newPlayerLives = prev.player.lives;
       let newOpponentLives = prev.opponent.lives;
+      let newPlayerGameScore = prev.player.gameScore;
+      let newOpponentGameScore = prev.opponent.gameScore;
 
       if (playerScore > opponentScore) {
         newOpponentLives--;
@@ -75,6 +78,22 @@ const GameManager = () => {
       } else {
         newPlayerLives--;
         newOpponentLives--;
+      }
+
+      if (newPlayerLives === 0 || newOpponentLives === 0) {
+        if (newPlayerLives === 0 && newOpponentLives > 0) {
+          newOpponentGameScore++;
+        } else if (newOpponentLives === 0 && newPlayerLives > 0) {
+          newPlayerGameScore++;
+        }
+        // Initialize new game after a short delay
+        setTimeout(() => {
+          initializeGame(newPlayerGameScore, newOpponentGameScore);
+          setCardsSelector({
+            title: "redraw",
+            show: true
+          });
+        }, 1500);
       }
 
       // Collect cards for discard
@@ -116,22 +135,65 @@ const GameManager = () => {
     });
   };
 
-  console.log(gameState.opponent.discard)
+  const { makeOpponentMove, setAiRedrawComplete } = useAI(gameState, handleRoundEnd, setGameState, setSelectedCard);
 
-  const { makeOpponentMove } = useAI(gameState, handleRoundEnd, setGameState, setSelectedCard);
+  const initializeGame = useCallback((playerScore: number, opponentScore: number) => {
+    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
+    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
 
+    const playerDeck = shuffle(playerDeckWithLeader.deck);
+    const opponentDeck = shuffle(opponentDeckWithLeader.deck);
+
+    const playerHand = playerDeck.splice(0, 10);
+    const opponentHand = opponentDeck.splice(0, 10);
+
+    setAiRedrawComplete(false);
+
+    setGameState(prev => ({
+      ...prev,
+      player: {
+        ...prev.player,
+        deck: playerDeck,
+        discard: [],
+        hand: playerHand,
+        leader: playerDeckWithLeader.leader,
+        faction: playerDeckWithLeader.leader.faction,
+        gameScore: playerScore,
+        passed: false,
+        lives: 2
+      },
+      opponent: {
+        ...prev.opponent,
+        deck: opponentDeck,
+        discard: [],
+        hand: opponentHand,
+        leader: opponentDeckWithLeader.leader,
+        faction: opponentDeckWithLeader.leader.faction,
+        gameScore: opponentScore,
+        passed: false,
+        lives: 2
+      },
+      currentTurn: Math.random() < 0.5 ? 'player' : 'opponent',
+      gamePhase: 'setup',
+      activeWeatherEffects: new Set(),
+      playerBoard: initialBoardState,
+      opponentBoard: initialBoardState,
+      currentRound: 1
+    }));
+  }, [setAiRedrawComplete]);
+  
   useEffect(() => {
     // Only initialize once at the start
     if (gameState.gamePhase === 'setup' &&
         gameState.player.hand.length === 0 &&
         gameState.opponent.hand.length === 0) {
-      initializeGame();
+      initializeGame(0, 0);
       setCardsSelector({
         title: "redraw",
         show: true
       });
     }
-  }, [gameState.gamePhase, gameState.opponent.hand.length, gameState.player.hand.length]);
+  }, [gameState.gamePhase, gameState.opponent.hand.length, gameState.player.hand.length, initializeGame]);
 
   const isAIMoving = useRef(false);
 
@@ -173,36 +235,7 @@ const GameManager = () => {
     };
   }, [gameState, makeOpponentMove]);
 
-  const initializeGame = () => {
-    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
-    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
-
-    const playerDeck = shuffle(playerDeckWithLeader.deck);
-    const opponentDeck = shuffle(opponentDeckWithLeader.deck);
-
-    const playerHand = playerDeck.splice(0, 10);
-    const opponentHand = opponentDeck.splice(0, 10);
-
-    setGameState(prev => ({
-      ...prev,
-      player: {
-        ...prev.player,
-        deck: playerDeck,
-        hand: playerHand,
-        leader: playerDeckWithLeader.leader,
-        faction: playerDeckWithLeader.leader.faction
-      },
-      opponent: {
-        ...prev.opponent,
-        deck: opponentDeck,
-        hand: opponentHand,
-        leader: opponentDeckWithLeader.leader,
-        faction: opponentDeckWithLeader.leader.faction
-      },
-      currentTurn: Math.random() < 0.5 ? 'player' : 'opponent',
-      gamePhase: 'setup'
-    }));
-  };
+  
 
 
   const handleCardClick = (card: Card) => {
@@ -577,6 +610,7 @@ const GameManager = () => {
         onRedraw={handleRedraw}
         onMedicSelect={handleMedicCardSelect}
         onLeaderAbility={handleLeaderAbility}
+
       />
     </React.Fragment>
 

@@ -115,6 +115,7 @@ export interface PlayerState {
     leader: LeaderCard | null;
     passed: boolean;
     lives: number;
+    gameScore: number;
 }
 
 export interface GameState {

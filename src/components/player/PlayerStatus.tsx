@@ -35,8 +35,6 @@ const PlayerStatus = ({
     !player.leader?.used && '--notUsed',
   ].filter(Boolean).join('');
 
-  console.log(turn);
-
   const handleLeaderCardClick = () => {
     if (turn === 'player') {
       setSelectedCard(player.leader);
@@ -76,6 +74,7 @@ const PlayerStatus = ({
           </div>
           <p className='player-deck'>{ deckName(player)} </p>
         </div>
+        <div className='player-game-score'>{player.gameScore}</div>
       </div>
       <div className="player-lives">
         <div className="score-container">

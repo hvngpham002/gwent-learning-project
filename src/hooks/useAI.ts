@@ -205,7 +205,8 @@ const useAI = (
 
   return {
     makeOpponentMove,
-    handleOpponentPass
+    handleOpponentPass,
+    setAiRedrawComplete
   };
 };
 
