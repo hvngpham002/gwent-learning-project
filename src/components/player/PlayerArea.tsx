@@ -21,7 +21,7 @@ const hornCard: SpecialCard = {
   type: CardType.SPECIAL,
   strength: 0,
   ability: CardAbility.COMMANDERS_HORN,
-  imageUrl: 'src/assets/images/neutral/commanders_horn.png',
+  imageUrl: '/images/neutral/commanders_horn.png',
   description: 'Doubles the strength of all unit cards in a row'
 };
 
@@ -82,7 +82,7 @@ const PlayerArea: React.FC<PlayerAreaProps> = ({
                 card={hornCard}
                 isPlayable={false}
               />
-            ) : <img src="/src/assets/avatars/horn.png" />}
+            ) : <img src="/images/avatars/horn.png" />}
           </div>
           {row.cards.map(card => (
             <GwentCard

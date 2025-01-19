@@ -10,7 +10,7 @@ export const neutralHeroes = [
         strength: 15,
         row: RowPosition.CLOSE,
         ability: CardAbility.MUSTER_ROACH,
-        imageUrl: 'src/assets/images/neutral/Geralt.png',
+        imageUrl: '/images/neutral/Geralt.png',
         description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
@@ -21,7 +21,7 @@ export const neutralHeroes = [
         strength: 15,
         row: RowPosition.CLOSE,
         ability: CardAbility.MUSTER_ROACH,
-        imageUrl: 'src/assets/images/neutral/Cirilla_Fiona_Elen_Riannon.jpg',
+        imageUrl: '/images/neutral/Cirilla_Fiona_Elen_Riannon.jpg',
         description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
@@ -32,7 +32,7 @@ export const neutralHeroes = [
         strength: 7,
         row: RowPosition.RANGED,
         ability: CardAbility.MEDIC,
-        imageUrl: 'src/assets/images/neutral/Yennefer.png',
+        imageUrl: '/images/neutral/Yennefer.png',
         description: 'Medic: Choose one card from your discard pile and play it instantly (no Heroes or Special Cards).'
     },
     {
@@ -43,7 +43,7 @@ export const neutralHeroes = [
         strength: 7,
         row: RowPosition.RANGED,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/neutral/Triss.png',
+        imageUrl: '/images/neutral/Triss.png',
         description: 'Hero: Not affected by any Special Cards or abilities.'
     },
     {
@@ -54,7 +54,7 @@ export const neutralHeroes = [
         strength: 0,
         row: RowPosition.CLOSE,
         ability: CardAbility.SPY,
-        imageUrl: 'src/assets/images/neutral/Mysterious_Elf.png',
+        imageUrl: '/images/neutral/Mysterious_Elf.png',
         description: 'Spy: Place on your opponent\'s battlefield and draw 2 cards from your deck.'
     }
 ];
@@ -68,7 +68,7 @@ export const neutralUnits = [
         strength: 2,
         row: RowPosition.CLOSE,
         ability: CardAbility.COMMANDERS_HORN,
-        imageUrl: 'src/assets/images/neutral/dandelion.png'
+        imageUrl: '/images/neutral/dandelion.png'
     },
     {
         id: 'neutral_unit_02',
@@ -78,7 +78,7 @@ export const neutralUnits = [
         strength: 6,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/neutral/vesemir.png'
+        imageUrl: '/images/neutral/vesemir.png'
     },
     {
         id: 'neutral_unit_03',
@@ -88,7 +88,7 @@ export const neutralUnits = [
         strength: 5,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/neutral/zoltan.png'
+        imageUrl: '/images/neutral/zoltan.png'
     },
     {
         id: 'neutral_unit_04',
@@ -98,7 +98,7 @@ export const neutralUnits = [
         strength: 5,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/neutral/emiel_regis.png'
+        imageUrl: '/images/neutral/emiel_regis.png'
     },
     {
         id: 'neutral_unit_05',
@@ -108,7 +108,7 @@ export const neutralUnits = [
         strength: 8,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/neutral/bovine_defense_force.png'
+        imageUrl: '/images/neutral/bovine_defense_force.png'
     },
     {
         id: 'neutral_unit_06',
@@ -118,7 +118,7 @@ export const neutralUnits = [
         strength: 0,
         row: RowPosition.CLOSE,
         ability: CardAbility.AVENGER,
-        imageUrl: 'src/assets/images/neutral/cow.png'
+        imageUrl: '/images/neutral/cow.png'
     },
     {
         id: 'neutral_unit_07',
@@ -129,7 +129,7 @@ export const neutralUnits = [
         row: RowPosition.CLOSE,
         availableRows: [RowPosition.CLOSE, RowPosition.RANGED],
         ability: CardAbility.MORALE_BOOST,
-        imageUrl: 'src/assets/images/neutral/olgierd_von_everec.png',
+        imageUrl: '/images/neutral/olgierd_von_everec.png',
         description: 'Morale Boost: Adds +1 to all units in the row (excluding itself).'
     },
     {
@@ -140,7 +140,7 @@ export const neutralUnits = [
         strength: 3,
         row: RowPosition.CLOSE,
         ability: CardAbility.NONE,
-        imageUrl: 'src/assets/images/neutral/roach.png'
+        imageUrl: '/images/neutral/roach.png'
     },
     {
         id: 'neutral_unit_09',
@@ -150,7 +150,7 @@ export const neutralUnits = [
         strength: 7,
         row: RowPosition.CLOSE,
         ability: CardAbility.SCORCH_CLOSE,
-        imageUrl: 'src/assets/images/neutral/villentretenmerth.png',
+        imageUrl: '/images/neutral/villentretenmerth.png',
         description: 'Scorch - Close Combat: Destroy your enemy\'s strongest Close Combat unit(s) if the combined strength of all his or her Close Combat units is 10 or more.'
     },
     {
@@ -161,7 +161,7 @@ export const neutralUnits = [
         strength: 2,
         row: RowPosition.SIEGE,
         ability: CardAbility.MUSTER,
-        imageUrl: 'src/assets/images/neutral/gaunt_odimm.png',
+        imageUrl: '/images/neutral/gaunt_odimm.png',
         description: 'Muster: Find any cards with the same name in your deck and play them instantly. '
     },
     {
@@ -172,7 +172,7 @@ export const neutralUnits = [
         strength: 4,
         row: RowPosition.RANGED,
         ability: CardAbility.MUSTER,
-        imageUrl: 'src/assets/images/neutral/gaunter_odimm_darkness.png',
+        imageUrl: '/images/neutral/gaunter_odimm_darkness.png',
         description: 'Muster: Find any cards with the same name in your deck and play them instantly. '
     },
 ];
@@ -185,7 +185,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.DECOY,
-        imageUrl: 'src/assets/images/neutral/decoy.png',
+        imageUrl: '/images/neutral/decoy.png',
         description: 'Swap with a non-Hero unit on your side of the battlefield'
     },
     {
@@ -195,7 +195,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.SCORCH,
-        imageUrl: 'src/assets/images/neutral/scorch.png',
+        imageUrl: '/images/neutral/scorch.png',
         description: 'Destroys the strongest card(s) on the battlefield'
     },
     {
@@ -205,7 +205,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.COMMANDERS_HORN,
-        imageUrl: 'src/assets/images/neutral/commanders_horn.png',
+        imageUrl: '/images/neutral/commanders_horn.png',
         description: 'Doubles the strength of all unit cards in a row'
     },
     {
@@ -215,7 +215,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.FOG,
-        imageUrl: 'src/assets/images/neutral/impenetrable_fog.png',
+        imageUrl: '/images/neutral/impenetrable_fog.png',
         description: 'Sets the strength of all Ranged Combat units to 1'
     },
     {
@@ -225,7 +225,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.RAIN,
-        imageUrl: 'src/assets/images/neutral/torrential_rain.png',
+        imageUrl: '/images/neutral/torrential_rain.png',
         description: 'Sets the strength of all Siege units to 1'
     },
     {
@@ -235,7 +235,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.FROST,
-        imageUrl: 'src/assets/images/neutral/biting_frost.png',
+        imageUrl: '/images/neutral/biting_frost.png',
         description: 'Sets the strength of all Close Combat units to 1'
     },
     {
@@ -245,7 +245,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.CLEAR_WEATHER,
-        imageUrl: 'src/assets/images/neutral/clear_weather.png',
+        imageUrl: '/images/neutral/clear_weather.png',
         description: 'Removes all Weather Card effects'
     },
     {
@@ -255,7 +255,7 @@ export const neutralSpecials = [
         type: CardType.SPECIAL,
         strength: 0,
         ability: CardAbility.SKELLIGE_STORM,  // Would need to be added to enum
-        imageUrl: 'src/assets/images/neutral/skellige_storm.png',
+        imageUrl: '/images/neutral/skellige_storm.png',
         description: 'Sets the strength of all Ranged and Siege units to 1'
     }
 ];

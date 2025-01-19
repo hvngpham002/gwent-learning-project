@@ -57,30 +57,30 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const playerImageUrl = () => {
     switch(gameState.player.faction) {
       case Faction.NILFGAARD:
-        return 'src/assets/images/nilfgaard/default-nilfgaard.png';
+        return '/images/nilfgaard/default-nilfgaard.png';
       case Faction.MONSTERS:
-        return 'src/assets/images/monster/default-monster.png';
+        return '/images/monster/default-monster.png';
       case Faction.NORTHERN_REALMS:
-        return 'src/assets/images/northern_realms/default-northern_realms.png';
+        return '/images/northern_realms/default-northern_realms.png';
       case Faction.SCOIATAEL:
-        return 'src/assets/images/scoiatael/default-scoiatael.png';
+        return '/images/scoiatael/default-scoiatael.png';
       default:
-        return 'src/assets/images/neutral/default-neutral.png';
+        return '/images/neutral/default-neutral.png';
     }
   }
 
   const opponentImageUrl = () => {
     switch(gameState.opponent.faction) {
       case Faction.NILFGAARD:
-        return 'src/assets/images/nilfgaard/default-nilfgaard.png';
+        return '/images/nilfgaard/default-nilfgaard.png';
       case Faction.MONSTERS:
-        return 'src/assets/images/monster/default-monster.png';
+        return '/images/monster/default-monster.png';
       case Faction.NORTHERN_REALMS:
-        return 'src/assets/images/northern_realms/default-northern_realms.png';
+        return '/images/northern_realms/default-northern_realms.png';
       case Faction.SCOIATAEL:
-        return 'src/assets/images/scoiatael/default-scoiatael.png';
+        return '/images/scoiatael/default-scoiatael.png';
       default:
-        return 'src/assets/images/neutral/default-neutral.png';
+        return '/images/neutral/default-neutral.png';
     }
   }
 
@@ -109,7 +109,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
     name: 'Deck',
     faction: gameState.player.deck[0]?.faction ?? Faction.NEUTRAL,
     type: CardType.SPECIAL,
-    imageUrl: 'src/assets/images/other-graveyard.png',
+    imageUrl: '/images/other-graveyard.png',
     strength: 0,
     ability: CardAbility.NONE
   };

@@ -66,7 +66,7 @@ const PlayerStatus = ({
     <div className="player-status">
       <div className="player-info">
         <div className="player-avatar">
-            {isOpponent ? <img src='src\assets\avatars\geralt_avatar.png' /> : <img src='src\assets\avatars\ciri_avatar.png' />}
+            {isOpponent ? <img src='/images/avatars/geralt_avatar.png' /> : <img src='/images/avatars/ciri_avatar.png' />}
         </div>
         <div className='player-name-deck'>
           <div className="player-name">
@@ -79,7 +79,7 @@ const PlayerStatus = ({
       <div className="player-lives">
         <div className="score-container">
             <div className="hand-size">
-              <img src='src\assets\avatars\on_hand.png'/> {player.hand.length}
+              <img src='/images/avatars/on_hand.png'/> {player.hand.length}
             </div>
         </div>
         <div className='lives-container'>
