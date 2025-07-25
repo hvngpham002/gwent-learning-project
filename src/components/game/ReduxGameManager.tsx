@@ -49,6 +49,7 @@ import {
 import { useReduxAI } from '@/hooks/useReduxAI';
 import DisclaimerModal from '../DisclaimerModal';
 import { calculateTotalScore } from '@/utils/gameHelpers';
+import VersionMark from '../VersionMark';
 
 const ReduxGameManager: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -398,27 +399,30 @@ const ReduxGameManager: React.FC = () => {
   return (
     <React.Fragment>
       <DisclaimerModal />
-      <GameBoard
-        gameState={{
-          ...gameState,
-          activeWeatherEffects: new Set(gameState.activeWeatherEffects)
-        }}
-        setGameState={handleSetGameState}
-        cardsSelector={cardsSelector}
-        setCardsSelector={(config) => dispatch(setCardsSelector(config))}
-        onCardClick={handleCardClick}
-        onRowClick={handleRowClick}
-        onWeatherRowClick={handleWeatherRowClick}
-        onBoardUnitClick={handleBoardUnitClick}
-        onPass={handlePass}
-        selectedCard={selectedCard}
-        setSelectedCard={(card) => dispatch(setSelectedCard(card))}
-        isDecoyActive={isDecoyActive}
-        handleDiscardPile={handleDiscardPile}
-        onRedraw={handleRedraw}
-        onMedicSelect={handleMedicCardSelect}
-        onLeaderAbility={handleLeaderAbility}
-      />
+      <div className="relative">
+        <GameBoard
+          gameState={{
+            ...gameState,
+            activeWeatherEffects: new Set(gameState.activeWeatherEffects)
+          }}
+          setGameState={handleSetGameState}
+          cardsSelector={cardsSelector}
+          setCardsSelector={(config) => dispatch(setCardsSelector(config))}
+          onCardClick={handleCardClick}
+          onRowClick={handleRowClick}
+          onWeatherRowClick={handleWeatherRowClick}
+          onBoardUnitClick={handleBoardUnitClick}
+          onPass={handlePass}
+          selectedCard={selectedCard}
+          setSelectedCard={(card) => dispatch(setSelectedCard(card))}
+          isDecoyActive={isDecoyActive}
+          handleDiscardPile={handleDiscardPile}
+          onRedraw={handleRedraw}
+          onMedicSelect={handleMedicCardSelect}
+          onLeaderAbility={handleLeaderAbility}
+        />
+        <VersionMark version={"0.8.5a"} />
+      </div>
     </React.Fragment>
   );
 };
