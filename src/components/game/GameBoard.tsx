@@ -130,6 +130,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
                   setCardsSelector={setCardsSelector}
                   gameState={gameState}
                   title={cardsSelector.title}
+                  redrawCount={(cardsSelector as any).redrawCount}
                   onRedraw={onRedraw}
                   setGameState={setGameState}
                   onMedicSelect={onMedicSelect}

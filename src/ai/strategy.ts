@@ -370,9 +370,10 @@ class MedicStrategy extends Strategy {
 
     chainedCards.add(initialCard.id);
     
-    // Find valid targets excluding already chained cards
+    // Find valid targets excluding already chained cards and DECOY cards (same rules as player)
     const validTargets = state.opponent.discard.filter(c =>
       c.type === CardType.UNIT &&
+      c.ability !== CardAbility.DECOY &&
       !chainedCards.has(c.id)
     ) as UnitCard[];
 

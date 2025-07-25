@@ -1,8 +1,8 @@
-import GameManager from './components/game/GameManager'
+import ReduxGameManager from './components/game/ReduxGameManager'
 
 function App() {
   return (
-      <GameManager />
+      <ReduxGameManager />
   )
 }
 
