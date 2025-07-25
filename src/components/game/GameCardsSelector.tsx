@@ -4,6 +4,7 @@ import { useState } from 'react';
 interface GameCardsSelectorProps {
   gameState: GameState;
   title: string;
+  redrawCount?: number;
   setCardsSelector: (cardsSelector: { title: string; show: boolean }) => void;
   onRedraw: (selectedCards: Card[]) => void;
   setGameState: (state: GameState | ((prev: GameState) => GameState)) => void;
@@ -13,18 +14,18 @@ interface GameCardsSelectorProps {
 const GameCardsSelector = ({
   gameState,
   title,
+  redrawCount = 0,
   setCardsSelector,
   onRedraw,
   setGameState,
   onMedicSelect,
 }: GameCardsSelectorProps) => {
   const [selectedCards, setSelectedCards] = useState<Card[]>([]);
-  const [redrawnCount, setRedrawnCount] = useState<number>(0);
 
   const getTitle = (title: string) => {
     switch (title) {
       case 'redraw':
-        return `Choose a card to redraw. ${redrawnCount}/2`;
+        return `Choose a card to redraw. ${redrawCount}/2`;
       case 'discard-view':
         return `Discard Pile`;
       case 'medic':
@@ -46,18 +47,8 @@ const GameCardsSelector = ({
 
   const handleRedraw = () => {
     if (selectedCards.length > 0) {
-      const newCount = redrawnCount + 1;
       onRedraw(selectedCards);
       setSelectedCards([]);
-      setRedrawnCount(newCount);
-
-      if (newCount >= 2) {
-        setGameState((prev) => ({
-          ...prev,
-          gamePhase: 'playing',
-        }));
-        setCardsSelector({ title: '', show: false });
-      }
     }
   };
 
