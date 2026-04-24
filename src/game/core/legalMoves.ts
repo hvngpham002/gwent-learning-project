@@ -1,0 +1,394 @@
+import {
+  CATALOG_LEADER_ABILITY_METADATA,
+  type CatalogAbilityId,
+  type CatalogCardSource,
+  type CatalogLeaderSource,
+  type CatalogRow,
+} from "@/game/catalog";
+
+import type { CardInstance, CardInstanceId, MatchState, SeatId } from "./types";
+
+export type LegalMoveKind = "choose_mulligan" | "play_card" | "pass" | "use_leader" | "choose_prompt_option";
+
+export type LegalMoveTarget =
+  | { kind: "board_row"; side: "own" | "opponent"; seatId: SeatId; row: CatalogRow }
+  | { kind: "row_horn"; side: "own"; seatId: SeatId; row: CatalogRow }
+  | { kind: "weather" }
+  | { kind: "card_instance"; side: "own" | "opponent"; seatId: SeatId; cardId: CardInstanceId; row?: CatalogRow }
+  | { kind: "none" };
+
+export interface LegalMoveBase {
+  moveId: string;
+  seatId: SeatId;
+  kind: LegalMoveKind;
+  label: string;
+  diagnostics?: string[];
+}
+
+export interface ChooseMulliganMove extends LegalMoveBase {
+  kind: "choose_mulligan";
+  cardIds: CardInstanceId[];
+  metadata: {
+    cardCount: number;
+    maxCards: number;
+  };
+}
+
+export interface PlayCardMove extends LegalMoveBase {
+  kind: "play_card";
+  sourceCardId: CardInstanceId;
+  sourceId: string;
+  target: LegalMoveTarget;
+  metadata: {
+    cardName: string;
+    cardKind: CatalogCardSource["kind"];
+    abilities: CatalogAbilityId[];
+    targetLabel: string;
+  };
+}
+
+export interface PassMove extends LegalMoveBase {
+  kind: "pass";
+  target: { kind: "none" };
+}
+
+export interface UseLeaderMove extends LegalMoveBase {
+  kind: "use_leader";
+  leaderCardId: CardInstanceId;
+  sourceId: string;
+  target: LegalMoveTarget;
+  metadata: {
+    leaderName: string;
+    ability: CatalogLeaderSource["ability"];
+    abilityStatus: "implemented" | "planned" | "placeholder";
+    targetRequirement: "none" | "future_prompt";
+  };
+}
+
+export interface ChoosePromptOptionMove extends LegalMoveBase {
+  kind: "choose_prompt_option";
+  promptId: string;
+  optionId: string;
+  target: LegalMoveTarget;
+}
+
+export type LegalMove =
+  | ChooseMulliganMove
+  | PlayCardMove
+  | PassMove
+  | UseLeaderMove
+  | ChoosePromptOptionMove;
+
+export interface LegalMoveCatalogInput {
+  catalogCards: readonly CatalogCardSource[];
+  catalogLeaders: readonly CatalogLeaderSource[];
+}
+
+export interface GetLegalMovesInput extends LegalMoveCatalogInput {
+  state: MatchState;
+  seatId: SeatId;
+}
+
+export interface CatalogLookups {
+  cardsBySourceId: ReadonlyMap<string, CatalogCardSource>;
+  leadersBySourceId: ReadonlyMap<string, CatalogLeaderSource>;
+}
+
+const ROWS: readonly CatalogRow[] = ["close", "ranged", "siege"];
+const WEATHER_ABILITIES = new Set<CatalogAbilityId>(["frost", "fog", "rain", "skellige_storm", "clear_weather"]);
+
+export const createCatalogLookups = ({ catalogCards, catalogLeaders }: LegalMoveCatalogInput): CatalogLookups => ({
+  cardsBySourceId: new Map(catalogCards.map((card) => [card.sourceId, card])),
+  leadersBySourceId: new Map(catalogLeaders.map((leader) => [leader.sourceId, leader])),
+});
+
+const opponentOf = (seatId: SeatId): SeatId => (seatId === "seat_a" ? "seat_b" : "seat_a");
+
+const hasAbility = (card: CatalogCardSource, ability: CatalogAbilityId) => card.abilities.includes(ability);
+
+const sortedCardIds = (cardIds: readonly CardInstanceId[]) => [...cardIds].sort((a, b) => a.localeCompare(b));
+
+const getCardSource = (lookups: CatalogLookups, instance: CardInstance) => lookups.cardsBySourceId.get(instance.sourceId);
+
+const getMulliganMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
+  const hand = state.seats[seatId].hand;
+  const sortedHand = sortedCardIds(hand);
+  const moves: LegalMove[] = [
+    {
+      kind: "choose_mulligan",
+      moveId: `mulligan:${seatId}:none`,
+      seatId,
+      label: "Keep hand",
+      cardIds: [],
+      metadata: { cardCount: 0, maxCards: 2 },
+    },
+  ];
+
+  sortedHand.forEach((firstCardId, firstIndex) => {
+    moves.push({
+      kind: "choose_mulligan",
+      moveId: `mulligan:${seatId}:${firstCardId}`,
+      seatId,
+      label: "Mulligan 1 card",
+      cardIds: [firstCardId],
+      metadata: { cardCount: 1, maxCards: 2 },
+    });
+
+    sortedHand.slice(firstIndex + 1).forEach((secondCardId) => {
+      moves.push({
+        kind: "choose_mulligan",
+        moveId: `mulligan:${seatId}:${firstCardId}+${secondCardId}`,
+        seatId,
+        label: "Mulligan 2 cards",
+        cardIds: [firstCardId, secondCardId],
+        metadata: { cardCount: 2, maxCards: 2 },
+      });
+    });
+  });
+
+  return moves;
+};
+
+const createBoardRowMove = (
+  seatId: SeatId,
+  instance: CardInstance,
+  source: CatalogCardSource,
+  targetSeatId: SeatId,
+  side: "own" | "opponent",
+  row: CatalogRow,
+): PlayCardMove => ({
+  kind: "play_card",
+  moveId: `play:${seatId}:${instance.instanceId}:board_row:${targetSeatId}:${row}`,
+  seatId,
+  sourceCardId: instance.instanceId,
+  sourceId: instance.sourceId,
+  target: { kind: "board_row", side, seatId: targetSeatId, row },
+  label: `Play ${source.name} to ${side} ${row}`,
+  metadata: {
+    cardName: source.name,
+    cardKind: source.kind,
+    abilities: source.abilities,
+    targetLabel: `${side} ${row}`,
+  },
+});
+
+const getUnitOrHeroMoves = (
+  seatId: SeatId,
+  instance: CardInstance,
+  source: CatalogCardSource,
+): PlayCardMove[] => {
+  const isSpy = hasAbility(source, "spy");
+  const targetSeatId = isSpy ? opponentOf(seatId) : seatId;
+  const side = isSpy ? "opponent" : "own";
+
+  return source.rows.map((row) => createBoardRowMove(seatId, instance, source, targetSeatId, side, row));
+};
+
+const getHornMoves = (
+  state: MatchState,
+  seatId: SeatId,
+  instance: CardInstance,
+  source: CatalogCardSource,
+): PlayCardMove[] =>
+  ROWS.flatMap((row) => {
+    if (state.seats[seatId].board[row].horn) {
+      return [];
+    }
+
+    return [
+      {
+        kind: "play_card",
+        moveId: `play:${seatId}:${instance.instanceId}:row_horn:${seatId}:${row}`,
+        seatId,
+        sourceCardId: instance.instanceId,
+        sourceId: instance.sourceId,
+        target: { kind: "row_horn", side: "own", seatId, row },
+        label: `Play ${source.name} to ${row} horn`,
+        metadata: {
+          cardName: source.name,
+          cardKind: source.kind,
+          abilities: source.abilities,
+          targetLabel: `own ${row} horn`,
+        },
+      },
+    ];
+  });
+
+const getDecoyMoves = (
+  state: MatchState,
+  seatId: SeatId,
+  lookups: CatalogLookups,
+  instance: CardInstance,
+  source: CatalogCardSource,
+): PlayCardMove[] =>
+  ROWS.flatMap((row) =>
+    state.seats[seatId].board[row].units.flatMap((targetCardId) => {
+      const targetInstance = state.cardsById[targetCardId];
+      const targetSource = targetInstance ? getCardSource(lookups, targetInstance) : undefined;
+
+      if (!targetSource || targetSource.kind !== "unit") {
+        return [];
+      }
+
+      return [
+        {
+          kind: "play_card",
+          moveId: `play:${seatId}:${instance.instanceId}:card_instance:${targetCardId}`,
+          seatId,
+          sourceCardId: instance.instanceId,
+          sourceId: instance.sourceId,
+          target: { kind: "card_instance", side: "own", seatId, cardId: targetCardId, row },
+          label: `Play ${source.name} on ${targetSource.name}`,
+          metadata: {
+            cardName: source.name,
+            cardKind: source.kind,
+            abilities: source.abilities,
+            targetLabel: targetSource.name,
+          },
+        },
+      ];
+    }),
+  );
+
+const createSpecialMove = (seatId: SeatId, instance: CardInstance, source: CatalogCardSource): PlayCardMove | null => {
+  if (source.abilities.some((ability) => WEATHER_ABILITIES.has(ability))) {
+    return {
+      kind: "play_card",
+      moveId: `play:${seatId}:${instance.instanceId}:weather`,
+      seatId,
+      sourceCardId: instance.instanceId,
+      sourceId: instance.sourceId,
+      target: { kind: "weather" },
+      label: `Play ${source.name} to weather`,
+      metadata: {
+        cardName: source.name,
+        cardKind: source.kind,
+        abilities: source.abilities,
+        targetLabel: "weather",
+      },
+    };
+  }
+
+  if (hasAbility(source, "scorch")) {
+    return {
+      kind: "play_card",
+      moveId: `play:${seatId}:${instance.instanceId}:none`,
+      seatId,
+      sourceCardId: instance.instanceId,
+      sourceId: instance.sourceId,
+      target: { kind: "none" },
+      label: `Play ${source.name}`,
+      metadata: {
+        cardName: source.name,
+        cardKind: source.kind,
+        abilities: source.abilities,
+        targetLabel: "global",
+      },
+    };
+  }
+
+  return null;
+};
+
+const getCardMoves = (
+  state: MatchState,
+  seatId: SeatId,
+  lookups: CatalogLookups,
+  instance: CardInstance,
+): PlayCardMove[] => {
+  const source = getCardSource(lookups, instance);
+
+  if (!source) {
+    return [];
+  }
+
+  if (source.kind === "unit" || source.kind === "hero") {
+    return getUnitOrHeroMoves(seatId, instance, source);
+  }
+
+  if (hasAbility(source, "commanders_horn")) {
+    return getHornMoves(state, seatId, instance, source);
+  }
+
+  if (hasAbility(source, "decoy")) {
+    return getDecoyMoves(state, seatId, lookups, instance, source);
+  }
+
+  const specialMove = createSpecialMove(seatId, instance, source);
+  return specialMove ? [specialMove] : [];
+};
+
+const getLeaderMove = (state: MatchState, seatId: SeatId, lookups: CatalogLookups): UseLeaderMove[] => {
+  const seat = state.seats[seatId];
+  const leaderCardId = seat.leader;
+
+  if (!leaderCardId || seat.leaderUsed) {
+    return [];
+  }
+
+  const leader = lookups.leadersBySourceId.get(seat.leaderSourceId);
+  const abilityMetadata = leader ? CATALOG_LEADER_ABILITY_METADATA[leader.ability] : undefined;
+
+  if (!leader || !abilityMetadata) {
+    return [];
+  }
+
+  const targetRequirement = leader.ability === "clear_weather" ? "none" : "future_prompt";
+
+  return [
+    {
+      kind: "use_leader",
+      moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+      seatId,
+      leaderCardId,
+      sourceId: leader.sourceId,
+      target: { kind: "none" },
+      label: `Use ${leader.name}`,
+      metadata: {
+        leaderName: leader.name,
+        ability: leader.ability,
+        abilityStatus: abilityMetadata.status,
+        targetRequirement,
+      },
+      diagnostics:
+        targetRequirement === "future_prompt" ? ["Leader target/effect resolution is reserved for a future phase."] : undefined,
+    },
+  ];
+};
+
+const getPlayingMoves = (state: MatchState, seatId: SeatId, lookups: CatalogLookups): LegalMove[] => {
+  const seat = state.seats[seatId];
+
+  if (state.currentTurn !== seatId || seat.passed) {
+    return [];
+  }
+
+  return [
+    {
+      kind: "pass",
+      moveId: `pass:${seatId}`,
+      seatId,
+      target: { kind: "none" },
+      label: "Pass",
+    },
+    ...getLeaderMove(state, seatId, lookups),
+    ...seat.hand.flatMap((cardId) => {
+      const instance = state.cardsById[cardId];
+      return instance ? getCardMoves(state, seatId, lookups, instance) : [];
+    }),
+  ];
+};
+
+export const getLegalMoves = ({ state, seatId, catalogCards, catalogLeaders }: GetLegalMovesInput): LegalMove[] => {
+  const lookups = createCatalogLookups({ catalogCards, catalogLeaders });
+
+  if (state.phase === "mulligan") {
+    return getMulliganMoves(state, seatId);
+  }
+
+  if (state.phase === "playing") {
+    return getPlayingMoves(state, seatId, lookups);
+  }
+
+  return [];
+};

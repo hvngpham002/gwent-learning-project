@@ -52,6 +52,7 @@ export interface SeatState {
   discard: CardInstanceId[];
   leader: CardInstanceId | null;
   leaderSourceId: string;
+  leaderUsed: boolean;
   sideDeck: CardInstanceId[];
   removedFromGame: CardInstanceId[];
   board: BoardSide;

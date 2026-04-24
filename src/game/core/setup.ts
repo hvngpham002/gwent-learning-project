@@ -190,6 +190,7 @@ const instantiateSeat = (
     discard: [],
     leader: leaderInstance.instanceId,
     leaderSourceId: leaderSource.sourceId,
+    leaderUsed: false,
     sideDeck,
     removedFromGame: [],
     board: createBoard(),
