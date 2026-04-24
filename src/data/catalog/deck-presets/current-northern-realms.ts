@@ -1,0 +1,33 @@
+import type { CatalogDeckPreset } from "@/game/catalog";
+
+export const currentNorthernRealmsDeckPreset = {
+  presetId: "current-northern-realms",
+  name: "Current Northern Realms",
+  faction: "northern_realms",
+  leaderSourceId: "northern-realms.foltest-lord-commander-of-the-north",
+  mainDeck: [
+    { sourceId: "northern-realms.vernon-roche", count: 1 },
+    { sourceId: "northern-realms.esterad-thyssen", count: 1 },
+    { sourceId: "northern-realms.philippa-eilhart", count: 1 },
+    { sourceId: "neutral.geralt-of-rivia", count: 1 },
+    { sourceId: "neutral.triss-merigold", count: 1 },
+    { sourceId: "neutral.mysterious-elf", count: 1 },
+    { sourceId: "northern-realms.prince-stennis", count: 1 },
+    { sourceId: "northern-realms.sigismund-dijkstra", count: 1 },
+    { sourceId: "northern-realms.thaler", count: 1 },
+    { sourceId: "northern-realms.dun-banner-medic", count: 5 },
+    { sourceId: "northern-realms.blue-stripes-commando", count: 3 },
+    { sourceId: "northern-realms.crinfrid-reavers-dragon-hunter", count: 3 },
+    { sourceId: "northern-realms.catapult", count: 2 },
+    { sourceId: "neutral.decoy", count: 2 },
+    { sourceId: "neutral.commanders-horn", count: 2 },
+    { sourceId: "neutral.scorch", count: 2 },
+    { sourceId: "neutral.biting-frost", count: 1 },
+    { sourceId: "neutral.impenetrable-fog", count: 1 },
+    { sourceId: "neutral.gaunter-odimm-darkness", count: 2 },
+    { sourceId: "neutral.gaunter-odimm", count: 1 },
+    { sourceId: "neutral.villentretenmerth", count: 1 },
+    { sourceId: "neutral.olgierd-von-everec", count: 1 },
+  ],
+  sideDeck: [],
+} as const satisfies CatalogDeckPreset;

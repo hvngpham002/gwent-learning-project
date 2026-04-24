@@ -1,0 +1,33 @@
+import type { CatalogDeckPreset } from "@/game/catalog";
+
+export const currentNilfgaardDeckPreset = {
+  presetId: "current-nilfgaard",
+  name: "Current Nilfgaard",
+  faction: "nilfgaard",
+  leaderSourceId: "nilfgaard.emhyr-var-emreis-the-relentless",
+  mainDeck: [
+    { sourceId: "neutral.cirilla-fiona-elen-riannon", count: 1 },
+    { sourceId: "neutral.yennefer-of-vengerberg", count: 1 },
+    { sourceId: "neutral.mysterious-elf", count: 1 },
+    { sourceId: "nilfgaard.letho-of-gulet", count: 1 },
+    { sourceId: "nilfgaard.menno-coehoorn", count: 1 },
+    { sourceId: "nilfgaard.tibor-eggebracht", count: 1 },
+    { sourceId: "nilfgaard.morvran-voorhis", count: 1 },
+    { sourceId: "neutral.villentretenmerth", count: 1 },
+    { sourceId: "neutral.gaunter-odimm-darkness", count: 2 },
+    { sourceId: "neutral.gaunter-odimm", count: 1 },
+    { sourceId: "neutral.olgierd-von-everec", count: 1 },
+    { sourceId: "nilfgaard.young-emissary", count: 6 },
+    { sourceId: "nilfgaard.black-infantry-archer", count: 2 },
+    { sourceId: "nilfgaard.stefan-skellen", count: 1 },
+    { sourceId: "nilfgaard.shilard-fitz-oesterlen", count: 1 },
+    { sourceId: "nilfgaard.vattier-de-rideaux", count: 1 },
+    { sourceId: "neutral.biting-frost", count: 1 },
+    { sourceId: "neutral.torrential-rain", count: 1 },
+    { sourceId: "neutral.clear-weather", count: 2 },
+    { sourceId: "neutral.decoy", count: 2 },
+    { sourceId: "neutral.commanders-horn", count: 2 },
+    { sourceId: "neutral.scorch", count: 2 },
+  ],
+  sideDeck: [],
+} as const satisfies CatalogDeckPreset;
