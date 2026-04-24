@@ -285,7 +285,7 @@ export const executeAIMedicChain = createAsyncThunk<
   void,
   { player: 'player' | 'opponent'; targets: UnitCard[] },
   { state: RootState }
->('game/executeAIMedicChain', async ({ player, targets }, { dispatch, getState }) => {
+>('game/executeAIMedicChain', async ({ player, targets }, { dispatch }) => {
   if (targets.length === 0) return;
   
   const [currentTarget, ...remainingTargets] = targets;

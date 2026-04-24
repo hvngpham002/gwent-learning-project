@@ -1,7 +1,7 @@
 import { neutralDeck } from "@/data/cards/neutral";
 import { northernRealmsDeck } from "@/data/cards/northern-realms";
 import { nilfgaardianEmpireDeck } from "@/data/cards/nilfgaardian-empire";
-import { Card, CardType, UnitCard, SpecialCard, LeaderCard, Faction } from "@/types/card";
+import { Card, CardType, LeaderCard, Faction } from "@/types/card";
 import { createUniqueCard, createMultipleUniqueCards } from "@/utils/cardHelpers";
 
 interface DeckWithLeader {

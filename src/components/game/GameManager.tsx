@@ -155,8 +155,8 @@ const GameManager = () => {
   const { makeOpponentMove, setAiRedrawComplete } = useAI(gameState, handleRoundEnd, setGameState, setSelectedCard);
 
   const initializeGame = useCallback((playerScore: number, opponentScore: number) => {
-    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD);
-    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS);
+    const playerDeckWithLeader = createInitialDeck(Faction.NILFGAARD, 'player');
+    const opponentDeckWithLeader = createInitialDeck(Faction.NORTHERN_REALMS, 'opponent');
 
     const playerDeck = shuffle(playerDeckWithLeader.deck);
     const opponentDeck = shuffle(opponentDeckWithLeader.deck);
@@ -644,4 +644,3 @@ const GameManager = () => {
 };
 
 export default GameManager;
-
