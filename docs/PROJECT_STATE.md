@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-25
-- Phase/spec: `cDp5` engine AI policy V0 spec
-- Latest relevant commit: this `cDp5` spec commit
+- Phase/spec: `cDp5` engine AI policy V0 implementation
+- Latest relevant commit: this `cDp5` implementation commit
 
 ## Required Reading For Every Coding Instance
 
@@ -39,15 +39,16 @@
 | `cDp2` | Cluster D Phase 9 split | `audit/reports/2026-04-25-cDp2-report.md` | Added opt-in engine UI shell with mulligan, pass, round resolution, and scripted preview AI. |
 | `cDp3` | Cluster D Phase 9 split | `audit/reports/2026-04-25-cDp3-report.md` | Added legal-move-backed human card play through button-driven target actions. |
 | `cDp4` | Cluster D Phase 9 split | `audit/reports/2026-04-25-cDp4-report.md` | Added legal-move-backed leader and prompt controls plus special-action diagnostics. |
+| `cDp5` | Cluster D Phase 10 split | `audit/reports/2026-04-25-cDp5-report.md` | Replaced pass-only preview AI with deterministic `legal-heuristic-v0` over engine legal moves. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
 
-The engine UI can start a current Northern Realms vs Nilfgaard match, complete human and scripted AI mulligans, render engine state, play human cards through engine legal moves, use implemented legal leader moves, resolve human prompts from legal prompt moves, pass, resolve rounds, and show game end without auto-starting a new game.
+The engine UI can start a current Northern Realms vs Nilfgaard match, complete human and AI mulligans, render engine state, play human cards through engine legal moves, use implemented legal leader moves, resolve human prompts from legal prompt moves, pass, resolve rounds, and show game end without auto-starting a new game.
 
-It cannot yet provide strategic AI, AI card play, polished spatial board interactions, full deck-building flows, persistence, PvP, simulations, ML exports, or default-route engine gameplay.
+The AI seat now uses `legal-heuristic-v0`, a deterministic policy that observes public state plus its own hand, selects from engine legal moves, and dispatches exact engine commands for mulligan, card play, prompt choice, useful Clear Weather leader use, and pass decisions.
 
-Scripted preview AI is intentionally limited to zero-card mulligan and pass. It does not play cards, use leaders, or resolve non-trivial AI prompts.
+It cannot yet provide strong strategic AI parity, polished spatial board interactions, full deck-building flows, persistence, PvP, simulations, ML exports, or default-route engine gameplay.
 
 ## Known Architectural Rules
 
@@ -61,13 +62,13 @@ Scripted preview AI is intentionally limited to zero-card mulligan and pass. It 
 
 - Browser click-through is still mostly manual; existing coverage is helper, core, Redux, and route smoke.
 - Engine UI is not default.
-- AI policy migration is not started.
+- `legal-heuristic-v0` is intentionally weak and deterministic; it proves legal-move AI plumbing but is not full strategic AI.
 - Current catalog is incomplete by design.
 - Placeholder leader/card abilities remain deferred until scoped specs implement them.
 
 ## Next Recommended Step
 
-Implement `docs/spec/2026-04-25-cDp5-specs.md`, focused on replacing the pass-only preview AI with `legal-heuristic-v0`, a bounded deterministic policy that selects from engine legal moves. The rationale is that human engine actions now flow through legal moves, while the opponent path still does not exercise engine card play, scoring choices, prompts, or pass strategy.
+Continue Cluster D with a bounded engine-shell polish or simulation slice: either improve the human/AI engine shell interaction model around AI turns and prompt visibility, or start a small headless AI-vs-AI simulation harness now that both seats can act through legal moves. Keep the legacy UI as default until a spec explicitly changes that.
 
 ## Update Requirements
 

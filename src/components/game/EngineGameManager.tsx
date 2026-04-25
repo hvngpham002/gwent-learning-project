@@ -43,7 +43,7 @@ import {
   shouldDisableLeaderAction,
   shouldDisableHandCard,
 } from "./engine/playMoveHelpers";
-import { getScriptedPreviewAiCommand } from "./engine/scriptedPreviewAi";
+import { getLegalHeuristicAiCommand } from "./engine/legalHeuristicAiController";
 import "@/styles/components/engine-game.css";
 
 const ROW_LABELS: Record<EngineBoardRowViewModel["row"], string> = {
@@ -133,7 +133,7 @@ const EngineGameManager: React.FC = () => {
   }, [dispatch, match, startSeed]);
 
   useEffect(() => {
-    const command = getScriptedPreviewAiCommand(engine, aiSeat, humanSeat);
+    const command = getLegalHeuristicAiCommand(engine, aiSeat, humanSeat);
     if (command) {
       dispatch(dispatchEngineCommand(command));
     }
