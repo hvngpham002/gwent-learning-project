@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-25
-- Phase/spec: `cDp6` engine shell playability polish spec
-- Latest relevant commit: this `cDp6` implementation commit
+- Phase/spec: `cDp7` engine browser smoke harness spec
+- Latest relevant commit: `c1dbef7` (`cDp6` implementation); `cDp7` spec pending commit
 
 ## Required Reading For Every Coding Instance
 
@@ -73,7 +73,7 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 
 ## Next Recommended Step
 
-Run an orchestrator browser review of `/?engine=1&seed=dp6-smoke` for hidden-info display, AI action-loop legibility, and mobile layout, then choose the next bounded Cluster D slice: either a small browser smoke harness or the first headless AI-vs-AI simulation harness.
+Implement `docs/spec/2026-04-25-cDp7-specs.md`: add a small Playwright browser smoke harness for the opt-in engine shell, cover default-route opt-in behavior, `dp6-smoke` mulligan/play flow, hidden-info display, mobile overflow, and GitHub Actions browser execution. Defer AI-vs-AI simulation until the browser smoke guardrail exists.
 
 ## Update Requirements
 
