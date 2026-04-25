@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-25
-- Phase/spec: `cDp5` engine AI policy V0 implementation
-- Latest relevant commit: this `cDp5` implementation commit
+- Phase/spec: `cDp6` engine shell playability polish spec
+- Latest relevant commit: `260d7ec` (`cDp5` implementation); `cDp6` spec pending commit
 
 ## Required Reading For Every Coding Instance
 
@@ -68,7 +68,7 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 
 ## Next Recommended Step
 
-Continue Cluster D with a bounded engine-shell polish or simulation slice: either improve the human/AI engine shell interaction model around AI turns and prompt visibility, or start a small headless AI-vs-AI simulation harness now that both seats can act through legal moves. Keep the legacy UI as default until a spec explicitly changes that.
+Implement `docs/spec/2026-04-25-cDp6-specs.md`: improve the opt-in engine shell's status banner, hand affordances, grouped target actions, prompt clarity, AI action visibility, round history, and manual click-through evidence. Keep the legacy UI as default and defer AI-vs-AI simulation until the shell is easier to verify manually.
 
 ## Update Requirements
 
