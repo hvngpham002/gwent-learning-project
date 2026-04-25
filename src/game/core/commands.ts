@@ -1,5 +1,6 @@
 import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource } from "@/game/catalog";
 
+import { resolveCardAbilities, resolvePromptOption } from "./abilities";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
 import { startMatch } from "./setup";
@@ -19,7 +20,8 @@ export type EngineRuleErrorCode =
   | "invalid_phase"
   | "invalid_target"
   | "missing_card"
-  | "missing_catalog_source";
+  | "missing_catalog_source"
+  | "prompt_pending";
 
 export class EngineRuleError extends Error {
   readonly code: EngineRuleErrorCode;
@@ -35,7 +37,7 @@ export class EngineRuleError extends Error {
 
 export interface StatefulCommandInput {
   state: MatchState;
-  command: Exclude<EngineCommand, { type: "StartMatch" } | { type: "ChoosePromptOption" }>;
+  command: Exclude<EngineCommand, { type: "StartMatch" }>;
   catalogCards: readonly CatalogCardSource[];
   catalogLeaders: readonly CatalogLeaderSource[];
 }
@@ -43,21 +45,6 @@ export interface StatefulCommandInput {
 type CommandInput = EngineCommand | StatefulCommandInput;
 
 const WEATHER_ABILITIES = new Set<CatalogAbilityId>(["frost", "fog", "rain", "skellige_storm"]);
-const DEFERRED_ON_PLAY_ABILITIES = new Set<CatalogAbilityId>([
-  "spy",
-  "medic",
-  "muster",
-  "tight_bond",
-  "morale_boost",
-  "commanders_horn",
-  "mardroeme",
-  "berserker",
-  "summon",
-  "avenger",
-  "muster_roach",
-  "scorch_close",
-]);
-
 const opponentOf = (seatId: SeatId): SeatId => (seatId === "seat_a" ? "seat_b" : "seat_a");
 
 const cloneState = (state: MatchState): MatchState => structuredClone(state);
@@ -94,6 +81,8 @@ const assertLegal = (input: StatefulCommandInput) => {
         return move.kind === "pass";
       case "UseLeader":
         return move.kind === "use_leader" && targetsEqual(command.target, move.target);
+      case "ChoosePromptOption":
+        return move.kind === "choose_prompt_option" && move.promptId === command.promptId && move.optionId === command.optionId;
     }
   });
 
@@ -228,27 +217,14 @@ const moveCard = (
 };
 
 const handoffTurn = (state: MatchState, events: GameEvent[], seatId: SeatId) => {
+  if (state.pendingPrompt) {
+    return;
+  }
   const opponent = opponentOf(seatId);
   if (!state.seats[opponent].passed) {
     state.currentTurn = opponent;
     events.push({ type: "turn_set", seatId: opponent, reason: "turn_handoff" });
   }
-};
-
-const emitDeferredAbilities = (
-  events: GameEvent[],
-  cardId: CardInstanceId,
-  source: CatalogCardSource,
-  excluded: readonly CatalogAbilityId[] = [],
-) => {
-  source.abilities.forEach((abilityId) => {
-    if (excluded.includes(abilityId) || abilityId === "none") {
-      return;
-    }
-    if (DEFERRED_ON_PLAY_ABILITIES.has(abilityId)) {
-      events.push({ type: "ability_deferred", sourceId: source.sourceId, cardId, abilityId });
-    }
-  });
 };
 
 const chooseMulligan = (input: StatefulCommandInput): EngineTransaction => {
@@ -276,6 +252,9 @@ const chooseMulligan = (input: StatefulCommandInput): EngineTransaction => {
   state.rng.state = rng.getState();
   state.seats[seatId].mulliganComplete = true;
   events.push({ type: "mulligan_chosen", seatId, cardIds: selected, drawCount: drawn.length });
+  if (selected.length > 0) {
+    events.push({ type: "deck_shuffled", seatId, reason: "mulligan" });
+  }
 
   if (state.seats.seat_a.mulliganComplete && state.seats.seat_b.mulliganComplete) {
     const from = state.phase;
@@ -298,6 +277,12 @@ const clearWeather = (state: MatchState, events: GameEvent[], seatId: SeatId, so
 };
 
 const playCard = (input: StatefulCommandInput): EngineTransaction => {
+  if (input.state.pendingPrompt) {
+    throw new EngineRuleError("prompt_pending", "Only prompt choices can execute while a prompt is pending.", {
+      promptId: input.state.pendingPrompt.promptId,
+    });
+  }
+
   assertLegal(input);
   const sourceLookup = createCardLookup(input.catalogCards);
   const state = cloneState(input.state);
@@ -318,7 +303,7 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
     card.controller = command.seatId;
     moveCard(state, events, command.cardId, { kind: "board_row", seat: target.seatId, row: target.row }, "play_card");
     events.push({ type: "card_played", seatId: command.seatId, cardId: command.cardId, target: card.zone });
-    emitDeferredAbilities(events, command.cardId, source);
+    resolveCardAbilities({ state, events, catalogCards: input.catalogCards, seatId: command.seatId, cardId: command.cardId });
   } else if (target.kind === "row_horn") {
     card.controller = command.seatId;
     moveCard(state, events, command.cardId, { kind: "row_horn", seat: target.seatId, row: target.row }, "play_card");
@@ -367,6 +352,12 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
 };
 
 const pass = (input: StatefulCommandInput): EngineTransaction => {
+  if (input.state.pendingPrompt) {
+    throw new EngineRuleError("prompt_pending", "Pass cannot execute while a prompt is pending.", {
+      promptId: input.state.pendingPrompt.promptId,
+    });
+  }
+
   if (input.state.phase !== "playing") {
     throw new EngineRuleError("invalid_phase", "Pass can only execute in playing phase.");
   }
@@ -393,6 +384,12 @@ const pass = (input: StatefulCommandInput): EngineTransaction => {
 };
 
 const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
+  if (input.state.pendingPrompt) {
+    throw new EngineRuleError("prompt_pending", "Leader commands cannot execute while a prompt is pending.", {
+      promptId: input.state.pendingPrompt.promptId,
+    });
+  }
+
   assertLegal(input);
   const state = cloneState(input.state);
   const events: GameEvent[] = [];
@@ -422,6 +419,39 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
   return { state, events };
 };
 
+const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
+  const command = input.command as Extract<EngineCommand, { type: "ChoosePromptOption" }>;
+  const prompt = input.state.pendingPrompt;
+
+  if (!prompt) {
+    throw new EngineRuleError("illegal_command", "ChoosePromptOption requires a pending prompt.", { command });
+  }
+
+  if (prompt.seatId !== command.seatId) {
+    throw new EngineRuleError("illegal_command", "Prompt can only be resolved by its seat.", {
+      promptSeatId: prompt.seatId,
+      commandSeatId: command.seatId,
+    });
+  }
+
+  if (prompt.promptId !== command.promptId || !prompt.options.some((option) => option.optionId === command.optionId)) {
+    throw new EngineRuleError("illegal_command", "Prompt option is not legal.", { command, promptId: prompt.promptId });
+  }
+
+  assertLegal(input);
+  const state = cloneState(input.state);
+  const events: GameEvent[] = [];
+  resolvePromptOption({
+    state,
+    events,
+    catalogCards: input.catalogCards,
+    seatId: command.seatId,
+    optionId: command.optionId,
+  });
+  handoffTurn(state, events, command.seatId);
+  return { state, events, prompt: state.pendingPrompt ?? undefined };
+};
+
 export function executeCommand(command: EngineCommand): EngineTransaction;
 export function executeCommand(input: StatefulCommandInput): EngineTransaction;
 export function executeCommand(input: CommandInput): EngineTransaction {
@@ -443,5 +473,7 @@ export function executeCommand(input: CommandInput): EngineTransaction {
       return pass(input);
     case "UseLeader":
       return executeLeader(input);
+    case "ChoosePromptOption":
+      return choosePromptOption(input);
   }
 }

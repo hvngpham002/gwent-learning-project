@@ -72,6 +72,7 @@ export interface MatchState {
   phase: MatchPhase;
   round: number;
   currentTurn: SeatId;
+  pendingPrompt: PendingPrompt | null;
   seats: Record<SeatId, SeatState>;
   cardsById: Record<CardInstanceId, CardInstance>;
   weather: WeatherState;
@@ -104,8 +105,22 @@ export interface MatchConfig {
 export interface PendingPrompt {
   promptId: string;
   seatId: SeatId;
-  kind: "mulligan" | "choose_row" | "choose_card" | "choose_option";
-  options: readonly string[];
+  kind: "medic_revive" | "choose_row" | "choose_card" | "choose_option";
+  sourceCardId?: CardInstanceId;
+  sourceId?: string;
+  abilityId: string;
+  options: readonly PendingPromptOption[];
+}
+
+export interface PendingPromptOption {
+  optionId: string;
+  label: string;
+  target: {
+    kind: "card_instance";
+    cardId: CardInstanceId;
+    sourceId: string;
+    row: CatalogRow;
+  };
 }
 
 export interface EngineTransaction {
@@ -120,7 +135,7 @@ export type EngineCommand =
   | { type: "PlayCard"; seatId: SeatId; cardId: CardInstanceId; target?: unknown }
   | { type: "Pass"; seatId: SeatId }
   | { type: "UseLeader"; seatId: SeatId; target?: unknown }
-  | { type: "ChoosePromptOption"; promptId: string; optionId: string };
+  | { type: "ChoosePromptOption"; seatId: SeatId; promptId: string; optionId: string };
 
 export type GameEvent =
   | {
@@ -152,6 +167,9 @@ export type GameEvent =
         | "mulligan_draw"
         | "play_card"
         | "decoy_return"
+        | "ability_draw"
+        | "ability_muster"
+        | "medic_revive"
         | "weather_cleared"
         | "discard_after_effect";
     }
@@ -171,8 +189,18 @@ export type GameEvent =
   | { type: "leader_used"; seatId: SeatId; leaderCardId: CardInstanceId; abilityId: string }
   | { type: "player_passed"; seatId: SeatId }
   | { type: "weather_cleared"; seatId: SeatId; cardIds: CardInstanceId[]; source: "card" | "leader" }
-  | { type: "ability_deferred"; sourceId: string; cardId: CardInstanceId; abilityId: string }
-  | { type: "ability_resolved"; sourceId: CardInstanceId; abilityId: string }
+  | { type: "ability_triggered"; sourceId: string; cardId: CardInstanceId; abilityId: string }
+  | { type: "ability_deferred"; sourceId: string; cardId: CardInstanceId; abilityId: string; reason: string }
+  | {
+      type: "ability_resolved";
+      sourceId: string;
+      cardId: CardInstanceId;
+      abilityId: string;
+      outcome?: string;
+    }
+  | { type: "card_drawn"; seatId: SeatId; cardId: CardInstanceId; sourceId: string }
   | { type: "prompt_opened"; prompt: PendingPrompt }
+  | { type: "prompt_resolved"; promptId: string; seatId: SeatId; optionId: string }
+  | { type: "deck_shuffled"; seatId: SeatId; reason: "muster" | "mulligan" }
   | { type: "round_ended"; round: number; winner: SeatId | "draw" }
   | { type: "game_ended"; winner: SeatId | "draw" };

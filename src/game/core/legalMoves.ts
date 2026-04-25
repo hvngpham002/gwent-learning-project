@@ -6,7 +6,7 @@ import {
   type CatalogRow,
 } from "@/game/catalog";
 
-import type { CardInstance, CardInstanceId, MatchState, SeatId } from "./types";
+import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
 export type LegalMoveKind = "choose_mulligan" | "play_card" | "pass" | "use_leader" | "choose_prompt_option";
 
@@ -70,6 +70,11 @@ export interface ChoosePromptOptionMove extends LegalMoveBase {
   promptId: string;
   optionId: string;
   target: LegalMoveTarget;
+  metadata: {
+    promptKind: PendingPrompt["kind"];
+    abilityId: string;
+    sourceCardId?: CardInstanceId;
+  };
 }
 
 export type LegalMove =
@@ -383,8 +388,34 @@ const getPlayingMoves = (state: MatchState, seatId: SeatId, lookups: CatalogLook
   ];
 };
 
+const getPromptMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
+  const prompt = state.pendingPrompt;
+  if (!prompt || prompt.seatId !== seatId) {
+    return [];
+  }
+
+  return prompt.options.map((option) => ({
+    kind: "choose_prompt_option",
+    moveId: `prompt:${prompt.promptId}:${option.optionId}`,
+    seatId,
+    promptId: prompt.promptId,
+    optionId: option.optionId,
+    target: { kind: "card_instance", side: "own", seatId, cardId: option.target.cardId, row: option.target.row },
+    label: option.label,
+    metadata: {
+      promptKind: prompt.kind,
+      abilityId: prompt.abilityId,
+      sourceCardId: prompt.sourceCardId,
+    },
+  }));
+};
+
 export const getLegalMoves = ({ state, seatId, catalogCards, catalogLeaders }: GetLegalMovesInput): LegalMove[] => {
   const lookups = createCatalogLookups({ catalogCards, catalogLeaders });
+
+  if (state.pendingPrompt) {
+    return getPromptMoves(state, seatId);
+  }
 
   if (state.phase === "mulligan") {
     return getMulliganMoves(state, seatId);

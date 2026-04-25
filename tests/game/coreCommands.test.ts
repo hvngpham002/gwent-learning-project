@@ -195,10 +195,11 @@ describe("core command transactions", () => {
     expect(
       result.events.some(
         (event) =>
-          event.type === "ability_deferred" &&
+          event.type === "ability_resolved" &&
           event.abilityId === "medic" &&
           event.sourceId === "northern-realms.dun-banner-medic" &&
-          event.cardId === cardId,
+          event.cardId === cardId &&
+          event.outcome === "no_targets",
       ),
     ).toBe(true);
     assertNoDuplicateZones(result.state);
@@ -220,7 +221,7 @@ describe("core command transactions", () => {
 
     expect(result.state.seats.seat_b.board.siege.units).toContain(cardId);
     expect(result.state.cardsById[cardId].controller).toBe("seat_a");
-    expect(result.events.some((event) => event.type === "ability_deferred" && event.abilityId === "spy")).toBe(true);
+    expect(result.events.some((event) => event.type === "ability_resolved" && event.abilityId === "spy")).toBe(true);
   });
 
   it("places Special Horn and rejects an occupied horn slot", () => {

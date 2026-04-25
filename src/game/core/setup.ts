@@ -244,6 +244,7 @@ export const startMatch = (config: MatchConfig): EngineTransaction => {
     phase: "mulligan",
     round: 1,
     currentTurn,
+    pendingPrompt: null,
     seats: Object.fromEntries(seatEntries) as MatchState["seats"],
     cardsById,
     weather: { entries: [] },
