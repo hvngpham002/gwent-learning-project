@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vitest";
 
 import engineReducer from "@/store/slices/engineSlice";
-import { engineSelectedCardIdsSet } from "@/store/slices/engineSlice";
+import { engineSelectedCardIdsSet, engineSelectedCardSet } from "@/store/slices/engineSlice";
 import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 import {
   selectEngineDebugAiHandCards,
@@ -12,6 +12,7 @@ import {
   selectEngineLegalMovesForHuman,
   selectEngineScoreBreakdown,
 } from "@/store/selectors/engineSelectors";
+import type { PlayCardMove } from "@/game/core";
 
 const createTestStore = () =>
   configureStore({
@@ -174,6 +175,46 @@ describe("engine Redux adapter", () => {
       }),
     );
     expect(state.engine.lastTransactionEvents.some((event) => event.type === "round_resolved")).toBe(true);
+  });
+
+  it("dispatches a legal human PlayCard through Redux and updates hand, board, score, and selection", () => {
+    const store = createTestStore();
+    store.dispatch(startEngineMatch({ seed: "adapter-play-card" }));
+    store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_a", cardIds: [] }));
+    store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_b", cardIds: [] }));
+
+    if (store.getState().engine.match?.currentTurn === "seat_b") {
+      store.dispatch(dispatchEngineCommand({ type: "Pass", seatId: "seat_b" }));
+    }
+
+    const stateBefore = store.getState();
+    const playMove = selectEngineLegalMovesForHuman(stateBefore).find(
+      (move): move is PlayCardMove =>
+        move.kind === "play_card" &&
+        move.target.kind === "board_row" &&
+        move.target.side === "own" &&
+        (move.metadata.cardKind === "unit" || move.metadata.cardKind === "hero"),
+    );
+    expect(playMove).toBeTruthy();
+
+    const beforeScore = selectEngineScoreBreakdown(stateBefore)?.totalBySeat.seat_a ?? 0;
+    store.dispatch(engineSelectedCardSet(playMove!.sourceCardId));
+    store.dispatch(
+      dispatchEngineCommand({
+        type: "PlayCard",
+        seatId: "seat_a",
+        cardId: playMove!.sourceCardId,
+        target: playMove!.target,
+      }),
+    );
+
+    const state = store.getState();
+    expect(state.engine.match?.seats.seat_a.hand).not.toContain(playMove!.sourceCardId);
+    expect(state.engine.match?.seats.seat_a.board[playMove!.target.row].units).toContain(playMove!.sourceCardId);
+    expect(selectEngineScoreBreakdown(state)?.totalBySeat.seat_a).toBeGreaterThan(beforeScore);
+    expect(state.engine.selectedCardId).toBeNull();
+    expect(state.engine.selectedCardIds).toEqual([]);
+    expect(state.engine.lastTransactionEvents.some((event) => event.type === "card_played")).toBe(true);
   });
 
   it("default human-facing engine state exposes AI hand count but no AI hand card details", () => {

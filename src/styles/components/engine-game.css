@@ -83,7 +83,8 @@
 .engine-weather,
 .engine-board-side,
 .engine-row,
-.engine-control-panel {
+.engine-control-panel,
+.engine-target-actions {
   display: grid;
   gap: 8px;
 }
@@ -166,6 +167,14 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+}
+
+.engine-play-panel {
+  min-width: min(420px, 100%);
+}
+
+.engine-target-actions {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
 .engine-action {

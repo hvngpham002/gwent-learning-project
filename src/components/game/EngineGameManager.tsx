@@ -7,6 +7,7 @@ import {
   selectEngineAiHandCount,
   selectEngineAiSeat,
   selectEngineBoardRows,
+  selectEngineCanHumanAct,
   selectEngineCurrentSeat,
   selectEngineDeckCounts,
   selectEngineDiscardCounts,
@@ -20,6 +21,7 @@ import {
   selectEnginePrompt,
   selectEngineScoreBreakdown,
   selectEngineSeed,
+  selectEngineSelectedCardId,
   selectEngineSelectedCardIds,
   selectEngineState,
   selectEngineStatus,
@@ -27,9 +29,15 @@ import {
   type EngineBoardRowViewModel,
   type EngineCardViewModel,
 } from "@/store/selectors/engineSelectors";
-import { engineSelectedCardIdsSet } from "@/store/slices/engineSlice";
+import { engineSelectedCardIdsSet, engineSelectedCardSet, engineSelectionCleared } from "@/store/slices/engineSlice";
 import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 
+import {
+  describePlayTarget,
+  getPlayableCardIds,
+  getPlayMovesForCard,
+  shouldDisableHandCard,
+} from "./engine/playMoveHelpers";
 import { getScriptedPreviewAiCommand } from "./engine/scriptedPreviewAi";
 import "@/styles/components/engine-game.css";
 
@@ -77,11 +85,14 @@ const sameCardSelection = (left: readonly CardInstanceId[], right: readonly Card
 
 const commandLabel = (command: Exclude<EngineCommand, { type: "StartMatch" }>) => {
   if (command.type === "ChooseMulligan") return "ChooseMulligan";
+  if (command.type === "PlayCard") return "PlayCard";
   if (command.type === "Pass") return "Pass";
   if (command.type === "ResolveRoundEnd") return "ResolveRoundEnd";
   if (command.type === "ChoosePromptOption") return "ChoosePromptOption";
   return command.type;
 };
+
+const eventLabel = (eventType: string) => eventType.replace(/_/g, " ");
 
 const EngineGameManager: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -91,8 +102,10 @@ const EngineGameManager: React.FC = () => {
   const humanSeat = useAppSelector(selectEngineHumanSeat);
   const aiSeat = useAppSelector(selectEngineAiSeat);
   const currentSeat = useAppSelector(selectEngineCurrentSeat);
+  const canHumanAct = useAppSelector(selectEngineCanHumanAct);
   const seed = useAppSelector(selectEngineSeed);
   const humanHand = useAppSelector(selectEngineHumanHand);
+  const selectedCardId = useAppSelector(selectEngineSelectedCardId);
   const selectedCardIds = useAppSelector(selectEngineSelectedCardIds);
   const aiHandCount = useAppSelector(selectEngineAiHandCount);
   const boardRows = useAppSelector(selectEngineBoardRows);
@@ -137,6 +150,43 @@ const EngineGameManager: React.FC = () => {
     [dispatch, selectedCardIds],
   );
 
+  const playableCardIds = useMemo(() => getPlayableCardIds(humanMoves), [humanMoves]);
+  const selectedPlayMoves = useMemo(() => getPlayMovesForCard(humanMoves, selectedCardId), [humanMoves, selectedCardId]);
+  const visibleCardsById = useMemo(() => {
+    const entries = [
+      ...humanHand,
+      ...weatherCards,
+      ...boardRows.flatMap((row) => [...row.units, ...(row.horn ? [row.horn] : [])]),
+    ].map((card) => [card.instanceId, { name: card.name }] as const);
+    return new Map(entries);
+  }, [boardRows, humanHand, weatherCards]);
+
+  useEffect(() => {
+    if (!selectedCardId) {
+      return;
+    }
+
+    const selectedStillInHand = humanHand.some((card) => card.instanceId === selectedCardId);
+    const selectedStillPlayable = selectedPlayMoves.length > 0;
+    if (match?.phase !== "mulligan" && (match?.phase !== "playing" || !selectedStillInHand || !selectedStillPlayable)) {
+      dispatch(engineSelectionCleared());
+    }
+  }, [dispatch, humanHand, match?.phase, selectedCardId, selectedPlayMoves.length]);
+
+  const selectHandCard = useCallback(
+    (cardId: CardInstanceId) => {
+      if (match?.phase === "mulligan" && !match.seats[humanSeat].mulliganComplete) {
+        toggleMulliganCard(cardId);
+        return;
+      }
+
+      if (match?.phase === "playing" && playableCardIds.has(cardId) && canHumanAct && !prompt) {
+        dispatch(engineSelectedCardSet(selectedCardId === cardId ? null : cardId));
+      }
+    },
+    [canHumanAct, dispatch, humanSeat, match, playableCardIds, prompt, selectedCardId, toggleMulliganCard],
+  );
+
   const selectedMulliganMove = humanMoves.find(
     (move) => move.kind === "choose_mulligan" && sameCardSelection(move.cardIds, selectedCardIds),
   );
@@ -173,6 +223,25 @@ const EngineGameManager: React.FC = () => {
       );
     },
     [dispatch, prompt],
+  );
+
+  const playCard = useCallback(
+    (moveId: string) => {
+      const move = selectedPlayMoves.find((candidate) => candidate.moveId === moveId);
+      if (!move) {
+        return;
+      }
+
+      dispatch(
+        dispatchEngineCommand({
+          type: "PlayCard",
+          seatId: humanSeat,
+          cardId: move.sourceCardId,
+          target: move.target,
+        }),
+      );
+    },
+    [dispatch, humanSeat, selectedPlayMoves],
   );
 
   const rowsBySeat = useMemo(
@@ -266,6 +335,29 @@ const EngineGameManager: React.FC = () => {
             Pass
           </button>
         ) : null}
+        {match?.phase === "playing" && !prompt ? (
+          <div className="engine-control-panel engine-play-panel">
+            <h2>Card Play</h2>
+            <p>
+              {selectedCardId
+                ? `${selectedPlayMoves.length} legal target${selectedPlayMoves.length === 1 ? "" : "s"}`
+                : `${playableCardIds.size} playable card${playableCardIds.size === 1 ? "" : "s"}`}
+            </p>
+            <div className="engine-target-actions">
+              {selectedPlayMoves.map((move) => (
+                <button
+                  key={move.moveId}
+                  type="button"
+                  className="engine-action"
+                  onClick={() => playCard(move.moveId)}
+                  title={move.label}
+                >
+                  {move.metadata.cardName}: {describePlayTarget(move, visibleCardsById)}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {match?.phase === "round_end" ? (
           <button type="button" className="engine-action" disabled={!canResolveRound} onClick={resolveRound}>
             Resolve Round
@@ -297,9 +389,23 @@ const EngineGameManager: React.FC = () => {
             <EngineCardTile
               key={card.instanceId}
               card={card}
-              selected={selectedCardIds.includes(card.instanceId)}
-              disabled={match?.phase !== "mulligan" || match.seats[humanSeat].mulliganComplete}
-              onClick={() => toggleMulliganCard(card.instanceId)}
+              selected={
+                match?.phase === "mulligan"
+                  ? selectedCardIds.includes(card.instanceId)
+                  : selectedCardId === card.instanceId
+              }
+              disabled={
+                match?.phase === "mulligan"
+                  ? match.seats[humanSeat].mulliganComplete
+                  : shouldDisableHandCard({
+                      phase: match?.phase,
+                      canHumanAct,
+                      promptOpen: Boolean(prompt),
+                      playableCardIds,
+                      cardId: card.instanceId,
+                    })
+              }
+              onClick={() => selectHandCard(card.instanceId)}
             />
           ))}
         </div>
@@ -311,6 +417,9 @@ const EngineGameManager: React.FC = () => {
           <span key={record.sequence}>
             #{record.sequence} {commandLabel(record.command)} {record.status}
           </span>
+        ))}
+        {engine.lastTransactionEvents.slice(-4).map((event, index) => (
+          <span key={`${event.type}-${index}`}>event: {eventLabel(event.type)}</span>
         ))}
       </section>
     </main>

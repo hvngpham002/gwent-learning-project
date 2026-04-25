@@ -55,6 +55,7 @@ export const selectEngineAiSeat = (state: RootState) => state.engine.seatMap.ai;
 export const selectEngineRoundHistory = createSelector(selectEngineMatch, (match) => match?.roundHistory ?? []);
 export const selectEngineLastError = (state: RootState) => state.engine.lastError;
 export const selectEngineSeed = createSelector(selectEngineMatch, (match) => match?.rng.seed ?? null);
+export const selectEngineSelectedCardId = (state: RootState) => state.engine.selectedCardId;
 export const selectEngineSelectedCardIds = (state: RootState) => state.engine.selectedCardIds;
 
 const toCardViewModel = (instance: CardInstance): EngineCardViewModel | null => {
