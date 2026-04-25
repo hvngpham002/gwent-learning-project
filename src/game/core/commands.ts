@@ -1,4 +1,4 @@
-import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource } from "@/game/catalog";
+import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
 
 import { resolveCardAbilities, resolvePromptOption } from "./abilities";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
@@ -11,6 +11,7 @@ import type {
   EngineTransaction,
   GameEvent,
   MatchState,
+  RoundResult,
   SeatId,
   ZoneRef,
 } from "./types";
@@ -46,6 +47,17 @@ export interface StatefulCommandInput {
 type CommandInput = EngineCommand | StatefulCommandInput;
 
 const WEATHER_ABILITIES = new Set<CatalogAbilityId>(["frost", "fog", "rain", "skellige_storm"]);
+const ROWS: readonly CatalogRow[] = ["close", "ranged", "siege"];
+const SEATS: readonly SeatId[] = ["seat_a", "seat_b"];
+const SKELLIGE_DEFERRED_RETURN_ABILITIES = new Set<CatalogAbilityId>([
+  "spy",
+  "medic",
+  "muster",
+  "muster_roach",
+  "scorch_close",
+  "mardroeme",
+  "berserker",
+]);
 const opponentOf = (seatId: SeatId): SeatId => (seatId === "seat_a" ? "seat_b" : "seat_a");
 
 const cloneState = (state: MatchState): MatchState => structuredClone(state);
@@ -61,6 +73,12 @@ const targetsEqual = (left: unknown, right: LegalMoveTarget) => JSON.stringify(l
 const sortedIds = (cardIds: readonly CardInstanceId[]) => [...cardIds].sort((a, b) => a.localeCompare(b));
 
 const assertLegal = (input: StatefulCommandInput) => {
+  if (!("seatId" in input.command) || !input.command.seatId) {
+    throw new EngineRuleError("illegal_command", `${input.command.type} cannot be checked as a seat legal move.`, {
+      command: input.command,
+    });
+  }
+
   const legalMoves = getLegalMoves({
     state: input.state,
     seatId: input.command.seatId,
@@ -84,6 +102,8 @@ const assertLegal = (input: StatefulCommandInput) => {
         return move.kind === "use_leader" && targetsEqual(command.target, move.target);
       case "ChoosePromptOption":
         return move.kind === "choose_prompt_option" && move.promptId === command.promptId && move.optionId === command.optionId;
+      case "ResolveRoundEnd":
+        return move.kind === "resolve_round_end";
     }
   });
 
@@ -215,6 +235,22 @@ const moveCard = (
   addToZone(state, cardId, to, boardIndex);
   card.zone = to;
   events.push({ type: "card_moved", cardId, sourceId: card.sourceId, from, to, reason });
+};
+
+const drawOneCard = (
+  state: MatchState,
+  events: GameEvent[],
+  seatId: SeatId,
+  reason: Extract<GameEvent, { type: "card_moved" }>["reason"],
+) => {
+  const cardId = state.seats[seatId].deck[0];
+  if (!cardId) {
+    return null;
+  }
+
+  moveCard(state, events, cardId, { kind: "hand", seat: seatId }, reason);
+  events.push({ type: "card_drawn", seatId, cardId, sourceId: state.cardsById[cardId].sourceId });
+  return cardId;
 };
 
 const handoffTurn = (state: MatchState, events: GameEvent[], seatId: SeatId) => {
@@ -437,6 +473,320 @@ const pass = (input: StatefulCommandInput): EngineTransaction => {
   return { state, events };
 };
 
+const determineRoundResult = (
+  state: MatchState,
+  catalogCards: readonly CatalogCardSource[],
+  catalogLeaders: readonly CatalogLeaderSource[],
+): Omit<RoundResult, "round" | "loserGemLoss" | "nextStarter"> & {
+  loserGemLoss: Partial<Record<SeatId, number>>;
+} => {
+  const scores = calculateScores({ state, catalogCards, catalogLeaders });
+  const scoreBySeat = scores.totalBySeat;
+  let winner: SeatId | "draw" = "draw";
+  let factionOutcome: RoundResult["factionOutcome"] = "normal";
+
+  if (scoreBySeat.seat_a > scoreBySeat.seat_b) {
+    winner = "seat_a";
+  } else if (scoreBySeat.seat_b > scoreBySeat.seat_a) {
+    winner = "seat_b";
+  } else {
+    const nilfgaardSeats = SEATS.filter((seatId) => state.seats[seatId].faction === "nilfgaard");
+    if (nilfgaardSeats.length === 1) {
+      winner = nilfgaardSeats[0];
+      factionOutcome = "nilfgaard_draw_win";
+    }
+  }
+
+  const loserGemLoss: Partial<Record<SeatId, number>> =
+    winner === "draw" ? { seat_a: 1, seat_b: 1 } : { [opponentOf(winner)]: 1 };
+  const outcome = winner === "seat_a" ? "seat_a_win" : winner === "seat_b" ? "seat_b_win" : "draw";
+
+  return { scoreBySeat, outcome, winner, loserGemLoss, factionOutcome };
+};
+
+const getMonstersKeepCardIds = (
+  state: MatchState,
+  events: GameEvent[],
+  sourceLookup: ReadonlyMap<string, CatalogCardSource>,
+) => {
+  const rng = createSeededRngFromState(state.rng.seed, state.rng.state);
+  let usedRng = false;
+  const keepCardIds = new Set<CardInstanceId>();
+
+  SEATS.forEach((seatId) => {
+    if (state.seats[seatId].faction !== "monsters") {
+      return;
+    }
+
+    const eligible = ROWS.flatMap((row) =>
+      state.seats[seatId].board[row].units.filter((cardId) => {
+        const instance = state.cardsById[cardId];
+        const source = instance ? sourceLookup.get(instance.sourceId) : undefined;
+        return source?.kind === "unit" && instance.controller === seatId;
+      }),
+    );
+    const keptCardId =
+      eligible.length > 1 ? eligible[Math.floor(rng.next() * eligible.length)] : eligible.length === 1 ? eligible[0] : null;
+    if (eligible.length > 1) {
+      usedRng = true;
+    }
+    if (keptCardId) {
+      keepCardIds.add(keptCardId);
+    }
+    events.push({
+      type: "faction_ability_resolved",
+      faction: "monsters",
+      seatId,
+      ability: "monsters_keep_unit",
+      outcome: keptCardId ? "kept" : "no_eligible_cards",
+      cardIds: keptCardId ? [keptCardId] : [],
+      eligibleCount: eligible.length,
+    });
+  });
+
+  if (usedRng) {
+    state.rng.state = rng.getState();
+  }
+
+  return keepCardIds;
+};
+
+const sweepBattlefield = (
+  state: MatchState,
+  events: GameEvent[],
+  round: number,
+  keepCardIds: ReadonlySet<CardInstanceId>,
+) => {
+  const movedCardIds: CardInstanceId[] = [];
+
+  SEATS.forEach((seatId) => {
+    ROWS.forEach((row) => {
+      const unitIds = [...state.seats[seatId].board[row].units];
+      unitIds.forEach((cardId) => {
+        if (keepCardIds.has(cardId)) {
+          return;
+        }
+        const controller = state.cardsById[cardId].controller;
+        moveCard(state, events, cardId, { kind: "discard", seat: controller }, "round_cleanup");
+        movedCardIds.push(cardId);
+      });
+
+      const hornId = state.seats[seatId].board[row].horn;
+      if (hornId) {
+        const controller = state.cardsById[hornId].controller;
+        moveCard(state, events, hornId, { kind: "discard", seat: controller }, "round_cleanup");
+        movedCardIds.push(hornId);
+      }
+    });
+  });
+
+  [...state.weather.entries].forEach((cardId) => {
+    const controller = state.cardsById[cardId].controller;
+    moveCard(state, events, cardId, { kind: "discard", seat: controller }, "round_cleanup");
+    movedCardIds.push(cardId);
+  });
+
+  events.push({ type: "board_swept", round, movedCardIds, keptCardIds: [...keepCardIds] });
+};
+
+const applyNorthernRealmsDraw = (
+  state: MatchState,
+  events: GameEvent[],
+  winner: SeatId | "draw",
+) => {
+  if (winner === "draw" || state.seats[winner].faction !== "northern_realms") {
+    return;
+  }
+
+  const cardId = drawOneCard(state, events, winner, "northern_realms_draw");
+  events.push({
+    type: "faction_ability_resolved",
+    faction: "northern_realms",
+    seatId: winner,
+    ability: "northern_realms_draw_on_win",
+    outcome: cardId ? "drew_card" : "deck_empty",
+    cardIds: cardId ? [cardId] : [],
+  });
+};
+
+const firstCatalogRow = (source: CatalogCardSource): CatalogRow => ROWS.find((row) => source.rows.includes(row)) ?? "close";
+
+const applySkelligeRoundThreeReturn = (
+  state: MatchState,
+  events: GameEvent[],
+  sourceLookup: ReadonlyMap<string, CatalogCardSource>,
+) => {
+  if (state.round !== 3) {
+    return;
+  }
+
+  const rng = createSeededRngFromState(state.rng.seed, state.rng.state);
+  let usedRng = false;
+
+  SEATS.forEach((seatId) => {
+    if (state.seats[seatId].faction !== "skellige") {
+      return;
+    }
+
+    const eligible = state.seats[seatId].discard.filter((cardId) => {
+      const instance = state.cardsById[cardId];
+      const source = instance ? sourceLookup.get(instance.sourceId) : undefined;
+      return source?.kind === "unit";
+    });
+    const selected = shuffleWithRng(eligible, rng).slice(0, 2);
+    if (eligible.length > 1) {
+      usedRng = true;
+    }
+    const policyNotes: string[] = [];
+
+    selected.forEach((cardId) => {
+      const source = sourceLookup.get(state.cardsById[cardId].sourceId);
+      if (!source) {
+        return;
+      }
+      const row = firstCatalogRow(source);
+      if (source.rows.length > 1 || source.abilities.includes("agile")) {
+        policyNotes.push(`${cardId}:${row}`);
+      }
+      moveCard(state, events, cardId, { kind: "board_row", seat: seatId, row }, "skellige_return");
+      source.abilities.forEach((abilityId) => {
+        if (SKELLIGE_DEFERRED_RETURN_ABILITIES.has(abilityId)) {
+          events.push({
+            type: "ability_deferred",
+            sourceId: source.sourceId,
+            cardId,
+            abilityId,
+            reason: "skellige_return_on_play_pending",
+          });
+        }
+      });
+    });
+
+    events.push({
+      type: "faction_ability_resolved",
+      faction: "skellige",
+      seatId,
+      ability: "skellige_round_3_return",
+      outcome: selected.length > 0 ? "returned_cards" : "no_eligible_cards",
+      cardIds: selected,
+      eligibleCount: eligible.length,
+      policy: policyNotes.length > 0 ? `first_catalog_row:${policyNotes.join(",")}` : undefined,
+    });
+  });
+
+  if (usedRng) {
+    state.rng.state = rng.getState();
+  }
+};
+
+const resolveRoundEnd = (input: StatefulCommandInput): EngineTransaction => {
+  const command = input.command as Extract<EngineCommand, { type: "ResolveRoundEnd" }>;
+  if (command.seatId && !SEATS.includes(command.seatId)) {
+    throw new EngineRuleError("illegal_command", "ResolveRoundEnd seatId must be a match seat.", { seatId: command.seatId });
+  }
+  if (input.state.pendingPrompt) {
+    throw new EngineRuleError("prompt_pending", "ResolveRoundEnd cannot execute while a prompt is pending.", {
+      promptId: input.state.pendingPrompt.promptId,
+    });
+  }
+  if (input.state.phase !== "round_end") {
+    throw new EngineRuleError("invalid_phase", "ResolveRoundEnd can only execute in round_end phase.", {
+      phase: input.state.phase,
+    });
+  }
+  if (!input.state.seats.seat_a.passed || !input.state.seats.seat_b.passed) {
+    throw new EngineRuleError("illegal_command", "ResolveRoundEnd requires both seats to have passed.");
+  }
+  if (input.state.lastResolvedRound === input.state.round) {
+    throw new EngineRuleError("illegal_command", "This logical round has already been resolved.", {
+      round: input.state.round,
+    });
+  }
+
+  const sourceLookup = createCardLookup(input.catalogCards);
+  const state = cloneState(input.state);
+  const events: GameEvent[] = [];
+  const resolvedRound = state.round;
+  const result = determineRoundResult(state, input.catalogCards, input.catalogLeaders);
+
+  if (result.factionOutcome === "nilfgaard_draw_win" && result.winner !== "draw") {
+    events.push({
+      type: "faction_ability_resolved",
+      faction: "nilfgaard",
+      seatId: result.winner,
+      ability: "nilfgaard_draw_win",
+      outcome: "tie_converted_to_round_win",
+    });
+  }
+
+  events.push({
+    type: "round_resolved",
+    round: resolvedRound,
+    scoreBySeat: result.scoreBySeat,
+    winner: result.winner,
+    loserGemLoss: result.loserGemLoss,
+    factionOutcome: result.factionOutcome ?? "normal",
+  });
+  events.push({ type: "round_ended", round: resolvedRound, winner: result.winner });
+
+  SEATS.forEach((seatId) => {
+    const loss = result.loserGemLoss[seatId] ?? 0;
+    if (loss <= 0) {
+      return;
+    }
+    const before = state.seats[seatId].gems;
+    const after = Math.max(0, before - loss);
+    state.seats[seatId].gems = after;
+    events.push({ type: "gems_changed", seatId, before, after, delta: after - before, reason: "round_loss" });
+  });
+
+  const seatsOut = SEATS.filter((seatId) => state.seats[seatId].gems <= 0);
+  const gameWinner =
+    seatsOut.length === 2 ? "draw" : seatsOut.length === 1 ? opponentOf(seatsOut[0]) : null;
+  const continues = gameWinner === null;
+  const nextStarter =
+    result.winner === "draw" ? state.roundStarter : result.winner;
+  const roundHistoryEntry: RoundResult = {
+    round: resolvedRound,
+    scoreBySeat: result.scoreBySeat,
+    outcome: result.outcome,
+    winner: result.winner,
+    loserGemLoss: result.loserGemLoss,
+    factionOutcome: result.factionOutcome,
+    nextStarter: continues ? nextStarter : undefined,
+  };
+  state.roundHistory.push(roundHistoryEntry);
+  state.lastResolvedRound = resolvedRound;
+
+  const keepCardIds = continues ? getMonstersKeepCardIds(state, events, sourceLookup) : new Set<CardInstanceId>();
+  sweepBattlefield(state, events, resolvedRound, keepCardIds);
+
+  if (!continues) {
+    const from = state.phase;
+    state.phase = "game_end";
+    events.push({ type: "phase_changed", from, to: state.phase, reason: "game_ended" });
+    events.push({ type: "game_ended", winner: gameWinner });
+    return { state, events };
+  }
+
+  applyNorthernRealmsDraw(state, events, result.winner);
+  const starterReason = result.winner === "draw" ? "draw_policy" : "round_winner";
+  state.round = resolvedRound + 1;
+  state.currentTurn = nextStarter;
+  state.roundStarter = nextStarter;
+  state.pendingPrompt = null;
+  state.seats.seat_a.passed = false;
+  state.seats.seat_b.passed = false;
+  const from = state.phase;
+  state.phase = "playing";
+  events.push({ type: "phase_changed", from, to: state.phase, reason: "round_resolved" });
+  events.push({ type: "turn_set", seatId: nextStarter, reason: starterReason });
+  events.push({ type: "round_started", round: state.round, startingSeat: nextStarter, reason: starterReason });
+  applySkelligeRoundThreeReturn(state, events, sourceLookup);
+
+  return { state, events };
+};
+
 const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
   if (input.state.pendingPrompt) {
     throw new EngineRuleError("prompt_pending", "Leader commands cannot execute while a prompt is pending.", {
@@ -525,6 +875,8 @@ export function executeCommand(input: CommandInput): EngineTransaction {
       return playCard(input);
     case "Pass":
       return pass(input);
+    case "ResolveRoundEnd":
+      return resolveRoundEnd(input);
     case "UseLeader":
       return executeLeader(input);
     case "ChoosePromptOption":

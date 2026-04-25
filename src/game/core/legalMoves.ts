@@ -8,7 +8,13 @@ import {
 
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
-export type LegalMoveKind = "choose_mulligan" | "play_card" | "pass" | "use_leader" | "choose_prompt_option";
+export type LegalMoveKind =
+  | "choose_mulligan"
+  | "play_card"
+  | "pass"
+  | "resolve_round_end"
+  | "use_leader"
+  | "choose_prompt_option";
 
 export type LegalMoveTarget =
   | { kind: "board_row"; side: "own" | "opponent"; seatId: SeatId; row: CatalogRow }
@@ -52,6 +58,11 @@ export interface PassMove extends LegalMoveBase {
   target: { kind: "none" };
 }
 
+export interface ResolveRoundEndMove extends LegalMoveBase {
+  kind: "resolve_round_end";
+  target: { kind: "none" };
+}
+
 export interface UseLeaderMove extends LegalMoveBase {
   kind: "use_leader";
   leaderCardId: CardInstanceId;
@@ -81,6 +92,7 @@ export type LegalMove =
   | ChooseMulliganMove
   | PlayCardMove
   | PassMove
+  | ResolveRoundEndMove
   | UseLeaderMove
   | ChoosePromptOptionMove;
 
@@ -410,6 +422,22 @@ const getPromptMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
   }));
 };
 
+const getRoundEndMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
+  if (!state.seats.seat_a.passed || !state.seats.seat_b.passed) {
+    return [];
+  }
+
+  return [
+    {
+      kind: "resolve_round_end",
+      moveId: `resolve-round-end:${state.round}`,
+      seatId,
+      target: { kind: "none" },
+      label: "Resolve round end",
+    },
+  ];
+};
+
 export const getLegalMoves = ({ state, seatId, catalogCards, catalogLeaders }: GetLegalMovesInput): LegalMove[] => {
   const lookups = createCatalogLookups({ catalogCards, catalogLeaders });
 
@@ -423,6 +451,10 @@ export const getLegalMoves = ({ state, seatId, catalogCards, catalogLeaders }: G
 
   if (state.phase === "playing") {
     return getPlayingMoves(state, seatId, lookups);
+  }
+
+  if (state.phase === "round_end") {
+    return getRoundEndMoves(state, seatId);
   }
 
   return [];

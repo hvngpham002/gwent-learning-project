@@ -71,6 +71,9 @@ export interface MatchState {
   matchId: string;
   phase: MatchPhase;
   round: number;
+  roundStarter: SeatId;
+  roundHistory: RoundResult[];
+  lastResolvedRound: number | null;
   currentTurn: SeatId;
   pendingPrompt: PendingPrompt | null;
   seats: Record<SeatId, SeatState>;
@@ -82,6 +85,16 @@ export interface MatchState {
     leaderSourceIds: string[];
     deckPresetIds: string[];
   };
+}
+
+export interface RoundResult {
+  round: number;
+  scoreBySeat: Record<SeatId, number>;
+  outcome: "seat_a_win" | "seat_b_win" | "draw";
+  winner: SeatId | "draw";
+  loserGemLoss: Partial<Record<SeatId, number>>;
+  factionOutcome?: "nilfgaard_draw_win" | "normal";
+  nextStarter?: SeatId;
 }
 
 export interface MatchSeatConfig {
@@ -134,6 +147,7 @@ export type EngineCommand =
   | { type: "ChooseMulligan"; seatId: SeatId; cardIds: CardInstanceId[] }
   | { type: "PlayCard"; seatId: SeatId; cardId: CardInstanceId; target?: unknown }
   | { type: "Pass"; seatId: SeatId }
+  | { type: "ResolveRoundEnd"; seatId?: SeatId }
   | { type: "UseLeader"; seatId: SeatId; target?: unknown }
   | { type: "ChoosePromptOption"; seatId: SeatId; promptId: string; optionId: string };
 
@@ -173,7 +187,10 @@ export type GameEvent =
         | "weather_cleared"
         | "discard_after_effect"
         | "scorch_destroyed"
-        | "scorch_discard";
+        | "scorch_discard"
+        | "round_cleanup"
+        | "northern_realms_draw"
+        | "skellige_return";
     }
   | {
       type: "initial_hand_drawn";
@@ -186,7 +203,12 @@ export type GameEvent =
       reason: "initial_roll" | "scoiatael_override" | "round_winner" | "draw_policy" | "turn_handoff";
     }
   | { type: "mulligan_chosen"; seatId: SeatId; cardIds: CardInstanceId[]; drawCount: number }
-  | { type: "phase_changed"; from: MatchPhase; to: MatchPhase; reason: "mulligan_complete" | "both_passed" }
+  | {
+      type: "phase_changed";
+      from: MatchPhase;
+      to: MatchPhase;
+      reason: "mulligan_complete" | "both_passed" | "round_resolved" | "game_ended";
+    }
   | { type: "card_played"; seatId: SeatId; cardId: CardInstanceId; target?: ZoneRef }
   | { type: "leader_used"; seatId: SeatId; leaderCardId: CardInstanceId; abilityId: string }
   | { type: "player_passed"; seatId: SeatId }
@@ -212,5 +234,35 @@ export type GameEvent =
   | { type: "prompt_opened"; prompt: PendingPrompt }
   | { type: "prompt_resolved"; promptId: string; seatId: SeatId; optionId: string }
   | { type: "deck_shuffled"; seatId: SeatId; reason: "muster" | "mulligan" }
+  | {
+      type: "round_resolved";
+      round: number;
+      scoreBySeat: Record<SeatId, number>;
+      winner: SeatId | "draw";
+      loserGemLoss: Partial<Record<SeatId, number>>;
+      factionOutcome: "nilfgaard_draw_win" | "normal";
+    }
+  | { type: "gems_changed"; seatId: SeatId; before: number; after: number; delta: number; reason: "round_loss" }
+  | { type: "board_swept"; round: number; movedCardIds: CardInstanceId[]; keptCardIds: CardInstanceId[] }
+  | {
+      type: "round_started";
+      round: number;
+      startingSeat: SeatId;
+      reason: "round_winner" | "draw_policy";
+    }
+  | {
+      type: "faction_ability_resolved";
+      faction: Exclude<CatalogFaction, "neutral">;
+      seatId: SeatId;
+      ability:
+        | "nilfgaard_draw_win"
+        | "monsters_keep_unit"
+        | "northern_realms_draw_on_win"
+        | "skellige_round_3_return";
+      outcome: string;
+      cardIds?: CardInstanceId[];
+      eligibleCount?: number;
+      policy?: string;
+    }
   | { type: "round_ended"; round: number; winner: SeatId | "draw" }
   | { type: "game_ended"; winner: SeatId | "draw" };
