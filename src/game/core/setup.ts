@@ -5,7 +5,6 @@ import type {
   BoardSide,
   CardInstance,
   CardInstanceId,
-  EngineCommand,
   EngineTransaction,
   GameEvent,
   MatchConfig,
@@ -191,6 +190,7 @@ const instantiateSeat = (
     leader: leaderInstance.instanceId,
     leaderSourceId: leaderSource.sourceId,
     leaderUsed: false,
+    mulliganComplete: false,
     sideDeck,
     removedFromGame: [],
     board: createBoard(),
@@ -260,17 +260,4 @@ export const startMatch = (config: MatchConfig): EngineTransaction => {
   };
 
   return { state, events };
-};
-
-export const executeCommand = (command: EngineCommand): EngineTransaction => {
-  switch (command.type) {
-    case "StartMatch":
-      return startMatch(command.config);
-    case "ChooseMulligan":
-    case "PlayCard":
-    case "Pass":
-    case "UseLeader":
-    case "ChoosePromptOption":
-      throw new Error(`${command.type} is defined for the engine command model but is not implemented in this phase.`);
-  }
 };

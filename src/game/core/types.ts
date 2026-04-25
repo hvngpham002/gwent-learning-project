@@ -53,6 +53,7 @@ export interface SeatState {
   leader: CardInstanceId | null;
   leaderSourceId: string;
   leaderUsed: boolean;
+  mulliganComplete: boolean;
   sideDeck: CardInstanceId[];
   removedFromGame: CardInstanceId[];
   board: BoardSide;
@@ -143,7 +144,16 @@ export type GameEvent =
       sourceId: string;
       from: ZoneRef | null;
       to: ZoneRef;
-      reason: "instantiate" | "shuffle" | "initial_draw";
+      reason:
+        | "instantiate"
+        | "shuffle"
+        | "initial_draw"
+        | "mulligan_return"
+        | "mulligan_draw"
+        | "play_card"
+        | "decoy_return"
+        | "weather_cleared"
+        | "discard_after_effect";
     }
   | {
       type: "initial_hand_drawn";
@@ -153,9 +163,15 @@ export type GameEvent =
   | {
       type: "turn_set";
       seatId: SeatId;
-      reason: "initial_roll" | "scoiatael_override" | "round_winner" | "draw_policy";
+      reason: "initial_roll" | "scoiatael_override" | "round_winner" | "draw_policy" | "turn_handoff";
     }
-  | { type: "card_played"; seatId: SeatId; cardId: CardInstanceId }
+  | { type: "mulligan_chosen"; seatId: SeatId; cardIds: CardInstanceId[]; drawCount: number }
+  | { type: "phase_changed"; from: MatchPhase; to: MatchPhase; reason: "mulligan_complete" | "both_passed" }
+  | { type: "card_played"; seatId: SeatId; cardId: CardInstanceId; target?: ZoneRef }
+  | { type: "leader_used"; seatId: SeatId; leaderCardId: CardInstanceId; abilityId: string }
+  | { type: "player_passed"; seatId: SeatId }
+  | { type: "weather_cleared"; seatId: SeatId; cardIds: CardInstanceId[]; source: "card" | "leader" }
+  | { type: "ability_deferred"; sourceId: string; cardId: CardInstanceId; abilityId: string }
   | { type: "ability_resolved"; sourceId: CardInstanceId; abilityId: string }
   | { type: "prompt_opened"; prompt: PendingPrompt }
   | { type: "round_ended"; round: number; winner: SeatId | "draw" }

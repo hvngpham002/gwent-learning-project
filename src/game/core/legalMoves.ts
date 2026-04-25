@@ -111,6 +111,10 @@ const sortedCardIds = (cardIds: readonly CardInstanceId[]) => [...cardIds].sort(
 const getCardSource = (lookups: CatalogLookups, instance: CardInstance) => lookups.cardsBySourceId.get(instance.sourceId);
 
 const getMulliganMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
+  if (state.seats[seatId].mulliganComplete) {
+    return [];
+  }
+
   const hand = state.seats[seatId].hand;
   const sortedHand = sortedCardIds(hand);
   const moves: LegalMove[] = [
