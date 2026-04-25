@@ -3,6 +3,7 @@ import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource } from "@
 import { resolveCardAbilities, resolvePromptOption } from "./abilities";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
+import { calculateScores, findSpecialScorchTargets } from "./scoring";
 import { startMatch } from "./setup";
 import type {
   CardInstanceId,
@@ -276,6 +277,64 @@ const clearWeather = (state: MatchState, events: GameEvent[], seatId: SeatId, so
   events.push({ type: "weather_cleared", seatId, cardIds: weatherCardIds, source });
 };
 
+const emitDiscardTriggerDeferrals = (
+  events: GameEvent[],
+  sourceLookup: ReadonlyMap<string, CatalogCardSource>,
+  state: MatchState,
+  cardId: CardInstanceId,
+) => {
+  const source = sourceLookup.get(state.cardsById[cardId].sourceId);
+  source?.abilities.forEach((abilityId) => {
+    if (abilityId === "summon" || abilityId === "avenger") {
+      events.push({
+        type: "ability_deferred",
+        sourceId: source.sourceId,
+        cardId,
+        abilityId,
+        reason: "discard_trigger_pending",
+      });
+    }
+  });
+};
+
+const resolveSpecialScorch = (
+  state: MatchState,
+  events: GameEvent[],
+  sourceLookup: ReadonlyMap<string, CatalogCardSource>,
+  catalogCards: readonly CatalogCardSource[],
+  seatId: SeatId,
+  cardId: CardInstanceId,
+  source: CatalogCardSource,
+) => {
+  events.push({ type: "ability_triggered", sourceId: source.sourceId, cardId, abilityId: "scorch" });
+  const breakdown = calculateScores({ state, catalogCards });
+  const targets = findSpecialScorchTargets(breakdown);
+
+  targets.forEach((target) => {
+    const controller = state.cardsById[target.cardId].controller;
+    moveCard(state, events, target.cardId, { kind: "discard", seat: controller }, "scorch_destroyed");
+    emitDiscardTriggerDeferrals(events, sourceLookup, state, target.cardId);
+  });
+
+  moveCard(state, events, cardId, { kind: "discard", seat: seatId }, "scorch_discard");
+  events.push({ type: "card_played", seatId, cardId, target: state.cardsById[cardId].zone });
+  events.push({
+    type: "scorch_resolved",
+    sourceId: source.sourceId,
+    cardId,
+    abilityId: "scorch",
+    targetCardIds: targets.map((target) => target.cardId),
+    outcome: targets.length > 0 ? "destroyed" : "no_targets",
+  });
+  events.push({
+    type: "ability_resolved",
+    sourceId: source.sourceId,
+    cardId,
+    abilityId: "scorch",
+    outcome: targets.length > 0 ? "destroyed" : "no_targets",
+  });
+};
+
 const playCard = (input: StatefulCommandInput): EngineTransaction => {
   if (input.state.pendingPrompt) {
     throw new EngineRuleError("prompt_pending", "Only prompt choices can execute while a prompt is pending.", {
@@ -291,13 +350,6 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
   const source = getCardSource(sourceLookup, state, command.cardId);
   const target = command.target as LegalMoveTarget;
   const card = state.cardsById[command.cardId];
-
-  if (source.kind === "special" && source.abilities.includes("scorch")) {
-    throw new EngineRuleError("unsupported_command", "Scorch execution is reserved for the ability resolver phase.", {
-      cardId: command.cardId,
-      sourceId: source.sourceId,
-    });
-  }
 
   if (target.kind === "board_row") {
     card.controller = command.seatId;
@@ -343,6 +395,8 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
       targetIndex,
     );
     events.push({ type: "card_played", seatId: command.seatId, cardId: command.cardId, target: card.zone });
+  } else if (target.kind === "none" && source.kind === "special" && source.abilities.includes("scorch")) {
+    resolveSpecialScorch(state, events, sourceLookup, input.catalogCards, command.seatId, command.cardId, source);
   } else {
     throw new EngineRuleError("invalid_target", "Unsupported play target.", { cardId: command.cardId, target });
   }

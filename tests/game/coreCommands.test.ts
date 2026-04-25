@@ -352,7 +352,7 @@ describe("core command transactions", () => {
     expect(unsupported).toEqual(before);
   });
 
-  it("rejects wrong-turn, passed-seat, wrong-phase, invalid-target, opponent-hand, and Scorch commands", () => {
+  it("rejects wrong-turn, passed-seat, wrong-phase, invalid-target, and opponent-hand commands", () => {
     const state = createState("rejects");
     const ownCard = findCard(state, "northern-realms.dun-banner-medic");
     const opponentCard = state.seats.seat_b.hand[0];
@@ -396,10 +396,74 @@ describe("core command transactions", () => {
       }),
     ).toThrow(EngineRuleError);
 
-    const scorch = findCard(state, "neutral.scorch");
-    putInHand(state, "seat_a", [scorch]);
     expect(() =>
-      execute(state, { type: "PlayCard", seatId: "seat_a", cardId: scorch, target: { kind: "none" } }),
+      execute(state, {
+        type: "PlayCard",
+        seatId: "seat_a",
+        cardId: ownCard,
+        target: { kind: "none" },
+      }),
     ).toThrow(EngineRuleError);
+  });
+
+  it("resolves Special Scorch against the highest effective non-Hero units and discards itself", () => {
+    const state = createState("special-scorch-command");
+    const scorch = findCard(state, "neutral.scorch");
+    const hero = findCard(state, "neutral.geralt-of-rivia");
+    const target = findCard(state, "nilfgaard.black-infantry-archer");
+    state.phase = "playing";
+    state.currentTurn = "seat_a";
+    putInHand(state, "seat_a", [scorch]);
+    putOnBoard(state, "seat_a", hero, "close");
+    putOnBoard(state, "seat_b", target, "ranged");
+
+    const result = execute(state, {
+      type: "PlayCard",
+      seatId: "seat_a",
+      cardId: scorch,
+      target: { kind: "none" },
+    });
+
+    expect(result.state.seats.seat_b.board.ranged.units).not.toContain(target);
+    expect(result.state.seats.seat_b.discard).toContain(target);
+    expect(result.state.seats.seat_a.discard).toContain(scorch);
+    expect(result.state.seats.seat_a.board.close.units).toContain(hero);
+    expect(result.events).toContainEqual(
+      expect.objectContaining({ type: "scorch_resolved", abilityId: "scorch", targetCardIds: [target] }),
+    );
+    assertNoDuplicateZones(result.state);
+  });
+
+  it("resolves Unit Scorch Close after placement and sends targets to controller discard", () => {
+    const state = createState("unit-scorch-command");
+    const scorchUnit = findCard(state, "neutral.villentretenmerth");
+    const firstTarget = findCard(state, "nilfgaard.young-emissary");
+    const secondTarget = findCard(state, "nilfgaard.young-emissary", [firstTarget]);
+    state.phase = "playing";
+    state.currentTurn = "seat_a";
+    putInHand(state, "seat_a", [scorchUnit]);
+    putOnBoard(state, "seat_b", firstTarget, "close");
+    putOnBoard(state, "seat_b", secondTarget, "close");
+
+    const result = execute(state, {
+      type: "PlayCard",
+      seatId: "seat_a",
+      cardId: scorchUnit,
+      target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+    });
+
+    expect(result.state.seats.seat_a.board.close.units).toContain(scorchUnit);
+    expect(result.state.seats.seat_b.board.close.units).not.toContain(firstTarget);
+    expect(result.state.seats.seat_b.board.close.units).not.toContain(secondTarget);
+    expect(result.state.seats.seat_b.discard).toEqual(expect.arrayContaining([firstTarget, secondTarget]));
+    expect(result.events).toContainEqual(
+      expect.objectContaining({
+        type: "scorch_resolved",
+        abilityId: "scorch_close",
+        targetCardIds: expect.arrayContaining([firstTarget, secondTarget]),
+        outcome: "destroyed",
+      }),
+    );
+    assertNoDuplicateZones(result.state);
   });
 });

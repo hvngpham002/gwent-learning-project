@@ -403,7 +403,10 @@ describe("core ability resolver", () => {
     });
 
     expect(scorch.events).toContainEqual(
-      expect.objectContaining({ type: "ability_deferred", abilityId: "scorch_close", reason: "requires_scoring" }),
+      expect.objectContaining({ type: "scorch_resolved", abilityId: "scorch_close", outcome: "below_threshold" }),
+    );
+    expect(scorch.events).not.toContainEqual(
+      expect.objectContaining({ type: "ability_deferred", abilityId: "scorch_close" }),
     );
   });
 

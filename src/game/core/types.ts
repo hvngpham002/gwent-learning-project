@@ -171,7 +171,9 @@ export type GameEvent =
         | "ability_muster"
         | "medic_revive"
         | "weather_cleared"
-        | "discard_after_effect";
+        | "discard_after_effect"
+        | "scorch_destroyed"
+        | "scorch_discard";
     }
   | {
       type: "initial_hand_drawn";
@@ -197,6 +199,14 @@ export type GameEvent =
       cardId: CardInstanceId;
       abilityId: string;
       outcome?: string;
+    }
+  | {
+      type: "scorch_resolved";
+      sourceId: string;
+      cardId: CardInstanceId;
+      abilityId: "scorch" | "scorch_close";
+      targetCardIds: CardInstanceId[];
+      outcome: "destroyed" | "no_targets" | "below_threshold";
     }
   | { type: "card_drawn"; seatId: SeatId; cardId: CardInstanceId; sourceId: string }
   | { type: "prompt_opened"; prompt: PendingPrompt }

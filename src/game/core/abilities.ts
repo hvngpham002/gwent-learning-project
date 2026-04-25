@@ -1,6 +1,7 @@
 import type { CatalogAbilityId, CatalogCardSource, CatalogRow } from "@/game/catalog";
 
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
+import { calculateScores, findUnitScorchCloseTargets } from "./scoring";
 import type {
   CardInstanceId,
   GameEvent,
@@ -153,6 +154,18 @@ const emitDeferred = (
   events.push({ type: "ability_deferred", sourceId: source.sourceId, cardId, abilityId, reason });
 };
 
+const emitDiscardTriggerDeferrals = (
+  events: GameEvent[],
+  targetSource: CatalogCardSource | undefined,
+  targetCardId: CardInstanceId,
+) => {
+  targetSource?.abilities.forEach((abilityId) => {
+    if (abilityId === "summon" || abilityId === "avenger") {
+      emitDeferred(events, targetSource, targetCardId, abilityId, "discard_trigger_pending");
+    }
+  });
+};
+
 const drawCards = (state: MatchState, events: GameEvent[], seatId: SeatId, count: number) => {
   const drawn = state.seats[seatId].deck.slice(0, count);
   drawn.forEach((cardId) => {
@@ -286,6 +299,37 @@ const resolveMusterLike = (
   emitResolved(events, source, cardId, abilityId, moved === 0 ? "no_targets" : "played_linked");
 };
 
+const resolveScorchClose = (
+  state: MatchState,
+  events: GameEvent[],
+  catalogCards: readonly CatalogCardSource[],
+  catalogLookup: ReadonlyMap<string, CatalogCardSource>,
+  source: CatalogCardSource,
+  seatId: SeatId,
+  cardId: CardInstanceId,
+) => {
+  emitTriggered(events, source, cardId, "scorch_close");
+  const breakdown = calculateScores({ state, catalogCards });
+  const result = findUnitScorchCloseTargets(breakdown, seatId);
+
+  result.targets.forEach((target) => {
+    const targetInstance = state.cardsById[target.cardId];
+    const controller = targetInstance.controller;
+    moveCard(state, events, target.cardId, { kind: "discard", seat: controller }, "scorch_destroyed");
+    emitDiscardTriggerDeferrals(events, catalogLookup.get(target.sourceId), target.cardId);
+  });
+
+  events.push({
+    type: "scorch_resolved",
+    sourceId: source.sourceId,
+    cardId,
+    abilityId: "scorch_close",
+    targetCardIds: result.targets.map((target) => target.cardId),
+    outcome: result.outcome,
+  });
+  emitResolved(events, source, cardId, "scorch_close", result.outcome);
+};
+
 export const resolveCardAbilities = ({ state, events, catalogCards, seatId, cardId }: AbilityResolverInput) => {
   const catalogLookup = createCardLookup(catalogCards);
   const source = catalogLookup.get(state.cardsById[cardId].sourceId);
@@ -307,9 +351,11 @@ export const resolveCardAbilities = ({ state, events, catalogCards, seatId, card
       resolveMusterLike(state, events, catalogLookup, source, seatId, cardId, "muster");
     } else if (abilityId === "muster_roach") {
       resolveMusterLike(state, events, catalogLookup, source, seatId, cardId, "muster_roach");
-    } else if (abilityId === "scorch_close" || abilityId === "scorch") {
+    } else if (abilityId === "scorch_close") {
+      resolveScorchClose(state, events, catalogCards, catalogLookup, source, seatId, cardId);
+    } else if (abilityId === "scorch") {
       emitTriggered(events, source, cardId, abilityId);
-      emitDeferred(events, source, cardId, abilityId, "requires_scoring");
+      emitDeferred(events, source, cardId, abilityId, "requires_special_resolution");
     } else if (ONGOING_STATE_ABILITIES.has(abilityId)) {
       emitTriggered(events, source, cardId, abilityId);
       emitResolved(events, source, cardId, abilityId, "represented_by_board_state");
