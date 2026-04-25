@@ -1,0 +1,261 @@
+import { createSelector } from "@reduxjs/toolkit";
+
+import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
+import type { CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
+import {
+  calculateScores,
+  getLegalMoves,
+  type CardInstance,
+  type CardInstanceId,
+  type MatchState,
+  type SeatId,
+  type ZoneRef,
+} from "@/game/core";
+import type { RootState } from "@/store";
+
+const ROWS: readonly CatalogRow[] = ["close", "ranged", "siege"];
+
+export interface EngineCardViewModel {
+  instanceId: CardInstanceId;
+  sourceId: string;
+  name: string;
+  kind: CatalogCardSource["kind"] | "leader";
+  faction: CatalogCardSource["faction"] | CatalogLeaderSource["faction"];
+  rows: CatalogRow[];
+  abilities: CatalogCardSource["abilities"] | [CatalogLeaderSource["ability"]];
+  printedStrength: number;
+  owner: SeatId;
+  controller: SeatId;
+  zone: ZoneRef;
+}
+
+export interface EngineBoardRowViewModel {
+  seatId: SeatId;
+  row: CatalogRow;
+  units: EngineCardViewModel[];
+  horn: EngineCardViewModel | null;
+}
+
+const cardSourceById: ReadonlyMap<string, CatalogCardSource> = new Map(
+  currentCatalogCards.map((card) => [card.sourceId, card]),
+);
+const leaderSourceById: ReadonlyMap<string, CatalogLeaderSource> = new Map(
+  currentCatalogLeaders.map((leader) => [leader.sourceId, leader]),
+);
+
+export const selectEngineState = (state: RootState) => state.engine;
+export const selectEngineMatch = (state: RootState) => state.engine.match;
+export const selectEngineStatus = (state: RootState) => state.engine.status;
+export const selectEngineLock = (state: RootState) => state.engine.lock;
+export const selectEnginePrompt = createSelector(selectEngineMatch, (match) => match?.pendingPrompt ?? null);
+export const selectEngineCurrentSeat = createSelector(selectEngineMatch, (match) => match?.currentTurn ?? null);
+export const selectEngineHumanSeat = (state: RootState) => state.engine.seatMap.human;
+export const selectEngineAiSeat = (state: RootState) => state.engine.seatMap.ai;
+export const selectEngineRoundHistory = createSelector(selectEngineMatch, (match) => match?.roundHistory ?? []);
+export const selectEngineLastError = (state: RootState) => state.engine.lastError;
+export const selectEngineSeed = createSelector(selectEngineMatch, (match) => match?.rng.seed ?? null);
+
+const toCardViewModel = (instance: CardInstance): EngineCardViewModel | null => {
+  if (instance.sourceKind === "leader") {
+    const source = leaderSourceById.get(instance.sourceId);
+    return source
+      ? {
+          instanceId: instance.instanceId,
+          sourceId: instance.sourceId,
+          name: source.name,
+          kind: "leader",
+          faction: source.faction,
+          rows: [],
+          abilities: [source.ability],
+          printedStrength: 0,
+          owner: instance.owner,
+          controller: instance.controller,
+          zone: instance.zone,
+        }
+      : null;
+  }
+
+  const source = cardSourceById.get(instance.sourceId);
+  return source
+    ? {
+        instanceId: instance.instanceId,
+        sourceId: instance.sourceId,
+        name: source.name,
+        kind: source.kind,
+        faction: source.faction,
+        rows: source.rows,
+        abilities: source.abilities,
+        printedStrength: source.strength,
+        owner: instance.owner,
+        controller: instance.controller,
+        zone: instance.zone,
+      }
+    : null;
+};
+
+const cardIdsToViewModels = (match: MatchState, cardIds: readonly CardInstanceId[]) =>
+  cardIds.flatMap((cardId) => {
+    const instance = match.cardsById[cardId];
+    const viewModel = instance ? toCardViewModel(instance) : null;
+    return viewModel ? [viewModel] : [];
+  });
+
+export const selectEngineLegalMovesForSeat = (seatId: SeatId) =>
+  createSelector(selectEngineMatch, (match) =>
+    match
+      ? getLegalMoves({
+          state: match,
+          seatId,
+          catalogCards: currentCatalogCards,
+          catalogLeaders: currentCatalogLeaders,
+        })
+      : [],
+  );
+
+export const selectEngineLegalMovesForHuman = createSelector(
+  selectEngineMatch,
+  selectEngineHumanSeat,
+  (match, humanSeat) =>
+    match
+      ? getLegalMoves({
+          state: match,
+          seatId: humanSeat,
+          catalogCards: currentCatalogCards,
+          catalogLeaders: currentCatalogLeaders,
+        })
+      : [],
+);
+
+export const selectEngineLegalMovesForAi = createSelector(selectEngineMatch, selectEngineAiSeat, (match, aiSeat) =>
+  match
+    ? getLegalMoves({
+        state: match,
+        seatId: aiSeat,
+        catalogCards: currentCatalogCards,
+        catalogLeaders: currentCatalogLeaders,
+      })
+    : [],
+);
+
+const canSeatAct = (state: RootState, seatId: SeatId) => {
+  const match = selectEngineMatch(state);
+  const lock = selectEngineLock(state);
+  if (!match || match.phase === "game_end") {
+    return false;
+  }
+
+  if (lock) {
+    return lock.kind === "prompt" && lock.owner === seatId;
+  }
+
+  if (match.pendingPrompt) {
+    return match.pendingPrompt.seatId === seatId;
+  }
+
+  if (match.phase === "mulligan") {
+    return !match.seats[seatId].mulliganComplete;
+  }
+
+  if (match.phase === "playing") {
+    return match.currentTurn === seatId && !match.seats[seatId].passed;
+  }
+
+  if (match.phase === "round_end") {
+    return match.seats.seat_a.passed && match.seats.seat_b.passed;
+  }
+
+  return false;
+};
+
+export const selectEngineCanHumanAct = (state: RootState) => canSeatAct(state, state.engine.seatMap.human);
+export const selectEngineCanAiAct = (state: RootState) => canSeatAct(state, state.engine.seatMap.ai);
+
+export const selectEngineScoreBreakdown = createSelector(selectEngineMatch, (match) =>
+  match ? calculateScores({ state: match, catalogCards: currentCatalogCards, catalogLeaders: currentCatalogLeaders }) : null,
+);
+
+export const selectEngineGameWinner = createSelector(selectEngineMatch, (match) => {
+  if (!match || match.phase !== "game_end") {
+    return null;
+  }
+  const lastRound = match.roundHistory[match.roundHistory.length - 1];
+  if (!lastRound) {
+    return null;
+  }
+  const seatsOut = (["seat_a", "seat_b"] as const).filter((seatId) => match.seats[seatId].gems <= 0);
+  if (seatsOut.length === 2) {
+    return "draw";
+  }
+  if (seatsOut.length === 1) {
+    return seatsOut[0] === "seat_a" ? "seat_b" : "seat_a";
+  }
+  return null;
+});
+
+export const selectEngineHumanHand = createSelector(selectEngineMatch, selectEngineHumanSeat, (match, humanSeat) =>
+  match ? cardIdsToViewModels(match, match.seats[humanSeat].hand) : [],
+);
+
+export const selectEngineAiHandCount = createSelector(selectEngineMatch, selectEngineAiSeat, (match, aiSeat) =>
+  match ? match.seats[aiSeat].hand.length : 0,
+);
+
+export const selectEngineDebugAiHandCards = createSelector(selectEngineMatch, selectEngineAiSeat, (match, aiSeat) =>
+  match ? cardIdsToViewModels(match, match.seats[aiSeat].hand) : [],
+);
+
+export const selectEngineBoardRows = createSelector(selectEngineMatch, (match): EngineBoardRowViewModel[] => {
+  if (!match) {
+    return [];
+  }
+
+  return (["seat_a", "seat_b"] as const).flatMap((seatId) =>
+    ROWS.map((row) => ({
+      seatId,
+      row,
+      units: cardIdsToViewModels(match, match.seats[seatId].board[row].units),
+      horn: match.seats[seatId].board[row].horn
+        ? cardIdsToViewModels(match, [match.seats[seatId].board[row].horn]).at(0) ?? null
+        : null,
+    })),
+  );
+});
+
+export const selectEngineWeatherCards = createSelector(selectEngineMatch, (match) =>
+  match ? cardIdsToViewModels(match, match.weather.entries) : [],
+);
+
+export const selectEngineDiscardCounts = createSelector(selectEngineMatch, (match) =>
+  match
+    ? {
+        seat_a: match.seats.seat_a.discard.length,
+        seat_b: match.seats.seat_b.discard.length,
+      }
+    : { seat_a: 0, seat_b: 0 },
+);
+
+export const selectEngineDeckCounts = createSelector(selectEngineMatch, (match) =>
+  match
+    ? {
+        seat_a: match.seats.seat_a.deck.length,
+        seat_b: match.seats.seat_b.deck.length,
+      }
+    : { seat_a: 0, seat_b: 0 },
+);
+
+export const selectEngineLeaderStatus = createSelector(selectEngineMatch, (match) =>
+  match
+    ? {
+        seat_a: {
+          leaderCardId: match.seats.seat_a.leader,
+          sourceId: match.seats.seat_a.leaderSourceId,
+          used: match.seats.seat_a.leaderUsed,
+        },
+        seat_b: {
+          leaderCardId: match.seats.seat_b.leader,
+          sourceId: match.seats.seat_b.leaderSourceId,
+          used: match.seats.seat_b.leaderUsed,
+        },
+      }
+    : null,
+);

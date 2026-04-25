@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import gameReducer from './slices/gameSlice';
 import uiReducer from './slices/uiSlice';
+import engineReducer from './slices/engineSlice';
 
 export const store = configureStore({
   reducer: {
     game: gameReducer,
     ui: uiReducer,
+    engine: engineReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
