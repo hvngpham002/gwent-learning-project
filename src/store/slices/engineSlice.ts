@@ -50,6 +50,7 @@ export interface EngineAdapterState {
   lastError: EngineAdapterError | null;
   selectedMoveId: string | null;
   selectedCardId: CardInstanceId | null;
+  selectedCardIds: CardInstanceId[];
 }
 
 const defaultSeatMap: EngineAdapterState["seatMap"] = {
@@ -95,6 +96,7 @@ export const createInitialEngineState = (): EngineAdapterState => ({
   lastError: null,
   selectedMoveId: null,
   selectedCardId: null,
+  selectedCardIds: [],
 });
 
 const engineSlice = createSlice({
@@ -120,6 +122,7 @@ const engineSlice = createSlice({
       state.lastError = null;
       state.selectedMoveId = null;
       state.selectedCardId = null;
+      state.selectedCardIds = [];
     },
     engineCommandResolving: (
       state,
@@ -205,6 +208,15 @@ const engineSlice = createSlice({
     engineSelectedCardSet: (state, action: PayloadAction<CardInstanceId | null>) => {
       state.selectedCardId = action.payload;
     },
+    engineSelectedCardIdsSet: (state, action: PayloadAction<CardInstanceId[]>) => {
+      state.selectedCardIds = action.payload;
+      state.selectedCardId = action.payload.at(-1) ?? null;
+    },
+    engineSelectionCleared: (state) => {
+      state.selectedMoveId = null;
+      state.selectedCardId = null;
+      state.selectedCardIds = [];
+    },
   },
 });
 
@@ -216,8 +228,10 @@ export const {
   engineMatchStarted,
   enginePresentationLockCleared,
   enginePresentationLockSet,
+  engineSelectedCardIdsSet,
   engineSelectedCardSet,
   engineSelectedMoveSet,
+  engineSelectionCleared,
 } = engineSlice.actions;
 
 export default engineSlice.reducer;

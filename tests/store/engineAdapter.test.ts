@@ -2,8 +2,10 @@ import { configureStore } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vitest";
 
 import engineReducer from "@/store/slices/engineSlice";
-import { dispatchEngineCommand, startEngineMatch } from "@/store/thunks/engineThunks";
+import { engineSelectedCardIdsSet } from "@/store/slices/engineSlice";
+import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 import {
+  selectEngineDebugAiHandCards,
   selectEngineAiHandCount,
   selectEngineCanHumanAct,
   selectEngineHumanHand,
@@ -116,7 +118,73 @@ describe("engine Redux adapter", () => {
     expect(selectEngineLegalMovesForHuman(state).some((move) => move.kind === "choose_mulligan")).toBe(true);
     expect(selectEngineCanHumanAct(state)).toBe(true);
     expect(selectEngineScoreBreakdown(state)?.totalBySeat).toEqual({ seat_a: 0, seat_b: 0 });
-    expect(selectEngineHumanHand(state)).toHaveLength(10);
+    const humanHand = selectEngineHumanHand(state);
+    expect(humanHand).toHaveLength(10);
+    expect(humanHand[0]).toEqual(
+      expect.objectContaining({
+        image: expect.stringMatching(/^\/images\//),
+        name: expect.any(String),
+        sourceId: expect.any(String),
+      }),
+    );
     expect(selectEngineAiHandCount(state)).toBe(10);
+    expect(selectEngineDebugAiHandCards(state)).toHaveLength(10);
+  });
+
+  it("clears engine UI selection after a human mulligan command is applied", () => {
+    const store = createTestStore();
+    store.dispatch(startEngineMatch({ seed: "adapter-selection-clear" }));
+    const selected = store.getState().engine.match?.seats.seat_a.hand.slice(0, 2) ?? [];
+
+    store.dispatch(engineSelectedCardIdsSet(selected));
+    expect(store.getState().engine.selectedCardIds).toEqual(selected);
+
+    store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_a", cardIds: selected }));
+
+    expect(store.getState().engine.match?.seats.seat_a.mulliganComplete).toBe(true);
+    expect(store.getState().engine.selectedCardIds).toEqual([]);
+    expect(store.getState().engine.selectedCardId).toBeNull();
+  });
+
+  it("supports the scripted vertical slice through mulligan, pass, and ResolveRoundEnd", () => {
+    const store = createTestStore();
+    store.dispatch(startEngineMatch({ seed: "adapter-round-flow" }));
+
+    store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_a", cardIds: [] }));
+    store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_b", cardIds: [] }));
+    expect(store.getState().engine.match?.phase).toBe("playing");
+
+    const currentTurn = store.getState().engine.match?.currentTurn;
+    expect(currentTurn).toBeTruthy();
+    store.dispatch(dispatchEngineCommand({ type: "Pass", seatId: currentTurn! }));
+    const nextTurn = store.getState().engine.match?.currentTurn;
+    expect(nextTurn).toBeTruthy();
+    if (nextTurn !== currentTurn) {
+      store.dispatch(dispatchEngineCommand({ type: "Pass", seatId: nextTurn! }));
+    }
+    expect(store.getState().engine.match?.phase).toBe("round_end");
+
+    store.dispatch(resolveEngineRoundEnd("seat_a"));
+
+    const state = store.getState();
+    expect(state.engine.commandHistory.at(-1)).toEqual(
+      expect.objectContaining({
+        status: "applied",
+        command: { type: "ResolveRoundEnd", seatId: "seat_a" },
+      }),
+    );
+    expect(state.engine.lastTransactionEvents.some((event) => event.type === "round_resolved")).toBe(true);
+  });
+
+  it("default human-facing engine state exposes AI hand count but no AI hand card details", () => {
+    const store = createTestStore();
+    store.dispatch(startEngineMatch({ seed: "adapter-hidden-ai" }));
+
+    const state = store.getState();
+    expect(selectEngineAiHandCount(state)).toBe(10);
+    expect(Object.keys(state.engine).includes("aiHandCards")).toBe(false);
+    expect(selectEngineHumanHand(state).map((card) => card.name)).not.toEqual(
+      selectEngineDebugAiHandCards(state).map((card) => card.name),
+    );
   });
 });

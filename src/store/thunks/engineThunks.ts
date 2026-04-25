@@ -21,6 +21,7 @@ import {
   engineCommandRejected,
   engineCommandResolving,
   engineMatchStarted,
+  engineSelectionCleared,
   type EngineAdapterError,
   type EngineAdapterState,
 } from "@/store/slices/engineSlice";
@@ -157,6 +158,7 @@ export const dispatchEngineCommand =
         catalogLeaders: currentCatalogLeaders,
       });
       dispatch(engineCommandApplied({ command, match: transaction.state, events: transaction.events, sequence }));
+      dispatch(engineSelectionCleared());
     } catch (error) {
       dispatch(engineCommandRejected({ command, sequence, error: toAdapterError(error) }));
     }

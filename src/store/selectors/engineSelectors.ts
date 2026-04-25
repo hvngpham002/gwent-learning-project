@@ -19,6 +19,7 @@ export interface EngineCardViewModel {
   instanceId: CardInstanceId;
   sourceId: string;
   name: string;
+  image: string;
   kind: CatalogCardSource["kind"] | "leader";
   faction: CatalogCardSource["faction"] | CatalogLeaderSource["faction"];
   rows: CatalogRow[];
@@ -54,6 +55,7 @@ export const selectEngineAiSeat = (state: RootState) => state.engine.seatMap.ai;
 export const selectEngineRoundHistory = createSelector(selectEngineMatch, (match) => match?.roundHistory ?? []);
 export const selectEngineLastError = (state: RootState) => state.engine.lastError;
 export const selectEngineSeed = createSelector(selectEngineMatch, (match) => match?.rng.seed ?? null);
+export const selectEngineSelectedCardIds = (state: RootState) => state.engine.selectedCardIds;
 
 const toCardViewModel = (instance: CardInstance): EngineCardViewModel | null => {
   if (instance.sourceKind === "leader") {
@@ -63,6 +65,7 @@ const toCardViewModel = (instance: CardInstance): EngineCardViewModel | null => 
           instanceId: instance.instanceId,
           sourceId: instance.sourceId,
           name: source.name,
+          image: source.image,
           kind: "leader",
           faction: source.faction,
           rows: [],
@@ -81,6 +84,7 @@ const toCardViewModel = (instance: CardInstance): EngineCardViewModel | null => 
         instanceId: instance.instanceId,
         sourceId: instance.sourceId,
         name: source.name,
+        image: source.image,
         kind: source.kind,
         faction: source.faction,
         rows: source.rows,
@@ -249,11 +253,15 @@ export const selectEngineLeaderStatus = createSelector(selectEngineMatch, (match
         seat_a: {
           leaderCardId: match.seats.seat_a.leader,
           sourceId: match.seats.seat_a.leaderSourceId,
+          name: leaderSourceById.get(match.seats.seat_a.leaderSourceId)?.name ?? match.seats.seat_a.leaderSourceId,
+          image: leaderSourceById.get(match.seats.seat_a.leaderSourceId)?.image ?? "",
           used: match.seats.seat_a.leaderUsed,
         },
         seat_b: {
           leaderCardId: match.seats.seat_b.leader,
           sourceId: match.seats.seat_b.leaderSourceId,
+          name: leaderSourceById.get(match.seats.seat_b.leaderSourceId)?.name ?? match.seats.seat_b.leaderSourceId,
+          image: leaderSourceById.get(match.seats.seat_b.leaderSourceId)?.image ?? "",
           used: match.seats.seat_b.leaderUsed,
         },
       }
