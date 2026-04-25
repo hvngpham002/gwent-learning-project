@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useMemo } from "react";
 
 import { getEngineSeedFromSearch } from "@/appMode";
-import type { CardInstanceId, EngineCommand, SeatId } from "@/game/core";
+import type { CardInstanceId, SeatId } from "@/game/core";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectEngineAiHandCount,
   selectEngineAiSeat,
   selectEngineBoardRows,
   selectEngineCanHumanAct,
-  selectEngineCurrentSeat,
   selectEngineDeckCounts,
   selectEngineDiscardCounts,
   selectEngineGameWinner,
@@ -17,8 +16,10 @@ import {
   selectEngineLastError,
   selectEngineLeaderStatus,
   selectEngineLegalMovesForHuman,
+  selectEngineLock,
   selectEngineMatch,
   selectEnginePrompt,
+  selectEngineRoundHistory,
   selectEngineScoreBreakdown,
   selectEngineSeed,
   selectEngineSelectedCardId,
@@ -35,14 +36,22 @@ import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "
 import {
   buildPromptViewModel,
   describeLeaderMove,
-  describePlayTarget,
   getPromptOptionMoves,
   getPlayableCardIds,
   getPlayMovesForCard,
   getUseLeaderMoves,
   shouldDisableLeaderAction,
-  shouldDisableHandCard,
 } from "./engine/playMoveHelpers";
+import {
+  buildMatchStatusBanner,
+  ENGINE_AI_POLICY_ID,
+  getHandCardState,
+  groupTargetActions,
+  summarizeCommandHistory,
+  summarizeEvents,
+  summarizeRoundEnd,
+  summarizeRoundHistory,
+} from "./engine/engineShellViewModels";
 import { getLegalHeuristicAiCommand } from "./engine/legalHeuristicAiController";
 import "@/styles/components/engine-game.css";
 
@@ -60,22 +69,30 @@ const SEAT_LABELS: Record<SeatId, string> = {
 const cardKindLabel = (card: EngineCardViewModel) =>
   card.kind === "unit" || card.kind === "hero" ? `${card.kind} ${card.printedStrength}` : card.kind;
 
+const abilitySummary = (card: EngineCardViewModel) =>
+  card.abilities.length > 0 ? card.abilities.map((ability) => ability.replace(/_/g, " ")).join(", ") : "none";
+
 const EngineCardTile: React.FC<{
   card: EngineCardViewModel;
   selected?: boolean;
   disabled?: boolean;
+  playable?: boolean;
+  disabledReason?: string | null;
   onClick?: () => void;
-}> = ({ card, selected = false, disabled = true, onClick }) => (
+}> = ({ card, selected = false, disabled = true, playable = false, disabledReason = null, onClick }) => (
   <button
     type="button"
-    className={`engine-card${selected ? " engine-card--selected" : ""}`}
+    className={`engine-card${selected ? " engine-card--selected" : ""}${playable ? " engine-card--playable" : ""}${
+      disabledReason ? " engine-card--disabled-reason" : ""
+    }`}
     disabled={disabled}
     onClick={onClick}
-    title={`${card.name} (${card.sourceId})`}
+    title={disabledReason ? `${card.name}: ${disabledReason}` : `${card.name} (${card.sourceId})`}
   >
     <img src={card.image} alt={card.name} className="engine-card__image" />
     <span className="engine-card__name">{card.name}</span>
     <span className="engine-card__meta">{cardKindLabel(card)}</span>
+    {disabledReason ? <span className="engine-card__reason">{disabledReason}</span> : null}
   </button>
 );
 
@@ -88,25 +105,14 @@ const sameCardSelection = (left: readonly CardInstanceId[], right: readonly Card
   return leftSorted.every((cardId, index) => cardId === rightSorted[index]);
 };
 
-const commandLabel = (command: Exclude<EngineCommand, { type: "StartMatch" }>) => {
-  if (command.type === "ChooseMulligan") return "ChooseMulligan";
-  if (command.type === "PlayCard") return "PlayCard";
-  if (command.type === "Pass") return "Pass";
-  if (command.type === "ResolveRoundEnd") return "ResolveRoundEnd";
-  if (command.type === "ChoosePromptOption") return "ChoosePromptOption";
-  return command.type;
-};
-
-const eventLabel = (eventType: string) => eventType.replace(/_/g, " ");
-
 const EngineGameManager: React.FC = () => {
   const dispatch = useAppDispatch();
   const engine = useAppSelector(selectEngineState);
   const match = useAppSelector(selectEngineMatch);
   const status = useAppSelector(selectEngineStatus);
+  const lock = useAppSelector(selectEngineLock);
   const humanSeat = useAppSelector(selectEngineHumanSeat);
   const aiSeat = useAppSelector(selectEngineAiSeat);
-  const currentSeat = useAppSelector(selectEngineCurrentSeat);
   const canHumanAct = useAppSelector(selectEngineCanHumanAct);
   const seed = useAppSelector(selectEngineSeed);
   const humanHand = useAppSelector(selectEngineHumanHand);
@@ -120,6 +126,7 @@ const EngineGameManager: React.FC = () => {
   const score = useAppSelector(selectEngineScoreBreakdown);
   const leaders = useAppSelector(selectEngineLeaderStatus);
   const prompt = useAppSelector(selectEnginePrompt);
+  const roundHistory = useAppSelector(selectEngineRoundHistory);
   const winner = useAppSelector(selectEngineGameWinner);
   const lastError = useAppSelector(selectEngineLastError);
   const humanMoves = useAppSelector(selectEngineLegalMovesForHuman);
@@ -157,6 +164,10 @@ const EngineGameManager: React.FC = () => {
 
   const playableCardIds = useMemo(() => getPlayableCardIds(humanMoves), [humanMoves]);
   const selectedPlayMoves = useMemo(() => getPlayMovesForCard(humanMoves, selectedCardId), [humanMoves, selectedCardId]);
+  const selectedCard = useMemo(
+    () => humanHand.find((card) => card.instanceId === selectedCardId) ?? null,
+    [humanHand, selectedCardId],
+  );
   const leaderMoves = useMemo(() => getUseLeaderMoves(humanMoves), [humanMoves]);
   const leaderMove = leaderMoves[0] ?? null;
   const promptMoves = useMemo(() => getPromptOptionMoves(humanMoves), [humanMoves]);
@@ -193,6 +204,50 @@ const EngineGameManager: React.FC = () => {
         : null,
     [prompt, promptMoves, visibleCardsById],
   );
+  const targetGroups = useMemo(
+    () => groupTargetActions(selectedPlayMoves, visibleCardsById),
+    [selectedPlayMoves, visibleCardsById],
+  );
+  const statusBanner = useMemo(
+    () =>
+      buildMatchStatusBanner({
+        match,
+        status,
+        lock,
+        humanSeat,
+        aiSeat,
+        canHumanAct,
+        lastError,
+        winner,
+        seatLabels: SEAT_LABELS,
+      }),
+    [aiSeat, canHumanAct, humanSeat, lastError, lock, match, status, winner],
+  );
+  const recentCommands = useMemo(
+    () =>
+      summarizeCommandHistory({
+        records: engine.commandHistory.slice(-6),
+        aiSeat,
+        seatLabels: SEAT_LABELS,
+        publicCardLookup: visibleCardsById,
+      }),
+    [aiSeat, engine.commandHistory, visibleCardsById],
+  );
+  const recentEvents = useMemo(
+    () => summarizeEvents({ events: engine.lastTransactionEvents.slice(-6), seatLabels: SEAT_LABELS, publicCardLookup: visibleCardsById }),
+    [engine.lastTransactionEvents, visibleCardsById],
+  );
+  const roundEndSummary = useMemo(
+    () =>
+      score
+        ? summarizeRoundEnd({
+            scoreBySeat: score.totalBySeat,
+            seatLabels: SEAT_LABELS,
+          })
+        : null,
+    [score],
+  );
+  const roundHistoryView = useMemo(() => summarizeRoundHistory(roundHistory, SEAT_LABELS), [roundHistory]);
 
   useEffect(() => {
     if (!selectedCardId) {
@@ -305,15 +360,23 @@ const EngineGameManager: React.FC = () => {
       <header className="engine-shell__header">
         <div>
           <h1>Engine Match</h1>
-          <p>
-            Seed {String(seed ?? startSeed ?? "default")} · phase {match?.phase ?? "idle"} · round {match?.round ?? "-"} ·
-            turn {currentSeat ? SEAT_LABELS[currentSeat] : "-"} · status {status}
-          </p>
+          <p>Seed {String(seed ?? startSeed ?? "default")} · AI {ENGINE_AI_POLICY_ID}</p>
         </div>
         <button type="button" className="engine-action" onClick={startNewGame}>
           New Game
         </button>
       </header>
+
+      <section className="engine-status-banner" aria-label="Match status">
+        <div className="engine-status-banner__meta">
+          <span>{statusBanner.phaseLabel}</span>
+          <span>{statusBanner.roundLabel}</span>
+          <span>{statusBanner.actorLabel}</span>
+          <span>{statusBanner.adapterLabel}</span>
+        </div>
+        <strong>{statusBanner.nextAction}</strong>
+        {statusBanner.errorLabel ? <p className="engine-error">{statusBanner.errorLabel}</p> : null}
+      </section>
 
       {match && (
         <section className="engine-status-grid" aria-label="Seat status">
@@ -399,41 +462,58 @@ const EngineGameManager: React.FC = () => {
           <div className="engine-control-panel engine-play-panel">
             <h2>Card Play</h2>
             <p>
-              {selectedCardId
-                ? `${selectedPlayMoves.length} legal target${selectedPlayMoves.length === 1 ? "" : "s"}`
+              {selectedCard
+                ? `${selectedCard.name} · ${selectedCard.kind} · ${abilitySummary(selectedCard)}`
                 : `${playableCardIds.size} playable card${playableCardIds.size === 1 ? "" : "s"}`}
             </p>
-            <div className="engine-target-actions">
-              {selectedPlayMoves.map((move) => (
-                <button
-                  key={move.moveId}
-                  type="button"
-                  className="engine-action"
-                  onClick={() => playCard(move.moveId)}
-                  title={move.label}
-                >
-                  {move.metadata.cardName}: {describePlayTarget(move, visibleCardsById)}
-                </button>
+            {!selectedCard ? <p>Select a highlighted hand card to show legal target groups.</p> : null}
+            <div className="engine-target-groups">
+              {targetGroups.map((group) => (
+                <div key={group.key} className="engine-target-group">
+                  <h3>{group.label}</h3>
+                  <div className="engine-target-actions">
+                    {group.actions.map((action) => (
+                      <button
+                        key={action.moveId}
+                        type="button"
+                        className="engine-action"
+                        onClick={() => playCard(action.moveId)}
+                        title={action.title}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         ) : null}
         {match?.phase === "round_end" ? (
-          <button type="button" className="engine-action" disabled={!canResolveRound} onClick={resolveRound}>
-            Resolve Round
-          </button>
+          <div className="engine-control-panel">
+            <h2>Round End</h2>
+            {roundEndSummary ? <p>{roundEndSummary.label}</p> : null}
+            <button type="button" className="engine-action" disabled={!canResolveRound} onClick={resolveRound}>
+              {roundEndSummary?.resolveLabel ?? "Resolve Round"}
+            </button>
+          </div>
         ) : null}
         {match?.phase === "game_end" ? (
           <div className="engine-control-panel">
             <h2>Game End</h2>
-            <p>Winner: {winner === "draw" ? "Draw" : winner ? SEAT_LABELS[winner] : "Unknown"}</p>
+            <p>
+              Winner: {winner === "draw" ? "Draw" : winner ? SEAT_LABELS[winner] : "Unknown"} · final gems{" "}
+              {match.seats.seat_a.gems}-{match.seats.seat_b.gems}
+            </p>
           </div>
         ) : null}
         {prompt ? (
           <div className="engine-control-panel">
             <h2>{promptView?.title ?? prompt.kind}</h2>
+            <p>Owner: {SEAT_LABELS[prompt.seatId]}</p>
             {promptView?.sourceLabel ? <p>{promptView.sourceLabel}</p> : null}
-            {promptView?.options.length ? null : <p>No legal prompt options for the human seat.</p>}
+            {prompt.seatId === aiSeat ? <p>AI resolving prompt from legal moves.</p> : null}
+            {prompt.seatId === humanSeat && !promptView?.options.length ? <p>No legal prompt options for the human seat.</p> : null}
             {promptView?.options.map((move) => (
               <button key={move.moveId} type="button" className="engine-action" onClick={() => choosePromptOption(move.moveId)}>
                 {move.label}
@@ -441,47 +521,63 @@ const EngineGameManager: React.FC = () => {
             ))}
           </div>
         ) : null}
-        {lastError ? <p className="engine-error">{lastError.code}: {lastError.message}</p> : null}
       </section>
 
       <section className="engine-hand" aria-label="Human hand">
         <h2>Human Hand</h2>
         <div className="engine-card-row">
-          {humanHand.map((card) => (
-            <EngineCardTile
-              key={card.instanceId}
-              card={card}
-              selected={
-                match?.phase === "mulligan"
-                  ? selectedCardIds.includes(card.instanceId)
-                  : selectedCardId === card.instanceId
-              }
-              disabled={
-                match?.phase === "mulligan"
-                  ? match.seats[humanSeat].mulliganComplete
-                  : shouldDisableHandCard({
-                      phase: match?.phase,
-                      canHumanAct,
-                      promptOpen: Boolean(prompt),
-                      playableCardIds,
-                      cardId: card.instanceId,
-                    })
-              }
-              onClick={() => selectHandCard(card.instanceId)}
-            />
-          ))}
+          {humanHand.map((card) => {
+            const handState = getHandCardState({
+              phase: match?.phase,
+              isMulliganComplete: match?.seats[humanSeat].mulliganComplete ?? false,
+              canHumanAct,
+              promptOpen: Boolean(prompt),
+              playableCardIds,
+              cardId: card.instanceId,
+              humanPassed: match?.seats[humanSeat].passed ?? false,
+            });
+
+            return (
+              <EngineCardTile
+                key={card.instanceId}
+                card={card}
+                selected={
+                  match?.phase === "mulligan"
+                    ? selectedCardIds.includes(card.instanceId)
+                    : selectedCardId === card.instanceId
+                }
+                playable={match?.phase === "playing" && playableCardIds.has(card.instanceId) && !handState.disabled}
+                disabled={handState.disabled}
+                disabledReason={handState.reasonLabel}
+                onClick={() => selectHandCard(card.instanceId)}
+              />
+            );
+          })}
         </div>
       </section>
 
+      {roundHistoryView.length > 0 ? (
+        <section className="engine-round-history" aria-label="Round history">
+          <h2>Round History</h2>
+          <div className="engine-round-history__list">
+            {roundHistoryView.map((round) => (
+              <span key={round.key}>
+                {round.label} · {round.scoreLabel} · {round.gemLossLabel}
+              </span>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <section className="engine-events" aria-label="Recent engine commands">
-        <h2>Recent Commands</h2>
-        {engine.commandHistory.slice(-5).map((record) => (
-          <span key={record.sequence}>
-            #{record.sequence} {commandLabel(record.command)} {record.status}
+        <h2>Recent Activity</h2>
+        {recentCommands.map((record) => (
+          <span key={record.key} className={record.isAiAction ? "engine-events__ai" : undefined}>
+            {record.label}
           </span>
         ))}
-        {engine.lastTransactionEvents.slice(-4).map((event, index) => (
-          <span key={`${event.type}-${index}`}>event: {eventLabel(event.type)}</span>
+        {recentEvents.map((event) => (
+          <span key={event.key}>event: {event.label}</span>
         ))}
       </section>
     </main>

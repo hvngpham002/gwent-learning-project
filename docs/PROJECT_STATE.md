@@ -4,7 +4,7 @@
 
 - Date: 2026-04-25
 - Phase/spec: `cDp6` engine shell playability polish spec
-- Latest relevant commit: `260d7ec` (`cDp5` implementation); `cDp6` spec pending commit
+- Latest relevant commit: this `cDp6` implementation commit
 
 ## Required Reading For Every Coding Instance
 
@@ -40,6 +40,7 @@
 | `cDp3` | Cluster D Phase 9 split | `audit/reports/2026-04-25-cDp3-report.md` | Added legal-move-backed human card play through button-driven target actions. |
 | `cDp4` | Cluster D Phase 9 split | `audit/reports/2026-04-25-cDp4-report.md` | Added legal-move-backed leader and prompt controls plus special-action diagnostics. |
 | `cDp5` | Cluster D Phase 10 split | `audit/reports/2026-04-25-cDp5-report.md` | Replaced pass-only preview AI with deterministic `legal-heuristic-v0` over engine legal moves. |
+| `cDp6` | Cluster D Phase 10 shell polish split | `audit/reports/2026-04-25-cDp6-report.md` | Added shell view-model helpers, clearer status/next-action UX, grouped target actions, hidden-info-safe activity summaries, and round history display. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -47,6 +48,8 @@
 The engine UI can start a current Northern Realms vs Nilfgaard match, complete human and AI mulligans, render engine state, play human cards through engine legal moves, use implemented legal leader moves, resolve human prompts from legal prompt moves, pass, resolve rounds, and show game end without auto-starting a new game.
 
 The AI seat now uses `legal-heuristic-v0`, a deterministic policy that observes public state plus its own hand, selects from engine legal moves, and dispatches exact engine commands for mulligan, card play, prompt choice, useful Clear Weather leader use, and pass decisions.
+
+The opt-in shell now has a compact phase/round/actor/status banner, human hand playable/disabled affordances, grouped selected-card target buttons, prompt ownership clarity, hidden-info-safe recent activity summaries, round-end score context, and a compact round history list.
 
 It cannot yet provide strong strategic AI parity, polished spatial board interactions, full deck-building flows, persistence, PvP, simulations, ML exports, or default-route engine gameplay.
 
@@ -65,10 +68,12 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 - `legal-heuristic-v0` is intentionally weak and deterministic; it proves legal-move AI plumbing but is not full strategic AI.
 - Current catalog is incomplete by design.
 - Placeholder leader/card abilities remain deferred until scoped specs implement them.
+- The immediate AI action loop remains effect-driven and intentionally delay-free; shell summaries make the aftermath legible, but richer pacing remains deferred.
+- Mobile layout has wrapping safeguards for controls and target groups, but final spatial board UX remains out of scope.
 
 ## Next Recommended Step
 
-Implement `docs/spec/2026-04-25-cDp6-specs.md`: improve the opt-in engine shell's status banner, hand affordances, grouped target actions, prompt clarity, AI action visibility, round history, and manual click-through evidence. Keep the legacy UI as default and defer AI-vs-AI simulation until the shell is easier to verify manually.
+Run an orchestrator browser review of `/?engine=1&seed=dp6-smoke` for hidden-info display, AI action-loop legibility, and mobile layout, then choose the next bounded Cluster D slice: either a small browser smoke harness or the first headless AI-vs-AI simulation harness.
 
 ## Update Requirements
 
