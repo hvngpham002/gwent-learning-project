@@ -1,6 +1,6 @@
-# 2026-04-24 Gwent Overhaul Plan
+# Gwent Overhaul Plan
 
-This directory is the planning source of truth for rebuilding the current game implementation into a deterministic, data-driven Gwent engine that can support:
+This directory is the stable strategy plan for rebuilding the current game implementation into a deterministic, data-driven Gwent engine that can support:
 
 - the current card set and any future card set;
 - a card/deck authoring workflow;
@@ -8,7 +8,13 @@ This directory is the planning source of truth for rebuilding the current game i
 - human vs AI, player vs player, and AI vs AI modes;
 - large-scale simulations and future machine-learning experiments.
 
-This is a plan only. It intentionally does not prescribe immediate code changes.
+This is a strategic plan, not the operational current-state ledger. Use:
+
+- `docs/PROJECT_STATE.md` as the source of truth for current architecture, completed specs, active risks, and next recommended step;
+- `docs/spec/` for executable implementation specs;
+- `audit/reports/` for phase results and evidence.
+
+The original roadmap phases below are coarse planning phases. Actual specs may split, insert, or reorder work when implementation risk requires it.
 
 ## Assumptions
 
@@ -81,9 +87,10 @@ src/
 | F. Simulation and ML | Add headless simulations, observation/action interfaces, logs, training baselines, and evaluation. | 13-14 |
 | G. Cleanup and hardening | Remove legacy paths, close audit findings, document extension process. | 15 |
 
-## Phase Index
+## Phase Index And Mapping
 
 Detailed phase specs are in [phase-specs.md](phase-specs.md).
+The current actual spec ledger lives in `../PROJECT_STATE.md`.
 
 | Phase | Name | Primary output |
 |---|---|---|
@@ -108,11 +115,12 @@ Detailed phase specs are in [phase-specs.md](phase-specs.md).
 
 This chat instance acts as the orchestrator.
 
-1. The orchestrator picks the next phase and issues an implementation spec.
+1. The orchestrator reads `docs/PROJECT_STATE.md`, picks the next phase, and issues an implementation spec.
 2. A separate implementation instance executes that phase only.
 3. The implementation instance reports back using the report template in [handoff-workflow.md](handoff-workflow.md).
-4. You relay that report here.
-5. The orchestrator compares outcome against this plan, updates the next spec, and pivots if needed.
+4. The implementation instance updates `docs/PROJECT_STATE.md` when required.
+5. You relay that report here.
+6. The orchestrator compares outcome against this plan, updates the next spec, and pivots if needed.
 
 Each phase should be small enough to review. Phases may be split if an implementer uncovers risk, especially in Cluster C.
 
@@ -129,4 +137,3 @@ Each phase should be small enough to review. Phases may be split if an implement
 - Whether in-app Card Studio writes only to localStorage/exported JSON or is paired with a local dev server file-write endpoint. The plan defaults to export/import first.
 - Whether multiplayer starts as local same-device PvP or networked PvP. The plan defaults to local same-device PvP first.
 - Whether ML uses an external Python environment later. The plan keeps TypeScript simulation logs stable so Python can consume them later.
-

@@ -38,8 +38,10 @@ One paragraph.
 
 ## Required Reading
 
-- docs/2026-04-24-overhaul-plan/README.md
-- docs/2026-04-24-overhaul-plan/phase-specs.md
+- AGENTS.md
+- docs/PROJECT_STATE.md
+- docs/overhaul-plan/README.md
+- docs/overhaul-plan/phase-specs.md
 - relevant audit files
 - relevant source files
 
@@ -90,6 +92,10 @@ Short description of completed work.
 
 - command: result
 
+## Project State Update
+
+- What changed in `docs/PROJECT_STATE.md`, or why no update was required.
+
 ## Audit Findings Addressed
 
 - R-001: fixed/deferred/not applicable
@@ -117,7 +123,17 @@ When you bring a report back, the orchestrator should check:
 - Did they accidentally patch around an audit root cause instead of removing it?
 - Did they introduce new human/AI divergence?
 - Did they update docs if a planned interface changed?
+- Did the phase update `docs/PROJECT_STATE.md`?
+- Did CI scripts pass?
+- Did forbidden import checks pass?
 - Is the next phase still valid, or should it be split?
+
+## CI Expectations
+
+- Every phase report should list `npm run ci` or explain why a subset was run.
+- UI phases should include smoke evidence.
+- Engine phases should include deterministic tests.
+- Reports should call out failed checks explicitly rather than presenting partial evidence as full CI.
 
 ## Phase Splitting Rules
 
@@ -156,4 +172,3 @@ When you bring an implementation report back here, include:
 - any failed tests;
 - any files the implementer says need review;
 - whether you want a next phase spec or a corrective spec.
-

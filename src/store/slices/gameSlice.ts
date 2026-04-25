@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Card, GameState, PlayerState, BoardState, RowPosition, CardAbility, UnitCard, Faction } from '@/types/card';
+import { Card, GameState, PlayerState, BoardState, RowPosition, CardAbility, UnitCard, Faction, LeaderCard } from '@/types/card';
 
 // Enhanced GameState for Redux with better serialization
 interface ReduxGameState extends Omit<GameState, 'activeWeatherEffects'> {
@@ -54,8 +54,8 @@ export const gameSlice = createSlice({
     initializeGame: (state, action: PayloadAction<{
       playerDeck: Card[];
       opponentDeck: Card[];
-      playerLeader: any;
-      opponentLeader: any;
+      playerLeader: LeaderCard;
+      opponentLeader: LeaderCard;
       playerScore: number;
       opponentScore: number;
     }>) => {

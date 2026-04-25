@@ -2,6 +2,8 @@
 
 Each phase below is written so the orchestrator can hand it to another implementation instance. The implementer should stay inside the named phase unless explicitly authorized to continue.
 
+These phases are the coarse roadmap. Actual specs under `docs/spec/` may split or insert work, and `docs/PROJECT_STATE.md` is the operational source of truth for current state and completed phase mapping.
+
 ## Universal Definition Of Done
 
 Every implementation phase must report:
@@ -11,7 +13,8 @@ Every implementation phase must report:
 - audit findings addressed, by ID where possible;
 - tests run and results;
 - remaining risks or follow-up work;
-- screenshots or smoke reproduction notes when UI changes.
+- screenshots or smoke reproduction notes when UI changes;
+- `Project State Update`, describing the `docs/PROJECT_STATE.md` update or why none was required.
 
 Every engine-facing phase must include deterministic tests where feasible. If no test is added, the report must explain why.
 

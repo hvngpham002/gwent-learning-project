@@ -9,7 +9,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "typecheck": "tsc -b --pretty false",
     "lint": "eslint .",
+    "check:forbidden-imports": "node scripts/check-forbidden-imports.mjs",
+    "check:project-state": "node scripts/check-project-state-update.mjs",
+    "check:worktree-clean": "node scripts/check-worktree-clean.mjs",
+    "ci": "npm run lint && npm test && npm run build && npm run check:forbidden-imports && npm run check:project-state && npm run check:worktree-clean",
     "preview": "vite preview",
     "start": "vite preview --host --port $PORT"
   },

@@ -1,135 +1,85 @@
-# Gwent Card Game - Learning Project 🎮
+# Gwent Card Game - Learning Project
 
-A React-based implementation of the card game Gwent, inspired by The Witcher 3: Wild Hunt. This project serves as an educational exercise in modern web development and game logic implementation.
+A React and TypeScript fan implementation of Gwent, inspired by The Witcher 3: Wild Hunt. The project is currently migrating from a legacy playable UI to a pure engine-backed architecture.
 
-## ⚠️ Important Disclaimer
+## Important Disclaimer
 
 This is a non-commercial fan project created solely for educational purposes and portfolio demonstration:
+
 - Not affiliated with CD PROJEKT RED
 - All Witcher-related intellectual property belongs to CD PROJEKT RED
 - Not for commercial use
 - Created for learning and portfolio demonstration only
 
-## ✨ Features
+## Current Project State
 
-### 🎲 Game Mechanics
-* Complete implementation of basic Gwent gameplay rules
-* AI opponent with strategic decision-making
-* Weather effects system
-* Card abilities (Spy, Tight Bond, Morale Boost, etc.)
-* Multiple factions (Northern Realms, Nilfgaard)
+Read these before contributing:
 
-### ⚛️ Modern React Architecture
-* Built with Vite for fast development and optimized builds
-* TypeScript for type safety and better development experience
-* Component-based architecture with custom hooks
-* State management using React hooks and context
-* Proper separation of concerns (game logic, UI, AI)
+- `AGENTS.md` for repository-specific coding agent rules
+- `docs/PROJECT_STATE.md` for the current architecture, completed phase ledger, active risks, and next recommended step
+- Active implementation specs under `docs/spec/`
+- Latest phase reports under `audit/reports/`
 
-### 🎨 UI/UX Features
-* Responsive design that adapts to screen size
-* Interactive card placement and selection
-* Visual feedback for game state changes
-* Smooth animations for card movements
-* Faction-specific styling and theming
+The app currently has two UI paths:
 
-## 🛠️ Technologies Used
+- Legacy UI remains the default route.
+- Engine UI is opt-in with `?engine=1`, for example `http://127.0.0.1:5173/?engine=1`.
 
-### Core
-* React 18
-* Plain Ole' CSS
-* TypeScript
-* Vite
-* SWC
+The pure engine migration is in progress. Current engine-backed work routes game rules through `src/game/core/`, Redux engine adapter state, and engine legal moves. The legacy UI still exists while the migration continues.
 
-### Development Tools
-* ESLint with TypeScript support
-* Path aliases for clean imports
-* Modern JavaScript features (ES2022+)
+## Commands
 
-## 🎯 Design Patterns & Architecture
+Install dependencies:
 
-### React Patterns
-* Custom hooks for complex logic (useGameLogic, useAI)
-* Component composition for reusability
-* Controlled components for form handling
-* Error boundaries for graceful error handling
-
-### Game Logic Patterns
-* State machine for game flow
-* Strategy pattern for AI decision making
-* Observer pattern for game events
-* Factory pattern for card creation
-
-### Code Organization
-```
-├── src/
-│   ├── components/     # React components
-│   │   ├── card/      # Card-related components
-│   │   ├── game/      # Game management components
-│   │   └── player/    # Player-related components
-│   ├── hooks/         # Custom React hooks
-│   ├── utils/         # Utility functions
-│   ├── types/         # TypeScript type definitions
-│   ├── styles/        # Global styles and CSS modules
-│   └── ai/            # AI strategy implementation
-```
-
-## 🚀 Getting Started
-
-1. Clone the repository:
-```bash
-git clone [repository-url]
-```
-
-2. Install dependencies:
 ```bash
 npm install
 ```
 
-3. Start the development server:
+For CI-like installs:
+
+```bash
+npm ci
+```
+
+Start the dev server:
+
 ```bash
 npm run dev
 ```
 
-4. Build for production:
+Run tests:
+
+```bash
+npm test
+```
+
+Build:
+
 ```bash
 npm run build
 ```
 
-## 🧪 Technical Highlights
+Lint:
 
-### AI Implementation
-* Multi-strategy decision making
-* Card value evaluation system
-* Situational awareness for weather effects
-* Adaptive play style based on game state
+```bash
+npm run lint
+```
 
-### Game Logic
-* Comprehensive rule enforcement
-* Special card ability handling
-* Score calculation system
-* Round management
+Run the aggregate local CI checks:
 
-### Performance Optimizations
-* Efficient card rendering
-* Memoization of expensive calculations
-* Optimized state updates
-* Proper React reconciliation usage
+```bash
+npm run ci
+```
 
-## 📄 License
+## Architecture Overview
+
+- `src/game/core/`: pure engine for match state, commands, legal moves, abilities, scoring, and round/game resolution.
+- `src/game/catalog/` and `src/data/catalog/`: catalog schemas, validators, card data, leaders, and deck presets.
+- `src/store/slices/engineSlice.ts`: Redux adapter state for engine matches, locks, command/event history, errors, and UI-only selections.
+- `src/store/thunks/engineThunks.ts`: dispatches engine commands without reimplementing rules.
+- `src/components/game/EngineGameManager.tsx`: opt-in engine UI shell.
+- Legacy UI paths remain in place until a future spec explicitly removes or replaces them.
+
+## License
 
 This project is licensed under MIT for the codebase. All Witcher-related content, including card names, descriptions, and game mechanics, are intellectual property of CD PROJEKT RED.
-
-## 🙏 Acknowledgements
-
-* CD PROJEKT RED for creating The Witcher series and the original Gwent mini-game
-* React and Vite communities for excellent documentation and tools
-* TypeScript team for providing great type safety tools
-* All contributors and reviewers
-
-## 📫 Contact
-
-Viet Hung Pham - hung.v.pham002@gmail.com
-
-Project Link: [[Repository URL](https://github.com/HungVPham/gwent-learning-project)]

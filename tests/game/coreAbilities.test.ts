@@ -110,13 +110,6 @@ const putInDiscard = (state: MatchState, seatId: SeatId, cardIds: CardInstanceId
   });
 };
 
-const putOnBoard = (state: MatchState, seatId: SeatId, cardId: CardInstanceId, row: CatalogRow) => {
-  removeEverywhere(state, cardId);
-  state.seats[seatId].board[row].units.push(cardId);
-  state.cardsById[cardId].zone = { kind: "board_row", seat: seatId, row };
-  state.cardsById[cardId].controller = seatId;
-};
-
 const preparePlayingTurn = (state: MatchState, seatId: SeatId = "seat_a") => {
   state.phase = "playing";
   state.currentTurn = seatId;

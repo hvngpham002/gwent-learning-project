@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../index';
-import { Card, UnitCard, RowPosition, CardAbility, CardType, LeaderAbility } from '@/types/card';
+import { Card, UnitCard, RowPosition, CardAbility, CardType, LeaderAbility, LeaderCard } from '@/types/card';
 import { PlayDecision } from '@/ai/strategy';
 import { 
   playCardBasic, 
@@ -98,7 +98,7 @@ export const playCardAction = createAsyncThunk<
   if (card.type === CardType.LEADER) {
     dispatch(useLeaderAbility({ player }));
     
-    const leaderCard = card as any; // LeaderCard type
+    const leaderCard = card as LeaderCard;
     switch (leaderCard.ability) {
       case LeaderAbility.CLEAR_WEATHER:
         dispatch(clearWeatherEffects());
@@ -207,8 +207,8 @@ export const handleDecoyAction = createAsyncThunk<
 
   // Find the row containing the target card
   let targetRow: RowPosition | undefined;
-  Object.entries(gameState[boardKey]).forEach(([row, rowState]) => {
-    if (rowState.cards.some((card: any) => card.id === targetCard.id)) {
+  Object.entries(gameState[boardKey] as Record<RowPosition, { cards: UnitCard[] }>).forEach(([row, rowState]) => {
+    if (rowState.cards.some((card) => card.id === targetCard.id)) {
       targetRow = row as RowPosition;
     }
   });
@@ -295,7 +295,7 @@ export const executeAIMedicChain = createAsyncThunk<
   
   // Handle its placement/effect based on ability
   switch (currentTarget.ability) {
-    case CardAbility.SPY:
+    case CardAbility.SPY: {
       // Revived spy should go to opponent's board and draw cards for the player who played it
       const oppositePlayer = player === 'player' ? 'opponent' : 'player';
       dispatch(playCardBasic({ 
@@ -306,6 +306,7 @@ export const executeAIMedicChain = createAsyncThunk<
       }));
       dispatch(drawCards({ player, count: 2 }));
       break;
+    }
       
     case CardAbility.SCORCH_CLOSE:
       await dispatch(handleScorchCloseAction({ player, card: currentTarget, row: currentTarget.row }));
@@ -353,7 +354,7 @@ export const handleMusterAction = createAsyncThunk<
   dispatch(playCardBasic({ player, card, row }));
   
   // Place all muster cards in their appropriate rows
-  musterCards.forEach((musterCard: any) => {
+  musterCards.forEach((musterCard) => {
     dispatch(playCardBasic({ player, card: musterCard, row: musterCard.row }));
   });
 });
@@ -377,10 +378,10 @@ export const handleScorchAction = createAsyncThunk<
   // Remove scorched cards from board and move to discard
   scorchTargets.forEach(target => {
     // Find which board and row the card is on
-    ['playerBoard', 'opponentBoard'].forEach(boardKey => {
-      ['close', 'ranged', 'siege'].forEach(rowKey => {
-        const row = (gameState as any)[boardKey][rowKey as RowPosition];
-        if (row.cards.some((c: any) => c.id === target.id)) {
+    (['playerBoard', 'opponentBoard'] as const).forEach(boardKey => {
+      (['close', 'ranged', 'siege'] as const).forEach(rowKey => {
+        const row = gameState[boardKey][rowKey];
+        if (row.cards.some((card) => card.id === target.id)) {
           const targetPlayer = boardKey === 'playerBoard' ? 'player' : 'opponent';
           dispatch(removeCardFromBoard({ 
             player: targetPlayer, 

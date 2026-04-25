@@ -7,7 +7,8 @@ import {
   UnitCard, 
   SpecialCard, 
   RowPosition,
-  LeaderAbility 
+  LeaderAbility,
+  GameState
 } from '@/types/card';
 import GameBoard from './GameBoard';
 import { canPlayWeatherInRow } from '@/utils/gameHelpers';
@@ -189,7 +190,7 @@ const ReduxGameManager: React.FC = () => {
       dispatch(setSelectedCard(card));
       dispatch(setIsDecoyActive(false));
     }
-  }, [canPlayerAct, playerHand, selectedCard, playerDiscard, dispatch]);
+  }, [canPlayerAct, playerHand, selectedCard, dispatch]);
 
   // Handle medic card selection
   const handleMedicCardSelect = useCallback(async (selectedCards: Card[]) => {
@@ -236,8 +237,8 @@ const ReduxGameManager: React.FC = () => {
       if (unitCard.row === row || unitCard.availableRows?.includes(row)) {
         // Check if this is a medic with valid targets
         if (unitCard.ability === CardAbility.MEDIC && playerDiscard.length > 0) {
-          const validTargets = playerDiscard.filter((c: any) => 
-            c.type === CardType.UNIT && c.ability !== CardAbility.DECOY
+          const validTargets = playerDiscard.filter((card): card is UnitCard =>
+            card.type === CardType.UNIT && card.ability !== CardAbility.DECOY
           );
           if (validTargets.length > 0) {
             // For medics, show the medic selector instead of playing immediately
@@ -289,7 +290,7 @@ const ReduxGameManager: React.FC = () => {
       dispatch(setSelectedCard(null));
       dispatch(setIsDecoyActive(false));
     }
-  }, [selectedCard, currentTurn, dispatch]);
+  }, [selectedCard, currentTurn, playerDiscard, dispatch]);
 
   // Handle weather row clicks
   const handleWeatherRowClick = useCallback(() => {
@@ -355,7 +356,7 @@ const ReduxGameManager: React.FC = () => {
   }, [gameState.player.leader, dispatch]);
 
   // Handle setGameState for backward compatibility with GameCardsSelector
-  const handleSetGameState = useCallback((newState: any) => {
+  const handleSetGameState = useCallback((newState: GameState | ((prev: GameState) => GameState)) => {
     if (typeof newState === 'function') {
       // Handle function-based state updates
       const updatedState = newState({
