@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-25
-- Phase/spec: `cWp0` workflow and CI baseline
-- Latest relevant commit: this `cWp0` implementation commit
+- Phase/spec: `cDp5` engine AI policy V0 spec
+- Latest relevant commit: this `cDp5` spec commit
 
 ## Required Reading For Every Coding Instance
 
@@ -67,7 +67,7 @@ Scripted preview AI is intentionally limited to zero-card mulligan and pass. It 
 
 ## Next Recommended Step
 
-Proceed to `cDp5`, focused on migrating the preview AI from scripted pass-only behavior toward a legal-move policy or on tightening the next engine UI playability gap if the orchestrator chooses to split AI further. The rationale is that human engine actions now flow through legal moves, while the opponent path still does not exercise engine card play, scoring choices, prompts, or pass strategy.
+Implement `docs/spec/2026-04-25-cDp5-specs.md`, focused on replacing the pass-only preview AI with `legal-heuristic-v0`, a bounded deterministic policy that selects from engine legal moves. The rationale is that human engine actions now flow through legal moves, while the opponent path still does not exercise engine card play, scoring choices, prompts, or pass strategy.
 
 ## Update Requirements
 
