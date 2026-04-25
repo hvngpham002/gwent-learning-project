@@ -33,9 +33,14 @@ import { engineSelectedCardIdsSet, engineSelectedCardSet, engineSelectionCleared
 import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 
 import {
+  buildPromptViewModel,
+  describeLeaderMove,
   describePlayTarget,
+  getPromptOptionMoves,
   getPlayableCardIds,
   getPlayMovesForCard,
+  getUseLeaderMoves,
+  shouldDisableLeaderAction,
   shouldDisableHandCard,
 } from "./engine/playMoveHelpers";
 import { getScriptedPreviewAiCommand } from "./engine/scriptedPreviewAi";
@@ -152,6 +157,9 @@ const EngineGameManager: React.FC = () => {
 
   const playableCardIds = useMemo(() => getPlayableCardIds(humanMoves), [humanMoves]);
   const selectedPlayMoves = useMemo(() => getPlayMovesForCard(humanMoves, selectedCardId), [humanMoves, selectedCardId]);
+  const leaderMoves = useMemo(() => getUseLeaderMoves(humanMoves), [humanMoves]);
+  const leaderMove = leaderMoves[0] ?? null;
+  const promptMoves = useMemo(() => getPromptOptionMoves(humanMoves), [humanMoves]);
   const visibleCardsById = useMemo(() => {
     const entries = [
       ...humanHand,
@@ -160,6 +168,31 @@ const EngineGameManager: React.FC = () => {
     ].map((card) => [card.instanceId, { name: card.name }] as const);
     return new Map(entries);
   }, [boardRows, humanHand, weatherCards]);
+  const humanLeaderUsed = leaders?.[humanSeat].used ?? true;
+  const humanLeaderStatus = leaders?.[humanSeat] ?? null;
+  const leaderActionLabel =
+    leaderMove || !humanLeaderStatus
+      ? describeLeaderMove(leaderMove)
+      : `${humanLeaderStatus.name}: ${humanLeaderStatus.abilityName} (${humanLeaderStatus.used ? "used" : humanLeaderStatus.abilityStatus})`;
+  const disableLeaderAction = shouldDisableLeaderAction({
+    phase: match?.phase,
+    canHumanAct,
+    promptOpen: Boolean(prompt),
+    leaderUsed: humanLeaderUsed,
+    leaderMove,
+  });
+  const promptView = useMemo(
+    () =>
+      prompt
+        ? buildPromptViewModel({
+            promptMoves,
+            promptKind: prompt.kind,
+            sourceCardId: prompt.sourceCardId,
+            cardLookup: visibleCardsById,
+          })
+        : null,
+    [prompt, promptMoves, visibleCardsById],
+  );
 
   useEffect(() => {
     if (!selectedCardId) {
@@ -209,21 +242,36 @@ const EngineGameManager: React.FC = () => {
   }, [dispatch, humanSeat]);
 
   const choosePromptOption = useCallback(
-    (optionId: string) => {
-      if (!prompt) {
+    (moveId: string) => {
+      const move = promptMoves.find((candidate) => candidate.moveId === moveId);
+      if (!move) {
         return;
       }
       dispatch(
         dispatchEngineCommand({
           type: "ChoosePromptOption",
-          seatId: prompt.seatId,
-          promptId: prompt.promptId,
-          optionId,
+          seatId: move.seatId,
+          promptId: move.promptId,
+          optionId: move.optionId,
         }),
       );
     },
-    [dispatch, prompt],
+    [dispatch, promptMoves],
   );
+
+  const useLeader = useCallback(() => {
+    if (!leaderMove) {
+      return;
+    }
+
+    dispatch(
+      dispatchEngineCommand({
+        type: "UseLeader",
+        seatId: humanSeat,
+        target: leaderMove.target,
+      }),
+    );
+  }, [dispatch, humanSeat, leaderMove]);
 
   const playCard = useCallback(
     (moveId: string) => {
@@ -331,9 +379,21 @@ const EngineGameManager: React.FC = () => {
           </div>
         ) : null}
         {match?.phase === "playing" ? (
-          <button type="button" className="engine-action" disabled={!canPass} onClick={pass}>
-            Pass
-          </button>
+          <div className="engine-control-panel engine-control-panel--compact">
+            <h2>Leader</h2>
+            <p>{leaderActionLabel}</p>
+            <button type="button" className="engine-action" disabled={disableLeaderAction} onClick={useLeader}>
+              Use Leader
+            </button>
+          </div>
+        ) : null}
+        {match?.phase === "playing" ? (
+          <div className="engine-control-panel engine-control-panel--compact">
+            <h2>Turn</h2>
+            <button type="button" className="engine-action" disabled={!canPass} onClick={pass}>
+              Pass
+            </button>
+          </div>
         ) : null}
         {match?.phase === "playing" && !prompt ? (
           <div className="engine-control-panel engine-play-panel">
@@ -371,10 +431,12 @@ const EngineGameManager: React.FC = () => {
         ) : null}
         {prompt ? (
           <div className="engine-control-panel">
-            <h2>{prompt.kind}</h2>
-            {prompt.options.map((option) => (
-              <button key={option.optionId} type="button" className="engine-action" onClick={() => choosePromptOption(option.optionId)}>
-                {option.label}
+            <h2>{promptView?.title ?? prompt.kind}</h2>
+            {promptView?.sourceLabel ? <p>{promptView.sourceLabel}</p> : null}
+            {promptView?.options.length ? null : <p>No legal prompt options for the human seat.</p>}
+            {promptView?.options.map((move) => (
+              <button key={move.moveId} type="button" className="engine-action" onClick={() => choosePromptOption(move.moveId)}>
+                {move.label}
               </button>
             ))}
           </div>

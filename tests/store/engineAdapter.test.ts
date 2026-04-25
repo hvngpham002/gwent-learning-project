@@ -2,7 +2,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import { describe, expect, it } from "vitest";
 
 import engineReducer from "@/store/slices/engineSlice";
-import { engineSelectedCardIdsSet, engineSelectedCardSet } from "@/store/slices/engineSlice";
+import { engineCommandApplied, engineSelectedCardIdsSet, engineSelectedCardSet } from "@/store/slices/engineSlice";
 import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 import {
   selectEngineDebugAiHandCards,
@@ -12,7 +12,7 @@ import {
   selectEngineLegalMovesForHuman,
   selectEngineScoreBreakdown,
 } from "@/store/selectors/engineSelectors";
-import type { PlayCardMove } from "@/game/core";
+import type { CardInstanceId, MatchState, PlayCardMove, SeatId, UseLeaderMove } from "@/game/core";
 
 const createTestStore = () =>
   configureStore({
@@ -20,6 +20,46 @@ const createTestStore = () =>
       engine: engineReducer,
     },
   });
+
+const completeMulligans = (store: ReturnType<typeof createTestStore>) => {
+  store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_a", cardIds: [] }));
+  store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_b", cardIds: [] }));
+};
+
+const passAiIfNeeded = (store: ReturnType<typeof createTestStore>) => {
+  if (store.getState().engine.match?.currentTurn === "seat_b") {
+    store.dispatch(dispatchEngineCommand({ type: "Pass", seatId: "seat_b" }));
+  }
+};
+
+const removeEverywhere = (match: MatchState, cardId: CardInstanceId) => {
+  Object.values(match.seats).forEach((seat) => {
+    seat.deck = seat.deck.filter((id) => id !== cardId);
+    seat.hand = seat.hand.filter((id) => id !== cardId);
+    seat.discard = seat.discard.filter((id) => id !== cardId);
+    seat.sideDeck = seat.sideDeck.filter((id) => id !== cardId);
+    seat.removedFromGame = seat.removedFromGame.filter((id) => id !== cardId);
+    Object.values(seat.board).forEach((row) => {
+      row.units = row.units.filter((id) => id !== cardId);
+      if (row.horn === cardId) row.horn = null;
+    });
+  });
+  match.weather.entries = match.weather.entries.filter((id) => id !== cardId);
+};
+
+const putInDiscard = (match: MatchState, seatId: SeatId, cardId: CardInstanceId) => {
+  removeEverywhere(match, cardId);
+  match.seats[seatId].discard.push(cardId);
+  match.cardsById[cardId].zone = { kind: "discard", seat: seatId };
+  match.cardsById[cardId].controller = seatId;
+};
+
+const putOnBoard = (match: MatchState, seatId: SeatId, cardId: CardInstanceId) => {
+  removeEverywhere(match, cardId);
+  match.seats[seatId].board.siege.units.push(cardId);
+  match.cardsById[cardId].zone = { kind: "board_row", seat: seatId, row: "siege" };
+  match.cardsById[cardId].controller = seatId;
+};
 
 describe("engine Redux adapter", () => {
   it("starts a deterministic engine match with the requested seed and seat map", () => {
@@ -215,6 +255,124 @@ describe("engine Redux adapter", () => {
     expect(state.engine.selectedCardId).toBeNull();
     expect(state.engine.selectedCardIds).toEqual([]);
     expect(state.engine.lastTransactionEvents.some((event) => event.type === "card_played")).toBe(true);
+  });
+
+  it("dispatches a legal human UseLeader through Redux, clears weather, and clears selection", () => {
+    const store = createTestStore();
+    let weatherMove: PlayCardMove | undefined;
+
+    for (let index = 0; index < 80 && !weatherMove; index += 1) {
+      store.dispatch(startEngineMatch({ seed: `adapter-leader-weather-${index}` }));
+      completeMulligans(store);
+      passAiIfNeeded(store);
+      weatherMove = selectEngineLegalMovesForHuman(store.getState()).find(
+        (move): move is PlayCardMove => move.kind === "play_card" && move.target.kind === "weather",
+      );
+    }
+
+    expect(weatherMove).toBeTruthy();
+    store.dispatch(
+      dispatchEngineCommand({
+        type: "PlayCard",
+        seatId: "seat_a",
+        cardId: weatherMove!.sourceCardId,
+        target: weatherMove!.target,
+      }),
+    );
+    expect(store.getState().engine.match?.weather.entries).toContain(weatherMove!.sourceCardId);
+
+    passAiIfNeeded(store);
+    const leaderMove = selectEngineLegalMovesForHuman(store.getState()).find(
+      (move): move is UseLeaderMove => move.kind === "use_leader",
+    );
+    expect(leaderMove).toBeTruthy();
+
+    store.dispatch(engineSelectedCardSet(weatherMove!.sourceCardId));
+    store.dispatch(
+      dispatchEngineCommand({
+        type: "UseLeader",
+        seatId: "seat_a",
+        target: leaderMove!.target,
+      }),
+    );
+
+    const state = store.getState();
+    expect(state.engine.match?.weather.entries).toEqual([]);
+    expect(state.engine.match?.seats.seat_a.leaderUsed).toBe(true);
+    expect(state.engine.match?.seats.seat_a.discard).toContain(weatherMove!.sourceCardId);
+    expect(state.engine.selectedCardId).toBeNull();
+    expect(state.engine.selectedCardIds).toEqual([]);
+    expect(state.engine.lastTransactionEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "weather_cleared", source: "leader" }),
+        expect.objectContaining({ type: "leader_used", seatId: "seat_a" }),
+      ]),
+    );
+  });
+
+  it("dispatches a legal prompt choice through Redux and suppresses ordinary human play while pending", () => {
+    const store = createTestStore();
+    store.dispatch(startEngineMatch({ seed: "adapter-prompt-choice" }));
+    const base = structuredClone(store.getState().engine.match!);
+    const medic = Object.values(base.cardsById).find((card) => card.sourceId === "northern-realms.dun-banner-medic")!;
+    const target = Object.values(base.cardsById).find((card) => card.sourceId === "northern-realms.catapult")!;
+    const promptId = "prompt:test:seat_a:medic";
+
+    base.phase = "playing";
+    base.currentTurn = "seat_a";
+    base.seats.seat_a.mulliganComplete = true;
+    base.seats.seat_b.mulliganComplete = true;
+    putOnBoard(base, "seat_a", medic.instanceId);
+    putInDiscard(base, "seat_a", target.instanceId);
+    base.pendingPrompt = {
+      promptId,
+      seatId: "seat_a",
+      kind: "medic_revive",
+      sourceCardId: medic.instanceId,
+      sourceId: medic.sourceId,
+      abilityId: "medic",
+      options: [
+        {
+          optionId: `revive:${target.instanceId}:siege`,
+          label: "Catapult to siege",
+          target: {
+            kind: "card_instance",
+            cardId: target.instanceId,
+            sourceId: target.sourceId,
+            row: "siege",
+          },
+        },
+      ],
+    };
+
+    store.dispatch(
+      engineCommandApplied({
+        command: { type: "ChooseMulligan", seatId: "seat_a", cardIds: [] },
+        match: base,
+        events: [{ type: "prompt_opened", prompt: base.pendingPrompt }],
+        sequence: 1,
+      }),
+    );
+    store.dispatch(engineSelectedCardSet(medic.instanceId));
+
+    const promptMoves = selectEngineLegalMovesForHuman(store.getState());
+    expect(promptMoves.map((move) => move.kind)).toEqual(["choose_prompt_option"]);
+
+    store.dispatch(
+      dispatchEngineCommand({
+        type: "ChoosePromptOption",
+        seatId: "seat_a",
+        promptId,
+        optionId: `revive:${target.instanceId}:siege`,
+      }),
+    );
+
+    const state = store.getState();
+    expect(state.engine.match?.pendingPrompt).toBeNull();
+    expect(state.engine.match?.seats.seat_a.discard).not.toContain(target.instanceId);
+    expect(state.engine.match?.seats.seat_a.board.siege.units).toContain(target.instanceId);
+    expect(state.engine.selectedCardId).toBeNull();
+    expect(state.engine.lastTransactionEvents.some((event) => event.type === "prompt_resolved")).toBe(true);
   });
 
   it("default human-facing engine state exposes AI hand count but no AI hand card details", () => {

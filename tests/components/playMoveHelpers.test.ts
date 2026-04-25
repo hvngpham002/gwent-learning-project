@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildPromptViewModel,
+  describeLeaderMove,
   describePlayTarget,
+  getPromptOptionMoves,
   getPlayableCardIds,
   getPlayMovesForCard,
+  getUseLeaderMoves,
+  shouldDisableLeaderAction,
   shouldDisableHandCard,
 } from "@/components/game/engine/playMoveHelpers";
-import type { LegalMove, PlayCardMove } from "@/game/core";
+import type { ChoosePromptOptionMove, LegalMove, PlayCardMove, UseLeaderMove } from "@/game/core";
 
 const createPlayMove = (target: PlayCardMove["target"], overrides: Partial<PlayCardMove> = {}): PlayCardMove => ({
   kind: "play_card",
@@ -21,6 +26,39 @@ const createPlayMove = (target: PlayCardMove["target"], overrides: Partial<PlayC
     cardKind: "unit",
     abilities: [],
     targetLabel: "target",
+  },
+  ...overrides,
+});
+
+const createLeaderMove = (overrides: Partial<UseLeaderMove> = {}): UseLeaderMove => ({
+  kind: "use_leader",
+  moveId: "leader:seat_a:leader-a:clear_weather",
+  seatId: "seat_a",
+  leaderCardId: "leader-a",
+  sourceId: "northern-realms.foltest-lord-commander-of-the-north",
+  target: { kind: "none" },
+  label: "Use Foltest",
+  metadata: {
+    leaderName: "Foltest: Lord Commander of The North",
+    ability: "clear_weather",
+    abilityStatus: "implemented",
+    targetRequirement: "none",
+  },
+  ...overrides,
+});
+
+const createPromptMove = (overrides: Partial<ChoosePromptOptionMove> = {}): ChoosePromptOptionMove => ({
+  kind: "choose_prompt_option",
+  moveId: "prompt:prompt-a:revive-card",
+  seatId: "seat_a",
+  promptId: "prompt-a",
+  optionId: "revive-card",
+  target: { kind: "card_instance", side: "own", seatId: "seat_a", cardId: "target-card", row: "siege" },
+  label: "Revive Catapult to siege",
+  metadata: {
+    promptKind: "medic_revive",
+    abilityId: "medic",
+    sourceCardId: "medic-card",
   },
   ...overrides,
 });
@@ -99,5 +137,93 @@ describe("engine play move helpers", () => {
     expect(
       shouldDisableHandCard({ phase: "playing", canHumanAct: true, promptOpen: false, playableCardIds, cardId: "card-b" }),
     ).toBe(true);
+  });
+
+  it("extracts and describes legal leader moves", () => {
+    const leaderMove = createLeaderMove();
+    const moves: LegalMove[] = [
+      createPlayMove({ kind: "weather" }),
+      leaderMove,
+      {
+        kind: "pass",
+        moveId: "pass:seat_a",
+        seatId: "seat_a",
+        target: { kind: "none" },
+        label: "Pass",
+      },
+    ];
+
+    expect(getUseLeaderMoves(moves)).toEqual([leaderMove]);
+    expect(describeLeaderMove(leaderMove)).toBe("Foltest: Lord Commander of The North: Clear Weather (implemented)");
+    expect(describeLeaderMove(null)).toBe("Use Leader");
+  });
+
+  it("disables leader action unless a current executable leader move is available", () => {
+    const leaderMove = createLeaderMove();
+
+    expect(
+      shouldDisableLeaderAction({
+        phase: "playing",
+        canHumanAct: true,
+        promptOpen: false,
+        leaderUsed: false,
+        leaderMove,
+      }),
+    ).toBe(false);
+    expect(
+      shouldDisableLeaderAction({
+        phase: "playing",
+        canHumanAct: true,
+        promptOpen: true,
+        leaderUsed: false,
+        leaderMove,
+      }),
+    ).toBe(true);
+    expect(
+      shouldDisableLeaderAction({
+        phase: "playing",
+        canHumanAct: true,
+        promptOpen: false,
+        leaderUsed: true,
+        leaderMove,
+      }),
+    ).toBe(true);
+    expect(
+      shouldDisableLeaderAction({
+        phase: "round_end",
+        canHumanAct: true,
+        promptOpen: false,
+        leaderUsed: false,
+        leaderMove,
+      }),
+    ).toBe(true);
+    expect(
+      shouldDisableLeaderAction({
+        phase: "playing",
+        canHumanAct: true,
+        promptOpen: false,
+        leaderUsed: false,
+        leaderMove: null,
+      }),
+    ).toBe(true);
+  });
+
+  it("maps legal prompt moves into button view models", () => {
+    const promptMove = createPromptMove();
+    const promptMoves = getPromptOptionMoves([promptMove, createPlayMove({ kind: "weather" })]);
+    const view = buildPromptViewModel({
+      promptMoves,
+      promptKind: "medic_revive",
+      sourceCardId: "medic-card",
+      cardLookup: new Map([["medic-card", { name: "Dun Banner Medic" }]]),
+    });
+
+    expect(promptMoves).toEqual([promptMove]);
+    expect(view).toEqual({
+      promptId: "prompt-a",
+      title: "medic revive · Medic",
+      sourceLabel: "Source: Dun Banner Medic",
+      options: [promptMove],
+    });
   });
 });

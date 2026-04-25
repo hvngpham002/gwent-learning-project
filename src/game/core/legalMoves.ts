@@ -354,7 +354,11 @@ const getLeaderMove = (state: MatchState, seatId: SeatId, lookups: CatalogLookup
     return [];
   }
 
-  const targetRequirement = leader.ability === "clear_weather" ? "none" : "future_prompt";
+  if (leader.ability !== "clear_weather" || abilityMetadata.status !== "implemented") {
+    return [];
+  }
+
+  const targetRequirement = "none";
 
   return [
     {
@@ -371,8 +375,6 @@ const getLeaderMove = (state: MatchState, seatId: SeatId, lookups: CatalogLookup
         abilityStatus: abilityMetadata.status,
         targetRequirement,
       },
-      diagnostics:
-        targetRequirement === "future_prompt" ? ["Leader target/effect resolution is reserved for a future phase."] : undefined,
     },
   ];
 };

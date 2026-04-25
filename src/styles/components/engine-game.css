@@ -163,14 +163,24 @@
 }
 
 .engine-controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: stretch;
   gap: 10px;
 }
 
+.engine-control-panel {
+  align-content: start;
+  min-width: 0;
+}
+
+.engine-control-panel--compact {
+  grid-template-rows: auto auto min-content;
+}
+
 .engine-play-panel {
-  min-width: min(420px, 100%);
+  grid-column: span 2;
+  min-width: 0;
 }
 
 .engine-target-actions {
@@ -179,12 +189,15 @@
 
 .engine-action {
   min-height: 34px;
+  min-width: 0;
   border: 1px solid rgba(246, 239, 228, 0.32);
   border-radius: 6px;
   background: #5d4529;
   color: #fff8ec;
-  padding: 0 12px;
+  padding: 7px 12px;
   font-weight: 700;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .engine-action:disabled {
@@ -210,5 +223,9 @@
 
   .engine-row {
     grid-template-columns: 1fr;
+  }
+
+  .engine-play-panel {
+    grid-column: span 1;
   }
 }

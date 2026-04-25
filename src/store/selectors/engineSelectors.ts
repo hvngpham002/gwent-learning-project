@@ -1,7 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 
 import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
-import type { CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
+import { CATALOG_LEADER_ABILITY_METADATA, type CatalogCardSource, type CatalogLeaderSource, type CatalogRow } from "@/game/catalog";
 import {
   calculateScores,
   getLegalMoves,
@@ -248,23 +248,28 @@ export const selectEngineDeckCounts = createSelector(selectEngineMatch, (match) 
     : { seat_a: 0, seat_b: 0 },
 );
 
+const toLeaderStatus = (match: MatchState, seatId: SeatId) => {
+  const seat = match.seats[seatId];
+  const leader = leaderSourceById.get(seat.leaderSourceId);
+  const abilityMetadata = leader ? CATALOG_LEADER_ABILITY_METADATA[leader.ability] : null;
+
+  return {
+    leaderCardId: seat.leader,
+    sourceId: seat.leaderSourceId,
+    name: leader?.name ?? seat.leaderSourceId,
+    image: leader?.image ?? "",
+    ability: leader?.ability ?? null,
+    abilityName: abilityMetadata?.name ?? "Unknown",
+    abilityStatus: abilityMetadata?.status ?? "placeholder",
+    used: seat.leaderUsed,
+  };
+};
+
 export const selectEngineLeaderStatus = createSelector(selectEngineMatch, (match) =>
   match
     ? {
-        seat_a: {
-          leaderCardId: match.seats.seat_a.leader,
-          sourceId: match.seats.seat_a.leaderSourceId,
-          name: leaderSourceById.get(match.seats.seat_a.leaderSourceId)?.name ?? match.seats.seat_a.leaderSourceId,
-          image: leaderSourceById.get(match.seats.seat_a.leaderSourceId)?.image ?? "",
-          used: match.seats.seat_a.leaderUsed,
-        },
-        seat_b: {
-          leaderCardId: match.seats.seat_b.leader,
-          sourceId: match.seats.seat_b.leaderSourceId,
-          name: leaderSourceById.get(match.seats.seat_b.leaderSourceId)?.name ?? match.seats.seat_b.leaderSourceId,
-          image: leaderSourceById.get(match.seats.seat_b.leaderSourceId)?.image ?? "",
-          used: match.seats.seat_b.leaderUsed,
-        },
+        seat_a: toLeaderStatus(match, "seat_a"),
+        seat_b: toLeaderStatus(match, "seat_b"),
       }
     : null,
 );

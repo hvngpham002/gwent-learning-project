@@ -237,6 +237,15 @@ describe("core legal move generator", () => {
     expect(legalMoves(state, "seat_a").filter((move) => move.kind === "use_leader")).toHaveLength(0);
   });
 
+  it("does not advertise placeholder leaders as executable use_leader moves", () => {
+    const state = createState("leader-placeholder");
+    state.phase = "playing";
+    state.currentTurn = "seat_b";
+
+    expect(state.seats.seat_b.leaderSourceId).toBe("nilfgaard.emhyr-var-emreis-the-relentless");
+    expect(legalMoves(state, "seat_b").filter((move) => move.kind === "use_leader")).toEqual([]);
+  });
+
   it("does not leak opponent hand IDs through returned moves", () => {
     const state = createState("hidden-info");
     state.phase = "playing";
