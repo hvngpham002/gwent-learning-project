@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: post-`cEp1` authentic card polish
-- Latest relevant commit: `cEp1` implementation commit plus working-tree card rendering polish
+- Phase/spec: post-`cEp1` authentic fallback badge polish
+- Latest relevant commit: `cEp1` implementation commit plus committed card rendering polish and working-tree fallback badge tuning
 
 ## Required Reading For Every Coding Instance
 
@@ -82,6 +82,7 @@ The authentic UI foundation now ships behind `?engine=1&ui=authentic`:
 - `src/components/gwent/AuthenticCard.tsx` and `AuthenticCardBack.tsx` render current catalog cards through a UI view model with image-failure fallback to a deterministic `SvgCardArt` placeholder;
 - `src/components/gwent/AuthenticUiHarness.tsx` shows sample Northern Realms, Nilfgaard, neutral, hero, and special cards alongside a hidden card back, missing-image fallback example, and metadata chips for browser smoke;
 - authentic card source images use tuned per-size targets: `xs` is `63px` by `95px` with `12px` crop, `sm` is `70px` by `115px` with `12px` crop, `md` is `86.5px` by `147px` with `15px` crop, and `lg` is `118px` by `200px` with `20px` crop;
+- deterministic fallback card art keeps rule-like markers in the left-side badge stack: the fallback ability glyph sits below the strength medallion, and the old decorative top-right hero ring has been removed so it is not mistaken for playable-row or rule metadata;
 - `AuthenticCardBack` uses faction default back images such as `public/images/northern_realms/default-northern_realms.png`, stretches those backs to fit, and still supports override candidates under `public/images/card-backs/`;
 - `src/appMode.ts` adds `getEngineUiVariantFromSearch` so `?engine=1&ui=authentic` reaches the harness without disturbing `/` or `?engine=1`;
 - the forbidden-imports check now scans `src/components/gwent/` so the new product UI path stays free of legacy rule helpers and AI;

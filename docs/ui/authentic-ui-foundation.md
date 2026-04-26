@@ -122,6 +122,13 @@ If a faction-specific back is missing, the component falls back to a
 faction-colored synthetic sleeve rather than the generic closed card. If a
 discard back is missing, it falls back to `/images/other-graveyard.png`.
 
+## SVG Fallback Notes
+
+`SvgCardArt` is only a deterministic placeholder for missing source art. It does
+not encode playable rows or card rules. Fallback rule-like badges are kept in
+the left-side card badge stack: strength at the top-left and the primary ability
+glyph directly below it when a glyph exists.
+
 ## Hidden Information Notes
 
 `AuthenticCardBack` never receives a card view model. It accepts only `size`

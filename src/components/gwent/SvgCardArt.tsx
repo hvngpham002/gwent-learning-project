@@ -86,16 +86,6 @@ const SvgCardArt: React.FC<SvgCardArtProps> = ({ sourceId, faction, kind, width,
           <rect x={width * 0.64} y={height * 0.45} width={width * 0.16} height={height * 0.33} />
         </g>
       )}
-      {kind === "hero" && (
-        <circle
-          cx={width * 0.85}
-          cy={height * 0.12}
-          r={Math.max(4, width * 0.06)}
-          fill="none"
-          stroke="#f6e6b0"
-          strokeWidth={1.2}
-        />
-      )}
     </svg>
   );
 };

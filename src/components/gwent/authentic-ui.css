@@ -150,6 +150,11 @@
   position: relative;
   flex: 0 0 auto;
   --authentic-card-face-crop-bottom: 15px;
+  --authentic-card-badge-left: 3px;
+  --authentic-card-badge-top: 3px;
+  --authentic-card-ability-top: 28px;
+  --authentic-card-ability-size: 19px;
+  --authentic-card-ability-font-size: 11px;
   border-radius: 4px;
   border: 1px solid #2a1f10;
   background: #1a140c;
@@ -161,6 +166,30 @@
     transform 0.15s ease,
     box-shadow 0.15s ease;
   outline: none;
+}
+
+.authentic-card--xs {
+  --authentic-card-ability-top: 24px;
+  --authentic-card-ability-size: 15px;
+  --authentic-card-ability-font-size: 10px;
+}
+
+.authentic-card--sm {
+  --authentic-card-ability-top: 24px;
+  --authentic-card-ability-size: 16px;
+  --authentic-card-ability-font-size: 10px;
+}
+
+.authentic-card--lg {
+  --authentic-card-ability-top: 37px;
+  --authentic-card-ability-size: 26px;
+  --authentic-card-ability-font-size: 14px;
+}
+
+.authentic-card--xl {
+  --authentic-card-ability-top: 57px;
+  --authentic-card-ability-size: 38px;
+  --authentic-card-ability-font-size: 20px;
 }
 
 .authentic-card.is-interactive {
@@ -220,8 +249,8 @@
 
 .authentic-card__strength {
   position: absolute;
-  top: 3px;
-  left: 3px;
+  top: var(--authentic-card-badge-top);
+  left: var(--authentic-card-badge-left);
   width: 26%;
   aspect-ratio: 1;
   min-width: 18px;
@@ -279,17 +308,17 @@
 
 .authentic-card__ability {
   position: absolute;
-  bottom: 2px;
-  right: 2px;
-  width: 22%;
-  aspect-ratio: 1;
-  min-width: 16px;
+  top: var(--authentic-card-ability-top);
+  left: var(--authentic-card-badge-left);
+  width: var(--authentic-card-ability-size);
+  height: var(--authentic-card-ability-size);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: var(--authentic-card-ability-font-size);
+  line-height: 1;
   color: #f6e6b0;
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(246, 230, 176, 0.4);
