@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import { getAbilityDisplay, getFactionDisplay } from "./displayMetadata";
+import { getAbilityDisplay, getFactionDisplay, getRowDisplay } from "./displayMetadata";
 import {
   type AuthenticCardSize,
   type AuthenticCardViewModel,
@@ -33,18 +33,22 @@ const AuthenticCard: React.FC<AuthenticCardProps> = ({
   const isSpecial = card.kind === "special";
   const isHero = card.kind === "hero";
   const showStrength = shouldRenderStrength(card);
+  const [imageFailed, setImageFailed] = useState(false);
+  const renderArt = imageFailed || !card.image;
+  const interactive = typeof onClick === "function";
   const primaryAbility = (card.abilities ?? []).find((id) => id !== "none");
   const ability = primaryAbility ? getAbilityDisplay(primaryAbility) : null;
+  const rowDisplays = card.rows.map((row) => getRowDisplay(row));
+  const primaryRow = showStrength ? rowDisplays[0] : null;
+  const rowTitle =
+    rowDisplays.length > 1 ? rowDisplays.map((row) => row.name).join(" / ") : primaryRow?.name;
+  const showRowBadge = renderArt && showStrength && Boolean(primaryRow);
   const factionName = faction.name;
   const ariaParts = [card.name, factionName, isSpecial ? "Special" : `Strength ${card.strength}`];
   if (ability && ability.glyph) {
     ariaParts.push(ability.name);
   }
   const ariaLabel = ariaParts.join(", ");
-
-  const [imageFailed, setImageFailed] = useState(false);
-  const renderArt = imageFailed || !card.image;
-  const interactive = typeof onClick === "function";
 
   useEffect(() => {
     setImageFailed(false);
@@ -114,8 +118,18 @@ const AuthenticCard: React.FC<AuthenticCardProps> = ({
         </div>
       )}
 
+      {showRowBadge && primaryRow && (
+        <div className="authentic-card__row" title={rowTitle} aria-hidden="true">
+          {primaryRow.glyph}
+        </div>
+      )}
+
       {renderArt && ability && ability.glyph && (
-        <div className="authentic-card__ability" title={ability.name} aria-hidden="true">
+        <div
+          className={`authentic-card__ability${showRowBadge ? " is-after-row" : ""}`}
+          title={ability.name}
+          aria-hidden="true"
+        >
           {ability.glyph}
         </div>
       )}

@@ -152,9 +152,10 @@
   --authentic-card-face-crop-bottom: 15px;
   --authentic-card-badge-left: 3px;
   --authentic-card-badge-top: 3px;
-  --authentic-card-ability-top: 28px;
-  --authentic-card-ability-size: 19px;
-  --authentic-card-ability-font-size: 11px;
+  --authentic-card-info-top: 28px;
+  --authentic-card-info-size: 19px;
+  --authentic-card-info-gap: 3px;
+  --authentic-card-info-font-size: 11px;
   border-radius: 4px;
   border: 1px solid #2a1f10;
   background: #1a140c;
@@ -169,27 +170,27 @@
 }
 
 .authentic-card--xs {
-  --authentic-card-ability-top: 24px;
-  --authentic-card-ability-size: 15px;
-  --authentic-card-ability-font-size: 10px;
+  --authentic-card-info-top: 24px;
+  --authentic-card-info-size: 15px;
+  --authentic-card-info-font-size: 10px;
 }
 
 .authentic-card--sm {
-  --authentic-card-ability-top: 24px;
-  --authentic-card-ability-size: 16px;
-  --authentic-card-ability-font-size: 10px;
+  --authentic-card-info-top: 24px;
+  --authentic-card-info-size: 16px;
+  --authentic-card-info-font-size: 10px;
 }
 
 .authentic-card--lg {
-  --authentic-card-ability-top: 37px;
-  --authentic-card-ability-size: 26px;
-  --authentic-card-ability-font-size: 14px;
+  --authentic-card-info-top: 37px;
+  --authentic-card-info-size: 26px;
+  --authentic-card-info-font-size: 14px;
 }
 
 .authentic-card--xl {
-  --authentic-card-ability-top: 57px;
-  --authentic-card-ability-size: 38px;
-  --authentic-card-ability-font-size: 20px;
+  --authentic-card-info-top: 57px;
+  --authentic-card-info-size: 38px;
+  --authentic-card-info-font-size: 20px;
 }
 
 .authentic-card.is-interactive {
@@ -306,22 +307,27 @@
   border-radius: 2px;
 }
 
+.authentic-card__row,
 .authentic-card__ability {
   position: absolute;
-  top: var(--authentic-card-ability-top);
+  top: var(--authentic-card-info-top);
   left: var(--authentic-card-badge-left);
-  width: var(--authentic-card-ability-size);
-  height: var(--authentic-card-ability-size);
+  width: var(--authentic-card-info-size);
+  height: var(--authentic-card-info-size);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: var(--authentic-card-ability-font-size);
+  font-size: var(--authentic-card-info-font-size);
   line-height: 1;
   color: #f6e6b0;
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(246, 230, 176, 0.4);
+}
+
+.authentic-card__ability.is-after-row {
+  top: calc(var(--authentic-card-info-top) + var(--authentic-card-info-size) + var(--authentic-card-info-gap));
 }
 
 .authentic-card__nameplate {

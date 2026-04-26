@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { CATALOG_ABILITY_IDS } from "@/game/catalog";
 import {
   getAbilityDisplay,
   getCardKindDisplay,
@@ -52,6 +53,20 @@ describe("authentic UI display metadata", () => {
     expect(medic.name).toBe("Medic");
     expect(medic.glyph).toBe("✚");
     expect(medic.status).toBe("implemented");
+  });
+
+  it("exposes fallback glyphs for every displayable catalog ability", () => {
+    for (const abilityId of CATALOG_ABILITY_IDS) {
+      const ability = getAbilityDisplay(abilityId);
+      if (abilityId === "none") {
+        expect(ability.glyph).toBe("");
+      } else {
+        expect(ability.glyph).toBeTruthy();
+        expect(ability.glyph).not.toBe("·");
+      }
+    }
+    expect(getAbilityDisplay("muster").glyph).toBe("☷");
+    expect(getAbilityDisplay("muster_roach").glyph).toBe("☷");
   });
 
   it("returns title-cased placeholder metadata for unknown ability ids", () => {

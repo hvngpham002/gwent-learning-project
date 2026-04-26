@@ -69,7 +69,7 @@ The harness shows:
 - a compact top bar with title and catalog counts;
 - faction palette chips;
 - row glyph chips;
-- ability glyph chips;
+- all displayable catalog ability glyph chips;
 - a sample card row across factions and kinds;
 - hidden, faction, and discard card backs;
 - a missing-image fallback example;
@@ -126,8 +126,8 @@ discard back is missing, it falls back to `/images/other-graveyard.png`.
 
 `SvgCardArt` is only a deterministic placeholder for missing source art. It does
 not encode playable rows or card rules. Fallback rule-like badges are kept in
-the left-side card badge stack: strength at the top-left and the primary ability
-glyph directly below it when a glyph exists.
+the left-side card badge stack: strength at the top-left, then the primary row
+glyph for unit/hero cards, then the primary ability glyph when a glyph exists.
 
 ## Hidden Information Notes
 

@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 
+import { CATALOG_ABILITY_IDS } from "@/game/catalog";
 import {
   currentCatalogCards,
   currentCatalogLeaders,
@@ -83,19 +84,7 @@ const AuthenticUiHarness: React.FC = () => {
   const rows = listRowDisplays();
   const abilityChips = useMemo(
     () =>
-      [
-        "spy",
-        "medic",
-        "tight_bond",
-        "morale_boost",
-        "scorch",
-        "commanders_horn",
-        "decoy",
-        "frost",
-        "fog",
-        "rain",
-        "clear_weather",
-      ].map((id) => getAbilityDisplay(id)),
+      CATALOG_ABILITY_IDS.filter((id) => id !== "none").map((id) => getAbilityDisplay(id)),
     [],
   );
   const leaderCount = currentCatalogLeaders.length;
