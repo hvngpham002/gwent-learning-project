@@ -9,6 +9,7 @@ import {
   fromCatalogCard,
   isUnitOrHero,
   shouldRenderStrength,
+  sourceFaceBottomCropForSize,
 } from "@/components/gwent/cardViewModel";
 
 describe("authentic card view model", () => {
@@ -70,9 +71,21 @@ describe("authentic card view model", () => {
   });
 
   it("uses the tall source-card aspect ratio for authentic card sizes", () => {
+    expect(AUTHENTIC_CARD_DIMENSIONS.xs).toEqual({ width: 63, height: 95 });
+    expect(AUTHENTIC_CARD_DIMENSIONS.sm).toEqual({ width: 70, height: 115 });
     expect(AUTHENTIC_CARD_DIMENSIONS.md).toEqual({ width: 86.5, height: 147 });
-    expect(AUTHENTIC_CARD_DIMENSIONS.lg).toEqual({ width: 110, height: 207 });
-    expect(AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX).toBe(15);
+    expect(AUTHENTIC_CARD_DIMENSIONS.lg).toEqual({ width: 118, height: 200 });
+    expect(AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX).toEqual({
+      xs: 12,
+      sm: 12,
+      md: 15,
+      lg: 20,
+      xl: 20,
+    });
+    expect(sourceFaceBottomCropForSize("xs")).toBe(12);
+    expect(sourceFaceBottomCropForSize("sm")).toBe(12);
+    expect(sourceFaceBottomCropForSize("md")).toBe(15);
+    expect(sourceFaceBottomCropForSize("lg")).toBe(20);
   });
 
   it("provides faction and discard pile card-back image candidates with safe fallbacks", () => {

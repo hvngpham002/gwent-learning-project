@@ -14,14 +14,20 @@ export interface AuthenticCardDimensions {
 }
 
 export const AUTHENTIC_CARD_DIMENSIONS: Record<AuthenticCardSize, AuthenticCardDimensions> = {
-  xs: { width: 44, height: 83 },
-  sm: { width: 60, height: 113 },
+  xs: { width: 63, height: 95 },
+  sm: { width: 70, height: 115 },
   md: { width: 86.5, height: 147 },
-  lg: { width: 110, height: 207 },
+  lg: { width: 118, height: 200 },
   xl: { width: 180, height: 339 },
 };
 
-export const AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX = 15;
+export const AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX: Record<AuthenticCardSize, number> = {
+  xs: 12,
+  sm: 12,
+  md: 15,
+  lg: 20,
+  xl: 20,
+};
 
 export interface AuthenticCardViewModel {
   readonly sourceId: string;
@@ -69,6 +75,9 @@ export const shouldRenderStrength = (card: AuthenticCardViewModel): boolean => i
 
 export const dimensionsForSize = (size: AuthenticCardSize): AuthenticCardDimensions =>
   AUTHENTIC_CARD_DIMENSIONS[size] ?? AUTHENTIC_CARD_DIMENSIONS.md;
+
+export const sourceFaceBottomCropForSize = (size: AuthenticCardSize): number =>
+  AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX[size] ?? AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX.md;
 
 const normalizeFactionSlug = (faction: string) => faction.replace(/[^a-z0-9_-]/gi, "_");
 

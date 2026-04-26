@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 
 import { getAbilityDisplay, getFactionDisplay } from "./displayMetadata";
 import {
-  AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX,
   type AuthenticCardSize,
   type AuthenticCardViewModel,
   dimensionsForSize,
   shouldRenderStrength,
+  sourceFaceBottomCropForSize,
 } from "./cardViewModel";
 import SvgCardArt from "./SvgCardArt";
 
@@ -28,6 +28,7 @@ const AuthenticCard: React.FC<AuthenticCardProps> = ({
   testId,
 }) => {
   const dims = dimensionsForSize(size);
+  const sourceFaceBottomCrop = sourceFaceBottomCropForSize(size);
   const faction = getFactionDisplay(card.faction);
   const isSpecial = card.kind === "special";
   const isHero = card.kind === "hero";
@@ -75,7 +76,7 @@ const AuthenticCard: React.FC<AuthenticCardProps> = ({
       style={{
         width: dims.width,
         height: dims.height,
-        "--authentic-card-face-crop-bottom": `${AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX}px`,
+        "--authentic-card-face-crop-bottom": `${sourceFaceBottomCrop}px`,
       } as React.CSSProperties}
     >
       <div className="authentic-card__art">
