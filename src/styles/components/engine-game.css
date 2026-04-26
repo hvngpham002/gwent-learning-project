@@ -1,8 +1,15 @@
 .engine-shell {
+  box-sizing: border-box;
   min-height: 100vh;
   padding: 16px;
   background: #2f2418;
   color: #f6efe4;
+}
+
+.engine-shell *,
+.engine-shell *::before,
+.engine-shell *::after {
+  box-sizing: border-box;
 }
 
 .engine-shell__header,

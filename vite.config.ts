@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react-swc'
 import { fileURLToPath } from 'url'
 import { dirname, resolve } from 'path'
@@ -11,6 +11,9 @@ export default defineConfig({
   plugins: [react({
     // Optional: Configure HMR options if needed
   })],
+  test: {
+    exclude: ['tests/e2e/**', '**/node_modules/**', '**/dist/**'],
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

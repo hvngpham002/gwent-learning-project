@@ -78,10 +78,12 @@ const EngineCardTile: React.FC<{
   disabled?: boolean;
   playable?: boolean;
   disabledReason?: string | null;
+  testId?: string;
   onClick?: () => void;
-}> = ({ card, selected = false, disabled = true, playable = false, disabledReason = null, onClick }) => (
+}> = ({ card, selected = false, disabled = true, playable = false, disabledReason = null, testId, onClick }) => (
   <button
     type="button"
+    data-testid={testId}
     className={`engine-card${selected ? " engine-card--selected" : ""}${playable ? " engine-card--playable" : ""}${
       disabledReason ? " engine-card--disabled-reason" : ""
     }`}
@@ -356,19 +358,21 @@ const EngineGameManager: React.FC = () => {
   );
 
   return (
-    <main className="engine-shell">
+    <main className="engine-shell" data-testid="engine-shell">
       <header className="engine-shell__header">
         <div>
           <h1>Engine Match</h1>
           <p>Seed {String(seed ?? startSeed ?? "default")} · AI {ENGINE_AI_POLICY_ID}</p>
         </div>
-        <button type="button" className="engine-action" onClick={startNewGame}>
+        <button type="button" className="engine-action" data-testid="engine-new-game" onClick={startNewGame}>
           New Game
         </button>
       </header>
 
-      <section className="engine-status-banner" aria-label="Match status">
+      <section className="engine-status-banner" aria-label="Match status" data-testid="engine-status-banner">
         <div className="engine-status-banner__meta">
+          <span>Seed {String(seed ?? startSeed ?? "default")}</span>
+          <span>AI {ENGINE_AI_POLICY_ID}</span>
           <span>{statusBanner.phaseLabel}</span>
           <span>{statusBanner.roundLabel}</span>
           <span>{statusBanner.actorLabel}</span>
@@ -381,7 +385,11 @@ const EngineGameManager: React.FC = () => {
       {match && (
         <section className="engine-status-grid" aria-label="Seat status">
           {(["seat_b", "seat_a"] as const).map((seatId) => (
-            <article key={seatId} className="engine-seat">
+            <article
+              key={seatId}
+              className="engine-seat"
+              data-testid={seatId === aiSeat ? "engine-seat-ai" : "engine-seat-human"}
+            >
               <img src={leaders?.[seatId].image} alt={leaders?.[seatId].name} className="engine-seat__leader" />
               <div>
                 <h2>{SEAT_LABELS[seatId]}</h2>
@@ -431,12 +439,18 @@ const EngineGameManager: React.FC = () => {
         ))}
       </section>
 
-      <section className="engine-controls" aria-label="Engine controls">
+      <section className="engine-controls" aria-label="Engine controls" data-testid="engine-controls">
         {match?.phase === "mulligan" && !match.seats[humanSeat].mulliganComplete ? (
           <div className="engine-control-panel">
             <h2>Mulligan</h2>
             <p>{selectedCardIds.length}/2 selected</p>
-            <button type="button" className="engine-action" disabled={!canConfirmMulligan} onClick={confirmMulligan}>
+            <button
+              type="button"
+              className="engine-action"
+              data-testid="engine-confirm-mulligan"
+              disabled={!canConfirmMulligan}
+              onClick={confirmMulligan}
+            >
               Confirm
             </button>
           </div>
@@ -453,7 +467,7 @@ const EngineGameManager: React.FC = () => {
         {match?.phase === "playing" ? (
           <div className="engine-control-panel engine-control-panel--compact">
             <h2>Turn</h2>
-            <button type="button" className="engine-action" disabled={!canPass} onClick={pass}>
+            <button type="button" className="engine-action" data-testid="engine-pass" disabled={!canPass} onClick={pass}>
               Pass
             </button>
           </div>
@@ -467,7 +481,7 @@ const EngineGameManager: React.FC = () => {
                 : `${playableCardIds.size} playable card${playableCardIds.size === 1 ? "" : "s"}`}
             </p>
             {!selectedCard ? <p>Select a highlighted hand card to show legal target groups.</p> : null}
-            <div className="engine-target-groups">
+            <div className="engine-target-groups" data-testid="engine-target-groups">
               {targetGroups.map((group) => (
                 <div key={group.key} className="engine-target-group">
                   <h3>{group.label}</h3>
@@ -477,6 +491,7 @@ const EngineGameManager: React.FC = () => {
                         key={action.moveId}
                         type="button"
                         className="engine-action"
+                        data-testid="engine-target-action"
                         onClick={() => playCard(action.moveId)}
                         title={action.title}
                       >
@@ -493,7 +508,13 @@ const EngineGameManager: React.FC = () => {
           <div className="engine-control-panel">
             <h2>Round End</h2>
             {roundEndSummary ? <p>{roundEndSummary.label}</p> : null}
-            <button type="button" className="engine-action" disabled={!canResolveRound} onClick={resolveRound}>
+            <button
+              type="button"
+              className="engine-action"
+              data-testid="engine-resolve-round"
+              disabled={!canResolveRound}
+              onClick={resolveRound}
+            >
               {roundEndSummary?.resolveLabel ?? "Resolve Round"}
             </button>
           </div>
@@ -523,7 +544,7 @@ const EngineGameManager: React.FC = () => {
         ) : null}
       </section>
 
-      <section className="engine-hand" aria-label="Human hand">
+      <section className="engine-hand" aria-label="Human hand" data-testid="engine-human-hand">
         <h2>Human Hand</h2>
         <div className="engine-card-row">
           {humanHand.map((card) => {
@@ -549,6 +570,7 @@ const EngineGameManager: React.FC = () => {
                 playable={match?.phase === "playing" && playableCardIds.has(card.instanceId) && !handState.disabled}
                 disabled={handState.disabled}
                 disabledReason={handState.reasonLabel}
+                testId="engine-hand-card"
                 onClick={() => selectHandCard(card.instanceId)}
               />
             );
@@ -557,7 +579,7 @@ const EngineGameManager: React.FC = () => {
       </section>
 
       {roundHistoryView.length > 0 ? (
-        <section className="engine-round-history" aria-label="Round history">
+        <section className="engine-round-history" aria-label="Round history" data-testid="engine-round-history">
           <h2>Round History</h2>
           <div className="engine-round-history__list">
             {roundHistoryView.map((round) => (
@@ -569,15 +591,17 @@ const EngineGameManager: React.FC = () => {
         </section>
       ) : null}
 
-      <section className="engine-events" aria-label="Recent engine commands">
+      <section className="engine-events" aria-label="Recent engine commands" data-testid="engine-recent-activity">
         <h2>Recent Activity</h2>
         {recentCommands.map((record) => (
-          <span key={record.key} className={record.isAiAction ? "engine-events__ai" : undefined}>
+          <span key={record.key} data-testid="engine-activity-line" className={record.isAiAction ? "engine-events__ai" : undefined}>
             {record.label}
           </span>
         ))}
         {recentEvents.map((event) => (
-          <span key={event.key}>event: {event.label}</span>
+          <span key={event.key} data-testid="engine-activity-line">
+            event: {event.label}
+          </span>
         ))}
       </section>
     </main>

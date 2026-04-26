@@ -22,6 +22,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run ci:browser
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'push'
         with:

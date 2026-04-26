@@ -2,9 +2,9 @@
 
 ## Last Updated
 
-- Date: 2026-04-25
+- Date: 2026-04-26
 - Phase/spec: `cDp7` engine browser smoke harness spec
-- Latest relevant commit: `c1dbef7` (`cDp6` implementation); `cDp7` spec pending commit
+- Latest relevant commit: this `cDp7` implementation commit
 
 ## Required Reading For Every Coding Instance
 
@@ -41,6 +41,7 @@
 | `cDp4` | Cluster D Phase 9 split | `audit/reports/2026-04-25-cDp4-report.md` | Added legal-move-backed leader and prompt controls plus special-action diagnostics. |
 | `cDp5` | Cluster D Phase 10 split | `audit/reports/2026-04-25-cDp5-report.md` | Replaced pass-only preview AI with deterministic `legal-heuristic-v0` over engine legal moves. |
 | `cDp6` | Cluster D Phase 10 shell polish split | `audit/reports/2026-04-25-cDp6-report.md` | Added shell view-model helpers, clearer status/next-action UX, grouped target actions, hidden-info-safe activity summaries, and round history display. |
+| `cDp7` | Cluster D browser smoke hardening split | `audit/reports/2026-04-25-cDp7-report.md` | Added Playwright Chromium browser smoke coverage for opt-in routing, `dp6-smoke` mulligan/play flow, hidden-info display, and mobile overflow, plus CI browser execution. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -50,6 +51,8 @@ The engine UI can start a current Northern Realms vs Nilfgaard match, complete h
 The AI seat now uses `legal-heuristic-v0`, a deterministic policy that observes public state plus its own hand, selects from engine legal moves, and dispatches exact engine commands for mulligan, card play, prompt choice, useful Clear Weather leader use, and pass decisions.
 
 The opt-in shell now has a compact phase/round/actor/status banner, human hand playable/disabled affordances, grouped selected-card target buttons, prompt ownership clarity, hidden-info-safe recent activity summaries, round-end score context, and a compact round history list.
+
+The browser smoke harness now runs the opt-in engine shell through Playwright Chromium against a built Vite preview server. It checks default-route legacy behavior, `/?engine=1&seed=dp6-smoke` mulligan and first-play flow, AI hand-count-only display, hidden-info-safe recent activity text, and mobile horizontal overflow.
 
 It cannot yet provide strong strategic AI parity, polished spatial board interactions, full deck-building flows, persistence, PvP, simulations, ML exports, or default-route engine gameplay.
 
@@ -63,17 +66,20 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 
 ## Active Risks And Limits
 
-- Browser click-through is still mostly manual; existing coverage is helper, core, Redux, and route smoke.
+- Browser click-through is now covered by a small Playwright Chromium smoke harness, but it is intentionally short and does not finish a full game.
 - Engine UI is not default.
 - `legal-heuristic-v0` is intentionally weak and deterministic; it proves legal-move AI plumbing but is not full strategic AI.
 - Current catalog is incomplete by design.
 - Placeholder leader/card abilities remain deferred until scoped specs implement them.
 - The immediate AI action loop remains effect-driven and intentionally delay-free; shell summaries make the aftermath legible, but richer pacing remains deferred.
 - Mobile layout has wrapping safeguards for controls and target groups, but final spatial board UX remains out of scope.
+- Playwright browser binaries install outside the repository cache locally, so first-time local setup may require filesystem/network permission. GitHub Actions installs Chromium explicitly before running the browser gate.
+- Browser selectors are stable `data-testid` hooks on visible shell regions and controls, but they are still coupled to the current button-driven smoke surface and should be revised when the final spatial board UI lands.
+- Browser CI now runs an additional build plus Chromium smoke suite after `npm run ci`; runtime is still small for three tests, but browser install/download time can dominate cold CI runs.
 
 ## Next Recommended Step
 
-Implement `docs/spec/2026-04-25-cDp7-specs.md`: add a small Playwright browser smoke harness for the opt-in engine shell, cover default-route opt-in behavior, `dp6-smoke` mulligan/play flow, hidden-info display, mobile overflow, and GitHub Actions browser execution. Defer AI-vs-AI simulation until the browser smoke guardrail exists.
+Start the next bounded Cluster D slice on AI-vs-AI or simulation harness work, using the cDp7 Playwright smoke tests as the UI regression guardrail. Keep engine UI as opt-in until a future spec explicitly changes the default route.
 
 ## Update Requirements
 
