@@ -2,7 +2,7 @@
 
 This document describes the authentic UI foundation introduced in `cEp1`. It
 covers what the foundation is, what it is not yet, how to open the harness, and
-how the harness relates to the future engine-backed match screen.
+how the harness relates to the engine-backed match screen introduced in `cEp2`.
 
 ## What This Is
 
@@ -45,12 +45,13 @@ These belong to later Cluster E phases (`cEp2` and beyond).
 |---|---|
 | `/` | Legacy Redux UI (default route). Unchanged. |
 | `/?engine=1` | Existing diagnostic engine shell (`EngineGameManager`). Unchanged. |
-| `/?engine=1&ui=authentic` | Opt-in authentic UI foundation harness. New. |
+| `/?engine=1&ui=authentic` | Engine-backed authentic match table. New in `cEp2`. |
+| `/?engine=1&ui=authentic&view=harness` | Opt-in authentic UI foundation harness. |
 | `/?ui=authentic` | Legacy UI. The authentic harness requires `engine=1`. |
 
 `VITE_ENGINE_UI=1` continues to enable the engine UI without `engine=1`. When
-this env flag is present and `ui=authentic` is set, the authentic harness still
-renders.
+this env flag is present and `ui=authentic` is set, the authentic match table
+renders. Add `view=harness` to open the foundation harness.
 
 ## Opening The Harness
 
@@ -61,7 +62,7 @@ npm run dev
 Then open:
 
 ```
-http://localhost:5173/?engine=1&ui=authentic
+http://localhost:5173/?engine=1&ui=authentic&view=harness
 ```
 
 The harness shows:
@@ -142,17 +143,18 @@ and so cannot render hidden hand contents at all. Future phases that wire the
 authentic card path to live engine state must continue to render backs/counts
 only for hidden zones.
 
-## Relationship To The Future Match Screen
+## Relationship To The Match Screen
 
-`cEp2` will build the engine-backed match table on top of this foundation:
+`cEp2` built the engine-backed match table on top of this foundation:
 
 - the same `.gwent-authentic` wrapper provides design tokens and font stacks;
-- `AuthenticCard`/`AuthenticCardBack` will render hand, board, and pile cards
+- `AuthenticCard`/`AuthenticCardBack` render hand, board, and pile cards
   driven by engine selectors;
-- display metadata helpers will translate catalog ids into faction/row/ability
+- display metadata helpers translate catalog ids into faction/row/ability
   presentation;
-- the SVG fallback will continue to cover missing card art during catalog
+- the SVG fallback continues to cover missing card art during catalog
   expansion.
 
-`cEp2` must not regress the rules: the match screen will dispatch engine
-commands and render legal moves, never compute rule outcomes in React.
+The match screen dispatches engine commands and renders legal moves; it does not
+compute rule outcomes in React. `cEp3` should build richer product interactions
+on the same command path.

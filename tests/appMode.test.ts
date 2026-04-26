@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  getAuthenticUiViewFromSearch,
   getEngineSeedFromSearch,
   getEngineUiVariantFromSearch,
   shouldUseEngineUi,
@@ -31,5 +32,11 @@ describe("app mode helpers", () => {
   it("selects the authentic variant when ui=authentic is set", () => {
     expect(getEngineUiVariantFromSearch("?engine=1&ui=authentic")).toBe("authentic");
     expect(getEngineUiVariantFromSearch("ui=authentic&engine=1")).toBe("authentic");
+  });
+
+  it("defaults authentic UI to the match view unless the harness view is explicit", () => {
+    expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic")).toBe("match");
+    expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=harness")).toBe("harness");
+    expect(getAuthenticUiViewFromSearch("view=other&ui=authentic")).toBe("match");
   });
 });

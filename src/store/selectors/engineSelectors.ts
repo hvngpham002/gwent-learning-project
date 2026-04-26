@@ -239,6 +239,15 @@ export const selectEngineDiscardCounts = createSelector(selectEngineMatch, (matc
     : { seat_a: 0, seat_b: 0 },
 );
 
+export const selectEngineDiscardCards = createSelector(selectEngineMatch, (match) =>
+  match
+    ? {
+        seat_a: cardIdsToViewModels(match, match.seats.seat_a.discard),
+        seat_b: cardIdsToViewModels(match, match.seats.seat_b.discard),
+      }
+    : { seat_a: [], seat_b: [] },
+);
+
 export const selectEngineDeckCounts = createSelector(selectEngineMatch, (match) =>
   match
     ? {

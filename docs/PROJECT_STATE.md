@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: post-`cEp1` catalog-scaled authentic card dimensions; `cEp2` spec remains next
-- Latest relevant commit: `cEp2` spec commit plus follow-up authentic card rendering and fallback badge tuning
+- Phase/spec: post-`cEp2` engine-backed authentic match table v1 plus Medic/Spy regression fix; `cEp3` is next
+- Latest relevant commit: `cEp2` implementation pending commit
 
 ## Required Reading For Every Coding Instance
 
@@ -19,7 +19,7 @@
 
 - Legacy UI remains the default route.
 - Engine UI is opt-in through `?engine=1` or `VITE_ENGINE_UI=1`.
-- An opt-in authentic UI foundation harness is now available at `?engine=1&ui=authentic`. It is a gallery-only foundation, not a playable match screen.
+- The opt-in authentic UI route `?engine=1&ui=authentic` now renders the engine-backed authentic match table. The cEp1 gallery harness remains available at `?engine=1&ui=authentic&view=harness`.
 - The pure engine under `src/game/core/` owns rules, legal moves, scoring, prompts, command transactions, round resolution, and game end.
 - The Redux engine adapter stores `MatchState`, status/locks, command history, event logs, adapter errors, and UI-only selection while dispatching engine commands.
 - Catalog and deck preset data under `src/game/catalog/` and `src/data/catalog/` define card, leader, faction, ability metadata, and current playable presets.
@@ -51,6 +51,7 @@
 | `cDp10` | Cluster D / hidden-info-safe export contract split | `audit/reports/2026-04-26-cDp10-report.md` | Added deterministic in-memory simulation export rows with safe perspective observations, per-row legal action encoding, chosen action indices, sparse terminal reward placeholders, summaries, diagnostics, and docs. |
 | `cDp11` | Cluster D / safe export validation and JSONL boundary split | `audit/reports/2026-04-26-cDp11-report.md` | Added runtime validation, recursive redaction scanning, deterministic in-memory JSONL serialization, JSONL parsing/round-trip reconstruction, tests, and docs for `sim-export-v1`. |
 | `cEp1` | Cluster E / authentic UI foundation | `audit/reports/2026-04-26-cEp1-report.md` | Added Direction A production tokens, catalog-aware display metadata, authentic card and card-back components with deterministic SVG fallback, opt-in `?engine=1&ui=authentic` harness, focused tests, browser smoke, and docs without changing engine rules or replacing the default route. |
+| `cEp2` | Cluster E / engine-backed authentic match table v1 | `audit/reports/2026-04-26-cEp2-report.md` | Replaced the default authentic route with a playable engine-backed match table while preserving the diagnostic shell and moving the foundation harness to `?engine=1&ui=authentic&view=harness`; review also fixed the Medic-revived Spy board-placement regression. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -75,21 +76,27 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 
 ## Current Cluster E Status
 
-The authentic UI foundation now ships behind `?engine=1&ui=authentic`:
+The engine-backed authentic match table now ships behind `?engine=1&ui=authentic`:
 
-- production Direction A tokens load via `src/styles/gwent-tokens.css`, scoped under a `.gwent-authentic` wrapper so the legacy UI is unaffected;
+- production Direction A tokens continue to load via `src/styles/gwent-tokens.css`, scoped under a `.gwent-authentic` wrapper so the legacy UI is unaffected;
+- `/?engine=1&ui=authentic` now mounts `src/components/gwent/AuthenticMatchScreen.tsx`, starts the same default Northern Realms vs Nilfgaard engine match from the URL seed, runs `legal-heuristic-v0` for the AI seat, and dispatches human actions through the existing engine thunks;
+- `/?engine=1&ui=authentic&view=harness` keeps the cEp1 `AuthenticUiHarness` available for card foundation review;
+- `src/components/gwent/matchViewModel.ts` maps engine adapter selectors into hidden-safe product UI shapes for authentic cards, seat summaries, board row order, public card lookup, and row legal target detection;
+- the match table provides the V1 handoff layout: top bar, score/pile/weather left rail, six-row tactical board, hand strip, right-side inspector, actions, prompt panel, round status, and battle log;
+- human mulligan, playable hand card selection, legal target action buttons, clickable legal board-row targets, implemented leader moves, pass, round resolution, and game-end summary are all driven by engine legal moves/commands;
+- AI hand and deck identities remain hidden: the authentic match renders AI hand/deck as counts and backs only, and activity summaries use public card lookup so hidden AI plays fall back to safe labels;
 - `src/components/gwent/displayMetadata.ts` exposes deterministic faction, row, ability, leader-ability, and card-kind display metadata with documented fallbacks for unknown ids;
 - `src/components/gwent/AuthenticCard.tsx` and `AuthenticCardBack.tsx` render current catalog cards through a UI view model with image-failure fallback to a deterministic `SvgCardArt` placeholder;
-- `src/components/gwent/AuthenticUiHarness.tsx` shows sample Northern Realms, Nilfgaard, neutral, hero, and special cards alongside a hidden card back, missing-image fallback example, and metadata chips for browser smoke;
 - authentic card and card-back dimensions derive from the shared catalog card display frame: `md` is the `86.5px` by `147px` source at `1.00x`, `xs` is `0.50x`, `sm` is `0.75x`, and `lg`/`xl` are `1.50x`; source-face bottom crop scales from the same `15px` base;
 - deterministic fallback card art keeps rule-like markers in the left-side badge stack: fallback unit/hero cards show row and ability glyphs below the strength medallion, all displayable catalog abilities have fallback glyph coverage, and the old decorative top-right hero ring has been removed so it is not mistaken for playable-row or rule metadata;
 - `AuthenticCardBack` uses faction default back images such as `public/images/northern_realms/default-northern_realms.png`, stretches those backs to fit, and still supports override candidates under `public/images/card-backs/`;
-- `src/appMode.ts` adds `getEngineUiVariantFromSearch` so `?engine=1&ui=authentic` reaches the harness without disturbing `/` or `?engine=1`;
+- `src/appMode.ts` now separates the authentic route variant from the authentic `match`/`harness` view flag without disturbing `/` or `?engine=1`;
 - the forbidden-imports check now scans `src/components/gwent/` so the new product UI path stays free of legacy rule helpers and AI;
-- new unit and component tests cover the route helper, display metadata, and card view model;
-- the existing Playwright Chromium smoke now also covers the authentic harness at desktop and mobile widths, asserts no leaked internal IDs, and fails on page-level runtime errors from the authentic route.
+- unit and component tests cover the route helper, display metadata, card view model, and authentic match view-model helpers;
+- the Playwright Chromium smoke covers the diagnostic shell, authentic harness, and authentic match table at desktop/mobile widths, including mulligan, card play, AI response, pass, hidden-info leak checks, and overflow checks.
+- the cEp2 review fixed a pre-existing Medic/Spy rule regression: when Medic revives a Spy, the Spy now lands on the opponent board, remains controlled by the reviving player, and resolves Spy draw for that player per `docs/gwent-rules.md` section 17.2/17.3.
 
-The harness is intentionally a gallery foundation, not a playable match screen, deck builder, or pre-game flow. `cEp2` will build the engine-backed match table on top of the same components and tokens.
+The authentic match table is intentionally V1. It is not yet the full cEp3 interaction layer: discard browser, Medic/Decoy modal polish, round-end overlay, card-flight animation, deck builder, and pre-game setup remain deferred.
 
 ## Current Cluster E Direction
 
@@ -143,14 +150,14 @@ Recommended Cluster E sequence:
 - JSONL parsing validates reconstructed datasets and reports malformed input as structured issues, but it is not a replay checker, schema library, compression format, Python bridge, or compatibility guarantee.
 - The UI handoff prototype is fixed-size and browser-global by design; Cluster E must adapt it into responsive React/TypeScript components and production styling.
 - The UI handoff README contains stale pre-overhaul paths. Use current catalog, engine, Redux adapter, AI, and simulation paths instead.
-- The authentic UI foundation harness is a gallery only. It does not exercise engine commands, legal moves, prompts, or AI; future phases must wire those without regressing the hidden-info safety properties already covered for the diagnostic shell.
+- The authentic UI foundation harness is now a development view only. The authentic match route exercises engine commands, legal moves, prompts, and AI, but still lacks full discard browsing, polished prompt modals, and match animations.
 - The authentic harness depends on a Google Fonts `@import` for `EB Garamond` and `JetBrains Mono`. Production deployments without external font access fall back to the documented serif/monospace stacks.
 - Card images are still incomplete by design. The `SvgCardArt` placeholder is a deterministic fallback, not a content workflow.
 - Faction-specific card-back files are not present in the repository yet. Until they are added under `public/images/card-backs/`, the authentic back component falls back to synthetic faction-colored sleeves.
 
 ## Next Recommended Step
 
-Implement `docs/spec/2026-04-26-cEp2-specs.md`: make `/?engine=1&ui=authentic` the first engine-backed authentic match table, keep the diagnostic shell at `/?engine=1`, keep the gallery harness behind a documented harness view flag, drive all actions from engine legal moves/commands, and preserve hidden-info safety.
+Implement the next Cluster E phase (`cEp3`): add product match interactions on top of the engine-backed authentic match table, including richer spatial targets, discard browser, prompt presentations, round-end overlay, and animation hooks while preserving legal-move command flow and hidden-info safety.
 
 ## Update Requirements
 

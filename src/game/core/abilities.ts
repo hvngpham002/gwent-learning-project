@@ -36,6 +36,7 @@ const ONGOING_STATE_ABILITIES = new Set<CatalogAbilityId>([
 ]);
 
 const PLANNED_DEFERRED_ABILITIES = new Set<CatalogAbilityId>(["summon", "avenger", "mardroeme", "berserker"]);
+const opponentOf = (seatId: SeatId): SeatId => (seatId === "seat_a" ? "seat_b" : "seat_a");
 
 const createCardLookup = (catalogCards: readonly CatalogCardSource[]) =>
   new Map(catalogCards.map((card) => [card.sourceId, card]));
@@ -191,16 +192,19 @@ const buildMedicOptions = (
       return [];
     }
 
-    return source.rows.map((row) => ({
-      optionId: `revive:${cardId}:${row}`,
-      label: `${source.name} to ${row}`,
-      target: {
-        kind: "card_instance" as const,
-        cardId,
-        sourceId: source.sourceId,
-        row,
-      },
-    }));
+    return source.rows.map((row) => {
+      const targetSide = source.abilities.includes("spy") ? "opponent" : "own";
+      return {
+        optionId: `revive:${cardId}:${row}`,
+        label: `${source.name} to ${targetSide} ${row}`,
+        target: {
+          kind: "card_instance" as const,
+          cardId,
+          sourceId: source.sourceId,
+          row,
+        },
+      };
+    });
   });
 
 const openMedicPrompt = (
@@ -379,13 +383,16 @@ export const resolvePromptOption = ({ state, events, catalogCards, seatId, optio
 
   const revivedId = option.target.cardId;
   const revived = state.cardsById[revivedId];
+  const catalogLookup = createCardLookup(catalogCards);
+  const revivedSource = catalogLookup.get(revived.sourceId);
+  const boardSeat = revivedSource?.abilities.includes("spy") ? opponentOf(seatId) : seatId;
   revived.controller = seatId;
-  moveCard(state, events, revivedId, { kind: "board_row", seat: seatId, row: option.target.row }, "medic_revive");
+  moveCard(state, events, revivedId, { kind: "board_row", seat: boardSeat, row: option.target.row }, "medic_revive");
   events.push({ type: "prompt_resolved", promptId: prompt.promptId, seatId, optionId });
   events.push({ type: "card_played", seatId, cardId: revivedId, target: revived.zone });
   state.pendingPrompt = null;
 
-  const source = createCardLookup(catalogCards).get(prompt.sourceId ?? "");
+  const source = catalogLookup.get(prompt.sourceId ?? "");
   if (source) {
     events.push({
       type: "ability_resolved",

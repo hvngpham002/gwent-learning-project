@@ -260,6 +260,37 @@ describe("core ability resolver", () => {
     assertNoDuplicateZones(result.state);
   });
 
+  it("revives Spy with Medic onto the opponent board and resolves Spy draw", () => {
+    const state = createState("medic-spy");
+    const medic = findCard(state, "northern-realms.dun-banner-medic");
+    const spy = findCard(state, "northern-realms.thaler");
+    const drawCards = state.seats.seat_a.deck.filter((cardId) => cardId !== medic && cardId !== spy).slice(0, 2);
+    preparePlayingTurn(state);
+    putInHand(state, "seat_a", [medic]);
+    putInDiscard(state, "seat_a", [spy]);
+    putInDeck(state, "seat_a", drawCards);
+
+    const prompted = playCard(state, "seat_a", medic).state;
+    const reviveSpyOption = prompted.pendingPrompt!.options.find((option) => option.target.cardId === spy)!;
+
+    const result = execute(prompted, {
+      type: "ChoosePromptOption",
+      seatId: "seat_a",
+      promptId: prompted.pendingPrompt!.promptId,
+      optionId: reviveSpyOption.optionId,
+    });
+
+    expect(result.state.pendingPrompt).toBeNull();
+    expect(result.state.seats.seat_a.discard).not.toContain(spy);
+    expect(result.state.seats.seat_a.board.siege.units).not.toContain(spy);
+    expect(result.state.seats.seat_b.board.siege.units).toContain(spy);
+    expect(result.state.cardsById[spy].controller).toBe("seat_a");
+    expect(result.events.filter((event) => event.type === "card_drawn")).toHaveLength(2);
+    expect(drawCards.every((cardId) => result.state.seats.seat_a.hand.includes(cardId))).toBe(true);
+    expect(result.state.currentTurn).toBe("seat_b");
+    assertNoDuplicateZones(result.state);
+  });
+
   it("rejects prompt choices without a pending prompt", () => {
     const state = createState("prompt-missing");
     preparePlayingTurn(state);
