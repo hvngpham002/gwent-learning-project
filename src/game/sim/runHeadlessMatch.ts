@@ -21,7 +21,7 @@ import type {
 const DEFAULT_MAX_STEPS = 300;
 const SEATS: readonly SeatId[] = ["seat_a", "seat_b"];
 
-const createSimulationConfig = (seed: string | number): MatchConfig => ({
+export const createHeadlessSimulationConfig = (seed: string | number): MatchConfig => ({
   matchId: `sim:${seed}`,
   seed,
   seats: [
@@ -54,7 +54,7 @@ const policyIds = (input: HeadlessMatchSimulationInput): Record<SeatId, string> 
 const policyForSeat = (input: HeadlessMatchSimulationInput, seatId: SeatId) =>
   input.policies?.[seatId] ?? legalHeuristicPolicyV0;
 
-const getActingSeat = (state: MatchState): SeatId | null => {
+export const getHeadlessActingSeat = (state: MatchState): SeatId | null => {
   if (state.pendingPrompt) {
     return state.pendingPrompt.seatId;
   }
@@ -134,7 +134,7 @@ const createResult = ({
 
 export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput): HeadlessMatchSimulationResult => {
   const maxSteps = input.maxSteps ?? DEFAULT_MAX_STEPS;
-  const started = startMatch(createSimulationConfig(input.seed));
+  const started = startMatch(createHeadlessSimulationConfig(input.seed));
   let state = started.state;
   const steps: SimulationStepLog[] = [];
   const commandLog: SimulationCommand[] = [];
@@ -145,7 +145,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
       return createResult({ input, status: "completed", state, steps, commandLog, events, maxSteps });
     }
 
-    const seatId = getActingSeat(state);
+    const seatId = getHeadlessActingSeat(state);
     if (!seatId) {
       return createResult({
         input,
@@ -263,7 +263,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
 };
 
 export const replayHeadlessMatchCommands = ({ seed, commandLog }: ReplayHeadlessMatchCommandsInput): MatchState => {
-  let state = startMatch(createSimulationConfig(seed)).state;
+  let state = startMatch(createHeadlessSimulationConfig(seed)).state;
 
   commandLog.forEach((command, index) => {
     const transaction = executeCommand({ state, command, catalogCards: currentCatalogCards, catalogLeaders: currentCatalogLeaders });

@@ -44,11 +44,31 @@ Round-end auto-resolution exists only in `src/game/sim`. The UI still requires e
 
 Replay is intentionally small. It checks command determinism for the current catalog config, not cross-version compatibility or a replay viewer protocol.
 
+## Safe Export Contract
+
+`cDp10` adds a hidden-info-safe in-memory export contract:
+
+```ts
+import { buildSimulationExportDataset } from "@/game/sim";
+
+const dataset = buildSimulationExportDataset({
+  batchInput: { suiteId: "current-smoke-v1" },
+});
+```
+
+The exporter replays each raw simulation command from the starting seed and emits rows from the engine state immediately before each command is applied. Each row contains a perspective-specific safe observation, the ordered legal action list, the chosen legal action index, a sparse terminal reward placeholder, and compact run metadata.
+
+Default export rows exclude `finalState`, `commandLog`, full events, `cardsById`, raw engine card instance ids, opponent hidden hand identities, opponent deck identities/order, and own deck order. Visible cards are represented by catalog `sourceId` plus row-local refs such as `own_hand_0` or `opponent_board_close_1`.
+
+`resolve_round_end` is excluded by default because it is the simulation auto-resolver rather than a policy-owned decision. Use `includeSystemActions: true` only for diagnostics.
+
+See `docs/simulation/safe-export-contract.md` for the full contract and ML boundary.
+
 ## ML Boundary
 
 This harness sets up future batch simulation and ML exports by using legal moves and seat observations as the policy contract. It does not add JSONL export, action encoding, reward shaping, tournament runs, random policies, Python tooling, notebooks, or model training.
 
-Future ML data should add explicit observation hashing or redacted observation export. The current `commandLog` and final state are for debugging/replay and may contain hidden card identifiers.
+The cDp10 export adds redacted observation rows and per-row legal action encoding, but still does not add JSONL export, fixed neural action vectors, Python tooling, notebooks, self-play workers, model training, or shaped rewards. The current `commandLog` and final state remain debugging/replay data and may contain hidden card identifiers.
 
 ## Batch Seed Suites
 

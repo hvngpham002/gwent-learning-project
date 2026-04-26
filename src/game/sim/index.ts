@@ -4,3 +4,7 @@ export * from "./runHeadlessMatch";
 export * from "./seedSuites";
 export * from "./diagnostics";
 export * from "./batch";
+export * from "./exportTypes";
+export * from "./exportObservation";
+export * from "./actionEncoding";
+export * from "./exportDataset";
