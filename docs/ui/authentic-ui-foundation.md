@@ -107,9 +107,13 @@ filenames:
 - `neutral.png`, `.jpg`, or `.jpeg`
 - `discard.png`, `.jpg`, or `.jpeg`
 
-The back resolver also accepts dashed names such as `northern-realms.png`,
-suffixes such as `northern_realms_back.png` and `northern-realms-back.png`, and
-faction-local paths such as `public/images/northern_realms/card_back.png`.
+The back resolver first uses the existing faction default images such as
+`public/images/northern_realms/default-northern_realms.png` and
+`public/images/nilfgaard/default-nilfgaard.png`. It also accepts dashed names
+such as `northern-realms.png`, suffixes such as `northern_realms_back.png` and
+`northern-realms-back.png`, and faction-local paths such as
+`public/images/northern_realms/card_back.png`. Faction back images are stretched
+to fit the card-back frame.
 
 If a faction-specific back is missing, the component falls back to a
 faction-colored synthetic sleeve rather than the generic closed card. If a

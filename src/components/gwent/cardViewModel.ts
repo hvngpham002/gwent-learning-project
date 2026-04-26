@@ -72,6 +72,11 @@ export const dimensionsForSize = (size: AuthenticCardSize): AuthenticCardDimensi
 
 const normalizeFactionSlug = (faction: string) => faction.replace(/[^a-z0-9_-]/gi, "_");
 
+const factionDefaultBackNames = (slug: string, kebab: string): readonly string[] => {
+  const singular = slug === "monsters" ? "monster" : slug;
+  return Array.from(new Set([slug, kebab, singular]));
+};
+
 export const cardBackImageCandidates = (
   faction: string,
   variant: AuthenticCardBackVariant = "deck",
@@ -87,8 +92,15 @@ export const cardBackImageCandidates = (
 
   const slug = normalizeFactionSlug(faction || "neutral");
   const kebab = slug.replace(/_/g, "-");
+  const factionDefaults = factionDefaultBackNames(slug, kebab).flatMap((name) => [
+    `/images/${slug}/default-${name}.png`,
+    `/images/${slug}/default-${name}.jpg`,
+    `/images/${slug}/default-${name}.jpeg`,
+    `/images/${slug}/default-${name}.webp`,
+  ]);
 
   return [
+    ...factionDefaults,
     `/images/card-backs/${slug}.png`,
     `/images/card-backs/${slug}.jpg`,
     `/images/card-backs/${slug}.jpeg`,

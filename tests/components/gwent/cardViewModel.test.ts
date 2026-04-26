@@ -76,12 +76,16 @@ describe("authentic card view model", () => {
   });
 
   it("provides faction and discard pile card-back image candidates with safe fallbacks", () => {
+    expect(cardBackImageCandidates("northern_realms")[0]).toBe(
+      "/images/northern_realms/default-northern_realms.png",
+    );
     expect(cardBackImageCandidates("northern_realms")).toContain(
       "/images/card-backs/northern_realms.png",
     );
     expect(cardBackImageCandidates("northern_realms")).toContain(
       "/images/card-backs/northern-realms-back.png",
     );
+    expect(cardBackImageCandidates("monsters")).toContain("/images/monsters/default-monster.png");
     expect(cardBackImageCandidates("northern_realms")).not.toContain("/images/closed_card.jpeg");
     expect(cardBackImageCandidates("neutral", "discard")).toEqual([
       "/images/card-backs/discard.png",
