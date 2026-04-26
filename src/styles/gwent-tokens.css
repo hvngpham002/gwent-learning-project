@@ -1,0 +1,68 @@
+/*
+  Gwent authentic UI tokens — Direction A (parchment-and-ink).
+
+  Sourced from docs/ui-handoff/prototype/tokens.css (.dir-a) and adapted to a
+  product wrapper class .gwent-authentic so the legacy UI is not affected.
+
+  Loaded once via src/main.tsx through the global stylesheet entry.
+*/
+
+@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+.gwent-authentic {
+  /* Faction palette (mirrors prototype/tokens.css :root values) */
+  --f-northern: #2a4a7a;
+  --f-nilfgaard: #1a1a1a;
+  --f-nilfgaard-accent: #c9a050;
+  --f-monsters: #5a2030;
+  --f-scoiatael: #4a6a30;
+  --f-skellige: #6a5030;
+  --f-neutral: #5a5a5a;
+
+  /* Row colors */
+  --row-close: #b8642e;
+  --row-ranged: #6a8a3a;
+  --row-siege: #8a6a3a;
+
+  /* Weather */
+  --w-frost: #6a9ac4;
+  --w-fog: #8a8a90;
+  --w-rain: #4a6a8a;
+
+  /* Direction A — Authentic tactical card table */
+  --bg: #d9cdb0;
+  --bg-2: #c8bb9a;
+  --bg-paper: #e8dfc4;
+  --ink: #1f1a12;
+  --ink-2: #4a3f2e;
+  --ink-3: #6e5d44;
+  --rule: rgba(31, 26, 18, 0.18);
+  --rule-strong: rgba(31, 26, 18, 0.45);
+  --accent: #8a3a1f;
+  --accent-2: #4a3f2e;
+  --gold: #b88a3a;
+  --shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4) inset,
+    0 2px 6px rgba(80, 60, 30, 0.18);
+
+  --font-display: "EB Garamond", "Iowan Old Style", "Palatino", Georgia, serif;
+  --font-body: "EB Garamond", "Iowan Old Style", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Iosevka", ui-monospace, monospace;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "tnum" 0;
+}
+
+.gwent-authentic *,
+.gwent-authentic *::before,
+.gwent-authentic *::after {
+  box-sizing: border-box;
+}
+
+.gwent-authentic button {
+  font: inherit;
+  color: inherit;
+}

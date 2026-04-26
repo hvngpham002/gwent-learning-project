@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Gwent — Clickable Prototype</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="tokens.css"/>
+<style>
+  html,body{margin:0;padding:0;background:#1a140c}
+  #root{display:grid;place-items:center;min-height:100vh;padding:20px;box-sizing:border-box}
+  .stage{box-shadow:0 30px 80px rgba(0,0,0,0.5);border-radius:6px;overflow:hidden}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="match-engine.jsx"></script>
+<script type="text/babel" src="match-screen.jsx"></script>
+<script type="text/babel" src="deck-builder-screen.jsx"></script>
+<script type="text/babel" src="pre-game-screen.jsx"></script>
+
+<script type="text/babel" data-presets="env,react">
+const { useState } = React;
+
+const DEFAULTS = /*EDITMODE-BEGIN*/{
+  "density": "compact",
+  "showAdvisor": true,
+  "cardStyle": "silhouette"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(DEFAULTS);
+  const [screen, setScreen] = useState('pregame'); // pregame | builder | match
+  const [matchConfig, setMatchConfig] = useState(null);
+
+  let body;
+  if (screen === 'pregame') {
+    body = <PreGameScreen
+      onExit={() => {}}
+      onDeckBuilder={() => setScreen('builder')}
+      onPlay={cfg => { setMatchConfig(cfg); setScreen('match'); }}/>;
+  } else if (screen === 'builder') {
+    body = <DeckBuilderScreen
+      onExit={() => setScreen('pregame')}
+      onPlay={(deck) => { setMatchConfig({ deck, mode: 'casual', opponent: 'eredin', bestOf: 3 }); setScreen('match'); }}/>;
+  } else {
+    body = <MatchScreen tweaks={tweaks} onExit={() => setScreen('pregame')}/>;
+  }
+
+  return (
+    <>
+      <div className="stage">{body}</div>
+      <TweaksPanel>
+        <TweakSection title="Navigation">
+          <TweakRadio label="Screen" options={[{value:'pregame',label:'Pre-game'},{value:'builder',label:'Deck Builder'},{value:'match',label:'Match'}]} value={screen} onChange={setScreen}/>
+        </TweakSection>
+        <TweakSection title="Layout">
+          <TweakRadio label="Density" options={[{value:'compact',label:'Compact'},{value:'comfortable',label:'Comfortable'}]} value={tweaks.density} onChange={v => setTweak('density', v)}/>
+          <TweakToggle label="Strategist's note panel" value={tweaks.showAdvisor} onChange={v => setTweak('showAdvisor', v)}/>
+        </TweakSection>
+        <TweakSection title="Cards">
+          <TweakSelect label="Placeholder style" options={[{value:'silhouette',label:'Silhouette portrait'},{value:'monogram',label:'Monogram only'},{value:'crest',label:'Heraldic crest'}]} value={tweaks.cardStyle} onChange={v => setTweak('cardStyle', v)}/>
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

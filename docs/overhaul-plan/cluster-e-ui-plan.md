@@ -1,0 +1,264 @@
+# Cluster E UI Product Plan
+
+This plan integrates the selected UI handoff in `docs/ui-handoff/` into the overhaul roadmap. Cluster E is now the product-facing UI track: it should turn the deterministic engine and Redux adapter into the authentic card-table game experience, then layer deck configuration, deck building, card authoring, and broader match modes on top.
+
+## Source Decision
+
+The UI direction is the `docs/ui-handoff/` design handoff, reviewed in full on 2026-04-26:
+
+- `README.md`
+- `prototype/tokens.css`
+- `prototype/shared.jsx`
+- `prototype/pre-game-screen.jsx`
+- `prototype/deck-builder-screen.jsx`
+- `prototype/match-screen.jsx`
+- `prototype/match-engine.jsx`
+- `prototype/tweaks-panel.jsx`
+- `prototype/Gwent - Prototype.html`
+
+The canonical visual direction is **Authentic Tactical Card Table**, also called Direction A in `tokens.css`.
+
+Use these traits as product requirements:
+
+- warm parchment and ink palette;
+- `EB Garamond` for display/card text and `JetBrains Mono` for compact labels;
+- restrained ink-red accent, brass/gold secondary detail, faction color stripes;
+- small radius, paper/card texture feel, tactical table density;
+- match screen as the primary product surface, not a marketing landing page.
+
+## Production Boundaries
+
+The handoff is a design reference, not production logic.
+
+Do not port:
+
+- `prototype/match-engine.jsx`;
+- `prototype/tweaks-panel.jsx`;
+- browser-global wiring from `Gwent - Prototype.html`;
+- prototype stub card pools, leader arrays, or localStorage deck model as production data;
+- stale paths in the handoff README such as `src/data/cards/*` or legacy `gameSlice` rule paths.
+
+Production code must use the current architecture:
+
+- card and leader data from `src/game/catalog/` and `src/data/catalog/`;
+- rules, legal moves, prompts, scoring, and round/game resolution from `src/game/core/`;
+- AI decisions from `src/game/ai/`;
+- simulation/export code from `src/game/sim/`;
+- Redux engine adapter state and selectors from the engine lane under `src/store/`.
+
+The UI may select, inspect, animate, and dispatch exact engine commands. It may not compute rule outcomes, infer game end, mutate card zones, invent legal targets, or expose hidden opponent card identities.
+
+## Route Strategy
+
+The legacy UI should remain the default until the product UI is meaningfully playable. The existing opt-in engine shell remains useful as a diagnostic harness.
+
+Recommended rollout:
+
+- keep `/` as the legacy route for now;
+- keep the current `?engine=1` shell available during the first UI foundation phase;
+- introduce the authentic product UI behind an explicit opt-in such as `?engine=1&ui=authentic` while it is incomplete;
+- once the authentic match screen can complete a current human-vs-AI game, promote it to the normal engine route and keep the old shell behind a dev/debug flag only if it still catches regressions.
+
+## Screen Mapping
+
+### Match Screen
+
+The `prototype/match-screen.jsx` layout is the target match experience:
+
+- top bar with exit, title, round, actor, and phase context;
+- left column for opponent score/gems, deck/discard piles, weather/pass actions, and player score/gems;
+- center card table with six tactical rows ordered opponent siege/ranged/close, divider, player close/ranged/siege, plus hand strip;
+- right column for selected-card inspector, legal target/actions, prompts, and battle log;
+- round-end overlay and discard browser as product interactions.
+
+Production match UI must be driven by engine view models and legal moves. The prototype's toy `playCard`, `resolveMedic`, `resolveDecoy`, `aiTurn`, and scoring helpers are explicitly out of scope.
+
+### Pre-Game Screen
+
+The `prototype/pre-game-screen.jsx` layout is the target match setup experience:
+
+- top bar with product title and deck-builder entry;
+- deck selection panel;
+- mode/opponent/format/seed panel;
+- bottom summary and Begin Match action.
+
+Production pre-game should create engine match configuration from catalog presets, selected controllers, policy IDs, and deterministic seeds. Prototype-only mode labels may be used as UX inspiration, but unavailable modes must be disabled or hidden until implemented.
+
+### Deck Builder
+
+The `prototype/deck-builder-screen.jsx` layout is the target deck-building experience:
+
+- deck list column;
+- searchable/filterable card pool;
+- selected deck/stat/validation column;
+- import/export/save/play actions.
+
+Production deck builder must be catalog-backed, use the real deck validator, and support current incomplete card content. It should make future card population easier by exposing image path conventions and export/import workflows, but it should not require browser code to write directly to repository files.
+
+### Card Visual System
+
+The `prototype/shared.jsx` `GameCard`, `CardBack`, faction metadata, row glyphs, ability glyphs, and `SvgCardArt` placeholder establish the visual vocabulary.
+
+Production should prefer one of these approaches:
+
+- extend the existing `src/components/card/GwentCard.tsx` with `variant: 'classic' | 'authentic'` if that avoids breaking current call sites;
+- or create a `src/components/gwent/` product card wrapper around catalog view models if the existing card component is too tightly coupled to legacy state.
+
+Either way, hidden zones must render backs/counts only.
+
+## Cluster E Phase Plan
+
+### `cEp1`: Authentic UI Foundation
+
+Goal: establish the visual system without changing game rules.
+
+Scope:
+
+- add Direction A design tokens to production styling;
+- import or document the required fonts;
+- add shared faction/row/ability display metadata mapped to current catalog IDs;
+- add an authentic card rendering path with `SvgCardArt`/image fallback;
+- add a small product UI route or gallery harness behind an opt-in flag;
+- preserve the current engine shell and legacy route.
+
+Acceptance:
+
+- no new UI code imports legacy rule helpers or legacy AI;
+- cards can render current catalog cards, card backs, hero/unit/special states, strength, rows, faction stripe, and abilities;
+- missing images degrade to a deterministic placeholder;
+- browser smoke covers the opt-in route at desktop and mobile widths.
+
+### `cEp2`: Engine-Backed Match Table V1
+
+Goal: replace the button-heavy engine shell with the first authentic, engine-backed match screen.
+
+Scope:
+
+- build `MatchScreen` and subcomponents for top bar, score cards, rows, hand, piles, inspector, action panel, and battle log;
+- map engine state/selectors into product view models;
+- render legal card plays and row/target choices from engine legal moves;
+- keep the diagnostic shell available if needed;
+- do not add deck builder or pre-game yet.
+
+Acceptance:
+
+- a current Northern Realms vs Nilfgaard human-vs-AI match can progress through mulligan, card play, leader use where implemented, pass, round resolution, and game end;
+- hidden AI hand/deck identities are not visible;
+- React components dispatch engine commands only;
+- Playwright smoke covers at least one card play, one AI response, one pass/round transition, and mobile overflow.
+
+### `cEp3`: Product Match Interactions
+
+Goal: make the match screen feel like the selected handoff rather than a thin shell.
+
+Scope:
+
+- spatial row click targets;
+- selected-card inspector and legal target list;
+- discard pile browser grouped by card category/row;
+- Medic and Decoy prompt presentations over engine prompt options;
+- round-end overlay based on engine round history;
+- UI-only card flight/transition hooks where safe.
+
+Acceptance:
+
+- prompt choices are legal-move backed;
+- discard browser never exposes hidden opponent zones;
+- round-end overlay observes resolved engine state and does not drive rule transitions;
+- browser tests cover prompt ownership and discard browser hidden-info safety.
+
+### `cEp4`: Pre-Game And Match Configuration
+
+Goal: make match start a product flow instead of a query-param/debug setup.
+
+Scope:
+
+- build the pre-game screen from the handoff;
+- support deck preset selection from current catalog presets;
+- support controller choices that are actually implemented: human vs AI first, then disabled placeholders for future modes;
+- support deterministic seed entry/copy;
+- start engine matches from selected config.
+
+Acceptance:
+
+- users can start a playable current match without editing the URL;
+- invalid or unavailable deck/mode choices are clearly disabled;
+- selected seed and policy IDs are visible in debug-safe context;
+- route smoke covers pre-game to match transition.
+
+### `cEp5`: Catalog-Backed Deck Builder V1
+
+Goal: add the deck builder over real catalog data.
+
+Scope:
+
+- build deck list, card pool, selected deck, stats, validation, import/export, save/load, and play-from-builder flows;
+- use existing catalog/deck validation rules rather than prototype counts only;
+- support incomplete catalog content gracefully;
+- keep local persistence/export import browser-only unless a file-writing tool is separately approved.
+
+Acceptance:
+
+- a legal current deck can be assembled and used to start a match;
+- illegal decks explain validation failures;
+- export/import round-trips catalog-compatible deck data;
+- unknown or unimplemented abilities are visible and cannot silently enter unsupported gameplay.
+
+### `cEp6`: Card Studio And Content Workflow
+
+Goal: make future card population easier for the user.
+
+Scope:
+
+- add a Card Studio or card-authoring workflow for catalog-compatible records;
+- include image path guidance and preview;
+- validate source IDs, factions, rows, abilities, leader fields, deck limits, and image metadata;
+- export/import card records and optionally generated deck presets.
+
+Acceptance:
+
+- a user can create a custom card record through the UI, export it, import it, and include it in a deck if all abilities are implemented;
+- unknown ability IDs are blocked or clearly marked as unsupported;
+- docs explain where repo images and catalog data belong for permanent source commits.
+
+### `cEp7`: Product Promotion And Mode Expansion
+
+Goal: make the new UI the main game experience and open the path for broader modes.
+
+Scope:
+
+- promote the authentic engine-backed UI to the default app experience when smoke and manual play are clean;
+- add or unlock local PvP and AI-vs-AI product mode surfaces when existing engine support is sufficient;
+- keep replay/simulation/debug surfaces clearly separated from normal play;
+- retire or quarantine obsolete shell/legacy UI paths only after replacement coverage exists.
+
+Acceptance:
+
+- default route reaches the new product UI;
+- current human-vs-AI remains playable;
+- local PvP or AI-vs-AI UI entry points do not leak hidden information beyond intentional same-device constraints;
+- final browser smoke covers default route, setup, match, mobile width, and hidden-info safety.
+
+## Relationship To ML Work
+
+The existing simulation and safe export work remains valuable and should not be discarded. However, Cluster E should now prioritize making the engine visible and playable through the selected UI. ML work should resume after the product UI has a stable engine-backed match surface, unless a small export/tensorization decision is needed to unblock future training design.
+
+The old "pretty-good" AI can be revisited after `cEp2` or `cEp3`, when the user can judge gameplay quality in the authentic match UI. That work should remain a policy upgrade over legal moves, not a UI rule path.
+
+## Design Handoff Reading Rule
+
+Any Cluster E implementation spec must require the coding instance to read:
+
+- `docs/PROJECT_STATE.md`;
+- this file;
+- `docs/ui-handoff/README.md`;
+- the relevant prototype file for the target screen;
+- `docs/gwent-rules.md` if any rule-facing behavior is touched.
+
+Reports for Cluster E must call out:
+
+- which handoff details were implemented;
+- which handoff details were intentionally deferred;
+- whether any prototype logic was avoided or replaced with engine-backed behavior;
+- hidden-info checks;
+- responsive/browser smoke evidence.

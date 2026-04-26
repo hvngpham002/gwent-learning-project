@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const engineUrl = "/?engine=1&seed=dp6-smoke";
+const authenticUrl = "/?engine=1&ui=authentic";
 
 const visiblePageText = async (page: import("@playwright/test").Page) =>
   (await page.locator("body").innerText()).replace(/\s+/g, " ");
@@ -75,5 +76,34 @@ test("engine shell avoids horizontal overflow on a mobile viewport", async ({ pa
 
   await page.locator('[data-testid="engine-hand-card"]:not([disabled])').first().click();
   await expect(page.getByTestId("engine-target-action").first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+});
+
+test("authentic UI harness mounts on the opt-in authentic route", async ({ page }) => {
+  await page.goto(authenticUrl);
+
+  await expect(page.getByTestId("authentic-ui-harness")).toBeVisible();
+  await expect(page.getByTestId("engine-shell")).toHaveCount(0);
+
+  const cards = page.getByTestId("authentic-card");
+  await expect(cards.first()).toBeVisible();
+  expect(await cards.count()).toBeGreaterThan(0);
+
+  const back = page.getByTestId("authentic-card-back");
+  await expect(back.first()).toBeVisible();
+
+  const swatches = page.getByTestId("authentic-metadata-swatch");
+  expect(await swatches.count()).toBeGreaterThan(0);
+
+  const harnessText = await visiblePageText(page);
+  expect(harnessText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+});
+
+test("authentic UI harness avoids horizontal overflow on a mobile viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(authenticUrl);
+
+  await expect(page.getByTestId("authentic-ui-harness")).toBeVisible();
+  await expect(page.getByTestId("authentic-card").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });

@@ -278,38 +278,43 @@ Every engine-facing phase must include deterministic tests where feasible. If no
 
 **Audit drivers addressed:** `R-006`, `R-007`, `F-3.15`, `F-4.4`, `F-5.17`, `F-8.1`, `F-9.2`, `F-10.4`.
 
-## Phase 11: Deck Builder and Card Authoring UI
+## Phase 11: Authentic Product UI
 
-**Cluster:** E. Content and game modes
+**Cluster:** E. Product UI, content, and modes
 
-**Objective:** Let users assemble decks and add card data without changing rule code.
+**Objective:** Turn the deterministic engine lane into the selected front-facing card-table product UI.
+
+**Scope:**
+
+- Use the selected handoff in `docs/ui-handoff/` as the product direction.
+- Add the Direction A token system and authentic card visual language.
+- Build an engine-backed match screen with scoreboard, tactical rows, hand strip, piles, inspector, prompts, battle log, and round-end overlay.
+- Build the pre-game setup flow once the match screen is sufficiently playable.
+- Keep rule outcomes in the engine and Redux adapter; UI components may only dispatch legal engine commands.
+
+**Acceptance criteria:**
+
+- Current human-vs-AI gameplay is playable through the authentic UI with the current catalog.
+- Hidden opponent hand/deck identities are not rendered.
+- Prototype logic from `match-engine.jsx` is not ported.
+- Browser smoke covers desktop and mobile widths.
+
+**Non-goals:**
+
+- Do not build full deck builder or Card Studio until the match surface is stable, unless explicitly pulled forward.
+- Do not train or integrate ML models in this phase.
+
+## Phase 12: Deck Builder, Card Studio, and Match Modes
+
+**Cluster:** E. Product UI, content, and modes
+
+**Objective:** Add catalog-backed content tools and make match configuration independent from "human is player, AI is opponent."
 
 **Scope:**
 
 - Build Deck Builder over the catalog and deck validator.
 - Build Card Studio UI for creating or editing catalog-compatible card records.
 - Support image path entry, preview, validation, local draft save, JSON export, JSON import, and deck preset creation.
-- Add default "current cards" presets so game remains playable with incomplete catalog.
-
-**Acceptance criteria:**
-
-- User can build a legal deck from current cards.
-- User can add a custom card record through Card Studio, export it, import it, and use it in a deck if its ability is known.
-- App clearly marks cards whose ability is unknown or unimplemented.
-- Deck builder supports side deck where applicable.
-
-**Non-goals:**
-
-- The browser-only app does not need to write directly to repo files. Export/import is enough unless a local dev server write endpoint is explicitly approved later.
-
-## Phase 12: Match Modes
-
-**Cluster:** E. Content and game modes
-
-**Objective:** Make match configuration independent from "human is player, AI is opponent."
-
-**Scope:**
-
 - Add match setup with two seats and controller type: human, local human, bot.
 - Support human vs AI, local PvP, and AI vs AI.
 - Add seed selection for deterministic replay.
@@ -317,10 +322,18 @@ Every engine-facing phase must include deterministic tests where feasible. If no
 
 **Acceptance criteria:**
 
-- Same engine supports all three modes.
+- User can build a legal deck from current cards.
+- User can add a custom card record through Card Studio, export it, import it, and use it in a deck if its ability is known.
+- App clearly marks cards whose ability is unknown or unimplemented.
+- Deck builder supports side deck where applicable.
+- Same engine supports all three controller modes.
 - Seat swap tests pass.
 - AI vs AI can complete a match without UI input.
 - PvP does not expose hidden hand info to the wrong local player except where same-device UI deliberately allows it.
+
+**Non-goals:**
+
+- The browser-only app does not need to write directly to repo files. Export/import is enough unless a local dev server write endpoint is explicitly approved later.
 
 ## Phase 13: Simulation Harness
 

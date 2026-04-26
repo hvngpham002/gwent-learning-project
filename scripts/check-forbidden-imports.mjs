@@ -6,6 +6,7 @@ const root = process.cwd();
 const scanTargets = [
   "src/components/game/EngineGameManager.tsx",
   "src/components/game/engine",
+  "src/components/gwent",
   "src/game/ai",
   "src/game/sim",
   "src/store/selectors/engineSelectors.ts",

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { getEngineSeedFromSearch, shouldUseEngineUi } from "@/appMode";
+import {
+  getEngineSeedFromSearch,
+  getEngineUiVariantFromSearch,
+  shouldUseEngineUi,
+} from "@/appMode";
 
 describe("app mode helpers", () => {
   it("keeps the legacy UI by default", () => {
@@ -16,5 +20,16 @@ describe("app mode helpers", () => {
   it("reads an optional deterministic engine seed from the query string", () => {
     expect(getEngineSeedFromSearch("?engine=1&seed=dp2-smoke")).toBe("dp2-smoke");
     expect(getEngineSeedFromSearch("?engine=1")).toBeUndefined();
+  });
+
+  it("defaults the engine UI variant to the existing diagnostic shell", () => {
+    expect(getEngineUiVariantFromSearch("")).toBe("shell");
+    expect(getEngineUiVariantFromSearch("?engine=1")).toBe("shell");
+    expect(getEngineUiVariantFromSearch("?engine=1&ui=other")).toBe("shell");
+  });
+
+  it("selects the authentic variant when ui=authentic is set", () => {
+    expect(getEngineUiVariantFromSearch("?engine=1&ui=authentic")).toBe("authentic");
+    expect(getEngineUiVariantFromSearch("ui=authentic&engine=1")).toBe("authentic");
   });
 });

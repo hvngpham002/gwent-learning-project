@@ -1,0 +1,102 @@
+/* Gwent Product — design tokens, shared across all 3 directions */
+
+:root {
+  /* Faction colors — same across themes, tints differ per direction */
+  --f-northern: #2a4a7a;       /* steel blue, royal */
+  --f-nilfgaard: #1a1a1a;      /* black + gold accent */
+  --f-nilfgaard-accent: #c9a050;
+  --f-monsters: #5a2030;       /* blood red */
+  --f-scoiatael: #4a6a30;      /* forest green */
+  --f-skellige: #6a5030;       /* bronze/sea */
+  --f-neutral: #5a5a5a;        /* slate */
+
+  /* Row colors */
+  --row-close: #b8642e;
+  --row-ranged: #6a8a3a;
+  --row-siege: #8a6a3a;
+
+  /* Weather */
+  --w-frost: #6a9ac4;
+  --w-fog: #8a8a90;
+  --w-rain: #4a6a8a;
+}
+
+/* === Direction A — Authentic tactical card table (parchment-and-ink) === */
+.dir-a {
+  --bg: #d9cdb0;
+  --bg-2: #c8bb9a;
+  --bg-paper: #e8dfc4;
+  --ink: #1f1a12;
+  --ink-2: #4a3f2e;
+  --ink-3: #6e5d44;
+  --rule: rgba(31, 26, 18, 0.18);
+  --rule-strong: rgba(31, 26, 18, 0.45);
+  --accent: #8a3a1f;          /* wax-seal red */
+  --accent-2: #4a3f2e;
+  --gold: #b88a3a;
+  --shadow: 0 1px 0 rgba(255,255,255,0.4) inset, 0 2px 6px rgba(80, 60, 30, 0.18);
+
+  --font-display: "EB Garamond", "Iowan Old Style", "Palatino", Georgia, serif;
+  --font-body: "EB Garamond", "Iowan Old Style", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Iosevka", ui-monospace, monospace;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* === Direction B — Modern competitive client (neon-esports) === */
+.dir-b {
+  --bg: #07090e;
+  --bg-2: #0d1118;
+  --bg-3: #161c26;
+  --bg-card: #1a212d;
+  --ink: #e8ecf2;
+  --ink-2: #9aa3b2;
+  --ink-3: #5a6271;
+  --rule: rgba(255, 255, 255, 0.06);
+  --rule-strong: rgba(255, 255, 255, 0.14);
+  --accent: #00e0a4;           /* hard mint */
+  --accent-2: #ff3060;         /* danger pink */
+  --warn: #ffb020;
+  --gold: #d8b250;
+  --shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 8px 24px rgba(0,0,0,0.5);
+
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+/* === Direction C — Research and training lab (IDE-monospace) === */
+.dir-c {
+  --bg: #f6f4ef;
+  --bg-2: #ecead1;
+  --bg-3: #e0dec5;
+  --bg-panel: #ffffff;
+  --ink: #1a1a1a;
+  --ink-2: #4a4a4a;
+  --ink-3: #7a7a7a;
+  --rule: rgba(0, 0, 0, 0.1);
+  --rule-strong: rgba(0, 0, 0, 0.25);
+  --accent: #2860c4;           /* citation blue */
+  --accent-2: #c43030;         /* error red */
+  --ok: #2a8a4a;
+  --warn: #c47a10;
+  --shadow: none;
+
+  --font-display: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  --font-body: "IBM Plex Sans", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-mono);
+}
+
+/* Reset bits used throughout */
+*, *::before, *::after { box-sizing: border-box; }
+button { font: inherit; color: inherit; }

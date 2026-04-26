@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: `cDp11` implementation - safe export validation and JSONL boundary
-- Latest relevant commit: this `cDp11` implementation commit
+- Phase/spec: `cEp1` implemented - authentic UI foundation
+- Latest relevant commit: this `cEp1` implementation commit
 
 ## Required Reading For Every Coding Instance
 
@@ -13,14 +13,18 @@
 - Active spec under `docs/spec/`
 - Latest relevant report under `audit/reports/`
 - `docs/gwent-rules.md` when touching rules
+- For Cluster E UI work: `docs/overhaul-plan/cluster-e-ui-plan.md`, `docs/ui-handoff/README.md`, and the relevant prototype file under `docs/ui-handoff/prototype/`
 
 ## Current Architecture
 
 - Legacy UI remains the default route.
 - Engine UI is opt-in through `?engine=1` or `VITE_ENGINE_UI=1`.
+- An opt-in authentic UI foundation harness is now available at `?engine=1&ui=authentic`. It is a gallery-only foundation, not a playable match screen.
 - The pure engine under `src/game/core/` owns rules, legal moves, scoring, prompts, command transactions, round resolution, and game end.
 - The Redux engine adapter stores `MatchState`, status/locks, command history, event logs, adapter errors, and UI-only selection while dispatching engine commands.
 - Catalog and deck preset data under `src/game/catalog/` and `src/data/catalog/` define card, leader, faction, ability metadata, and current playable presets.
+- Authentic UI components under `src/components/gwent/` provide the production card visual path, faction/row/ability/leader display metadata, and the opt-in harness. They do not import legacy rule helpers, legacy AI modules, or engine board state, and they are covered by the forbidden-imports check.
+- The selected front-facing product UI direction is the `docs/ui-handoff/` Authentic Tactical Card Table handoff. The diagnostic engine shell remains the engine UI default until later Cluster E phases promote the engine-backed authentic match screen.
 
 ## Completed Phase Ledger
 
@@ -46,6 +50,7 @@
 | `cDp9` | Cluster D / simulation diagnostics split | `audit/reports/2026-04-26-cDp9-report.md` | Added bounded batch seed suites, compact aggregate diagnostics, replay diagnostics, deterministic fingerprints, and batch simulation docs over the cDp8 runner. |
 | `cDp10` | Cluster D / hidden-info-safe export contract split | `audit/reports/2026-04-26-cDp10-report.md` | Added deterministic in-memory simulation export rows with safe perspective observations, per-row legal action encoding, chosen action indices, sparse terminal reward placeholders, summaries, diagnostics, and docs. |
 | `cDp11` | Cluster D / safe export validation and JSONL boundary split | `audit/reports/2026-04-26-cDp11-report.md` | Added runtime validation, recursive redaction scanning, deterministic in-memory JSONL serialization, JSONL parsing/round-trip reconstruction, tests, and docs for `sim-export-v1`. |
+| `cEp1` | Cluster E / authentic UI foundation | `audit/reports/2026-04-26-cEp1-report.md` | Added Direction A production tokens, catalog-aware display metadata, authentic card and card-back components with deterministic SVG fallback, opt-in `?engine=1&ui=authentic` harness, focused tests, browser smoke, and docs without changing engine rules or replacing the default route. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -67,6 +72,39 @@ The safe simulation export layer now builds deterministic in-memory `sim-export-
 The export validation and JSONL boundary now validates `sim-export-v1` datasets at runtime, scans recursively for raw-debug and hidden-info hazards, can reject system action rows for policy-only datasets, serializes validated datasets to deterministic in-memory `sim-export-jsonl-v1` strings, and parses JSONL back into rows/reconstructed datasets with structured issues for malformed input.
 
 It cannot yet provide strong strategic AI parity, polished spatial board interactions, full deck-building flows, persistence, PvP, JSONL file writing, Python ML exports, fixed neural action vectors, model training, or default-route engine gameplay.
+
+## Current Cluster E Status
+
+The authentic UI foundation now ships behind `?engine=1&ui=authentic`:
+
+- production Direction A tokens load via `src/styles/gwent-tokens.css`, scoped under a `.gwent-authentic` wrapper so the legacy UI is unaffected;
+- `src/components/gwent/displayMetadata.ts` exposes deterministic faction, row, ability, leader-ability, and card-kind display metadata with documented fallbacks for unknown ids;
+- `src/components/gwent/AuthenticCard.tsx` and `AuthenticCardBack.tsx` render current catalog cards through a UI view model with image-failure fallback to a deterministic `SvgCardArt` placeholder;
+- `src/components/gwent/AuthenticUiHarness.tsx` shows sample Northern Realms, Nilfgaard, neutral, hero, and special cards alongside a hidden card back, missing-image fallback example, and metadata chips for browser smoke;
+- `src/appMode.ts` adds `getEngineUiVariantFromSearch` so `?engine=1&ui=authentic` reaches the harness without disturbing `/` or `?engine=1`;
+- the forbidden-imports check now scans `src/components/gwent/` so the new product UI path stays free of legacy rule helpers and AI;
+- new unit and component tests cover the route helper, display metadata, and card view model;
+- the existing Playwright Chromium smoke now also covers the authentic harness at desktop and mobile widths and asserts no leaked internal IDs.
+
+The harness is intentionally a gallery foundation, not a playable match screen, deck builder, or pre-game flow. `cEp2` will build the engine-backed match table on top of the same components and tokens.
+
+## Current Cluster E Direction
+
+Cluster E is now the product-facing UI track, integrated in `docs/overhaul-plan/cluster-e-ui-plan.md`.
+
+The selected UI is the `docs/ui-handoff/` Authentic Tactical Card Table handoff: parchment-and-ink styling, EB Garamond display text, JetBrains Mono labels, faction-striped cards, dense tactical rows, pre-game setup, deck builder, match table, discard browser, prompts, and round-end overlay.
+
+The handoff is a design source, not a logic source. Cluster E implementations must not port `prototype/match-engine.jsx`, `prototype/tweaks-panel.jsx`, browser-global prototype wiring, stub card pools, or stale legacy code paths. Production UI must consume current catalog data, engine legal moves, engine prompts, Redux engine adapter selectors, and AI policies.
+
+Recommended Cluster E sequence:
+
+- `cEp1`: authentic UI foundation, Direction A tokens, card visual system, and opt-in route/gallery harness;
+- `cEp2`: engine-backed authentic match table v1;
+- `cEp3`: product match interactions, prompts, discard browser, and round overlay;
+- `cEp4`: pre-game setup and match configuration;
+- `cEp5`: catalog-backed deck builder v1;
+- `cEp6`: Card Studio and content workflow;
+- `cEp7`: promote product UI and expand modes when coverage is ready.
 
 ## Known Architectural Rules
 
@@ -100,10 +138,15 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 - Reward placeholders are sparse terminal outcomes only; no shaped reward design or round-level training signal exists yet.
 - `includeSystemActions: true` can expose simulation auto-resolver rows for diagnostics, but default policy datasets continue to exclude `resolve_round_end`.
 - JSONL parsing validates reconstructed datasets and reports malformed input as structured issues, but it is not a replay checker, schema library, compression format, Python bridge, or compatibility guarantee.
+- The UI handoff prototype is fixed-size and browser-global by design; Cluster E must adapt it into responsive React/TypeScript components and production styling.
+- The UI handoff README contains stale pre-overhaul paths. Use current catalog, engine, Redux adapter, AI, and simulation paths instead.
+- The authentic UI foundation harness is a gallery only. It does not exercise engine commands, legal moves, prompts, or AI; future phases must wire those without regressing the hidden-info safety properties already covered for the diagnostic shell.
+- The authentic harness depends on a Google Fonts `@import` for `EB Garamond` and `JetBrains Mono`. Production deployments without external font access fall back to the documented serif/monospace stacks.
+- Card images are still incomplete by design. The `SvgCardArt` placeholder is a deterministic fallback, not a content workflow.
 
 ## Next Recommended Step
 
-Plan the next ML/export step: define a file-writing or Python-consumption spec over validated `sim-export-jsonl-v1`, including storage/versioning policy and action-vector/tensorization decisions, without changing engine rules or exposing raw replay logs.
+Plan `cEp2`: replace the diagnostic shell with the engine-backed authentic match table. Reuse `AuthenticCard`/`AuthenticCardBack`, the display metadata helpers, and the `.gwent-authentic` token wrapper, drive board/hand/pile rendering from engine selectors and legal moves, and keep hidden zones rendering backs/counts only. Do not move legacy rule helpers or AI into the new UI path.
 
 ## Update Requirements
 

@@ -16,6 +16,8 @@ This is a strategic plan, not the operational current-state ledger. Use:
 
 The original roadmap phases below are coarse planning phases. Actual specs may split, insert, or reorder work when implementation risk requires it.
 
+Cluster E UI productization is now detailed in [cluster-e-ui-plan.md](cluster-e-ui-plan.md), based on the selected `docs/ui-handoff/` design handoff.
+
 ## Assumptions
 
 - No blocking clarifying questions. The plan proceeds with conservative defaults.
@@ -83,7 +85,7 @@ src/
 | B. Data foundation | Replace hardcoded deck assembly with validated card catalog, image conventions, card authoring, and deck presets. | 1-2 |
 | C. Pure game engine | Build deterministic match state, legal moves, scoring, ability resolution, round/game/faction logic. | 3-7 |
 | D. App migration | Connect React/Redux to the engine and restore playable human vs AI with current cards. | 8-10 |
-| E. Content and game modes | Build deck builder, card studio workflow, PvP, and AI vs AI on top of the same engine. | 11-12 |
+| E. Product UI, content, and modes | Build the selected authentic card-table UI, then deck builder, card studio workflow, PvP, and AI vs AI on top of the same engine. | 11-12 and `cEp*` splits |
 | F. Simulation and ML | Add headless simulations, observation/action interfaces, logs, training baselines, and evaluation. | 13-14 |
 | G. Cleanup and hardening | Remove legacy paths, close audit findings, document extension process. | 15 |
 
@@ -105,8 +107,8 @@ The current actual spec ledger lives in `../PROJECT_STATE.md`.
 | 8 | Redux Adapter and UI State Machine | Engine-backed store, action locks, modal flows, no rule logic in components. |
 | 9 | Human Play Migration | Current human UX restored using legal moves and engine commands. |
 | 10 | AI Policy Migration | Current AI restored as a policy over legal moves, not a separate rules path. |
-| 11 | Deck Builder and Card Authoring UI | Shared deck builder plus Card Studio import/export flow. |
-| 12 | Match Modes | Human vs AI, local PvP, AI vs AI, and replay viewer foundations. |
+| 11 | Authentic Product UI | Selected card-table visual system, engine-backed match screen, pre-game setup, and product interaction model. |
+| 12 | Deck Builder, Card Studio, and Match Modes | Catalog-backed deck builder, card authoring/import-export, human vs AI, local PvP, AI vs AI, and replay viewer foundations. |
 | 13 | Simulation Harness | Batch headless runner, metrics, event logs, deterministic seeds. |
 | 14 | ML Readiness | Observation/action schema, legal action masks, baselines, evaluation protocol. |
 | 15 | Cleanup, Audit Closure, and Documentation | Legacy removal, final audit matrix, extension docs. |
