@@ -1,8 +1,7 @@
 import ReduxGameManager from './components/game/ReduxGameManager'
 import EngineGameManager from './components/game/EngineGameManager'
-import AuthenticMatchScreen from './components/gwent/AuthenticMatchScreen'
-import AuthenticUiHarness from './components/gwent/AuthenticUiHarness'
-import { getAuthenticUiViewFromSearch, getEngineUiVariantFromSearch, shouldUseEngineUi } from './appMode'
+import AuthenticGameApp from './components/gwent/AuthenticGameApp'
+import { getEngineUiVariantFromSearch, shouldUseEngineUi } from './appMode'
 
 function App() {
   const search = window.location.search;
@@ -16,11 +15,7 @@ function App() {
   }
 
   if (getEngineUiVariantFromSearch(search) === 'authentic') {
-    if (getAuthenticUiViewFromSearch(search) === 'harness') {
-      return <AuthenticUiHarness />;
-    }
-
-    return <AuthenticMatchScreen />;
+    return <AuthenticGameApp search={search} />;
   }
   return <EngineGameManager />;
 }

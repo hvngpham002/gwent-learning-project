@@ -76,6 +76,30 @@ describe("engine Redux adapter", () => {
     expect(state.engine.eventLog.some((event) => event.type === "match_started")).toBe(true);
   });
 
+  it("starts with explicit selected deck presets while preserving seed and seat controllers", () => {
+    const store = createTestStore();
+
+    store.dispatch(
+      startEngineMatch({
+        seed: "adapter-selected-presets",
+        humanDeckPresetId: "current-nilfgaard",
+        aiDeckPresetId: "current-northern-realms",
+        humanSeat: "seat_a",
+        aiSeat: "seat_b",
+        playerIds: { seat_a: "human", seat_b: "ai" },
+        controllerKinds: { seat_a: "human", seat_b: "ai" },
+      }),
+    );
+
+    const match = store.getState().engine.match;
+    expect(match?.rng.seed).toBe("adapter-selected-presets");
+    expect(match?.seats.seat_a.faction).toBe("nilfgaard");
+    expect(match?.seats.seat_b.faction).toBe("northern_realms");
+    expect(match?.seats.seat_a.controllerKind).toBe("human");
+    expect(match?.seats.seat_b.controllerKind).toBe("ai");
+    expect(match?.catalog.deckPresetIds).toEqual(["current-nilfgaard", "current-northern-realms"]);
+  });
+
   it("starting a second match resets adapter history, selections, prompt, and errors", () => {
     const store = createTestStore();
 

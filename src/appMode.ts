@@ -4,7 +4,7 @@ export interface EngineUiFlagInput {
 }
 
 export type EngineUiVariant = "shell" | "authentic";
-export type AuthenticUiView = "match" | "harness";
+export type AuthenticUiView = "pregame" | "match" | "harness";
 
 const buildSearchParams = (search: string) =>
   new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
@@ -26,5 +26,9 @@ export const getEngineUiVariantFromSearch = (search = ""): EngineUiVariant => {
 
 export const getAuthenticUiViewFromSearch = (search = ""): AuthenticUiView => {
   const params = buildSearchParams(search);
-  return params.get("view") === "harness" ? "harness" : "match";
+  const view = params.get("view");
+  if (view === "match" || view === "harness" || view === "pregame") {
+    return view;
+  }
+  return "pregame";
 };

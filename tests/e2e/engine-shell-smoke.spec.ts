@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
 const engineUrl = "/?engine=1&seed=dp6-smoke";
-const authenticUrl = "/?engine=1&ui=authentic&seed=dp6-smoke";
-const authenticEp3Url = "/?engine=1&ui=authentic&seed=ep3-smoke";
+const authenticPregameUrl = "/?engine=1&ui=authentic&seed=ep4-smoke";
+const authenticDirectUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-direct";
 const authenticHarnessUrl = "/?engine=1&ui=authentic&view=harness";
 
 const visiblePageText = async (page: import("@playwright/test").Page) =>
@@ -124,13 +124,32 @@ test("authentic UI harness avoids horizontal overflow on a mobile viewport", asy
   expect(pageErrors).toEqual([]);
 });
 
-test("authentic match supports mulligan, card play, discard browsing, AI response, and pass without hidden leaks", async ({ page }) => {
+test("authentic pre-game starts a configured match without hidden leaks", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
-  await page.goto(authenticEp3Url);
+  await page.goto(authenticPregameUrl);
+
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+  await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-pregame-seed")).toHaveValue("ep4-smoke");
+  await expect(page.getByTestId("authentic-pregame-deck-option")).toHaveCount(2);
+  await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
+
+  const leaderImage = page.getByTestId("authentic-leader-card-image").first();
+  await expect(leaderImage).toBeVisible();
+  await expect(leaderImage).toHaveCSS("object-fit", "contain");
+
+  const pregameText = await visiblePageText(page);
+  expect(pregameText).toContain("legal-heuristic-v0");
+  expect(pregameText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
+  await page.getByTestId("authentic-pregame-begin").click();
 
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
   await expect(page.getByTestId("engine-shell")).toHaveCount(0);
+  await expect(page.locator(".authentic-match__seed")).toContainText(/Seed ep4-smoke/i);
+  await expect(page.locator(".authentic-match__seed")).toContainText(/legal-heuristic-v0/i);
+  await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
   await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
   await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
 
@@ -167,11 +186,16 @@ test("authentic match supports mulligan, card play, discard browsing, AI respons
   expect(pageErrors).toEqual([]);
 });
 
-test("authentic match avoids horizontal overflow on a mobile viewport", async ({ page }) => {
+test("authentic pre-game and direct match avoid horizontal overflow on a mobile viewport", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
   await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto(authenticUrl);
+  await page.goto(authenticPregameUrl);
+
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+  await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await page.getByTestId("authentic-pregame-begin").click();
 
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
   await expectNoHorizontalOverflow(page);
@@ -181,6 +205,11 @@ test("authentic match avoids horizontal overflow on a mobile viewport", async ({
   await expectNoHorizontalOverflow(page);
   await page.getByTestId("authentic-discard-trigger-human").click();
   await expect(page.getByTestId("authentic-discard-browser")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  await page.goto(authenticDirectUrl);
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+  await expect(page.locator(".authentic-match__seed")).toContainText(/Seed ep4-direct/i);
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
 });

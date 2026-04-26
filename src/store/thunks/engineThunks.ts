@@ -3,9 +3,11 @@ import type { Action, ThunkAction } from "@reduxjs/toolkit";
 import {
   currentCatalogCards,
   currentCatalogLeaders,
+  currentDeckPresets,
   currentNilfgaardDeckPreset,
   currentNorthernRealmsDeckPreset,
 } from "@/data/catalog";
+import type { CatalogDeckPreset } from "@/game/catalog";
 import {
   EngineRuleError,
   executeCommand,
@@ -34,6 +36,10 @@ export interface StartEngineMatchOptions {
   matchId?: string;
   humanSeat?: SeatId;
   aiSeat?: SeatId;
+  humanDeckPresetId?: string;
+  aiDeckPresetId?: string;
+  humanDeckPreset?: CatalogDeckPreset;
+  aiDeckPreset?: CatalogDeckPreset;
   playerIds?: Partial<Record<SeatId, string>>;
   controllerKinds?: Partial<Record<SeatId, ControllerKind>>;
 }
@@ -64,32 +70,52 @@ const toAdapterError = (error: unknown): EngineAdapterError => {
 const createDefaultConfig = ({
   seed = Date.now(),
   matchId,
+  humanDeckPresetId,
+  aiDeckPresetId,
+  humanDeckPreset,
+  aiDeckPreset,
   playerIds = {},
   controllerKinds = {},
-}: StartEngineMatchOptions): MatchConfig => ({
-  matchId,
-  seed,
-  seats: [
-    {
-      seatId: "seat_a",
-      playerId: playerIds.seat_a ?? "human",
-      controllerKind: controllerKinds.seat_a ?? "human",
-      faction: "northern_realms",
-      deckPreset: currentNorthernRealmsDeckPreset,
+}: StartEngineMatchOptions): MatchConfig => {
+  const presetById = new Map<string, CatalogDeckPreset>(currentDeckPresets.map((preset) => [preset.presetId, preset]));
+  const findPreset = (presetId: string | undefined, fallback: CatalogDeckPreset) => {
+    if (!presetId) {
+      return fallback;
+    }
+    const preset = presetById.get(presetId);
+    if (!preset) {
+      throw new Error(`Unknown catalog deck preset: ${presetId}`);
+    }
+    return preset;
+  };
+  const resolvedHumanPreset = humanDeckPreset ?? findPreset(humanDeckPresetId, currentNorthernRealmsDeckPreset);
+  const resolvedAiPreset = aiDeckPreset ?? findPreset(aiDeckPresetId, currentNilfgaardDeckPreset);
+
+  return {
+    matchId,
+    seed,
+    seats: [
+      {
+        seatId: "seat_a",
+        playerId: playerIds.seat_a ?? "human",
+        controllerKind: controllerKinds.seat_a ?? "human",
+        faction: resolvedHumanPreset.faction,
+        deckPreset: resolvedHumanPreset,
+      },
+      {
+        seatId: "seat_b",
+        playerId: playerIds.seat_b ?? "ai",
+        controllerKind: controllerKinds.seat_b ?? "ai",
+        faction: resolvedAiPreset.faction,
+        deckPreset: resolvedAiPreset,
+      },
+    ],
+    catalog: {
+      cards: currentCatalogCards,
+      leaders: currentCatalogLeaders,
     },
-    {
-      seatId: "seat_b",
-      playerId: playerIds.seat_b ?? "ai",
-      controllerKind: controllerKinds.seat_b ?? "ai",
-      faction: "nilfgaard",
-      deckPreset: currentNilfgaardDeckPreset,
-    },
-  ],
-  catalog: {
-    cards: currentCatalogCards,
-    leaders: currentCatalogLeaders,
-  },
-});
+  };
+};
 
 export const startEngineMatch =
   (options: StartEngineMatchOptions = {}): AppThunk =>

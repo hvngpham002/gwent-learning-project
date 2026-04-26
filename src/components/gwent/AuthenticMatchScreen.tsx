@@ -54,6 +54,7 @@ import {
 import { getLegalHeuristicAiCommand } from "../game/engine/legalHeuristicAiController";
 import AuthenticCard from "./AuthenticCard";
 import AuthenticCardBack from "./AuthenticCardBack";
+import AuthenticLeaderCard from "./AuthenticLeaderCard";
 import {
   buildAuthenticSeatSummary,
   buildMedicPromptOptions,
@@ -69,6 +70,7 @@ import {
   type AuthenticRuntimeCardViewModel,
   type AuthenticSeatSummaryViewModel,
 } from "./matchViewModel";
+import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 import { getAbilityDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
 import "./authentic-match.css";
 
@@ -100,11 +102,19 @@ const TopBar: React.FC<{
   phaseLabel: string;
   nextAction: string;
   onNewGame: () => void;
-}> = ({ seedLabel, roundLabel, actorLabel, phaseLabel, nextAction, onNewGame }) => (
+  onReturnToPreGame?: () => void;
+}> = ({ seedLabel, roundLabel, actorLabel, phaseLabel, nextAction, onNewGame, onReturnToPreGame }) => (
   <header className="authentic-match__topbar">
-    <button type="button" className="authentic-match__ghost-button" onClick={onNewGame}>
-      New game
-    </button>
+    <div className="authentic-match__top-actions">
+      <button type="button" className="authentic-match__ghost-button" onClick={onNewGame}>
+        New game
+      </button>
+      {onReturnToPreGame ? (
+        <button type="button" className="authentic-match__ghost-button" onClick={onReturnToPreGame}>
+          Setup
+        </button>
+      ) : null}
+    </div>
     <div className="authentic-match__title-block">
       <h1>Gwent</h1>
       <p>
@@ -128,7 +138,16 @@ const ScoreCard: React.FC<{
   active: boolean;
 }> = ({ seat, leaderName, leaderImage, leaderAbility, leaderUsed, active }) => (
   <article className={`authentic-score-card${active ? " is-active" : ""}`} data-testid={`authentic-seat-${seat.role}`}>
-    <img src={leaderImage} alt="" className="authentic-score-card__leader" />
+    <AuthenticLeaderCard
+      leader={{
+        sourceId: `${seat.faction}:${leaderName}`,
+        name: leaderName,
+        faction: seat.faction,
+        abilityName: leaderAbility,
+        image: leaderImage,
+      }}
+      size="compact"
+    />
     <div className="authentic-score-card__body">
       <div>
         <h2>{seat.label}</h2>
@@ -530,7 +549,17 @@ const BattleLog: React.FC<{ lines: readonly string[] }> = ({ lines }) => (
   </section>
 );
 
-const AuthenticMatchScreen: React.FC = () => {
+interface AuthenticMatchScreenProps {
+  readonly setupConfig?: AuthenticMatchSetupConfig;
+  readonly onReturnToPreGame?: () => void;
+}
+
+const setupKey = (config: AuthenticMatchSetupConfig | undefined, fallbackSeed: string | undefined) =>
+  config
+    ? `${config.humanDeckPresetId}|${config.opponentDeckPresetId}|${String(config.seed)}|${config.aiPolicyId}`
+    : `direct|${String(fallbackSeed ?? "default")}`;
+
+const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig, onReturnToPreGame }) => {
   const dispatch = useAppDispatch();
   const [discardOpenSeat, setDiscardOpenSeat] = useState<SeatId | null>(null);
   const [dismissedRoundOverlayKey, setDismissedRoundOverlayKey] = useState<string | null>(null);
@@ -560,12 +589,19 @@ const AuthenticMatchScreen: React.FC = () => {
   const humanMoves = useAppSelector(selectEngineLegalMovesForHuman);
 
   const startSeed = useMemo(() => getEngineSeedFromSearch(window.location.search), []);
+  const activeSetupKey = setupKey(setupConfig, startSeed);
 
   useEffect(() => {
+    if (setupConfig) {
+      dispatch(startEngineMatch(setupConfigToStartEngineOptions(setupConfig)));
+      return;
+    }
     if (!match) {
       dispatch(startEngineMatch({ seed: startSeed }));
     }
-  }, [dispatch, match, startSeed]);
+    // activeSetupKey is included so local pre-game transitions always start the chosen setup.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, activeSetupKey]);
 
   useEffect(() => {
     const command = getLegalHeuristicAiCommand(engine, aiSeat, humanSeat);
@@ -577,8 +613,8 @@ const AuthenticMatchScreen: React.FC = () => {
   const startNewGame = useCallback(() => {
     setDiscardOpenSeat(null);
     setDismissedRoundOverlayKey(null);
-    dispatch(startEngineMatch({ seed: startSeed }));
-  }, [dispatch, startSeed]);
+    dispatch(startEngineMatch(setupConfig ? setupConfigToStartEngineOptions(setupConfig) : { seed: startSeed }));
+  }, [dispatch, setupConfig, startSeed]);
 
   const toggleMulliganCard = useCallback(
     (cardId: CardInstanceId) => {
@@ -886,6 +922,7 @@ const AuthenticMatchScreen: React.FC = () => {
           phaseLabel={statusBanner.phaseLabel}
           nextAction={statusBanner.errorLabel ?? statusBanner.nextAction}
           onNewGame={startNewGame}
+          onReturnToPreGame={onReturnToPreGame}
         />
 
         <div className="authentic-match__layout">

@@ -34,9 +34,11 @@ describe("app mode helpers", () => {
     expect(getEngineUiVariantFromSearch("ui=authentic&engine=1")).toBe("authentic");
   });
 
-  it("defaults authentic UI to the match view unless the harness view is explicit", () => {
-    expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic")).toBe("match");
+  it("routes authentic UI views and falls back to pre-game", () => {
+    expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic")).toBe("pregame");
+    expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=pregame")).toBe("pregame");
+    expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=match")).toBe("match");
     expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=harness")).toBe("harness");
-    expect(getAuthenticUiViewFromSearch("view=other&ui=authentic")).toBe("match");
+    expect(getAuthenticUiViewFromSearch("view=other&ui=authentic")).toBe("pregame");
   });
 });

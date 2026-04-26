@@ -28,6 +28,12 @@
   box-shadow: var(--shadow);
 }
 
+.authentic-match__top-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .authentic-match__title-block {
   text-align: center;
   min-width: 0;
@@ -182,14 +188,6 @@
 
 .authentic-score-card.is-active {
   border-left-color: var(--accent);
-}
-
-.authentic-score-card__leader {
-  width: 46px;
-  height: 58px;
-  object-fit: cover;
-  border: 1px solid var(--rule-strong);
-  background: var(--bg-2);
 }
 
 .authentic-score-card__body {
