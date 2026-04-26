@@ -89,10 +89,17 @@ const putInHand = (state: MatchState, seatId: SeatId, cardIds: CardInstanceId[])
   });
 };
 
-const putOnBoard = (state: MatchState, seatId: SeatId, cardId: CardInstanceId, row: CatalogRow) => {
+const putOnBoard = (
+  state: MatchState,
+  seatId: SeatId,
+  cardId: CardInstanceId,
+  row: CatalogRow,
+  controller: SeatId = seatId,
+) => {
   removeEverywhere(state, cardId);
   state.seats[seatId].board[row].units.push(cardId);
   state.cardsById[cardId].zone = { kind: "board_row", seat: seatId, row };
+  state.cardsById[cardId].controller = controller;
 };
 
 const putWeather = (state: MatchState, seatId: SeatId, cardId: CardInstanceId) => {
@@ -434,7 +441,31 @@ describe("core command transactions", () => {
     assertNoDuplicateZones(result.state);
   });
 
-  it("resolves Unit Scorch Close after placement and sends targets to controller discard", () => {
+  it("sends a Scorched Spy to the discard pile for the side it occupies", () => {
+    const state = createState("special-scorch-spy-side");
+    const scorch = findCard(state, "neutral.scorch");
+    const spy = findCard(state, "northern-realms.thaler");
+    state.phase = "playing";
+    state.currentTurn = "seat_a";
+    putInHand(state, "seat_a", [scorch]);
+    putOnBoard(state, "seat_b", spy, "siege", "seat_a");
+
+    const result = execute(state, {
+      type: "PlayCard",
+      seatId: "seat_a",
+      cardId: scorch,
+      target: { kind: "none" },
+    });
+
+    expect(result.state.seats.seat_b.board.siege.units).not.toContain(spy);
+    expect(result.state.seats.seat_a.discard).not.toContain(spy);
+    expect(result.state.seats.seat_b.discard).toContain(spy);
+    expect(result.state.cardsById[spy].zone).toEqual({ kind: "discard", seat: "seat_b" });
+    expect(result.state.cardsById[spy].controller).toBe("seat_a");
+    assertNoDuplicateZones(result.state);
+  });
+
+  it("resolves Unit Scorch Close after placement and sends targets to occupied-side discard", () => {
     const state = createState("unit-scorch-command");
     const scorchUnit = findCard(state, "neutral.villentretenmerth");
     const firstTarget = findCard(state, "nilfgaard.young-emissary");
@@ -464,6 +495,33 @@ describe("core command transactions", () => {
         outcome: "destroyed",
       }),
     );
+    assertNoDuplicateZones(result.state);
+  });
+
+  it("sends a Unit Scorch Close destroyed Spy to the discard pile for the side it occupies", () => {
+    const state = createState("unit-scorch-spy-side");
+    const scorchUnit = findCard(state, "neutral.villentretenmerth");
+    const spy = findCard(state, "nilfgaard.stefan-skellen");
+    const rowSupport = findCard(state, "nilfgaard.vattier-de-rideaux");
+    state.phase = "playing";
+    state.currentTurn = "seat_a";
+    putInHand(state, "seat_a", [scorchUnit]);
+    putOnBoard(state, "seat_b", spy, "close", "seat_a");
+    putOnBoard(state, "seat_b", rowSupport, "close", "seat_b");
+
+    const result = execute(state, {
+      type: "PlayCard",
+      seatId: "seat_a",
+      cardId: scorchUnit,
+      target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+    });
+
+    expect(result.state.seats.seat_b.board.close.units).not.toContain(spy);
+    expect(result.state.seats.seat_a.discard).not.toContain(spy);
+    expect(result.state.seats.seat_b.discard).toContain(spy);
+    expect(result.state.cardsById[spy].zone).toEqual({ kind: "discard", seat: "seat_b" });
+    expect(result.state.cardsById[spy].controller).toBe("seat_a");
+    expect(result.state.seats.seat_b.board.close.units).toContain(rowSupport);
     assertNoDuplicateZones(result.state);
   });
 });

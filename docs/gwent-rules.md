@@ -183,9 +183,9 @@ When **both players have passed**:
 - In a **draw**, **both players remove a gem** — *unless* Nilfgaard's faction ability is in play (Nilfgaard wins draws).
 - Cards occupying a player's battle rows are placed in that row-side player's
   **discard pile** (exception: Monsters keep one Unit — see §11). This includes
-  Spy cards: a Spy on the opponent's side goes to the opponent's discard pile at
-  round cleanup. Global Weather/Special cards that do not occupy a side are
-  discarded to their controller's discard pile unless the effect says otherwise.
+  Spy cards: a Spy on the opponent's side goes to the opponent's discard pile.
+  Global Weather/Special cards that do not occupy a side are discarded to their
+  controller's discard pile unless the effect says otherwise.
 - The winner of the round **starts the next round**.
 
 ### 8.4 Game End
@@ -207,15 +207,15 @@ When **both players have passed**:
 
 ### Discard Pile Rule
 
-> At round cleanup, row-occupying cards go to the discard pile for the side they
-> currently occupy. A Spy on the opponent's side therefore goes to the
-> opponent's discard pile. Global cards that do not occupy a side, and
-> non-round-cleanup effect discards, use their controller's discard unless an
-> effect says otherwise.
+> Row-occupying battlefield cards sent to discard go to the discard pile for
+> the side they currently occupy. This includes round cleanup and Scorch
+> destruction. A Spy on the opponent's side therefore goes to the opponent's
+> discard pile. Global cards that do not occupy a side use their controller's
+> discard unless an effect says otherwise.
 
 This matters: a Spy's controller is still the player who played or revived it
-for on-play effects such as drawing cards, but round cleanup follows the side of
-the table the Spy currently occupies.
+for on-play effects such as drawing cards, but discard placement follows the
+side of the table the Spy currently occupies when a row card is sent to discard.
 
 ---
 
@@ -380,10 +380,10 @@ Heroes are immune to **Special Card, Unit Card, and Leader Card abilities**. Con
 - **Spy is a Unit Card** played onto the **opponent's** side, Strength counts for the opponent.
 - **You draw 2 cards.**
 - **Whose side is the Spy on?** Physically the opponent's. **Control** still belongs to the player who played it.
-- **End-of-round discard:** Round cleanup follows board side. Your Spy is
+- **Discard placement:** Row-card discard follows board side. Your Spy is
   physically on the opponent's side, so it goes to the **opponent's** discard
-  pile at round end. Its controller still matters before cleanup for the Spy
-  draw and other controller-based effects.
+  pile when round cleanup or Scorch sends it to discard. Its controller still
+  matters before discard for the Spy draw and other controller-based effects.
 - **Can the opponent Decoy your Spy?** The rulebook says Decoy replaces a Unit Card on **the controlling player's side of the battlefield**. The "controlling player" of Decoy is whoever plays the Decoy. Their "side" is their own. Since the Spy is sitting on the opponent's side, the opponent *could* pick it up with Decoy. **[Derived]** The replaced card returns to *the Decoy-player's hand* — so the opponent would get **your** Spy card in their hand. Whether they can then play it is a grey area: decks require single-faction color, but nothing in the rulebook explicitly forbids playing a mismatched-faction card that someone else "handed" you — this is a genuine rules gap. Most casual playgroups would treat the stolen Spy as unplayable from the opponent's hand. **[Derived — rulebook silent.]**
 - **Can you Decoy your own Spy after playing it?** No — the Spy is on the opponent's side, not yours. Decoy requires a target on the controlling player's own side. **[Derived]**
 - **Weather affects Spies.** Weather sets all matching-row Units to 1 regardless of side — including Spies.
@@ -418,6 +418,10 @@ Two separate Scorch effects exist — don't confuse them:
 - **Ties are resolved by discarding all tied highest-Strength non-Hero units.** **[Derived from "Unit Card(s)" — the plural suggests multiple may be destroyed.]**
 - **What if the highest-Strength unit on the field is a Hero?** Scorch targets the next-highest non-Hero. If *all* units on the relevant area are Heroes, nothing is discarded.
 - **What if your own unit is the highest Strength on the battlefield when you play Special Scorch?** You destroy your own unit. There is no "my side only" restriction — it's "the entire battlefield."
+- **Where do Scorched cards go?** Scorched row cards go to the discard pile for
+  the side they occupied when destroyed. A Spy destroyed while sitting on the
+  opponent's side goes to the opponent's discard pile, even though its
+  controller remains the player who played it.
 - **What if the Unit-ability Scorch is played but the opposite row has < 10 Strength?** The Scorch effect simply doesn't fire. The unit still lands and contributes its own Strength.
 - **Does Scorch affect Strength counted *after* Horn/Weather modifiers?** **[Derived]** Yes — "highest Strength" means highest current effective Strength on the battlefield. A Weather-muted unit at 1 won't be the highest if buffed units are around; a Horn-doubled unit will likely be scorched.
 - **Clan Dimun Pirate and its own Strength:** Even if the Pirate is tied for highest Strength, the FAQ states it "cannot discard itself."
@@ -578,9 +582,10 @@ Heroes are not affected by: Weather, Commander's Horn, Morale Boost, Scorch (Uni
 
 ### Discard Rules
 
-- Round cleanup for row cards → **board-side** discard pile, including Spies.
-- Global cards and non-round-cleanup discards → **controller's** discard pile
-  unless an effect says otherwise.
+- Row cards sent to discard by round cleanup or Scorch → **board-side** discard
+  pile, including Spies.
+- Global cards and non-row effect discards → **controller's** discard pile unless
+  an effect says otherwise.
 - Berserkers triggered by Mardroeme → **removed from game**, *not* discarded.
 
 ### Deck Construction

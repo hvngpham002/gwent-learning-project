@@ -347,8 +347,7 @@ const resolveSpecialScorch = (
   const targets = findSpecialScorchTargets(breakdown);
 
   targets.forEach((target) => {
-    const controller = state.cardsById[target.cardId].controller;
-    moveCard(state, events, target.cardId, { kind: "discard", seat: controller }, "scorch_destroyed");
+    moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
     emitDiscardTriggerDeferrals(events, sourceLookup, state, target.cardId);
   });
 

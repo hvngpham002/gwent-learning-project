@@ -317,9 +317,7 @@ const resolveScorchClose = (
   const result = findUnitScorchCloseTargets(breakdown, seatId);
 
   result.targets.forEach((target) => {
-    const targetInstance = state.cardsById[target.cardId];
-    const controller = targetInstance.controller;
-    moveCard(state, events, target.cardId, { kind: "discard", seat: controller }, "scorch_destroyed");
+    moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
     emitDiscardTriggerDeferrals(events, catalogLookup.get(target.sourceId), target.cardId);
   });
 
