@@ -16,7 +16,7 @@ export interface AuthenticCardDimensions {
 export const AUTHENTIC_CARD_DIMENSIONS: Record<AuthenticCardSize, AuthenticCardDimensions> = {
   xs: { width: 44, height: 83 },
   sm: { width: 60, height: 113 },
-  md: { width: 80, height: 151 },
+  md: { width: 86.5, height: 147 },
   lg: { width: 110, height: 207 },
   xl: { width: 180, height: 339 },
 };
