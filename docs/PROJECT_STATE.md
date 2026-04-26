@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: post-`cEp1` authentic fallback row/ability badge polish
-- Latest relevant commit: `cEp1` implementation commit plus follow-up authentic card rendering and fallback badge tuning
+- Phase/spec: `cEp2` spec ready - engine-backed authentic match table v1
+- Latest relevant commit: `cEp1` implementation commit plus follow-up authentic card rendering and fallback badge tuning; `cEp2` spec is now published as the next implementation target
 
 ## Required Reading For Every Coding Instance
 
@@ -150,7 +150,7 @@ Recommended Cluster E sequence:
 
 ## Next Recommended Step
 
-Plan `cEp2`: replace the diagnostic shell with the engine-backed authentic match table. Reuse `AuthenticCard`/`AuthenticCardBack`, the display metadata helpers, and the `.gwent-authentic` token wrapper, drive board/hand/pile rendering from engine selectors and legal moves, and keep hidden zones rendering backs/counts only. Do not move legacy rule helpers or AI into the new UI path.
+Implement `docs/spec/2026-04-26-cEp2-specs.md`: make `/?engine=1&ui=authentic` the first engine-backed authentic match table, keep the diagnostic shell at `/?engine=1`, keep the gallery harness behind a documented harness view flag, drive all actions from engine legal moves/commands, and preserve hidden-info safety.
 
 ## Update Requirements
 
