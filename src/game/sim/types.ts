@@ -68,3 +68,80 @@ export interface ReplayHeadlessMatchCommandsInput {
   seed: string | number;
   commandLog: readonly SimulationCommand[];
 }
+
+export interface SimulationSeedSuite {
+  id: string;
+  label: string;
+  description: string;
+  seeds: readonly (string | number)[];
+  defaultMaxSteps?: number;
+}
+
+export interface SimulationReplayDiagnostics {
+  checked: boolean;
+  status: "passed" | "failed" | "skipped";
+  commandCount: number;
+  mismatches: string[];
+  error?: string;
+}
+
+export interface SimulationRunFingerprints {
+  commandTypes: string;
+  eventTypes: string;
+  summary: string;
+}
+
+export interface HeadlessSimulationBatchInput {
+  suite?: SimulationSeedSuite;
+  suiteId?: string;
+  seeds?: readonly (string | number)[];
+  maxSteps?: number;
+  policies?: Partial<Record<SeatId, EnginePolicy>>;
+  verifyReplay?: boolean;
+  includeRawResults?: boolean;
+}
+
+export interface SimulationBatchRunRecord {
+  seed: string | number;
+  matchId: string;
+  status: SimulationTerminalStatus;
+  winner: SeatId | "draw" | null;
+  stepCount: number;
+  commandCount: number;
+  eventCount: number;
+  roundsResolved: number;
+  promptsResolved: number;
+  averageLegalMoves: number;
+  finalGems: Record<SeatId, number>;
+  error?: SimulationError;
+  replay?: SimulationReplayDiagnostics;
+  fingerprints: SimulationRunFingerprints;
+  rawResult?: HeadlessMatchSimulationResult;
+}
+
+export interface SimulationBatchSummary {
+  suiteId: string | null;
+  totalRuns: number;
+  statusCounts: Record<SimulationTerminalStatus, number>;
+  winnerCounts: Record<SeatId | "draw" | "none", number>;
+  completionRate: number;
+  maxStepRate: number;
+  replayCheckedCount: number;
+  replayFailedCount: number;
+  promptRunCount: number;
+  promptResolutionCount: number;
+  averageSteps: number;
+  averageCommands: number;
+  averageRoundsResolved: number;
+  averageLegalMoves: number;
+  policiesBySeat: Record<SeatId, string>;
+  seedsByStatus: Record<SimulationTerminalStatus, (string | number)[]>;
+  failureCodes: Record<string, number>;
+}
+
+export interface HeadlessSimulationBatchResult {
+  suite: SimulationSeedSuite | null;
+  seeds: readonly (string | number)[];
+  runs: SimulationBatchRunRecord[];
+  summary: SimulationBatchSummary;
+}

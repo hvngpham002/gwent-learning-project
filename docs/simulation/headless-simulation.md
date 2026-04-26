@@ -49,3 +49,49 @@ Replay is intentionally small. It checks command determinism for the current cat
 This harness sets up future batch simulation and ML exports by using legal moves and seat observations as the policy contract. It does not add JSONL export, action encoding, reward shaping, tournament runs, random policies, Python tooling, notebooks, or model training.
 
 Future ML data should add explicit observation hashing or redacted observation export. The current `commandLog` and final state are for debugging/replay and may contain hidden card identifiers.
+
+## Batch Seed Suites
+
+`cDp9` adds a bounded batch diagnostics layer over the single-match runner:
+
+```ts
+import { currentSimulationSmokeSuite, runHeadlessSimulationBatch } from "@/game/sim";
+
+const batch = runHeadlessSimulationBatch({
+  suiteId: currentSimulationSmokeSuite.id,
+});
+```
+
+The default batch run uses `current-smoke-v1`, a six-seed current-catalog Northern Realms vs Nilfgaard suite:
+
+- `sim-smoke-001`
+- `sim-smoke-002`
+- `sim-smoke-003`
+- `sim-smoke-004`
+- `sim-smoke-005`
+- `sim-smoke-006`
+
+`sim-smoke-001` is kept because it exercises a Medic prompt in the current catalog. The list is fixed and ordered so repeated runs compare deterministically.
+
+The batch runner accepts an explicit suite, suite id, or seed list. It defaults replay diagnostics on and raw single-match results off:
+
+```ts
+const batch = runHeadlessSimulationBatch({
+  seeds: ["debug-seed-001", "debug-seed-002"],
+  maxSteps: 300,
+  verifyReplay: true,
+  includeRawResults: false,
+});
+```
+
+## Batch Diagnostics
+
+Each batch run returns compact per-seed records: seed, match id, terminal status, winner, step/command/event counts, resolved round and prompt counts, average legal moves, final gems, optional structured error, replay diagnostics, and deterministic fingerprints.
+
+The aggregate summary includes status counts, winner counts, completion and max-step rates, replay checked/failed counts, prompt counts, average steps/commands/rounds/legal moves, policy ids by seat, seeds grouped by terminal status, and failure-code counts.
+
+Replay diagnostics call `replayHeadlessMatchCommands` and compare final essentials: phase, winner, gems, round history, and current round. Replay failures are reported in the run record and summary counts; they do not abort later seeds. Replay does not promise cross-version compatibility or intermediate-state hashing.
+
+Fingerprints are deterministic compact strings over command type sequence, event type sequence, and summary essentials. They are intended for regression comparison, not as state reconstruction data.
+
+By default, batch output deliberately excludes `rawResult`, `finalState`, `commandLog`, full events, observations, hand arrays, and deck order. `includeRawResults: true` is supported for debugging and replay investigation, but raw cDp8 results can contain card instance/source identifiers and are not a hidden-info-safe ML dataset.
