@@ -13,6 +13,14 @@ const expectNoHorizontalOverflow = async (page: import("@playwright/test").Page)
   expect(overflow).toBeLessThanOrEqual(1);
 };
 
+const collectPageErrors = (page: import("@playwright/test").Page): string[] => {
+  const pageErrors: string[] = [];
+  page.on("pageerror", (error) => {
+    pageErrors.push(error.message);
+  });
+  return pageErrors;
+};
+
 const confirmMulliganAndWaitForHumanTurn = async (page: import("@playwright/test").Page) => {
   await page.getByTestId("engine-confirm-mulligan").click();
 
@@ -80,6 +88,8 @@ test("engine shell avoids horizontal overflow on a mobile viewport", async ({ pa
 });
 
 test("authentic UI harness mounts on the opt-in authentic route", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
   await page.goto(authenticUrl);
 
   await expect(page.getByTestId("authentic-ui-harness")).toBeVisible();
@@ -97,13 +107,17 @@ test("authentic UI harness mounts on the opt-in authentic route", async ({ page 
 
   const harnessText = await visiblePageText(page);
   expect(harnessText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  expect(pageErrors).toEqual([]);
 });
 
 test("authentic UI harness avoids horizontal overflow on a mobile viewport", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto(authenticUrl);
 
   await expect(page.getByTestId("authentic-ui-harness")).toBeVisible();
   await expect(page.getByTestId("authentic-card").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
+  expect(pageErrors).toEqual([]);
 });

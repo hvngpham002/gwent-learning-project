@@ -87,7 +87,7 @@ The authentic UI foundation now ships behind `?engine=1&ui=authentic`:
 - `src/appMode.ts` adds `getEngineUiVariantFromSearch` so `?engine=1&ui=authentic` reaches the harness without disturbing `/` or `?engine=1`;
 - the forbidden-imports check now scans `src/components/gwent/` so the new product UI path stays free of legacy rule helpers and AI;
 - new unit and component tests cover the route helper, display metadata, and card view model;
-- the existing Playwright Chromium smoke now also covers the authentic harness at desktop and mobile widths and asserts no leaked internal IDs.
+- the existing Playwright Chromium smoke now also covers the authentic harness at desktop and mobile widths, asserts no leaked internal IDs, and fails on page-level runtime errors from the authentic route.
 
 The harness is intentionally a gallery foundation, not a playable match screen, deck builder, or pre-game flow. `cEp2` will build the engine-backed match table on top of the same components and tokens.
 
