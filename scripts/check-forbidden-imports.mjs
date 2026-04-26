@@ -7,6 +7,7 @@ const scanTargets = [
   "src/components/game/EngineGameManager.tsx",
   "src/components/game/engine",
   "src/game/ai",
+  "src/game/sim",
   "src/store/selectors/engineSelectors.ts",
   "src/store/slices/engineSlice.ts",
   "src/store/thunks/engineThunks.ts",

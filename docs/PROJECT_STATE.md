@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: `cDp8` headless AI-vs-AI simulation smoke spec
-- Latest relevant commit: `e314bd9` (`cDp7` implementation); `cDp8` spec pending commit
+- Phase/spec: `cDp8` headless AI-vs-AI simulation smoke implementation
+- Latest relevant commit: this `cDp8` implementation commit
 
 ## Required Reading For Every Coding Instance
 
@@ -42,6 +42,7 @@
 | `cDp5` | Cluster D Phase 10 split | `audit/reports/2026-04-25-cDp5-report.md` | Replaced pass-only preview AI with deterministic `legal-heuristic-v0` over engine legal moves. |
 | `cDp6` | Cluster D Phase 10 shell polish split | `audit/reports/2026-04-25-cDp6-report.md` | Added shell view-model helpers, clearer status/next-action UX, grouped target actions, hidden-info-safe activity summaries, and round history display. |
 | `cDp7` | Cluster D browser smoke hardening split | `audit/reports/2026-04-25-cDp7-report.md` | Added Playwright Chromium browser smoke coverage for opt-in routing, `dp6-smoke` mulligan/play flow, hidden-info display, and mobile overflow, plus CI browser execution. |
+| `cDp8` | Cluster D / simulation foundation split | `audit/reports/2026-04-26-cDp8-report.md` | Added pure headless AI-vs-AI simulation smoke runner, compact logs/metrics, max-step failure status, deterministic replay helper, docs, and forbidden-import coverage for `src/game/sim`. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -54,7 +55,9 @@ The opt-in shell now has a compact phase/round/actor/status banner, human hand p
 
 The browser smoke harness now runs the opt-in engine shell through Playwright Chromium against a built Vite preview server. It checks default-route legacy behavior, `/?engine=1&seed=dp6-smoke` mulligan and first-play flow, AI hand-count-only display, hidden-info-safe recent activity text, and mobile horizontal overflow.
 
-It cannot yet provide strong strategic AI parity, polished spatial board interactions, full deck-building flows, persistence, PvP, simulations, ML exports, or default-route engine gameplay.
+The headless simulation harness now runs the current Northern Realms vs Nilfgaard AI-vs-AI match without React, Redux, timers, browser APIs, localStorage, or filesystem writes. It uses the same pure engine legal moves, seat observations, `legal-heuristic-v0`, command conversion, and command execution path as the engine UI, with simulation-only round-end auto-resolution, compact step logs, summary metrics, max-step protection, and replay from command logs.
+
+It cannot yet provide strong strategic AI parity, polished spatial board interactions, full deck-building flows, persistence, PvP, batch simulations, ML exports, or default-route engine gameplay.
 
 ## Known Architectural Rules
 
@@ -76,10 +79,15 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 - Playwright browser binaries install outside the repository cache locally, so first-time local setup may require filesystem/network permission. GitHub Actions installs Chromium explicitly before running the browser gate.
 - Browser selectors are stable `data-testid` hooks on visible shell regions and controls, but they are still coupled to the current button-driven smoke surface and should be revised when the final spatial board UI lands.
 - Browser CI now runs an additional build plus Chromium smoke suite after `npm run ci`; runtime is still small for three tests, but browser install/download time can dominate cold CI runs.
+- Headless simulation has max-step protection, but non-termination is still a risk for future policies that repeatedly choose legal no-progress moves; keep bounded runs and status checks around every simulation entrypoint.
+- Prompt handling is covered by the cDp8 smoke seed through a Medic prompt, but broader prompt kinds and chained prompt-heavy games need future seed suites.
+- Simulation step logs are compact and avoid full observations/state snapshots, but `commandLog`, final state, and event logs can contain hidden card instance/source IDs for replay; they are not hidden-info-safe ML export data yet.
+- Replay verifies deterministic command application for the current catalog config, but it does not yet hash observations, validate every intermediate state, or promise cross-version replay compatibility.
+- Policy failures are reported as structured `policy_failed` results for missing acting seats, thrown policy exceptions, no selected move, illegal selected moves, or move conversion failure; stronger policy diagnostics and illegal-action metrics belong in later simulation phases.
 
 ## Next Recommended Step
 
-Implement `docs/spec/2026-04-26-cDp8-specs.md`: add a pure headless AI-vs-AI simulation smoke harness over `startMatch`, legal moves, seat observations, `legal-heuristic-v0`, command conversion, and `executeCommand`. Keep browser/UI behavior unchanged and use the cDp7 Playwright smoke tests as the UI regression guardrail.
+Continue with the next bounded simulation/ML foundation slice: add batch seed suites or richer replay diagnostics over the `cDp8` headless runner while keeping UI behavior unchanged and using the cDp7 browser smoke tests as the UI regression guardrail.
 
 ## Update Requirements
 
