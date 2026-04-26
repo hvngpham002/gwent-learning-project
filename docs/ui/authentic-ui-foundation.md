@@ -87,14 +87,18 @@ Stable browser-smoke selectors:
 Card art lives at `/images/<faction>/<source-id-derived-name>.<ext>` matching
 the `image` field on each catalog card source under `src/data/catalog/cards/`.
 The authentic card component treats catalog images as complete card faces and
-keeps the custom strength badge visible above the source face. Source faces use
-per-size dimensions and bottom crop values from
-`src/components/gwent/cardViewModel.ts` for later fine-tuning:
+keeps the custom strength badge visible above the source face. Card fronts and
+backs use one shared catalog card display frame from
+`src/components/gwent/cardViewModel.ts`: `md` is the `1.00x` source frame at
+`86.5px` by `147px`, and other sizes scale from that frame:
 
-- `xs`: `63px` by `95px`, `12px` bottom crop
-- `sm`: `70px` by `115px`, `12px` bottom crop
-- `md`: `86.5px` by `147px`, `15px` bottom crop
-- `lg`: `118px` by `200px`, `20px` bottom crop
+- `xs`: `0.50x`, `43.25px` by `73.5px`, `7.5px` bottom crop
+- `sm`: `0.75x`, `64.875px` by `110.25px`, `11.25px` bottom crop
+- `md`: `1.00x`, `86.5px` by `147px`, `15px` bottom crop
+- `lg`: `1.50x`, `129.75px` by `220.5px`, `22.5px` bottom crop
+
+`xl` is currently a compatibility alias for the largest `1.50x` frame until a
+fifth product size is needed.
 
 When real art is added, drop image files at the paths declared in the catalog
 sources. No code changes are required for the harness to pick them up.

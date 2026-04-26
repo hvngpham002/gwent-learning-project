@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: `cEp2` spec ready - engine-backed authentic match table v1
-- Latest relevant commit: `cEp1` implementation commit plus follow-up authentic card rendering and fallback badge tuning; `cEp2` spec is now published as the next implementation target
+- Phase/spec: post-`cEp1` catalog-scaled authentic card dimensions; `cEp2` spec remains next
+- Latest relevant commit: `cEp2` spec commit plus follow-up authentic card rendering and fallback badge tuning
 
 ## Required Reading For Every Coding Instance
 
@@ -81,7 +81,7 @@ The authentic UI foundation now ships behind `?engine=1&ui=authentic`:
 - `src/components/gwent/displayMetadata.ts` exposes deterministic faction, row, ability, leader-ability, and card-kind display metadata with documented fallbacks for unknown ids;
 - `src/components/gwent/AuthenticCard.tsx` and `AuthenticCardBack.tsx` render current catalog cards through a UI view model with image-failure fallback to a deterministic `SvgCardArt` placeholder;
 - `src/components/gwent/AuthenticUiHarness.tsx` shows sample Northern Realms, Nilfgaard, neutral, hero, and special cards alongside a hidden card back, missing-image fallback example, and metadata chips for browser smoke;
-- authentic card source images use tuned per-size targets: `xs` is `63px` by `95px` with `12px` crop, `sm` is `70px` by `115px` with `12px` crop, `md` is `86.5px` by `147px` with `15px` crop, and `lg` is `118px` by `200px` with `20px` crop;
+- authentic card and card-back dimensions derive from the shared catalog card display frame: `md` is the `86.5px` by `147px` source at `1.00x`, `xs` is `0.50x`, `sm` is `0.75x`, and `lg`/`xl` are `1.50x`; source-face bottom crop scales from the same `15px` base;
 - deterministic fallback card art keeps rule-like markers in the left-side badge stack: fallback unit/hero cards show row and ability glyphs below the strength medallion, all displayable catalog abilities have fallback glyph coverage, and the old decorative top-right hero ring has been removed so it is not mistaken for playable-row or rule metadata;
 - `AuthenticCardBack` uses faction default back images such as `public/images/northern_realms/default-northern_realms.png`, stretches those backs to fit, and still supports override candidates under `public/images/card-backs/`;
 - `src/appMode.ts` adds `getEngineUiVariantFromSearch` so `?engine=1&ui=authentic` reaches the harness without disturbing `/` or `?engine=1`;

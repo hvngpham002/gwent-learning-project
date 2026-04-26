@@ -13,20 +13,45 @@ export interface AuthenticCardDimensions {
   readonly height: number;
 }
 
+export const AUTHENTIC_CATALOG_CARD_DIMENSIONS: AuthenticCardDimensions = {
+  width: 86.5,
+  height: 147,
+};
+
+export const AUTHENTIC_CARD_SIZE_SCALE: Record<AuthenticCardSize, number> = {
+  xs: 0.5,
+  sm: 0.75,
+  md: 1,
+  lg: 1.5,
+  xl: 1.5,
+};
+
+export const AUTHENTIC_CATALOG_CARD_SOURCE_FACE_BOTTOM_CROP_PX = 15;
+
+const scaleNumber = (value: number, scale: number) => Number((value * scale).toFixed(3));
+
+const scaleDimensions = (
+  dimensions: AuthenticCardDimensions,
+  scale: number,
+): AuthenticCardDimensions => ({
+  width: scaleNumber(dimensions.width, scale),
+  height: scaleNumber(dimensions.height, scale),
+});
+
 export const AUTHENTIC_CARD_DIMENSIONS: Record<AuthenticCardSize, AuthenticCardDimensions> = {
-  xs: { width: 63, height: 95 },
-  sm: { width: 70, height: 115 },
-  md: { width: 86.5, height: 147 },
-  lg: { width: 118, height: 200 },
-  xl: { width: 180, height: 339 },
+  xs: scaleDimensions(AUTHENTIC_CATALOG_CARD_DIMENSIONS, AUTHENTIC_CARD_SIZE_SCALE.xs),
+  sm: scaleDimensions(AUTHENTIC_CATALOG_CARD_DIMENSIONS, AUTHENTIC_CARD_SIZE_SCALE.sm),
+  md: scaleDimensions(AUTHENTIC_CATALOG_CARD_DIMENSIONS, AUTHENTIC_CARD_SIZE_SCALE.md),
+  lg: scaleDimensions(AUTHENTIC_CATALOG_CARD_DIMENSIONS, AUTHENTIC_CARD_SIZE_SCALE.lg),
+  xl: scaleDimensions(AUTHENTIC_CATALOG_CARD_DIMENSIONS, AUTHENTIC_CARD_SIZE_SCALE.xl),
 };
 
 export const AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX: Record<AuthenticCardSize, number> = {
-  xs: 12,
-  sm: 12,
-  md: 15,
-  lg: 20,
-  xl: 20,
+  xs: scaleNumber(AUTHENTIC_CATALOG_CARD_SOURCE_FACE_BOTTOM_CROP_PX, AUTHENTIC_CARD_SIZE_SCALE.xs),
+  sm: scaleNumber(AUTHENTIC_CATALOG_CARD_SOURCE_FACE_BOTTOM_CROP_PX, AUTHENTIC_CARD_SIZE_SCALE.sm),
+  md: scaleNumber(AUTHENTIC_CATALOG_CARD_SOURCE_FACE_BOTTOM_CROP_PX, AUTHENTIC_CARD_SIZE_SCALE.md),
+  lg: scaleNumber(AUTHENTIC_CATALOG_CARD_SOURCE_FACE_BOTTOM_CROP_PX, AUTHENTIC_CARD_SIZE_SCALE.lg),
+  xl: scaleNumber(AUTHENTIC_CATALOG_CARD_SOURCE_FACE_BOTTOM_CROP_PX, AUTHENTIC_CARD_SIZE_SCALE.xl),
 };
 
 export interface AuthenticCardViewModel {

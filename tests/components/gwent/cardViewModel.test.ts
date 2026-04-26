@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { northernRealmsCatalogCards } from "@/data/catalog";
 import {
+  AUTHENTIC_CATALOG_CARD_DIMENSIONS,
+  AUTHENTIC_CATALOG_CARD_SOURCE_FACE_BOTTOM_CROP_PX,
   AUTHENTIC_CARD_DIMENSIONS,
+  AUTHENTIC_CARD_SIZE_SCALE,
   AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX,
   cardBackImageCandidates,
   dimensionsForSize,
@@ -70,22 +73,31 @@ describe("authentic card view model", () => {
     expect(dimensionsForSize("not-a-size")).toEqual(AUTHENTIC_CARD_DIMENSIONS.md);
   });
 
-  it("uses the tall source-card aspect ratio for authentic card sizes", () => {
-    expect(AUTHENTIC_CARD_DIMENSIONS.xs).toEqual({ width: 63, height: 95 });
-    expect(AUTHENTIC_CARD_DIMENSIONS.sm).toEqual({ width: 70, height: 115 });
-    expect(AUTHENTIC_CARD_DIMENSIONS.md).toEqual({ width: 86.5, height: 147 });
-    expect(AUTHENTIC_CARD_DIMENSIONS.lg).toEqual({ width: 118, height: 200 });
-    expect(AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX).toEqual({
-      xs: 12,
-      sm: 12,
-      md: 15,
-      lg: 20,
-      xl: 20,
+  it("derives authentic card sizes from the catalog card dimensions", () => {
+    expect(AUTHENTIC_CATALOG_CARD_DIMENSIONS).toEqual({ width: 86.5, height: 147 });
+    expect(AUTHENTIC_CARD_SIZE_SCALE).toMatchObject({
+      xs: 0.5,
+      sm: 0.75,
+      md: 1,
+      lg: 1.5,
     });
-    expect(sourceFaceBottomCropForSize("xs")).toBe(12);
-    expect(sourceFaceBottomCropForSize("sm")).toBe(12);
+    expect(AUTHENTIC_CARD_DIMENSIONS.xs).toEqual({ width: 43.25, height: 73.5 });
+    expect(AUTHENTIC_CARD_DIMENSIONS.sm).toEqual({ width: 64.875, height: 110.25 });
+    expect(AUTHENTIC_CARD_DIMENSIONS.md).toEqual(AUTHENTIC_CATALOG_CARD_DIMENSIONS);
+    expect(AUTHENTIC_CARD_DIMENSIONS.lg).toEqual({ width: 129.75, height: 220.5 });
+    expect(AUTHENTIC_CARD_DIMENSIONS.xl).toEqual(AUTHENTIC_CARD_DIMENSIONS.lg);
+    expect(AUTHENTIC_CATALOG_CARD_SOURCE_FACE_BOTTOM_CROP_PX).toBe(15);
+    expect(AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX).toEqual({
+      xs: 7.5,
+      sm: 11.25,
+      md: 15,
+      lg: 22.5,
+      xl: 22.5,
+    });
+    expect(sourceFaceBottomCropForSize("xs")).toBe(7.5);
+    expect(sourceFaceBottomCropForSize("sm")).toBe(11.25);
     expect(sourceFaceBottomCropForSize("md")).toBe(15);
-    expect(sourceFaceBottomCropForSize("lg")).toBe(20);
+    expect(sourceFaceBottomCropForSize("lg")).toBe(22.5);
   });
 
   it("provides faction and discard pile card-back image candidates with safe fallbacks", () => {

@@ -146,16 +146,31 @@
 
 /* Authentic card visual */
 
+.authentic-card,
+.authentic-card-back {
+  --authentic-card-back-sigil-size: 26px;
+}
+
 .authentic-card {
   position: relative;
   flex: 0 0 auto;
   --authentic-card-face-crop-bottom: 15px;
   --authentic-card-badge-left: 3px;
   --authentic-card-badge-top: 3px;
+  --authentic-card-strength-min-size: 18px;
+  --authentic-card-strength-font-size: 13px;
+  --authentic-card-synthetic-inset: 3px;
   --authentic-card-info-top: 28px;
   --authentic-card-info-size: 19px;
   --authentic-card-info-gap: 3px;
   --authentic-card-info-font-size: 11px;
+  --authentic-card-banner-top: 2px;
+  --authentic-card-banner-side: 2px;
+  --authentic-card-banner-padding: 2px 4px;
+  --authentic-card-banner-font-size: 9px;
+  --authentic-card-nameplate-padding: 4px 6px 5px;
+  --authentic-card-nameplate-font-size: 10px;
+  --authentic-card-stripe-width: 3px;
   border-radius: 4px;
   border: 1px solid #2a1f10;
   background: #1a140c;
@@ -169,28 +184,79 @@
   outline: none;
 }
 
+.authentic-card--xs,
+.authentic-card-back--xs {
+  --authentic-card-back-sigil-size: 13px;
+}
+
 .authentic-card--xs {
-  --authentic-card-info-top: 24px;
-  --authentic-card-info-size: 15px;
-  --authentic-card-info-font-size: 10px;
+  --authentic-card-badge-left: 1.5px;
+  --authentic-card-badge-top: 1.5px;
+  --authentic-card-strength-min-size: 9px;
+  --authentic-card-strength-font-size: 6.5px;
+  --authentic-card-synthetic-inset: 1.5px;
+  --authentic-card-info-top: 14px;
+  --authentic-card-info-size: 9.5px;
+  --authentic-card-info-gap: 1.5px;
+  --authentic-card-info-font-size: 5.5px;
+  --authentic-card-banner-top: 1px;
+  --authentic-card-banner-side: 1px;
+  --authentic-card-banner-padding: 1px 2px;
+  --authentic-card-banner-font-size: 5px;
+  --authentic-card-nameplate-padding: 2px 3px 2.5px;
+  --authentic-card-nameplate-font-size: 6px;
+  --authentic-card-stripe-width: 1.5px;
+}
+
+.authentic-card--sm,
+.authentic-card-back--sm {
+  --authentic-card-back-sigil-size: 19.5px;
 }
 
 .authentic-card--sm {
-  --authentic-card-info-top: 24px;
-  --authentic-card-info-size: 16px;
-  --authentic-card-info-font-size: 10px;
+  --authentic-card-badge-left: 2.25px;
+  --authentic-card-badge-top: 2.25px;
+  --authentic-card-strength-min-size: 13.5px;
+  --authentic-card-strength-font-size: 9.75px;
+  --authentic-card-synthetic-inset: 2.25px;
+  --authentic-card-info-top: 21px;
+  --authentic-card-info-size: 14.25px;
+  --authentic-card-info-gap: 2.25px;
+  --authentic-card-info-font-size: 8.25px;
+  --authentic-card-banner-top: 1.5px;
+  --authentic-card-banner-side: 1.5px;
+  --authentic-card-banner-padding: 1.5px 3px;
+  --authentic-card-banner-font-size: 6.75px;
+  --authentic-card-nameplate-padding: 3px 4.5px 3.75px;
+  --authentic-card-nameplate-font-size: 7.5px;
+  --authentic-card-stripe-width: 2.25px;
 }
 
-.authentic-card--lg {
-  --authentic-card-info-top: 37px;
-  --authentic-card-info-size: 26px;
-  --authentic-card-info-font-size: 14px;
+.authentic-card--lg,
+.authentic-card--xl,
+.authentic-card-back--lg,
+.authentic-card-back--xl {
+  --authentic-card-back-sigil-size: 39px;
 }
 
+.authentic-card--lg,
 .authentic-card--xl {
-  --authentic-card-info-top: 57px;
-  --authentic-card-info-size: 38px;
-  --authentic-card-info-font-size: 20px;
+  --authentic-card-badge-left: 4.5px;
+  --authentic-card-badge-top: 4.5px;
+  --authentic-card-strength-min-size: 27px;
+  --authentic-card-strength-font-size: 19.5px;
+  --authentic-card-synthetic-inset: 4.5px;
+  --authentic-card-info-top: 42px;
+  --authentic-card-info-size: 28.5px;
+  --authentic-card-info-gap: 4.5px;
+  --authentic-card-info-font-size: 16.5px;
+  --authentic-card-banner-top: 3px;
+  --authentic-card-banner-side: 3px;
+  --authentic-card-banner-padding: 3px 6px;
+  --authentic-card-banner-font-size: 13.5px;
+  --authentic-card-nameplate-padding: 6px 9px 7.5px;
+  --authentic-card-nameplate-font-size: 15px;
+  --authentic-card-stripe-width: 4.5px;
 }
 
 .authentic-card.is-interactive {
@@ -229,7 +295,7 @@
 }
 
 .authentic-card.is-synthetic .authentic-card__art {
-  inset: 3px;
+  inset: var(--authentic-card-synthetic-inset);
 }
 
 .authentic-card__image {
@@ -254,14 +320,14 @@
   left: var(--authentic-card-badge-left);
   width: 26%;
   aspect-ratio: 1;
-  min-width: 18px;
+  min-width: var(--authentic-card-strength-min-size);
   border-radius: 50%;
   display: grid;
   place-items: center;
   padding: 0;
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 13px;
+  font-size: var(--authentic-card-strength-font-size);
   line-height: 1;
   text-align: center;
   color: #fff;
@@ -276,16 +342,6 @@
   line-height: 1;
 }
 
-.authentic-card--xs .authentic-card__strength,
-.authentic-card--sm .authentic-card__strength {
-  font-size: 10px;
-}
-
-.authentic-card--lg .authentic-card__strength,
-.authentic-card--xl .authentic-card__strength {
-  font-size: 16px;
-}
-
 .authentic-card__strength--hero {
   background: #7a1818;
   color: #f6e6b0;
@@ -293,12 +349,12 @@
 
 .authentic-card__banner {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  padding: 2px 4px;
+  top: var(--authentic-card-banner-top);
+  left: var(--authentic-card-banner-side);
+  right: var(--authentic-card-banner-side);
+  padding: var(--authentic-card-banner-padding);
   text-align: center;
-  font-size: 9px;
+  font-size: var(--authentic-card-banner-font-size);
   font-family: var(--font-display);
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -335,11 +391,11 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 4px 6px 5px;
+  padding: var(--authentic-card-nameplate-padding);
   background: linear-gradient(to top, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.55) 60%, transparent);
   color: #f0e2c0;
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: var(--authentic-card-nameplate-font-size);
   line-height: 1.1;
   text-align: center;
   letter-spacing: 0.02em;
@@ -353,17 +409,11 @@
   text-overflow: ellipsis;
 }
 
-.authentic-card--lg .authentic-card__nameplate,
-.authentic-card--xl .authentic-card__nameplate {
-  font-size: 12px;
-  padding: 6px 8px 7px;
-}
-
 .authentic-card__stripe {
   position: absolute;
   top: 0;
   right: 0;
-  width: 3px;
+  width: var(--authentic-card-stripe-width);
   height: 100%;
   opacity: 0.7;
 }
@@ -413,25 +463,9 @@
 .authentic-card-back__sigil {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 26px;
+  font-size: var(--authentic-card-back-sigil-size);
   color: rgba(246, 230, 176, 0.55);
   letter-spacing: 0.05em;
-}
-
-.authentic-card-back--xs .authentic-card-back__sigil {
-  font-size: 14px;
-}
-
-.authentic-card-back--sm .authentic-card-back__sigil {
-  font-size: 18px;
-}
-
-.authentic-card-back--lg .authentic-card-back__sigil {
-  font-size: 36px;
-}
-
-.authentic-card-back--xl .authentic-card-back__sigil {
-  font-size: 56px;
 }
 
 @media (max-width: 480px) {
