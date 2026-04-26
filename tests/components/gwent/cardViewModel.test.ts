@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { northernRealmsCatalogCards } from "@/data/catalog";
 import {
   AUTHENTIC_CARD_DIMENSIONS,
+  cardBackImageCandidates,
   dimensionsForSize,
   fromCatalogCard,
   isUnitOrHero,
@@ -65,5 +66,23 @@ describe("authentic card view model", () => {
     expect(dimensionsForSize("xl")).toEqual(AUTHENTIC_CARD_DIMENSIONS.xl);
     // @ts-expect-error - guarding the fallback path against unknown sizes at runtime
     expect(dimensionsForSize("not-a-size")).toEqual(AUTHENTIC_CARD_DIMENSIONS.md);
+  });
+
+  it("uses the tall source-card aspect ratio for authentic card sizes", () => {
+    expect(AUTHENTIC_CARD_DIMENSIONS.md).toEqual({ width: 80, height: 151 });
+    expect(AUTHENTIC_CARD_DIMENSIONS.lg).toEqual({ width: 110, height: 207 });
+  });
+
+  it("provides faction and discard pile card-back image candidates with safe fallbacks", () => {
+    expect(cardBackImageCandidates("northern_realms")).toContain(
+      "/images/card-backs/northern_realms.png",
+    );
+    expect(cardBackImageCandidates("northern_realms")).toContain("/images/closed_card.jpeg");
+    expect(cardBackImageCandidates("neutral", "discard")).toEqual([
+      "/images/card-backs/discard.png",
+      "/images/card-backs/discard.jpg",
+      "/images/card-backs/discard.jpeg",
+      "/images/other-graveyard.png",
+    ]);
   });
 });

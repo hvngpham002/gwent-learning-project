@@ -71,7 +71,7 @@ The harness shows:
 - row glyph chips;
 - ability glyph chips;
 - a sample card row across factions and kinds;
-- a hidden card back;
+- hidden, faction, and discard card backs;
 - a missing-image fallback example;
 - a row of card sizes (xs, sm, md, lg).
 
@@ -86,11 +86,28 @@ Stable browser-smoke selectors:
 
 Card art lives at `/images/<faction>/<source-id-derived-name>.<ext>` matching
 the `image` field on each catalog card source under `src/data/catalog/cards/`.
-The harness does not fetch images itself; image elements degrade to the SVG
-fallback when the configured path is missing or fails to load.
+The authentic card component treats catalog images as complete card faces:
+images are contained inside the card bounds, not cropped, and metadata overlays
+are only used for synthetic fallback art when the configured image is missing or
+fails to load.
 
 When real art is added, drop image files at the paths declared in the catalog
 sources. No code changes are required for the harness to pick them up.
+
+Card-back images should be placed in `public/images/card-backs/`. Supported
+filenames:
+
+- `northern_realms.png`, `.jpg`, or `.jpeg`
+- `nilfgaard.png`, `.jpg`, or `.jpeg`
+- `monsters.png`, `.jpg`, or `.jpeg`
+- `scoiatael.png`, `.jpg`, or `.jpeg`
+- `skellige.png`, `.jpg`, or `.jpeg`
+- `neutral.png`, `.jpg`, or `.jpeg`
+- `discard.png`, `.jpg`, or `.jpeg`
+
+If a faction-specific back is missing, the component falls back to
+`/images/closed_card.jpeg`. If a discard back is missing, it falls back to
+`/images/other-graveyard.png`.
 
 ## Hidden Information Notes
 

@@ -1,11 +1,18 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { getFactionDisplay } from "./displayMetadata";
-import { type AuthenticCardSize, dimensionsForSize } from "./cardViewModel";
+import {
+  type AuthenticCardBackVariant,
+  type AuthenticCardSize,
+  cardBackImageCandidates,
+  dimensionsForSize,
+} from "./cardViewModel";
 
 interface AuthenticCardBackProps {
   readonly size?: AuthenticCardSize;
   readonly faction?: string;
+  readonly variant?: AuthenticCardBackVariant;
+  readonly imageCandidates?: readonly string[];
   readonly testId?: string;
   readonly label?: string;
 }
@@ -13,12 +20,28 @@ interface AuthenticCardBackProps {
 const AuthenticCardBack: React.FC<AuthenticCardBackProps> = ({
   size = "md",
   faction = "neutral",
+  variant = "deck",
+  imageCandidates,
   testId,
   label,
 }) => {
   const dims = dimensionsForSize(size);
   const display = getFactionDisplay(faction);
-  const ariaLabel = label ?? `Hidden card, ${display.name} sleeve`;
+  const candidates = useMemo(
+    () => imageCandidates ?? cardBackImageCandidates(faction, variant),
+    [faction, imageCandidates, variant],
+  );
+  const [candidateIndex, setCandidateIndex] = useState(0);
+  const imageSrc = candidates[candidateIndex];
+  const ariaLabel = label ?? (variant === "discard" ? "Discard pile back" : `Hidden card, ${display.name} sleeve`);
+
+  useEffect(() => {
+    setCandidateIndex(0);
+  }, [candidates]);
+
+  const tryNextCandidate = () => {
+    setCandidateIndex((index) => Math.min(index + 1, candidates.length));
+  };
 
   return (
     <div
@@ -26,12 +49,23 @@ const AuthenticCardBack: React.FC<AuthenticCardBackProps> = ({
       aria-label={ariaLabel}
       data-testid={testId ?? "authentic-card-back"}
       data-faction={display.id}
-      className={`authentic-card-back authentic-card-back--${size}`}
+      data-variant={variant}
+      className={`authentic-card-back authentic-card-back--${size}${imageSrc ? " has-image" : ""}`}
       style={{ width: dims.width, height: dims.height }}
     >
-      <span className="authentic-card-back__sigil" aria-hidden="true">
-        {display.short}
-      </span>
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          alt=""
+          className="authentic-card-back__image"
+          draggable={false}
+          onError={tryNextCandidate}
+        />
+      ) : (
+        <span className="authentic-card-back__sigil" aria-hidden="true">
+          {variant === "discard" ? "X" : display.short}
+        </span>
+      )}
     </div>
   );
 };

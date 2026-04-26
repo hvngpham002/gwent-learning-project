@@ -206,6 +206,24 @@ const AuthenticUiHarness: React.FC = () => {
           </div>
           <hr className="authentic-harness__divider" />
           <div className="authentic-harness__panel-body">
+            <span className="authentic-harness__row-label">Backs</span>
+            {factions.map((faction) => (
+              <AuthenticCardBack
+                key={`back-${faction.id}`}
+                size="sm"
+                faction={faction.id}
+                label={`${faction.name} deck back`}
+              />
+            ))}
+            <AuthenticCardBack
+              size="sm"
+              faction="neutral"
+              variant="discard"
+              label="Discard pile back"
+            />
+          </div>
+          <hr className="authentic-harness__divider" />
+          <div className="authentic-harness__panel-body">
             <span className="authentic-harness__row-label">Sizes</span>
             {samples[0] ? (
               (["xs", "sm", "md", "lg"] as const).map((size) => (

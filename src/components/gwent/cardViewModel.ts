@@ -6,6 +6,7 @@ import type {
 } from "@/game/catalog";
 
 export type AuthenticCardSize = "xs" | "sm" | "md" | "lg" | "xl";
+export type AuthenticCardBackVariant = "deck" | "discard";
 
 export interface AuthenticCardDimensions {
   readonly width: number;
@@ -13,11 +14,11 @@ export interface AuthenticCardDimensions {
 }
 
 export const AUTHENTIC_CARD_DIMENSIONS: Record<AuthenticCardSize, AuthenticCardDimensions> = {
-  xs: { width: 44, height: 62 },
-  sm: { width: 60, height: 86 },
-  md: { width: 80, height: 112 },
-  lg: { width: 110, height: 154 },
-  xl: { width: 180, height: 252 },
+  xs: { width: 44, height: 83 },
+  sm: { width: 60, height: 113 },
+  md: { width: 80, height: 151 },
+  lg: { width: 110, height: 207 },
+  xl: { width: 180, height: 339 },
 };
 
 export interface AuthenticCardViewModel {
@@ -66,3 +67,33 @@ export const shouldRenderStrength = (card: AuthenticCardViewModel): boolean => i
 
 export const dimensionsForSize = (size: AuthenticCardSize): AuthenticCardDimensions =>
   AUTHENTIC_CARD_DIMENSIONS[size] ?? AUTHENTIC_CARD_DIMENSIONS.md;
+
+const normalizeFactionSlug = (faction: string) => faction.replace(/[^a-z0-9_-]/gi, "_");
+
+export const cardBackImageCandidates = (
+  faction: string,
+  variant: AuthenticCardBackVariant = "deck",
+): readonly string[] => {
+  if (variant === "discard") {
+    return [
+      "/images/card-backs/discard.png",
+      "/images/card-backs/discard.jpg",
+      "/images/card-backs/discard.jpeg",
+      "/images/other-graveyard.png",
+    ];
+  }
+
+  const slug = normalizeFactionSlug(faction || "neutral");
+  const kebab = slug.replace(/_/g, "-");
+
+  return [
+    `/images/card-backs/${slug}.png`,
+    `/images/card-backs/${slug}.jpg`,
+    `/images/card-backs/${slug}.jpeg`,
+    `/images/card-backs/${kebab}.png`,
+    `/images/card-backs/${kebab}.jpg`,
+    `/images/${slug}/card_back.png`,
+    `/images/${slug}/back.png`,
+    "/images/closed_card.jpeg",
+  ];
+};
