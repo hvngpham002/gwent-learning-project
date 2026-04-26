@@ -149,7 +149,7 @@
 .authentic-card {
   position: relative;
   flex: 0 0 auto;
-  --authentic-card-face-crop-bottom: 2px;
+  --authentic-card-face-crop-bottom: 15px;
   border-radius: 4px;
   border: 1px solid #2a1f10;
   background: #1a140c;

@@ -21,7 +21,7 @@ export const AUTHENTIC_CARD_DIMENSIONS: Record<AuthenticCardSize, AuthenticCardD
   xl: { width: 180, height: 339 },
 };
 
-export const AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX = 2;
+export const AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX = 15;
 
 export interface AuthenticCardViewModel {
   readonly sourceId: string;

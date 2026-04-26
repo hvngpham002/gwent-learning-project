@@ -88,7 +88,7 @@ Card art lives at `/images/<faction>/<source-id-derived-name>.<ext>` matching
 the `image` field on each catalog card source under `src/data/catalog/cards/`.
 The authentic card component treats catalog images as complete card faces and
 keeps the custom strength badge visible above the source face. The image face
-currently extends 2px past the bottom edge and is clipped by the card frame;
+currently extends 15px past the bottom edge and is clipped by the card frame;
 this is controlled by
 `AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX` in
 `src/components/gwent/cardViewModel.ts` for later fine-tuning.

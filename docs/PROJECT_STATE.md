@@ -81,7 +81,7 @@ The authentic UI foundation now ships behind `?engine=1&ui=authentic`:
 - `src/components/gwent/displayMetadata.ts` exposes deterministic faction, row, ability, leader-ability, and card-kind display metadata with documented fallbacks for unknown ids;
 - `src/components/gwent/AuthenticCard.tsx` and `AuthenticCardBack.tsx` render current catalog cards through a UI view model with image-failure fallback to a deterministic `SvgCardArt` placeholder;
 - `src/components/gwent/AuthenticUiHarness.tsx` shows sample Northern Realms, Nilfgaard, neutral, hero, and special cards alongside a hidden card back, missing-image fallback example, and metadata chips for browser smoke;
-- authentic card source images are treated as complete card faces and rendered with `object-fit: contain`, with a tunable 2px bottom crop while keeping the strength overlay visible;
+- authentic card source images are treated as complete card faces and rendered with `object-fit: contain`, with a tunable 15px bottom crop while keeping the strength overlay visible;
 - `AuthenticCardBack` supports faction and discard back image candidates under `public/images/card-backs/`; faction backs fall back to a faction-colored sleeve when custom backs are absent, while discard backs fall back to `other-graveyard.png`;
 - `src/appMode.ts` adds `getEngineUiVariantFromSearch` so `?engine=1&ui=authentic` reaches the harness without disturbing `/` or `?engine=1`;
 - the forbidden-imports check now scans `src/components/gwent/` so the new product UI path stays free of legacy rule helpers and AI;
