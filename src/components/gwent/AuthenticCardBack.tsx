@@ -42,6 +42,7 @@ const AuthenticCardBack: React.FC<AuthenticCardBackProps> = ({
   const tryNextCandidate = () => {
     setCandidateIndex((index) => Math.min(index + 1, candidates.length));
   };
+  const hasImage = Boolean(imageSrc);
 
   return (
     <div
@@ -50,10 +51,10 @@ const AuthenticCardBack: React.FC<AuthenticCardBackProps> = ({
       data-testid={testId ?? "authentic-card-back"}
       data-faction={display.id}
       data-variant={variant}
-      className={`authentic-card-back authentic-card-back--${size}${imageSrc ? " has-image" : ""}`}
+      className={`authentic-card-back authentic-card-back--${size}${hasImage ? " has-image" : " has-sigil"}`}
       style={{ width: dims.width, height: dims.height }}
     >
-      {imageSrc ? (
+      {hasImage ? (
         <img
           src={imageSrc}
           alt=""
@@ -62,9 +63,16 @@ const AuthenticCardBack: React.FC<AuthenticCardBackProps> = ({
           onError={tryNextCandidate}
         />
       ) : (
-        <span className="authentic-card-back__sigil" aria-hidden="true">
-          {variant === "discard" ? "X" : display.short}
-        </span>
+        <>
+          <span
+            className="authentic-card-back__faction-field"
+            style={{ background: display.color }}
+            aria-hidden="true"
+          />
+          <span className="authentic-card-back__sigil" aria-hidden="true">
+            {variant === "discard" ? "X" : display.short}
+          </span>
+        </>
       )}
     </div>
   );

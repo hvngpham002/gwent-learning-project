@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { northernRealmsCatalogCards } from "@/data/catalog";
 import {
   AUTHENTIC_CARD_DIMENSIONS,
+  AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX,
   cardBackImageCandidates,
   dimensionsForSize,
   fromCatalogCard,
@@ -71,13 +72,17 @@ describe("authentic card view model", () => {
   it("uses the tall source-card aspect ratio for authentic card sizes", () => {
     expect(AUTHENTIC_CARD_DIMENSIONS.md).toEqual({ width: 80, height: 151 });
     expect(AUTHENTIC_CARD_DIMENSIONS.lg).toEqual({ width: 110, height: 207 });
+    expect(AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX).toBe(2);
   });
 
   it("provides faction and discard pile card-back image candidates with safe fallbacks", () => {
     expect(cardBackImageCandidates("northern_realms")).toContain(
       "/images/card-backs/northern_realms.png",
     );
-    expect(cardBackImageCandidates("northern_realms")).toContain("/images/closed_card.jpeg");
+    expect(cardBackImageCandidates("northern_realms")).toContain(
+      "/images/card-backs/northern-realms-back.png",
+    );
+    expect(cardBackImageCandidates("northern_realms")).not.toContain("/images/closed_card.jpeg");
     expect(cardBackImageCandidates("neutral", "discard")).toEqual([
       "/images/card-backs/discard.png",
       "/images/card-backs/discard.jpg",

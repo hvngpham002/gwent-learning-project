@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import { getAbilityDisplay, getFactionDisplay } from "./displayMetadata";
 import {
+  AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX,
   type AuthenticCardSize,
   type AuthenticCardViewModel,
   dimensionsForSize,
@@ -42,7 +43,6 @@ const AuthenticCard: React.FC<AuthenticCardProps> = ({
 
   const [imageFailed, setImageFailed] = useState(false);
   const renderArt = imageFailed || !card.image;
-  const renderSyntheticOverlays = renderArt;
   const interactive = typeof onClick === "function";
 
   useEffect(() => {
@@ -71,8 +71,12 @@ const AuthenticCard: React.FC<AuthenticCardProps> = ({
       data-faction={faction.id}
       data-kind={card.kind}
       data-selected={selected ? "true" : undefined}
-      className={`authentic-card authentic-card--${size}${renderSyntheticOverlays ? " is-synthetic" : " is-source-face"}${selected ? " is-selected" : ""}${dimmed ? " is-dimmed" : ""}${interactive ? " is-interactive" : ""}`}
-      style={{ width: dims.width, height: dims.height }}
+      className={`authentic-card authentic-card--${size}${renderArt ? " is-synthetic" : " is-source-face"}${selected ? " is-selected" : ""}${dimmed ? " is-dimmed" : ""}${interactive ? " is-interactive" : ""}`}
+      style={{
+        width: dims.width,
+        height: dims.height,
+        "--authentic-card-face-crop-bottom": `${AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX}px`,
+      } as React.CSSProperties}
     >
       <div className="authentic-card__art">
         {renderArt ? (
@@ -94,7 +98,7 @@ const AuthenticCard: React.FC<AuthenticCardProps> = ({
         )}
       </div>
 
-      {renderSyntheticOverlays && showStrength && (
+      {showStrength && (
         <div
           className={`authentic-card__strength${isHero ? " authentic-card__strength--hero" : ""}`}
           aria-hidden="true"
@@ -103,25 +107,25 @@ const AuthenticCard: React.FC<AuthenticCardProps> = ({
         </div>
       )}
 
-      {renderSyntheticOverlays && isSpecial && (
+      {renderArt && isSpecial && (
         <div className="authentic-card__banner" aria-hidden="true">
           {card.tags.includes("weather") ? "Weather" : "Special"}
         </div>
       )}
 
-      {renderSyntheticOverlays && ability && ability.glyph && (
+      {renderArt && ability && ability.glyph && (
         <div className="authentic-card__ability" title={ability.name} aria-hidden="true">
           {ability.glyph}
         </div>
       )}
 
-      {renderSyntheticOverlays && dims.height >= 86 && (
+      {renderArt && dims.height >= 86 && (
         <div className="authentic-card__nameplate">
           <span>{card.name}</span>
         </div>
       )}
 
-      {renderSyntheticOverlays && (
+      {renderArt && (
         <div className="authentic-card__stripe" style={{ background: faction.color }} aria-hidden="true" />
       )}
     </div>

@@ -81,8 +81,8 @@ The authentic UI foundation now ships behind `?engine=1&ui=authentic`:
 - `src/components/gwent/displayMetadata.ts` exposes deterministic faction, row, ability, leader-ability, and card-kind display metadata with documented fallbacks for unknown ids;
 - `src/components/gwent/AuthenticCard.tsx` and `AuthenticCardBack.tsx` render current catalog cards through a UI view model with image-failure fallback to a deterministic `SvgCardArt` placeholder;
 - `src/components/gwent/AuthenticUiHarness.tsx` shows sample Northern Realms, Nilfgaard, neutral, hero, and special cards alongside a hidden card back, missing-image fallback example, and metadata chips for browser smoke;
-- authentic card source images are treated as complete card faces and rendered with `object-fit: contain`; synthetic strength/name/ability overlays are reserved for missing-image fallback art;
-- `AuthenticCardBack` supports faction and discard back image candidates under `public/images/card-backs/`, falling back to `closed_card.jpeg` and `other-graveyard.png` when custom backs are absent;
+- authentic card source images are treated as complete card faces and rendered with `object-fit: contain`, with a tunable 2px bottom crop while keeping the strength overlay visible;
+- `AuthenticCardBack` supports faction and discard back image candidates under `public/images/card-backs/`; faction backs fall back to a faction-colored sleeve when custom backs are absent, while discard backs fall back to `other-graveyard.png`;
 - `src/appMode.ts` adds `getEngineUiVariantFromSearch` so `?engine=1&ui=authentic` reaches the harness without disturbing `/` or `?engine=1`;
 - the forbidden-imports check now scans `src/components/gwent/` so the new product UI path stays free of legacy rule helpers and AI;
 - new unit and component tests cover the route helper, display metadata, and card view model;
@@ -145,7 +145,7 @@ Recommended Cluster E sequence:
 - The authentic UI foundation harness is a gallery only. It does not exercise engine commands, legal moves, prompts, or AI; future phases must wire those without regressing the hidden-info safety properties already covered for the diagnostic shell.
 - The authentic harness depends on a Google Fonts `@import` for `EB Garamond` and `JetBrains Mono`. Production deployments without external font access fall back to the documented serif/monospace stacks.
 - Card images are still incomplete by design. The `SvgCardArt` placeholder is a deterministic fallback, not a content workflow.
-- Faction-specific card-back files are not all present in the repository yet. Until they are added under `public/images/card-backs/`, the authentic back component falls back to the existing generic and discard images.
+- Faction-specific card-back files are not present in the repository yet. Until they are added under `public/images/card-backs/`, the authentic back component falls back to synthetic faction-colored sleeves.
 
 ## Next Recommended Step
 

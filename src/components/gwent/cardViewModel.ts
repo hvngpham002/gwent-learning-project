@@ -21,6 +21,8 @@ export const AUTHENTIC_CARD_DIMENSIONS: Record<AuthenticCardSize, AuthenticCardD
   xl: { width: 180, height: 339 },
 };
 
+export const AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX = 2;
+
 export interface AuthenticCardViewModel {
   readonly sourceId: string;
   readonly name: string;
@@ -90,10 +92,23 @@ export const cardBackImageCandidates = (
     `/images/card-backs/${slug}.png`,
     `/images/card-backs/${slug}.jpg`,
     `/images/card-backs/${slug}.jpeg`,
+    `/images/card-backs/${slug}.webp`,
     `/images/card-backs/${kebab}.png`,
     `/images/card-backs/${kebab}.jpg`,
+    `/images/card-backs/${kebab}.jpeg`,
+    `/images/card-backs/${kebab}.webp`,
+    `/images/card-backs/${slug}_back.png`,
+    `/images/card-backs/${slug}_back.jpg`,
+    `/images/card-backs/${kebab}-back.png`,
+    `/images/card-backs/${kebab}-back.jpg`,
+    `/images/card-backs/back_${slug}.png`,
+    `/images/card-backs/back_${slug}.jpg`,
     `/images/${slug}/card_back.png`,
+    `/images/${slug}/card-back.png`,
+    `/images/${slug}/deck_back.png`,
+    `/images/${slug}/deck-back.png`,
+    `/images/${slug}/${slug}_back.png`,
+    `/images/${slug}/${kebab}-back.png`,
     `/images/${slug}/back.png`,
-    "/images/closed_card.jpeg",
   ];
 };

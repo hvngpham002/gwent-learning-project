@@ -86,10 +86,12 @@ Stable browser-smoke selectors:
 
 Card art lives at `/images/<faction>/<source-id-derived-name>.<ext>` matching
 the `image` field on each catalog card source under `src/data/catalog/cards/`.
-The authentic card component treats catalog images as complete card faces:
-images are contained inside the card bounds, not cropped, and metadata overlays
-are only used for synthetic fallback art when the configured image is missing or
-fails to load.
+The authentic card component treats catalog images as complete card faces and
+keeps the custom strength badge visible above the source face. The image face
+currently extends 2px past the bottom edge and is clipped by the card frame;
+this is controlled by
+`AUTHENTIC_CARD_SOURCE_FACE_BOTTOM_CROP_PX` in
+`src/components/gwent/cardViewModel.ts` for later fine-tuning.
 
 When real art is added, drop image files at the paths declared in the catalog
 sources. No code changes are required for the harness to pick them up.
@@ -105,9 +107,13 @@ filenames:
 - `neutral.png`, `.jpg`, or `.jpeg`
 - `discard.png`, `.jpg`, or `.jpeg`
 
-If a faction-specific back is missing, the component falls back to
-`/images/closed_card.jpeg`. If a discard back is missing, it falls back to
-`/images/other-graveyard.png`.
+The back resolver also accepts dashed names such as `northern-realms.png`,
+suffixes such as `northern_realms_back.png` and `northern-realms-back.png`, and
+faction-local paths such as `public/images/northern_realms/card_back.png`.
+
+If a faction-specific back is missing, the component falls back to a
+faction-colored synthetic sleeve rather than the generic closed card. If a
+discard back is missing, it falls back to `/images/other-graveyard.png`.
 
 ## Hidden Information Notes
 
