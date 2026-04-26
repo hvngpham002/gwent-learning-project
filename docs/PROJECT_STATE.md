@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: `cDp7` engine browser smoke harness spec
-- Latest relevant commit: this `cDp7` implementation commit
+- Phase/spec: `cDp8` headless AI-vs-AI simulation smoke spec
+- Latest relevant commit: `e314bd9` (`cDp7` implementation); `cDp8` spec pending commit
 
 ## Required Reading For Every Coding Instance
 
@@ -79,7 +79,7 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 
 ## Next Recommended Step
 
-Start the next bounded Cluster D slice on AI-vs-AI or simulation harness work, using the cDp7 Playwright smoke tests as the UI regression guardrail. Keep engine UI as opt-in until a future spec explicitly changes the default route.
+Implement `docs/spec/2026-04-26-cDp8-specs.md`: add a pure headless AI-vs-AI simulation smoke harness over `startMatch`, legal moves, seat observations, `legal-heuristic-v0`, command conversion, and `executeCommand`. Keep browser/UI behavior unchanged and use the cDp7 Playwright smoke tests as the UI regression guardrail.
 
 ## Update Requirements
 
