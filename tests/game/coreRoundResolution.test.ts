@@ -335,7 +335,7 @@ describe("core round resolution", () => {
     expect(result.state.roundHistory[0]).toEqual(expect.objectContaining({ winner: "draw", loserGemLoss: { seat_a: 1, seat_b: 1 } }));
   });
 
-  it("sweeps Spies, horns, and weather to controller discard", () => {
+  it("sweeps row cards to their board-side discard and weather to controller discard", () => {
     const state = createState("cleanup", "northern_realms", "monsters");
     setRoundEnd(state);
     const spy = findCard(state, "test.spy", "seat_a");
@@ -347,9 +347,12 @@ describe("core round resolution", () => {
 
     const result = execute(state, { type: "ResolveRoundEnd" });
 
-    expect(result.state.seats.seat_a.discard).toEqual(expect.arrayContaining([spy, horn]));
+    expect(result.state.seats.seat_a.discard).toContain(horn);
+    expect(result.state.seats.seat_a.discard).not.toContain(spy);
+    expect(result.state.seats.seat_b.discard).toEqual(expect.arrayContaining([spy, frost]));
+    expect(result.state.cardsById[spy].zone).toEqual({ kind: "discard", seat: "seat_b" });
+    expect(result.state.cardsById[spy].controller).toBe("seat_a");
     expect(result.state.seats.seat_b.discard).toContain(frost);
-    expect(result.state.seats.seat_b.discard).not.toContain(spy);
     expect(result.state.weather.entries).toEqual([]);
     expect(result.state.seats.seat_a.board.close.horn).toBeNull();
     assertNoDuplicateZones(result.state);
@@ -374,7 +377,8 @@ describe("core round resolution", () => {
 
     expect(kept).toHaveLength(1);
     expect(result.state.seats.seat_a.discard).toContain(hero);
-    expect(result.state.seats.seat_b.discard).toContain(spy);
+    expect(result.state.seats.seat_a.discard).toContain(spy);
+    expect(result.state.cardsById[spy].controller).toBe("seat_b");
     expect(result.events).toContainEqual(
       expect.objectContaining({ type: "faction_ability_resolved", ability: "monsters_keep_unit", eligibleCount: 2 }),
     );

@@ -181,7 +181,11 @@ When **both players have passed**:
 - Each player sums the **Strength** of all their cards currently on the battlefield (both Units and Heroes — plus any ongoing modifiers from Weather, Tight Bond, Morale Boost, Horn, Mardroeme).
 - The player with the **lowest** total Strength **loses** the round and **removes a gem**.
 - In a **draw**, **both players remove a gem** — *unless* Nilfgaard's faction ability is in play (Nilfgaard wins draws).
-- All cards on the battlefield, **including Special Cards**, are placed in their controller's **discard pile** (exception: Monsters keep one Unit — see §11).
+- Cards occupying a player's battle rows are placed in that row-side player's
+  **discard pile** (exception: Monsters keep one Unit — see §11). This includes
+  Spy cards: a Spy on the opponent's side goes to the opponent's discard pile at
+  round cleanup. Global Weather/Special cards that do not occupy a side are
+  discarded to their controller's discard pile unless the effect says otherwise.
 - The winner of the round **starts the next round**.
 
 ### 8.4 Game End
@@ -203,9 +207,15 @@ When **both players have passed**:
 
 ### Discard Pile Rule
 
-> When a card leaves the battlefield, it goes to **its controller's** discard pile. **This includes "Spy" cards.**
+> At round cleanup, row-occupying cards go to the discard pile for the side they
+> currently occupy. A Spy on the opponent's side therefore goes to the
+> opponent's discard pile. Global cards that do not occupy a side, and
+> non-round-cleanup effect discards, use their controller's discard unless an
+> effect says otherwise.
 
-This matters: even when a Spy is physically sitting on your opponent's side of the table, its controller is still the player who played it, so it returns to *their* discard pile.
+This matters: a Spy's controller is still the player who played or revived it
+for on-play effects such as drawing cards, but round cleanup follows the side of
+the table the Spy currently occupies.
 
 ---
 
@@ -370,7 +380,10 @@ Heroes are immune to **Special Card, Unit Card, and Leader Card abilities**. Con
 - **Spy is a Unit Card** played onto the **opponent's** side, Strength counts for the opponent.
 - **You draw 2 cards.**
 - **Whose side is the Spy on?** Physically the opponent's. **Control** still belongs to the player who played it.
-- **End-of-round discard:** Per the rulebook: "When a card leaves the battlefield, it goes to its controller's discard pile. This includes 'Spy' cards." → Your Spy goes to **your** discard pile at round end. You can Medic or Eredin it back later.
+- **End-of-round discard:** Round cleanup follows board side. Your Spy is
+  physically on the opponent's side, so it goes to the **opponent's** discard
+  pile at round end. Its controller still matters before cleanup for the Spy
+  draw and other controller-based effects.
 - **Can the opponent Decoy your Spy?** The rulebook says Decoy replaces a Unit Card on **the controlling player's side of the battlefield**. The "controlling player" of Decoy is whoever plays the Decoy. Their "side" is their own. Since the Spy is sitting on the opponent's side, the opponent *could* pick it up with Decoy. **[Derived]** The replaced card returns to *the Decoy-player's hand* — so the opponent would get **your** Spy card in their hand. Whether they can then play it is a grey area: decks require single-faction color, but nothing in the rulebook explicitly forbids playing a mismatched-faction card that someone else "handed" you — this is a genuine rules gap. Most casual playgroups would treat the stolen Spy as unplayable from the opponent's hand. **[Derived — rulebook silent.]**
 - **Can you Decoy your own Spy after playing it?** No — the Spy is on the opponent's side, not yours. Decoy requires a target on the controlling player's own side. **[Derived]**
 - **Weather affects Spies.** Weather sets all matching-row Units to 1 regardless of side — including Spies.
@@ -565,7 +578,9 @@ Heroes are not affected by: Weather, Commander's Horn, Morale Boost, Scorch (Uni
 
 ### Discard Rules
 
-- Cards leaving the battlefield → **controller's** discard pile (including Spies).
+- Round cleanup for row cards → **board-side** discard pile, including Spies.
+- Global cards and non-round-cleanup discards → **controller's** discard pile
+  unless an effect says otherwise.
 - Berserkers triggered by Mardroeme → **removed from game**, *not* discarded.
 
 ### Deck Construction

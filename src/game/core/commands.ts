@@ -566,15 +566,13 @@ const sweepBattlefield = (
         if (keepCardIds.has(cardId)) {
           return;
         }
-        const controller = state.cardsById[cardId].controller;
-        moveCard(state, events, cardId, { kind: "discard", seat: controller }, "round_cleanup");
+        moveCard(state, events, cardId, { kind: "discard", seat: seatId }, "round_cleanup");
         movedCardIds.push(cardId);
       });
 
       const hornId = state.seats[seatId].board[row].horn;
       if (hornId) {
-        const controller = state.cardsById[hornId].controller;
-        moveCard(state, events, hornId, { kind: "discard", seat: controller }, "round_cleanup");
+        moveCard(state, events, hornId, { kind: "discard", seat: seatId }, "round_cleanup");
         movedCardIds.push(hornId);
       }
     });

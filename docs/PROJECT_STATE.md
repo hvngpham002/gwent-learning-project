@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: post-`cEp2` engine-backed authentic match table v1 plus Medic/Spy regression fix; `cEp3` is next
-- Latest relevant commit: `cEp2` implementation pending commit
+- Phase/spec: post-`cEp2` engine-backed authentic match table v1 plus Spy round-cleanup regression fix; `cEp3` is next
+- Latest relevant commit: Spy round-cleanup fix pending commit
 
 ## Required Reading For Every Coding Instance
 
@@ -123,6 +123,10 @@ Recommended Cluster E sequence:
 - Engine UI and adapter paths may not use legacy rule helpers or legacy AI.
 - AI hidden hand details must not appear in the default human engine view.
 - `docs/gwent-rules.md` is the authority for rule behavior.
+- Round cleanup discards row-occupying cards to the discard pile for the side
+  they currently occupy. This includes Spies on the opponent board. Global
+  weather and non-round-cleanup effect discards still use controller discard
+  unless an effect says otherwise.
 
 ## Active Risks And Limits
 
