@@ -3,7 +3,7 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: `cEp3` product match interactions spec generated; implementation pending
+- Phase/spec: `cEp3` product match interactions implemented
 - Latest relevant commit: `c09d8ff` Unify battlefield discard side for Scorch
 
 ## Required Reading For Every Coding Instance
@@ -52,6 +52,7 @@
 | `cDp11` | Cluster D / safe export validation and JSONL boundary split | `audit/reports/2026-04-26-cDp11-report.md` | Added runtime validation, recursive redaction scanning, deterministic in-memory JSONL serialization, JSONL parsing/round-trip reconstruction, tests, and docs for `sim-export-v1`. |
 | `cEp1` | Cluster E / authentic UI foundation | `audit/reports/2026-04-26-cEp1-report.md` | Added Direction A production tokens, catalog-aware display metadata, authentic card and card-back components with deterministic SVG fallback, opt-in `?engine=1&ui=authentic` harness, focused tests, browser smoke, and docs without changing engine rules or replacing the default route. |
 | `cEp2` | Cluster E / engine-backed authentic match table v1 | `audit/reports/2026-04-26-cEp2-report.md` | Replaced the default authentic route with a playable engine-backed match table while preserving the diagnostic shell and moving the foundation harness to `?engine=1&ui=authentic&view=harness`; review also fixed the Medic-revived Spy board-placement regression. |
+| `cEp3` | Cluster E / product match interactions | `audit/reports/2026-04-26-cEp3-report.md` | Added public discard browsers, engine-derived board effective-strength display, visible card-instance target clicks, Medic prompt cards, round-history overlay, and UI-only motion hooks while preserving route behavior and hidden-info boundaries. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -96,7 +97,16 @@ The engine-backed authentic match table now ships behind `?engine=1&ui=authentic
 - the Playwright Chromium smoke covers the diagnostic shell, authentic harness, and authentic match table at desktop/mobile widths, including mulligan, card play, AI response, pass, hidden-info leak checks, and overflow checks.
 - the cEp2 review fixed a pre-existing Medic/Spy rule regression: when Medic revives a Spy, the Spy now lands on the opponent board, remains controlled by the reviving player, and resolves Spy draw for that player per `docs/gwent-rules.md` section 17.2/17.3.
 
-The authentic match table is intentionally V1. It is not yet the full cEp3 interaction layer: discard browser, Medic/Decoy modal polish, round-end overlay, card-flight animation, deck builder, and pre-game setup remain deferred.
+The authentic match table now includes the cEp3 product interaction layer:
+
+- both public discard piles are clickable and open a modal browser grouped by card category/row, with empty-state handling and printed-strength discard cards;
+- visible board cards display engine-derived effective strength from `selectEngineScoreBreakdown`, including boosted/reduced/normal visual states and fallback-to-printed behavior if a score entry is absent;
+- selected-card actions still show legal target buttons, and visible `card_instance` legal targets, such as Decoy targets, are highlighted and clickable on board cards;
+- human Medic prompts render product option rows with legal prompt moves, source context, target card preview, printed strength, row, faction, ability metadata, and engine option labels;
+- resolved round history opens a dismissible product overlay with the engine-recorded round result, scores, gem loss, next starter, and game-end label when applicable;
+- recent public engine movement events add conservative `data-card-motion` hooks for played, discarded, revived, and scorched cards without delaying engine transitions.
+
+The authentic match table is still not the full product game shell: pre-game setup, deck builder, Card Studio, route promotion, full drag-and-drop, and robust end-to-end deterministic prompt/Decoy/round overlay browser paths remain deferred.
 
 ## Current Cluster E Direction
 
@@ -161,7 +171,7 @@ Recommended Cluster E sequence:
 
 ## Next Recommended Step
 
-Implement `docs/spec/2026-04-26-cEp3-specs.md`: product match interactions on top of the engine-backed authentic match table, including richer spatial/card targets, discard browser, effective board-strength display, prompt presentations, round-end overlay, and animation hooks while preserving legal-move command flow and hidden-info safety.
+Proceed to `cEp4`: build the product pre-game setup and match configuration flow over current catalog presets, controller choices, and deterministic seed handling while keeping the legacy route and diagnostic shell available.
 
 ## Update Requirements
 

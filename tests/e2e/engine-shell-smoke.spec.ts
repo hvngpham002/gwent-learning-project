@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const engineUrl = "/?engine=1&seed=dp6-smoke";
 const authenticUrl = "/?engine=1&ui=authentic&seed=dp6-smoke";
+const authenticEp3Url = "/?engine=1&ui=authentic&seed=ep3-smoke";
 const authenticHarnessUrl = "/?engine=1&ui=authentic&view=harness";
 
 const visiblePageText = async (page: import("@playwright/test").Page) =>
@@ -123,15 +124,24 @@ test("authentic UI harness avoids horizontal overflow on a mobile viewport", asy
   expect(pageErrors).toEqual([]);
 });
 
-test("authentic match supports mulligan, card play, AI response, and pass without hidden leaks", async ({ page }) => {
+test("authentic match supports mulligan, card play, discard browsing, AI response, and pass without hidden leaks", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
-  await page.goto(authenticUrl);
+  await page.goto(authenticEp3Url);
 
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
   await expect(page.getByTestId("engine-shell")).toHaveCount(0);
   await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
   await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
+
+  await page.getByTestId("authentic-discard-trigger-ai").click();
+  await expect(page.getByTestId("authentic-discard-browser")).toBeVisible();
+  await expect(page.getByTestId("authentic-discard-empty")).toBeVisible();
+  await page.getByTestId("authentic-discard-close").click();
+
+  await page.getByTestId("authentic-discard-trigger-human").click();
+  await expect(page.getByTestId("authentic-discard-browser")).toBeVisible();
+  await page.getByTestId("authentic-discard-close").click();
 
   await page.getByTestId("authentic-confirm-mulligan").click();
   await expect(page.getByTestId("authentic-human-hand")).toBeVisible();
@@ -144,6 +154,7 @@ test("authentic match supports mulligan, card play, AI response, and pass withou
   const activity = page.getByTestId("authentic-recent-activity");
   await expect(activity).toContainText(/Human played/);
   await expect(activity).toContainText(/AI completed mulligan|AI played|AI passed|AI used leader|AI resolved prompt/);
+  await expect(page.getByTestId("authentic-effective-strength").first()).toBeVisible();
 
   const passButton = page.getByTestId("authentic-pass");
   await expect(passButton).toBeEnabled();
@@ -166,6 +177,9 @@ test("authentic match avoids horizontal overflow on a mobile viewport", async ({
 
   await page.getByTestId("authentic-confirm-mulligan").click();
   await expect(page.locator(".authentic-hand__card.is-playable [data-testid='authentic-hand-card']").first()).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await page.getByTestId("authentic-discard-trigger-human").click();
+  await expect(page.getByTestId("authentic-discard-browser")).toBeVisible();
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
 });

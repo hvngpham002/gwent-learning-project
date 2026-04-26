@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getEngineSeedFromSearch } from "@/appMode";
 import type { CardInstanceId, SeatId } from "@/game/core";
@@ -56,10 +56,15 @@ import AuthenticCard from "./AuthenticCard";
 import AuthenticCardBack from "./AuthenticCardBack";
 import {
   buildAuthenticSeatSummary,
+  buildMedicPromptOptions,
+  buildRoundOverlayViewModel,
   buildVisibleCardLookup,
+  getBoardCardTargetsById,
   getBoardRowTargetsByKey,
+  groupDiscardCards,
   orderBoardRowsForAuthenticTable,
   toRuntimeCard,
+  type AuthenticBoardRuntimeCardViewModel,
   type AuthenticBoardRowViewModel,
   type AuthenticRuntimeCardViewModel,
   type AuthenticSeatSummaryViewModel,
@@ -71,6 +76,8 @@ const SEAT_LABELS: Record<SeatId, string> = {
   seat_a: "Human",
   seat_b: "AI",
 };
+
+type CardMotion = "played" | "discarded" | "prompt-revived" | "scorched";
 
 const sameCardSelection = (left: readonly CardInstanceId[], right: readonly CardInstanceId[]) => {
   if (left.length !== right.length) {
@@ -142,18 +149,25 @@ const ScoreCard: React.FC<{
 const PilePair: React.FC<{
   seat: AuthenticSeatSummaryViewModel;
   topDiscard: AuthenticRuntimeCardViewModel | null;
-}> = ({ seat, topDiscard }) => (
+  onDiscardOpen: () => void;
+}> = ({ seat, topDiscard, onDiscardOpen }) => (
   <div className="authentic-piles">
     <div className="authentic-pile">
       <AuthenticCardBack size="xs" faction={seat.faction} label={`${seat.label} deck`} />
       <span>{seat.deckCount}</span>
       <strong>Deck</strong>
     </div>
-    <div className="authentic-pile">
+    <button
+      type="button"
+      className="authentic-pile authentic-pile--discard"
+      data-testid={seat.role === "human" ? "authentic-discard-trigger-human" : "authentic-discard-trigger-ai"}
+      onClick={onDiscardOpen}
+      aria-label={`Open ${seat.label} discard pile`}
+    >
       {topDiscard ? <AuthenticCard card={topDiscard.card} size="xs" /> : <AuthenticCardBack size="xs" variant="discard" label={`${seat.label} discard`} />}
       <span>{seat.discardCount}</span>
       <strong>Discard</strong>
-    </div>
+    </button>
   </div>
 );
 
@@ -172,8 +186,61 @@ const WeatherSummary: React.FC<{ cards: readonly AuthenticRuntimeCardViewModel[]
 const BoardRow: React.FC<{
   row: AuthenticBoardRowViewModel;
   legalTargetMoveId?: string;
+  legalCardTargets: ReadonlyMap<CardInstanceId, { moveId: string }>;
+  motionByCardId: ReadonlyMap<CardInstanceId, string>;
   onTargetClick: (moveId: string) => void;
-}> = ({ row, legalTargetMoveId, onTargetClick }) => {
+}> = ({ row, legalTargetMoveId, legalCardTargets, motionByCardId, onTargetClick }) => {
+  const renderBoardCard = (unit: AuthenticBoardRuntimeCardViewModel) => {
+    const cardTarget = legalCardTargets.get(unit.key);
+    const motion = motionByCardId.get(unit.key);
+    const className = `authentic-board-card authentic-board-card--${unit.boardState.strengthState}${
+      cardTarget ? " is-card-target" : ""
+    }`;
+    const testId =
+      unit.boardState.strengthState === "boosted"
+        ? "authentic-strength-boosted"
+        : unit.boardState.strengthState === "reduced"
+          ? "authentic-strength-reduced"
+          : undefined;
+    const content = (
+      <>
+        <AuthenticCard card={unit.card} size="xs" />
+        <span
+          className={`authentic-board-card__strength authentic-board-card__strength--${unit.boardState.strengthState}`}
+          data-testid="authentic-effective-strength"
+          data-strength-state={unit.boardState.strengthState}
+          title={unit.boardState.modifiers.join(", ") || "No active modifier"}
+        >
+          {unit.boardState.effectiveStrength}
+        </span>
+      </>
+    );
+
+    if (!cardTarget) {
+      return (
+        <div key={unit.key} className={className} data-testid={testId} data-card-motion={motion}>
+          {content}
+        </div>
+      );
+    }
+
+    return (
+      <button
+        key={unit.key}
+        type="button"
+        className={className}
+        data-testid="authentic-board-card-target"
+        data-card-motion={motion}
+        onClick={(event) => {
+          event.stopPropagation();
+          onTargetClick(cardTarget.moveId);
+        }}
+      >
+        {content}
+      </button>
+    );
+  };
+
   const content = (
     <>
       <div className="authentic-board-row__label">
@@ -183,9 +250,7 @@ const BoardRow: React.FC<{
       <div className="authentic-board-row__cards">
         {row.horn ? <AuthenticCard key={row.horn.key} card={row.horn.card} size="xs" /> : null}
         {row.units.length === 0 && !row.horn ? <span className="authentic-board-row__empty">empty</span> : null}
-        {row.units.map((unit) => (
-          <AuthenticCard key={unit.key} card={unit.card} size="xs" />
-        ))}
+        {row.units.map(renderBoardCard)}
       </div>
       <div className="authentic-board-row__score">{row.score}</div>
     </>
@@ -210,13 +275,21 @@ const BoardRow: React.FC<{
 const BoardTable: React.FC<{
   rows: readonly AuthenticBoardRowViewModel[];
   legalTargets: ReadonlyMap<string, { moveId: string }>;
+  legalCardTargets: ReadonlyMap<CardInstanceId, { moveId: string }>;
+  motionByCardId: ReadonlyMap<CardInstanceId, string>;
   onTargetClick: (moveId: string) => void;
-}> = ({ rows, legalTargets, onTargetClick }) => (
+}> = ({ rows, legalTargets, legalCardTargets, motionByCardId, onTargetClick }) => (
   <section className="authentic-board-table" aria-label="Authentic board">
     {rows.map((row, index) => (
       <React.Fragment key={row.key}>
         {index === 3 ? <div className="authentic-board-table__divider" aria-hidden="true" /> : null}
-        <BoardRow row={row} legalTargetMoveId={legalTargets.get(row.key)?.moveId} onTargetClick={onTargetClick} />
+        <BoardRow
+          row={row}
+          legalTargetMoveId={legalTargets.get(row.key)?.moveId}
+          legalCardTargets={legalCardTargets}
+          motionByCardId={motionByCardId}
+          onTargetClick={onTargetClick}
+        />
       </React.Fragment>
     ))}
   </section>
@@ -261,7 +334,7 @@ const HandStrip: React.FC<{
 );
 
 const InspectorPanel: React.FC<{ selected: AuthenticRuntimeCardViewModel | null }> = ({ selected }) => (
-  <section className="authentic-panel authentic-inspector">
+  <section className="authentic-panel authentic-inspector" data-testid="authentic-selected-card-inspector">
     <h2>Inspector</h2>
     {selected ? (
       <>
@@ -359,20 +432,98 @@ const PromptPanel: React.FC<{
   sourceLabel: string | null;
   isAiPrompt: boolean;
   options: readonly { moveId: string; label: string }[];
+  medicOptions: readonly ReturnType<typeof buildMedicPromptOptions>[number][];
   onChoose: (moveId: string) => void;
-}> = ({ promptTitle, ownerLabel, sourceLabel, isAiPrompt, options, onChoose }) => (
-  <section className="authentic-panel authentic-prompt" data-testid="authentic-prompt">
+}> = ({ promptTitle, ownerLabel, sourceLabel, isAiPrompt, options, medicOptions, onChoose }) => (
+  <section
+    className={`authentic-panel authentic-prompt${medicOptions.length > 0 ? " authentic-prompt--medic" : ""}`}
+    data-testid="authentic-prompt"
+    data-prompt-kind={medicOptions.length > 0 ? "medic" : isAiPrompt ? "ai" : "generic"}
+  >
     <h2>{promptTitle ?? "Prompt"}</h2>
     {ownerLabel ? <p>Owner: {ownerLabel}</p> : null}
     {sourceLabel ? <p>{sourceLabel}</p> : null}
-    {isAiPrompt ? <p>AI resolving prompt from legal moves.</p> : null}
+    {isAiPrompt ? <p data-testid="authentic-ai-prompt-pending">AI resolving prompt from legal moves.</p> : null}
     {!isAiPrompt && options.length === 0 ? <p>No legal prompt options for your seat.</p> : null}
-    {options.map((option) => (
-      <button key={option.moveId} type="button" onClick={() => onChoose(option.moveId)}>
-        {option.label}
-      </button>
-    ))}
+    {medicOptions.length > 0
+      ? (
+          <div className="authentic-medic-options" data-testid="authentic-medic-prompt">
+            {medicOptions.map((option) => (
+              <button
+                key={option.moveId}
+                type="button"
+                className="authentic-medic-option"
+                data-testid="authentic-medic-option"
+                onClick={() => onChoose(option.moveId)}
+              >
+                {option.card ? <AuthenticCard card={option.card.card} size="xs" /> : null}
+                <span>
+                  <strong>{option.label}</strong>
+                  <em>{option.meta}</em>
+                </span>
+              </button>
+            ))}
+          </div>
+        )
+      : options.map((option) => (
+          <button key={option.moveId} type="button" data-testid="authentic-prompt-option" onClick={() => onChoose(option.moveId)}>
+            {option.label}
+          </button>
+        ))}
   </section>
+);
+
+const DiscardBrowser: React.FC<{
+  ownerLabel: string;
+  count: number;
+  groups: ReturnType<typeof groupDiscardCards>;
+  onClose: () => void;
+}> = ({ ownerLabel, count, groups, onClose }) => (
+  <div className="authentic-modal" data-testid="authentic-discard-browser" role="dialog" aria-modal="true" aria-label={`${ownerLabel} discard pile`}>
+    <section className="authentic-discard-browser">
+      <header>
+        <div>
+          <span>Discard</span>
+          <h2>
+            {ownerLabel} · {count}
+          </h2>
+        </div>
+        <button type="button" data-testid="authentic-discard-close" onClick={onClose}>
+          Close
+        </button>
+      </header>
+      {groups.length === 0 ? <p data-testid="authentic-discard-empty">The pile is empty.</p> : null}
+      {groups.map((group) => (
+        <section key={group.key} className="authentic-discard-group">
+          <h3>{group.label}</h3>
+          <div>
+            {group.cards.map((entry) => (
+              <AuthenticCard key={entry.key} card={entry.card} size="md" testId="authentic-discard-card" />
+            ))}
+          </div>
+        </section>
+      ))}
+    </section>
+  </div>
+);
+
+const RoundOverlay: React.FC<{
+  overlay: NonNullable<ReturnType<typeof buildRoundOverlayViewModel>>;
+  onDismiss: () => void;
+}> = ({ overlay, onDismiss }) => (
+  <div className="authentic-modal authentic-modal--round" data-testid="authentic-round-overlay" role="dialog" aria-modal="true">
+    <section className="authentic-round-overlay">
+      <span>{overlay.eyebrow}</span>
+      <h2>{overlay.title}</h2>
+      <p>{overlay.scoreLabel}</p>
+      <p>{overlay.gemLossLabel}</p>
+      {overlay.nextStarterLabel ? <p>{overlay.nextStarterLabel}</p> : null}
+      {overlay.gameEndLabel ? <p>{overlay.gameEndLabel}</p> : null}
+      <button type="button" data-testid="authentic-round-overlay-dismiss" onClick={onDismiss}>
+        Continue
+      </button>
+    </section>
+  </div>
 );
 
 const BattleLog: React.FC<{ lines: readonly string[] }> = ({ lines }) => (
@@ -389,6 +540,8 @@ const BattleLog: React.FC<{ lines: readonly string[] }> = ({ lines }) => (
 
 const AuthenticMatchScreen: React.FC = () => {
   const dispatch = useAppDispatch();
+  const [discardOpenSeat, setDiscardOpenSeat] = useState<SeatId | null>(null);
+  const [dismissedRoundOverlayKey, setDismissedRoundOverlayKey] = useState<string | null>(null);
   const engine = useAppSelector(selectEngineState);
   const match = useAppSelector(selectEngineMatch);
   const status = useAppSelector(selectEngineStatus);
@@ -430,6 +583,8 @@ const AuthenticMatchScreen: React.FC = () => {
   }, [aiSeat, dispatch, engine, humanSeat]);
 
   const startNewGame = useCallback(() => {
+    setDiscardOpenSeat(null);
+    setDismissedRoundOverlayKey(null);
     dispatch(startEngineMatch({ seed: startSeed }));
   }, [dispatch, startSeed]);
 
@@ -464,8 +619,10 @@ const AuthenticMatchScreen: React.FC = () => {
     [boardRows, discardCards, humanHand, weatherCards],
   );
   const visibleCardsById = useMemo(() => buildVisibleCardLookup(publicCards), [publicCards]);
+  const engineCardsById = useMemo(() => new Map(publicCards.map((card) => [card.instanceId, card])), [publicCards]);
   const targetGroups = useMemo(() => groupTargetActions(selectedPlayMoves, visibleCardsById), [selectedPlayMoves, visibleCardsById]);
   const rowTargets = useMemo(() => getBoardRowTargetsByKey(selectedPlayMoves), [selectedPlayMoves]);
+  const cardTargets = useMemo(() => getBoardCardTargetsById(selectedPlayMoves), [selectedPlayMoves]);
   const promptView = useMemo(
     () =>
       prompt
@@ -477,6 +634,13 @@ const AuthenticMatchScreen: React.FC = () => {
           })
         : null,
     [prompt, promptMoves, visibleCardsById],
+  );
+  const medicOptions = useMemo(
+    () =>
+      prompt?.kind === "medic_revive" && prompt.seatId === humanSeat
+        ? buildMedicPromptOptions({ promptMoves, cardLookup: engineCardsById })
+        : [],
+    [engineCardsById, humanSeat, prompt?.kind, prompt?.seatId, promptMoves],
   );
   const statusBanner = useMemo(
     () =>
@@ -507,6 +671,30 @@ const AuthenticMatchScreen: React.FC = () => {
     () => summarizeEvents({ events: engine.lastTransactionEvents.slice(-4), seatLabels: SEAT_LABELS, publicCardLookup: visibleCardsById }),
     [engine.lastTransactionEvents, visibleCardsById],
   );
+  const motionByCardId = useMemo(() => {
+    const entries: [CardInstanceId, CardMotion][] = [];
+    engine.lastTransactionEvents.forEach((event) => {
+      if (event.type !== "card_moved") {
+        return;
+      }
+      if (event.reason === "medic_revive") {
+        entries.push([event.cardId, "prompt-revived"]);
+        return;
+      }
+      if (event.reason === "scorch_destroyed" || event.reason === "scorch_discard") {
+        entries.push([event.cardId, "scorched"]);
+        return;
+      }
+      if (event.reason === "play_card") {
+        entries.push([event.cardId, "played"]);
+        return;
+      }
+      if (event.to.kind === "discard") {
+        entries.push([event.cardId, "discarded"]);
+      }
+    });
+    return new Map(entries);
+  }, [engine.lastTransactionEvents]);
   const roundEndSummary = useMemo(
     () =>
       score
@@ -674,6 +862,7 @@ const AuthenticMatchScreen: React.FC = () => {
             rows: boardRows,
             humanSeat,
             rowScores: score.rowTotalsBySeat,
+            scoreBreakdown: score,
           })
         : [],
     [boardRows, humanSeat, score],
@@ -687,6 +876,13 @@ const AuthenticMatchScreen: React.FC = () => {
   );
   const winnerLabel =
     match?.phase === "game_end" ? (winner === "draw" ? "Draw" : winner ? `${SEAT_LABELS[winner]} wins` : "Finished") : null;
+  const discardBrowserSeat = discardOpenSeat && seatSummaries ? (discardOpenSeat === humanSeat ? seatSummaries.human : seatSummaries.ai) : null;
+  const discardGroups = useMemo(() => groupDiscardCards(discardOpenSeat ? discardCards[discardOpenSeat] : []), [discardCards, discardOpenSeat]);
+  const latestRoundOverlay = useMemo(
+    () => buildRoundOverlayViewModel({ round: roundHistory.at(-1), seatLabels: SEAT_LABELS, gameWinner: winner }),
+    [roundHistory, winner],
+  );
+  const showRoundOverlay = Boolean(latestRoundOverlay && latestRoundOverlay.key !== dismissedRoundOverlayKey);
 
   return (
     <main className="gwent-authentic gwent-authentic--match" data-testid="authentic-match-screen">
@@ -712,9 +908,17 @@ const AuthenticMatchScreen: React.FC = () => {
                   leaderUsed={leaders[aiSeat].used}
                   active={match?.currentTurn === aiSeat}
                 />
-                <PilePair seat={seatSummaries.ai} topDiscard={topAiDiscard ? toRuntimeCard(topAiDiscard) : null} />
+                <PilePair
+                  seat={seatSummaries.ai}
+                  topDiscard={topAiDiscard ? toRuntimeCard(topAiDiscard) : null}
+                  onDiscardOpen={() => setDiscardOpenSeat(aiSeat)}
+                />
                 <WeatherSummary cards={weatherRuntimeCards} />
-                <PilePair seat={seatSummaries.human} topDiscard={topHumanDiscard ? toRuntimeCard(topHumanDiscard) : null} />
+                <PilePair
+                  seat={seatSummaries.human}
+                  topDiscard={topHumanDiscard ? toRuntimeCard(topHumanDiscard) : null}
+                  onDiscardOpen={() => setDiscardOpenSeat(humanSeat)}
+                />
                 <ScoreCard
                   seat={seatSummaries.human}
                   leaderName={leaders[humanSeat].name}
@@ -728,7 +932,13 @@ const AuthenticMatchScreen: React.FC = () => {
           </aside>
 
           <section className="authentic-match__center">
-            <BoardTable rows={orderedRows} legalTargets={rowTargets} onTargetClick={playCard} />
+            <BoardTable
+              rows={orderedRows}
+              legalTargets={rowTargets}
+              legalCardTargets={cardTargets}
+              motionByCardId={motionByCardId}
+              onTargetClick={playCard}
+            />
             <HandStrip
               cards={handCards}
               selectedCardId={selectedCardId}
@@ -764,6 +974,7 @@ const AuthenticMatchScreen: React.FC = () => {
                 sourceLabel={promptView?.sourceLabel ?? null}
                 isAiPrompt={prompt.seatId === aiSeat}
                 options={prompt.seatId === humanSeat ? (promptView?.options ?? []) : []}
+                medicOptions={medicOptions}
                 onChoose={choosePromptOption}
               />
             ) : null}
@@ -794,6 +1005,17 @@ const AuthenticMatchScreen: React.FC = () => {
             <BattleLog lines={logLines} />
           </aside>
         </div>
+        {discardBrowserSeat ? (
+          <DiscardBrowser
+            ownerLabel={discardBrowserSeat.label}
+            count={discardBrowserSeat.discardCount}
+            groups={discardGroups}
+            onClose={() => setDiscardOpenSeat(null)}
+          />
+        ) : null}
+        {showRoundOverlay && latestRoundOverlay ? (
+          <RoundOverlay overlay={latestRoundOverlay} onDismiss={() => setDismissedRoundOverlayKey(latestRoundOverlay.key)} />
+        ) : null}
       </div>
     </main>
   );
