@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: post-`cEp2` engine-backed authentic match table v1 plus Spy battlefield discard-side regression fix; `cEp3` is next
-- Latest relevant commit: Spy battlefield discard-side fix pending commit
+- Phase/spec: `cEp3` product match interactions spec generated; implementation pending
+- Latest relevant commit: `c09d8ff` Unify battlefield discard side for Scorch
 
 ## Required Reading For Every Coding Instance
 
@@ -161,7 +161,7 @@ Recommended Cluster E sequence:
 
 ## Next Recommended Step
 
-Implement the next Cluster E phase (`cEp3`): add product match interactions on top of the engine-backed authentic match table, including richer spatial targets, discard browser, prompt presentations, round-end overlay, and animation hooks while preserving legal-move command flow and hidden-info safety.
+Implement `docs/spec/2026-04-26-cEp3-specs.md`: product match interactions on top of the engine-backed authentic match table, including richer spatial/card targets, discard browser, effective board-strength display, prompt presentations, round-end overlay, and animation hooks while preserving legal-move command flow and hidden-info safety.
 
 ## Update Requirements
 
