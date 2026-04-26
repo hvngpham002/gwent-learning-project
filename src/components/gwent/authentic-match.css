@@ -357,41 +357,19 @@ button.authentic-board-card {
   text-transform: none;
 }
 
+.authentic-board-card--boosted {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(184, 134, 42, 0.24);
+}
+
+.authentic-board-card--reduced {
+  border-color: var(--w-frost);
+  box-shadow: 0 0 0 1px rgba(106, 154, 196, 0.24);
+}
+
 .authentic-board-card.is-card-target {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(138, 58, 31, 0.35);
-}
-
-.authentic-board-card__strength {
-  position: absolute;
-  right: -3px;
-  bottom: -3px;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--rule-strong);
-  border-radius: 999px;
-  background: var(--bg-paper);
-  color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.authentic-board-card__strength--boosted {
-  border-color: var(--gold);
-  background: rgba(184, 134, 42, 0.18);
-  color: #5f3c00;
-}
-
-.authentic-board-card__strength--reduced {
-  border-color: var(--w-frost);
-  background: rgba(106, 154, 196, 0.22);
-  color: #24465d;
 }
 
 .authentic-board-row__score {

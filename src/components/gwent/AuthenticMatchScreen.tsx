@@ -196,29 +196,19 @@ const BoardRow: React.FC<{
     const className = `authentic-board-card authentic-board-card--${unit.boardState.strengthState}${
       cardTarget ? " is-card-target" : ""
     }`;
-    const testId =
-      unit.boardState.strengthState === "boosted"
-        ? "authentic-strength-boosted"
-        : unit.boardState.strengthState === "reduced"
-          ? "authentic-strength-reduced"
-          : undefined;
-    const content = (
-      <>
-        <AuthenticCard card={unit.card} size="xs" />
-        <span
-          className={`authentic-board-card__strength authentic-board-card__strength--${unit.boardState.strengthState}`}
-          data-testid="authentic-effective-strength"
-          data-strength-state={unit.boardState.strengthState}
-          title={unit.boardState.modifiers.join(", ") || "No active modifier"}
-        >
-          {unit.boardState.effectiveStrength}
-        </span>
-      </>
-    );
+    const strengthTitle = unit.boardState.modifiers.join(", ") || "No active modifier";
+    const content = <AuthenticCard card={unit.card} size="xs" />;
 
     if (!cardTarget) {
       return (
-        <div key={unit.key} className={className} data-testid={testId} data-card-motion={motion}>
+        <div
+          key={unit.key}
+          className={className}
+          data-testid="authentic-effective-strength"
+          data-strength-state={unit.boardState.strengthState}
+          data-card-motion={motion}
+          title={strengthTitle}
+        >
           {content}
         </div>
       );
@@ -230,7 +220,9 @@ const BoardRow: React.FC<{
         type="button"
         className={className}
         data-testid="authentic-board-card-target"
+        data-strength-state={unit.boardState.strengthState}
         data-card-motion={motion}
+        title={strengthTitle}
         onClick={(event) => {
           event.stopPropagation();
           onTargetClick(cardTarget.moveId);

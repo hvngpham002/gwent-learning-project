@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: `cEp3` product match interactions implemented
-- Latest relevant commit: `c09d8ff` Unify battlefield discard side for Scorch
+- Phase/spec: `cEp3` product match interactions follow-up
+- Latest relevant commit: cEp3 duplicate effective-strength overlay fix
 
 ## Required Reading For Every Coding Instance
 
@@ -100,7 +100,7 @@ The engine-backed authentic match table now ships behind `?engine=1&ui=authentic
 The authentic match table now includes the cEp3 product interaction layer:
 
 - both public discard piles are clickable and open a modal browser grouped by card category/row, with empty-state handling and printed-strength discard cards;
-- visible board cards display engine-derived effective strength from `selectEngineScoreBreakdown`, including boosted/reduced/normal visual states and fallback-to-printed behavior if a score entry is absent;
+- visible board cards display engine-derived effective strength from `selectEngineScoreBreakdown` through the existing card strength medallion, including boosted/reduced/normal wrapper states and fallback-to-printed behavior if a score entry is absent;
 - selected-card actions still show legal target buttons, and visible `card_instance` legal targets, such as Decoy targets, are highlighted and clickable on board cards;
 - human Medic prompts render product option rows with legal prompt moves, source context, target card preview, printed strength, row, faction, ability metadata, and engine option labels;
 - resolved round history opens a dismissible product overlay with the engine-recorded round result, scores, gem loss, next starter, and game-end label when applicable;

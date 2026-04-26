@@ -155,6 +155,7 @@ test("authentic match supports mulligan, card play, discard browsing, AI respons
   await expect(activity).toContainText(/Human played/);
   await expect(activity).toContainText(/AI completed mulligan|AI played|AI passed|AI used leader|AI resolved prompt/);
   await expect(page.getByTestId("authentic-effective-strength").first()).toBeVisible();
+  await expect(page.locator(".authentic-board-card__strength")).toHaveCount(0);
 
   const passButton = page.getByTestId("authentic-pass");
   await expect(passButton).toBeEnabled();
