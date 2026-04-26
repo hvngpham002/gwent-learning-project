@@ -7,9 +7,11 @@ export const SIMULATION_EXPORT_SCHEMA_VERSION = "sim-export-v1";
 export const SAFE_OBSERVATION_SCHEMA_VERSION = "safe-observation-v1";
 export const LEGAL_ACTION_SCHEMA_VERSION = "legal-action-v1";
 export const SIMULATION_REWARD_SCHEMA_VERSION = "reward-v1";
+export const SIMULATION_EXPORT_JSONL_SCHEMA_VERSION = "sim-export-jsonl-v1";
 
 export type SimulationActorKind = "policy" | "system";
 export type RelativeSeatSide = "own" | "opponent";
+export type SimulationExportValidationSeverity = "error" | "warning";
 
 export interface SimulationExportDatasetInput {
   batch?: HeadlessSimulationBatchResult;
@@ -213,4 +215,63 @@ export interface SimulationExportDataset {
   matchCount: number;
   summary: SimulationExportSummary;
   rows: SimulationDecisionRow[];
+}
+
+export interface SimulationExportValidationIssue {
+  severity: SimulationExportValidationSeverity;
+  code: string;
+  path: string;
+  message: string;
+}
+
+export interface SimulationExportValidationSummary {
+  errorCount: number;
+  warningCount: number;
+  rowCount: number;
+  matchCount: number;
+  systemRowCount: number;
+}
+
+export interface SimulationExportValidationResult {
+  valid: boolean;
+  issues: SimulationExportValidationIssue[];
+  summary: SimulationExportValidationSummary;
+}
+
+export interface SimulationExportValidationOptions {
+  allowSystemActions?: boolean;
+  requireNoWarnings?: boolean;
+}
+
+export interface SimulationExportJsonlHeaderRecord {
+  recordType: "dataset_header";
+  jsonlSchemaVersion: typeof SIMULATION_EXPORT_JSONL_SCHEMA_VERSION;
+  exportSchemaVersion: typeof SIMULATION_EXPORT_SCHEMA_VERSION;
+  generatedBy: "headless-simulation-export";
+  suiteId: string | null;
+  seeds: readonly (string | number)[];
+  policiesBySeat: Record<SeatId, string>;
+  rowCount: number;
+  matchCount: number;
+  summary: SimulationExportSummary;
+}
+
+export interface SimulationExportJsonlDecisionRecord {
+  recordType: "decision_row";
+  jsonlSchemaVersion: typeof SIMULATION_EXPORT_JSONL_SCHEMA_VERSION;
+  row: SimulationDecisionRow;
+}
+
+export type SimulationExportJsonlRecord = SimulationExportJsonlHeaderRecord | SimulationExportJsonlDecisionRecord;
+
+export interface SerializeSimulationExportJsonlOptions {
+  validate?: boolean;
+  includeHeader?: boolean;
+}
+
+export interface ParseSimulationExportJsonlResult {
+  header: SimulationExportJsonlHeaderRecord | null;
+  rows: SimulationDecisionRow[];
+  dataset: SimulationExportDataset | null;
+  issues: SimulationExportValidationIssue[];
 }

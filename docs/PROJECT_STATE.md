@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-26
-- Phase/spec: `cDp10` hidden-info-safe simulation export contract implementation
-- Latest relevant commit: this `cDp10` implementation commit
+- Phase/spec: `cDp11` implementation - safe export validation and JSONL boundary
+- Latest relevant commit: this `cDp11` implementation commit
 
 ## Required Reading For Every Coding Instance
 
@@ -45,6 +45,7 @@
 | `cDp8` | Cluster D / simulation foundation split | `audit/reports/2026-04-26-cDp8-report.md` | Added pure headless AI-vs-AI simulation smoke runner, compact logs/metrics, max-step failure status, deterministic replay helper, docs, and forbidden-import coverage for `src/game/sim`. |
 | `cDp9` | Cluster D / simulation diagnostics split | `audit/reports/2026-04-26-cDp9-report.md` | Added bounded batch seed suites, compact aggregate diagnostics, replay diagnostics, deterministic fingerprints, and batch simulation docs over the cDp8 runner. |
 | `cDp10` | Cluster D / hidden-info-safe export contract split | `audit/reports/2026-04-26-cDp10-report.md` | Added deterministic in-memory simulation export rows with safe perspective observations, per-row legal action encoding, chosen action indices, sparse terminal reward placeholders, summaries, diagnostics, and docs. |
+| `cDp11` | Cluster D / safe export validation and JSONL boundary split | `audit/reports/2026-04-26-cDp11-report.md` | Added runtime validation, recursive redaction scanning, deterministic in-memory JSONL serialization, JSONL parsing/round-trip reconstruction, tests, and docs for `sim-export-v1`. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -63,7 +64,9 @@ The batch simulation layer now runs the fixed `current-smoke-v1` six-seed suite 
 
 The safe simulation export layer now builds deterministic in-memory `sim-export-v1` datasets from replayed pre-command states. Rows include `safe-observation-v1` acting-seat observations, `legal-action-v1` ordered legal action lists, chosen action indices, sparse `reward-v1` terminal placeholders, compact outcome metadata, and export diagnostics. Default rows exclude raw final states, command logs, full events, `cardsById`, raw engine card instance ids, opponent hidden hand identities, opponent deck identities/order, and own deck order.
 
-It cannot yet provide strong strategic AI parity, polished spatial board interactions, full deck-building flows, persistence, PvP, JSONL/Python ML exports, fixed neural action vectors, model training, or default-route engine gameplay.
+The export validation and JSONL boundary now validates `sim-export-v1` datasets at runtime, scans recursively for raw-debug and hidden-info hazards, can reject system action rows for policy-only datasets, serializes validated datasets to deterministic in-memory `sim-export-jsonl-v1` strings, and parses JSONL back into rows/reconstructed datasets with structured issues for malformed input.
+
+It cannot yet provide strong strategic AI parity, polished spatial board interactions, full deck-building flows, persistence, PvP, JSONL file writing, Python ML exports, fixed neural action vectors, model training, or default-route engine gameplay.
 
 ## Known Architectural Rules
 
@@ -92,14 +95,15 @@ It cannot yet provide strong strategic AI parity, polished spatial board interac
 - Policy failures are reported as structured `policy_failed` results for missing acting seats, thrown policy exceptions, no selected move, illegal selected moves, or move conversion failure; stronger policy diagnostics and illegal-action metrics belong in later simulation phases.
 - Batch diagnostics are intentionally compact and hidden-info cautious by default, but `includeRawResults: true` exposes cDp8 final states and command logs for debugging; those raw results are not ML-safe export rows.
 - `current-smoke-v1` is a small fixed seed suite for regression visibility, not a tournament matrix or policy evaluation ladder.
-- Safe export rows are hidden-info-safe by explicit field selection, but this is still an in-memory TypeScript contract, not a serialized dataset format with schema validation.
+- Safe export rows are hidden-info-safe by explicit field selection plus cDp11 validation/redaction scanning, but future consumers still need file/storage policy before writing JSONL outside memory.
 - Legal actions remain per-row lists rather than a fixed model action vector; downstream ML tooling must still define tensorization/masking.
 - Reward placeholders are sparse terminal outcomes only; no shaped reward design or round-level training signal exists yet.
 - `includeSystemActions: true` can expose simulation auto-resolver rows for diagnostics, but default policy datasets continue to exclude `resolve_round_end`.
+- JSONL parsing validates reconstructed datasets and reports malformed input as structured issues, but it is not a replay checker, schema library, compression format, Python bridge, or compatibility guarantee.
 
 ## Next Recommended Step
 
-Continue with the next bounded simulation/ML foundation slice: add an explicit JSONL/exporter boundary or schema-validation plan over `sim-export-v1`, while keeping raw replay logs debug-only and preserving the current hidden-info-safe row contract.
+Plan the next ML/export step: define a file-writing or Python-consumption spec over validated `sim-export-jsonl-v1`, including storage/versioning policy and action-vector/tensorization decisions, without changing engine rules or exposing raw replay logs.
 
 ## Update Requirements
 

@@ -62,13 +62,15 @@ Default export rows exclude `finalState`, `commandLog`, full events, `cardsById`
 
 `resolve_round_end` is excluded by default because it is the simulation auto-resolver rather than a policy-owned decision. Use `includeSystemActions: true` only for diagnostics.
 
-See `docs/simulation/safe-export-contract.md` for the full contract and ML boundary.
+`cDp11` adds `validateSimulationExportDataset`, `assertValidSimulationExportDataset`, `serializeSimulationExportDatasetToJsonl`, and `parseSimulationExportDatasetJsonl` as the pure validation and in-memory JSONL boundary for `sim-export-v1`.
+
+See `docs/simulation/safe-export-contract.md` and `docs/simulation/export-jsonl-boundary.md` for the full contract and ML boundary.
 
 ## ML Boundary
 
 This harness sets up future batch simulation and ML exports by using legal moves and seat observations as the policy contract. It does not add JSONL export, action encoding, reward shaping, tournament runs, random policies, Python tooling, notebooks, or model training.
 
-The cDp10 export adds redacted observation rows and per-row legal action encoding, but still does not add JSONL export, fixed neural action vectors, Python tooling, notebooks, self-play workers, model training, or shaped rewards. The current `commandLog` and final state remain debugging/replay data and may contain hidden card identifiers.
+The cDp10 export adds redacted observation rows and per-row legal action encoding. The cDp11 boundary adds in-memory JSONL strings and parsing, but still does not add file writing, fixed neural action vectors, Python tooling, notebooks, self-play workers, model training, or shaped rewards. The current `commandLog` and final state remain debugging/replay data and may contain hidden card identifiers.
 
 ## Batch Seed Suites
 

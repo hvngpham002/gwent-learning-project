@@ -1,6 +1,6 @@
 # Safe Simulation Export Contract
 
-`cDp10` adds the first hidden-info-safe in-memory export contract over the headless batch simulation layer.
+`cDp10` adds the first hidden-info-safe in-memory export contract over the headless batch simulation layer. `cDp11` adds runtime validation and deterministic in-memory JSONL serialization for that contract.
 
 ```ts
 import { buildSimulationExportDataset } from "@/game/sim";
@@ -87,6 +87,16 @@ Dataset summary counts rows by action kind, seat, and policy id. Per-match diagn
 
 Diagnostics are compact and must not include raw state, raw commands, card instance ids, hidden hand identities, or deck order.
 
+## Validation And JSONL
+
+`validateSimulationExportDataset` checks the safe contract before data leaves memory. It validates schema versions, top-level counts, summary consistency, row id uniqueness, observation/action/reward versions, legal action list alignment, chosen action alignment, terminal reward shape, system action policy, and hidden-info/raw-debug redaction hazards.
+
+`assertValidSimulationExportDataset` throws with validation issue codes and narrows valid values to `SimulationExportDataset`.
+
+`serializeSimulationExportDatasetToJsonl` emits deterministic in-memory JSONL with a `dataset_header` record followed by one `decision_row` record per row. It validates by default. `parseSimulationExportDatasetJsonl` parses line-delimited JSON, reconstructs a dataset when a header is present, validates it, and returns structured issues for malformed input instead of throwing for ordinary bad records.
+
+See `docs/simulation/export-jsonl-boundary.md` for the full validation and JSONL boundary.
+
 ## Still Out Of Scope
 
-Future work still needs a JSONL writer, Python or learner bridge, model-ready tensorization, fixed action-vector design, stronger replay/intermediate-state validation, observation hashing if needed, broader seed suites, policy evaluation, and reward design beyond the sparse terminal placeholder.
+Future work still needs a JSONL file writer, Python or learner bridge, model-ready tensorization, fixed action-vector design, stronger replay/intermediate-state validation, observation hashing if needed, broader seed suites, policy evaluation, and reward design beyond the sparse terminal placeholder.
