@@ -55,6 +55,7 @@ import { getLegalHeuristicAiCommand } from "../game/engine/legalHeuristicAiContr
 import AuthenticCard from "./AuthenticCard";
 import AuthenticCardBack from "./AuthenticCardBack";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
+import { Alert } from "./alert";
 import {
   buildAuthenticSeatSummary,
   buildMedicPromptOptions,
@@ -523,17 +524,23 @@ const RoundOverlay: React.FC<{
   onDismiss: () => void;
 }> = ({ overlay, onDismiss }) => (
   <div className="authentic-modal authentic-modal--round" data-testid="authentic-round-overlay" role="dialog" aria-modal="true">
-    <section className="authentic-round-overlay">
-      <span>{overlay.eyebrow}</span>
-      <h2>{overlay.title}</h2>
-      <p>{overlay.scoreLabel}</p>
-      <p>{overlay.gemLossLabel}</p>
-      {overlay.nextStarterLabel ? <p>{overlay.nextStarterLabel}</p> : null}
-      {overlay.gameEndLabel ? <p>{overlay.gameEndLabel}</p> : null}
-      <button type="button" data-testid="authentic-round-overlay-dismiss" onClick={onDismiss}>
-        Continue
-      </button>
-    </section>
+    <Alert
+      severity={overlay.gameEndLabel ? "success" : "info"}
+      variant="seal"
+      className="authentic-round-overlay"
+      eyebrow={overlay.eyebrow}
+      title={overlay.title}
+      body={
+        <>
+          <p>{overlay.scoreLabel}</p>
+          <p>{overlay.gemLossLabel}</p>
+          {overlay.nextStarterLabel ? <p>{overlay.nextStarterLabel}</p> : null}
+          {overlay.gameEndLabel ? <p>{overlay.gameEndLabel}</p> : null}
+        </>
+      }
+      actions={[{ label: "Continue", onClick: onDismiss, kind: "primary", testId: "authentic-round-overlay-dismiss" }]}
+      testId="authentic-round-overlay-alert"
+    />
   </div>
 );
 

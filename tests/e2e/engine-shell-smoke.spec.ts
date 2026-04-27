@@ -296,8 +296,9 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   const before = await total.innerText();
   await page.locator(".authentic-deck-builder__deck-card button").first().click();
   await expect(total).not.toHaveText(before);
-  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Reset to catalog" }).click();
+  await expect(page.getByTestId("authentic-deck-builder-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-deck-builder-confirm-action").click();
   await expect(total).toHaveText(before);
   await page.getByRole("button", { name: "Duplicate" }).click();
   await expect(page.getByLabel("Deck name")).toHaveValue(/Current Northern Realms 2/);

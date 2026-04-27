@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-27
-- Phase/spec: `cEp5.1` deck builder count badge position tweak
-- Latest relevant commit: cEp5.1 deck builder count badge position tweak
+- Phase/spec: `handoff-alerts` authentic alert and listbox integration
+- Latest relevant commit: handoff-alerts integration
 
 ## Required Reading For Every Coding Instance
 
@@ -91,6 +91,8 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - `AuthenticGameApp` owns the small authentic route layer and passes an explicit serializable setup config from pre-game into `AuthenticMatchScreen` without requiring URL edits;
 - `AuthenticGameApp` also owns browser-local deck state for the authentic flow; local editable decks are loaded from `gwent_authentic_decks_v1`, seeded from catalog preset copies when absent, and can be passed as inline `CatalogDeckPreset` objects to `startEngineMatch`;
 - the deck builder uses `currentCatalogCards`, `currentCatalogLeaders`, and `CatalogDeckPreset` data only; it supports create, rename, save, delete, search/filter, leader selection, add/remove within `deckLimit`, export, clipboard copy, paste/file import, validation, and Play-from-builder;
+- shared authentic alert primitives now live under `src/components/gwent/alert/`, with ledger and seal variants, severity sigils, action buttons, and toast support adapted from `handoff-alerts/`;
+- shared authentic `Listbox` now replaces native selects in the pre-game opponent picker and deck-builder faction/leader controls, with custom desktop behavior and native touch fallback;
 - deck validation blocks structural errors such as missing names, unknown references, wrong faction cards/leaders, over-limit copies, fewer than 22 battlefield cards, more than 10 special cards, and non-empty side decks, while planned/placeholder card or leader abilities are visible warnings rather than blockers;
 - local deck identity is normalized on storage read/write and through create, duplicate, import, and rename flows so browser-local `presetId` values and display names stay unique;
 - the deck builder now exposes catalog-derived faction selection for new and existing local decks; changing faction resets to that faction's default leader, confirms if cards would be removed, keeps neutral cards, and removes wrong-faction cards;
@@ -98,6 +100,7 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - deck-builder add limits are kind-aware: heroes remain singleton, specials use their catalog per-card limit plus the 10-special deck cap, and normal units can be added up to at least 3 copies even when the migrated catalog source count is one;
 - Heavy Fire Zerrikanian Scorpion uses the available `/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png` asset in both catalog-backed and legacy data paths;
 - deck-builder action, modal, reset, delete, and filter buttons now inherit the existing `← back` ghost-button visual language without changing the generic deck tile button baseline;
+- deck-builder reset/delete/faction-change confirmations now use the authentic ledger confirmation alert rather than browser-native `window.confirm`;
 - Duplicate creates a selected same-composition local copy with a unique name/ID, Reset to catalog restores catalog-derived local decks while preserving their local `presetId`, and import conflict notices report the final imported name/ID behavior;
 - pre-game now lists valid local decks in addition to current catalog presets, marks invalid local decks disabled with the validation reason, and starts selected local decks by passing an inline custom human deck preset rather than adding it to `currentDeckPresets`;
 - pre-game deck selection uses source-prefixed UI option IDs, such as `catalog:current-northern-realms` and `local:current-northern-realms`, so imported or older browser-local decks that reuse a catalog preset ID cannot select both tiles or accidentally substitute a local deck when the catalog tile is chosen;
@@ -132,6 +135,7 @@ The authentic match table now includes the cEp3 product interaction layer:
 - selected-card actions still show legal target buttons, and visible `card_instance` legal targets, such as Decoy targets, are highlighted and clickable on board cards;
 - human Medic prompts render product option rows with legal prompt moves, source context, target card preview, printed strength, row, faction, ability metadata, and engine option labels;
 - resolved round history opens a dismissible product overlay with the engine-recorded round result, scores, gem loss, next starter, and game-end label when applicable;
+- round/game-end overlays now use the handoff alert seal presentation while keeping the existing engine-derived round overlay data;
 - recent public engine movement events add conservative `data-card-motion` hooks for played, discarded, revived, and scorched cards without delaying engine transitions.
 
 The authentic match table is still not the full product game shell: Card Studio, route promotion, full drag-and-drop, richer match pacing, and robust end-to-end deterministic prompt/Decoy/round overlay browser paths remain deferred.

@@ -41,6 +41,10 @@
   --accent: #8a3a1f;
   --accent-2: #4a3f2e;
   --gold: #b88a3a;
+  --sev-info: #3a5a7a;
+  --sev-warn: #a07020;
+  --sev-error: #8a3a1f;
+  --sev-success: #a8893f;
   --shadow:
     0 1px 0 rgba(255, 255, 255, 0.4) inset,
     0 2px 6px rgba(80, 60, 30, 0.18);

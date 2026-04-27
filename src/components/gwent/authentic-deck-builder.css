@@ -222,6 +222,11 @@
   min-width: 190px;
 }
 
+.authentic-deck-builder__inline-controls .authentic-listbox {
+  flex: 1 1 190px;
+  min-width: 190px;
+}
+
 .authentic-deck-builder__inline-controls select {
   width: 100%;
   margin-top: 5px;
@@ -327,6 +332,11 @@
   font-family: var(--font-display);
 }
 
+.authentic-deck-builder__stats .authentic-listbox {
+  width: 100%;
+  margin-top: 6px;
+}
+
 .authentic-deck-builder__deck-cards {
   margin-top: 8px;
   display: grid;
@@ -371,6 +381,10 @@
   border-radius: 4px;
   background: var(--bg-paper);
   box-shadow: var(--shadow);
+}
+
+.authentic-deck-builder__modal > .authentic-alert {
+  width: min(520px, 100%);
 }
 
 .authentic-deck-builder__modal-box textarea {

@@ -558,7 +558,6 @@ button.authentic-board-card {
 .authentic-round-overlay {
   width: min(560px, 100%);
   padding: 24px;
-  text-align: center;
 }
 
 .authentic-round-overlay p {
@@ -567,8 +566,8 @@ button.authentic-board-card {
 }
 
 .authentic-round-overlay h2 {
-  color: var(--gold);
-  font-size: 40px;
+  color: var(--ink);
+  font-size: 26px;
 }
 
 [data-card-motion="played"],
@@ -648,6 +647,6 @@ button.authentic-board-card {
   }
 
   .authentic-round-overlay h2 {
-    font-size: 30px;
+    font-size: 24px;
   }
 }

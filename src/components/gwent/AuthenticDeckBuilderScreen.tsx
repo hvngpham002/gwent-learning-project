@@ -4,6 +4,7 @@ import { currentCatalogCards, currentCatalogLeaders, currentDeckPresets } from "
 import type { CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
 
 import AuthenticCard from "./AuthenticCard";
+import { Alert, Toast } from "./alert";
 import {
   addCardToDeck,
   buildCardPool,
@@ -25,6 +26,7 @@ import { writeDeckBuilderStore } from "./deckBuilderStorage";
 import type { DeckBuilderFilter } from "./deckBuilderTypes";
 import { fromCatalogCard } from "./cardViewModel";
 import { getAbilityDisplay, getFactionDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
+import Listbox from "./Listbox";
 import "./authentic-deck-builder.css";
 
 interface AuthenticDeckBuilderScreenProps {
@@ -39,6 +41,14 @@ interface AuthenticDeckBuilderScreenProps {
 const newLocalId = () => `local-${Date.now().toString(36)}`;
 
 const deckTotal = (deck: CatalogDeckPreset) => deck.mainDeck.reduce((total, entry) => total + entry.count, 0);
+
+interface PendingConfirmation {
+  readonly title: string;
+  readonly body: string;
+  readonly confirmLabel: string;
+  readonly destructive?: boolean;
+  readonly onConfirm: () => void;
+}
 
 const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   decks,
@@ -56,6 +66,8 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   const [importText, setImportText] = useState("");
   const [importErrors, setImportErrors] = useState<readonly string[]>([]);
   const [notice, setNotice] = useState(storageWarning ?? "");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const stats = useMemo(() => (activeDeck ? validateDeckPreset(activeDeck) : null), [activeDeck]);
@@ -71,6 +83,13 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   const leaderAbility = leader ? getLeaderAbilityDisplay(leader.ability) : null;
   const selectedAbility = selectedCard?.abilities.find((ability) => ability !== "none");
   const selectedAbilityDisplay = selectedAbility ? getAbilityDisplay(selectedAbility) : null;
+  const hasErrorIssues = stats?.issues.some((issue) => issue.severity === "error") ?? false;
+  const hasWarningIssues = stats?.issues.some((issue) => issue.severity === "warning") ?? false;
+
+  const showNotice = (message: string) => {
+    setNotice(message);
+    setToastMessage(message);
+  };
 
   const updateDecks = (nextDecks: readonly CatalogDeckPreset[], nextActiveId = activeDeck?.presetId) => {
     onDecksChange(nextDecks, nextActiveId);
@@ -115,32 +134,53 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
 
   const resetToCatalog = () => {
     if (!activeDeck || !catalogSource) return;
-    if (!window.confirm(`Reset ${activeDeck.name} to ${catalogSource.name}?`)) return;
-    const reset = resetDeckToCatalogSource(activeDeck, catalogSource);
-    updateActiveDeck(reset);
-    setSelectedSourceId(reset.mainDeck[0]?.sourceId ?? null);
-    setNotice(`Reset to ${catalogSource.name}.`);
+    setPendingConfirmation({
+      title: `Reset ${activeDeck.name}?`,
+      body: `Restore this local deck from ${catalogSource.name}. Current edits will be replaced.`,
+      confirmLabel: "Reset to catalog",
+      destructive: true,
+      onConfirm: () => {
+        const reset = resetDeckToCatalogSource(activeDeck, catalogSource);
+        updateActiveDeck(reset);
+        setSelectedSourceId(reset.mainDeck[0]?.sourceId ?? null);
+        showNotice(`Reset to ${catalogSource.name}.`);
+      },
+    });
   };
 
   const updateFaction = (nextFaction: CatalogDeckPreset["faction"]) => {
     if (!activeDeck || nextFaction === activeDeck.faction) return;
     const result = changeDeckFaction(activeDeck, nextFaction);
-    if (
-      result.removedCards > 0 &&
-      !window.confirm(`Change faction to ${getFactionDisplay(nextFaction).name}? This removes ${result.removedCards} wrong-faction cards.`)
-    ) {
+    const applyFactionChange = () => {
+      updateActiveDeck(result.deck);
+      setSelectedSourceId(result.deck.mainDeck[0]?.sourceId ?? null);
+      showNotice(`Faction changed to ${getFactionDisplay(nextFaction).name}; removed ${result.removedCards} wrong-faction cards.`);
+    };
+    if (result.removedCards > 0) {
+      setPendingConfirmation({
+        title: `Change faction to ${getFactionDisplay(nextFaction).name}?`,
+        body: `This removes ${result.removedCards} wrong-faction cards from the current deck.`,
+        confirmLabel: "Change faction",
+        destructive: true,
+        onConfirm: applyFactionChange,
+      });
       return;
     }
-    updateActiveDeck(result.deck);
-    setSelectedSourceId(result.deck.mainDeck[0]?.sourceId ?? null);
-    setNotice(`Faction changed to ${getFactionDisplay(nextFaction).name}; removed ${result.removedCards} wrong-faction cards.`);
+    applyFactionChange();
   };
 
   const deleteDeck = () => {
     if (!activeDeck || decks.length <= 1) return;
-    if (!window.confirm(`Delete ${activeDeck.name}?`)) return;
-    const remaining = decks.filter((deck) => deck.presetId !== activeDeck.presetId);
-    updateDecks(remaining, remaining[0]?.presetId);
+    setPendingConfirmation({
+      title: `Delete ${activeDeck.name}?`,
+      body: "This removes the browser-local deck. Catalog presets remain available.",
+      confirmLabel: "delete current",
+      destructive: true,
+      onConfirm: () => {
+        const remaining = decks.filter((deck) => deck.presetId !== activeDeck.presetId);
+        updateDecks(remaining, remaining[0]?.presetId);
+      },
+    });
   };
 
   const saveNow = () => {
@@ -149,7 +189,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
       decks,
       activePresetId: activeDeck?.presetId,
     });
-    setNotice(write.warning ?? "saved");
+    showNotice(write.warning ?? "saved");
   };
 
   const playCurrentDeck = () => {
@@ -161,7 +201,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
       decks,
       activePresetId: activeDeck.presetId,
     });
-    setNotice(write.warning ?? "saved");
+    showNotice(write.warning ?? "saved");
     onPlay(activeDeck);
   };
 
@@ -179,7 +219,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   const copyJson = async () => {
     if (!activeDeck || !navigator.clipboard) return;
     await navigator.clipboard.writeText(stringifyDeckExport(activeDeck));
-    setNotice("copied");
+    showNotice("copied");
   };
 
   const importDeck = () => {
@@ -193,7 +233,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
     }
     const preset = { ...result.preset, name: makeUniqueDeckName(result.preset.name, decks) };
     updateDecks([...decks, preset], preset.presetId);
-    setNotice(result.notices?.length ? `Imported as ${preset.name}. ${result.notices.join(" ")}` : `Imported as ${preset.name}.`);
+    showNotice(result.notices?.length ? `Imported as ${preset.name}. ${result.notices.join(" ")}` : `Imported as ${preset.name}.`);
     setImportOpen(false);
     setImportText("");
     setImportErrors([]);
@@ -271,20 +311,18 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                 {getFactionDisplay(activeDeck.faction).name} · leader {leader?.name ?? "missing"} · {activeDeck.presetId}
               </p>
               <div className="authentic-deck-builder__inline-controls">
-                <label>
-                  <span className="authentic-deck-builder__label">faction</span>
-                  <select
-                    value={activeDeck.faction}
-                    onChange={(event) => updateFaction(event.target.value as CatalogDeckPreset["faction"])}
-                    data-testid="authentic-deck-builder-faction"
-                  >
-                    {factionOptions.map((option) => (
-                      <option key={option.faction} value={option.faction} disabled={!option.available}>
-                        {option.name}{option.available ? "" : " (unavailable)"}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <Listbox
+                  label="faction"
+                  value={activeDeck.faction}
+                  onChange={(value) => updateFaction(value as CatalogDeckPreset["faction"])}
+                  testId="authentic-deck-builder-faction"
+                  options={factionOptions.map((option) => ({
+                    value: option.faction,
+                    label: option.name,
+                    meta: option.available ? `${option.cardCount} cards` : "unavailable",
+                    disabled: !option.available,
+                  }))}
+                />
                 <button
                   type="button"
                   onClick={resetToCatalog}
@@ -342,30 +380,45 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                 <dt>Total strength</dt><dd>{stats.totalStrength}</dd>
                 <dt>Total cards</dt><dd data-testid="authentic-deck-builder-total">{stats.totalCards}</dd>
               </dl>
-              {notice ? <p className="authentic-deck-builder__notice">{notice}</p> : null}
-              <ul className="authentic-deck-builder__issues">
-                {stats.issues.length === 0 ? <li>Ready for play.</li> : null}
-                {stats.issues.map((issue, index) => (
-                  <li key={`${issue.code}-${issue.sourceId ?? index}`} className={`is-${issue.severity}`}>
-                    {issue.severity}: {issue.message}
-                  </li>
-                ))}
-              </ul>
+              {notice ? (
+                <Alert
+                  severity="success"
+                  variant="ledger"
+                  className="authentic-alert--compact"
+                  eyebrow="deck builder"
+                  title={notice}
+                  testId="authentic-deck-builder-notice"
+                />
+              ) : null}
+              <Alert
+                severity={hasErrorIssues ? "error" : hasWarningIssues ? "warn" : "success"}
+                variant="ledger"
+                className="authentic-alert--compact"
+                eyebrow="composition"
+                title={stats.issues.length === 0 ? "Ready for play." : "Deck needs attention."}
+                body={
+                  stats.issues.length > 0 ? (
+                    <ul className="authentic-deck-builder__issues">
+                      {stats.issues.map((issue, index) => (
+                        <li key={`${issue.code}-${issue.sourceId ?? index}`} className={`is-${issue.severity}`}>
+                          {issue.severity}: {issue.message}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null
+                }
+                testId="authentic-deck-builder-issues"
+              />
             </section>
 
             <section>
-              <div className="authentic-deck-builder__label">leader</div>
-              <select
+              <Listbox
+                label="leader"
                 value={activeDeck.leaderSourceId}
-                onChange={(event) => updateActiveDeck({ ...activeDeck, leaderSourceId: event.target.value })}
-                data-testid="authentic-deck-builder-leader"
-              >
-                {leaderOptions.map((option) => (
-                  <option key={option.sourceId} value={option.sourceId}>
-                    {option.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => updateActiveDeck({ ...activeDeck, leaderSourceId: value })}
+                options={leaderOptions.map((option) => ({ value: option.sourceId, label: option.name }))}
+                testId="authentic-deck-builder-leader"
+              />
               <p>{leader?.description ?? leaderAbility?.description ?? "Choose a leader for this faction."}</p>
               {leaderAbility && leaderAbility.status !== "implemented" ? (
                 <p className="authentic-deck-builder__notice">{leaderAbility.name} is {leaderAbility.status}.</p>
@@ -410,7 +463,23 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
             <h2>Import Deck JSON</h2>
             <textarea value={importText} onChange={(event) => setImportText(event.target.value)} />
             <input ref={fileInputRef} type="file" accept="application/json,.json" hidden onChange={readImportFile} />
-            {importErrors.map((error) => <p key={error} className="authentic-deck-builder__error">{error}</p>)}
+            {importErrors.length > 0 ? (
+              <Alert
+                severity="error"
+                variant="ledger"
+                className="authentic-alert--compact"
+                eyebrow="import failed"
+                title="Deck JSON cannot be imported."
+                body={
+                  <ul>
+                    {importErrors.map((error) => (
+                      <li key={error}>{error}</li>
+                    ))}
+                  </ul>
+                }
+                testId="authentic-deck-builder-import-errors"
+              />
+            ) : null}
             <div>
               <button type="button" onClick={() => fileInputRef.current?.click()}>upload file...</button>
               <button type="button" onClick={() => setImportOpen(false)}>cancel</button>
@@ -419,6 +488,31 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
           </div>
         </div>
       ) : null}
+      {pendingConfirmation ? (
+        <div className="authentic-deck-builder__modal" role="dialog" aria-modal="true">
+          <Alert
+            severity="confirm"
+            variant="ledger"
+            eyebrow="confirm"
+            title={pendingConfirmation.title}
+            body={<p>{pendingConfirmation.body}</p>}
+            actions={[
+              { label: "cancel", onClick: () => setPendingConfirmation(null), kind: "ghost" },
+              {
+                label: pendingConfirmation.confirmLabel,
+                onClick: () => {
+                  pendingConfirmation.onConfirm();
+                  setPendingConfirmation(null);
+                },
+                kind: pendingConfirmation.destructive ? "destructive" : "primary",
+                testId: "authentic-deck-builder-confirm-action",
+              },
+            ]}
+            testId="authentic-deck-builder-confirmation"
+          />
+        </div>
+      ) : null}
+      <Toast open={Boolean(toastMessage)} message={toastMessage ?? ""} onDismiss={() => setToastMessage(null)} />
     </main>
   );
 };

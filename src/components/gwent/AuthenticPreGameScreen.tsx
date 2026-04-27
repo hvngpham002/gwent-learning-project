@@ -4,6 +4,7 @@ import type { CatalogDeckPreset } from "@/game/catalog";
 
 import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
+import Listbox from "./Listbox";
 import {
   buildPreGameDeckOptions,
   buildPreGameDeckOptionsWithLocal,
@@ -192,25 +193,21 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
               ))}
             </div>
 
-            <label className="authentic-pregame__field">
-              <span>Opponent</span>
-              <select
-                data-testid="authentic-pregame-opponent-option"
+            <div className="authentic-pregame__field">
+              <Listbox
+                label="Opponent"
                 value={opponentDeckPresetId}
-                onChange={(event) => setOpponentDeckPresetId(event.target.value)}
-              >
-                {opponentOptions.map((option) => (
-                  <option
-                    key={option.presetId}
-                    value={option.presetId}
-                    disabled={!option.ready || option.presetId === selectedDeck?.presetId}
-                  >
-                    {option.name} ({option.factionName})
-                  </option>
-                ))}
-              </select>
+                onChange={setOpponentDeckPresetId}
+                testId="authentic-pregame-opponent-option"
+                options={opponentOptions.map((option) => ({
+                  value: option.presetId,
+                  label: option.name,
+                  meta: option.factionName,
+                  disabled: !option.ready || option.presetId === selectedDeck?.presetId,
+                }))}
+              />
               <em>{selectedOpponent?.description ?? "Choose a ready catalog opponent."}</em>
-            </label>
+            </div>
 
             <div className="authentic-pregame__control-grid">
               <div>
