@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-27
-- Phase/spec: `cEp5.1` deck builder composition and identity polish implemented
-- Latest relevant commit: cEp5.1 deck builder composition and identity polish
+- Phase/spec: `cEp5.1` deck builder button style follow-up
+- Latest relevant commit: cEp5.1 button style follow-up pending
 
 ## Required Reading For Every Coding Instance
 
@@ -95,6 +95,7 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - local deck identity is normalized on storage read/write and through create, duplicate, import, and rename flows so browser-local `presetId` values and display names stay unique;
 - the deck builder now exposes catalog-derived faction selection for new and existing local decks; changing faction resets to that faction's default leader, confirms if cards would be removed, keeps neutral cards, and removes wrong-faction cards;
 - the card pool now hides wrong-faction cards through faction-aware filtering; relevant capped cards remain visible, keep the overlay count badge, and disable add interactions with concise metadata reasons such as `3/3 limit` and `special cap reached`; validation remains the backstop for imported or stale invalid decks;
+- deck-builder action buttons now use the same restrained ghost-button visual language as `← back`, including create, duplicate, import/export, copy, save, play, reset, delete, and filter controls;
 - Duplicate creates a selected same-composition local copy with a unique name/ID, Reset to catalog restores catalog-derived local decks while preserving their local `presetId`, and import conflict notices report the final imported name/ID behavior;
 - pre-game now lists valid local decks in addition to current catalog presets, marks invalid local decks disabled with the validation reason, and starts selected local decks by passing an inline custom human deck preset rather than adding it to `currentDeckPresets`;
 - pre-game deck selection uses source-prefixed UI option IDs, such as `catalog:current-northern-realms` and `local:current-northern-realms`, so imported or older browser-local decks that reuse a catalog preset ID cannot select both tiles or accidentally substitute a local deck when the catalog tile is chosen;
