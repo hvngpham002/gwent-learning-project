@@ -285,7 +285,7 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   await expect(page.getByTestId("authentic-deck-builder-leader")).toBeVisible();
   await expect(page.getByRole("button", { name: "+ new" })).toBeVisible();
   await expect(page.getByRole("button", { name: "import" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "export .json" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "export" })).toBeVisible();
   await expect(page.getByRole("button", { name: "copy" })).toBeVisible();
   await expect(page.getByRole("button", { name: "save" })).toBeVisible();
   await expect(page.getByRole("button", { name: "play →" })).toBeEnabled();

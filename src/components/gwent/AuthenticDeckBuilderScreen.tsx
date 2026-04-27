@@ -274,7 +274,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               reset
             </button>
             <button type="button" onClick={() => setImportOpen(true)}>import</button>
-            <button type="button" onClick={exportJson}>export .json</button>
+            <button type="button" onClick={exportJson}>export</button>
             <button type="button" onClick={copyJson} disabled={!navigator.clipboard}>copy</button>
             <button type="button" onClick={saveNow}>save</button>
             <button type="button" className="is-primary" disabled={!stats.playable} onClick={playCurrentDeck}>
