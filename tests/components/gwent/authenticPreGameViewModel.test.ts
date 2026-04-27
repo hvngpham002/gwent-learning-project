@@ -21,6 +21,10 @@ describe("authentic pre-game view model", () => {
     const options = buildPreGameDeckOptions();
 
     expect(options.map((option) => option.presetId)).toEqual(["current-northern-realms", "current-nilfgaard"]);
+    expect(options.map((option) => option.optionId)).toEqual([
+      "catalog:current-northern-realms",
+      "catalog:current-nilfgaard",
+    ]);
     expect(options.every((option) => option.ready)).toBe(true);
     expect(options[0]).toEqual(
       expect.objectContaining({
@@ -87,6 +91,16 @@ describe("authentic pre-game view model", () => {
         ready: true,
       }),
     );
+  });
+
+  it("keeps catalog and local deck options distinct when preset IDs collide", () => {
+    const localDeck = { ...currentNorthernRealmsDeckPreset, name: "Imported Current Northern Realms" };
+    const options = buildPreGameDeckOptionsWithLocal([localDeck]);
+
+    expect(options.filter((option) => option.presetId === "current-northern-realms").map((option) => option.optionId)).toEqual([
+      "catalog:current-northern-realms",
+      "local:current-northern-realms",
+    ]);
   });
 
   it("marks invalid local decks disabled with a validation reason", () => {

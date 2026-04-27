@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 
-import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
+import { currentCatalogCards, currentCatalogLeaders, currentDeckPresets } from "@/data/catalog";
 import type { CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
 
 import AuthenticCard from "./AuthenticCard";
@@ -143,7 +143,10 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   };
 
   const importDeck = () => {
-    const result = parseDeckImport(importText, decks.map((deck) => deck.presetId));
+    const result = parseDeckImport(importText, [
+      ...decks.map((deck) => deck.presetId),
+      ...currentDeckPresets.map((deck) => deck.presetId),
+    ]);
     if (!result.ok || !result.preset) {
       setImportErrors(result.errors);
       return;

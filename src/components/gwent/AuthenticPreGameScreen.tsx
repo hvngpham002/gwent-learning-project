@@ -37,24 +37,26 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
   const roundOptions = useMemo(() => buildPreGameRoundOptions(), []);
   const formatOptions = useMemo(() => buildPreGameFormatOptions(), []);
   const defaults = useMemo(() => getDefaultPreGameSelection(), []);
-  const [humanDeckPresetId, setHumanDeckPresetId] = useState(defaults.humanDeckPresetId);
+  const [humanDeckOptionId, setHumanDeckOptionId] = useState(`catalog:${defaults.humanDeckPresetId}`);
   const [opponentDeckPresetId, setOpponentDeckPresetId] = useState(defaults.opponentDeckPresetId);
   const [roundId, setRoundId] = useState<"standard" | null>(defaults.roundId);
   const [formatId, setFormatId] = useState<"best-of-3" | null>(defaults.formatId);
   const [seed, setSeed] = useState(() => seedFromSearch(search));
   const [copyLabel, setCopyLabel] = useState("copy");
 
-  const selectedDeck = deckOptions.find((option) => option.presetId === humanDeckPresetId) ?? deckOptions[0];
+  const selectedDeck = deckOptions.find((option) => option.optionId === humanDeckOptionId) ?? deckOptions[0];
   const selectedOpponent = opponentOptions.find((option) => option.presetId === opponentDeckPresetId) ?? opponentOptions[1] ?? opponentOptions[0];
   const selectedRound = roundOptions.find((option) => option.id === roundId) ?? null;
   const selectedFormat = formatOptions.find((option) => option.id === formatId) ?? null;
   const canBegin = Boolean(selectedDeck?.ready && selectedOpponent?.ready && selectedRound?.available && selectedFormat?.available);
   const seedLabel = seed.trim().length > 0 ? seed.trim() : "generated on begin";
 
-  const chooseHumanDeck = (presetId: string) => {
-    setHumanDeckPresetId(presetId);
-    if (presetId === opponentDeckPresetId) {
-      setOpponentDeckPresetId(getSuggestedOpponentPresetId(presetId, opponentOptions));
+  const chooseHumanDeck = (optionId: string) => {
+    const option = deckOptions.find((candidate) => candidate.optionId === optionId);
+    if (!option) return;
+    setHumanDeckOptionId(option.optionId);
+    if (option.presetId === opponentDeckPresetId) {
+      setOpponentDeckPresetId(getSuggestedOpponentPresetId(option.presetId, opponentOptions));
     }
   };
 
@@ -65,9 +67,13 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
     if (!roundId || !formatId) {
       return;
     }
-    const localDeck = localDecks.find((deck) => deck.presetId === humanDeckPresetId);
+    if (!selectedDeck) {
+      return;
+    }
+    const localDeck =
+      selectedDeck.source === "local" ? localDecks.find((deck) => deck.presetId === selectedDeck.presetId) : undefined;
     const config = buildSetupConfig({
-      humanDeckPresetId,
+      humanDeckPresetId: selectedDeck.presetId,
       humanDeckPreset: localDeck,
       opponentDeckPresetId,
       roundId,
@@ -111,12 +117,12 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
             <div className="authentic-pregame__deck-list">
               {deckOptions.map((option) => (
                 <button
-                  key={option.presetId}
+                  key={option.optionId}
                   type="button"
                   data-testid="authentic-pregame-deck-option"
-                  className={`authentic-pregame__deck-option${option.presetId === humanDeckPresetId ? " is-selected" : ""}`}
+                  className={`authentic-pregame__deck-option${option.optionId === selectedDeck?.optionId ? " is-selected" : ""}`}
                   disabled={!option.ready}
-                  onClick={() => chooseHumanDeck(option.presetId)}
+                  onClick={() => chooseHumanDeck(option.optionId)}
                 >
                   <span className="authentic-pregame__deck-leader">
                     {option.leader ? (
@@ -140,7 +146,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                       {option.ready ? "ready" : option.disabledReason}
                     </small>
                   </span>
-                  {option.presetId === humanDeckPresetId ? <span className="authentic-pregame__checkmark">✓</span> : null}
+                  {option.optionId === selectedDeck?.optionId ? <span className="authentic-pregame__checkmark">✓</span> : null}
                 </button>
               ))}
             </div>
@@ -184,7 +190,11 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                 onChange={(event) => setOpponentDeckPresetId(event.target.value)}
               >
                 {opponentOptions.map((option) => (
-                  <option key={option.presetId} value={option.presetId} disabled={!option.ready || option.presetId === humanDeckPresetId}>
+                  <option
+                    key={option.presetId}
+                    value={option.presetId}
+                    disabled={!option.ready || option.presetId === selectedDeck?.presetId}
+                  >
                     {option.name} ({option.factionName})
                   </option>
                 ))}

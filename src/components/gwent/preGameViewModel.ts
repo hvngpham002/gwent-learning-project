@@ -23,6 +23,7 @@ export interface AuthenticMatchSetupConfig {
 }
 
 export interface PreGameDeckOptionViewModel {
+  readonly optionId: string;
   readonly presetId: string;
   readonly name: string;
   readonly faction: CatalogFaction;
@@ -92,6 +93,7 @@ export const buildPreGameDeckOptions = (
       const validation = validateDeckPreset(preset);
       const errors = validation.issues.filter((issue) => issue.severity === "error");
       return {
+        optionId: `${source}:${preset.presetId}`,
         presetId: preset.presetId,
         name: preset.name,
         faction: preset.faction,
@@ -111,6 +113,7 @@ export const buildPreGameDeckOptions = (
     } catch (error) {
       const faction = getFactionDisplay(preset.faction);
       return {
+        optionId: `${source}:${preset.presetId}`,
         presetId: preset.presetId,
         name: preset.name,
         faction: preset.faction,

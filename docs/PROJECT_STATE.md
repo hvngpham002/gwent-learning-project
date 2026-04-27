@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-27
-- Phase/spec: `cEp5` catalog-backed deck builder v1 implemented
-- Latest relevant commit: cEp5 implementation
+- Phase/spec: `cEp5` pre-game local deck identity follow-up
+- Latest relevant commit: cEp5 pre-game local deck identity fix
 
 ## Required Reading For Every Coding Instance
 
@@ -92,6 +92,8 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - the deck builder uses `currentCatalogCards`, `currentCatalogLeaders`, and `CatalogDeckPreset` data only; it supports create, rename, save, delete, search/filter, leader selection, add/remove within `deckLimit`, export, clipboard copy, paste/file import, validation, and Play-from-builder;
 - deck validation blocks structural errors such as missing names, unknown references, wrong faction cards/leaders, over-limit copies, fewer than 22 battlefield cards, more than 10 special cards, and non-empty side decks, while planned/placeholder card or leader abilities are visible warnings rather than blockers;
 - pre-game now lists valid local decks in addition to current catalog presets, marks invalid local decks disabled with the validation reason, and starts selected local decks by passing an inline custom human deck preset rather than adding it to `currentDeckPresets`;
+- pre-game deck selection uses source-prefixed UI option IDs, such as `catalog:current-northern-realms` and `local:current-northern-realms`, so imported or older browser-local decks that reuse a catalog preset ID cannot select both tiles or accidentally substitute a local deck when the catalog tile is chosen;
+- deck-builder import now protects built-in catalog preset IDs as reserved IDs when assigning duplicate imported preset IDs, reducing future catalog/local collisions in browser-local storage;
 - the pre-game screen now uses a centered 1200-ish by 780-ish tactical table surface with a restrained parchment grid flourish, strong paper top and bottom bars, two balanced setup panels, prototype-style deck tiles, `Casual` as the visible label for the implemented Human vs AI mode, disabled Ranked/Training/Seed Suite tiles, catalog-derived opponent descriptions, auto-selected title-only `Standard` Round and `Bo3` Format selectors, a seed control with compact lowercase `copy` button, and a bottom summary/action bar;
 - `startEngineMatch` remains backward compatible with no options and can now start from explicit human/opponent catalog deck preset IDs while deriving seat factions from those presets;
 - the enabled product mode is Human vs AI with `legal-heuristic-v0`; local PvP, AI-vs-AI product mode, ranked, Bo1, and training controls are disabled as future work;
