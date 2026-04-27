@@ -292,6 +292,11 @@
   font-weight: 700;
 }
 
+.authentic-deck-builder__stats dl + .authentic-alert--compact,
+.authentic-deck-builder__stats .authentic-alert--compact + .authentic-alert--compact {
+  margin-top: 10px;
+}
+
 .authentic-deck-builder__stats .is-bad,
 .authentic-deck-builder__issues .is-error,
 .authentic-deck-builder__error {
