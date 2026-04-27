@@ -64,13 +64,9 @@
 }
 
 .authentic-deck-builder button {
-  background: transparent;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-style: italic;
-  letter-spacing: 0;
-  text-transform: none;
-  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 7px 10px;
   cursor: pointer;
 }
 
@@ -80,6 +76,16 @@
 }
 
 .authentic-deck-builder__ghost {
+  background: transparent !important;
+  font-family: var(--font-display) !important;
+  font-size: 11px !important;
+}
+
+.authentic-deck-builder__actions button,
+.authentic-deck-builder__delete,
+.authentic-deck-builder__inline-controls button,
+.authentic-deck-builder__filters button,
+.authentic-deck-builder__modal-box button {
   background: transparent;
   font-family: var(--font-display);
   font-size: 11px;
@@ -135,7 +141,6 @@
   text-align: left;
   background: rgba(31, 26, 18, 0.04);
   border-color: var(--rule);
-  font-style: normal;
 }
 
 .authentic-deck-builder__deck-tile.is-selected {
@@ -159,7 +164,7 @@
 .authentic-deck-builder__delete {
   width: 100%;
   margin-top: 14px;
-  color: var(--ink-2) !important;
+  color: var(--ink);
 }
 
 .authentic-deck-builder__pool {
@@ -227,7 +232,6 @@
 .authentic-deck-builder__filters .is-selected {
   border-color: var(--accent);
   background: rgba(138, 58, 31, 0.12);
-  color: var(--ink);
 }
 
 .authentic-deck-builder__filters input {
@@ -347,8 +351,7 @@
 }
 
 .authentic-deck-builder__deck-card button {
-  padding: 3px 7px;
-  color: var(--accent);
+  padding: 2px 6px;
 }
 
 .authentic-deck-builder__modal {
