@@ -2,9 +2,9 @@
 
 ## Last Updated
 
-- Date: 2026-04-26
-- Phase/spec: `cEp4.5` pre-game visual fidelity follow-up implemented
-- Latest relevant commit: cEp4.5 implementation
+- Date: 2026-04-27
+- Phase/spec: `cEp5` catalog-backed deck builder v1 implemented
+- Latest relevant commit: cEp5 implementation
 
 ## Required Reading For Every Coding Instance
 
@@ -55,6 +55,7 @@
 | `cEp3` | Cluster E / product match interactions | `audit/reports/2026-04-26-cEp3-report.md` | Added public discard browsers, engine-derived board effective-strength display, visible card-instance target clicks, Medic prompt cards, round-history overlay, and UI-only motion hooks while preserving route behavior and hidden-info boundaries. |
 | `cEp4` | Cluster E / pre-game setup and match configuration | `audit/reports/2026-04-26-cEp4-report.md` | Added the product pre-game route, catalog-backed deck/opponent selection, seed controls, setup-configurable engine starts, disabled future modes/formats, direct `view=match`, and leader-specific card display repair. |
 | `cEp4.5` | Cluster E / pre-game visual fidelity follow-up | `audit/reports/2026-04-26-cEp4.5-report.md` | Tightened the product pre-game screen toward the handoff table composition, added catalog-derived opponent descriptions, kept future modes/formats disabled, used shared small pre-game leader thumbnails, and resized match score-card leaders to the foundation medium card dimensions on desktop. |
+| `cEp5` | Cluster E / catalog-backed deck builder v1 | `audit/reports/2026-04-27-cEp5-report.md` | Added the authentic deck-builder route, catalog-backed local deck editing, validation, localStorage persistence, import/export/copy JSON, pre-game local deck selection, and Play-from-builder into the engine-backed authentic match screen. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -83,9 +84,14 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 
 - production Direction A tokens continue to load via `src/styles/gwent-tokens.css`, scoped under a `.gwent-authentic` wrapper so the legacy UI is unaffected;
 - `/?engine=1&ui=authentic` and `/?engine=1&ui=authentic&view=pregame` now mount the product pre-game setup screen, backed by current catalog deck presets and deterministic seed controls;
+- `/?engine=1&ui=authentic&view=deck-builder` opens the catalog-backed authentic deck builder, and the pre-game deck-builder controls now navigate there in-app;
 - `/?engine=1&ui=authentic&view=match` remains the direct-match development/smoke route and starts the default Northern Realms vs Nilfgaard engine match from the URL seed;
 - `/?engine=1&ui=authentic&view=harness` keeps the cEp1 `AuthenticUiHarness` available for card foundation review;
 - `AuthenticGameApp` owns the small authentic route layer and passes an explicit serializable setup config from pre-game into `AuthenticMatchScreen` without requiring URL edits;
+- `AuthenticGameApp` also owns browser-local deck state for the authentic flow; local editable decks are loaded from `gwent_authentic_decks_v1`, seeded from catalog preset copies when absent, and can be passed as inline `CatalogDeckPreset` objects to `startEngineMatch`;
+- the deck builder uses `currentCatalogCards`, `currentCatalogLeaders`, and `CatalogDeckPreset` data only; it supports create, rename, save, delete, search/filter, leader selection, add/remove within `deckLimit`, export, clipboard copy, paste/file import, validation, and Play-from-builder;
+- deck validation blocks structural errors such as missing names, unknown references, wrong faction cards/leaders, over-limit copies, fewer than 22 battlefield cards, more than 10 special cards, and non-empty side decks, while planned/placeholder card or leader abilities are visible warnings rather than blockers;
+- pre-game now lists valid local decks in addition to current catalog presets, marks invalid local decks disabled with the validation reason, and starts selected local decks by passing an inline custom human deck preset rather than adding it to `currentDeckPresets`;
 - the pre-game screen now uses a centered 1200-ish by 780-ish tactical table surface with a restrained parchment grid flourish, strong paper top and bottom bars, two balanced setup panels, prototype-style deck tiles, `Casual` as the visible label for the implemented Human vs AI mode, disabled Ranked/Training/Seed Suite tiles, catalog-derived opponent descriptions, auto-selected title-only `Standard` Round and `Bo3` Format selectors, a seed control with compact lowercase `copy` button, and a bottom summary/action bar;
 - `startEngineMatch` remains backward compatible with no options and can now start from explicit human/opponent catalog deck preset IDs while deriving seat factions from those presets;
 - the enabled product mode is Human vs AI with `legal-heuristic-v0`; local PvP, AI-vs-AI product mode, ranked, Bo1, and training controls are disabled as future work;
@@ -116,7 +122,7 @@ The authentic match table now includes the cEp3 product interaction layer:
 - resolved round history opens a dismissible product overlay with the engine-recorded round result, scores, gem loss, next starter, and game-end label when applicable;
 - recent public engine movement events add conservative `data-card-motion` hooks for played, discarded, revived, and scorched cards without delaying engine transitions.
 
-The authentic match table is still not the full product game shell: deck builder, Card Studio, route promotion, full drag-and-drop, richer match pacing, and robust end-to-end deterministic prompt/Decoy/round overlay browser paths remain deferred.
+The authentic match table is still not the full product game shell: Card Studio, route promotion, full drag-and-drop, richer match pacing, and robust end-to-end deterministic prompt/Decoy/round overlay browser paths remain deferred.
 
 ## Current Cluster E Direction
 
@@ -138,7 +144,7 @@ Recommended Cluster E sequence:
 
 Active Cluster E spec:
 
-- `docs/spec/2026-04-26-cEp4.5-specs.md` is implemented. cEp5 should proceed next with the catalog-backed deck builder.
+- `docs/spec/2026-04-27-cEp5-specs.md` has been implemented. cEp6 should scope Card Studio and content workflow separately; permanent card authoring and repository file writes remain deferred.
 
 ## Known Architectural Rules
 
@@ -178,14 +184,14 @@ Active Cluster E spec:
 - JSONL parsing validates reconstructed datasets and reports malformed input as structured issues, but it is not a replay checker, schema library, compression format, Python bridge, or compatibility guarantee.
 - The UI handoff prototype is fixed-size and browser-global by design; Cluster E must adapt it into responsive React/TypeScript components and production styling.
 - The UI handoff README contains stale pre-overhaul paths. Use current catalog, engine, Redux adapter, AI, and simulation paths instead.
-- The authentic UI foundation harness is now a development view only. The pre-game route starts configured matches, and the direct match route exercises engine commands, legal moves, prompts, and AI, but the product UI still lacks deck editing, persistence, full drag-and-drop, and match animations.
+- The authentic UI foundation harness is now a development view only. The pre-game route starts configured matches, the deck-builder route edits browser-local catalog decks, and the direct match route exercises engine commands, legal moves, prompts, and AI, but the product UI still lacks Card Studio, full drag-and-drop, and match animations.
 - The authentic harness depends on a Google Fonts `@import` for `EB Garamond` and `JetBrains Mono`. Production deployments without external font access fall back to the documented serif/monospace stacks.
 - Card images are still incomplete by design. The `SvgCardArt` placeholder is a deterministic fallback, not a content workflow.
 - Faction-specific card-back files are not present in the repository yet. Until they are added under `public/images/card-backs/`, the authentic back component falls back to synthetic faction-colored sleeves.
 
 ## Next Recommended Step
 
-Proceed to cEp5: catalog-backed deck builder v1.
+Proceed to cEp6 planning: Card Studio and content workflow.
 
 ## Update Requirements
 

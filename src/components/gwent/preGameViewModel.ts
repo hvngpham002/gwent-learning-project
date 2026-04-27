@@ -8,10 +8,12 @@ import type { CatalogCardKind, CatalogDeckPreset, CatalogFaction, CatalogLeaderS
 import type { StartEngineMatchOptions } from "@/store/thunks/engineThunks";
 
 import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
+import { validateDeckPreset } from "./deckBuilderViewModel";
 import { getFactionDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
 
 export interface AuthenticMatchSetupConfig {
   readonly humanDeckPresetId: string;
+  readonly humanDeckPreset?: CatalogDeckPreset;
   readonly opponentDeckPresetId: string;
   readonly modeId: "human-vs-ai";
   readonly roundId: "standard";
@@ -35,6 +37,7 @@ export interface PreGameDeckOptionViewModel {
   readonly ready: boolean;
   readonly disabledReason: string | null;
   readonly description: string;
+  readonly source: "catalog" | "local";
 }
 
 export interface PreGameModeOptionViewModel {
@@ -78,6 +81,7 @@ const countKinds = (preset: CatalogDeckPreset): Record<CatalogCardKind, number> 
 
 export const buildPreGameDeckOptions = (
   presets: readonly CatalogDeckPreset[] = currentDeckPresets,
+  source: "catalog" | "local" = "catalog",
 ): readonly PreGameDeckOptionViewModel[] =>
   presets.map((preset) => {
     try {
@@ -85,6 +89,8 @@ export const buildPreGameDeckOptions = (
       const kindCounts = countKinds(preset);
       const leaderAbility = getLeaderAbilityDisplay(resolved.leader.ability);
       const faction = getFactionDisplay(preset.faction);
+      const validation = validateDeckPreset(preset);
+      const errors = validation.issues.filter((issue) => issue.severity === "error");
       return {
         presetId: preset.presetId,
         name: preset.name,
@@ -97,9 +103,10 @@ export const buildPreGameDeckOptions = (
         unitCount: kindCounts.unit,
         heroCount: kindCounts.hero,
         specialCount: kindCounts.special,
-        ready: true,
-        disabledReason: null,
-        description: `Current ${faction.name} - ${resolved.leader.name}`,
+        ready: errors.length === 0,
+        disabledReason: errors[0]?.message ?? null,
+        description: `${source === "local" ? "Local" : "Current"} ${faction.name} - ${resolved.leader.name}`,
+        source,
       };
     } catch (error) {
       const faction = getFactionDisplay(preset.faction);
@@ -118,9 +125,15 @@ export const buildPreGameDeckOptions = (
         ready: false,
         disabledReason: error instanceof Error ? error.message : "Preset cannot be resolved.",
         description: `${faction.name} preset cannot be resolved.`,
+        source,
       };
     }
   });
+
+export const buildPreGameDeckOptionsWithLocal = (localDecks: readonly CatalogDeckPreset[] = []) => [
+  ...buildPreGameDeckOptions(currentDeckPresets, "catalog"),
+  ...buildPreGameDeckOptions(localDecks, "local"),
+];
 
 export const buildPreGameModeOptions = (): readonly PreGameModeOptionViewModel[] => [
   {
@@ -178,23 +191,28 @@ export const normalizePreGameSeed = (seedInput: string, generate = generateVisib
 
 export const buildSetupConfig = (input: {
   readonly humanDeckPresetId: string;
+  readonly humanDeckPreset?: CatalogDeckPreset;
   readonly opponentDeckPresetId: string;
   readonly roundId: "standard";
   readonly formatId: "best-of-3";
   readonly seed: string;
-}): AuthenticMatchSetupConfig => ({
-  humanDeckPresetId: input.humanDeckPresetId,
-  opponentDeckPresetId: input.opponentDeckPresetId,
-  modeId: "human-vs-ai",
-  roundId: input.roundId,
-  formatId: input.formatId,
-  seed: normalizePreGameSeed(input.seed),
-  aiPolicyId: ENGINE_AI_POLICY_ID,
-});
+}): AuthenticMatchSetupConfig => {
+  const config: AuthenticMatchSetupConfig = {
+    humanDeckPresetId: input.humanDeckPresetId,
+    opponentDeckPresetId: input.opponentDeckPresetId,
+    modeId: "human-vs-ai",
+    roundId: input.roundId,
+    formatId: input.formatId,
+    seed: normalizePreGameSeed(input.seed),
+    aiPolicyId: ENGINE_AI_POLICY_ID,
+  };
+  return input.humanDeckPreset ? { ...config, humanDeckPreset: input.humanDeckPreset } : config;
+};
 
 export const setupConfigToStartEngineOptions = (config: AuthenticMatchSetupConfig): StartEngineMatchOptions => ({
   seed: config.seed,
   humanDeckPresetId: config.humanDeckPresetId,
+  ...(config.humanDeckPreset ? { humanDeckPreset: config.humanDeckPreset } : {}),
   aiDeckPresetId: config.opponentDeckPresetId,
   humanSeat: "seat_a",
   aiSeat: "seat_b",

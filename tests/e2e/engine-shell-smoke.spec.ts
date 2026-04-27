@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const engineUrl = "/?engine=1&seed=dp6-smoke";
 const authenticPregameUrl = "/?engine=1&ui=authentic&seed=ep4-smoke";
+const authenticDeckBuilderUrl = "/?engine=1&ui=authentic&view=deck-builder&seed=ep5-builder";
 const authenticDirectUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-direct";
 const authenticHarnessUrl = "/?engine=1&ui=authentic&view=harness";
 
@@ -177,13 +178,14 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-pregame-begin")).toBeEnabled();
   await expect(page.getByTestId("authentic-pregame-seed")).toHaveValue("ep4-smoke");
   await expect(page.getByTestId("authentic-pregame-copy-seed")).toHaveText("copy");
-  await expect(page.getByTestId("authentic-pregame-deck-option")).toHaveCount(2);
+  expect(await page.getByTestId("authentic-pregame-deck-option").count()).toBeGreaterThanOrEqual(2);
   await expect(page.getByTestId("authentic-pregame-deck-option").first()).not.toContainText(/Lord Commander|Clear Weather/i);
   await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("font-style", "italic");
   await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("text-transform", "none");
   await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-style", "italic");
   await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-size", "12px");
   await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("text-transform", "none");
+  await expect(page.getByTestId("authentic-pregame-builder-placeholder")).toBeEnabled();
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
   await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Casual" })).toBeVisible();
   await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Ranked" })).toBeDisabled();
@@ -258,7 +260,47 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   expect(pageErrors).toEqual([]);
 });
 
-test("authentic pre-game and direct match avoid horizontal overflow on a mobile viewport", async ({ page }) => {
+test("authentic deck builder opens, edits, and starts a hidden-safe match", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto(authenticPregameUrl);
+  await page.getByTestId("authentic-pregame-builder-placeholder").click();
+  await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Deck Builder" })).toBeVisible();
+
+  await page.goto(authenticDeckBuilderUrl);
+  await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  await expect(page.getByTestId("authentic-deck-builder-deck-list")).toBeVisible();
+  await expect(page.getByTestId("authentic-deck-builder-card-pool")).toBeVisible();
+  await expect(page.getByTestId("authentic-deck-builder-stats")).toBeVisible();
+  await expect(page.getByTestId("authentic-deck-builder-leader")).toBeVisible();
+  await expect(page.getByRole("button", { name: "+ New" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Import" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Export .json" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "copy" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Save" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Play →" })).toBeEnabled();
+
+  const total = page.getByTestId("authentic-deck-builder-total");
+  const before = await total.innerText();
+  await page.locator(".authentic-deck-builder__deck-card button").first().click();
+  await expect(total).not.toHaveText(before);
+  await page.getByRole("button", { name: /Geralt of Rivia/i }).last().click();
+  await expect(total).toHaveText(before);
+
+  await page.getByRole("button", { name: "Play →" }).click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+  await expect(page.locator(".authentic-match__seed")).toContainText(/Seed ep5-builder/i);
+  await expect(page.locator(".authentic-match__seed")).toContainText(/legal-heuristic-v0/i);
+  await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
+  await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
+
+  const pageText = await visiblePageText(page);
+  expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic pre-game, deck builder, and direct match avoid horizontal overflow on a mobile viewport", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
   await page.setViewportSize({ width: 390, height: 900 });
@@ -267,6 +309,11 @@ test("authentic pre-game and direct match avoid horizontal overflow on a mobile 
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
+  await page.getByTestId("authentic-pregame-builder-placeholder").click();
+  await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await page.getByRole("button", { name: "← back" }).click();
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
   await page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" }).click();
   await page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" }).click();
   await page.getByTestId("authentic-pregame-begin").click();

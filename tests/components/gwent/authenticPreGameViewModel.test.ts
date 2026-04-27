@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ENGINE_AI_POLICY_ID } from "@/components/game/engine/engineShellViewModels";
 import {
   buildPreGameDeckOptions,
+  buildPreGameDeckOptionsWithLocal,
   buildPreGameFormatOptions,
   buildPreGameModeOptions,
   buildPreGameRoundOptions,
@@ -13,6 +14,7 @@ import {
   seedFromSearch,
   setupConfigToStartEngineOptions,
 } from "@/components/gwent/preGameViewModel";
+import { currentNorthernRealmsDeckPreset } from "@/data/catalog";
 
 describe("authentic pre-game view model", () => {
   it("maps current catalog presets to ready deck options", () => {
@@ -74,6 +76,37 @@ describe("authentic pre-game view model", () => {
     expect(getSuggestedOpponentPresetId("current-nilfgaard")).toBe("current-northern-realms");
   });
 
+  it("adds valid local decks as distinct pre-game options", () => {
+    const localDeck = { ...currentNorthernRealmsDeckPreset, presetId: "local-nr", name: "Local NR" };
+    const options = buildPreGameDeckOptionsWithLocal([localDeck]);
+
+    expect(options.find((option) => option.presetId === "local-nr")).toEqual(
+      expect.objectContaining({
+        name: "Local NR",
+        source: "local",
+        ready: true,
+      }),
+    );
+  });
+
+  it("marks invalid local decks disabled with a validation reason", () => {
+    const localDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      presetId: "local-invalid",
+      name: "Invalid Local",
+      mainDeck: [],
+    };
+    const option = buildPreGameDeckOptionsWithLocal([localDeck]).find((entry) => entry.presetId === "local-invalid");
+
+    expect(option).toEqual(
+      expect.objectContaining({
+        source: "local",
+        ready: false,
+        disabledReason: "Need at least 22 battlefield cards.",
+      }),
+    );
+  });
+
   it("builds serializable setup config and engine start options", () => {
     const config = buildSetupConfig({
       humanDeckPresetId: "current-nilfgaard",
@@ -99,6 +132,27 @@ describe("authentic pre-game view model", () => {
         aiDeckPresetId: "current-northern-realms",
         humanSeat: "seat_a",
         aiSeat: "seat_b",
+      }),
+    );
+  });
+
+  it("converts a local selected deck into start options with an inline preset", () => {
+    const localDeck = { ...currentNorthernRealmsDeckPreset, presetId: "local-nr", name: "Local NR" };
+    const config = buildSetupConfig({
+      humanDeckPresetId: localDeck.presetId,
+      humanDeckPreset: localDeck,
+      opponentDeckPresetId: "current-nilfgaard",
+      roundId: "standard",
+      formatId: "best-of-3",
+      seed: "ep5-local",
+    });
+
+    expect(setupConfigToStartEngineOptions(config)).toEqual(
+      expect.objectContaining({
+        seed: "ep5-local",
+        humanDeckPresetId: "local-nr",
+        humanDeckPreset: localDeck,
+        aiDeckPresetId: "current-nilfgaard",
       }),
     );
   });
