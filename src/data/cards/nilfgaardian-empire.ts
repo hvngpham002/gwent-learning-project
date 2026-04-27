@@ -172,7 +172,7 @@ export const nilfgaardianEmpireUnits = [
         strength: 10,
         row: RowPosition.SIEGE,
         ability: CardAbility.NONE,
-        imageUrl: '/images/nilfgaard/heavy_fire_zerrikanian_scorpion.png'
+        imageUrl: '/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png'
     },
     {
         id: 'nilfgaard_unit_09',

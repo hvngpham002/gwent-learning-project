@@ -318,7 +318,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
             </div>
 
             <div className="authentic-deck-builder__pool-grid">
-              {pool.map(({ card, count, addState }) => (
+              {pool.map(({ card, count, limit, addState }) => (
                 <div
                   key={card.sourceId}
                   className="authentic-deck-builder__pool-item"
@@ -326,7 +326,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                   title={`${card.sourceId} · ${card.image}${addState.reason ? ` · ${addState.reason}` : ""}`}
                 >
                   <AuthenticCard card={fromCatalogCard(card)} size="md" dimmed={!addState.canAdd} onClick={addState.canAdd ? () => addCard(card.sourceId) : undefined} />
-                  {count > 0 ? <span className="authentic-deck-builder__count">{count}/{card.deckLimit}</span> : null}
+                  {count > 0 ? <span className="authentic-deck-builder__count">{count}/{limit}</span> : null}
                 </div>
               ))}
             </div>

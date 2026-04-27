@@ -62,6 +62,12 @@ describe("current catalog data", () => {
     });
   });
 
+  it("uses the available Heavy Fire Zerrikanian Scorpion image asset", () => {
+    expect(
+      currentCatalogCards.find((card) => card.sourceId === "nilfgaard.heavy-fire-zerrikanian-scorpion")?.image,
+    ).toBe("/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png");
+  });
+
   it("keeps future faction placeholder packs intentionally inert and valid", () => {
     expect(monstersCatalogCards).toEqual([]);
     expect(scoiataelCatalogCards).toEqual([]);

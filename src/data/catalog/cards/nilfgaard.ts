@@ -148,7 +148,7 @@ export const nilfgaardCatalogCards = [
     abilities: ["none"],
     tags: ["non_hero"],
     deckLimit: 1,
-    image: "/images/nilfgaard/heavy_fire_zerrikanian_scorpion.png",
+    image: "/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png",
   },
   {
     sourceId: "nilfgaard.impera-brigade-guard",

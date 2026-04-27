@@ -30,6 +30,7 @@ export interface DeckBuilderStats {
 export interface DeckBuilderCardPoolItem {
   readonly card: CatalogCardSource;
   readonly count: number;
+  readonly limit: number;
   readonly atLimit: boolean;
   readonly addState: DeckBuilderAddState;
 }

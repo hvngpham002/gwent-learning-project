@@ -30,6 +30,7 @@ import { getFactionDisplay } from "./displayMetadata";
 
 export const DECK_BUILDER_MIN_BATTLEFIELD_CARDS = 22;
 export const DECK_BUILDER_MAX_SPECIAL_CARDS = 10;
+export const DECK_BUILDER_DEFAULT_UNIT_CARD_LIMIT = 3;
 
 const NON_NEUTRAL_FACTIONS = CATALOG_FACTIONS.filter((faction) => faction !== "neutral") as EditableDeckFaction[];
 
@@ -197,8 +198,9 @@ export const buildCardPool = (
     .filter((card) => card.faction === "neutral" || card.faction === deck.faction)
     .map((card) => {
       const count = countById.get(card.sourceId) ?? 0;
+      const limit = getDeckBuilderCardLimit(card);
       const addState = getDeckBuilderAddState(deck, card.sourceId, cards);
-      return { card, count, atLimit: addState.reasonCode === "deck_limit", addState };
+      return { card, count, limit, atLimit: addState.reasonCode === "deck_limit", addState };
     })
     .sort((a, b) => {
       const faction = a.card.faction.localeCompare(b.card.faction);
@@ -207,6 +209,12 @@ export const buildCardPool = (
       if (kind !== 0) return kind;
       return a.card.name.localeCompare(b.card.name);
     });
+};
+
+export const getDeckBuilderCardLimit = (card: CatalogCardSource): number => {
+  if (card.kind === "hero") return 1;
+  if (card.kind === "unit") return Math.max(card.deckLimit, DECK_BUILDER_DEFAULT_UNIT_CARD_LIMIT);
+  return card.deckLimit;
 };
 
 export const getDeckBuilderAddState = (
@@ -222,8 +230,9 @@ export const getDeckBuilderAddState = (
     return { canAdd: false, reasonCode: "wrong_faction", reason: "wrong faction" };
   }
   const current = deck.mainDeck.find((entry) => entry.sourceId === sourceId)?.count ?? 0;
-  if (current >= card.deckLimit) {
-    return { canAdd: false, reasonCode: "deck_limit", reason: `${current}/${card.deckLimit} limit` };
+  const limit = getDeckBuilderCardLimit(card);
+  if (current >= limit) {
+    return { canAdd: false, reasonCode: "deck_limit", reason: `${current}/${limit} limit` };
   }
   if (card.kind === "special") {
     const stats = validateDeckPreset(deck, cards);
@@ -418,12 +427,13 @@ export const validateDeckPreset = (
       pushIssue(issues, "error", "wrong_faction_card", `${card.name} cannot be used in this faction deck.`, card.sourceId);
     }
 
-    if (entry.count > card.deckLimit) {
+    const deckBuilderLimit = getDeckBuilderCardLimit(card);
+    if (entry.count > deckBuilderLimit) {
       pushIssue(
         issues,
         "error",
         "deck_limit_exceeded",
-        `${card.name} is ${entry.count}/${card.deckLimit}.`,
+        `${card.name} is ${entry.count}/${deckBuilderLimit}.`,
         card.sourceId,
       );
     }

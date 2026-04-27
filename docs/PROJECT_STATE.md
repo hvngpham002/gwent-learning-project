@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-27
-- Phase/spec: `cEp5.1` deck builder button style corrective follow-up
-- Latest relevant commit: cEp5.1 deck builder button style corrective follow-up
+- Phase/spec: `cEp5.1` deck builder image and unit-limit bugfix
+- Latest relevant commit: cEp5.1 deck builder image and unit-limit bugfix
 
 ## Required Reading For Every Coding Instance
 
@@ -95,6 +95,8 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - local deck identity is normalized on storage read/write and through create, duplicate, import, and rename flows so browser-local `presetId` values and display names stay unique;
 - the deck builder now exposes catalog-derived faction selection for new and existing local decks; changing faction resets to that faction's default leader, confirms if cards would be removed, keeps neutral cards, and removes wrong-faction cards;
 - the card pool now hides wrong-faction cards through faction-aware filtering; relevant capped cards remain visible, keep the overlay count badge, and disable add interactions with concise metadata reasons such as `3/3 limit` and `special cap reached`; validation remains the backstop for imported or stale invalid decks;
+- deck-builder add limits are kind-aware: heroes remain singleton, specials use their catalog per-card limit plus the 10-special deck cap, and normal units can be added up to at least 3 copies even when the migrated catalog source count is one;
+- Heavy Fire Zerrikanian Scorpion uses the available `/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png` asset in both catalog-backed and legacy data paths;
 - deck-builder action, modal, reset, delete, and filter buttons now inherit the existing `← back` ghost-button visual language without changing the generic deck tile button baseline;
 - Duplicate creates a selected same-composition local copy with a unique name/ID, Reset to catalog restores catalog-derived local decks while preserving their local `presetId`, and import conflict notices report the final imported name/ID behavior;
 - pre-game now lists valid local decks in addition to current catalog presets, marks invalid local decks disabled with the validation reason, and starts selected local decks by passing an inline custom human deck preset rather than adding it to `currentDeckPresets`;

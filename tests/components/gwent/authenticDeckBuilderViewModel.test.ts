@@ -17,6 +17,7 @@ import {
   filterCardPool,
   findCatalogSourceForLocalDeck,
   getDeckBuilderAddState,
+  getDeckBuilderCardLimit,
   makeUniqueDeckName,
   normalizeDeckCollection,
   removeCardFromDeck,
@@ -55,6 +56,28 @@ describe("authentic deck builder view model", () => {
     expect(withOne.mainDeck).toEqual([{ sourceId: "neutral.geralt-of-rivia", count: 1 }]);
     expect(withTwoAttempt.mainDeck).toEqual(withOne.mainDeck);
     expect(removeCardFromDeck(withOne, "neutral.geralt-of-rivia").mainDeck).toEqual([]);
+  });
+
+  it("allows normal unit cards up to the deck-builder unit limit even when catalog source count is one", () => {
+    const scorpion = currentCatalogCards.find((card) => card.sourceId === "nilfgaard.heavy-fire-zerrikanian-scorpion");
+    expect(scorpion).toBeDefined();
+    expect(scorpion!.deckLimit).toBe(1);
+    expect(getDeckBuilderCardLimit(scorpion!)).toBe(3);
+
+    const empty = createEmptyDeckPreset("local-nilfgaard", "Local Nilfgaard", "nilfgaard");
+    const withOne = addCardToDeck(empty, scorpion!.sourceId);
+    const withTwo = addCardToDeck(withOne, scorpion!.sourceId);
+    const withThree = addCardToDeck(withTwo, scorpion!.sourceId);
+    const withFourAttempt = addCardToDeck(withThree, scorpion!.sourceId);
+
+    expect(withThree.mainDeck).toEqual([{ sourceId: scorpion!.sourceId, count: 3 }]);
+    expect(withFourAttempt.mainDeck).toEqual(withThree.mainDeck);
+    expect(getDeckBuilderAddState(withThree, scorpion!.sourceId)).toEqual(
+      expect.objectContaining({ canAdd: false, reason: "3/3 limit" }),
+    );
+    expect(buildCardPool(withThree).find((item) => item.card.sourceId === scorpion!.sourceId)).toEqual(
+      expect.objectContaining({ count: 3, limit: 3, atLimit: true }),
+    );
   });
 
   it("computes add-state for special cap, deck limit, wrong faction, and unknown cards", () => {
