@@ -27,10 +27,11 @@ describe("authentic alert and listbox components", () => {
 
   it("renders the seal alert variant for ceremonial round/game states", () => {
     const markup = renderToStaticMarkup(
-      <Alert severity="success" variant="seal" eyebrow="match concluded" title="Victory" />,
+      <Alert severity="crown" variant="seal" eyebrow="match concluded" title="Victory" />,
     );
 
     expect(markup).toContain("authentic-alert--seal");
+    expect(markup).toContain("authentic-alert--crown");
     expect(markup).toContain("authentic-alert__seal-sigil");
     expect(markup).toContain("match concluded");
     expect(markup).toContain("Victory");

@@ -570,6 +570,93 @@ button.authentic-board-card {
   font-size: 26px;
 }
 
+.authentic-round-ledger {
+  width: min(560px, 100%);
+  max-height: min(720px, 90vh);
+  overflow: auto;
+}
+
+.authentic-round-ledger--game-end {
+  width: min(620px, 100%);
+}
+
+.authentic-round-ledger__summary,
+.authentic-round-ledger__history-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.authentic-round-ledger__summary td,
+.authentic-round-ledger__history-table th,
+.authentic-round-ledger__history-table td {
+  padding: 4px 0;
+  border-bottom: 1px dotted var(--rule-strong);
+}
+
+.authentic-round-ledger__summary tr:last-child td,
+.authentic-round-ledger__history-table tbody tr:last-child td {
+  border-bottom-color: var(--rule);
+}
+
+.authentic-round-ledger__summary td:first-child,
+.authentic-round-ledger__history-table th {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.authentic-round-ledger__summary td:last-child,
+.authentic-round-ledger__history-table th:not(:first-child),
+.authentic-round-ledger__history-table td:not(:first-child) {
+  text-align: right;
+}
+
+.authentic-round-ledger__winner {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.authentic-round-ledger__end-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.authentic-round-ledger__section-label {
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-style: normal;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.authentic-round-ledger__standing {
+  margin-top: 6px;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-style: normal;
+}
+
+.authentic-round-ledger__standing-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 0;
+  border-bottom: 1px dotted var(--rule);
+}
+
+.authentic-round-ledger__standing-row span {
+  color: var(--ink-3);
+}
+
 [data-card-motion="played"],
 [data-card-motion="discarded"],
 [data-card-motion="prompt-revived"],
@@ -648,5 +735,9 @@ button.authentic-board-card {
 
   .authentic-round-overlay h2 {
     font-size: 24px;
+  }
+
+  .authentic-round-ledger__end-grid {
+    grid-template-columns: 1fr;
   }
 }

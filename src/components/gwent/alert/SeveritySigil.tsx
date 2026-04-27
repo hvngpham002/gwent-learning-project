@@ -1,6 +1,6 @@
 import React from "react";
 
-export type AlertSeverity = "info" | "warn" | "error" | "confirm" | "success";
+export type AlertSeverity = "info" | "warn" | "error" | "confirm" | "success" | "crown";
 
 interface SeveritySigilProps {
   readonly severity: AlertSeverity;
@@ -43,6 +43,8 @@ const severityGlyph = (severity: AlertSeverity) => {
       );
     case "success":
       return <path d="M3 9.5 L7 13 L15 5" />;
+    case "crown":
+      return <path d="M2 7 L4 11 L6 6 L9 11 L12 6 L14 11 L16 7 L15 13 L3 13 Z" fill="currentColor" />;
   }
 };
 

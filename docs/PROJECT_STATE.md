@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-27
-- Phase/spec: `handoff-alerts` authentic alert and listbox integration
-- Latest relevant commit: handoff-alerts integration
+- Phase/spec: `handoff-alerts` round and match ledger popup follow-up
+- Latest relevant commit: handoff-alerts round ledger follow-up
 
 ## Required Reading For Every Coding Instance
 
@@ -135,7 +135,7 @@ The authentic match table now includes the cEp3 product interaction layer:
 - selected-card actions still show legal target buttons, and visible `card_instance` legal targets, such as Decoy targets, are highlighted and clickable on board cards;
 - human Medic prompts render product option rows with legal prompt moves, source context, target card preview, printed strength, row, faction, ability metadata, and engine option labels;
 - resolved round history opens a dismissible product overlay with the engine-recorded round result, scores, gem loss, next starter, and game-end label when applicable;
-- round/game-end overlays now use the handoff alert seal presentation while keeping the existing engine-derived round overlay data;
+- round/game-end overlays now use the handoff ledger broadside presentation: round resolution shows a compact score/gem-loss table, match end shows round history plus real result/round/gem standing, and no ranked/MMR placeholder data is invented;
 - recent public engine movement events add conservative `data-card-motion` hooks for played, discarded, revived, and scorched cards without delaying engine transitions.
 
 The authentic match table is still not the full product game shell: Card Studio, route promotion, full drag-and-drop, richer match pacing, and robust end-to-end deterministic prompt/Decoy/round overlay browser paths remain deferred.

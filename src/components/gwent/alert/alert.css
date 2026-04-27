@@ -27,6 +27,10 @@
   --alert-severity: var(--sev-success);
 }
 
+.authentic-alert--crown {
+  --alert-severity: var(--gold);
+}
+
 .authentic-alert--ledger {
   border-radius: 0;
   padding: 18px 20px 16px;
@@ -146,6 +150,12 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.3;
+}
+
+.authentic-alert__mark [fill="currentColor"],
+.authentic-alert__seal-mark [fill="currentColor"] {
+  fill: currentColor;
+  stroke: currentColor;
 }
 
 .authentic-alert__seal-sigil {

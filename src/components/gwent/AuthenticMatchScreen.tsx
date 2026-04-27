@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getEngineSeedFromSearch } from "@/appMode";
-import type { CardInstanceId, SeatId } from "@/game/core";
+import type { CardInstanceId, RoundResult, SeatId } from "@/game/core";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectEngineAiHandCount,
@@ -79,6 +79,8 @@ const SEAT_LABELS: Record<SeatId, string> = {
   seat_a: "Human",
   seat_b: "AI",
 };
+
+const SEAT_IDS = ["seat_a", "seat_b"] as const;
 
 type CardMotion = "played" | "discarded" | "prompt-revived" | "scorched";
 
@@ -521,28 +523,152 @@ const DiscardBrowser: React.FC<{
 
 const RoundOverlay: React.FC<{
   overlay: NonNullable<ReturnType<typeof buildRoundOverlayViewModel>>;
+  round: RoundResult;
+  rounds: readonly RoundResult[];
+  humanSeat: SeatId;
+  aiSeat: SeatId;
+  winner: SeatId | "draw" | null;
+  gemsBySeat: Record<SeatId, number> | null;
   onDismiss: () => void;
-}> = ({ overlay, onDismiss }) => (
-  <div className="authentic-modal authentic-modal--round" data-testid="authentic-round-overlay" role="dialog" aria-modal="true">
-    <Alert
-      severity={overlay.gameEndLabel ? "success" : "info"}
-      variant="seal"
-      className="authentic-round-overlay"
-      eyebrow={overlay.eyebrow}
-      title={overlay.title}
-      body={
-        <>
-          <p>{overlay.scoreLabel}</p>
-          <p>{overlay.gemLossLabel}</p>
-          {overlay.nextStarterLabel ? <p>{overlay.nextStarterLabel}</p> : null}
-          {overlay.gameEndLabel ? <p>{overlay.gameEndLabel}</p> : null}
-        </>
-      }
-      actions={[{ label: "Continue", onClick: onDismiss, kind: "primary", testId: "authentic-round-overlay-dismiss" }]}
-      testId="authentic-round-overlay-alert"
-    />
-  </div>
-);
+  onRematch: () => void;
+  onChangeDeck?: () => void;
+}> = ({ overlay, round, rounds, humanSeat, aiSeat, winner, gemsBySeat, onDismiss, onRematch, onChangeDeck }) => {
+  const isGameEnd = Boolean(overlay.gameEndLabel);
+  const humanRoundWins = rounds.filter((entry) => entry.winner === humanSeat).length;
+  const aiRoundWins = rounds.filter((entry) => entry.winner === aiSeat).length;
+  const scoreWinner = round.winner === "draw" ? "draw" : round.winner === humanSeat ? "human" : "ai";
+  const roundTitle =
+    round.winner === "draw" ? "Neither side yields." : round.winner === humanSeat ? "You hold the field." : `${SEAT_LABELS[aiSeat]} holds the field.`;
+  const matchTitle =
+    winner === "draw"
+      ? "Draw."
+      : winner === humanSeat
+        ? `Victory over ${SEAT_LABELS[aiSeat]}.`
+        : winner === aiSeat
+          ? `Defeat against ${SEAT_LABELS[aiSeat]}.`
+          : "Match concluded.";
+  const matchResult = winner === "draw" ? "draw" : winner === humanSeat ? "victory" : winner === aiSeat ? "defeat" : "finished";
+  const gemLossRows = SEAT_IDS.flatMap((seatId) => {
+    const loss = round.loserGemLoss[seatId] ?? 0;
+    if (loss <= 0) {
+      return [];
+    }
+    const after = gemsBySeat?.[seatId] ?? null;
+    const value = after === null ? `-${loss}` : `◆ ${after + loss} → ${after}`;
+    return [
+      {
+        key: seatId,
+        label: seatId === humanSeat ? "your gem" : "opponent gem",
+        value,
+      },
+    ];
+  });
+
+  return (
+    <div className="authentic-modal authentic-modal--round" data-testid="authentic-round-overlay" role="dialog" aria-modal="true">
+      <Alert
+        severity={isGameEnd ? "crown" : "info"}
+        variant="ledger"
+        className={`authentic-round-ledger${isGameEnd ? " authentic-round-ledger--game-end" : ""}`}
+        eyebrow={isGameEnd ? `match concluded · ${humanRoundWins} to ${aiRoundWins}` : "round resolved"}
+        title={isGameEnd ? matchTitle : roundTitle}
+        body={
+          isGameEnd ? (
+            <div className="authentic-round-ledger__end-grid">
+              <div>
+                <div className="authentic-round-ledger__section-label">round history</div>
+                <table className="authentic-round-ledger__history-table">
+                  <thead>
+                    <tr>
+                      <th>rd</th>
+                      <th>you</th>
+                      <th>opp</th>
+                      <th>·</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rounds.map((entry) => {
+                      const humanWon = entry.winner === humanSeat;
+                      const marker = entry.winner === "draw" ? "draw" : humanWon ? "✓" : "·";
+                      return (
+                        <tr key={entry.round}>
+                          <td>{entry.round}</td>
+                          <td className={humanWon ? "authentic-round-ledger__winner" : undefined}>{entry.scoreBySeat[humanSeat]}</td>
+                          <td className={entry.winner === aiSeat ? "authentic-round-ledger__winner" : undefined}>{entry.scoreBySeat[aiSeat]}</td>
+                          <td className={humanWon ? "authentic-round-ledger__winner" : undefined}>{marker}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <div className="authentic-round-ledger__section-label">standing</div>
+                <div className="authentic-round-ledger__standing">
+                  <div className="authentic-round-ledger__standing-row">
+                    <span>result</span>
+                    <b>{matchResult}</b>
+                  </div>
+                  <div className="authentic-round-ledger__standing-row">
+                    <span>rounds</span>
+                    <b>
+                      {humanRoundWins} - {aiRoundWins}
+                    </b>
+                  </div>
+                  <div className="authentic-round-ledger__standing-row">
+                    <span>gems</span>
+                    <b>
+                      {gemsBySeat ? `${gemsBySeat[humanSeat]} - ${gemsBySeat[aiSeat]}` : "unknown"}
+                    </b>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <table className="authentic-round-ledger__summary">
+                <tbody>
+                  <tr>
+                    <td>your score</td>
+                    <td className={scoreWinner === "human" ? "authentic-round-ledger__winner" : undefined}>{round.scoreBySeat[humanSeat]}</td>
+                  </tr>
+                  <tr>
+                    <td>opponent</td>
+                    <td className={scoreWinner === "ai" ? "authentic-round-ledger__winner" : undefined}>{round.scoreBySeat[aiSeat]}</td>
+                  </tr>
+                  {gemLossRows.length > 0 ? (
+                    gemLossRows.map((row) => (
+                      <tr key={row.key}>
+                        <td>{row.label}</td>
+                        <td>{row.value}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td>gem loss</td>
+                      <td>none</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              {overlay.nextStarterLabel ? <p>{overlay.nextStarterLabel}</p> : null}
+            </>
+          )
+        }
+        actions={
+          isGameEnd
+            ? [
+                { label: "close", onClick: onDismiss, kind: "ghost", testId: "authentic-round-overlay-dismiss" },
+                ...(onChangeDeck ? [{ label: "change deck", onClick: onChangeDeck, kind: "ghost" as const }] : []),
+                { label: "Rematch", onClick: onRematch, kind: "primary" },
+              ]
+            : [{ label: "Next round →", onClick: onDismiss, kind: "primary", testId: "authentic-round-overlay-dismiss" }]
+        }
+        testId="authentic-round-overlay-alert"
+      />
+    </div>
+  );
+};
 
 const BattleLog: React.FC<{ lines: readonly string[] }> = ({ lines }) => (
   <section className="authentic-panel authentic-log" data-testid="authentic-recent-activity">
@@ -917,6 +1043,8 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     () => buildRoundOverlayViewModel({ round: roundHistory.at(-1), seatLabels: SEAT_LABELS, gameWinner: winner }),
     [roundHistory, winner],
   );
+  const latestRound = roundHistory.at(-1) ?? null;
+  const gemsBySeat = match ? { seat_a: match.seats.seat_a.gems, seat_b: match.seats.seat_b.gems } : null;
   const showRoundOverlay = Boolean(latestRoundOverlay && latestRoundOverlay.key !== dismissedRoundOverlayKey);
 
   return (
@@ -1049,8 +1177,19 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
             onClose={() => setDiscardOpenSeat(null)}
           />
         ) : null}
-        {showRoundOverlay && latestRoundOverlay ? (
-          <RoundOverlay overlay={latestRoundOverlay} onDismiss={() => setDismissedRoundOverlayKey(latestRoundOverlay.key)} />
+        {showRoundOverlay && latestRoundOverlay && latestRound ? (
+          <RoundOverlay
+            overlay={latestRoundOverlay}
+            round={latestRound}
+            rounds={roundHistory}
+            humanSeat={humanSeat}
+            aiSeat={aiSeat}
+            winner={winner}
+            gemsBySeat={gemsBySeat}
+            onDismiss={() => setDismissedRoundOverlayKey(latestRoundOverlay.key)}
+            onRematch={startNewGame}
+            onChangeDeck={onReturnToPreGame}
+          />
         ) : null}
       </div>
     </main>
