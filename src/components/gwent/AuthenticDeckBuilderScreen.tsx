@@ -138,7 +138,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
     setPendingConfirmation({
       title: `Reset ${activeDeck.name}?`,
       body: `Restore this local deck from ${catalogSource.name}. Current edits will be replaced.`,
-      confirmLabel: "Reset to catalog",
+      confirmLabel: "reset",
       destructive: true,
       onConfirm: () => {
         const reset = resetDeckToCatalogSource(activeDeck, catalogSource);
@@ -161,7 +161,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
       setPendingConfirmation({
         title: `Change faction to ${getFactionDisplay(nextFaction).name}?`,
         body: `This removes ${result.removedCards} wrong-faction cards from the current deck.`,
-        confirmLabel: "Change faction",
+        confirmLabel: "change faction",
         destructive: true,
         onConfirm: applyFactionChange,
       });
@@ -263,14 +263,22 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
             <h1>Deck Builder</h1>
           </div>
           <div className="authentic-deck-builder__actions">
-            <button type="button" onClick={createDeck}>+ New</button>
-            <button type="button" onClick={duplicateDeck}>Duplicate</button>
-            <button type="button" onClick={() => setImportOpen(true)}>Import</button>
-            <button type="button" onClick={exportJson}>Export .json</button>
+            <button type="button" onClick={createDeck}>+ new</button>
+            <button type="button" onClick={duplicateDeck}>duplicate</button>
+            <button
+              type="button"
+              onClick={resetToCatalog}
+              disabled={!catalogSource}
+              title={catalogSource ? `Reset to ${catalogSource.name}` : "No catalog source"}
+            >
+              reset
+            </button>
+            <button type="button" onClick={() => setImportOpen(true)}>import</button>
+            <button type="button" onClick={exportJson}>export .json</button>
             <button type="button" onClick={copyJson} disabled={!navigator.clipboard}>copy</button>
-            <button type="button" onClick={saveNow}>Save</button>
+            <button type="button" onClick={saveNow}>save</button>
             <button type="button" className="is-primary" disabled={!stats.playable} onClick={playCurrentDeck}>
-              Play →
+              play →
             </button>
           </div>
         </header>
@@ -311,16 +319,6 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               <p>
                 {getFactionDisplay(activeDeck.faction).name} · leader {leader?.name ?? "missing"} · {activeDeck.presetId}
               </p>
-              <div className="authentic-deck-builder__inline-controls">
-                <button
-                  type="button"
-                  onClick={resetToCatalog}
-                  disabled={!catalogSource}
-                  title={catalogSource ? `Reset to ${catalogSource.name}` : "No catalog source"}
-                >
-                  Reset to catalog
-                </button>
-              </div>
               {activeDeck.mainDeck.length === 0 ? (
                 <p className="authentic-deck-builder__notice">Choose a faction, then add cards.</p>
               ) : null}
