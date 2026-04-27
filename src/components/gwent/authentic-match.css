@@ -580,6 +580,13 @@ button.authentic-board-card {
   width: min(620px, 100%);
 }
 
+.authentic-round-ledger--game-end .authentic-alert__button--primary:not(:disabled):hover {
+  border-color: #4a1a08;
+  background: var(--accent);
+  color: #f0e2c0;
+  cursor: pointer;
+}
+
 .authentic-round-ledger__summary,
 .authentic-round-ledger__history-table {
   width: 100%;
