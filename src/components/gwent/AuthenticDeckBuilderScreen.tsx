@@ -4,6 +4,7 @@ import { currentCatalogCards, currentCatalogLeaders, currentDeckPresets } from "
 import type { CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
 
 import AuthenticCard from "./AuthenticCard";
+import AuthenticLeaderCard from "./AuthenticLeaderCard";
 import { Alert, Toast } from "./alert";
 import {
   addCardToDeck,
@@ -311,18 +312,6 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                 {getFactionDisplay(activeDeck.faction).name} · leader {leader?.name ?? "missing"} · {activeDeck.presetId}
               </p>
               <div className="authentic-deck-builder__inline-controls">
-                <Listbox
-                  label="faction"
-                  value={activeDeck.faction}
-                  onChange={(value) => updateFaction(value as CatalogDeckPreset["faction"])}
-                  testId="authentic-deck-builder-faction"
-                  options={factionOptions.map((option) => ({
-                    value: option.faction,
-                    label: option.name,
-                    meta: option.available ? `${option.cardCount} cards` : "unavailable",
-                    disabled: !option.available,
-                  }))}
-                />
                 <button
                   type="button"
                   onClick={resetToCatalog}
@@ -411,14 +400,42 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               />
             </section>
 
-            <section>
-              <Listbox
-                label="leader"
-                value={activeDeck.leaderSourceId}
-                onChange={(value) => updateActiveDeck({ ...activeDeck, leaderSourceId: value })}
-                options={leaderOptions.map((option) => ({ value: option.sourceId, label: option.name }))}
-                testId="authentic-deck-builder-leader"
-              />
+            <section className="authentic-deck-builder__leader-section">
+              {leader ? (
+                <div className="authentic-deck-builder__leader-preview">
+                  <AuthenticLeaderCard
+                    leader={{
+                      sourceId: leader.sourceId,
+                      name: leader.name,
+                      faction: leader.faction,
+                      abilityName: leaderAbility?.name ?? leader.ability,
+                      image: leader.image,
+                    }}
+                    size="match"
+                  />
+                </div>
+              ) : null}
+              <div className="authentic-deck-builder__leader-controls">
+                <Listbox
+                  label="faction"
+                  value={activeDeck.faction}
+                  onChange={(value) => updateFaction(value as CatalogDeckPreset["faction"])}
+                  testId="authentic-deck-builder-faction"
+                  options={factionOptions.map((option) => ({
+                    value: option.faction,
+                    label: option.name,
+                    meta: option.available ? `${option.cardCount} cards` : "unavailable",
+                    disabled: !option.available,
+                  }))}
+                />
+                <Listbox
+                  label="leader"
+                  value={activeDeck.leaderSourceId}
+                  onChange={(value) => updateActiveDeck({ ...activeDeck, leaderSourceId: value })}
+                  options={leaderOptions.map((option) => ({ value: option.sourceId, label: option.name }))}
+                  testId="authentic-deck-builder-leader"
+                />
+              </div>
               <p>{leader?.description ?? leaderAbility?.description ?? "Choose a leader for this faction."}</p>
               {leaderAbility && leaderAbility.status !== "implemented" ? (
                 <p className="authentic-deck-builder__notice">{leaderAbility.name} is {leaderAbility.status}.</p>

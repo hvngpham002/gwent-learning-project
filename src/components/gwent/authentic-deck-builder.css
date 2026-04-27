@@ -337,6 +337,24 @@
   margin-top: 6px;
 }
 
+.authentic-deck-builder__leader-section {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.authentic-deck-builder__leader-preview {
+  display: flex;
+  justify-content: center;
+}
+
+.authentic-deck-builder__leader-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
 .authentic-deck-builder__deck-cards {
   margin-top: 8px;
   display: grid;

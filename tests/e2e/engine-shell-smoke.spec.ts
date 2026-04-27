@@ -185,7 +185,7 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-pregame-create-deck")).toBeEnabled();
   await expect(page.getByTestId("authentic-pregame-edit-decks")).toBeEnabled();
   await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-style", "italic");
-  await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-size", "12px");
+  await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-size", "13px");
   await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("text-transform", "none");
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
   await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Casual" })).toBeVisible();
@@ -198,8 +198,8 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo1" })).toBeDisabled();
   await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Training" })).toBeDisabled();
   await expect(page.locator(".authentic-pregame__control-grid")).not.toContainText(/two gems|one gem|two-gem|coming later/i);
-  await expect(page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" })).toHaveCSS("font-size", "10px");
-  await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" })).toHaveCSS("font-size", "10px");
+  await expect(page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" })).toHaveCSS("font-size", "11px");
+  await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" })).toHaveCSS("font-size", "11px");
   await expectNoElementTextOverflow(page, ".authentic-pregame__segment-option");
   await expectSameVisualRow(page, "[data-testid='authentic-pregame-round-option']");
   await expectSameVisualRow(page, "[data-testid='authentic-pregame-format-option']");
