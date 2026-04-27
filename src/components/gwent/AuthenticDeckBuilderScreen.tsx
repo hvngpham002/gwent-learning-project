@@ -358,46 +358,6 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
           </section>
 
           <aside className="authentic-deck-builder__stats" data-testid="authentic-deck-builder-stats">
-            <section>
-              <div className="authentic-deck-builder__label">composition</div>
-              <dl>
-                <dt>Battlefield</dt><dd className={stats.battlefieldCards < 22 ? "is-bad" : ""}>{stats.battlefieldCards} / 22 min</dd>
-                <dt>Specials</dt><dd data-testid="authentic-deck-builder-specials" className={stats.specialCards > 10 ? "is-bad" : ""}>{stats.specialCards} / 10 max</dd>
-                <dt>Heroes</dt><dd>{stats.heroCards}</dd>
-                <dt>Total strength</dt><dd>{stats.totalStrength}</dd>
-                <dt>Total cards</dt><dd data-testid="authentic-deck-builder-total">{stats.totalCards}</dd>
-              </dl>
-              {notice ? (
-                <Alert
-                  severity="success"
-                  variant="ledger"
-                  className="authentic-alert--compact"
-                  eyebrow="deck builder"
-                  title={notice}
-                  testId="authentic-deck-builder-notice"
-                />
-              ) : null}
-              <Alert
-                severity={hasErrorIssues ? "error" : hasWarningIssues ? "warn" : "success"}
-                variant="ledger"
-                className="authentic-alert--compact"
-                eyebrow="composition"
-                title={stats.issues.length === 0 ? "Ready for play." : "Deck needs attention."}
-                body={
-                  stats.issues.length > 0 ? (
-                    <ul className="authentic-deck-builder__issues">
-                      {stats.issues.map((issue, index) => (
-                        <li key={`${issue.code}-${issue.sourceId ?? index}`} className={`is-${issue.severity}`}>
-                          {issue.severity}: {issue.message}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null
-                }
-                testId="authentic-deck-builder-issues"
-              />
-            </section>
-
             <section className="authentic-deck-builder__leader-section">
               {leader ? (
                 <div className="authentic-deck-builder__leader-preview">
@@ -438,6 +398,46 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               {leaderAbility && leaderAbility.status !== "implemented" ? (
                 <p className="authentic-deck-builder__notice">{leaderAbility.name} is {leaderAbility.status}.</p>
               ) : null}
+            </section>
+
+            <section>
+              <div className="authentic-deck-builder__label">composition</div>
+              <dl>
+                <dt>Battlefield</dt><dd className={stats.battlefieldCards < 22 ? "is-bad" : ""}>{stats.battlefieldCards} / 22 min</dd>
+                <dt>Specials</dt><dd data-testid="authentic-deck-builder-specials" className={stats.specialCards > 10 ? "is-bad" : ""}>{stats.specialCards} / 10 max</dd>
+                <dt>Heroes</dt><dd>{stats.heroCards}</dd>
+                <dt>Total strength</dt><dd>{stats.totalStrength}</dd>
+                <dt>Total cards</dt><dd data-testid="authentic-deck-builder-total">{stats.totalCards}</dd>
+              </dl>
+              {notice ? (
+                <Alert
+                  severity="success"
+                  variant="ledger"
+                  className="authentic-alert--compact"
+                  eyebrow="deck builder"
+                  title={notice}
+                  testId="authentic-deck-builder-notice"
+                />
+              ) : null}
+              <Alert
+                severity={hasErrorIssues ? "error" : hasWarningIssues ? "warn" : "success"}
+                variant="ledger"
+                className="authentic-alert--compact"
+                eyebrow="composition"
+                title={stats.issues.length === 0 ? "Ready for play." : "Deck needs attention."}
+                body={
+                  stats.issues.length > 0 ? (
+                    <ul className="authentic-deck-builder__issues">
+                      {stats.issues.map((issue, index) => (
+                        <li key={`${issue.code}-${issue.sourceId ?? index}`} className={`is-${issue.severity}`}>
+                          {issue.severity}: {issue.message}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null
+                }
+                testId="authentic-deck-builder-issues"
+              />
             </section>
 
             {selectedCard ? (
