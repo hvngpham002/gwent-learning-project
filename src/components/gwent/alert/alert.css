@@ -82,6 +82,11 @@
   align-items: flex-start;
 }
 
+.authentic-alert__ledger-header {
+  align-items: center;
+  justify-content: flex-start;
+}
+
 .authentic-alert__seal-header {
   gap: 14px;
 }
