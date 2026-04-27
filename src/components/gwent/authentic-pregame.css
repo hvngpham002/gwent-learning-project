@@ -228,7 +228,7 @@ button.authentic-pregame__builder-entry {
   padding: 8px 14px;
   background: transparent;
   font-family: var(--font-display) !important;
-  font-size: 12px;
+  font-size: 13px;
   font-style: italic !important;
   letter-spacing: 0 !important;
   text-transform: none !important;
@@ -236,7 +236,7 @@ button.authentic-pregame__builder-entry {
 
 .authentic-pregame__builder-entry-text {
   font-family: var(--font-display) !important;
-  font-size: 12px;
+  font-size: 13px;
   font-style: italic !important;
   font-weight: 600;
   letter-spacing: 0;
@@ -361,7 +361,7 @@ button.authentic-pregame__segment-option {
   padding: 4px;
   background: transparent;
   font-family: var(--font-display) !important;
-  font-size: 10px !important;
+  font-size: 11px !important;
   line-height: 1.15;
   letter-spacing: 0 !important;
   text-transform: none !important;
