@@ -16,13 +16,14 @@ export interface AuthenticLeaderCardViewModel {
 
 interface AuthenticLeaderCardProps {
   readonly leader: AuthenticLeaderCardViewModel;
-  readonly size?: "compact" | "pregame" | "match";
+  readonly size?: "compact" | "pregame" | "match" | "large";
 }
 
 const dimensionsBySize = {
   compact: dimensionsForSize("xs"),
   pregame: dimensionsForSize("sm"),
   match: dimensionsForSize("md"),
+  large: dimensionsForSize("lg"),
 } as const;
 
 const AuthenticLeaderCard: React.FC<AuthenticLeaderCardProps> = ({ leader, size = "compact" }) => {

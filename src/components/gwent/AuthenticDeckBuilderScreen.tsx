@@ -409,7 +409,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                       abilityName: leaderAbility?.name ?? leader.ability,
                       image: leader.image,
                     }}
-                    size="match"
+                    size="large"
                   />
                 </div>
               ) : null}
