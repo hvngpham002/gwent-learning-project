@@ -174,7 +174,7 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-pregame-begin")).toContainText("Begin Match →");
   await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("color", "rgb(255, 255, 255)");
   await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("font-weight", "700");
-  await expect(page.getByTestId("authentic-pregame-begin")).toBeDisabled();
+  await expect(page.getByTestId("authentic-pregame-begin")).toBeEnabled();
   await expect(page.getByTestId("authentic-pregame-seed")).toHaveValue("ep4-smoke");
   await expect(page.getByTestId("authentic-pregame-copy-seed")).toHaveText("Copy seed");
   await expect(page.getByTestId("authentic-pregame-deck-option")).toHaveCount(2);
@@ -188,8 +188,10 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Casual" })).toBeVisible();
   await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Ranked" })).toBeDisabled();
   await expect(page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" })).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" })).toHaveClass(/is-selected/);
   await expect(page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Instant Death" })).toBeDisabled();
   await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" })).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" })).toHaveClass(/is-selected/);
   await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo1" })).toBeDisabled();
   await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Training" })).toBeDisabled();
   await expect(page.locator(".authentic-pregame__control-grid")).not.toContainText(/two gems|one gem|two-gem|coming later/i);
@@ -198,11 +200,6 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expectNoElementTextOverflow(page, ".authentic-pregame__segment-option");
   await expectSameVisualRow(page, "[data-testid='authentic-pregame-round-option']");
   await expectSameVisualRow(page, "[data-testid='authentic-pregame-format-option']");
-
-  await page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" }).click();
-  await expect(page.getByTestId("authentic-pregame-begin")).toBeDisabled();
-  await page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" }).click();
-  await expect(page.getByTestId("authentic-pregame-begin")).toBeEnabled();
 
   const leaderImage = page.getByTestId("authentic-leader-card-image").first();
   await expect(leaderImage).toBeVisible();

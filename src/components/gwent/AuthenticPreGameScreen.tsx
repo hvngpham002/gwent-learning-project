@@ -28,8 +28,8 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
   const defaults = useMemo(() => getDefaultPreGameSelection(), []);
   const [humanDeckPresetId, setHumanDeckPresetId] = useState(defaults.humanDeckPresetId);
   const [opponentDeckPresetId, setOpponentDeckPresetId] = useState(defaults.opponentDeckPresetId);
-  const [roundId, setRoundId] = useState<"standard" | null>(null);
-  const [formatId, setFormatId] = useState<"best-of-3" | null>(null);
+  const [roundId, setRoundId] = useState<"standard" | null>(defaults.roundId);
+  const [formatId, setFormatId] = useState<"best-of-3" | null>(defaults.formatId);
   const [seed, setSeed] = useState(() => seedFromSearch(search));
   const [copyLabel, setCopyLabel] = useState("Copy seed");
 
