@@ -31,7 +31,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
   const [roundId, setRoundId] = useState<"standard" | null>(defaults.roundId);
   const [formatId, setFormatId] = useState<"best-of-3" | null>(defaults.formatId);
   const [seed, setSeed] = useState(() => seedFromSearch(search));
-  const [copyLabel, setCopyLabel] = useState("Copy seed");
+  const [copyLabel, setCopyLabel] = useState("copy");
 
   const selectedDeck = deckOptions.find((option) => option.presetId === humanDeckPresetId) ?? deckOptions[0];
   const selectedOpponent = deckOptions.find((option) => option.presetId === opponentDeckPresetId) ?? deckOptions[1] ?? deckOptions[0];
@@ -64,7 +64,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
       return;
     }
     await navigator.clipboard.writeText(seed.trim());
-    setCopyLabel("Copied");
+    setCopyLabel("copied");
   };
 
   return (
@@ -225,7 +225,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
                     value={seed}
                     onChange={(event) => {
                       setSeed(event.target.value);
-                      setCopyLabel("Copy seed");
+                      setCopyLabel("copy");
                     }}
                     placeholder="e.g. 8aF3-29-c1"
                   />

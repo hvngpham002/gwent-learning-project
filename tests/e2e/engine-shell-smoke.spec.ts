@@ -176,7 +176,7 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("font-weight", "700");
   await expect(page.getByTestId("authentic-pregame-begin")).toBeEnabled();
   await expect(page.getByTestId("authentic-pregame-seed")).toHaveValue("ep4-smoke");
-  await expect(page.getByTestId("authentic-pregame-copy-seed")).toHaveText("Copy seed");
+  await expect(page.getByTestId("authentic-pregame-copy-seed")).toHaveText("copy");
   await expect(page.getByTestId("authentic-pregame-deck-option")).toHaveCount(2);
   await expect(page.getByTestId("authentic-pregame-deck-option").first()).not.toContainText(/Lord Commander|Clear Weather/i);
   await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("font-style", "italic");
