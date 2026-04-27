@@ -292,9 +292,9 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   await expect(page.getByRole("button", { name: "duplicate" })).toBeVisible();
   await expect(page.getByRole("button", { name: "reset" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "← back" })).toHaveCSS("font-size", "11px");
-  await expect(page.getByRole("button", { name: "+ new" })).toHaveCSS("font-size", "12px");
+  await expect(page.getByRole("button", { name: "+ new" })).toHaveCSS("font-size", "13px");
   await expect(page.getByRole("button", { name: "delete current" })).toHaveCSS("font-size", "11px");
-  await expect(page.getByRole("button", { name: "all", exact: true })).toHaveCSS("font-size", "12px");
+  await expect(page.getByRole("button", { name: "all", exact: true })).toHaveCSS("font-size", "13px");
 
   const total = page.getByTestId("authentic-deck-builder-total");
   const before = await total.innerText();
