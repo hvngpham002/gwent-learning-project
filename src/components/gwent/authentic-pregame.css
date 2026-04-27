@@ -216,9 +216,15 @@ button.authentic-pregame__mode-option {
   color: var(--ink-3);
 }
 
+.authentic-pregame__builder-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 button.authentic-pregame__builder-entry {
   width: 100%;
-  margin-top: 14px;
   padding: 8px 14px;
   background: transparent;
   font-family: var(--font-display) !important;
@@ -457,7 +463,8 @@ button.authentic-pregame__segment-option {
   .authentic-pregame__mode-grid,
   .authentic-pregame__segments,
   .authentic-pregame__seed-row,
-  .authentic-pregame__control-grid {
+  .authentic-pregame__control-grid,
+  .authentic-pregame__builder-actions {
     grid-template-columns: 1fr;
   }
 

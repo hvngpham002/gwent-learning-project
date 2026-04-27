@@ -7,7 +7,8 @@ import AuthenticDeckBuilderScreen from "./AuthenticDeckBuilderScreen";
 import AuthenticMatchScreen from "./AuthenticMatchScreen";
 import AuthenticPreGameScreen from "./AuthenticPreGameScreen";
 import AuthenticUiHarness from "./AuthenticUiHarness";
-import { readDeckBuilderStore } from "./deckBuilderStorage";
+import { readDeckBuilderStore, writeDeckBuilderStore } from "./deckBuilderStorage";
+import { createEmptyDeckPreset } from "./deckBuilderViewModel";
 import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import { seedFromSearch, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 
@@ -31,6 +32,20 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
       },
       warning: null,
     });
+  };
+
+  const openDeckBuilder = (mode: "create" | "edit" = "edit") => {
+    if (mode === "create") {
+      const deck = createEmptyDeckPreset(`local-${Date.now().toString(36)}-${deckStore.store.decks.length + 1}`);
+      const nextStore = {
+        schemaVersion: "authentic-decks-v1" as const,
+        decks: [...deckStore.store.decks, deck],
+        activePresetId: deck.presetId,
+      };
+      const write = writeDeckBuilderStore(nextStore);
+      setDeckStore({ store: nextStore, warning: write.warning });
+    }
+    setViewOverride("deck-builder");
   };
 
   const playDeck = (deck: CatalogDeckPreset) => {
@@ -87,12 +102,12 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
 
   return (
     <div data-testid="authentic-game-app">
-      <AuthenticPreGameScreen
-        search={search}
-        localDecks={deckStore.store.decks}
-        onBeginMatch={setSetupConfig}
-        onOpenDeckBuilder={() => setViewOverride("deck-builder")}
-      />
+        <AuthenticPreGameScreen
+          search={search}
+          localDecks={deckStore.store.decks}
+          onBeginMatch={setSetupConfig}
+          onOpenDeckBuilder={openDeckBuilder}
+        />
     </div>
   );
 };

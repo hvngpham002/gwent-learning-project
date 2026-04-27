@@ -182,10 +182,11 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-pregame-deck-option").first()).not.toContainText(/Lord Commander|Clear Weather/i);
   await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("font-style", "italic");
   await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("text-transform", "none");
-  await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-style", "italic");
-  await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-size", "12px");
-  await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("text-transform", "none");
-  await expect(page.getByTestId("authentic-pregame-builder-placeholder")).toBeEnabled();
+  await expect(page.getByTestId("authentic-pregame-create-deck")).toBeEnabled();
+  await expect(page.getByTestId("authentic-pregame-edit-decks")).toBeEnabled();
+  await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-style", "italic");
+  await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-size", "12px");
+  await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("text-transform", "none");
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
   await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Casual" })).toBeVisible();
   await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Ranked" })).toBeDisabled();
@@ -264,7 +265,7 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   const pageErrors = collectPageErrors(page);
 
   await page.goto(authenticPregameUrl);
-  await page.getByTestId("authentic-pregame-builder-placeholder").click();
+  await page.getByTestId("authentic-pregame-edit-decks").click();
   await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Deck Builder" })).toBeVisible();
 
@@ -309,7 +310,7 @@ test("authentic pre-game, deck builder, and direct match avoid horizontal overfl
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
-  await page.getByTestId("authentic-pregame-builder-placeholder").click();
+  await page.getByTestId("authentic-pregame-edit-decks").click();
   await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.getByRole("button", { name: "← back" }).click();

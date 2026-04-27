@@ -22,7 +22,7 @@ interface AuthenticPreGameScreenProps {
   readonly search?: string;
   readonly localDecks?: readonly CatalogDeckPreset[];
   readonly onBeginMatch: (config: AuthenticMatchSetupConfig) => void;
-  readonly onOpenDeckBuilder?: () => void;
+  readonly onOpenDeckBuilder?: (mode?: "create" | "edit") => void;
 }
 
 const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
@@ -105,7 +105,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
           <button
             type="button"
             className="authentic-pregame__ghost"
-            onClick={onOpenDeckBuilder}
+            onClick={() => onOpenDeckBuilder?.("edit")}
           >
             open deck builder →
           </button>
@@ -150,14 +150,24 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              className="authentic-pregame__builder-entry"
-              data-testid="authentic-pregame-builder-placeholder"
-              onClick={onOpenDeckBuilder}
-            >
-              <span className="authentic-pregame__builder-entry-text">+ create or edit a deck...</span>
-            </button>
+            <div className="authentic-pregame__builder-actions">
+              <button
+                type="button"
+                className="authentic-pregame__builder-entry"
+                data-testid="authentic-pregame-create-deck"
+                onClick={() => onOpenDeckBuilder?.("create")}
+              >
+                <span className="authentic-pregame__builder-entry-text">+ create deck...</span>
+              </button>
+              <button
+                type="button"
+                className="authentic-pregame__builder-entry"
+                data-testid="authentic-pregame-edit-decks"
+                onClick={() => onOpenDeckBuilder?.("edit")}
+              >
+                <span className="authentic-pregame__builder-entry-text">edit decks →</span>
+              </button>
+            </div>
           </section>
 
           <section className="authentic-pregame__panel">
