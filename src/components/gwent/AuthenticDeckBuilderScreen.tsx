@@ -8,11 +8,16 @@ import {
   addCardToDeck,
   buildCardPool,
   buildDeckCardItems,
+  buildFactionOptions,
+  changeDeckFaction,
   createEmptyDeckPreset,
+  duplicateDeckPreset,
+  findCatalogSourceForLocalDeck,
   filterCardPool,
   leadersForFaction,
   makeUniqueDeckName,
   removeCardFromDeck,
+  resetDeckToCatalogSource,
   validateDeckPreset,
 } from "./deckBuilderViewModel";
 import { parseDeckImport, stringifyDeckExport } from "./deckBuilderImportExport";
@@ -56,6 +61,8 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   const stats = useMemo(() => (activeDeck ? validateDeckPreset(activeDeck) : null), [activeDeck]);
   const pool = useMemo(() => (activeDeck ? filterCardPool(buildCardPool(activeDeck), filter, search) : []), [activeDeck, filter, search]);
   const deckItems = useMemo(() => (activeDeck ? buildDeckCardItems(activeDeck) : []), [activeDeck]);
+  const factionOptions = useMemo(() => buildFactionOptions(), []);
+  const catalogSource = useMemo(() => (activeDeck ? findCatalogSourceForLocalDeck(activeDeck) : null), [activeDeck]);
   const selectedCard =
     currentCatalogCards.find((card) => card.sourceId === selectedSourceId) ?? deckItems[0]?.card ?? pool[0]?.card ?? null;
   const leaderOptions = activeDeck ? leadersForFaction(activeDeck.faction) : [];
@@ -95,6 +102,38 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
     const deck = createEmptyDeckPreset(newLocalId(), makeUniqueDeckName("New Deck", decks));
     updateDecks([...decks, deck], deck.presetId);
     setSelectedSourceId(null);
+    setNotice("Choose a faction, then add cards.");
+  };
+
+  const duplicateDeck = () => {
+    if (!activeDeck) return;
+    const duplicate = duplicateDeckPreset(activeDeck, decks);
+    updateDecks([...decks, duplicate], duplicate.presetId);
+    setSelectedSourceId(duplicate.mainDeck[0]?.sourceId ?? null);
+    setNotice(`Duplicated as ${duplicate.name}.`);
+  };
+
+  const resetToCatalog = () => {
+    if (!activeDeck || !catalogSource) return;
+    if (!window.confirm(`Reset ${activeDeck.name} to ${catalogSource.name}?`)) return;
+    const reset = resetDeckToCatalogSource(activeDeck, catalogSource);
+    updateActiveDeck(reset);
+    setSelectedSourceId(reset.mainDeck[0]?.sourceId ?? null);
+    setNotice(`Reset to ${catalogSource.name}.`);
+  };
+
+  const updateFaction = (nextFaction: CatalogDeckPreset["faction"]) => {
+    if (!activeDeck || nextFaction === activeDeck.faction) return;
+    const result = changeDeckFaction(activeDeck, nextFaction);
+    if (
+      result.removedCards > 0 &&
+      !window.confirm(`Change faction to ${getFactionDisplay(nextFaction).name}? This removes ${result.removedCards} wrong-faction cards.`)
+    ) {
+      return;
+    }
+    updateActiveDeck(result.deck);
+    setSelectedSourceId(result.deck.mainDeck[0]?.sourceId ?? null);
+    setNotice(`Faction changed to ${getFactionDisplay(nextFaction).name}; removed ${result.removedCards} wrong-faction cards.`);
   };
 
   const deleteDeck = () => {
@@ -154,6 +193,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
     }
     const preset = { ...result.preset, name: makeUniqueDeckName(result.preset.name, decks) };
     updateDecks([...decks, preset], preset.presetId);
+    setNotice(result.notices?.length ? `Imported as ${preset.name}. ${result.notices.join(" ")}` : `Imported as ${preset.name}.`);
     setImportOpen(false);
     setImportText("");
     setImportErrors([]);
@@ -183,6 +223,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
           </div>
           <div className="authentic-deck-builder__actions">
             <button type="button" onClick={createDeck}>+ New</button>
+            <button type="button" onClick={duplicateDeck}>Duplicate</button>
             <button type="button" onClick={() => setImportOpen(true)}>Import</button>
             <button type="button" onClick={exportJson}>Export .json</button>
             <button type="button" onClick={copyJson} disabled={!navigator.clipboard}>copy</button>
@@ -229,6 +270,33 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               <p>
                 {getFactionDisplay(activeDeck.faction).name} · leader {leader?.name ?? "missing"} · {activeDeck.presetId}
               </p>
+              <div className="authentic-deck-builder__inline-controls">
+                <label>
+                  <span className="authentic-deck-builder__label">faction</span>
+                  <select
+                    value={activeDeck.faction}
+                    onChange={(event) => updateFaction(event.target.value as CatalogDeckPreset["faction"])}
+                    data-testid="authentic-deck-builder-faction"
+                  >
+                    {factionOptions.map((option) => (
+                      <option key={option.faction} value={option.faction} disabled={!option.available}>
+                        {option.name}{option.available ? "" : " (unavailable)"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  onClick={resetToCatalog}
+                  disabled={!catalogSource}
+                  title={catalogSource ? `Reset to ${catalogSource.name}` : "No catalog source"}
+                >
+                  Reset to catalog
+                </button>
+              </div>
+              {activeDeck.mainDeck.length === 0 ? (
+                <p className="authentic-deck-builder__notice">Choose a faction, then add cards.</p>
+              ) : null}
               <div className="authentic-deck-builder__filters">
                 {(["all", "heroes", "units", "specials"] as const).map((nextFilter) => (
                   <button
@@ -250,13 +318,15 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
             </div>
 
             <div className="authentic-deck-builder__pool-grid">
-              {pool.map(({ card, count, atLimit }) => (
-                <div key={card.sourceId} className="authentic-deck-builder__pool-item" title={`${card.sourceId} · ${card.image}`}>
-                  <AuthenticCard card={fromCatalogCard(card)} size="md" dimmed={atLimit} onClick={atLimit ? undefined : () => addCard(card.sourceId)} />
+              {pool.map(({ card, count, addState }) => (
+                <div
+                  key={card.sourceId}
+                  className="authentic-deck-builder__pool-item"
+                  data-source-id={card.sourceId}
+                  title={`${card.sourceId} · ${card.image}${addState.reason ? ` · ${addState.reason}` : ""}`}
+                >
+                  <AuthenticCard card={fromCatalogCard(card)} size="md" dimmed={!addState.canAdd} onClick={addState.canAdd ? () => addCard(card.sourceId) : undefined} />
                   {count > 0 ? <span className="authentic-deck-builder__count">{count}/{card.deckLimit}</span> : null}
-                  <button type="button" disabled={atLimit} onClick={() => addCard(card.sourceId)}>
-                    {card.name}
-                  </button>
                 </div>
               ))}
             </div>
@@ -267,7 +337,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               <div className="authentic-deck-builder__label">composition</div>
               <dl>
                 <dt>Battlefield</dt><dd className={stats.battlefieldCards < 22 ? "is-bad" : ""}>{stats.battlefieldCards} / 22 min</dd>
-                <dt>Specials</dt><dd className={stats.specialCards > 10 ? "is-bad" : ""}>{stats.specialCards} / 10 max</dd>
+                <dt>Specials</dt><dd data-testid="authentic-deck-builder-specials" className={stats.specialCards > 10 ? "is-bad" : ""}>{stats.specialCards} / 10 max</dd>
                 <dt>Heroes</dt><dd>{stats.heroCards}</dd>
                 <dt>Total strength</dt><dd>{stats.totalStrength}</dd>
                 <dt>Total cards</dt><dd data-testid="authentic-deck-builder-total">{stats.totalCards}</dd>

@@ -10,16 +10,22 @@ import {
   addCardToDeck,
   buildCardPool,
   buildDeckCardItems,
+  buildFactionOptions,
+  changeDeckFaction,
   createEmptyDeckPreset,
+  duplicateDeckPreset,
   filterCardPool,
+  findCatalogSourceForLocalDeck,
+  getDeckBuilderAddState,
   makeUniqueDeckName,
   normalizeDeckCollection,
   removeCardFromDeck,
+  resetDeckToCatalogSource,
   validateDeckPreset,
 } from "@/components/gwent/deckBuilderViewModel";
 
 describe("authentic deck builder view model", () => {
-  it("builds faction plus neutral card pools from catalog data", () => {
+  it("builds a faction plus neutral pool and hides wrong-faction cards", () => {
     const pool = buildCardPool(currentNorthernRealmsDeckPreset);
     const factions = new Set(pool.map((item) => item.card.faction));
 
@@ -27,6 +33,7 @@ describe("authentic deck builder view model", () => {
     expect(factions.has("neutral")).toBe(true);
     expect(factions.has("nilfgaard")).toBe(false);
     expect(pool.some((item) => item.card.sourceId === "northern-realms.vernon-roche")).toBe(true);
+    expect(pool.some((item) => item.card.sourceId === "nilfgaard.letho-of-gulet")).toBe(false);
   });
 
   it("filters and searches deterministically", () => {
@@ -50,6 +57,31 @@ describe("authentic deck builder view model", () => {
     expect(removeCardFromDeck(withOne, "neutral.geralt-of-rivia").mainDeck).toEqual([]);
   });
 
+  it("computes add-state for special cap, deck limit, wrong faction, and unknown cards", () => {
+    const specialCapped = {
+      ...currentNorthernRealmsDeckPreset,
+      mainDeck: [
+        { sourceId: "neutral.decoy", count: 3 },
+        { sourceId: "neutral.commanders-horn", count: 3 },
+        { sourceId: "neutral.scorch", count: 3 },
+        { sourceId: "neutral.biting-frost", count: 1 },
+      ],
+    };
+
+    expect(getDeckBuilderAddState(specialCapped, "neutral.impenetrable-fog")).toEqual(
+      expect.objectContaining({ canAdd: false, reasonCode: "special_cap" }),
+    );
+    expect(getDeckBuilderAddState(currentNorthernRealmsDeckPreset, "neutral.geralt-of-rivia")).toEqual(
+      expect.objectContaining({ canAdd: false, reasonCode: "deck_limit" }),
+    );
+    expect(getDeckBuilderAddState(currentNorthernRealmsDeckPreset, "nilfgaard.letho-of-gulet")).toEqual(
+      expect.objectContaining({ canAdd: false, reasonCode: "wrong_faction" }),
+    );
+    expect(getDeckBuilderAddState(currentNorthernRealmsDeckPreset, "missing.card")).toEqual(
+      expect.objectContaining({ canAdd: false, reasonCode: "unknown_card" }),
+    );
+  });
+
   it("creates unique local deck names and normalizes duplicate local identities", () => {
     expect(makeUniqueDeckName("New Deck", [createEmptyDeckPreset("a", "New Deck")])).toBe("New Deck 2");
 
@@ -60,6 +92,52 @@ describe("authentic deck builder view model", () => {
 
     expect(normalized.map((deck) => deck.presetId)).toEqual(["local-same", "local-same-2"]);
     expect(normalized.map((deck) => deck.name)).toEqual(["Saved Deck", "Saved Deck 2"]);
+  });
+
+  it("derives faction options from catalog leaders and cards", () => {
+    const options = buildFactionOptions();
+
+    expect(options.find((option) => option.faction === "northern_realms")).toEqual(
+      expect.objectContaining({ available: true, leaderCount: 5 }),
+    );
+    expect(options.find((option) => option.faction === "nilfgaard")).toEqual(
+      expect.objectContaining({ available: true, leaderCount: 5 }),
+    );
+  });
+
+  it("changes faction by resetting leader and removing wrong-faction cards", () => {
+    const result = changeDeckFaction(currentNorthernRealmsDeckPreset, "nilfgaard");
+
+    expect(result.removedCards).toBeGreaterThan(0);
+    expect(result.deck.faction).toBe("nilfgaard");
+    expect(result.deck.leaderSourceId).toMatch(/^nilfgaard\./);
+    expect(result.deck.mainDeck.every((entry) => !entry.sourceId.startsWith("northern-realms."))).toBe(true);
+    expect(result.deck.mainDeck.some((entry) => entry.sourceId.startsWith("neutral."))).toBe(true);
+  });
+
+  it("duplicates decks with the same composition but unique local identity", () => {
+    const duplicate = duplicateDeckPreset(currentNorthernRealmsDeckPreset, [currentNorthernRealmsDeckPreset]);
+
+    expect(duplicate.presetId).not.toBe(currentNorthernRealmsDeckPreset.presetId);
+    expect(duplicate.name).toBe("Current Northern Realms 2");
+    expect(duplicate.mainDeck).toEqual(currentNorthernRealmsDeckPreset.mainDeck);
+    expect(duplicate.leaderSourceId).toBe(currentNorthernRealmsDeckPreset.leaderSourceId);
+  });
+
+  it("finds and resets catalog-sourced local decks while preserving local IDs", () => {
+    const localDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      presetId: "local-current-northern-realms",
+      name: "Current Northern Realms",
+      mainDeck: [],
+    };
+    const source = findCatalogSourceForLocalDeck(localDeck);
+
+    expect(source?.presetId).toBe("current-northern-realms");
+    expect(resetDeckToCatalogSource(localDeck, source!)).toEqual({
+      ...currentNorthernRealmsDeckPreset,
+      presetId: "local-current-northern-realms",
+    });
   });
 
   it("sorts cards in deck by strength, kind, then name", () => {

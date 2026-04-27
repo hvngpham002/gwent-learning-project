@@ -265,6 +265,14 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   const pageErrors = collectPageErrors(page);
 
   await page.goto(authenticPregameUrl);
+  await page.getByTestId("authentic-pregame-create-deck").click();
+  await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  await expect(page.getByTestId("authentic-deck-builder-faction")).toBeVisible();
+  await expect(page.getByText(/Choose a faction, then add cards/i)).toBeVisible();
+  await page.getByRole("button", { name: "← back" }).click();
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+  await page.evaluate(() => window.localStorage.removeItem("gwent_authentic_decks_v1"));
+
   await page.getByTestId("authentic-pregame-edit-decks").click();
   await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Deck Builder" })).toBeVisible();
@@ -281,11 +289,19 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   await expect(page.getByRole("button", { name: "copy" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Play →" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Duplicate" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reset to catalog" })).toBeEnabled();
 
   const total = page.getByTestId("authentic-deck-builder-total");
   const before = await total.innerText();
   await page.locator(".authentic-deck-builder__deck-card button").first().click();
   await expect(total).not.toHaveText(before);
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Reset to catalog" }).click();
+  await expect(total).toHaveText(before);
+  await page.getByRole("button", { name: "Duplicate" }).click();
+  await expect(page.getByLabel("Deck name")).toHaveValue(/Current Northern Realms 2/);
+  await page.locator(".authentic-deck-builder__deck-card button").first().click();
   await page.getByRole("button", { name: /Geralt of Rivia/i }).last().click();
   await expect(total).toHaveText(before);
 
@@ -298,6 +314,47 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
 
   const pageText = await visiblePageText(page);
   expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic deck builder disables special adds at the composition cap", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "gwent_authentic_decks_v1",
+      JSON.stringify({
+        schemaVersion: "authentic-decks-v1",
+        activePresetId: "local-special-cap",
+        decks: [
+          {
+            presetId: "local-special-cap",
+            name: "Special Cap Check",
+            faction: "northern_realms",
+            leaderSourceId: "northern-realms.foltest-lord-commander-of-the-north",
+            mainDeck: [
+              { sourceId: "neutral.decoy", count: 3 },
+              { sourceId: "neutral.commanders-horn", count: 3 },
+              { sourceId: "neutral.scorch", count: 3 },
+              { sourceId: "neutral.biting-frost", count: 1 },
+            ],
+            sideDeck: [],
+          },
+        ],
+      }),
+    );
+  });
+
+  await page.goto(authenticDeckBuilderUrl);
+  await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  await page.getByRole("button", { name: "specials" }).click();
+  await expect(page.getByTestId("authentic-deck-builder-specials")).toContainText("10 / 10 max");
+  const fogPoolItem = page.locator('[data-source-id="neutral.impenetrable-fog"]');
+  await expect(fogPoolItem).toHaveAttribute("title", /special cap reached/);
+  await expect(fogPoolItem.getByTestId("authentic-card")).toHaveAttribute("role", "img");
+  await fogPoolItem.locator("[data-testid='authentic-card']").click({ force: true });
+  await expect(page.getByTestId("authentic-deck-builder-specials")).toContainText("10 / 10 max");
+
   expect(pageErrors).toEqual([]);
 });
 

@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-27
-- Phase/spec: `cEp5` pre-game local deck identity follow-up
-- Latest relevant commit: cEp5 deck instance identity cleanup
+- Phase/spec: `cEp5.1` deck builder composition and identity polish implemented
+- Latest relevant commit: cEp5.1 deck builder composition and identity polish
 
 ## Required Reading For Every Coding Instance
 
@@ -56,6 +56,7 @@
 | `cEp4` | Cluster E / pre-game setup and match configuration | `audit/reports/2026-04-26-cEp4-report.md` | Added the product pre-game route, catalog-backed deck/opponent selection, seed controls, setup-configurable engine starts, disabled future modes/formats, direct `view=match`, and leader-specific card display repair. |
 | `cEp4.5` | Cluster E / pre-game visual fidelity follow-up | `audit/reports/2026-04-26-cEp4.5-report.md` | Tightened the product pre-game screen toward the handoff table composition, added catalog-derived opponent descriptions, kept future modes/formats disabled, used shared small pre-game leader thumbnails, and resized match score-card leaders to the foundation medium card dimensions on desktop. |
 | `cEp5` | Cluster E / catalog-backed deck builder v1 | `audit/reports/2026-04-27-cEp5-report.md` | Added the authentic deck-builder route, catalog-backed local deck editing, validation, localStorage persistence, import/export/copy JSON, pre-game local deck selection, and Play-from-builder into the engine-backed authentic match screen. |
+| `cEp5.1` | Cluster E / deck builder composition and identity polish | `audit/reports/2026-04-27-cEp5.1-report.md` | Added local deck ID/name normalization, explicit faction selection and confirmed faction changes, disabled add states for hard composition caps, Duplicate, Reset to catalog, and import conflict notices. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -91,6 +92,10 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - `AuthenticGameApp` also owns browser-local deck state for the authentic flow; local editable decks are loaded from `gwent_authentic_decks_v1`, seeded from catalog preset copies when absent, and can be passed as inline `CatalogDeckPreset` objects to `startEngineMatch`;
 - the deck builder uses `currentCatalogCards`, `currentCatalogLeaders`, and `CatalogDeckPreset` data only; it supports create, rename, save, delete, search/filter, leader selection, add/remove within `deckLimit`, export, clipboard copy, paste/file import, validation, and Play-from-builder;
 - deck validation blocks structural errors such as missing names, unknown references, wrong faction cards/leaders, over-limit copies, fewer than 22 battlefield cards, more than 10 special cards, and non-empty side decks, while planned/placeholder card or leader abilities are visible warnings rather than blockers;
+- local deck identity is normalized on storage read/write and through create, duplicate, import, and rename flows so browser-local `presetId` values and display names stay unique;
+- the deck builder now exposes catalog-derived faction selection for new and existing local decks; changing faction resets to that faction's default leader, confirms if cards would be removed, keeps neutral cards, and removes wrong-faction cards;
+- the card pool now hides wrong-faction cards through faction-aware filtering; relevant capped cards remain visible, keep the overlay count badge, and disable add interactions with concise metadata reasons such as `3/3 limit` and `special cap reached`; validation remains the backstop for imported or stale invalid decks;
+- Duplicate creates a selected same-composition local copy with a unique name/ID, Reset to catalog restores catalog-derived local decks while preserving their local `presetId`, and import conflict notices report the final imported name/ID behavior;
 - pre-game now lists valid local decks in addition to current catalog presets, marks invalid local decks disabled with the validation reason, and starts selected local decks by passing an inline custom human deck preset rather than adding it to `currentDeckPresets`;
 - pre-game deck selection uses source-prefixed UI option IDs, such as `catalog:current-northern-realms` and `local:current-northern-realms`, so imported or older browser-local decks that reuse a catalog preset ID cannot select both tiles or accidentally substitute a local deck when the catalog tile is chosen;
 - deck-builder import now protects built-in catalog preset IDs as reserved IDs when assigning duplicate imported preset IDs, reducing future catalog/local collisions in browser-local storage;
@@ -148,7 +153,7 @@ Recommended Cluster E sequence:
 
 Active Cluster E spec:
 
-- `docs/spec/2026-04-27-cEp5-specs.md` has been implemented. cEp6 should scope Card Studio and content workflow separately; permanent card authoring and repository file writes remain deferred.
+- `docs/spec/2026-04-27-cEp5.1-specs.md` has been implemented. cEp6 should scope Card Studio and content workflow next.
 
 ## Known Architectural Rules
 
@@ -195,7 +200,7 @@ Active Cluster E spec:
 
 ## Next Recommended Step
 
-Proceed to cEp6 planning: Card Studio and content workflow.
+ Proceed to cEp6 planning: Card Studio and content workflow.
 
 ## Update Requirements
 

@@ -7,7 +7,7 @@ import {
   readDeckBuilderStore,
   writeDeckBuilderStore,
 } from "@/components/gwent/deckBuilderStorage";
-import { normalizeDeckPreset } from "@/components/gwent/deckBuilderViewModel";
+import { makeUniqueDeckName, normalizeDeckPreset } from "@/components/gwent/deckBuilderViewModel";
 import { parseDeckImport, stringifyDeckExport } from "@/components/gwent/deckBuilderImportExport";
 import type { DeckBuilderStorageLike } from "@/components/gwent/deckBuilderStorage";
 
@@ -106,7 +106,18 @@ describe("authentic deck builder storage", () => {
 
     expect(result.ok).toBe(true);
     expect(result.preset?.presetId).toBe("current-northern-realms-imported");
-    expect(result.preset?.name).toBe("Current Northern Realms (Imported)");
+    expect(result.preset?.name).toBe("Current Northern Realms");
+    expect(result.notices?.join(" ")).toContain("Imported ID changed");
+  });
+
+  it("applies the shared name uniqueness rule to imported deck conflicts", () => {
+    const result = parseDeckImport(stringifyDeckExport(currentNorthernRealmsDeckPreset));
+
+    expect(result.ok).toBe(true);
+    expect(result.preset).toBeDefined();
+    expect(result.preset ? makeUniqueDeckName(result.preset.name, [currentNorthernRealmsDeckPreset]) : "").toBe(
+      "Current Northern Realms 2",
+    );
   });
 
   it("returns structured import errors for invalid decks", () => {

@@ -84,8 +84,9 @@ export const parseDeckImport = (
     preset: {
       ...preset,
       presetId: nextId,
-      name: `${preset.name} (Imported)`,
+      name: preset.name,
     },
     errors: [],
+    notices: [`Imported ID changed to ${nextId}.`],
   };
 };

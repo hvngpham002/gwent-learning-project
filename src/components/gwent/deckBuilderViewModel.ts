@@ -16,13 +16,17 @@ import {
 } from "@/game/catalog";
 
 import type {
+  DeckBuilderAddState,
   DeckBuilderCardPoolItem,
   DeckBuilderDeckCardItem,
+  DeckBuilderFactionChangeResult,
+  DeckBuilderFactionOption,
   DeckBuilderFilter,
   DeckBuilderStats,
   DeckBuilderValidationIssue,
   EditableDeckFaction,
 } from "./deckBuilderTypes";
+import { getFactionDisplay } from "./displayMetadata";
 
 export const DECK_BUILDER_MIN_BATTLEFIELD_CARDS = 22;
 export const DECK_BUILDER_MAX_SPECIAL_CARDS = 10;
@@ -64,6 +68,11 @@ export const makeUniqueDeckName = (
   }
   return nextName;
 };
+
+export const makeUniqueLocalPresetId = (
+  preferredId: string,
+  decks: readonly CatalogDeckPreset[],
+): string => makeUniquePresetId(preferredId, new Set(decks.map((deck) => deck.presetId)), decks.length);
 
 const makeUniquePresetId = (preferredId: string, usedIds: Set<string>, fallbackIndex: number): string => {
   const baseId = preferredId.trim() || `local-deck-${fallbackIndex + 1}`;
@@ -127,6 +136,24 @@ export const defaultLeaderForFaction = (
   );
 };
 
+export const buildFactionOptions = (
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+  leaders: readonly CatalogLeaderSource[] = currentCatalogLeaders,
+): DeckBuilderFactionOption[] =>
+  NON_NEUTRAL_FACTIONS.map((faction) => {
+    const leaderCount = leadersForFaction(faction, leaders).length;
+    const cardCount = cards.filter((card) => card.faction === faction).length;
+    const available = leaderCount > 0 && cardCount > 0;
+    return {
+      faction,
+      name: getFactionDisplay(faction).name,
+      available,
+      leaderCount,
+      cardCount,
+      disabledReason: available ? undefined : "Needs catalog cards and a leader.",
+    };
+  });
+
 export const createEmptyDeckPreset = (
   presetId: string,
   name = "New Deck",
@@ -170,7 +197,8 @@ export const buildCardPool = (
     .filter((card) => card.faction === "neutral" || card.faction === deck.faction)
     .map((card) => {
       const count = countById.get(card.sourceId) ?? 0;
-      return { card, count, atLimit: count >= card.deckLimit };
+      const addState = getDeckBuilderAddState(deck, card.sourceId, cards);
+      return { card, count, atLimit: addState.reasonCode === "deck_limit", addState };
     })
     .sort((a, b) => {
       const faction = a.card.faction.localeCompare(b.card.faction);
@@ -179,6 +207,31 @@ export const buildCardPool = (
       if (kind !== 0) return kind;
       return a.card.name.localeCompare(b.card.name);
     });
+};
+
+export const getDeckBuilderAddState = (
+  deck: CatalogDeckPreset,
+  sourceId: string,
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+): DeckBuilderAddState => {
+  const card = catalogCardById(cards).get(sourceId);
+  if (!card) {
+    return { canAdd: false, reasonCode: "unknown_card", reason: "unknown card" };
+  }
+  if (card.faction !== "neutral" && card.faction !== deck.faction) {
+    return { canAdd: false, reasonCode: "wrong_faction", reason: "wrong faction" };
+  }
+  const current = deck.mainDeck.find((entry) => entry.sourceId === sourceId)?.count ?? 0;
+  if (current >= card.deckLimit) {
+    return { canAdd: false, reasonCode: "deck_limit", reason: `${current}/${card.deckLimit} limit` };
+  }
+  if (card.kind === "special") {
+    const stats = validateDeckPreset(deck, cards);
+    if (stats.specialCards >= DECK_BUILDER_MAX_SPECIAL_CARDS) {
+      return { canAdd: false, reasonCode: "special_cap", reason: "special cap reached" };
+    }
+  }
+  return { canAdd: true };
 };
 
 export const filterCardPool = (
@@ -213,11 +266,11 @@ export const addCardToDeck = (
   sourceId: string,
   cards: readonly CatalogCardSource[] = currentCatalogCards,
 ): CatalogDeckPreset => {
+  const addState = getDeckBuilderAddState(deck, sourceId, cards);
+  if (!addState.canAdd) return deck;
   const card = catalogCardById(cards).get(sourceId);
   if (!card) return deck;
-  if (card.faction !== "neutral" && card.faction !== deck.faction) return deck;
   const current = deck.mainDeck.find((entry) => entry.sourceId === sourceId)?.count ?? 0;
-  if (current >= card.deckLimit) return deck;
   return withEntryCount(deck, sourceId, current + 1);
 };
 
@@ -225,6 +278,62 @@ export const removeCardFromDeck = (deck: CatalogDeckPreset, sourceId: string): C
   const current = deck.mainDeck.find((entry) => entry.sourceId === sourceId)?.count ?? 0;
   return current <= 0 ? deck : withEntryCount(deck, sourceId, current - 1);
 };
+
+export const changeDeckFaction = (
+  deck: CatalogDeckPreset,
+  faction: EditableDeckFaction,
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+  leaders: readonly CatalogLeaderSource[] = currentCatalogLeaders,
+): DeckBuilderFactionChangeResult => {
+  const defaultLeader = defaultLeaderForFaction(faction, leaders);
+  const byCardId = catalogCardById(cards);
+  let removedCards = 0;
+  const mainDeck = deck.mainDeck.filter((entry) => {
+    const card = byCardId.get(entry.sourceId);
+    const keep = card?.faction === "neutral" || card?.faction === faction;
+    if (!keep) removedCards += entry.count;
+    return keep;
+  });
+  return {
+    deck: normalizeDeckPreset({
+      ...deck,
+      faction,
+      leaderSourceId: defaultLeader?.sourceId ?? "",
+      mainDeck,
+      sideDeck: [],
+    }),
+    removedCards,
+  };
+};
+
+export const duplicateDeckPreset = (
+  deck: CatalogDeckPreset,
+  decks: readonly CatalogDeckPreset[],
+): CatalogDeckPreset => ({
+  ...cloneDeck(deck),
+  presetId: makeUniqueLocalPresetId(`${deck.presetId}-copy`, decks),
+  name: makeUniqueDeckName(deck.name, decks),
+});
+
+export const findCatalogSourceForLocalDeck = (
+  localDeck: CatalogDeckPreset,
+  catalogDecks: readonly CatalogDeckPreset[] = currentDeckPresets,
+): CatalogDeckPreset | null => {
+  const seededSourceId = localDeck.presetId.startsWith("local-") ? localDeck.presetId.slice("local-".length) : "";
+  return (
+    catalogDecks.find((deck) => deck.presetId === seededSourceId) ??
+    catalogDecks.find((deck) => deckNameKey(deck.name) === deckNameKey(localDeck.name)) ??
+    null
+  );
+};
+
+export const resetDeckToCatalogSource = (
+  localDeck: CatalogDeckPreset,
+  catalogSource: CatalogDeckPreset,
+): CatalogDeckPreset => ({
+  ...cloneDeck(catalogSource),
+  presetId: localDeck.presetId,
+});
 
 const pushIssue = (
   issues: DeckBuilderValidationIssue[],
