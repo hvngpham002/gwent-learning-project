@@ -54,7 +54,7 @@
 .authentic-hand__label,
 .authentic-score-card__meta,
 .authentic-pile strong,
-.authentic-pile span,
+.authentic-pile > span,
 .authentic-board-row__label strong {
   font-family: var(--font-mono);
   font-size: 10px;
@@ -93,7 +93,7 @@
 
 .authentic-match__layout {
   display: grid;
-  grid-template-columns: minmax(210px, 250px) minmax(0, 1fr) minmax(230px, 290px);
+  grid-template-columns: minmax(300px, 340px) minmax(0, 1fr) minmax(230px, 290px);
   gap: 12px;
   padding-top: 12px;
   align-items: start;
@@ -181,8 +181,8 @@
 .authentic-score-card {
   padding: 10px;
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
   border-left: 3px solid transparent;
 }
 
@@ -194,6 +194,7 @@
   min-width: 0;
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 8px;
 }
 
@@ -263,7 +264,7 @@ button.authentic-pile:hover {
   grid-row: 1 / 3;
 }
 
-.authentic-pile span {
+.authentic-pile > span {
   color: var(--accent);
   font-size: 16px;
   font-variant-numeric: tabular-nums;
@@ -617,6 +618,14 @@ button.authentic-board-card {
 
   .authentic-match__left-rail {
     grid-template-columns: 1fr;
+  }
+
+  .authentic-score-card .authentic-leader-card--match {
+    width: min(86.5px, 28vw) !important;
+  }
+
+  .authentic-score-card .authentic-leader-card--match .authentic-leader-card__frame {
+    height: min(147px, 48vw) !important;
   }
 
   .authentic-board-row {

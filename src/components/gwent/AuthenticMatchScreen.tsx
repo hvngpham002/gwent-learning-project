@@ -146,7 +146,7 @@ const ScoreCard: React.FC<{
         abilityName: leaderAbility,
         image: leaderImage,
       }}
-      size="compact"
+      size="match"
     />
     <div className="authentic-score-card__body">
       <div>

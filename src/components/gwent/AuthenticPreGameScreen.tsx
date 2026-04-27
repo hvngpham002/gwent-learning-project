@@ -6,6 +6,7 @@ import {
   buildPreGameDeckOptions,
   buildPreGameFormatOptions,
   buildPreGameModeOptions,
+  buildPreGameRoundOptions,
   buildSetupConfig,
   getDefaultPreGameSelection,
   getSuggestedOpponentPresetId,
@@ -22,16 +23,21 @@ interface AuthenticPreGameScreenProps {
 const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search = window.location.search, onBeginMatch }) => {
   const deckOptions = useMemo(() => buildPreGameDeckOptions(), []);
   const modeOptions = useMemo(() => buildPreGameModeOptions(), []);
+  const roundOptions = useMemo(() => buildPreGameRoundOptions(), []);
   const formatOptions = useMemo(() => buildPreGameFormatOptions(), []);
   const defaults = useMemo(() => getDefaultPreGameSelection(), []);
   const [humanDeckPresetId, setHumanDeckPresetId] = useState(defaults.humanDeckPresetId);
   const [opponentDeckPresetId, setOpponentDeckPresetId] = useState(defaults.opponentDeckPresetId);
+  const [roundId, setRoundId] = useState<"standard" | null>(null);
+  const [formatId, setFormatId] = useState<"best-of-3" | null>(null);
   const [seed, setSeed] = useState(() => seedFromSearch(search));
   const [copyLabel, setCopyLabel] = useState("Copy seed");
 
   const selectedDeck = deckOptions.find((option) => option.presetId === humanDeckPresetId) ?? deckOptions[0];
   const selectedOpponent = deckOptions.find((option) => option.presetId === opponentDeckPresetId) ?? deckOptions[1] ?? deckOptions[0];
-  const canBegin = Boolean(selectedDeck?.ready && selectedOpponent?.ready);
+  const selectedRound = roundOptions.find((option) => option.id === roundId) ?? null;
+  const selectedFormat = formatOptions.find((option) => option.id === formatId) ?? null;
+  const canBegin = Boolean(selectedDeck?.ready && selectedOpponent?.ready && selectedRound?.available && selectedFormat?.available);
   const seedLabel = seed.trim().length > 0 ? seed.trim() : "generated on begin";
 
   const chooseHumanDeck = (presetId: string) => {
@@ -45,7 +51,10 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
     if (!canBegin) {
       return;
     }
-    const config = buildSetupConfig({ humanDeckPresetId, opponentDeckPresetId, seed });
+    if (!roundId || !formatId) {
+      return;
+    }
+    const config = buildSetupConfig({ humanDeckPresetId, opponentDeckPresetId, roundId, formatId, seed });
     setSeed(String(config.seed));
     onBeginMatch(config);
   };
@@ -62,21 +71,19 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
     <main className="gwent-authentic gwent-authentic--pregame" data-testid="authentic-pregame">
       <div className="authentic-pregame">
         <header className="authentic-pregame__topbar">
-          <button type="button" className="authentic-pregame__ghost" onClick={() => window.history.back()} aria-label="Back">
-            Menu
-          </button>
-          <div>
-            <span>Authentic table</span>
+          <div className="authentic-pregame__topbar-title">
+            <button type="button" className="authentic-pregame__ghost" onClick={() => window.history.back()} aria-label="Back">
+              ← menu
+            </button>
             <h1>Prepare for Battle</h1>
           </div>
           <button
             type="button"
             className="authentic-pregame__ghost"
-            data-testid="authentic-pregame-builder-placeholder"
             disabled
             title="Deck builder arrives in cEp5"
           >
-            Deck Builder - coming next
+            open deck builder →
           </button>
         </header>
 
@@ -93,33 +100,42 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
                   disabled={!option.ready}
                   onClick={() => chooseHumanDeck(option.presetId)}
                 >
-                  {option.leader ? (
-                    <AuthenticLeaderCard
-                      size="pregame"
-                      leader={{
-                        sourceId: option.leader.sourceId,
-                        name: option.leader.name,
-                        faction: option.leader.faction,
-                        abilityName: option.leaderAbilityName,
-                        image: option.leader.image,
-                      }}
-                    />
-                  ) : null}
-                  <span>
+                  <span className="authentic-pregame__deck-leader">
+                    {option.leader ? (
+                      <AuthenticLeaderCard
+                        size="pregame"
+                        leader={{
+                          sourceId: option.leader.sourceId,
+                          name: option.leader.name,
+                          faction: option.leader.faction,
+                          abilityName: option.leaderAbilityName,
+                          image: option.leader.image,
+                        }}
+                      />
+                    ) : null}
+                  </span>
+                  <span className="authentic-pregame__deck-copy">
                     <strong>{option.name}</strong>
                     <em>{option.factionName}</em>
-                    <small>
-                      {option.cardCount} cards · {option.unitCount} units · {option.heroCount} heroes · {option.specialCount} specials
-                    </small>
-                    <small>{option.ready ? "ready" : option.disabledReason}</small>
+                    <small>{option.cardCount} cards · {option.ready ? "ready" : option.disabledReason}</small>
                   </span>
+                  {option.presetId === humanDeckPresetId ? <span className="authentic-pregame__checkmark">✓</span> : null}
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              className="authentic-pregame__builder-entry"
+              data-testid="authentic-pregame-builder-placeholder"
+              disabled
+              title="Deck builder arrives in cEp5"
+            >
+              <span className="authentic-pregame__builder-entry-text">+ create or edit a deck...</span>
+            </button>
           </section>
 
           <section className="authentic-pregame__panel">
-            <div className="authentic-pregame__section-label">Step 2 - configure match</div>
+            <div className="authentic-pregame__section-label">Step 2 - game mode</div>
             <div className="authentic-pregame__mode-grid">
               {modeOptions.map((mode) => (
                 <button
@@ -130,7 +146,10 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
                   disabled={!mode.available}
                   aria-disabled={!mode.available}
                 >
-                  <strong>{mode.name}</strong>
+                  <span className="authentic-pregame__mode-heading">
+                    <span aria-hidden="true">{mode.icon}</span>
+                    <strong>{mode.name}</strong>
+                  </span>
                   <span>{mode.description}</span>
                   <em>{mode.note}</em>
                 </button>
@@ -138,7 +157,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
             </div>
 
             <label className="authentic-pregame__field">
-              <span>Opponent preset</span>
+              <span>Opponent</span>
               <select
                 data-testid="authentic-pregame-opponent-option"
                 value={opponentDeckPresetId}
@@ -150,49 +169,93 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({ search 
                   </option>
                 ))}
               </select>
+              <em>{selectedOpponent?.description ?? "Choose a ready catalog opponent."}</em>
             </label>
 
-            <div className="authentic-pregame__formats">
-              {formatOptions.map((format) => (
-                <button key={format.id} type="button" disabled={!format.available} className={format.available ? "is-selected" : ""}>
-                  {format.name}
-                  <span>{format.note}</span>
-                </button>
-              ))}
-            </div>
-
-            <label className="authentic-pregame__field">
-              <span>Seed</span>
-              <div className="authentic-pregame__seed-row">
-                <input
-                  data-testid="authentic-pregame-seed"
-                  value={seed}
-                  onChange={(event) => {
-                    setSeed(event.target.value);
-                    setCopyLabel("Copy seed");
-                  }}
-                  placeholder="Blank generates a visible seed"
-                />
-                <button
-                  type="button"
-                  data-testid="authentic-pregame-copy-seed"
-                  disabled={!navigator.clipboard || seed.trim().length === 0}
-                  onClick={copySeed}
-                >
-                  {copyLabel}
-                </button>
+            <div className="authentic-pregame__control-grid">
+              <div>
+                <div className="authentic-pregame__section-label">Round</div>
+                <div className="authentic-pregame__segments authentic-pregame__segments--round">
+                  {roundOptions.map((round) => (
+                    <button
+                      key={round.id}
+                      type="button"
+                      data-testid="authentic-pregame-round-option"
+                      disabled={!round.available}
+                      className={`authentic-pregame__segment-option${round.id === roundId ? " is-selected" : ""}`}
+                      onClick={() => {
+                        if (round.available && round.id === "standard") {
+                          setRoundId(round.id);
+                        }
+                      }}
+                    >
+                      {round.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </label>
+
+              <div>
+                <div className="authentic-pregame__section-label">Format</div>
+                <div className="authentic-pregame__segments authentic-pregame__segments--format">
+                  {formatOptions.map((format) => (
+                    <button
+                      key={format.id}
+                      type="button"
+                      data-testid="authentic-pregame-format-option"
+                      disabled={!format.available}
+                      className={`authentic-pregame__segment-option${format.id === formatId ? " is-selected" : ""}`}
+                      onClick={() => {
+                        if (format.available && format.id === "best-of-3") {
+                          setFormatId(format.id);
+                        }
+                      }}
+                    >
+                      {format.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="authentic-pregame__field authentic-pregame__seed-field">
+                <span>Seed</span>
+                <div className="authentic-pregame__seed-row">
+                  <input
+                    data-testid="authentic-pregame-seed"
+                    value={seed}
+                    onChange={(event) => {
+                      setSeed(event.target.value);
+                      setCopyLabel("Copy seed");
+                    }}
+                    placeholder="e.g. 8aF3-29-c1"
+                  />
+                  <button
+                    type="button"
+                    data-testid="authentic-pregame-copy-seed"
+                    disabled={!navigator.clipboard || seed.trim().length === 0}
+                    onClick={copySeed}
+                  >
+                    {copyLabel}
+                  </button>
+                </div>
+              </label>
+            </div>
           </section>
         </div>
 
         <footer className="authentic-pregame__summary">
           <p>
-            {selectedDeck?.name ?? "Deck"} vs {selectedOpponent?.name ?? "Opponent"} · Human vs AI · Standard · seed {seedLabel} ·{" "}
-            {ENGINE_AI_POLICY_ID}
+            {selectedDeck?.name ?? "Deck"} vs {selectedOpponent?.name ?? "Opponent"} · Human vs AI · {selectedRound?.name ?? "choose round"} ·{" "}
+            {selectedFormat?.name ?? "choose format"} · seed {seedLabel} · {ENGINE_AI_POLICY_ID}
           </p>
-          <button type="button" data-testid="authentic-pregame-begin" disabled={!canBegin} onClick={beginMatch}>
-            Begin Match
+          <button
+            type="button"
+            className="authentic-pregame__begin"
+            data-testid="authentic-pregame-begin"
+            disabled={!canBegin}
+            onClick={beginMatch}
+          >
+            Begin Match →
           </button>
         </footer>
       </div>

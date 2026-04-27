@@ -14,7 +14,8 @@ export interface AuthenticMatchSetupConfig {
   readonly humanDeckPresetId: string;
   readonly opponentDeckPresetId: string;
   readonly modeId: "human-vs-ai";
-  readonly formatId: "standard";
+  readonly roundId: "standard";
+  readonly formatId: "best-of-3";
   readonly seed: string | number;
   readonly aiPolicyId: typeof ENGINE_AI_POLICY_ID;
 }
@@ -33,18 +34,27 @@ export interface PreGameDeckOptionViewModel {
   readonly specialCount: number;
   readonly ready: boolean;
   readonly disabledReason: string | null;
+  readonly description: string;
 }
 
 export interface PreGameModeOptionViewModel {
-  readonly id: "human-vs-ai" | "local-pvp" | "ai-vs-ai" | "ranked";
+  readonly id: "human-vs-ai" | "ranked" | "training" | "seed-suite";
   readonly name: string;
+  readonly icon: string;
   readonly description: string;
   readonly available: boolean;
   readonly note: string;
 }
 
 export interface PreGameFormatOptionViewModel {
-  readonly id: "standard" | "bo1" | "training";
+  readonly id: "best-of-3" | "best-of-1" | "training";
+  readonly name: string;
+  readonly available: boolean;
+  readonly note: string;
+}
+
+export interface PreGameRoundOptionViewModel {
+  readonly id: "standard" | "instant-death";
   readonly name: string;
   readonly available: boolean;
   readonly note: string;
@@ -89,6 +99,7 @@ export const buildPreGameDeckOptions = (
         specialCount: kindCounts.special,
         ready: true,
         disabledReason: null,
+        description: `Current ${faction.name} - ${resolved.leader.name}`,
       };
     } catch (error) {
       const faction = getFactionDisplay(preset.faction);
@@ -106,6 +117,7 @@ export const buildPreGameDeckOptions = (
         specialCount: 0,
         ready: false,
         disabledReason: error instanceof Error ? error.message : "Preset cannot be resolved.",
+        description: `${faction.name} preset cannot be resolved.`,
       };
     }
   });
@@ -113,27 +125,34 @@ export const buildPreGameDeckOptions = (
 export const buildPreGameModeOptions = (): readonly PreGameModeOptionViewModel[] => [
   {
     id: "human-vs-ai",
-    name: "Human vs AI",
-    description: "Current catalog match against the deterministic policy.",
+    name: "Casual",
+    icon: "☕",
+    description: "Practice match versus AI. No ranking.",
     available: true,
     note: ENGINE_AI_POLICY_ID,
   },
-  { id: "local-pvp", name: "Local PvP", description: "Same-device player controls.", available: false, note: "coming later" },
-  { id: "ai-vs-ai", name: "AI vs AI", description: "Simulation viewer for policies.", available: false, note: "coming later" },
-  { id: "ranked", name: "Ranked", description: "Network ladder play.", available: false, note: "coming later" },
+  { id: "ranked", name: "Ranked", icon: "⚔", description: "Climb the ladder. Win streaks affect MMR.", available: false, note: "coming later" },
+  { id: "training", name: "Training", icon: "✎", description: "Single round, free mulligans, undo enabled.", available: false, note: "coming later" },
+  { id: "seed-suite", name: "Seed Suite", icon: "⚙", description: "Replay deterministic suite from research lab.", available: false, note: "coming later" },
 ];
 
 export const buildPreGameFormatOptions = (): readonly PreGameFormatOptionViewModel[] => [
-  { id: "standard", name: "Standard", available: true, note: "two-gem match" },
-  { id: "bo1", name: "Bo1", available: false, note: "coming later" },
+  { id: "best-of-3", name: "Bo3", available: true, note: "current match format" },
+  { id: "best-of-1", name: "Bo1", available: false, note: "coming later" },
   { id: "training", name: "Training", available: false, note: "coming later" },
+];
+
+export const buildPreGameRoundOptions = (): readonly PreGameRoundOptionViewModel[] => [
+  { id: "standard", name: "Standard", available: true, note: "two gems each" },
+  { id: "instant-death", name: "Instant Death", available: false, note: "one gem each" },
 ];
 
 export const getDefaultPreGameSelection = () => ({
   humanDeckPresetId: "current-northern-realms",
   opponentDeckPresetId: "current-nilfgaard",
   modeId: "human-vs-ai" as const,
-  formatId: "standard" as const,
+  roundId: "standard" as const,
+  formatId: "best-of-3" as const,
   aiPolicyId: ENGINE_AI_POLICY_ID,
 });
 
@@ -160,12 +179,15 @@ export const normalizePreGameSeed = (seedInput: string, generate = generateVisib
 export const buildSetupConfig = (input: {
   readonly humanDeckPresetId: string;
   readonly opponentDeckPresetId: string;
+  readonly roundId: "standard";
+  readonly formatId: "best-of-3";
   readonly seed: string;
 }): AuthenticMatchSetupConfig => ({
   humanDeckPresetId: input.humanDeckPresetId,
   opponentDeckPresetId: input.opponentDeckPresetId,
   modeId: "human-vs-ai",
-  formatId: "standard",
+  roundId: input.roundId,
+  formatId: input.formatId,
   seed: normalizePreGameSeed(input.seed),
   aiPolicyId: ENGINE_AI_POLICY_ID,
 });

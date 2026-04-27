@@ -15,6 +15,42 @@ const expectNoHorizontalOverflow = async (page: import("@playwright/test").Page)
   expect(overflow).toBeLessThanOrEqual(1);
 };
 
+const expectNoElementTextOverflow = async (page: import("@playwright/test").Page, selector: string) => {
+  const overflow = await page.locator(selector).evaluateAll((elements) =>
+    elements.map((element) => ({
+      text: element.textContent?.replace(/\s+/g, " ").trim(),
+      overflowX: element.scrollWidth - element.clientWidth,
+      overflowY: element.scrollHeight - element.clientHeight,
+    })),
+  );
+
+  for (const entry of overflow) {
+    expect(entry, entry.text).toEqual(
+      expect.objectContaining({
+        overflowX: expect.any(Number),
+        overflowY: expect.any(Number),
+      }),
+    );
+    expect(entry.overflowX, entry.text).toBeLessThanOrEqual(1);
+    expect(entry.overflowY, entry.text).toBeLessThanOrEqual(1);
+  }
+};
+
+const expectSameVisualRow = async (page: import("@playwright/test").Page, selector: string) => {
+  const boxes = await page.locator(selector).evaluateAll((elements) =>
+    elements.map((element) => {
+      const rect = element.getBoundingClientRect();
+      return { top: rect.top, bottom: rect.bottom };
+    }),
+  );
+  expect(boxes.length).toBeGreaterThan(1);
+  const first = boxes[0];
+  for (const box of boxes.slice(1)) {
+    expect(Math.abs(box.top - first.top)).toBeLessThanOrEqual(1);
+    expect(Math.abs(box.bottom - first.bottom)).toBeLessThanOrEqual(1);
+  }
+};
+
 const collectPageErrors = (page: import("@playwright/test").Page): string[] => {
   const pageErrors: string[] = [];
   page.on("pageerror", (error) => {
@@ -131,9 +167,42 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
 
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
   await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Prepare for Battle" })).toBeVisible();
+  await expect(page.getByText(/Step 1 - choose deck/i)).toBeVisible();
+  await expect(page.getByText(/Step 2 - game mode/i)).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-begin")).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-begin")).toContainText("Begin Match →");
+  await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("font-weight", "700");
+  await expect(page.getByTestId("authentic-pregame-begin")).toBeDisabled();
   await expect(page.getByTestId("authentic-pregame-seed")).toHaveValue("ep4-smoke");
+  await expect(page.getByTestId("authentic-pregame-copy-seed")).toHaveText("Copy seed");
   await expect(page.getByTestId("authentic-pregame-deck-option")).toHaveCount(2);
+  await expect(page.getByTestId("authentic-pregame-deck-option").first()).not.toContainText(/Lord Commander|Clear Weather/i);
+  await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("font-style", "italic");
+  await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("text-transform", "none");
+  await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-style", "italic");
+  await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-size", "12px");
+  await expect(page.locator(".authentic-pregame__builder-entry-text")).toHaveCSS("text-transform", "none");
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Casual" })).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-mode-option").filter({ hasText: "Ranked" })).toBeDisabled();
+  await expect(page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" })).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Instant Death" })).toBeDisabled();
+  await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" })).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo1" })).toBeDisabled();
+  await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Training" })).toBeDisabled();
+  await expect(page.locator(".authentic-pregame__control-grid")).not.toContainText(/two gems|one gem|two-gem|coming later/i);
+  await expect(page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" })).toHaveCSS("font-size", "10px");
+  await expect(page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" })).toHaveCSS("font-size", "10px");
+  await expectNoElementTextOverflow(page, ".authentic-pregame__segment-option");
+  await expectSameVisualRow(page, "[data-testid='authentic-pregame-round-option']");
+  await expectSameVisualRow(page, "[data-testid='authentic-pregame-format-option']");
+
+  await page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" }).click();
+  await expect(page.getByTestId("authentic-pregame-begin")).toBeDisabled();
+  await page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" }).click();
+  await expect(page.getByTestId("authentic-pregame-begin")).toBeEnabled();
 
   const leaderImage = page.getByTestId("authentic-leader-card-image").first();
   await expect(leaderImage).toBeVisible();
@@ -150,6 +219,12 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.locator(".authentic-match__seed")).toContainText(/Seed ep4-smoke/i);
   await expect(page.locator(".authentic-match__seed")).toContainText(/legal-heuristic-v0/i);
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
+  const matchLeaderBox = await page.getByTestId("authentic-leader-card").first().boundingBox();
+  expect(matchLeaderBox?.width ?? 0).toBeGreaterThanOrEqual(128);
+  expect(matchLeaderBox?.width ?? 0).toBeLessThan(132);
+  expect(matchLeaderBox?.height ?? 0).toBeGreaterThanOrEqual(219);
+  expect(matchLeaderBox?.height ?? 0).toBeLessThan(223);
+  await expect(page.getByTestId("authentic-leader-card-image").first()).toHaveCSS("object-fit", "contain");
   await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
   await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
 
@@ -195,6 +270,8 @@ test("authentic pre-game and direct match avoid horizontal overflow on a mobile 
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
+  await page.getByTestId("authentic-pregame-round-option").filter({ hasText: "Standard" }).click();
+  await page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" }).click();
   await page.getByTestId("authentic-pregame-begin").click();
 
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();

@@ -5,6 +5,7 @@ import {
   buildPreGameDeckOptions,
   buildPreGameFormatOptions,
   buildPreGameModeOptions,
+  buildPreGameRoundOptions,
   buildSetupConfig,
   getDefaultPreGameSelection,
   getSuggestedOpponentPresetId,
@@ -34,15 +35,32 @@ describe("authentic pre-game view model", () => {
       humanDeckPresetId: "current-northern-realms",
       opponentDeckPresetId: "current-nilfgaard",
       modeId: "human-vs-ai",
-      formatId: "standard",
+      roundId: "standard",
+      formatId: "best-of-3",
       aiPolicyId: ENGINE_AI_POLICY_ID,
     });
   });
 
   it("marks only implemented mode and format options as available", () => {
     expect(buildPreGameModeOptions().filter((mode) => mode.available).map((mode) => mode.id)).toEqual(["human-vs-ai"]);
+    expect(buildPreGameModeOptions().find((mode) => mode.id === "human-vs-ai")).toEqual(
+      expect.objectContaining({
+        name: "Casual",
+        note: ENGINE_AI_POLICY_ID,
+      }),
+    );
     expect(buildPreGameModeOptions().filter((mode) => !mode.available).every((mode) => mode.note === "coming later")).toBe(true);
-    expect(buildPreGameFormatOptions().filter((format) => format.available).map((format) => format.id)).toEqual(["standard"]);
+    expect(buildPreGameRoundOptions().filter((round) => round.available).map((round) => round.id)).toEqual(["standard"]);
+    expect(buildPreGameRoundOptions().filter((round) => !round.available).map((round) => round.id)).toEqual(["instant-death"]);
+    expect(buildPreGameFormatOptions().filter((format) => format.available).map((format) => format.id)).toEqual(["best-of-3"]);
+    expect(buildPreGameFormatOptions().filter((format) => !format.available).map((format) => format.id)).toEqual(["best-of-1", "training"]);
+  });
+
+  it("derives opponent descriptions from catalog deck and leader data", () => {
+    const options = buildPreGameDeckOptions();
+
+    expect(options[1].description).toContain("Current Nilfgaard");
+    expect(options[1].description).toContain("Emhyr var Emreis");
   });
 
   it("prefills, normalizes, and generates visible seeds", () => {
@@ -60,6 +78,8 @@ describe("authentic pre-game view model", () => {
     const config = buildSetupConfig({
       humanDeckPresetId: "current-nilfgaard",
       opponentDeckPresetId: "current-northern-realms",
+      roundId: "standard",
+      formatId: "best-of-3",
       seed: "ep4-config",
     });
 
@@ -67,7 +87,8 @@ describe("authentic pre-game view model", () => {
       humanDeckPresetId: "current-nilfgaard",
       opponentDeckPresetId: "current-northern-realms",
       modeId: "human-vs-ai",
-      formatId: "standard",
+      roundId: "standard",
+      formatId: "best-of-3",
       seed: "ep4-config",
       aiPolicyId: ENGINE_AI_POLICY_ID,
     });
