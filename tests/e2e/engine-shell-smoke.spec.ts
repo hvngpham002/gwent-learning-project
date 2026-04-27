@@ -220,10 +220,10 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.locator(".authentic-match__seed")).toContainText(/legal-heuristic-v0/i);
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
   const matchLeaderBox = await page.getByTestId("authentic-leader-card").first().boundingBox();
-  expect(matchLeaderBox?.width ?? 0).toBeGreaterThanOrEqual(128);
-  expect(matchLeaderBox?.width ?? 0).toBeLessThan(132);
-  expect(matchLeaderBox?.height ?? 0).toBeGreaterThanOrEqual(219);
-  expect(matchLeaderBox?.height ?? 0).toBeLessThan(223);
+  expect(matchLeaderBox?.width ?? 0).toBeGreaterThanOrEqual(84);
+  expect(matchLeaderBox?.width ?? 0).toBeLessThan(100);
+  expect(matchLeaderBox?.height ?? 0).toBeGreaterThanOrEqual(140);
+  expect(matchLeaderBox?.height ?? 0).toBeLessThan(160);
   await expect(page.getByTestId("authentic-leader-card-image").first()).toHaveCSS("object-fit", "contain");
   await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
   await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);

@@ -55,8 +55,8 @@ describe("AuthenticLeaderCard", () => {
     expect(css).toContain("object-fit: contain");
   });
 
-  it("uses the foundation large dimensions for match score-card leaders", () => {
-    const dimensions = dimensionsForSize("lg");
+  it("uses the foundation medium dimensions for match score-card leaders", () => {
+    const dimensions = dimensionsForSize("md");
     const markup = renderToStaticMarkup(
       <AuthenticLeaderCard
         size="match"

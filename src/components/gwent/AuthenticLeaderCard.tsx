@@ -22,7 +22,7 @@ interface AuthenticLeaderCardProps {
 const dimensionsBySize = {
   compact: dimensionsForSize("xs"),
   pregame: dimensionsForSize("sm"),
-  match: dimensionsForSize("lg"),
+  match: dimensionsForSize("md"),
 } as const;
 
 const AuthenticLeaderCard: React.FC<AuthenticLeaderCardProps> = ({ leader, size = "compact" }) => {
