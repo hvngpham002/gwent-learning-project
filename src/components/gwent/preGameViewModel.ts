@@ -8,7 +8,7 @@ import type { CatalogCardKind, CatalogDeckPreset, CatalogFaction, CatalogLeaderS
 import type { StartEngineMatchOptions } from "@/store/thunks/engineThunks";
 
 import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
-import { validateDeckPreset } from "./deckBuilderViewModel";
+import { deckNameKey, validateDeckPreset } from "./deckBuilderViewModel";
 import { getFactionDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
 
 export interface AuthenticMatchSetupConfig {
@@ -133,10 +133,37 @@ export const buildPreGameDeckOptions = (
     }
   });
 
-export const buildPreGameDeckOptionsWithLocal = (localDecks: readonly CatalogDeckPreset[] = []) => [
-  ...buildPreGameDeckOptions(currentDeckPresets, "catalog"),
-  ...buildPreGameDeckOptions(localDecks, "local"),
-];
+const findShadowedCatalogPresetId = (localDeck: CatalogDeckPreset): string | null => {
+  const seededSourceId = localDeck.presetId.startsWith("local-") ? localDeck.presetId.slice("local-".length) : "";
+  if (currentDeckPresets.some((preset) => preset.presetId === seededSourceId)) {
+    return seededSourceId;
+  }
+  return currentDeckPresets.find((preset) => deckNameKey(preset.name) === deckNameKey(localDeck.name))?.presetId ?? null;
+};
+
+export const buildPreGameDeckOptionsWithLocal = (localDecks: readonly CatalogDeckPreset[] = []) => {
+  const localByCatalogId = new Map<string, CatalogDeckPreset>();
+  const unmatchedLocalDecks: CatalogDeckPreset[] = [];
+
+  localDecks.forEach((localDeck) => {
+    const shadowedCatalogId = findShadowedCatalogPresetId(localDeck);
+    if (shadowedCatalogId && !localByCatalogId.has(shadowedCatalogId)) {
+      localByCatalogId.set(shadowedCatalogId, localDeck);
+    } else {
+      unmatchedLocalDecks.push(localDeck);
+    }
+  });
+
+  return [
+    ...currentDeckPresets.flatMap((preset) => {
+      const localReplacement = localByCatalogId.get(preset.presetId);
+      return localReplacement
+        ? buildPreGameDeckOptions([localReplacement], "local")
+        : buildPreGameDeckOptions([preset], "catalog");
+    }),
+    ...buildPreGameDeckOptions(unmatchedLocalDecks, "local"),
+  ];
+};
 
 export const buildPreGameModeOptions = (): readonly PreGameModeOptionViewModel[] => [
   {

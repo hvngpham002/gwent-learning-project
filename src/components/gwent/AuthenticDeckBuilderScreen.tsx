@@ -11,6 +11,7 @@ import {
   createEmptyDeckPreset,
   filterCardPool,
   leadersForFaction,
+  makeUniqueDeckName,
   removeCardFromDeck,
   validateDeckPreset,
 } from "./deckBuilderViewModel";
@@ -91,7 +92,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   };
 
   const createDeck = () => {
-    const deck = createEmptyDeckPreset(newLocalId());
+    const deck = createEmptyDeckPreset(newLocalId(), makeUniqueDeckName("New Deck", decks));
     updateDecks([...decks, deck], deck.presetId);
     setSelectedSourceId(null);
   };
@@ -151,7 +152,8 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
       setImportErrors(result.errors);
       return;
     }
-    updateDecks([...decks, result.preset], result.preset.presetId);
+    const preset = { ...result.preset, name: makeUniqueDeckName(result.preset.name, decks) };
+    updateDecks([...decks, preset], preset.presetId);
     setImportOpen(false);
     setImportText("");
     setImportErrors([]);

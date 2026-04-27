@@ -2,7 +2,7 @@ import { currentDeckPresets } from "@/data/catalog";
 import type { CatalogDeckPreset } from "@/game/catalog";
 
 import type { DeckBuilderStoreV1 } from "./deckBuilderTypes";
-import { cloneDeckPresets, normalizeDeckPreset } from "./deckBuilderViewModel";
+import { cloneDeckPresets, normalizeDeckCollection } from "./deckBuilderViewModel";
 
 export const AUTHENTIC_DECK_STORAGE_KEY = "gwent_authentic_decks_v1";
 export const AUTHENTIC_DECK_SCHEMA_VERSION = "authentic-decks-v1";
@@ -57,7 +57,7 @@ export const normalizeDeckStore = (
   decks: readonly CatalogDeckPreset[],
   activePresetId?: string,
 ): DeckBuilderStoreV1 => {
-  const normalizedDecks = decks.map(normalizeDeckPreset);
+  const normalizedDecks = normalizeDeckCollection(decks);
   return {
     schemaVersion: AUTHENTIC_DECK_SCHEMA_VERSION,
     decks: normalizedDecks,

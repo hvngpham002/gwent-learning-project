@@ -42,6 +42,41 @@ export const cloneDeckPresets = (
   decks: readonly CatalogDeckPreset[] = currentDeckPresets,
 ): CatalogDeckPreset[] => decks.map(cloneDeck);
 
+export const deckNameKey = (name: string): string => name.trim().replace(/\s+/g, " ").toLowerCase();
+
+export const makeUniqueDeckName = (
+  preferredName: string,
+  decks: readonly CatalogDeckPreset[],
+  ignorePresetId?: string,
+): string => {
+  const baseName = preferredName.trim().replace(/\s+/g, " ") || "New Deck";
+  const usedNames = new Set(
+    decks
+      .filter((deck) => deck.presetId !== ignorePresetId)
+      .map((deck) => deckNameKey(deck.name))
+      .filter((name) => name.length > 0),
+  );
+  let nextName = baseName;
+  let suffix = 2;
+  while (usedNames.has(deckNameKey(nextName))) {
+    nextName = `${baseName} ${suffix}`;
+    suffix += 1;
+  }
+  return nextName;
+};
+
+const makeUniquePresetId = (preferredId: string, usedIds: Set<string>, fallbackIndex: number): string => {
+  const baseId = preferredId.trim() || `local-deck-${fallbackIndex + 1}`;
+  let nextId = baseId;
+  let suffix = 2;
+  while (usedIds.has(nextId)) {
+    nextId = `${baseId}-${suffix}`;
+    suffix += 1;
+  }
+  usedIds.add(nextId);
+  return nextId;
+};
+
 export const normalizeDeckPreset = (deck: CatalogDeckPreset): CatalogDeckPreset => ({
   ...cloneDeck(deck),
   name: deck.name.trim(),
@@ -54,6 +89,18 @@ export const normalizeDeckPreset = (deck: CatalogDeckPreset): CatalogDeckPreset 
     .map((entry) => ({ sourceId: entry.sourceId, count: entry.count }))
     .sort((a, b) => a.sourceId.localeCompare(b.sourceId)),
 });
+
+export const normalizeDeckCollection = (decks: readonly CatalogDeckPreset[]): CatalogDeckPreset[] => {
+  const usedIds = new Set<string>();
+  const normalizedDecks: CatalogDeckPreset[] = [];
+  decks.forEach((deck, index) => {
+    const normalized = normalizeDeckPreset(deck);
+    const presetId = makeUniquePresetId(normalized.presetId, usedIds, index);
+    const name = makeUniqueDeckName(normalized.name, normalizedDecks);
+    normalizedDecks.push({ ...normalized, presetId, name });
+  });
+  return normalizedDecks;
+};
 
 export const catalogCardById = (
   cards: readonly CatalogCardSource[] = currentCatalogCards,

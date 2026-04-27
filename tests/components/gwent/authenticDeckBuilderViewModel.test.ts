@@ -12,6 +12,8 @@ import {
   buildDeckCardItems,
   createEmptyDeckPreset,
   filterCardPool,
+  makeUniqueDeckName,
+  normalizeDeckCollection,
   removeCardFromDeck,
   validateDeckPreset,
 } from "@/components/gwent/deckBuilderViewModel";
@@ -46,6 +48,18 @@ describe("authentic deck builder view model", () => {
     expect(withOne.mainDeck).toEqual([{ sourceId: "neutral.geralt-of-rivia", count: 1 }]);
     expect(withTwoAttempt.mainDeck).toEqual(withOne.mainDeck);
     expect(removeCardFromDeck(withOne, "neutral.geralt-of-rivia").mainDeck).toEqual([]);
+  });
+
+  it("creates unique local deck names and normalizes duplicate local identities", () => {
+    expect(makeUniqueDeckName("New Deck", [createEmptyDeckPreset("a", "New Deck")])).toBe("New Deck 2");
+
+    const normalized = normalizeDeckCollection([
+      { ...currentNorthernRealmsDeckPreset, presetId: "local-same", name: "Saved Deck" },
+      { ...currentNorthernRealmsDeckPreset, presetId: "local-same", name: " Saved   Deck " },
+    ]);
+
+    expect(normalized.map((deck) => deck.presetId)).toEqual(["local-same", "local-same-2"]);
+    expect(normalized.map((deck) => deck.name)).toEqual(["Saved Deck", "Saved Deck 2"]);
   });
 
   it("sorts cards in deck by strength, kind, then name", () => {

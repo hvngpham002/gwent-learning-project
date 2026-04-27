@@ -62,6 +62,24 @@ describe("authentic deck builder storage", () => {
     expect(loaded.store.activePresetId).toBe(currentNorthernRealmsDeckPreset.presetId);
   });
 
+  it("normalizes saved duplicate deck names and IDs to one editable instance per name", () => {
+    const storage = new MemoryStorage();
+    const store = {
+      schemaVersion: AUTHENTIC_DECK_SCHEMA_VERSION,
+      decks: [
+        { ...currentNorthernRealmsDeckPreset, presetId: "local-copy", name: "Current Northern Realms" },
+        { ...currentNorthernRealmsDeckPreset, presetId: "local-copy", name: " Current   Northern Realms " },
+      ],
+      activePresetId: "local-copy",
+    } as const;
+
+    expect(writeDeckBuilderStore(store, storage)).toEqual({ ok: true, warning: null });
+    const loaded = readDeckBuilderStore(storage);
+
+    expect(loaded.store.decks.map((deck) => deck.presetId)).toEqual(["local-copy", "local-copy-2"]);
+    expect(loaded.store.decks.map((deck) => deck.name)).toEqual(["Current Northern Realms", "Current Northern Realms 2"]);
+  });
+
   it("exports JSON that imports back to an equivalent preset", () => {
     const json = stringifyDeckExport(currentNorthernRealmsDeckPreset);
     const parsed = JSON.parse(json);

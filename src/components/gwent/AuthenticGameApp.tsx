@@ -7,8 +7,8 @@ import AuthenticDeckBuilderScreen from "./AuthenticDeckBuilderScreen";
 import AuthenticMatchScreen from "./AuthenticMatchScreen";
 import AuthenticPreGameScreen from "./AuthenticPreGameScreen";
 import AuthenticUiHarness from "./AuthenticUiHarness";
-import { readDeckBuilderStore, writeDeckBuilderStore } from "./deckBuilderStorage";
-import { createEmptyDeckPreset } from "./deckBuilderViewModel";
+import { normalizeDeckStore, readDeckBuilderStore, writeDeckBuilderStore } from "./deckBuilderStorage";
+import { createEmptyDeckPreset, makeUniqueDeckName } from "./deckBuilderViewModel";
 import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import { seedFromSearch, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 
@@ -24,24 +24,20 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
   const view = setupConfig ? "match" : (viewOverride ?? routeView);
 
   const updateDecks = (decks: readonly CatalogDeckPreset[], activePresetId?: string) => {
+    const normalizedStore = normalizeDeckStore(decks, activePresetId);
     setDeckStore({
-      store: {
-        schemaVersion: "authentic-decks-v1",
-        decks,
-        activePresetId,
-      },
+      store: normalizedStore,
       warning: null,
     });
   };
 
   const openDeckBuilder = (mode: "create" | "edit" = "edit") => {
     if (mode === "create") {
-      const deck = createEmptyDeckPreset(`local-${Date.now().toString(36)}-${deckStore.store.decks.length + 1}`);
-      const nextStore = {
-        schemaVersion: "authentic-decks-v1" as const,
-        decks: [...deckStore.store.decks, deck],
-        activePresetId: deck.presetId,
-      };
+      const deck = createEmptyDeckPreset(
+        `local-${Date.now().toString(36)}-${deckStore.store.decks.length + 1}`,
+        makeUniqueDeckName("New Deck", deckStore.store.decks),
+      );
+      const nextStore = normalizeDeckStore([...deckStore.store.decks, deck], deck.presetId);
       const write = writeDeckBuilderStore(nextStore);
       setDeckStore({ store: nextStore, warning: write.warning });
     }
