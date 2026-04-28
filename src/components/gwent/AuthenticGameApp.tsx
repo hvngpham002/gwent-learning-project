@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { getAuthenticUiViewFromSearch } from "@/appMode";
 import type { CatalogDeckPreset } from "@/game/catalog";
 
+import AuthenticComponentFoundationPage from "./AuthenticComponentFoundationPage";
 import AuthenticDeckBuilderScreen from "./AuthenticDeckBuilderScreen";
 import AuthenticMatchScreen from "./AuthenticMatchScreen";
 import AuthenticPreGameScreen from "./AuthenticPreGameScreen";
@@ -63,6 +64,14 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
     return (
       <div data-testid="authentic-game-app">
         <AuthenticUiHarness />
+      </div>
+    );
+  }
+
+  if (view === "ui-component-foundation") {
+    return (
+      <div data-testid="authentic-game-app">
+        <AuthenticComponentFoundationPage />
       </div>
     );
   }

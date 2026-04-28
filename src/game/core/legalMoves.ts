@@ -134,6 +134,7 @@ const getMulliganMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
 
   const hand = state.seats[seatId].hand;
   const sortedHand = sortedCardIds(hand);
+  const remainingMulligans = Math.max(0, 2 - state.seats[seatId].mulligansUsed);
   const moves: LegalMove[] = [
     {
       kind: "choose_mulligan",
@@ -141,29 +142,22 @@ const getMulliganMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
       seatId,
       label: "Keep hand",
       cardIds: [],
-      metadata: { cardCount: 0, maxCards: 2 },
+      metadata: { cardCount: 0, maxCards: 1 },
     },
   ];
 
-  sortedHand.forEach((firstCardId, firstIndex) => {
+  if (remainingMulligans <= 0) {
+    return moves;
+  }
+
+  sortedHand.forEach((firstCardId) => {
     moves.push({
       kind: "choose_mulligan",
       moveId: `mulligan:${seatId}:${firstCardId}`,
       seatId,
       label: "Mulligan 1 card",
       cardIds: [firstCardId],
-      metadata: { cardCount: 1, maxCards: 2 },
-    });
-
-    sortedHand.slice(firstIndex + 1).forEach((secondCardId) => {
-      moves.push({
-        kind: "choose_mulligan",
-        moveId: `mulligan:${seatId}:${firstCardId}+${secondCardId}`,
-        seatId,
-        label: "Mulligan 2 cards",
-        cardIds: [firstCardId, secondCardId],
-        metadata: { cardCount: 2, maxCards: 2 },
-      });
+      metadata: { cardCount: 1, maxCards: 1 },
     });
   });
 

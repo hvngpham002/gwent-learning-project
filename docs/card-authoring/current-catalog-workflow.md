@@ -1,6 +1,6 @@
 # Current Catalog Card Authoring Workflow
 
-This phase keeps legacy gameplay on `src/data/cards/*`, but new content should be added to the catalog source tree.
+The legacy default route still has legacy card-data paths, but the current engine/authentic product path consumes catalog source data. New content should be added to the catalog source tree.
 
 ## Files
 

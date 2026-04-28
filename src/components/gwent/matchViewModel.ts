@@ -1,4 +1,4 @@
-import type { CardInstanceId, MatchScoreBreakdown, PlayCardMove, RoundResult, SeatId } from "@/game/core";
+import type { CardInstanceId, ChooseMulliganMove, LegalMove, MatchScoreBreakdown, PlayCardMove, RoundResult, SeatId } from "@/game/core";
 import type { CatalogRow } from "@/game/catalog";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 
@@ -88,11 +88,53 @@ export interface RoundOverlayViewModel {
   readonly gameEndLabel: string | null;
 }
 
+export interface GameEndNavigationActionViewModel {
+  readonly key: "setup" | "close" | "rematch";
+  readonly label: string;
+  readonly kind: "ghost" | "primary";
+}
+
 const HUMAN_LABEL = "You";
 const AI_LABEL = "AI";
 
 const BOARD_ROW_ORDER: readonly CatalogRow[] = ["siege", "ranged", "close", "close", "ranged", "siege"];
 const DISCARD_GROUP_ORDER = ["hero", "close", "ranged", "siege", "special", "other"] as const;
+export const MULLIGAN_MAX_SELECTION = 1;
+
+export const sameCardSelection = (left: readonly CardInstanceId[], right: readonly CardInstanceId[]) => {
+  if (left.length !== right.length) {
+    return false;
+  }
+  const leftSorted = [...left].sort();
+  const rightSorted = [...right].sort();
+  return leftSorted.every((cardId, index) => cardId === rightSorted[index]);
+};
+
+export const findLegalMulliganMove = (
+  moves: readonly LegalMove[],
+  selectedCardIds: readonly CardInstanceId[],
+): ChooseMulliganMove | null =>
+  moves.find((move): move is ChooseMulliganMove => move.kind === "choose_mulligan" && sameCardSelection(move.cardIds, selectedCardIds)) ?? null;
+
+export const toggleMulliganSelection = ({
+  selectedCardIds,
+  cardId,
+  maxCards = MULLIGAN_MAX_SELECTION,
+}: {
+  readonly selectedCardIds: readonly CardInstanceId[];
+  readonly cardId: CardInstanceId;
+  readonly maxCards?: number;
+}): CardInstanceId[] => {
+  if (selectedCardIds.includes(cardId)) {
+    return selectedCardIds.filter((selectedId) => selectedId !== cardId);
+  }
+
+  if (selectedCardIds.length >= maxCards) {
+    return [...selectedCardIds];
+  }
+
+  return [...selectedCardIds, cardId];
+};
 
 export const engineCardToAuthenticCard = (card: EngineCardViewModel): AuthenticCardViewModel => ({
   sourceId: card.sourceId,
@@ -356,3 +398,10 @@ export const buildRoundOverlayViewModel = ({
     gameEndLabel: gameWinner ? `Game end: ${seatLabel(gameWinner, seatLabels)}` : null,
   };
 };
+
+export const buildGameEndNavigationActions = (canReturnToSetup: boolean): GameEndNavigationActionViewModel[] => [
+  canReturnToSetup
+    ? { key: "setup", label: "setup", kind: "ghost" }
+    : { key: "close", label: "close", kind: "ghost" },
+  { key: "rematch", label: "rematch", kind: "primary" },
+];

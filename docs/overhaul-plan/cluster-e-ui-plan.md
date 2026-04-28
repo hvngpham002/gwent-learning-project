@@ -21,7 +21,7 @@ The canonical visual direction is **Authentic Tactical Card Table**, also called
 Use these traits as product requirements:
 
 - warm parchment and ink palette;
-- `EB Garamond` for display/card text and `JetBrains Mono` for compact labels;
+- `EB Garamond` for the authentic body/display voice, including standard buttons and labels, with `JetBrains Mono` reserved for data/debug text such as seeds, imported JSON, runtime IDs, and compact numeric badges;
 - restrained ink-red accent, brass/gold secondary detail, faction color stripes;
 - small radius, paper/card texture feel, tactical table density;
 - match screen as the primary product surface, not a marketing landing page.
@@ -36,7 +36,7 @@ Do not port:
 - `prototype/tweaks-panel.jsx`;
 - browser-global wiring from `Gwent - Prototype.html`;
 - prototype stub card pools, leader arrays, or localStorage deck model as production data;
-- stale paths in the handoff README such as `src/data/cards/*` or legacy `gameSlice` rule paths.
+- any stale prototype-era paths that remain in older specs or examples; the handoff README now includes a production note pointing to current catalog, engine, adapter, and authentic component paths.
 
 Production code must use the current architecture:
 
@@ -204,7 +204,34 @@ Acceptance:
 - export/import round-trips catalog-compatible deck data;
 - unknown or unimplemented abilities are visible and cannot silently enter unsupported gameplay.
 
-### `cEp6`: Card Studio And Content Workflow
+### `cEp6`: Mulligan Screen And Product Navigation
+
+Goal: complete the current product loop before adding content-authoring tools.
+
+Scope:
+
+- add a dedicated authentic mulligan screen before the match table;
+- keep mulligan command flow legal-move-backed through the engine, using sequential one-card redraws up to two times per seat;
+- present AI mulligan choices after the human keep/confirm decision with hidden-safe backs/counts in the normal route and explicit debug-only reveal controls for animation inspection;
+- require player confirmation in the start-match modal before leaving mulligan for the match table;
+- tighten navigation between pre-game, deck builder, mulligan, match, round overlay, and match end;
+- clarify rematch/change-deck/setup exits;
+- clear stale engine adapter state when returning to setup from mulligan or match;
+- consolidate shared authentic buttons, modal buttons, alerts, toasts, and typography decisions into a reviewable UI component foundation route;
+- keep hidden AI information hidden on every product screen.
+
+Acceptance:
+
+- pre-game `begin match →`, deck-builder `play →`, direct match, and rematch show mulligan before the match table;
+- human mulligan dispatches exact engine commands only from legal moves, one selected current-hand card at a time;
+- AI mulligan presentation finishes before the start-match confirmation modal appears;
+- abandoning an in-progress match uses authentic confirmation UI and a later start begins from a fresh mulligan;
+- shared standard buttons use the seal-style proportions, lowercase labels, and documented hover treatment across product, debug, alert, toast, and modal surfaces;
+- the component foundation route documents tokens, typography, buttons, cards, alerts, modals, and game-surface primitives for review;
+- product routes remain opt-in and backward compatible;
+- browser smoke covers desktop/mobile mulligan and hidden-info safety.
+
+### `cEp7`: Card Studio And Content Workflow
 
 Goal: make future card population easier for the user.
 
@@ -221,7 +248,7 @@ Acceptance:
 - unknown ability IDs are blocked or clearly marked as unsupported;
 - docs explain where repo images and catalog data belong for permanent source commits.
 
-### `cEp7`: Product Promotion And Mode Expansion
+### `cEp8`: Product Promotion And Mode Expansion
 
 Goal: make the new UI the main game experience and open the path for broader modes.
 

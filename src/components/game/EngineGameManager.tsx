@@ -156,7 +156,7 @@ const EngineGameManager: React.FC = () => {
     (cardId: CardInstanceId) => {
       const nextSelection = selectedCardIds.includes(cardId)
         ? selectedCardIds.filter((selectedId) => selectedId !== cardId)
-        : selectedCardIds.length < 2
+        : selectedCardIds.length < 1
           ? [...selectedCardIds, cardId]
           : selectedCardIds;
       dispatch(engineSelectedCardIdsSet(nextSelection));
@@ -443,7 +443,7 @@ const EngineGameManager: React.FC = () => {
         {match?.phase === "mulligan" && !match.seats[humanSeat].mulliganComplete ? (
           <div className="engine-control-panel">
             <h2>Mulligan</h2>
-            <p>{selectedCardIds.length}/2 selected</p>
+            <p>{selectedCardIds.length}/1 selected</p>
             <button
               type="button"
               className="engine-action"

@@ -257,27 +257,28 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
       <div className="authentic-deck-builder">
         <header className="authentic-deck-builder__topbar">
           <div className="authentic-deck-builder__title">
-            <button type="button" className="authentic-deck-builder__ghost" onClick={onExit}>
+            <button type="button" className="authentic-button authentic-button--ghost authentic-deck-builder__ghost" onClick={onExit}>
               ← back
             </button>
             <h1>Deck Builder</h1>
           </div>
           <div className="authentic-deck-builder__actions">
-            <button type="button" onClick={createDeck}>+ new</button>
-            <button type="button" onClick={duplicateDeck}>duplicate</button>
+            <button type="button" className="authentic-button authentic-button--secondary" onClick={createDeck}>+ new</button>
+            <button type="button" className="authentic-button authentic-button--secondary" onClick={duplicateDeck}>duplicate</button>
             <button
               type="button"
+              className="authentic-button authentic-button--secondary"
               onClick={resetToCatalog}
               disabled={!catalogSource}
               title={catalogSource ? `Reset to ${catalogSource.name}` : "No catalog source"}
             >
               reset
             </button>
-            <button type="button" onClick={() => setImportOpen(true)}>import</button>
-            <button type="button" onClick={exportJson}>export</button>
-            <button type="button" onClick={copyJson} disabled={!navigator.clipboard}>copy</button>
-            <button type="button" onClick={saveNow}>save</button>
-            <button type="button" className="is-primary" disabled={!stats.playable} onClick={playCurrentDeck}>
+            <button type="button" className="authentic-button authentic-button--secondary" onClick={() => setImportOpen(true)}>import</button>
+            <button type="button" className="authentic-button authentic-button--secondary" onClick={exportJson}>export</button>
+            <button type="button" className="authentic-button authentic-button--secondary" onClick={copyJson} disabled={!navigator.clipboard}>copy</button>
+            <button type="button" className="authentic-button authentic-button--secondary" onClick={saveNow}>save</button>
+            <button type="button" className="authentic-button authentic-button--primary is-primary" disabled={!stats.playable} onClick={playCurrentDeck}>
               play →
             </button>
           </div>
@@ -292,7 +293,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                 <button
                   key={deck.presetId}
                   type="button"
-                  className={`authentic-deck-builder__deck-tile${deck.presetId === activeDeck.presetId ? " is-selected" : ""}`}
+                  className={`authentic-button authentic-button--tile authentic-deck-builder__deck-tile${deck.presetId === activeDeck.presetId ? " is-selected" : ""}`}
                   onClick={() => updateDecks(decks, deck.presetId)}
                 >
                   <strong>{deck.name || "Unnamed deck"}</strong>
@@ -301,7 +302,12 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                 </button>
               );
             })}
-            <button type="button" className="authentic-deck-builder__delete" disabled={decks.length <= 1} onClick={deleteDeck}>
+            <button
+              type="button"
+              className="authentic-button authentic-button--destructive authentic-deck-builder__delete"
+              disabled={decks.length <= 1}
+              onClick={deleteDeck}
+            >
               delete current
             </button>
           </aside>
@@ -327,7 +333,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                   <button
                     key={nextFilter}
                     type="button"
-                    className={filter === nextFilter ? "is-selected" : ""}
+                    className={`authentic-button authentic-button--choice authentic-button--compact${filter === nextFilter ? " is-selected" : ""}`}
                     onClick={() => setFilter(nextFilter)}
                   >
                     {nextFilter}
@@ -461,7 +467,12 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                     <span>{card.kind === "special" ? "·" : card.strength}</span>
                     <strong>{card.name}</strong>
                     <em>x{count}</em>
-                    <button type="button" onClick={() => removeCard(card.sourceId)} aria-label={`Remove ${card.name}`}>
+                    <button
+                      type="button"
+                      className="authentic-button authentic-button--icon authentic-button--ghost"
+                      onClick={() => removeCard(card.sourceId)}
+                      aria-label={`Remove ${card.name}`}
+                    >
                       -
                     </button>
                   </div>
@@ -496,9 +507,9 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               />
             ) : null}
             <div>
-              <button type="button" onClick={() => fileInputRef.current?.click()}>upload file...</button>
-              <button type="button" onClick={() => setImportOpen(false)}>cancel</button>
-              <button type="button" className="is-primary" onClick={importDeck}>import</button>
+              <button type="button" className="authentic-button authentic-button--secondary" onClick={() => fileInputRef.current?.click()}>upload file...</button>
+              <button type="button" className="authentic-button authentic-button--ghost" onClick={() => setImportOpen(false)}>cancel</button>
+              <button type="button" className="authentic-button authentic-button--primary is-primary" onClick={importDeck}>import</button>
             </div>
           </div>
         </div>

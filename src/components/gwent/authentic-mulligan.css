@@ -1,0 +1,544 @@
+.gwent-authentic.gwent-authentic--mulligan {
+  min-height: 100vh;
+  overflow-x: hidden;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.authentic-mulligan {
+  width: min(1200px, 100%);
+  min-height: min(780px, calc(100vh - 36px));
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  overflow: hidden;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 60px 60px, rgba(31, 26, 18, 0.06) 0 3px, transparent 3.5px),
+    linear-gradient(rgba(31, 26, 18, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 26, 18, 0.055) 1px, transparent 1px),
+    var(--bg);
+  background-size: 120px 120px;
+  box-shadow: 0 18px 70px rgba(31, 26, 18, 0.16);
+}
+
+.authentic-mulligan button:not(.authentic-button) {
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  background: var(--bg-2);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  padding: 7px 9px;
+  cursor: pointer;
+}
+
+.authentic-mulligan button:not(.authentic-button):disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.authentic-mulligan button:not(.authentic-button):not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.authentic-mulligan__topbar,
+.authentic-mulligan__actionbar {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-paper);
+}
+
+.authentic-mulligan__topbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 22px;
+  border-bottom: 2px solid var(--rule-strong);
+}
+
+.authentic-mulligan__top-actions {
+  min-width: 80px;
+}
+
+button.authentic-mulligan__ghost {
+  padding: 5px 12px;
+  white-space: nowrap;
+}
+
+.authentic-mulligan__title {
+  min-width: 0;
+  text-align: center;
+}
+
+.authentic-mulligan__title h1 {
+  margin: 0;
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.authentic-mulligan__title p,
+.authentic-mulligan__seed,
+.authentic-mulligan__seat-copy span,
+.authentic-mulligan__human-context span,
+.authentic-mulligan__seat-copy p,
+.authentic-mulligan__human-context p,
+.authentic-mulligan__actionbar p {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.authentic-mulligan__title p,
+.authentic-mulligan__seed,
+.authentic-mulligan__seat-copy span,
+.authentic-mulligan__human-context span,
+.authentic-mulligan__seat-copy p,
+.authentic-mulligan__human-context p,
+.authentic-mulligan__actionbar p {
+  color: var(--ink-3);
+}
+
+.authentic-mulligan__seed {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.authentic-mulligan__seed strong {
+  color: var(--ink-2);
+}
+
+.authentic-mulligan__opponent,
+.authentic-mulligan__hand-panel {
+  position: relative;
+  z-index: 1;
+  width: min(1000px, calc(100% - 48px));
+  margin: 18px auto 0;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background: var(--bg-paper);
+  box-shadow: var(--shadow);
+}
+
+.authentic-mulligan__opponent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 14px;
+}
+
+.authentic-mulligan__seat-copy,
+.authentic-mulligan__human-context > div {
+  min-width: 0;
+}
+
+.authentic-mulligan__seat-copy h2,
+.authentic-mulligan__human-context h2 {
+  margin: 2px 0 4px;
+  color: var(--ink);
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.authentic-mulligan__seat-copy p,
+.authentic-mulligan__human-context p,
+.authentic-mulligan__actionbar p {
+  margin: 0;
+  line-height: 1.35;
+}
+
+.authentic-mulligan__hidden-hand {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 0;
+}
+
+.authentic-mulligan__hidden-hand,
+.authentic-mulligan__cards {
+  scrollbar-width: none;
+}
+
+.authentic-mulligan__hidden-hand::-webkit-scrollbar,
+.authentic-mulligan__cards::-webkit-scrollbar {
+  display: none;
+}
+
+.authentic-mulligan__hidden-card-slot {
+  position: relative;
+  flex: 0 0 auto;
+  margin-left: -34px;
+  display: block;
+  transform-origin: center bottom;
+}
+
+.authentic-mulligan__hidden-card-slot:first-child {
+  margin-left: 0;
+}
+
+.authentic-mulligan__hidden-back {
+  display: block;
+}
+
+.authentic-mulligan__hidden-card-slot .authentic-card-back {
+  box-shadow: var(--shadow);
+}
+
+.authentic-mulligan__hidden-card-slot .authentic-card {
+  box-shadow: var(--shadow);
+}
+
+.authentic-mulligan__hidden-card-slot.is-ai-redrawn {
+  z-index: 3;
+}
+
+.authentic-mulligan__hidden-card-slot + .authentic-mulligan__hidden-card-slot.is-ai-redrawn {
+  margin-left: 12px;
+}
+
+.authentic-mulligan__hidden-card-slot.is-ai-redrawn + .authentic-mulligan__hidden-card-slot.is-ai-redrawn {
+  margin-left: -22px;
+}
+
+.authentic-mulligan__hidden-card-slot.is-ai-redrawn .authentic-mulligan__hidden-back--in {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.authentic-mulligan__hidden-hand.is-ai-keep-animating .authentic-mulligan__hidden-back--held {
+  animation: authentic-ai-keep-wave 900ms ease-out both;
+  animation-delay: calc(var(--authentic-ai-wave-index, 0) * 55ms);
+}
+
+.authentic-mulligan__hidden-hand.is-ai-mulligan-animating .authentic-mulligan__hidden-card-slot.is-ai-redrawn .authentic-mulligan__hidden-back--out {
+  animation: authentic-ai-slide-out 1700ms cubic-bezier(0.22, 0.72, 0.18, 1) both;
+}
+
+.authentic-mulligan__hidden-hand.is-ai-mulligan-animating .authentic-mulligan__hidden-card-slot.is-ai-redrawn .authentic-mulligan__hidden-back--in {
+  animation: authentic-ai-slide-in 1700ms cubic-bezier(0.22, 0.72, 0.18, 1) both;
+}
+
+.authentic-mulligan__hidden-hand.is-ai-mulligan-animating .authentic-mulligan__hidden-card-slot.is-ai-redrawn[data-ai-redraw-order="1"] .authentic-mulligan__hidden-back--out,
+.authentic-mulligan__hidden-hand.is-ai-mulligan-animating .authentic-mulligan__hidden-card-slot.is-ai-redrawn[data-ai-redraw-order="1"] .authentic-mulligan__hidden-back--in {
+  animation-delay: 1700ms;
+}
+
+@keyframes authentic-ai-keep-wave {
+  0% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+  42% {
+    transform: translateY(-9px) scale(1.035);
+    filter: brightness(1.08);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes authentic-ai-slide-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  46% {
+    opacity: 1;
+    transform: translateX(-34px) translateY(8px) rotate(-4deg) scale(0.98);
+  }
+  78% {
+    opacity: 0;
+    transform: translateX(-118px) translateY(34px) rotate(-12deg) scale(0.9);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-118px) translateY(34px) rotate(-12deg) scale(0.9);
+  }
+}
+
+@keyframes authentic-ai-slide-in {
+  0%,
+  42% {
+    opacity: 0;
+    transform: translateX(112px) translateY(-24px) rotate(9deg) scale(0.92);
+  }
+  66% {
+    opacity: 1;
+    transform: translateX(22px) translateY(-6px) rotate(3deg) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+
+.authentic-mulligan__hidden-hand strong {
+  flex: 0 0 auto;
+  min-width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  margin-left: 6px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg-paper);
+  font-family: var(--font-data);
+  font-size: 12px;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.authentic-mulligan__debug {
+  grid-column: 1 / -1;
+  min-width: 0;
+  border-top: 1px dotted var(--rule-strong);
+  padding-top: 8px;
+}
+
+.authentic-mulligan__debug span,
+.authentic-mulligan__debug p {
+  margin: 0;
+  font-family: var(--font-data);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.authentic-mulligan__debug span {
+  color: var(--accent);
+}
+
+.authentic-mulligan__debug p {
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.authentic-mulligan__thinking {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  margin-left: auto;
+  border: 1px solid rgba(120, 68, 28, 0.28);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: rgba(155, 62, 26, 0.08);
+  color: var(--accent);
+}
+
+.authentic-mulligan__thinking span {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.authentic-mulligan__thinking i {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.authentic-mulligan__hand-panel {
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+  padding: 16px;
+}
+
+.authentic-mulligan__human-context {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px dotted var(--rule-strong);
+}
+
+.authentic-mulligan__cards {
+  --authentic-mulligan-card-overlap: -10px;
+  --authentic-mulligan-selected-gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 28px 24px 20px;
+}
+
+.authentic-mulligan__card {
+  position: relative;
+  flex: 0 0 auto;
+  transition:
+    transform 180ms ease,
+    margin-left 180ms ease,
+    margin-right 180ms ease;
+}
+
+.authentic-mulligan__card + .authentic-mulligan__card {
+  margin-left: var(--authentic-mulligan-card-overlap);
+}
+
+.authentic-mulligan__card + .authentic-mulligan__card.is-selected,
+.authentic-mulligan__card.is-selected + .authentic-mulligan__card {
+  margin-left: var(--authentic-mulligan-selected-gap);
+}
+
+.authentic-mulligan__card.is-selected {
+  z-index: 5;
+  animation: authentic-mulligan-card-rise 180ms ease-out;
+}
+
+.authentic-mulligan__card.is-selected .authentic-card {
+  transform: translateY(-14px) scale(1.03);
+}
+
+.authentic-mulligan__card.is-human-redrawn {
+  z-index: 6;
+}
+
+.authentic-mulligan__human-swap {
+  position: relative;
+  display: block;
+}
+
+.authentic-mulligan__human-swap-card {
+  display: block;
+}
+
+.authentic-mulligan__human-swap-card--in {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: authentic-ai-slide-in 1250ms cubic-bezier(0.22, 0.72, 0.18, 1) both;
+}
+
+.authentic-mulligan__human-swap-card--out {
+  animation: authentic-ai-slide-out 1250ms cubic-bezier(0.22, 0.72, 0.18, 1) both;
+}
+
+@keyframes authentic-mulligan-card-rise {
+  from {
+    transform: translateY(0) scale(0.98);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.authentic-mulligan__actionbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 14px 28px;
+  border-top: 2px solid var(--rule-strong);
+}
+
+.gwent-authentic .authentic-mulligan__actionbar button {
+  min-width: 0;
+}
+
+.gwent-authentic .authentic-mulligan__actionbar button[data-presentation-locked="true"]:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+@media (max-width: 720px) {
+  .gwent-authentic.gwent-authentic--mulligan {
+    padding: 10px;
+  }
+
+  .authentic-mulligan {
+    min-height: calc(100vh - 20px);
+  }
+
+  .authentic-mulligan__topbar {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 10px 14px;
+  }
+
+  .authentic-mulligan__top-actions {
+    min-width: 0;
+  }
+
+  .authentic-mulligan__seed {
+    align-items: center;
+  }
+
+  .authentic-mulligan__opponent,
+  .authentic-mulligan__hand-panel {
+    width: min(100%, calc(100% - 20px));
+    margin-top: 10px;
+  }
+
+  .authentic-mulligan__opponent {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .authentic-mulligan__hidden-hand {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .authentic-mulligan__cards {
+    --authentic-mulligan-card-overlap: -22px;
+    --authentic-mulligan-selected-gap: 10px;
+    justify-content: flex-start;
+    padding: 18px 10px 16px;
+  }
+
+  .authentic-mulligan__actionbar {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 10px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+
+  .authentic-mulligan__actionbar button {
+    width: 100%;
+    min-width: 0;
+  }
+}

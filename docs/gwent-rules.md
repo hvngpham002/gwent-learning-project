@@ -151,7 +151,7 @@ All card effects **must be applied if possible** when played — you cannot "cho
 
 1. **Coin flip** to determine the first player. Some Leader or Faction abilities may override this (notably Scoia'tael — see §11).
 2. Each player shuffles their deck and **draws 10 cards**. This hand will be used for the **entire game** (across up to 3 rounds) — you do **not** re-draw at the start of later rounds (except via abilities that draw cards).
-3. **Mulligan step:** Each player may then discard **up to 2 cards** from their hand and draw the same number from their deck. This can be done one at a time. The discarded cards are **reshuffled back into the deck** after the mulligan.
+3. **Mulligan step:** Each player may then redraw **up to 2 cards**, one card at a time. For each redraw, choose 1 current hand card, draw its replacement from the deck, then shuffle the chosen card back into the deck. Because redraws resolve sequentially, the replacement card from the first redraw is part of the current hand and may be chosen for the second redraw.
 4. These 10 cards (after mulligan) are the player's hand for the rest of the game.
 
 > **Tip (from the book):** Most of the time you must spread your starting hand across 2 or 3 rounds. Passing is often the best strategy.

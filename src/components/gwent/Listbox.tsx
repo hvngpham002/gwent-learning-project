@@ -191,7 +191,7 @@ const CustomListbox: React.FC<ListboxProps> = ({
       <button
         ref={triggerRef}
         type="button"
-        className="authentic-listbox__trigger"
+        className="authentic-button authentic-button--field authentic-listbox__trigger"
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}

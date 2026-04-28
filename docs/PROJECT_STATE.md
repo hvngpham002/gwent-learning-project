@@ -2,9 +2,9 @@
 
 ## Last Updated
 
-- Date: 2026-04-27
-- Phase/spec: `handoff-alerts` round and match ledger popup follow-up
-- Latest relevant commit: handoff-alerts round ledger follow-up
+- Date: 2026-04-28
+- Phase/spec: `cEp6` final consolidation, mulligan screen, product navigation, and UI foundation docs audit
+- Latest relevant commit: pending cEp6 implementation
 
 ## Required Reading For Every Coding Instance
 
@@ -19,7 +19,7 @@
 
 - Legacy UI remains the default route.
 - Engine UI is opt-in through `?engine=1` or `VITE_ENGINE_UI=1`.
-- The opt-in authentic UI route `?engine=1&ui=authentic` now renders the product pre-game setup screen. Direct match remains available at `?engine=1&ui=authentic&view=match`, and the cEp1 gallery harness remains available at `?engine=1&ui=authentic&view=harness`.
+- The opt-in authentic UI route `?engine=1&ui=authentic` now renders the product pre-game setup screen. Direct match remains available at `?engine=1&ui=authentic&view=match`, the cEp1 gallery harness remains available at `?engine=1&ui=authentic&view=harness`, and the component review foundation is available at `?engine=1&ui=authentic&view=ui-component-foundation`.
 - The pure engine under `src/game/core/` owns rules, legal moves, scoring, prompts, command transactions, round resolution, and game end.
 - The Redux engine adapter stores `MatchState`, status/locks, command history, event logs, adapter errors, and UI-only selection while dispatching engine commands.
 - Catalog and deck preset data under `src/game/catalog/` and `src/data/catalog/` define card, leader, faction, ability metadata, and current playable presets.
@@ -57,6 +57,7 @@
 | `cEp4.5` | Cluster E / pre-game visual fidelity follow-up | `audit/reports/2026-04-26-cEp4.5-report.md` | Tightened the product pre-game screen toward the handoff table composition, added catalog-derived opponent descriptions, kept future modes/formats disabled, used shared small pre-game leader thumbnails, and resized match score-card leaders to the foundation medium card dimensions on desktop. |
 | `cEp5` | Cluster E / catalog-backed deck builder v1 | `audit/reports/2026-04-27-cEp5-report.md` | Added the authentic deck-builder route, catalog-backed local deck editing, validation, localStorage persistence, import/export/copy JSON, pre-game local deck selection, and Play-from-builder into the engine-backed authentic match screen. |
 | `cEp5.1` | Cluster E / deck builder composition and identity polish | `audit/reports/2026-04-27-cEp5.1-report.md` | Added local deck ID/name normalization, explicit faction selection and confirmed faction changes, disabled add states for hard composition caps, Duplicate, Reset to catalog, and import conflict notices. |
+| `cEp6` | Cluster E / mulligan screen and product navigation | `audit/reports/2026-04-27-cEp6-report.md` | Added the dedicated authentic mulligan screen, legal-move-backed mulligan confirmation, hidden-safe AI mulligan presentation, explicit setup/rematch navigation, abandon-match confirmation, and product-flow documentation. |
 | `cWp0` | Workflow hardening inserted before continuing Cluster D | `audit/reports/2026-04-25-cWp0-report.md` | Added living state docs, agent instructions, stable plan path, CI workflow, checks, and versioning policy. |
 
 ## Current Cluster D Status
@@ -86,9 +87,10 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - production Direction A tokens continue to load via `src/styles/gwent-tokens.css`, scoped under a `.gwent-authentic` wrapper so the legacy UI is unaffected;
 - `/?engine=1&ui=authentic` and `/?engine=1&ui=authentic&view=pregame` now mount the product pre-game setup screen, backed by current catalog deck presets and deterministic seed controls;
 - `/?engine=1&ui=authentic&view=deck-builder` opens the catalog-backed authentic deck builder, and the pre-game deck-builder controls now navigate there in-app;
-- `/?engine=1&ui=authentic&view=match` remains the direct-match development/smoke route and starts the default Northern Realms vs Nilfgaard engine match from the URL seed;
+- `/?engine=1&ui=authentic&view=match` remains the direct-match development/smoke route and starts the default Northern Realms vs Nilfgaard engine match from the URL seed, but now shows the dedicated mulligan screen before the match table;
 - `/?engine=1&ui=authentic&view=harness` keeps the cEp1 `AuthenticUiHarness` available for card foundation review;
-- `AuthenticGameApp` owns the small authentic route layer and passes an explicit serializable setup config from pre-game into `AuthenticMatchScreen` without requiring URL edits;
+- `/?engine=1&ui=authentic&view=ui-component-foundation` opens a consolidated component foundation review page covering tokens, audited typography/font stacks, button variants, selection controls, form controls, cards, leaders, backs, alerts, toasts, handoff modals, and game-surface patterns so UI decisions can be finalized in one place;
+- `AuthenticGameApp` owns the small authentic route layer and passes an explicit serializable setup config from pre-game or deck-builder `play →` into the engine-backed authentic match flow without requiring URL edits;
 - `AuthenticGameApp` also owns browser-local deck state for the authentic flow; local editable decks are loaded from `gwent_authentic_decks_v1`, seeded from catalog preset copies when absent, and can be passed as inline `CatalogDeckPreset` objects to `startEngineMatch`;
 - the deck builder uses `currentCatalogCards`, `currentCatalogLeaders`, and `CatalogDeckPreset` data only; it supports create, rename, save, delete, search/filter, leader selection, add/remove within `deckLimit`, export, clipboard copy, paste/file import, validation, and Play-from-builder;
 - shared authentic alert primitives now live under `src/components/gwent/alert/`, with ledger and seal variants, severity sigils, action buttons, and toast support adapted from `handoff-alerts/`;
@@ -105,15 +107,22 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - pre-game now lists valid local decks in addition to current catalog presets, marks invalid local decks disabled with the validation reason, and starts selected local decks by passing an inline custom human deck preset rather than adding it to `currentDeckPresets`;
 - pre-game deck selection uses source-prefixed UI option IDs, such as `catalog:current-northern-realms` and `local:current-northern-realms`, so imported or older browser-local decks that reuse a catalog preset ID cannot select both tiles or accidentally substitute a local deck when the catalog tile is chosen;
 - deck-builder import now protects built-in catalog preset IDs as reserved IDs when assigning duplicate imported preset IDs, reducing future catalog/local collisions in browser-local storage;
-- pre-game exposes separate Step 1 actions for `+ create deck...` and `edit decks ->`; Create opens the deck builder with a new empty local deck selected, while Edit opens the existing saved-deck list;
+- pre-game exposes separate Step 1 actions for `+ create deck...` and `edit decks →`; Create opens the deck builder with a new empty local deck selected, while Edit opens the existing saved-deck list;
 - local deck storage normalizes duplicate local preset IDs and duplicate local deck names, new/imported decks receive unique names, and pre-game replaces a catalog option with its editable local copy instead of showing two same-name deck instances;
 - the pre-game screen now uses a centered 1200-ish by 780-ish tactical table surface with a restrained parchment grid flourish, strong paper top and bottom bars, two balanced setup panels, prototype-style deck tiles, `Casual` as the visible label for the implemented Human vs AI mode, disabled Ranked/Training/Seed Suite tiles, catalog-derived opponent descriptions, auto-selected title-only `Standard` Round and `Bo3` Format selectors, a seed control with compact lowercase `copy` button, and a bottom summary/action bar;
 - `startEngineMatch` remains backward compatible with no options and can now start from explicit human/opponent catalog deck preset IDs while deriving seat factions from those presets;
 - the enabled product mode is Human vs AI with `legal-heuristic-v0`; local PvP, AI-vs-AI product mode, ranked, Bo1, and training controls are disabled as future work;
-- selected or generated seeds are visible before Begin Match and in the match top bar after transition;
-- `src/components/gwent/matchViewModel.ts` maps engine adapter selectors into hidden-safe product UI shapes for authentic cards, seat summaries, board row order, public card lookup, and row legal target detection;
+- selected or generated seeds are visible before `begin match →`, on the mulligan screen, and in the match top bar after transition;
+- `src/components/gwent/AuthenticMulliganScreen.tsx` owns the product mulligan surface for authentic matches. It renders the human hand from `selectEngineHumanHand` with medium authentic cards, shows medium leader cards, represents AI hand as one card back per hidden card plus count text only, reads legal `choose_mulligan` moves from `selectEngineLegalMovesForHuman`, and confirms only by dispatching the exact engine `ChooseMulligan` command for the selected legal move;
+- engine mulligan now resolves sequentially: each `ChooseMulligan` command redraws either zero cards to keep/end, or one current hand card. Each seat can use up to two one-card redraws, and the replacement from the first redraw is eligible for the second redraw;
+- after a human one-card mulligan command applies, the mulligan surface briefly animates the selected card sliding out and the replacement card sliding into the hand before allowing the next mulligan choice; the visual lock does not dim mulligan hand cards, so first and second redraw presentations keep stable card opacity, and the hand strip hides scrollbars/vertical overflow while cards slide;
+- after the human finishes mulligan, `AuthenticMatchScreen` shows a short AI-choosing indicator before dispatching the AI's legal `ChooseMulligan` command. When the AI completes mulligan, the screen stays mounted to animate hidden AI back slots and then opens the handoff wax-seal `Start the match?` modal before the match table appears. The modal supports `review hand`, which dismisses the dialog and leaves the mulligan screen available; the footer `start match` action reopens that same modal instead of entering the match directly. The default non-debug presentation uses the same polished AI mulligan timing as the debug route while rendering backs/counts only. It is keyed from the applied AI redraw batch, plays a hidden-back wave for zero-card AI keeps, freezes the pre-AI hand during sequential AI choices so drawn cards do not blink in before their reveal, removes selected AI cards from their original frozen slots before reserving the right-side swap slots, spreads the hidden backs with lighter overlap, anchors selected AI redraw slots on the right with a separation gap that pushes held backs left, slides selected hidden backs out while replacement backs slide in one card at a time for sequential AI redraws, and returns the hand to static backs for review. It does not expose AI card identities in the default route, and only gates subsequent AI UI dispatch while the visual finishes and the player acknowledges the transition;
+- `src/styles/authentic-buttons.css` and `src/components/gwent/AuthenticButton.tsx` now define the shared authentic button contract, documented in `docs/ui/authentic-button-style-guide.md`. Standard buttons across normal and debug authentic flows use `authentic-button` variants for primary, secondary, ghost, destructive, tile, choice, field, and icon roles, with alerts, toasts, handoff modals, and the component foundation page consuming the same shared button component. Primary, secondary, ghost, destructive, and flow actions all share the seal-style button proportions; `flow` is now semantic and does not widen buttons. Shared standard buttons enforce lowercase labels visually, product-flow labels use the real right-arrow glyph `→`, and spatial card/board/pile controls are explicitly treated as exceptions. Primary product flow buttons keep the requested orange-filled, white-text treatment with a transparent orange-text hover state and black hover border. Handoff modals keep a transparent fixed shell so `Start the match?` and `Return to setup?` appear as popups over the current screen instead of painting a full parchment page. Returning to setup from an active mulligan or match confirms through the handoff modal and clears the engine adapter so the next `begin match →` starts at a fresh mulligan instead of seeing prior command history;
+- the component foundation page now documents the platform font audit and guideline: authentic UI defaults to EB Garamond via `--font-body`, reserves `--font-display` for titles, names, and standard buttons, aliases JetBrains Mono behind `--font-data` for seeds, debug text, imported JSON, technical IDs, and compact numeric card badges, and keeps `Inter, sans-serif` isolated to the legacy route. Standard buttons, modals, listboxes, toasts, pre-game, deck-builder, mulligan, match, leader, and foundation labels now use normal EB Garamond by default instead of mixing mono labels with display italics. The Google Fonts import includes the EB Garamond and JetBrains Mono weights used by current CSS rather than relying on browser-synthesized bold/italic weights;
+- temporary mulligan animation debugging is available through `debugAiMulligan=1`, which reveals AI hand cards and debug decision text. `debugAiMulliganCount=0` forces a legal zero-card AI keep so the hidden-back wave can be inspected, `debugAiMulliganCount=1` forces a legal one-card AI redraw, and `debugAiMulliganCount=2` spends both AI redraws sequentially. This is an explicit debug exception and is not part of the hidden-info-safe product view;
+- `src/components/gwent/matchViewModel.ts` maps engine adapter selectors into hidden-safe product UI shapes for authentic cards, seat summaries, board row order, public card lookup, row legal target detection, and pure mulligan selection helpers;
 - the match table provides the V1 handoff layout: top bar, score/pile/weather left rail, six-row tactical board, hand strip, right-side inspector, actions, prompt panel, round status, and battle log;
-- human mulligan, playable hand card selection, legal target action buttons, clickable legal board-row targets, implemented leader moves, pass, round resolution, and game-end summary are all driven by engine legal moves/commands;
+- playable hand card selection, legal target action buttons, clickable legal board-row targets, implemented leader moves, pass, round resolution, and game-end summary are all driven by engine legal moves/commands. The match table no longer exposes normal mulligan controls because cEp6 moved that phase to the dedicated screen;
 - AI hand and deck identities remain hidden: the authentic match renders AI hand/deck as counts and backs only, and activity summaries use public card lookup so hidden AI plays fall back to safe labels;
 - `src/components/gwent/displayMetadata.ts` exposes deterministic faction, row, ability, leader-ability, and card-kind display metadata with documented fallbacks for unknown ids;
 - `src/components/gwent/AuthenticCard.tsx` and `AuthenticCardBack.tsx` render current catalog cards through a UI view model with image-failure fallback to a deterministic `SvgCardArt` placeholder;
@@ -124,8 +133,8 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - `AuthenticCardBack` uses faction default back images such as `public/images/northern_realms/default-northern_realms.png`, stretches those backs to fit, and still supports override candidates under `public/images/card-backs/`;
 - `src/appMode.ts` now separates the authentic route variant from the authentic `pregame`/`match`/`harness` view flag without disturbing `/` or `?engine=1`;
 - the forbidden-imports check now scans `src/components/gwent/` so the new product UI path stays free of legacy rule helpers and AI;
-- unit and component tests cover the route helper, display metadata, card view model, and authentic match view-model helpers;
-- the Playwright Chromium smoke covers the diagnostic shell, authentic harness, authentic pre-game, pre-game-to-match transition, direct match route, leader image containment, and desktop/mobile overflow, including mulligan, card play, AI response, pass, and hidden-info leak checks.
+- unit and component tests cover the route helper, display metadata, card view model, and authentic match/mulligan view-model helpers;
+- the Playwright Chromium smoke covers the diagnostic shell, authentic harness, component foundation page, authentic pre-game, pre-game-to-mulligan-to-AI-presentation-to-match transition, deck-builder `play →` to mulligan, direct match to mulligan, handoff start-match/return-to-setup modals, return-to-setup fresh-restart behavior, leader image containment, desktop/mobile overflow, abandon-match confirmation, card play, AI response, pass, and hidden-info leak checks.
 - the cEp2 review fixed a pre-existing Medic/Spy rule regression: when Medic revives a Spy, the Spy now lands on the opponent board, remains controlled by the reviving player, and resolves Spy draw for that player per `docs/gwent-rules.md` section 17.2/17.3.
 
 The authentic match table now includes the cEp3 product interaction layer:
@@ -144,7 +153,7 @@ The authentic match table is still not the full product game shell: Card Studio,
 
 Cluster E is now the product-facing UI track, integrated in `docs/overhaul-plan/cluster-e-ui-plan.md`.
 
-The selected UI is the `docs/ui-handoff/` Authentic Tactical Card Table handoff: parchment-and-ink styling, EB Garamond display text, JetBrains Mono labels, faction-striped cards, dense tactical rows, pre-game setup, deck builder, match table, discard browser, prompts, and round-end overlay.
+The selected UI is the `docs/ui-handoff/` Authentic Tactical Card Table handoff: parchment-and-ink styling, EB Garamond body/display text, JetBrains Mono data/debug text, faction-striped cards, dense tactical rows, pre-game setup, deck builder, match table, discard browser, prompts, and round-end overlay.
 
 The handoff is a design source, not a logic source. Cluster E implementations must not port `prototype/match-engine.jsx`, `prototype/tweaks-panel.jsx`, browser-global prototype wiring, stub card pools, or stale legacy code paths. Production UI must consume current catalog data, engine legal moves, engine prompts, Redux engine adapter selectors, and AI policies.
 
@@ -155,12 +164,14 @@ Recommended Cluster E sequence:
 - `cEp3`: product match interactions, prompts, discard browser, and round overlay;
 - `cEp4`: pre-game setup and match configuration;
 - `cEp5`: catalog-backed deck builder v1;
-- `cEp6`: Card Studio and content workflow;
-- `cEp7`: promote product UI and expand modes when coverage is ready.
+- `cEp6`: dedicated mulligan screen and product navigation cleanup;
+- `cEp7`: Card Studio and content workflow;
+- `cEp8`: promote product UI and expand modes when coverage is ready.
 
-Active Cluster E spec:
+Latest Cluster E implementation:
 
-- `docs/spec/2026-04-27-cEp5.1-specs.md` has been implemented. cEp6 should scope Card Studio and content workflow next.
+- `docs/spec/2026-04-27-cEp6-specs.md` has been implemented. Card Studio/content workflow remains deferred to cEp7.
+- Final cEp6 documentation consolidation has aligned `docs/spec/2026-04-27-cEp6-specs.md`, `docs/spec/2026-04-27-cEp5-specs.md`, `docs/overhaul-plan/cluster-e-ui-plan.md`, `docs/ui-handoff/README.md`, `docs/card-authoring/current-catalog-workflow.md`, `docs/ui/authentic-product-flow.md`, `docs/ui/authentic-ui-foundation.md`, `docs/ui/authentic-button-style-guide.md`, `docs/testing/browser-smoke.md`, and `audit/reports/2026-04-27-cEp6-report.md` with the implemented sequential mulligan, hidden-safe AI presentation, start/return modal, fresh setup restart, shared button, typography, and component foundation behavior. Older cEp5/cEp5.1/handoff-alert forward-looking report notes now explicitly mark their "Card Studio as cEp6" recommendation as superseded; this file and the cEp6 report are the current source of truth.
 
 ## Known Architectural Rules
 
@@ -185,7 +196,7 @@ Active Cluster E spec:
 - Mobile layout has wrapping safeguards for controls and target groups, but final spatial board UX remains out of scope.
 - Playwright browser binaries install outside the repository cache locally, so first-time local setup may require filesystem/network permission. GitHub Actions installs Chromium explicitly before running the browser gate.
 - Browser selectors are stable `data-testid` hooks on visible shell regions and controls, but they are still coupled to the current button-driven smoke surface and should be revised when the final spatial board UI lands.
-- Browser CI now runs an additional build plus Chromium smoke suite after `npm run ci`; runtime is still small for three tests, but browser install/download time can dominate cold CI runs.
+- Browser CI now runs an additional build plus Chromium smoke suite after `npm run ci`; runtime is still small for the current 13-test smoke suite, but browser install/download time can dominate cold CI runs.
 - Headless simulation has max-step protection, but non-termination is still a risk for future policies that repeatedly choose legal no-progress moves; keep bounded runs and status checks around every simulation entrypoint.
 - Prompt handling is covered by the cDp8 smoke seed through a Medic prompt, but broader prompt kinds and chained prompt-heavy games need future seed suites.
 - Simulation step logs are compact and avoid full observations/state snapshots, but `commandLog`, final state, and event logs can contain hidden card instance/source IDs for replay; they are not hidden-info-safe ML export data yet.
@@ -199,15 +210,15 @@ Active Cluster E spec:
 - `includeSystemActions: true` can expose simulation auto-resolver rows for diagnostics, but default policy datasets continue to exclude `resolve_round_end`.
 - JSONL parsing validates reconstructed datasets and reports malformed input as structured issues, but it is not a replay checker, schema library, compression format, Python bridge, or compatibility guarantee.
 - The UI handoff prototype is fixed-size and browser-global by design; Cluster E must adapt it into responsive React/TypeScript components and production styling.
-- The UI handoff README contains stale pre-overhaul paths. Use current catalog, engine, Redux adapter, AI, and simulation paths instead.
+- The UI handoff README has been annotated with current production paths. Treat the prototype files as visual references only; use current catalog, engine, Redux adapter, AI, and simulation paths for implementation work.
 - The authentic UI foundation harness is now a development view only. The pre-game route starts configured matches, the deck-builder route edits browser-local catalog decks, and the direct match route exercises engine commands, legal moves, prompts, and AI, but the product UI still lacks Card Studio, full drag-and-drop, and match animations.
-- The authentic harness depends on a Google Fonts `@import` for `EB Garamond` and `JetBrains Mono`. Production deployments without external font access fall back to the documented serif/monospace stacks.
+- The authentic harness depends on a Google Fonts `@import` for `EB Garamond` and `JetBrains Mono`, currently loading normal/italic EB Garamond 400/500/600/700 and JetBrains Mono 400/500/600/700. Production deployments without external font access fall back to the documented serif/monospace stacks. JetBrains Mono is intentionally opt-in through `--font-data` rather than a general label font. The legacy default route still references `Inter, sans-serif` from `src/styles/global.css` without importing Inter.
 - Card images are still incomplete by design. The `SvgCardArt` placeholder is a deterministic fallback, not a content workflow.
 - Faction-specific card-back files are not present in the repository yet. Until they are added under `public/images/card-backs/`, the authentic back component falls back to synthetic faction-colored sleeves.
 
 ## Next Recommended Step
 
- Proceed to cEp6 planning: Card Studio and content workflow.
+ Proceed to cEp7 planning: Card Studio and content workflow.
 
 ## Update Requirements
 

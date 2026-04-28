@@ -91,8 +91,8 @@ describe("engine AI policy", () => {
         moveId: "mulligan:seat_b:none",
         seatId: "seat_b",
         label: "Keep hand",
-        cardIds: ["c1", "c2"],
-        metadata: { cardCount: 2, maxCards: 2 },
+        cardIds: ["c1"],
+        metadata: { cardCount: 1, maxCards: 1 },
       },
       {
         kind: "play_card",
@@ -140,7 +140,7 @@ describe("engine AI policy", () => {
     ];
 
     expect(moves.map(commandFromLegalMove)).toEqual([
-      { type: "ChooseMulligan", seatId: "seat_b", cardIds: ["c1", "c2"] },
+      { type: "ChooseMulligan", seatId: "seat_b", cardIds: ["c1"] },
       { type: "PlayCard", seatId: "seat_b", cardId: "c3", target: { kind: "weather" } },
       { type: "Pass", seatId: "seat_b" },
       { type: "UseLeader", seatId: "seat_b", target: { kind: "none" } },

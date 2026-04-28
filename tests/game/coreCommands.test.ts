@@ -139,25 +139,46 @@ describe("core command transactions", () => {
     const result = execute(state, { type: "ChooseMulligan", seatId: "seat_a", cardIds: [] });
 
     expect(result.state.seats.seat_a.mulliganComplete).toBe(true);
+    expect(result.state.seats.seat_a.mulligansUsed).toBe(0);
     expect(result.state.seats.seat_b.mulliganComplete).toBe(false);
     expect(result.state.phase).toBe("mulligan");
     expect(state).toEqual(before);
   });
 
   it("mulligans selected cards after drawing replacements and preserves zone invariants", () => {
-    const state = createState("mulligan-two");
-    const selected = state.seats.seat_a.hand.slice(0, 2);
-    const firstDeckCards = state.seats.seat_a.deck.slice(0, 2);
+    const state = createState("mulligan-one");
+    const selected = state.seats.seat_a.hand.slice(0, 1);
+    const firstDeckCards = state.seats.seat_a.deck.slice(0, 1);
     const result = execute(state, { type: "ChooseMulligan", seatId: "seat_a", cardIds: selected });
 
     expect(firstDeckCards.every((cardId) => result.state.seats.seat_a.hand.includes(cardId))).toBe(true);
     expect(selected.every((cardId) => result.state.seats.seat_a.deck.includes(cardId))).toBe(true);
+    expect(result.state.seats.seat_a.mulligansUsed).toBe(1);
+    expect(result.state.seats.seat_a.mulliganComplete).toBe(false);
     expect(result.state.rng.state).not.toBe(state.rng.state);
     expect(result.events.map((event) => event.type)).toContain("mulligan_chosen");
     expect(result.events.find((event) => event.type === "card_moved" && event.cardId === selected[0])?.type).toBe(
       "card_moved",
     );
     assertNoDuplicateZones(result.state);
+  });
+
+  it("allows the replacement card to be mulliganed as the second redraw", () => {
+    const state = createState("mulligan-replacement");
+    const firstSelected = state.seats.seat_a.hand[0];
+    const replacement = state.seats.seat_a.deck[0];
+    const afterFirst = execute(state, { type: "ChooseMulligan", seatId: "seat_a", cardIds: [firstSelected] }).state;
+
+    expect(afterFirst.seats.seat_a.hand).toContain(replacement);
+    expect(afterFirst.seats.seat_a.mulliganComplete).toBe(false);
+
+    const afterSecond = execute(afterFirst, { type: "ChooseMulligan", seatId: "seat_a", cardIds: [replacement] });
+
+    expect(afterSecond.state.seats.seat_a.hand).not.toContain(replacement);
+    expect(afterSecond.state.seats.seat_a.deck).toContain(replacement);
+    expect(afterSecond.state.seats.seat_a.mulligansUsed).toBe(2);
+    expect(afterSecond.state.seats.seat_a.mulliganComplete).toBe(true);
+    assertNoDuplicateZones(afterSecond.state);
   });
 
   it("moves to playing after both seats complete mulligan and preserves setup currentTurn", () => {

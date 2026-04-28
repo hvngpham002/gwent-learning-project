@@ -7,7 +7,7 @@
     var(--bg);
   background-size: 120px 120px;
   color: var(--ink);
-  font-family: var(--font-display);
+  font-family: var(--font-body);
 }
 
 .authentic-match {
@@ -43,7 +43,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-size: 22px;
-  font-style: italic;
+  font-style: normal;
   font-weight: 600;
 }
 
@@ -56,10 +56,11 @@
 .authentic-pile strong,
 .authentic-pile > span,
 .authentic-board-row__label strong {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .authentic-match__title-block p,
@@ -75,6 +76,11 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 2px;
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .authentic-match__seed strong {
@@ -87,7 +93,6 @@
   padding-top: 8px;
   border-top: 1px dotted var(--rule);
   color: var(--ink-2);
-  letter-spacing: 0.08em;
   text-align: center;
 }
 
@@ -141,7 +146,7 @@
 .authentic-panel h3 {
   margin: 8px 0 2px;
   font-size: 16px;
-  font-style: italic;
+  font-style: normal;
 }
 
 .authentic-panel p {
@@ -151,25 +156,26 @@
   line-height: 1.35;
 }
 
-.authentic-match button {
+.authentic-match button:not(.authentic-button) {
   border: 1px solid var(--rule-strong);
   border-radius: 3px;
   background: var(--bg-2);
   color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: lowercase;
   padding: 7px 9px;
   cursor: pointer;
 }
 
-.authentic-match button:disabled {
+.authentic-match button:not(.authentic-button):disabled {
   cursor: not-allowed;
   opacity: 0.46;
 }
 
-.authentic-match button:not(:disabled):hover {
+.authentic-match button:not(.authentic-button):not(:disabled):hover {
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -205,7 +211,7 @@
 
 .authentic-score-card h2 {
   font-size: 18px;
-  font-style: italic;
+  font-style: normal;
 }
 
 .authentic-score-card__body p,
@@ -281,7 +287,7 @@ button.authentic-pile:hover {
 .authentic-weather__cards > span,
 .authentic-board-row__empty {
   color: var(--ink-3);
-  font-style: italic;
+  font-style: normal;
   font-size: 13px;
 }
 
@@ -443,10 +449,11 @@ button.authentic-board-card {
 
 .authentic-target-group h3 {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-3);
 }
 
@@ -454,8 +461,9 @@ button.authentic-board-card {
 .authentic-round-history span {
   padding-bottom: 6px;
   border-bottom: 1px dotted var(--rule);
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--ink-2);
 }
@@ -490,8 +498,9 @@ button.authentic-board-card {
 
 .authentic-medic-option em {
   color: var(--ink-3);
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 12px;
+  font-style: normal;
 }
 
 .authentic-modal {
@@ -531,10 +540,11 @@ button.authentic-board-card {
 .authentic-discard-browser header span,
 .authentic-round-overlay > span,
 .authentic-discard-group h3 {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-3);
 }
 
@@ -542,7 +552,7 @@ button.authentic-board-card {
 .authentic-round-overlay h2 {
   margin: 0;
   font-size: 26px;
-  font-style: italic;
+  font-style: normal;
 }
 
 .authentic-discard-group {
@@ -580,21 +590,14 @@ button.authentic-board-card {
   width: min(620px, 100%);
 }
 
-.authentic-round-ledger--game-end .authentic-alert__button--primary:not(:disabled):hover {
-  border-color: #4a1a08;
-  background: var(--accent);
-  color: #f0e2c0;
-  cursor: pointer;
-}
-
 .authentic-round-ledger__summary,
 .authentic-round-ledger__history-table {
   width: 100%;
   margin-top: 12px;
   border-collapse: collapse;
   color: var(--ink);
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: 12px;
   font-style: normal;
   font-variant-numeric: tabular-nums;
 }
@@ -637,11 +640,12 @@ button.authentic-board-card {
 
 .authentic-round-ledger__section-label {
   color: var(--ink-3);
-  font-family: var(--font-mono);
-  font-size: 9px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
   font-style: normal;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .authentic-round-ledger__standing {

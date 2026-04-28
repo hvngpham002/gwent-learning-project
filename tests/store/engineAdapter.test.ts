@@ -132,7 +132,8 @@ describe("engine Redux adapter", () => {
     store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_a", cardIds: selected }));
 
     const state = store.getState();
-    expect(state.engine.match?.seats.seat_a.mulliganComplete).toBe(true);
+    expect(state.engine.match?.seats.seat_a.mulligansUsed).toBe(1);
+    expect(state.engine.match?.seats.seat_a.mulliganComplete).toBe(false);
     expect(state.engine.commandHistory).toEqual([
       expect.objectContaining({
         sequence: 1,
@@ -199,14 +200,14 @@ describe("engine Redux adapter", () => {
   it("clears engine UI selection after a human mulligan command is applied", () => {
     const store = createTestStore();
     store.dispatch(startEngineMatch({ seed: "adapter-selection-clear" }));
-    const selected = store.getState().engine.match?.seats.seat_a.hand.slice(0, 2) ?? [];
+    const selected = store.getState().engine.match?.seats.seat_a.hand.slice(0, 1) ?? [];
 
     store.dispatch(engineSelectedCardIdsSet(selected));
     expect(store.getState().engine.selectedCardIds).toEqual(selected);
 
     store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_a", cardIds: selected }));
 
-    expect(store.getState().engine.match?.seats.seat_a.mulliganComplete).toBe(true);
+    expect(store.getState().engine.match?.seats.seat_a.mulligansUsed).toBe(1);
     expect(store.getState().engine.selectedCardIds).toEqual([]);
     expect(store.getState().engine.selectedCardId).toBeNull();
   });

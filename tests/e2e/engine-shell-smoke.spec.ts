@@ -2,9 +2,13 @@ import { expect, test } from "@playwright/test";
 
 const engineUrl = "/?engine=1&seed=dp6-smoke";
 const authenticPregameUrl = "/?engine=1&ui=authentic&seed=ep4-smoke";
+const authenticPregameRestartUrl = "/?engine=1&ui=authentic&seed=ep4-restart&debugAiMulligan=1&debugAiMulliganCount=0";
 const authenticDeckBuilderUrl = "/?engine=1&ui=authentic&view=deck-builder&seed=ep5-builder";
 const authenticDirectUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-direct";
+const authenticMulliganDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-debug&debugAiMulligan=1&debugAiMulliganCount=2";
+const authenticMulliganKeepDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-keep&debugAiMulligan=1&debugAiMulliganCount=0";
 const authenticHarnessUrl = "/?engine=1&ui=authentic&view=harness";
+const authenticComponentFoundationUrl = "/?engine=1&ui=authentic&view=ui-component-foundation";
 
 const visiblePageText = async (page: import("@playwright/test").Page) =>
   (await page.locator("body").innerText()).replace(/\s+/g, " ");
@@ -161,6 +165,84 @@ test("authentic UI harness avoids horizontal overflow on a mobile viewport", asy
   expect(pageErrors).toEqual([]);
 });
 
+test("authentic component foundation page mounts shared UI primitives", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto(authenticComponentFoundationUrl);
+
+  await expect(page.getByTestId("authentic-component-foundation")).toBeVisible();
+  await expect(page.getByTestId("authentic-foundation-buttons")).toBeVisible();
+  await expect(page.getByTestId("authentic-foundation-fonts")).toBeVisible();
+  await expect(page.getByTestId("authentic-foundation-forms")).toBeVisible();
+  await expect(page.getByTestId("authentic-foundation-cards")).toBeVisible();
+  await expect(page.getByTestId("authentic-foundation-alerts")).toBeVisible();
+  await expect(page.getByTestId("authentic-foundation-game-surfaces")).toBeVisible();
+  await expect(page.getByTestId("authentic-foundation-listbox")).toBeVisible();
+  await expect(page.getByRole("button", { name: "primary flow" })).toHaveCSS("background-color", "rgb(138, 58, 31)");
+  await expect(page.getByTestId("authentic-foundation-font-authentic-display")).toContainText("Round resolved");
+  await expect(page.getByTestId("authentic-foundation-font-authentic-display")).toHaveCSS(
+    "font-family",
+    /EB Garamond/,
+  );
+  await expect(page.getByTestId("authentic-foundation-font-authentic-display")).toHaveCSS("font-style", "normal");
+  await expect(page.getByTestId("authentic-foundation-font-authentic-mono")).toHaveCSS("font-family", /JetBrains Mono/);
+  await expect(page.getByTestId("authentic-foundation-font-legacy-body")).toHaveCSS("font-family", /Inter/);
+  await expect(page.getByTestId("authentic-foundation-fonts")).toContainText("Loaded Weights");
+  await expect(page.getByRole("button", { name: "primary flow" })).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.getByRole("button", { name: "primary flow" })).toHaveCSS("font-size", "13px");
+  await expect(page.getByRole("button", { name: "primary flow" })).toHaveCSS("font-style", "normal");
+  await expect(page.getByRole("button", { name: "primary flow" })).toHaveCSS("min-width", "0px");
+  await expect(page.getByRole("button", { name: "next round →" })).toHaveClass(/authentic-button--primary/);
+  await expect(page.getByRole("button", { name: "next round →" })).not.toHaveClass(/authentic-button--flow/);
+  await expect(page.getByRole("button", { name: "next round →" })).toHaveCSS("min-width", "0px");
+  await expect(page.getByRole("button", { name: "next round →" })).toHaveCSS("font-size", "13px");
+  await expect(page.getByRole("button", { name: "close" })).toHaveClass(/authentic-button--ghost/);
+  await expect(page.getByRole("button", { name: "cancel" })).toHaveClass(/authentic-button--ghost/);
+  await expect(page.getByRole("button", { name: "close" })).not.toHaveClass(/authentic-button--compact/);
+  await expect(page.getByRole("button", { name: "cancel" })).not.toHaveClass(/authentic-button--compact/);
+  await expect(page.getByRole("button", { name: "close" })).toHaveCSS("font-size", "13px");
+  await expect(page.getByRole("button", { name: "cancel" })).toHaveCSS("font-size", "13px");
+  const actionHeights = await Promise.all(
+    ["primary flow", "next round →", "close", "cancel", "delete"].map(async (name) => {
+      const box = await page.getByRole("button", { name }).boundingBox();
+      return box?.height ?? 0;
+    }),
+  );
+  const [primaryFlowHeight, nextRoundHeight, closeHeight, cancelHeight, deleteHeight] = actionHeights;
+  for (const height of [primaryFlowHeight, nextRoundHeight, closeHeight, deleteHeight]) {
+    expect(Math.abs(height - cancelHeight)).toBeLessThanOrEqual(2);
+  }
+
+  await page.getByTestId("authentic-foundation-toast-button").click();
+  await expect(page.getByTestId("authentic-toast")).toBeVisible();
+  await expect(page.getByLabel("dismiss notification")).toHaveClass(/authentic-button--icon/);
+  await page.getByLabel("dismiss notification").click();
+  await expect(page.getByTestId("authentic-toast")).toHaveCount(0);
+
+  await page.getByTestId("authentic-foundation-start-modal").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await expect(page.getByTestId("authentic-start-match-confirm")).toHaveClass(/authentic-button--primary/);
+  await page.getByTestId("authentic-start-match-review").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toHaveCount(0);
+
+  const foundationText = await visiblePageText(page);
+  expect(foundationText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  await expectNoHorizontalOverflow(page);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic component foundation page avoids horizontal overflow on mobile", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(authenticComponentFoundationUrl);
+
+  await expect(page.getByTestId("authentic-component-foundation")).toBeVisible();
+  await expect(page.getByTestId("authentic-foundation-buttons")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  expect(pageErrors).toEqual([]);
+});
+
 test("authentic pre-game starts a configured match without hidden leaks", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
@@ -172,19 +254,22 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByText(/Step 1 - choose deck/i)).toBeVisible();
   await expect(page.getByText(/Step 2 - game mode/i)).toBeVisible();
   await expect(page.getByTestId("authentic-pregame-begin")).toBeVisible();
-  await expect(page.getByTestId("authentic-pregame-begin")).toContainText("Begin Match →");
+  await expect(page.getByTestId("authentic-pregame-begin")).toContainText("begin match →");
+  await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("background-color", "rgb(138, 58, 31)");
   await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("font-size", "13px");
+  await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("min-width", "0px");
   await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("font-weight", "700");
   await expect(page.getByTestId("authentic-pregame-begin")).toBeEnabled();
   await expect(page.getByTestId("authentic-pregame-seed")).toHaveValue("ep4-smoke");
   await expect(page.getByTestId("authentic-pregame-copy-seed")).toHaveText("copy");
   expect(await page.getByTestId("authentic-pregame-deck-option").count()).toBeGreaterThanOrEqual(2);
   await expect(page.getByTestId("authentic-pregame-deck-option").first()).not.toContainText(/Lord Commander|Clear Weather/i);
-  await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("font-style", "italic");
+  await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("font-style", "normal");
   await expect(page.locator(".authentic-pregame__deck-copy strong").first()).toHaveCSS("text-transform", "none");
   await expect(page.getByTestId("authentic-pregame-create-deck")).toBeEnabled();
   await expect(page.getByTestId("authentic-pregame-edit-decks")).toBeEnabled();
-  await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-style", "italic");
+  await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-style", "normal");
   await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("font-size", "13px");
   await expect(page.getByTestId("authentic-pregame-create-deck").locator(".authentic-pregame__builder-entry-text")).toHaveCSS("text-transform", "none");
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
@@ -212,8 +297,89 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   expect(pregameText).toContain("legal-heuristic-v0");
   expect(pregameText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
 
+  await page.getByTestId("authentic-pregame-begin").hover();
+  await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("border-top-color", "rgb(0, 0, 0)");
+  await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("color", "rgb(138, 58, 31)");
+
   await page.getByTestId("authentic-pregame-begin").click();
 
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed ep4-smoke/i);
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/legal-heuristic-v0/i);
+  await expect(page.getByTestId("authentic-mulligan-ai")).toContainText(/hand \d+/i);
+  await expect(page.getByTestId("authentic-mulligan-ai").getByTestId("authentic-mulligan-card")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-mulligan-ai").getByTestId("authentic-card-back")).toHaveCount(10);
+  await expect(page.getByTestId("authentic-ai-mulligan-debug")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-ai-debug-card")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("keep hand");
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toBeEnabled();
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveCSS("background-color", "rgb(138, 58, 31)");
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveCSS("color", "rgb(255, 255, 255)");
+  await page.getByTestId("authentic-confirm-mulligan").hover();
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveCSS("border-top-color", "rgb(0, 0, 0)");
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveCSS("color", "rgb(138, 58, 31)");
+  const firstMulliganCard = page.getByTestId("authentic-mulligan-card").first();
+  await firstMulliganCard.click();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText(/1\/1 select: .+/);
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("confirm mulligan");
+  await firstMulliganCard.click();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("0/1 selected");
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("keep hand");
+  await page.getByTestId("authentic-mulligan-setup").click();
+  await expect(page.getByTestId("authentic-abandon-confirmation")).toBeVisible();
+  await page.getByRole("button", { name: "stay" }).click();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+
+  const mulliganText = await visiblePageText(page);
+  expect(mulliganText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
+  await firstMulliganCard.click();
+  await page.getByTestId("authentic-confirm-mulligan").click();
+
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("Redrawing 1 card");
+  await expect(page.locator('[data-human-mulligan-state="redrawn"]')).toHaveCount(1);
+  await expect(page.locator(".authentic-mulligan__cards")).toHaveCSS("overflow-y", "hidden");
+  await expect(page.locator(".authentic-mulligan__cards")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.locator(".authentic-mulligan__hand-panel .authentic-card.is-dimmed")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("keep hand");
+
+  await page.getByTestId("authentic-mulligan-card").first().click();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText(/1\/1 select: .+/);
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("Redrawing 1 card");
+  await expect(page.locator('[data-human-mulligan-state="redrawn"]')).toHaveCount(1);
+  await expect(page.locator(".authentic-mulligan__cards")).toHaveCSS("overflow-y", "hidden");
+  await expect(page.locator(".authentic-mulligan__cards")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.locator(".authentic-mulligan__hand-panel .authentic-card.is-dimmed")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-ai-mulligan-thinking")).toBeVisible();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("AI is choosing mulligans");
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("ai choosing");
+
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText(/AI keeps hand|AI redraws \d+ cards?/);
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await expect(page.locator(".authentic-modal-shell")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(page.getByTestId("authentic-start-match-review")).toHaveText("review hand");
+  await expect(page.getByTestId("authentic-start-match-confirm")).toContainText("start match →");
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("start match");
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("AI mulligan complete");
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveCSS("opacity", "1");
+  await expect(page.getByTestId("authentic-ai-mulligan-back")).toHaveCount(10);
+  await expect(page.getByTestId("authentic-ai-mulligan-debug")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-ai-debug-card")).toHaveCount(0);
+  const aiMulliganText = await visiblePageText(page);
+  expect(aiMulliganText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
+  await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
+  await page.getByTestId("authentic-start-match-review").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toHaveCount(0);
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
+  await page.getByTestId("authentic-start-match-confirm").click();
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
   await expect(page.getByTestId("engine-shell")).toHaveCount(0);
   await expect(page.locator(".authentic-match__seed")).toContainText(/Seed ep4-smoke/i);
@@ -227,6 +393,10 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-leader-card-image").first()).toHaveCSS("object-fit", "contain");
   await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
   await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
+  await page.getByRole("button", { name: "setup" }).click();
+  await expect(page.getByTestId("authentic-abandon-confirmation")).toBeVisible();
+  await expect(page.locator(".authentic-modal-shell")).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await page.getByRole("button", { name: "stay" }).click();
 
   await page.getByTestId("authentic-discard-trigger-ai").click();
   await expect(page.getByTestId("authentic-discard-browser")).toBeVisible();
@@ -237,7 +407,6 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-discard-browser")).toBeVisible();
   await page.getByTestId("authentic-discard-close").click();
 
-  await page.getByTestId("authentic-confirm-mulligan").click();
   await expect(page.getByTestId("authentic-human-hand")).toBeVisible();
 
   await page.locator(".authentic-hand__card.is-playable [data-testid='authentic-hand-card']").first().click();
@@ -258,6 +427,33 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
 
   const pageText = await visiblePageText(page);
   expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic return to setup discards the previous match before the next start", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto(authenticPregameRestartUrl);
+  await page.getByTestId("authentic-pregame-begin").click();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("keep hand");
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-start-match-confirm").click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+
+  await page.getByRole("button", { name: "setup" }).click();
+  await expect(page.getByTestId("authentic-abandon-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-confirm-abandon").click();
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toHaveCount(0);
+
+  await page.getByTestId("authentic-pregame-begin").click();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("keep hand");
+  await expect(page.getByTestId("authentic-ai-mulligan-thinking")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("0/1 selected");
   expect(pageErrors).toEqual([]);
 });
 
@@ -291,10 +487,10 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   await expect(page.getByRole("button", { name: "play →" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "duplicate" })).toBeVisible();
   await expect(page.getByRole("button", { name: "reset" })).toBeEnabled();
-  await expect(page.getByRole("button", { name: "← back" })).toHaveCSS("font-size", "11px");
+  await expect(page.getByRole("button", { name: "← back" })).toHaveCSS("font-size", "13px");
   await expect(page.getByRole("button", { name: "+ new" })).toHaveCSS("font-size", "13px");
-  await expect(page.getByRole("button", { name: "delete current" })).toHaveCSS("font-size", "11px");
-  await expect(page.getByRole("button", { name: "all", exact: true })).toHaveCSS("font-size", "13px");
+  await expect(page.getByRole("button", { name: "delete current" })).toHaveCSS("font-size", "13px");
+  await expect(page.getByRole("button", { name: "all", exact: true })).toHaveCSS("font-size", "11px");
 
   const total = page.getByTestId("authentic-deck-builder-total");
   const before = await total.innerText();
@@ -311,9 +507,15 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   await expect(total).toHaveText(before);
 
   await page.getByRole("button", { name: "play →" }).click();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed ep5-builder/i);
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/legal-heuristic-v0/i);
+  await expect(page.getByTestId("authentic-mulligan-ai")).toContainText(/hand \d+/i);
+  await expect(page.getByTestId("authentic-mulligan-ai").getByTestId("authentic-mulligan-card")).toHaveCount(0);
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-start-match-confirm").click();
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
-  await expect(page.locator(".authentic-match__seed")).toContainText(/Seed ep5-builder/i);
-  await expect(page.locator(".authentic-match__seed")).toContainText(/legal-heuristic-v0/i);
   await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
   await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
 
@@ -363,6 +565,45 @@ test("authentic deck builder disables special adds at the composition cap", asyn
   expect(pageErrors).toEqual([]);
 });
 
+test("authentic mulligan debug route reveals AI decision and forced redraw animation", async ({ page }) => {
+  await page.goto(authenticMulliganDebugUrl);
+
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-ai-mulligan-debug")).toContainText("debug AI mulligan: no decision yet");
+  await expect(page.getByTestId("authentic-ai-debug-card")).toHaveCount(10);
+
+  await page.getByTestId("authentic-confirm-mulligan").click();
+
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-ai-mulligan-thinking")).toBeVisible();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("AI is choosing mulligans");
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("AI redraws 2 cards");
+  await expect(page.getByTestId("authentic-ai-mulligan-debug")).toContainText(/debug AI mulligan: redraw .+/);
+  await expect(page.locator('[data-ai-mulligan-state="redrawn"]')).toHaveCount(2);
+  await expect(
+    page.locator('[data-ai-mulligan-state="redrawn"]').nth(1).locator(".authentic-mulligan__hidden-back--out"),
+  ).toHaveCSS("animation-delay", "1.7s");
+  await expect(page.locator(".authentic-mulligan__hidden-hand")).toHaveCSS("overflow-y", "hidden");
+  await expect(page.locator(".authentic-mulligan__hidden-hand")).toHaveCSS("scrollbar-width", "none");
+  expect(await page.getByTestId("authentic-ai-debug-card").count()).toBeGreaterThanOrEqual(10);
+
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 8000 });
+  await expect(page.getByTestId("authentic-start-match-confirm")).toContainText("start match →");
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("AI mulligan complete");
+  await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
+  await page.getByTestId("authentic-start-match-confirm").click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+
+  await page.goto(authenticMulliganKeepDebugUrl);
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("AI keeps hand");
+  await expect(page.locator('[data-ai-mulligan-state="redrawn"]')).toHaveCount(0);
+  await expect(page.locator(".authentic-mulligan__hidden-hand")).toHaveClass(/is-ai-keep-animating/);
+  await expect(page.locator(".authentic-mulligan__hidden-back--held").first()).toHaveCSS("animation-name", "authentic-ai-keep-wave");
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 8000 });
+});
+
 test("authentic pre-game, deck builder, and direct match avoid horizontal overflow on a mobile viewport", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
@@ -381,10 +622,12 @@ test("authentic pre-game, deck builder, and direct match avoid horizontal overfl
   await page.getByTestId("authentic-pregame-format-option").filter({ hasText: "Bo3" }).click();
   await page.getByTestId("authentic-pregame-begin").click();
 
-  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
   await expectNoHorizontalOverflow(page);
 
   await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-start-match-confirm").click();
   await expect(page.locator(".authentic-hand__card.is-playable [data-testid='authentic-hand-card']").first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
   await page.getByTestId("authentic-discard-trigger-human").click();
@@ -392,8 +635,13 @@ test("authentic pre-game, deck builder, and direct match avoid horizontal overfl
   await expectNoHorizontalOverflow(page);
 
   await page.goto(authenticDirectUrl);
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed ep4-direct/i);
+  await expectNoHorizontalOverflow(page);
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-start-match-confirm").click();
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
-  await expect(page.locator(".authentic-match__seed")).toContainText(/Seed ep4-direct/i);
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
 });

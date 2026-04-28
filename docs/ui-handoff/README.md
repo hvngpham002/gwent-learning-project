@@ -2,29 +2,33 @@
 
 ## Overview
 
-This package is a complete UI design for a Gwent-style card game built on top of the existing TypeScript engine in `src/`. It covers three connected screens — **Pre-game (lobby)**, **Deck Builder**, and **Match** — in a single visual direction we'll call **"Authentic Tactical Card Table"** (parchment-and-ink, EB Garamond display + JetBrains Mono labels, ink-red `#8a3a1f` accent on warm parchment `#f4ecd8`). The match screen includes a discard pile component, a card-flight animation when units are killed/scorched/resurrected, a Medic prompt that opens a discard browser, and a Decoy swap prompt.
+This package is a complete UI design for a Gwent-style card game built on top of the existing TypeScript engine in `src/`. It covers three connected screens — **Pre-game (lobby)**, **Deck Builder**, and **Match** — in a single visual direction we'll call **"Authentic Tactical Card Table"** (parchment-and-ink, EB Garamond body/display text, JetBrains Mono data/debug text, ink-red `#8a3a1f` accent on warm parchment `#f4ecd8`). The match screen includes a discard pile component, a card-flight animation when units are killed/scorched/resurrected, a Medic prompt that opens a discard browser, and a Decoy swap prompt.
+
+## Current Production Note
+
+This README is a visual handoff reference, not an implementation map. The current production code uses the post-overhaul paths documented in `docs/PROJECT_STATE.md` and `docs/overhaul-plan/cluster-e-ui-plan.md`: card and deck catalog data live under `src/game/catalog/` and `src/data/catalog/`, rules/legal moves/prompts live under `src/game/core/`, AI policies live under `src/game/ai/`, and the Redux engine adapter lives under `src/store/`. The authentic product components now live under `src/components/gwent/` and the current product flow is documented in `docs/ui/authentic-product-flow.md`.
 
 ## About the Design Files
 
-The files in `prototype/` are **design references**, not production code. They are written as inline-Babel JSX loaded by `Gwent - Prototype.html` so they can run in a browser preview without a build step. **Do not ship them as-is.** Your job is to recreate them inside the existing codebase at `src/` — which already has React + TypeScript, Redux Toolkit (`src/store/`), a deterministic game engine (`src/game/`), card catalogs (`src/data/cards/`), and a `GwentCard` component (`src/components/card/GwentCard.tsx`).
+The files in `prototype/` are **design references**, not production code. They are written as inline-Babel JSX loaded by `Gwent - Prototype.html` so they can run in a browser preview without a build step. **Do not ship them as-is.** Recreate useful interaction and visual ideas inside the current React + TypeScript codebase using the production paths listed above.
 
-The prototype's `match-engine.jsx` is a **toy reducer** used only to make the prototype clickable. **Do not port it.** Wire the UI to the real engine in `src/game/sim/` and `src/store/slices/gameSlice.ts`. The prototype's `CARD_POOL` in `deck-builder-screen.jsx` is a stub of ~25 cards — replace it with the real catalog (`src/data/cards/northern-realms.ts`, `src/data/cards/nilfgaardian-empire.ts`, `src/data/cards/neutral.ts`, etc.).
+The prototype's `match-engine.jsx` is a **toy reducer** used only to make the prototype clickable. **Do not port it.** Wire UI behavior to the real engine under `src/game/core/`, legal moves, engine selectors/thunks, and the Redux engine adapter. The prototype's `CARD_POOL` in `deck-builder-screen.jsx` is a stub of ~25 cards — replace it with the real catalog under `src/game/catalog/` and `src/data/catalog/`.
 
 ## Fidelity
 
-**High-fidelity.** Final colors, typography, spacing, layout, and interaction behaviors. All design tokens are in `prototype/tokens.css` as CSS custom properties — drop that file in as-is (rename if you want, e.g. `src/styles/gwent-tokens.css`) and import once at app root. Pixel measurements and the visual identity should be reproduced accurately. The card-art SVG placeholders in `shared.jsx` (`SvgCardArt`) are stand-ins for real illustration; keep the placeholder for now and swap to real art later.
+**High-fidelity.** Final colors, typography, spacing, layout, and interaction behaviors. The design tokens in `prototype/tokens.css` are CSS custom properties; production adapts them into `src/styles/gwent-tokens.css` under `.gwent-authentic` rather than importing the prototype file raw. Pixel measurements and the visual identity should be reproduced accurately where they fit the responsive React product. The card-art SVG placeholders in `shared.jsx` (`SvgCardArt`) are stand-ins for real illustration; keep the placeholder for now and swap to real art later.
 
 ## Target Codebase Map
 
 | Prototype file | Becomes | Notes |
 |---|---|---|
-| `tokens.css` | `src/styles/gwent-tokens.css` | Drop in as-is. Import once in root layout. |
-| `shared.jsx` — `FACTIONS`, `ABILITIES` | `src/components/gwent/factions.ts` | Already partially exists in `src/types/card.ts` (`Faction`, `CardAbility` enums). Add display metadata (color, glyph, short name) keyed by enum. |
-| `shared.jsx` — `GameCard`, `CardBack`, `SvgCardArt` | `src/components/gwent/Card.tsx` | The repo already has `src/components/card/GwentCard.tsx` — extend that component to support the new visual treatment via a prop (`variant: 'classic' \| 'authentic'`) so existing call-sites keep working. |
-| `match-engine.jsx` | **Discard.** | Use existing `src/game/sim/` + `src/store/slices/gameSlice.ts`. The prototype's `playCard`/`resolveMedic`/`resolveDecoy`/`aiPickMove` map to existing actions/selectors. |
-| `match-screen.jsx` | `src/components/gwent/MatchScreen.tsx` (+ subcomponents) | Split into `MatchTopBar`, `ScoreCard`, `Row`, `DiscardPile`, `DeckPile`, `Inspector`, `BattleLog`, `MedicPrompt`, `DecoyPrompt`, `DiscardBrowser`, `RoundEndOverlay`, `CardFlight`. Wire to `gameSelectors`. |
-| `deck-builder-screen.jsx` | `src/components/gwent/DeckBuilderScreen.tsx` | Persist via Redux (`uiSlice` for active deck) + `localStorage` middleware. Replace `CARD_POOL` with real card data. |
-| `pre-game-screen.jsx` | `src/components/gwent/PreGameScreen.tsx` | Reads decks from store. On "Begin Match" dispatches `startMatch({deckId, mode, opponent, seed, bestOf})`. |
+| `tokens.css` | `src/styles/gwent-tokens.css` | Production tokens are adapted rather than dropped in raw. |
+| `shared.jsx` — `FACTIONS`, `ABILITIES` | `src/components/gwent/displayMetadata.ts` | Production display metadata maps current catalog ids to faction, row, ability, leader, and card-kind presentation. |
+| `shared.jsx` — `GameCard`, `CardBack`, `SvgCardArt` | `src/components/gwent/AuthenticCard.tsx`, `src/components/gwent/AuthenticCardBack.tsx`, `src/components/gwent/SvgCardArt.tsx` | Production authentic cards use catalog view models and hidden-safe backs. |
+| `match-engine.jsx` | **Discard.** | Use `src/game/core/`, `src/game/ai/`, and the Redux engine adapter. Do not port toy reducers or toy AI. |
+| `match-screen.jsx` | `src/components/gwent/AuthenticMatchScreen.tsx` (+ helpers/styles) | Production match UI consumes engine selectors and dispatches exact engine commands. |
+| `deck-builder-screen.jsx` | `src/components/gwent/AuthenticDeckBuilderScreen.tsx` | Uses current catalog data, browser-local deck state, and real deck validation. |
+| `pre-game-screen.jsx` | `src/components/gwent/AuthenticPreGameScreen.tsx` | Starts configured engine matches from catalog/local deck selections and visible seeds. |
 | `tweaks-panel.jsx` | **Discard.** | Tweak panel is a design tool; not part of the shipped UI. |
 
 ## Screens
@@ -206,7 +210,7 @@ Faction tints (used as left-edge accent on cards and in pickers):
 ```
 prototype/
 ├── Gwent - Prototype.html        ← entry point; loads React 18.3.1 + Babel standalone, mounts <App/>
-├── tokens.css                    ← design tokens (drop into project as-is)
+├── tokens.css                    ← design tokens (adapt into scoped production tokens)
 ├── shared.jsx                    ← FACTIONS, ABILITIES, GameCard, CardBack, SvgCardArt
 ├── match-engine.jsx              ← TOY REDUCER — do not port; use real engine
 ├── match-screen.jsx              ← MatchScreen component (board, hand, prompts, animations, discard browser)
@@ -219,17 +223,17 @@ To preview the prototype: open `Gwent - Prototype.html` in a browser. Use the Tw
 
 ## Implementation Plan (suggested order)
 
-1. **Tokens.** Drop `tokens.css` into `src/styles/`, import in root, verify the CSS variables resolve. (1 hour)
-2. **Card component variant.** Extend `src/components/card/GwentCard.tsx` with an `authentic` variant that matches `shared.jsx`'s `GameCard` rendering (faction-tinted left edge, parchment fill, EB Garamond name, mono ability label, strength badge bottom-left). (3–4 hours)
-3. **Pre-game.** Wire to existing deck list selector. Stub modes/opponents until backed by real matchmaking. (2 hours)
-4. **Deck Builder.** Replace `CARD_POOL` stub with real card data from `src/data/cards/`. Use `src/utils/deckBuilder.ts` for validation. Implement Import/Export against the existing `CatalogDeckPreset` format if it makes sense for round-tripping; otherwise use the prototype's flat `{cards: {id: count}}` shape. (4–6 hours)
-5. **Match shell.** Build the 3-column layout, scoreboards, deck/discard piles, row glyphs, hand strip. Wire to existing game state. Hand off animations + prompts as last step. (1–2 days)
-6. **Discard browser, Medic, Decoy, Card-flight.** Self-contained; build on top of the live engine. Use `getBoundingClientRect()` from refs the same way the prototype does. (1 day)
-7. **Round-end overlay + transitions.** (2 hours)
+1. **Tokens.** Adapt `tokens.css` into `src/styles/gwent-tokens.css`, import it once, and keep tokens scoped to `.gwent-authentic`. (Done in cEp1.)
+2. **Card components.** Use `src/components/gwent/AuthenticCard.tsx`, `AuthenticCardBack.tsx`, and `SvgCardArt.tsx` rather than extending the legacy card component. (Done in cEp1/cEp2.)
+3. **Pre-game.** Wire to catalog deck presets, local decks, implemented controller choices, and visible deterministic seed state. (Done in cEp4/cEp5.)
+4. **Deck Builder.** Replace `CARD_POOL` with current catalog data from `src/game/catalog/` and `src/data/catalog/`; use the real deck validator and catalog-compatible import/export shapes. (Done in cEp5/cEp5.1.)
+5. **Match shell.** Build the 3-column layout, scoreboards, deck/discard piles, row glyphs, hand strip, prompts, and action panels over engine selectors and exact engine commands. (Done in cEp2/cEp3.)
+6. **Mulligan and product navigation.** Route pre-game, deck-builder `play →`, direct match, and rematch through the dedicated cEp6 mulligan flow with hidden-safe AI presentation and start/return modals. (Done in cEp6.)
+7. **Future content workflow.** Card Studio and permanent content-authoring workflows are deferred to cEp7.
 
 ## Notes for Codex
 
-- **Don't port `match-engine.jsx`.** It exists only to make the prototype clickable; the real engine in `src/game/sim/` is canonical.
+- **Don't port `match-engine.jsx`.** It exists only to make the prototype clickable; the real engine under `src/game/core/` is canonical for rules, legal moves, prompts, scoring, and command transactions.
 - **Don't port `tweaks-panel.jsx`.** It's a design-tool affordance.
 - The prototype uses `Object.assign(window, {...})` to share components across `<script type="text/babel">` files because Babel-standalone scripts don't share scope. In your TSX port, replace with named ESM imports.
 - All prototype JSX uses inline style objects for speed of iteration. Convert to CSS Modules / styled-components / whatever the codebase uses. Tokens are already CSS variables, so the conversion is mechanical.

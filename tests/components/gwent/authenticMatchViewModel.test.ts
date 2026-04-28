@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import type { PlayCardMove } from "@/game/core";
+import type { LegalMove, PlayCardMove } from "@/game/core";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 import {
   buildRoundOverlayViewModel,
   buildAuthenticSeatSummary,
   engineCardToAuthenticCard,
+  findLegalMulliganMove,
+  buildGameEndNavigationActions,
   getBoardCardState,
   getBoardCardTargetsById,
   getBoardRowTargetsByKey,
   groupDiscardCards,
   orderBoardRowsForAuthenticTable,
+  toggleMulliganSelection,
   toRuntimeCard,
 } from "@/components/gwent/matchViewModel";
 
@@ -83,7 +86,15 @@ describe("authentic match view models", () => {
       faction: "nilfgaard",
       gems: 2,
       passed: false,
-      handCards: [card({ name: "Should Stay Hidden", owner: "seat_b", controller: "seat_b" })],
+      handCards: [
+        card({
+          instanceId: "seat_b:000:hidden",
+          sourceId: "nilfgaard.hidden-card",
+          name: "Should Stay Hidden",
+          owner: "seat_b",
+          controller: "seat_b",
+        }),
+      ],
       hiddenHandCount: 7,
       deckCount: 14,
       discardCount: 1,
@@ -93,6 +104,65 @@ describe("authentic match view models", () => {
     expect(summary.handCount).toBe(7);
     expect(summary.handCards).toEqual([]);
     expect(JSON.stringify(summary)).not.toContain("Should Stay Hidden");
+    expect(JSON.stringify(summary)).not.toContain("seat_b:000:hidden");
+    expect(JSON.stringify(summary)).not.toContain("nilfgaard.hidden-card");
+  });
+
+  it("maps selected mulligan ids only to an exact legal choose_mulligan move", () => {
+    const moves: LegalMove[] = [
+      {
+        kind: "choose_mulligan",
+        moveId: "mulligan:seat_a:none",
+        seatId: "seat_a",
+        label: "Keep hand",
+        cardIds: [],
+        metadata: { cardCount: 0, maxCards: 1 },
+      },
+      {
+        kind: "choose_mulligan",
+        moveId: "mulligan:seat_a:a",
+        seatId: "seat_a",
+        label: "Mulligan 1 card",
+        cardIds: ["a"],
+        metadata: { cardCount: 1, maxCards: 1 },
+      },
+      {
+        kind: "pass",
+        moveId: "pass:seat_a",
+        seatId: "seat_a",
+        label: "Pass",
+        target: { kind: "none" },
+      },
+    ];
+
+    expect(findLegalMulliganMove(moves, ["a"])?.moveId).toBe("mulligan:seat_a:a");
+    expect(findLegalMulliganMove(moves, ["b", "a"])).toBeNull();
+    expect(findLegalMulliganMove(moves, ["a", "c"])).toBeNull();
+  });
+
+  it("allows zero-card keep-hand confirmation when the engine exposes that move", () => {
+    const move = findLegalMulliganMove(
+      [
+        {
+          kind: "choose_mulligan",
+          moveId: "mulligan:seat_a:none",
+          seatId: "seat_a",
+          label: "Keep hand",
+          cardIds: [],
+          metadata: { cardCount: 0, maxCards: 1 },
+        },
+      ],
+      [],
+    );
+
+    expect(move).toEqual(expect.objectContaining({ cardIds: [] }));
+  });
+
+  it("caps mulligan selection at one card per redraw and frees the slot when deselecting", () => {
+    expect(toggleMulliganSelection({ selectedCardIds: [], cardId: "a" })).toEqual(["a"]);
+    expect(toggleMulliganSelection({ selectedCardIds: ["a"], cardId: "b" })).toEqual(["a"]);
+    expect(toggleMulliganSelection({ selectedCardIds: ["a"], cardId: "a" })).toEqual([]);
+    expect(toggleMulliganSelection({ selectedCardIds: [], cardId: "c" })).toEqual(["c"]);
   });
 
   it("marks only legal board row targets as clickable row targets", () => {
@@ -247,5 +317,16 @@ describe("authentic match view models", () => {
       nextStarterLabel: "Next starter: AI",
       gameEndLabel: null,
     });
+  });
+
+  it("keeps match-end navigation labels predictable for setup and rematch paths", () => {
+    expect(buildGameEndNavigationActions(true)).toEqual([
+      { key: "setup", label: "setup", kind: "ghost" },
+      { key: "rematch", label: "rematch", kind: "primary" },
+    ]);
+    expect(buildGameEndNavigationActions(false)).toEqual([
+      { key: "close", label: "close", kind: "ghost" },
+      { key: "rematch", label: "rematch", kind: "primary" },
+    ]);
   });
 });

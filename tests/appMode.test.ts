@@ -40,6 +40,9 @@ describe("app mode helpers", () => {
     expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=match")).toBe("match");
     expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=harness")).toBe("harness");
     expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=deck-builder")).toBe("deck-builder");
+    expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=ui-component-foundation")).toBe(
+      "ui-component-foundation",
+    );
     expect(getAuthenticUiViewFromSearch("view=other&ui=authentic")).toBe("pregame");
   });
 });

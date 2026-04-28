@@ -98,14 +98,19 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
       <div className="authentic-pregame">
         <header className="authentic-pregame__topbar">
           <div className="authentic-pregame__topbar-title">
-            <button type="button" className="authentic-pregame__ghost" onClick={() => window.history.back()} aria-label="Back">
+            <button
+              type="button"
+              className="authentic-button authentic-button--ghost authentic-pregame__ghost"
+              onClick={() => window.history.back()}
+              aria-label="back"
+            >
               ← menu
             </button>
             <h1>Prepare for Battle</h1>
           </div>
           <button
             type="button"
-            className="authentic-pregame__ghost"
+            className="authentic-button authentic-button--ghost authentic-pregame__ghost"
             onClick={() => onOpenDeckBuilder?.("edit")}
           >
             open deck builder →
@@ -121,7 +126,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                   key={option.optionId}
                   type="button"
                   data-testid="authentic-pregame-deck-option"
-                  className={`authentic-pregame__deck-option${option.optionId === selectedDeck?.optionId ? " is-selected" : ""}`}
+                  className={`authentic-button authentic-button--tile authentic-pregame__deck-option${option.optionId === selectedDeck?.optionId ? " is-selected" : ""}`}
                   disabled={!option.ready}
                   onClick={() => chooseHumanDeck(option.optionId)}
                 >
@@ -154,7 +159,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
             <div className="authentic-pregame__builder-actions">
               <button
                 type="button"
-                className="authentic-pregame__builder-entry"
+                className="authentic-button authentic-button--ghost authentic-pregame__builder-entry"
                 data-testid="authentic-pregame-create-deck"
                 onClick={() => onOpenDeckBuilder?.("create")}
               >
@@ -162,7 +167,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
               </button>
               <button
                 type="button"
-                className="authentic-pregame__builder-entry"
+                className="authentic-button authentic-button--ghost authentic-pregame__builder-entry"
                 data-testid="authentic-pregame-edit-decks"
                 onClick={() => onOpenDeckBuilder?.("edit")}
               >
@@ -179,7 +184,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                   key={mode.id}
                   type="button"
                   data-testid="authentic-pregame-mode-option"
-                  className={`authentic-pregame__mode-option${mode.available ? " is-selected" : ""}`}
+                  className={`authentic-button authentic-button--tile authentic-pregame__mode-option${mode.available ? " is-selected" : ""}`}
                   disabled={!mode.available}
                   aria-disabled={!mode.available}
                 >
@@ -219,7 +224,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                       type="button"
                       data-testid="authentic-pregame-round-option"
                       disabled={!round.available}
-                      className={`authentic-pregame__segment-option${round.id === roundId ? " is-selected" : ""}`}
+                      className={`authentic-button authentic-button--choice authentic-button--compact authentic-pregame__segment-option${round.id === roundId ? " is-selected" : ""}`}
                       onClick={() => {
                         if (round.available && round.id === "standard") {
                           setRoundId(round.id);
@@ -241,7 +246,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                       type="button"
                       data-testid="authentic-pregame-format-option"
                       disabled={!format.available}
-                      className={`authentic-pregame__segment-option${format.id === formatId ? " is-selected" : ""}`}
+                      className={`authentic-button authentic-button--choice authentic-button--compact authentic-pregame__segment-option${format.id === formatId ? " is-selected" : ""}`}
                       onClick={() => {
                         if (format.available && format.id === "best-of-3") {
                           setFormatId(format.id);
@@ -268,6 +273,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                   />
                   <button
                     type="button"
+                    className="authentic-button authentic-button--secondary authentic-button--compact"
                     data-testid="authentic-pregame-copy-seed"
                     disabled={!navigator.clipboard || seed.trim().length === 0}
                     onClick={copySeed}
@@ -287,12 +293,12 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
           </p>
           <button
             type="button"
-            className="authentic-pregame__begin"
+            className="authentic-button authentic-button--primary authentic-button--flow authentic-pregame__begin"
             data-testid="authentic-pregame-begin"
             disabled={!canBegin}
             onClick={beginMatch}
           >
-            Begin Match →
+            begin match →
           </button>
         </footer>
       </div>

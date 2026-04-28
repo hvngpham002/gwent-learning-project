@@ -1,8 +1,8 @@
 # Authentic UI Foundation (cEp1)
 
 This document describes the authentic UI foundation introduced in `cEp1`. It
-covers what the foundation is, what it is not yet, how to open the harness, and
-how the harness relates to the engine-backed match screen introduced in `cEp2`.
+covers what the foundation owns, how to open the original harness, and how the
+foundation relates to the current authentic product routes.
 
 ## What This Is
 
@@ -25,19 +25,21 @@ The foundation contains:
 - an opt-in route variant `?engine=1&ui=authentic` driven by
   `src/appMode.ts`.
 
-## What This Is Not Yet
+## What The Foundation Does Not Own
 
-The foundation deliberately stops short of the future product UI. It does not
-provide:
+The cEp1 foundation itself deliberately stopped short of product flows. Later
+Cluster E phases now provide match, pre-game, deck builder, mulligan, navigation,
+and component-review screens on top of it. The foundation layer still does not
+own:
 
-- the full match table or hand strip;
-- a deck builder or pre-game configuration screen;
 - a Card Studio or content-authoring tool;
-- spatial card-flight animations or row click targets;
-- engine-driven legal target rendering on the authentic card path;
-- Medic, Decoy, round-end overlay, or discard browser interactions.
+- repository image management;
+- engine rules, legal moves, AI policy, deck validation, scoring, prompts, or
+  route promotion;
+- final drag-and-drop card play or full game-end browser automation.
 
-These belong to later Cluster E phases (`cEp2` and beyond).
+Those behaviors belong to the current product screens and future Cluster E
+phases, not to this reusable visual substrate.
 
 ## Routes
 
@@ -45,12 +47,16 @@ These belong to later Cluster E phases (`cEp2` and beyond).
 |---|---|
 | `/` | Legacy Redux UI (default route). Unchanged. |
 | `/?engine=1` | Existing diagnostic engine shell (`EngineGameManager`). Unchanged. |
-| `/?engine=1&ui=authentic` | Engine-backed authentic match table. New in `cEp2`. |
+| `/?engine=1&ui=authentic` | Authentic pre-game setup screen. New default authentic route after `cEp4`. |
+| `/?engine=1&ui=authentic&view=pregame` | Explicit authentic pre-game setup screen. |
+| `/?engine=1&ui=authentic&view=deck-builder` | Catalog-backed browser-local authentic deck builder. |
+| `/?engine=1&ui=authentic&view=match` | Direct development match route. Starts the default setup, shows the cEp6 mulligan flow first, then the match table after start confirmation. |
 | `/?engine=1&ui=authentic&view=harness` | Opt-in authentic UI foundation harness. |
+| `/?engine=1&ui=authentic&view=ui-component-foundation` | Consolidated review page for authentic tokens, typography, buttons, cards, alerts, modals, and game-surface primitives. |
 | `/?ui=authentic` | Legacy UI. The authentic harness requires `engine=1`. |
 
 `VITE_ENGINE_UI=1` continues to enable the engine UI without `engine=1`. When
-this env flag is present and `ui=authentic` is set, the authentic match table
+this env flag is present and `ui=authentic` is set, the authentic pre-game route
 renders. Add `view=harness` to open the foundation harness.
 
 ## Opening The Harness
@@ -145,7 +151,10 @@ only for hidden zones.
 
 ## Relationship To The Match Screen
 
-`cEp2` built the engine-backed match table on top of this foundation:
+`cEp2` built the engine-backed match table on top of this foundation, and
+`cEp3` through `cEp6` added product interactions, pre-game setup, deck builder,
+the dedicated mulligan flow, handoff modals, and shared button/typography review
+surfaces:
 
 - the same `.gwent-authentic` wrapper provides design tokens and font stacks;
 - `AuthenticCard`/`AuthenticCardBack` render hand, board, and pile cards
@@ -155,6 +164,7 @@ only for hidden zones.
 - the SVG fallback continues to cover missing card art during catalog
   expansion.
 
-The match screen dispatches engine commands and renders legal moves; it does not
-compute rule outcomes in React. `cEp3` should build richer product interactions
-on the same command path.
+The match and mulligan screens dispatch engine commands and render legal moves;
+they do not compute rule outcomes in React. Current product-flow behavior is
+tracked in `docs/ui/authentic-product-flow.md`, while shared standard button
+rules are tracked in `docs/ui/authentic-button-style-guide.md`.

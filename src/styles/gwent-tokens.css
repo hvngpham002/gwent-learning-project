@@ -7,7 +7,7 @@
   Loaded once via src/main.tsx through the global stylesheet entry.
 */
 
-@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap");
 
 .gwent-authentic {
   /* Faction palette (mirrors prototype/tokens.css :root values) */
@@ -52,6 +52,7 @@
   --font-display: "EB Garamond", "Iowan Old Style", "Palatino", Georgia, serif;
   --font-body: "EB Garamond", "Iowan Old Style", Georgia, serif;
   --font-mono: "JetBrains Mono", "Iosevka", ui-monospace, monospace;
+  --font-data: var(--font-mono);
 
   background: var(--bg);
   color: var(--ink);

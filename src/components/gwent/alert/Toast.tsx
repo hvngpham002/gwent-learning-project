@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import AuthenticButton from "../AuthenticButton";
 import SeveritySigil, { type AlertSeverity } from "./SeveritySigil";
 import "./alert.css";
 
@@ -44,9 +45,15 @@ export const Toast: React.FC<ToastProps> = ({
     >
       <SeveritySigil severity={severity} />
       <span>{message}</span>
-      <button type="button" aria-label="Dismiss notification" onClick={onDismiss}>
+      <AuthenticButton
+        type="button"
+        variant="ghost"
+        icon
+        aria-label="dismiss notification"
+        onClick={onDismiss}
+      >
         x
-      </button>
+      </AuthenticButton>
     </div>,
     document.body,
   );

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import { getEngineSeedFromSearch } from "@/appMode";
-import type { CardInstanceId, RoundResult, SeatId } from "@/game/core";
+import type { CardInstanceId, GameEvent, RoundResult, SeatId } from "@/game/core";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectEngineAiHandCount,
@@ -16,6 +16,7 @@ import {
   selectEngineHumanSeat,
   selectEngineLastError,
   selectEngineLeaderStatus,
+  selectEngineLegalMovesForAi,
   selectEngineLegalMovesForHuman,
   selectEngineLock,
   selectEngineMatch,
@@ -24,12 +25,11 @@ import {
   selectEngineScoreBreakdown,
   selectEngineSeed,
   selectEngineSelectedCardId,
-  selectEngineSelectedCardIds,
   selectEngineState,
   selectEngineStatus,
   selectEngineWeatherCards,
 } from "@/store/selectors/engineSelectors";
-import { engineSelectedCardIdsSet, engineSelectedCardSet, engineSelectionCleared } from "@/store/slices/engineSlice";
+import { engineMatchCleared, engineSelectedCardSet, engineSelectionCleared, type EngineCommandRecord } from "@/store/slices/engineSlice";
 import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 
 import {
@@ -55,9 +55,13 @@ import { getLegalHeuristicAiCommand } from "../game/engine/legalHeuristicAiContr
 import AuthenticCard from "./AuthenticCard";
 import AuthenticCardBack from "./AuthenticCardBack";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
+import AuthenticMulliganScreen from "./AuthenticMulliganScreen";
 import { Alert } from "./alert";
+import { ReturnToSetupModal } from "./modal/ReturnToSetupModal";
+import { StartMatchModal } from "./modal/StartMatchModal";
 import {
   buildAuthenticSeatSummary,
+  buildGameEndNavigationActions,
   buildMedicPromptOptions,
   buildRoundOverlayViewModel,
   buildVisibleCardLookup,
@@ -84,15 +88,6 @@ const SEAT_IDS = ["seat_a", "seat_b"] as const;
 
 type CardMotion = "played" | "discarded" | "prompt-revived" | "scorched";
 
-const sameCardSelection = (left: readonly CardInstanceId[], right: readonly CardInstanceId[]) => {
-  if (left.length !== right.length) {
-    return false;
-  }
-  const leftSorted = [...left].sort();
-  const rightSorted = [...right].sort();
-  return leftSorted.every((cardId, index) => cardId === rightSorted[index]);
-};
-
 const abilitySummary = (card: AuthenticRuntimeCardViewModel | null) => {
   const primaryAbility = card?.card.abilities.find((ability) => ability !== "none");
   return primaryAbility ? getAbilityDisplay(primaryAbility).name : "No ability";
@@ -109,12 +104,12 @@ const TopBar: React.FC<{
 }> = ({ seedLabel, roundLabel, actorLabel, phaseLabel, nextAction, onNewGame, onReturnToPreGame }) => (
   <header className="authentic-match__topbar">
     <div className="authentic-match__top-actions">
-      <button type="button" className="authentic-match__ghost-button" onClick={onNewGame}>
-        New game
+      <button type="button" className="authentic-button authentic-button--ghost authentic-match__ghost-button" onClick={onNewGame}>
+        rematch
       </button>
       {onReturnToPreGame ? (
-        <button type="button" className="authentic-match__ghost-button" onClick={onReturnToPreGame}>
-          Setup
+        <button type="button" className="authentic-button authentic-button--ghost authentic-match__ghost-button" onClick={onReturnToPreGame}>
+          setup
         </button>
       ) : null}
     </div>
@@ -312,17 +307,15 @@ const BoardTable: React.FC<{
 const HandStrip: React.FC<{
   cards: readonly AuthenticRuntimeCardViewModel[];
   selectedCardId: CardInstanceId | null;
-  selectedCardIds: readonly CardInstanceId[];
-  phase: string | undefined;
   playableCardIds: ReadonlySet<CardInstanceId>;
   disabledByCardId: ReadonlyMap<CardInstanceId, string | null>;
   onCardClick: (cardId: CardInstanceId) => void;
-}> = ({ cards, selectedCardId, selectedCardIds, phase, playableCardIds, disabledByCardId, onCardClick }) => (
+}> = ({ cards, selectedCardId, playableCardIds, disabledByCardId, onCardClick }) => (
   <section className="authentic-hand" data-testid="authentic-human-hand">
     <div className="authentic-hand__label">hand · {cards.length}</div>
     <div className="authentic-hand__cards">
       {cards.map((entry) => {
-        const selected = phase === "mulligan" ? selectedCardIds.includes(entry.key) : selectedCardId === entry.key;
+        const selected = selectedCardId === entry.key;
         const disabledReason = disabledByCardId.get(entry.key);
         return (
           <div
@@ -373,9 +366,6 @@ const ActionPanel: React.FC<{
   leaderLabel: string;
   leaderDisabled: boolean;
   onUseLeader: () => void;
-  mulliganLabel: string | null;
-  canConfirmMulligan: boolean;
-  onConfirmMulligan: () => void;
   roundEndLabel: string | null;
   canResolveRound: boolean;
   onResolveRound: () => void;
@@ -387,35 +377,30 @@ const ActionPanel: React.FC<{
   leaderLabel,
   leaderDisabled,
   onUseLeader,
-  mulliganLabel,
-  canConfirmMulligan,
-  onConfirmMulligan,
   roundEndLabel,
   canResolveRound,
   onResolveRound,
 }) => (
   <section className="authentic-panel authentic-actions">
     <h2>Actions</h2>
-    {mulliganLabel ? (
-      <div className="authentic-actions__block">
-        <p>{mulliganLabel}</p>
-        <button type="button" data-testid="authentic-confirm-mulligan" disabled={!canConfirmMulligan} onClick={onConfirmMulligan}>
-          Confirm
-        </button>
-      </div>
-    ) : null}
     <div className="authentic-actions__block">
       <p>{leaderLabel}</p>
-      <button type="button" disabled={leaderDisabled} onClick={onUseLeader}>
-        Use Leader
+      <button type="button" className="authentic-button authentic-button--secondary" disabled={leaderDisabled} onClick={onUseLeader}>
+        use leader
       </button>
     </div>
-    <button type="button" data-testid="authentic-pass" disabled={!canPass} onClick={onPass}>
-      Pass Round
+    <button type="button" className="authentic-button authentic-button--secondary" data-testid="authentic-pass" disabled={!canPass} onClick={onPass}>
+      pass round
     </button>
     {roundEndLabel ? (
-      <button type="button" data-testid="authentic-resolve-round" disabled={!canResolveRound} onClick={onResolveRound}>
-        {roundEndLabel}
+      <button
+        type="button"
+        className="authentic-button authentic-button--primary"
+        data-testid="authentic-resolve-round"
+        disabled={!canResolveRound}
+        onClick={onResolveRound}
+      >
+        {roundEndLabel.toLocaleLowerCase()}
       </button>
     ) : null}
     <div className="authentic-target-groups" data-testid="authentic-target-groups">
@@ -427,11 +412,12 @@ const ActionPanel: React.FC<{
             <button
               key={action.moveId}
               type="button"
+              className="authentic-button authentic-button--secondary"
               data-testid="authentic-target-action"
-              title={action.title}
+              title={action.title.toLocaleLowerCase()}
               onClick={() => onPlayMove(action.moveId)}
             >
-              {action.label}
+              {action.label.toLocaleLowerCase()}
             </button>
           ))}
         </div>
@@ -466,22 +452,28 @@ const PromptPanel: React.FC<{
               <button
                 key={option.moveId}
                 type="button"
-                className="authentic-medic-option"
+                className="authentic-button authentic-button--tile authentic-medic-option"
                 data-testid="authentic-medic-option"
                 onClick={() => onChoose(option.moveId)}
               >
                 {option.card ? <AuthenticCard card={option.card.card} size="xs" /> : null}
                 <span>
-                  <strong>{option.label}</strong>
-                  <em>{option.meta}</em>
+                  <strong>{option.label.toLocaleLowerCase()}</strong>
+                  <em>{option.meta.toLocaleLowerCase()}</em>
                 </span>
               </button>
             ))}
           </div>
         )
       : options.map((option) => (
-          <button key={option.moveId} type="button" data-testid="authentic-prompt-option" onClick={() => onChoose(option.moveId)}>
-            {option.label}
+          <button
+            key={option.moveId}
+            type="button"
+            className="authentic-button authentic-button--secondary"
+            data-testid="authentic-prompt-option"
+            onClick={() => onChoose(option.moveId)}
+          >
+            {option.label.toLocaleLowerCase()}
           </button>
         ))}
   </section>
@@ -502,8 +494,13 @@ const DiscardBrowser: React.FC<{
             {ownerLabel} · {count}
           </h2>
         </div>
-        <button type="button" data-testid="authentic-discard-close" onClick={onClose}>
-          Close
+        <button
+          type="button"
+          className="authentic-button authentic-button--ghost authentic-button--compact"
+          data-testid="authentic-discard-close"
+          onClick={onClose}
+        >
+          close
         </button>
       </header>
       {groups.length === 0 ? <p data-testid="authentic-discard-empty">The pile is empty.</p> : null}
@@ -534,6 +531,7 @@ const RoundOverlay: React.FC<{
   onChangeDeck?: () => void;
 }> = ({ overlay, round, rounds, humanSeat, aiSeat, winner, gemsBySeat, onDismiss, onRematch, onChangeDeck }) => {
   const isGameEnd = Boolean(overlay.gameEndLabel);
+  const gameEndActions = buildGameEndNavigationActions(Boolean(onChangeDeck));
   const humanRoundWins = rounds.filter((entry) => entry.winner === humanSeat).length;
   const aiRoundWins = rounds.filter((entry) => entry.winner === aiSeat).length;
   const scoreWinner = round.winner === "draw" ? "draw" : round.winner === humanSeat ? "human" : "ai";
@@ -657,12 +655,18 @@ const RoundOverlay: React.FC<{
         }
         actions={
           isGameEnd
-            ? [
-                { label: "close", onClick: onDismiss, kind: "ghost", testId: "authentic-round-overlay-dismiss" },
-                ...(onChangeDeck ? [{ label: "change deck", onClick: onChangeDeck, kind: "ghost" as const }] : []),
-                { label: "Rematch", onClick: onRematch, kind: "primary" },
-              ]
-            : [{ label: "Next round →", onClick: onDismiss, kind: "primary", testId: "authentic-round-overlay-dismiss" }]
+            ? gameEndActions.map((action) => ({
+                label: action.label,
+                onClick: action.key === "rematch" ? onRematch : action.key === "setup" && onChangeDeck ? onChangeDeck : onDismiss,
+                kind: action.kind,
+                testId:
+                  action.key === "rematch"
+                    ? "authentic-game-end-rematch"
+                    : action.key === "setup"
+                      ? "authentic-game-end-setup"
+                      : "authentic-round-overlay-dismiss",
+              }))
+            : [{ label: "next round →", onClick: onDismiss, kind: "primary", testId: "authentic-round-overlay-dismiss" }]
         }
         testId="authentic-round-overlay-alert"
       />
@@ -692,10 +696,141 @@ const setupKey = (config: AuthenticMatchSetupConfig | undefined, fallbackSeed: s
     ? `${config.humanDeckPresetId}|${config.opponentDeckPresetId}|${String(config.seed)}|${config.aiPolicyId}`
     : `direct|${String(fallbackSeed ?? "default")}`;
 
+const HUMAN_MULLIGAN_ANIMATION_MS = 1450;
+const AI_MULLIGAN_CARD_ANIMATION_MS = 1700;
+const AI_MULLIGAN_CARD_STAGGER_MS = 1700;
+const AI_MULLIGAN_KEEP_ANIMATION_MS = 1450;
+const AI_MULLIGAN_THINKING_MS = 650;
+const MULLIGAN_TOTAL_REDRAWS = 2;
+
+const aiMulliganReviewDelay = (selectedCount: number) =>
+  selectedCount > 0
+    ? AI_MULLIGAN_CARD_ANIMATION_MS + Math.max(0, selectedCount - 1) * AI_MULLIGAN_CARD_STAGGER_MS
+    : AI_MULLIGAN_KEEP_ANIMATION_MS;
+
+interface MulliganExitAnimation {
+  readonly key: string;
+  readonly selectedCount: number;
+  readonly selectedCardIds: readonly CardInstanceId[];
+  readonly drawnCardIds: readonly CardInstanceId[];
+  readonly baseHandCardIds: readonly CardInstanceId[];
+}
+
+interface HumanMulliganAnimation {
+  readonly key: string;
+  readonly selectedCardIds: readonly CardInstanceId[];
+  readonly drawnCardIds: readonly CardInstanceId[];
+}
+
+interface AiMulliganBaseHand {
+  readonly key: string;
+  readonly cardIds: readonly CardInstanceId[];
+}
+
+type AppliedMulliganRecord = Omit<EngineCommandRecord, "command" | "status"> & {
+  readonly status: "applied";
+  readonly command: Extract<EngineCommandRecord["command"], { type: "ChooseMulligan" }>;
+};
+
+const latestAppliedMulligan = (
+  records: readonly EngineCommandRecord[],
+  seatId: SeatId,
+  options: { preferRedraw?: boolean } = {},
+): AppliedMulliganRecord | null => {
+  let latest: AppliedMulliganRecord | null = null;
+  for (let index = records.length - 1; index >= 0; index -= 1) {
+    const record = records[index];
+    if (
+      record.status === "applied" &&
+      record.command.type === "ChooseMulligan" &&
+      record.command.seatId === seatId
+    ) {
+      const mulliganRecord = record as AppliedMulliganRecord;
+      if (!latest) {
+        latest = mulliganRecord;
+      }
+      if (!options.preferRedraw || mulliganRecord.command.cardIds.length > 0) {
+        return mulliganRecord;
+      }
+    }
+  }
+  return latest;
+};
+
+const latestAppliedMulliganRedrawBatch = (
+  records: readonly EngineCommandRecord[],
+  seatId: SeatId,
+): AppliedMulliganRecord[] => {
+  const batch: AppliedMulliganRecord[] = [];
+  let foundLatestMulligan = false;
+
+  for (let index = records.length - 1; index >= 0; index -= 1) {
+    const record = records[index];
+    if (
+      record.status === "applied" &&
+      record.command.type === "ChooseMulligan" &&
+      record.command.seatId === seatId
+    ) {
+      foundLatestMulligan = true;
+      const mulliganRecord = record as AppliedMulliganRecord;
+      if (mulliganRecord.command.cardIds.length > 0) {
+        batch.unshift(mulliganRecord);
+      }
+      continue;
+    }
+
+    if (foundLatestMulligan) {
+      break;
+    }
+  }
+
+  return batch;
+};
+
+const eventSlicesByCommandSequence = (
+  records: readonly EngineCommandRecord[],
+  eventLog: readonly GameEvent[],
+) => {
+  const totalCommandEventCount = records.reduce((total, record) => total + record.eventCount, 0);
+  let eventOffset = Math.max(0, eventLog.length - totalCommandEventCount);
+  const eventsBySequence = new Map<number, readonly GameEvent[]>();
+
+  records.forEach((record) => {
+    const eventSlice = eventLog.slice(eventOffset, eventOffset + record.eventCount);
+    eventsBySequence.set(record.sequence, eventSlice);
+    eventOffset += record.eventCount;
+  });
+
+  return eventsBySequence;
+};
+
+const isDebugAiMulliganEnabled = () => {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("debugAiMulligan") === "1" || params.get("debugAiMulligan") === "true";
+};
+
+const getDebugAiMulliganCount = () => {
+  const raw = new URLSearchParams(window.location.search).get("debugAiMulliganCount");
+  if (raw === null) {
+    return null;
+  }
+  const parsed = Number(raw);
+  return Number.isInteger(parsed) && parsed >= 0 ? Math.min(parsed, MULLIGAN_TOTAL_REDRAWS) : null;
+};
+
 const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig, onReturnToPreGame }) => {
   const dispatch = useAppDispatch();
   const [discardOpenSeat, setDiscardOpenSeat] = useState<SeatId | null>(null);
   const [dismissedRoundOverlayKey, setDismissedRoundOverlayKey] = useState<string | null>(null);
+  const [pendingSetupConfirmation, setPendingSetupConfirmation] = useState(false);
+  const [mulliganExitAnimation, setMulliganExitAnimation] = useState<MulliganExitAnimation | null>(null);
+  const [completedMulliganAnimationKey, setCompletedMulliganAnimationKey] = useState<string | null>(null);
+  const [readyMulliganAnimationKey, setReadyMulliganAnimationKey] = useState<string | null>(null);
+  const [humanMulliganAnimation, setHumanMulliganAnimation] = useState<HumanMulliganAnimation | null>(null);
+  const [completedHumanMulliganAnimationKey, setCompletedHumanMulliganAnimationKey] = useState<string | null>(null);
+  const [readyAiMulliganDecisionKey, setReadyAiMulliganDecisionKey] = useState<string | null>(null);
+  const [aiMulliganBaseHand, setAiMulliganBaseHand] = useState<AiMulliganBaseHand | null>(null);
+  const [isStartMatchModalDismissed, setStartMatchModalDismissed] = useState(false);
   const engine = useAppSelector(selectEngineState);
   const match = useAppSelector(selectEngineMatch);
   const status = useAppSelector(selectEngineStatus);
@@ -706,7 +841,6 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const seed = useAppSelector(selectEngineSeed);
   const humanHand = useAppSelector(selectEngineHumanHand);
   const selectedCardId = useAppSelector(selectEngineSelectedCardId);
-  const selectedCardIds = useAppSelector(selectEngineSelectedCardIds);
   const aiHandCount = useAppSelector(selectEngineAiHandCount);
   const boardRows = useAppSelector(selectEngineBoardRows);
   const weatherCards = useAppSelector(selectEngineWeatherCards);
@@ -720,11 +854,22 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const winner = useAppSelector(selectEngineGameWinner);
   const lastError = useAppSelector(selectEngineLastError);
   const humanMoves = useAppSelector(selectEngineLegalMovesForHuman);
+  const aiMoves = useAppSelector(selectEngineLegalMovesForAi);
 
   const startSeed = useMemo(() => getEngineSeedFromSearch(window.location.search), []);
+  const debugRevealAiMulligan = useMemo(() => isDebugAiMulliganEnabled(), []);
+  const debugAiMulliganCount = useMemo(() => getDebugAiMulliganCount(), []);
   const activeSetupKey = setupKey(setupConfig, startSeed);
 
   useEffect(() => {
+    setMulliganExitAnimation(null);
+    setCompletedMulliganAnimationKey(null);
+    setReadyMulliganAnimationKey(null);
+    setHumanMulliganAnimation(null);
+    setCompletedHumanMulliganAnimationKey(null);
+    setReadyAiMulliganDecisionKey(null);
+    setAiMulliganBaseHand(null);
+    setStartMatchModalDismissed(false);
     if (setupConfig) {
       dispatch(startEngineMatch(setupConfigToStartEngineOptions(setupConfig)));
       return;
@@ -736,30 +881,296 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, activeSetupKey]);
 
-  useEffect(() => {
-    const command = getLegalHeuristicAiCommand(engine, aiSeat, humanSeat);
-    if (command) {
-      dispatch(dispatchEngineCommand(command));
+  const latestAiMulliganRecord = useMemo(
+    () => latestAppliedMulligan(engine.commandHistory, aiSeat, { preferRedraw: true }),
+    [aiSeat, engine.commandHistory],
+  );
+  const latestAiMulliganRedrawBatch = useMemo(
+    () => latestAppliedMulliganRedrawBatch(engine.commandHistory, aiSeat),
+    [aiSeat, engine.commandHistory],
+  );
+  const commandEventsBySequence = useMemo(
+    () => eventSlicesByCommandSequence(engine.commandHistory, engine.eventLog),
+    [engine.commandHistory, engine.eventLog],
+  );
+  const latestHumanMulliganRecord = useMemo(
+    () => latestAppliedMulligan(engine.commandHistory, humanSeat),
+    [engine.commandHistory, humanSeat],
+  );
+  const pendingHumanMulliganAnimation = useMemo<HumanMulliganAnimation | null>(() => {
+    if (!latestHumanMulliganRecord || latestHumanMulliganRecord.command.cardIds.length === 0) {
+      return null;
     }
-  }, [aiSeat, dispatch, engine, humanSeat]);
+    const animationKey = `${activeSetupKey}|human|${latestHumanMulliganRecord.sequence}`;
+    if (animationKey === completedHumanMulliganAnimationKey) {
+      return null;
+    }
+    const mulliganChosen = engine.lastTransactionEvents.find(
+      (event) => event.type === "mulligan_chosen" && event.seatId === humanSeat,
+    );
+    if (!mulliganChosen) {
+      return null;
+    }
+    const drawnCardIds = engine.lastTransactionEvents.flatMap((event) =>
+      event.type === "card_moved" &&
+      event.reason === "mulligan_draw" &&
+      event.to.kind === "hand" &&
+      event.to.seat === humanSeat
+        ? [event.cardId]
+        : [],
+    );
+    if (drawnCardIds.length === 0) {
+      return null;
+    }
+    return {
+      key: animationKey,
+      selectedCardIds: latestHumanMulliganRecord.command.cardIds,
+      drawnCardIds,
+    };
+  }, [activeSetupKey, completedHumanMulliganAnimationKey, engine.lastTransactionEvents, humanSeat, latestHumanMulliganRecord]);
+  const pendingMulliganExitAnimation = useMemo<MulliganExitAnimation | null>(() => {
+    if (!latestAiMulliganRecord || match?.phase !== "playing") {
+      return null;
+    }
+    const firstRedrawRecord = latestAiMulliganRedrawBatch[0] ?? null;
+    const lastRedrawRecord = latestAiMulliganRedrawBatch[latestAiMulliganRedrawBatch.length - 1] ?? null;
+    const animationKey = `${activeSetupKey}|${firstRedrawRecord?.sequence ?? latestAiMulliganRecord.sequence}-${
+      lastRedrawRecord?.sequence ?? latestAiMulliganRecord.sequence
+    }`;
+    const selectedCardIds = latestAiMulliganRedrawBatch.flatMap((record) => record.command.cardIds);
+    const drawnCardIds = latestAiMulliganRedrawBatch.flatMap((record) =>
+      (commandEventsBySequence.get(record.sequence) ?? []).flatMap((event) =>
+        event.type === "card_moved" &&
+        event.reason === "mulligan_draw" &&
+        event.to.kind === "hand" &&
+        event.to.seat === aiSeat
+          ? [event.cardId]
+          : [],
+      ),
+    );
+    if (animationKey === completedMulliganAnimationKey) {
+      return null;
+    }
+    return {
+      key: animationKey,
+      selectedCount: selectedCardIds.length,
+      selectedCardIds,
+      drawnCardIds,
+      baseHandCardIds: aiMulliganBaseHand?.cardIds ?? [],
+    };
+  }, [
+    activeSetupKey,
+    aiMulliganBaseHand?.cardIds,
+    aiSeat,
+    commandEventsBySequence,
+    completedMulliganAnimationKey,
+    latestAiMulliganRecord,
+    latestAiMulliganRedrawBatch,
+    match?.phase,
+  ]);
+  const visibleMulliganExitAnimation = mulliganExitAnimation ?? pendingMulliganExitAnimation;
+  const visibleMulliganExitAnimationKey = visibleMulliganExitAnimation?.key ?? null;
+  const isMulliganReviewReady = Boolean(
+    visibleMulliganExitAnimationKey && readyMulliganAnimationKey === visibleMulliganExitAnimationKey,
+  );
+  const isStartMatchModalOpen = Boolean(
+    visibleMulliganExitAnimation &&
+      isMulliganReviewReady &&
+      !isStartMatchModalDismissed,
+  );
+  const visibleHumanMulliganAnimation = humanMulliganAnimation ?? pendingHumanMulliganAnimation;
+  const visibleHumanMulliganAnimationKey = visibleHumanMulliganAnimation?.key ?? null;
+  const aiMulliganDecisionKey =
+    match?.phase === "mulligan" &&
+    match.seats[humanSeat].mulliganComplete &&
+    !match.seats[aiSeat].mulliganComplete &&
+    !visibleHumanMulliganAnimation &&
+    !visibleMulliganExitAnimation
+      ? `${activeSetupKey}|ai-thinking|${match.seats[aiSeat].mulligansUsed}`
+      : null;
+  const isAiMulliganChoosing = Boolean(
+    aiMulliganDecisionKey && readyAiMulliganDecisionKey !== aiMulliganDecisionKey,
+  );
+
+  useEffect(() => {
+    if (!aiMulliganDecisionKey || !match) {
+      return;
+    }
+    const baseKey = `${activeSetupKey}|ai-mulligan-base`;
+    setAiMulliganBaseHand((current) =>
+      current?.key === baseKey ? current : { key: baseKey, cardIds: [...match.seats[aiSeat].hand] },
+    );
+  }, [activeSetupKey, aiMulliganDecisionKey, aiSeat, match]);
+
+  useEffect(() => {
+    if (!pendingHumanMulliganAnimation) {
+      return;
+    }
+    setHumanMulliganAnimation((current) =>
+      current?.key === pendingHumanMulliganAnimation.key ? current : pendingHumanMulliganAnimation,
+    );
+  }, [pendingHumanMulliganAnimation]);
+
+  useEffect(() => {
+    if (!visibleHumanMulliganAnimationKey) {
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      setCompletedHumanMulliganAnimationKey(visibleHumanMulliganAnimationKey);
+      setHumanMulliganAnimation((current) =>
+        current?.key === visibleHumanMulliganAnimationKey ? null : current,
+      );
+    }, HUMAN_MULLIGAN_ANIMATION_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [visibleHumanMulliganAnimationKey]);
+
+  useEffect(() => {
+    if (!pendingMulliganExitAnimation) {
+      return;
+    }
+    setMulliganExitAnimation((current) =>
+      current?.key === pendingMulliganExitAnimation.key ? current : pendingMulliganExitAnimation,
+    );
+    setReadyMulliganAnimationKey((current) =>
+      current === pendingMulliganExitAnimation.key ? current : null,
+    );
+  }, [pendingMulliganExitAnimation]);
+
+  useEffect(() => {
+    setStartMatchModalDismissed(false);
+  }, [visibleMulliganExitAnimationKey]);
+
+  useEffect(() => {
+    if (!visibleMulliganExitAnimation || !visibleMulliganExitAnimationKey) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setReadyMulliganAnimationKey(visibleMulliganExitAnimationKey);
+    }, aiMulliganReviewDelay(visibleMulliganExitAnimation.selectedCount));
+
+    return () => window.clearTimeout(timeoutId);
+  }, [visibleMulliganExitAnimation, visibleMulliganExitAnimationKey]);
+
+  useEffect(() => {
+    if (!aiMulliganDecisionKey || readyAiMulliganDecisionKey === aiMulliganDecisionKey) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setReadyAiMulliganDecisionKey(aiMulliganDecisionKey);
+    }, AI_MULLIGAN_THINKING_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [aiMulliganDecisionKey, readyAiMulliganDecisionKey]);
+
+  useEffect(() => {
+    if (visibleMulliganExitAnimation || visibleHumanMulliganAnimation) {
+      return;
+    }
+    if (aiMulliganDecisionKey && readyAiMulliganDecisionKey !== aiMulliganDecisionKey) {
+      return;
+    }
+    const command = getLegalHeuristicAiCommand(engine, aiSeat, humanSeat);
+    if (!command) {
+      return;
+    }
+
+    if (debugRevealAiMulligan && debugAiMulliganCount !== null && command.type === "ChooseMulligan") {
+      const usedRedraws = engine.match?.seats[aiSeat].mulligansUsed ?? 0;
+      const shouldDebugRedraw = usedRedraws < debugAiMulliganCount;
+      const debugMulliganMove = shouldDebugRedraw
+        ? aiMoves.find((move) => move.kind === "choose_mulligan" && move.cardIds.length === 1)
+        : (
+            aiMoves.find((move) => move.kind === "choose_mulligan" && move.cardIds.length === 0) ??
+            aiMoves.find((move) => move.kind === "choose_mulligan")
+          );
+      if (debugMulliganMove?.kind === "choose_mulligan") {
+        dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: aiSeat, cardIds: debugMulliganMove.cardIds }));
+        return;
+      }
+    }
+
+    dispatch(dispatchEngineCommand(command));
+  }, [
+    aiMoves,
+    aiSeat,
+    debugAiMulliganCount,
+    debugRevealAiMulligan,
+    dispatch,
+    engine,
+    humanSeat,
+    aiMulliganDecisionKey,
+    readyAiMulliganDecisionKey,
+    visibleHumanMulliganAnimation,
+    visibleMulliganExitAnimation,
+  ]);
 
   const startNewGame = useCallback(() => {
     setDiscardOpenSeat(null);
     setDismissedRoundOverlayKey(null);
+    setPendingSetupConfirmation(false);
+    setMulliganExitAnimation(null);
+    setCompletedMulliganAnimationKey(null);
+    setReadyMulliganAnimationKey(null);
+    setHumanMulliganAnimation(null);
+    setCompletedHumanMulliganAnimationKey(null);
+    setReadyAiMulliganDecisionKey(null);
+    setStartMatchModalDismissed(false);
     dispatch(startEngineMatch(setupConfig ? setupConfigToStartEngineOptions(setupConfig) : { seed: startSeed }));
   }, [dispatch, setupConfig, startSeed]);
 
-  const toggleMulliganCard = useCallback(
-    (cardId: CardInstanceId) => {
-      const nextSelection = selectedCardIds.includes(cardId)
-        ? selectedCardIds.filter((selectedId) => selectedId !== cardId)
-        : selectedCardIds.length < 2
-          ? [...selectedCardIds, cardId]
-          : selectedCardIds;
-      dispatch(engineSelectedCardIdsSet(nextSelection));
-    },
-    [dispatch, selectedCardIds],
-  );
+  const confirmMulliganReview = useCallback(() => {
+    if (!visibleMulliganExitAnimationKey || !isMulliganReviewReady) {
+      return;
+    }
+    setCompletedMulliganAnimationKey(visibleMulliganExitAnimationKey);
+    setMulliganExitAnimation((current) =>
+      current?.key === visibleMulliganExitAnimationKey ? null : current,
+    );
+    setReadyMulliganAnimationKey((current) => (current === visibleMulliganExitAnimationKey ? null : current));
+    setAiMulliganBaseHand(null);
+    setStartMatchModalDismissed(false);
+  }, [isMulliganReviewReady, visibleMulliganExitAnimationKey]);
+
+  const reviewMulliganHand = useCallback(() => {
+    setStartMatchModalDismissed(true);
+  }, []);
+
+  const requestStartMatchModal = useCallback(() => {
+    setStartMatchModalDismissed(false);
+  }, []);
+
+  const returnToPreGame = useCallback(() => {
+    if (!onReturnToPreGame) {
+      return;
+    }
+    setDiscardOpenSeat(null);
+    setDismissedRoundOverlayKey(null);
+    setPendingSetupConfirmation(false);
+    setMulliganExitAnimation(null);
+    setCompletedMulliganAnimationKey(null);
+    setReadyMulliganAnimationKey(null);
+    setHumanMulliganAnimation(null);
+    setCompletedHumanMulliganAnimationKey(null);
+    setReadyAiMulliganDecisionKey(null);
+    setAiMulliganBaseHand(null);
+    setStartMatchModalDismissed(false);
+    dispatch(engineMatchCleared());
+    onReturnToPreGame();
+  }, [dispatch, onReturnToPreGame]);
+
+  const requestReturnToPreGame = useCallback(() => {
+    if (!onReturnToPreGame) {
+      return;
+    }
+    if (match && match.phase !== "game_end") {
+      setPendingSetupConfirmation(true);
+      return;
+    }
+    returnToPreGame();
+  }, [match, onReturnToPreGame, returnToPreGame]);
 
   const playableCardIds = useMemo(() => getPlayableCardIds(humanMoves), [humanMoves]);
   const selectedPlayMoves = useMemo(() => getPlayMovesForCard(humanMoves, selectedCardId), [humanMoves, selectedCardId]);
@@ -873,31 +1284,26 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       return;
     }
 
+    if (match?.phase === "mulligan") {
+      return;
+    }
+
     const selectedStillInHand = humanHand.some((card) => card.instanceId === selectedCardId);
     const selectedStillPlayable = selectedPlayMoves.length > 0;
-    if (match?.phase !== "mulligan" && (match?.phase !== "playing" || !selectedStillInHand || !selectedStillPlayable)) {
+    if (match?.phase !== "playing" || !selectedStillInHand || !selectedStillPlayable) {
       dispatch(engineSelectionCleared());
     }
   }, [dispatch, humanHand, match?.phase, selectedCardId, selectedPlayMoves.length]);
 
   const selectHandCard = useCallback(
     (cardId: CardInstanceId) => {
-      if (match?.phase === "mulligan" && !match.seats[humanSeat].mulliganComplete) {
-        toggleMulliganCard(cardId);
-        return;
-      }
-
       if (match?.phase === "playing" && playableCardIds.has(cardId) && canHumanAct && !prompt) {
         dispatch(engineSelectedCardSet(selectedCardId === cardId ? null : cardId));
       }
     },
-    [canHumanAct, dispatch, humanSeat, match, playableCardIds, prompt, selectedCardId, toggleMulliganCard],
+    [canHumanAct, dispatch, match?.phase, playableCardIds, prompt, selectedCardId],
   );
 
-  const selectedMulliganMove = humanMoves.find(
-    (move) => move.kind === "choose_mulligan" && sameCardSelection(move.cardIds, selectedCardIds),
-  );
-  const canConfirmMulligan = Boolean(match?.phase === "mulligan" && selectedMulliganMove);
   const canPass = humanMoves.some((move) => move.kind === "pass");
   const canResolveRound = humanMoves.some((move) => move.kind === "resolve_round_end");
   const humanLeaderUsed = leaders?.[humanSeat].used ?? true;
@@ -914,12 +1320,6 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     leaderUsed: humanLeaderUsed,
     leaderMove,
   });
-
-  const confirmMulligan = useCallback(() => {
-    if (selectedMulliganMove?.kind === "choose_mulligan") {
-      dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: humanSeat, cardIds: selectedMulliganMove.cardIds }));
-    }
-  }, [dispatch, humanSeat, selectedMulliganMove]);
 
   const pass = useCallback(() => {
     dispatch(dispatchEngineCommand({ type: "Pass", seatId: humanSeat }));
@@ -1046,18 +1446,70 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const latestRound = roundHistory.at(-1) ?? null;
   const gemsBySeat = match ? { seat_a: match.seats.seat_a.gems, seat_b: match.seats.seat_b.gems } : null;
   const showRoundOverlay = Boolean(latestRoundOverlay && latestRoundOverlay.key !== dismissedRoundOverlayKey);
+  const seedLabel = `Seed ${String(seed ?? startSeed ?? "default")}`;
+
+  if (match?.phase === "mulligan" || visibleMulliganExitAnimation) {
+    return (
+      <>
+        <AuthenticMulliganScreen
+          seedLabel={seedLabel}
+          statusLabel={
+            visibleMulliganExitAnimation
+              ? isMulliganReviewReady
+                ? "Opponent mulligan complete."
+                : "Opponent mulligan in progress."
+              : statusBanner.errorLabel ?? statusBanner.nextAction
+          }
+          aiMulliganAnimation={
+            visibleMulliganExitAnimation
+              ? {
+                  selectedCount: visibleMulliganExitAnimation.selectedCount,
+                  selectedCardIds: visibleMulliganExitAnimation.selectedCardIds,
+                  drawnCardIds: visibleMulliganExitAnimation.drawnCardIds,
+                  baseHandCardIds: visibleMulliganExitAnimation.baseHandCardIds,
+                }
+              : undefined
+          }
+          aiMulliganBaseHandCardIds={aiMulliganBaseHand?.cardIds}
+          humanMulliganAnimation={
+            visibleHumanMulliganAnimation
+              ? {
+                  selectedCardIds: visibleHumanMulliganAnimation.selectedCardIds,
+                  drawnCardIds: visibleHumanMulliganAnimation.drawnCardIds,
+                }
+              : undefined
+          }
+          debugRevealAiCards={debugRevealAiMulligan}
+          isAiMulliganChoosing={isAiMulliganChoosing}
+          isMulliganReviewReady={isMulliganReviewReady}
+          onRequestStartMatch={requestStartMatchModal}
+          onRequestSetup={onReturnToPreGame ? requestReturnToPreGame : undefined}
+        />
+        {isStartMatchModalOpen ? (
+          <StartMatchModal open onReviewHand={reviewMulliganHand} onStart={confirmMulliganReview} />
+        ) : null}
+        {pendingSetupConfirmation ? (
+          <ReturnToSetupModal
+            open
+            onStay={() => setPendingSetupConfirmation(false)}
+            onLeave={returnToPreGame}
+          />
+        ) : null}
+      </>
+    );
+  }
 
   return (
     <main className="gwent-authentic gwent-authentic--match" data-testid="authentic-match-screen">
       <div className="authentic-match">
         <TopBar
-          seedLabel={`Seed ${String(seed ?? startSeed ?? "default")}`}
+          seedLabel={seedLabel}
           roundLabel={statusBanner.roundLabel}
           actorLabel={statusBanner.actorLabel}
           phaseLabel={statusBanner.phaseLabel}
           nextAction={statusBanner.errorLabel ?? statusBanner.nextAction}
           onNewGame={startNewGame}
-          onReturnToPreGame={onReturnToPreGame}
+          onReturnToPreGame={onReturnToPreGame ? requestReturnToPreGame : undefined}
         />
 
         <div className="authentic-match__layout">
@@ -1106,8 +1558,6 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
             <HandStrip
               cards={handCards}
               selectedCardId={selectedCardId}
-              selectedCardIds={selectedCardIds}
-              phase={match?.phase}
               playableCardIds={playableCardIds}
               disabledByCardId={disabledByCardId}
               onCardClick={selectHandCard}
@@ -1124,10 +1574,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               leaderLabel={leaderActionLabel}
               leaderDisabled={disableLeaderAction}
               onUseLeader={useLeader}
-              mulliganLabel={match?.phase === "mulligan" ? `${selectedCardIds.length}/2 selected for mulligan` : null}
-              canConfirmMulligan={canConfirmMulligan}
-              onConfirmMulligan={confirmMulligan}
-              roundEndLabel={match?.phase === "round_end" ? roundEndSummary?.resolveLabel ?? "Resolve Round" : null}
+              roundEndLabel={match?.phase === "round_end" ? roundEndSummary?.resolveLabel ?? "resolve round" : null}
               canResolveRound={canResolveRound}
               onResolveRound={resolveRound}
             />
@@ -1188,7 +1635,14 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
             gemsBySeat={gemsBySeat}
             onDismiss={() => setDismissedRoundOverlayKey(latestRoundOverlay.key)}
             onRematch={startNewGame}
-            onChangeDeck={onReturnToPreGame}
+            onChangeDeck={onReturnToPreGame ? returnToPreGame : undefined}
+          />
+        ) : null}
+        {pendingSetupConfirmation ? (
+          <ReturnToSetupModal
+            open
+            onStay={() => setPendingSetupConfirmation(false)}
+            onLeave={returnToPreGame}
           />
         ) : null}
       </div>

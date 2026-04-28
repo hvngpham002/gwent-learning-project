@@ -54,6 +54,7 @@ export interface SeatState {
   leaderSourceId: string;
   leaderUsed: boolean;
   mulliganComplete: boolean;
+  mulligansUsed: number;
   sideDeck: CardInstanceId[];
   removedFromGame: CardInstanceId[];
   board: BoardSide;

@@ -97,9 +97,10 @@
 
 .authentic-alert__eyebrow {
   color: var(--alert-severity);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.18em;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -132,9 +133,9 @@
 .authentic-alert__body {
   margin-top: 12px;
   color: var(--ink-2);
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 13px;
-  font-style: italic;
+  font-style: normal;
   line-height: 1.5;
 }
 
@@ -193,42 +194,9 @@
 
 .gwent-authentic .authentic-alert__button {
   min-width: 0;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.gwent-authentic .authentic-alert__button--ghost {
-  padding: 6px 14px;
-  border: 1px solid var(--rule-strong);
-  background: transparent;
-  color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-}
-
-.gwent-authentic .authentic-alert__button--primary,
-.gwent-authentic .authentic-alert__button--destructive {
-  padding: 6px 16px;
-  border: 1px solid #4a1a08;
-  background: var(--accent);
-  color: #f0e2c0;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-style: italic;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.gwent-authentic .authentic-alert__button--destructive {
-  border-color: #2a0a04;
-  background: #5a1a08;
-  color: #f0d8c0;
 }
 
 .gwent-authentic .authentic-alert__button:disabled {
-  cursor: not-allowed;
   opacity: 0.45;
 }
 
@@ -264,9 +232,9 @@
   background: var(--bg-paper);
   box-shadow: 0 6px 16px rgba(40, 28, 12, 0.25);
   color: var(--ink);
-  font-family: var(--font-display);
+  font-family: var(--font-body);
   font-size: 13px;
-  font-style: italic;
+  font-style: normal;
 }
 
 .authentic-toast--info {
@@ -286,12 +254,12 @@
   --alert-severity: var(--sev-success);
 }
 
-.authentic-toast button {
+.authentic-toast button:not(.authentic-button) {
   border: 0;
   background: transparent;
   color: var(--ink-3);
   cursor: pointer;
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-size: 12px;
 }
 

@@ -96,16 +96,16 @@ const playMoveTargets = (state: MatchState, seatId: SeatId, sourceId: string) =>
   legalMoves(state, seatId).filter((move) => move.kind === "play_card" && move.sourceId === sourceId);
 
 describe("core legal move generator", () => {
-  it("returns 0/1/2-card mulligan choices using only acting-seat hand IDs", () => {
+  it("returns keep-hand and one-card mulligan choices using only acting-seat hand IDs", () => {
     const state = createState("mulligan");
     const moves = legalMoves(state, "seat_a").filter((move) => move.kind === "choose_mulligan");
     const ownHandIds = new Set(state.seats.seat_a.hand);
     const opponentHandIds = new Set(state.seats.seat_b.hand);
 
-    expect(moves).toHaveLength(56);
+    expect(moves).toHaveLength(11);
     expect(moves.some((move) => move.cardIds.length === 0)).toBe(true);
     expect(moves.some((move) => move.cardIds.length === 1)).toBe(true);
-    expect(moves.some((move) => move.cardIds.length === 2)).toBe(true);
+    expect(moves.some((move) => move.cardIds.length === 2)).toBe(false);
     moves.flatMap((move) => move.cardIds).forEach((cardId) => {
       expect(ownHandIds.has(cardId)).toBe(true);
       expect(opponentHandIds.has(cardId)).toBe(false);

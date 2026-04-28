@@ -1,6 +1,6 @@
 # Browser Smoke Tests
 
-The browser smoke harness uses Playwright with Chromium only. It covers the opt-in engine shell as a short UI regression tripwire; it is not a full game automation suite.
+The browser smoke harness uses Playwright with Chromium only. It covers the opt-in engine shell and the current authentic product loop as short UI regression tripwires; it is not a full game automation suite.
 
 ## Local Setup
 
@@ -46,7 +46,11 @@ npm run ci:browser
 
 The default local `npm run ci` gate remains the fast deterministic unit/lint/build/project-state/worktree check. GitHub Actions runs `npm run ci`, installs Chromium with Playwright, then runs `npm run ci:browser`.
 
-## dp6-smoke Coverage
+## Current Committed Coverage
+
+The committed smoke spec currently runs 13 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, mulligan, modal, and match entry flows.
+
+## dp6-smoke Engine Shell Coverage
 
 The committed smoke spec uses:
 
@@ -69,11 +73,31 @@ It verifies:
 
 The browser test intentionally checks visible page text for internal labels and generated AI hidden-card IDs such as `instanceId`, `sourceId`, and `seat_b:000:`-style values. It does not assert that all AI card names are absent, because AI cards can become public after board, weather, discard, or event exposure.
 
+The authentic mulligan smoke extends this guard to the normal non-debug product route: AI hand and AI mulligan presentation text must remain backs/counts only. Debug routes such as `debugAiMulligan=1` intentionally reveal AI cards for animation inspection and are tested separately as explicit debug exceptions.
+
+## Authentic Product Coverage
+
+The same smoke spec verifies:
+
+- `/` remains the legacy route, `/?engine=1` remains the diagnostic shell, and `?engine=1&ui=authentic` opens the authentic pre-game setup screen.
+- `/?engine=1&ui=authentic&view=harness` still opens the cEp1 foundation harness.
+- `/?engine=1&ui=authentic&view=ui-component-foundation` opens the component foundation page with shared tokens, audited typography, button variants, form controls, cards, backs, leaders, alerts, toasts, modals, and hidden-info-safe samples.
+- Pre-game `begin match →` opens the dedicated mulligan flow before the match table.
+- Direct `view=match` and deck-builder `play →` also land on mulligan first.
+- Human keep-hand and one-card redraw paths dispatch legal mulligan commands and present the player replacement animation.
+- The second one-card redraw keeps card opacity stable and avoids hand-strip scrollbars.
+- AI choosing, hidden-safe AI presentation, forced debug one/two-redraw animations, and forced zero-card wave inspection are reachable.
+- `Start the match?` and `Return to setup?` handoff modals render as overlay popups with transparent shells, not separate full parchment screens.
+- `review hand` dismisses the start modal, and the footer `start match` action reopens it before entering the match.
+- Returning to setup from a completed mulligan or in-progress match clears old engine adapter state, so starting the same setup/seed again begins at a fresh mulligan instead of stale prior history.
+- Shared button color/hover behavior is checked on normal and debug authentic routes.
+- Mobile width `390px` avoids horizontal overflow across pre-game, deck builder, mulligan, direct match, and post-confirm match entry.
+
 ## Current Limits
 
-The smoke suite is intentionally bounded. It does not cover a full game, drag/drop, multi-browser behavior, screenshot approval, AI-vs-AI simulation, deck builder flows, or polished mobile board UX.
+The smoke suite is intentionally bounded. It does not cover a full game, drag/drop, multi-browser behavior, screenshot approval, AI-vs-AI simulation, every deck-builder editing branch, full match-end click-through, or polished mobile board UX.
 
-Some selectors are `data-testid` attributes on user-visible regions and controls. They are more stable than class names, but they still depend on the current button-driven shell structure and should be revisited when the final spatial board UI replaces this smoke surface.
+Some selectors are `data-testid` attributes on user-visible regions and controls. They are more stable than class names, but they still depend on the current shell/product structure and should be revisited when final spatial board interactions replace this smoke surface.
 
 ## Failure Artifacts
 

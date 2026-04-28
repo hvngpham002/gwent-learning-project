@@ -12,9 +12,9 @@
 
 ## Behavior Changed
 
-- Round resolution no longer uses the compact seal-style alert. It now uses the handoff ledger broadside treatment with a score table, gem-loss row, and `Next round ->` action.
+- Round resolution no longer uses the compact seal-style alert. It now uses the handoff ledger broadside treatment with a score table, gem-loss row, and `next round →` action.
 - Match end now uses a crown-severity ledger popup with round-history rows and real standing data from engine state: match result, round count, and final gems.
-- Match-end actions are functional: `close` dismisses the popup, `change deck` returns to setup when that route callback exists, and `Rematch` starts the current setup again.
+- Match-end actions are functional: `close` dismisses the popup, `change deck` returns to setup when that route callback exists, and `rematch` starts the current setup again.
 - The new ledger presentation continues to derive scores, gem loss, winner, and final gems from engine state and does not add ranked/MMR placeholder data.
 
 ## Tests And Checks Run
@@ -53,4 +53,4 @@
 
 ## Recommended Next Step
 
-- Continue toward cEp6/Card Studio after visual review, unless more authentic match popup/navigation details need another focused follow-up.
+- Superseded by cEp6 final planning: cEp6 delivered mulligan/product navigation. Proceed to cEp7 planning for Card Studio and content workflow after visual review.

@@ -186,6 +186,7 @@ const engineSlice = createSlice({
         state.status = "error";
       }
     },
+    engineMatchCleared: () => createInitialEngineState(),
     enginePresentationLockSet: (
       state,
       action: PayloadAction<{ kind: "animation" | "ai_thinking"; owner?: SeatId }>,
@@ -225,6 +226,7 @@ export const {
   engineCommandApplied,
   engineCommandRejected,
   engineCommandResolving,
+  engineMatchCleared,
   engineMatchStarted,
   enginePresentationLockCleared,
   enginePresentationLockSet,

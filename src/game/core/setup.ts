@@ -191,6 +191,7 @@ const instantiateSeat = (
     leaderSourceId: leaderSource.sourceId,
     leaderUsed: false,
     mulliganComplete: false,
+    mulligansUsed: 0,
     sideDeck,
     removedFromGame: [],
     board: createBoard(),

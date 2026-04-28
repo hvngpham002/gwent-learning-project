@@ -34,7 +34,7 @@
 
 .authentic-harness__title {
   font-family: var(--font-display);
-  font-style: italic;
+  font-style: normal;
   font-weight: 600;
   font-size: 22px;
   color: var(--ink);
@@ -42,10 +42,11 @@
 }
 
 .authentic-harness__caption {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-3);
 }
 
@@ -61,17 +62,18 @@
 }
 
 .authentic-harness__panel-title {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-3);
   margin: 0;
 }
 
 .authentic-harness__panel-subtitle {
-  font-family: var(--font-display);
-  font-style: italic;
+  font-family: var(--font-body);
+  font-style: normal;
   font-size: 14px;
   color: var(--ink-2);
   margin: 0;
@@ -98,10 +100,11 @@
   border-radius: 999px;
   border: 1px solid var(--rule-strong);
   background: var(--bg-2);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-2);
 }
 
@@ -123,10 +126,11 @@
 }
 
 .authentic-harness__row-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--ink-3);
 }
 
@@ -137,8 +141,8 @@
 }
 
 .authentic-harness__notes {
-  font-family: var(--font-display);
-  font-style: italic;
+  font-family: var(--font-body);
+  font-style: normal;
   font-size: 13px;
   color: var(--ink-2);
   margin: 0;
@@ -325,7 +329,7 @@
   display: grid;
   place-items: center;
   padding: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-data);
   font-weight: 700;
   font-size: var(--authentic-card-strength-font-size);
   line-height: 1;

@@ -275,19 +275,21 @@ const chooseMulligan = (input: StatefulCommandInput): EngineTransaction => {
   const { seatId, cardIds } = input.command as Extract<EngineCommand, { type: "ChooseMulligan" }>;
   const rng = createSeededRngFromState(state.rng.seed, state.rng.state);
   const selected = sortedIds(cardIds);
+  const redrawCount = selected.length;
 
   selected.forEach((cardId) => {
     removeFromArray(state.seats[seatId].hand, cardId);
   });
 
-  const drawn = state.seats[seatId].deck.slice(0, selected.length);
+  const drawn = state.seats[seatId].deck.slice(0, redrawCount);
   drawn.forEach((cardId) => moveCard(state, events, cardId, { kind: "hand", seat: seatId }, "mulligan_draw"));
 
   selected.forEach((cardId) => moveCard(state, events, cardId, { kind: "deck", seat: seatId }, "mulligan_return"));
 
   state.seats[seatId].deck = shuffleWithRng(state.seats[seatId].deck, rng);
   state.rng.state = rng.getState();
-  state.seats[seatId].mulliganComplete = true;
+  state.seats[seatId].mulligansUsed += redrawCount;
+  state.seats[seatId].mulliganComplete = redrawCount === 0 || state.seats[seatId].mulligansUsed >= 2;
   events.push({ type: "mulligan_chosen", seatId, cardIds: selected, drawCount: drawn.length });
   if (selected.length > 0) {
     events.push({ type: "deck_shuffled", seatId, reason: "mulligan" });

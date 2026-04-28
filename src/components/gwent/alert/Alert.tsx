@@ -1,16 +1,18 @@
 import React from "react";
 
+import AuthenticButton, { type AuthenticButtonSize, type AuthenticButtonVariant } from "../AuthenticButton";
 import SeveritySigil, { type AlertSeverity } from "./SeveritySigil";
 import "./alert.css";
 
 export type { AlertSeverity };
 export type AlertVariant = "seal" | "ledger";
-export type AlertActionKind = "primary" | "ghost" | "destructive";
+export type AlertActionKind = Extract<AuthenticButtonVariant, "primary" | "secondary" | "ghost" | "destructive">;
 
 export interface AlertAction {
   readonly label: string;
   readonly onClick: () => void;
   readonly kind?: AlertActionKind;
+  readonly size?: AuthenticButtonSize;
   readonly disabled?: boolean;
   readonly testId?: string;
 }
@@ -75,22 +77,32 @@ export const Alert: React.FC<AlertProps> = ({
       {(dismissible && onDismiss) || actions.length > 0 ? (
         <div className="authentic-alert__actions">
           {dismissible && onDismiss ? (
-            <button type="button" className="authentic-alert__button authentic-alert__button--ghost" onClick={onDismiss}>
-              dismiss
-            </button>
-          ) : null}
-          {actions.map((action) => (
-            <button
-              key={action.label}
+            <AuthenticButton
               type="button"
-              className={`authentic-alert__button authentic-alert__button--${action.kind ?? "ghost"}`}
-              disabled={action.disabled}
-              data-testid={action.testId}
-              onClick={action.onClick}
+              variant="ghost"
+              className="authentic-alert__button authentic-alert__button--ghost"
+              onClick={onDismiss}
             >
-              {action.label}
-            </button>
-          ))}
+              dismiss
+            </AuthenticButton>
+          ) : null}
+          {actions.map((action) => {
+            const kind = action.kind ?? "ghost";
+            return (
+              <AuthenticButton
+                key={action.label}
+                type="button"
+                variant={kind}
+                size={action.size}
+                className={`authentic-alert__button authentic-alert__button--${kind}`}
+                disabled={action.disabled}
+                data-testid={action.testId}
+                onClick={action.onClick}
+              >
+                {action.label}
+              </AuthenticButton>
+            );
+          })}
         </div>
       ) : null}
     </section>
