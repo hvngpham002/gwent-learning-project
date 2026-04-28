@@ -116,6 +116,25 @@ export const findLegalMulliganMove = (
 ): ChooseMulliganMove | null =>
   moves.find((move): move is ChooseMulliganMove => move.kind === "choose_mulligan" && sameCardSelection(move.cardIds, selectedCardIds)) ?? null;
 
+export const chooseDebugAiMulliganMove = ({
+  moves,
+  mulligansUsed,
+  desiredRedrawCount,
+}: {
+  readonly moves: readonly LegalMove[];
+  readonly mulligansUsed: number;
+  readonly desiredRedrawCount: number;
+}): ChooseMulliganMove | null => {
+  const mulliganMoves = moves.filter((move): move is ChooseMulliganMove => move.kind === "choose_mulligan");
+  const shouldRedraw = mulligansUsed < desiredRedrawCount;
+
+  if (shouldRedraw) {
+    return mulliganMoves.find((move) => move.cardIds.length === 1) ?? null;
+  }
+
+  return mulliganMoves.find((move) => move.cardIds.length === 0) ?? mulliganMoves[0] ?? null;
+};
+
 export const toggleMulliganSelection = ({
   selectedCardIds,
   cardId,

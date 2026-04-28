@@ -5,6 +5,7 @@ import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selec
 import {
   buildRoundOverlayViewModel,
   buildAuthenticSeatSummary,
+  chooseDebugAiMulliganMove,
   engineCardToAuthenticCard,
   findLegalMulliganMove,
   buildGameEndNavigationActions,
@@ -156,6 +157,55 @@ describe("authentic match view models", () => {
     );
 
     expect(move).toEqual(expect.objectContaining({ cardIds: [] }));
+  });
+
+  it("chooses only legal debug AI mulligan moves for forced keep and redraw counts", () => {
+    const moves: LegalMove[] = [
+      {
+        kind: "choose_mulligan",
+        moveId: "mulligan:seat_b:none",
+        seatId: "seat_b",
+        label: "Keep hand",
+        cardIds: [],
+        metadata: { cardCount: 0, maxCards: 1 },
+      },
+      {
+        kind: "choose_mulligan",
+        moveId: "mulligan:seat_b:first",
+        seatId: "seat_b",
+        label: "Mulligan first card",
+        cardIds: ["seat_b:000:first"],
+        metadata: { cardCount: 1, maxCards: 1 },
+      },
+      {
+        kind: "pass",
+        moveId: "pass:seat_b",
+        seatId: "seat_b",
+        label: "Pass",
+        target: { kind: "none" },
+      },
+    ];
+
+    expect(chooseDebugAiMulliganMove({ moves, mulligansUsed: 0, desiredRedrawCount: 0 })?.moveId).toBe("mulligan:seat_b:none");
+    expect(chooseDebugAiMulliganMove({ moves, mulligansUsed: 0, desiredRedrawCount: 1 })?.moveId).toBe("mulligan:seat_b:first");
+    expect(chooseDebugAiMulliganMove({ moves, mulligansUsed: 1, desiredRedrawCount: 2 })?.moveId).toBe("mulligan:seat_b:first");
+    expect(chooseDebugAiMulliganMove({ moves, mulligansUsed: 2, desiredRedrawCount: 2 })?.moveId).toBe("mulligan:seat_b:none");
+  });
+
+  it("does not invent a debug AI redraw when no legal one-card mulligan exists", () => {
+    const moves: LegalMove[] = [
+      {
+        kind: "choose_mulligan",
+        moveId: "mulligan:seat_b:none",
+        seatId: "seat_b",
+        label: "Keep hand",
+        cardIds: [],
+        metadata: { cardCount: 0, maxCards: 1 },
+      },
+    ];
+
+    expect(chooseDebugAiMulliganMove({ moves, mulligansUsed: 0, desiredRedrawCount: 1 })).toBeNull();
+    expect(chooseDebugAiMulliganMove({ moves, mulligansUsed: 1, desiredRedrawCount: 1 })?.moveId).toBe("mulligan:seat_b:none");
   });
 
   it("caps mulligan selection at one card per redraw and frees the slot when deselecting", () => {

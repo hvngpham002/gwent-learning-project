@@ -86,10 +86,10 @@ The same smoke spec verifies:
 - Direct `view=match` and deck-builder `play →` also land on mulligan first.
 - Human keep-hand and one-card redraw paths dispatch legal mulligan commands and present the player replacement animation.
 - The second one-card redraw keeps card opacity stable and avoids hand-strip scrollbars.
-- AI choosing, hidden-safe AI presentation, forced debug one/two-redraw animations, and forced zero-card wave inspection are reachable.
+- AI choosing, hidden-safe AI presentation, forced debug zero-card keep, one-redraw, and two-redraw animations are reachable for QA inspection.
 - `Start the match?` and `Return to setup?` handoff modals render as overlay popups with transparent shells, not separate full parchment screens.
 - `review hand` dismisses the start modal, and the footer `start match` action reopens it before entering the match.
-- Returning to setup from a completed mulligan or in-progress match clears old engine adapter state, so starting the same setup/seed again begins at a fresh mulligan instead of stale prior history.
+- Returning to setup from a completed mulligan review/start-modal state or in-progress match clears old engine adapter state, so starting the same setup/seed again begins at a fresh mulligan instead of stale prior history.
 - Shared button color/hover behavior is checked on normal and debug authentic routes.
 - Mobile width `390px` avoids horizontal overflow across pre-game, deck builder, mulligan, direct match, and post-confirm match entry.
 

@@ -6,6 +6,7 @@ const authenticPregameRestartUrl = "/?engine=1&ui=authentic&seed=ep4-restart&deb
 const authenticDeckBuilderUrl = "/?engine=1&ui=authentic&view=deck-builder&seed=ep5-builder";
 const authenticDirectUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-direct";
 const authenticMulliganDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-debug&debugAiMulligan=1&debugAiMulliganCount=2";
+const authenticMulliganOneDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-one&debugAiMulligan=1&debugAiMulliganCount=1";
 const authenticMulliganKeepDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-keep&debugAiMulligan=1&debugAiMulliganCount=0";
 const authenticHarnessUrl = "/?engine=1&ui=authentic&view=harness";
 const authenticComponentFoundationUrl = "/?engine=1&ui=authentic&view=ui-component-foundation";
@@ -439,10 +440,9 @@ test("authentic return to setup discards the previous match before the next star
   await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("keep hand");
   await page.getByTestId("authentic-confirm-mulligan").click();
   await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
-  await page.getByTestId("authentic-start-match-confirm").click();
-  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
-
-  await page.getByRole("button", { name: "setup" }).click();
+  await page.getByTestId("authentic-start-match-review").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toHaveCount(0);
+  await page.getByTestId("authentic-mulligan-setup").click();
   await expect(page.getByTestId("authentic-abandon-confirmation")).toBeVisible();
   await page.getByTestId("authentic-confirm-abandon").click();
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
@@ -454,6 +454,8 @@ test("authentic return to setup discards the previous match before the next star
   await expect(page.getByTestId("authentic-confirm-mulligan")).toHaveText("keep hand");
   await expect(page.getByTestId("authentic-ai-mulligan-thinking")).toHaveCount(0);
   await expect(page.getByTestId("authentic-mulligan-status")).toContainText("0/1 selected");
+  await expect(page.getByTestId("authentic-ai-mulligan-debug")).toContainText("debug AI mulligan: no decision yet");
+  await expect(page.getByTestId("authentic-ai-mulligan-debug")).not.toContainText("debug AI mulligan: keep hand");
   expect(pageErrors).toEqual([]);
 });
 
@@ -565,7 +567,7 @@ test("authentic deck builder disables special adds at the composition cap", asyn
   expect(pageErrors).toEqual([]);
 });
 
-test("authentic mulligan debug route reveals AI decision and forced redraw animation", async ({ page }) => {
+test("authentic mulligan debug routes reveal AI decision and forced redraw animations", async ({ page }) => {
   await page.goto(authenticMulliganDebugUrl);
 
   await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
@@ -593,6 +595,15 @@ test("authentic mulligan debug route reveals AI decision and forced redraw anima
   await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
   await page.getByTestId("authentic-start-match-confirm").click();
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+
+  await page.goto(authenticMulliganOneDebugUrl);
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-mulligan-status")).toContainText("AI redraws 1 card");
+  await expect(page.locator('[data-ai-mulligan-state="redrawn"]')).toHaveCount(1);
+  await expect(page.locator(".authentic-mulligan__hidden-hand")).toHaveCSS("overflow-y", "hidden");
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 8000 });
+  await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
 
   await page.goto(authenticMulliganKeepDebugUrl);
   await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();

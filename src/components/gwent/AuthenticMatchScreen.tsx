@@ -65,6 +65,7 @@ import {
   buildMedicPromptOptions,
   buildRoundOverlayViewModel,
   buildVisibleCardLookup,
+  chooseDebugAiMulliganMove,
   getBoardCardTargetsById,
   getBoardRowTargetsByKey,
   groupDiscardCards,
@@ -831,6 +832,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const [readyAiMulliganDecisionKey, setReadyAiMulliganDecisionKey] = useState<string | null>(null);
   const [aiMulliganBaseHand, setAiMulliganBaseHand] = useState<AiMulliganBaseHand | null>(null);
   const [isStartMatchModalDismissed, setStartMatchModalDismissed] = useState(false);
+  const [matchPresentationRun, setMatchPresentationRun] = useState(0);
   const engine = useAppSelector(selectEngineState);
   const match = useAppSelector(selectEngineMatch);
   const status = useAppSelector(selectEngineStatus);
@@ -860,6 +862,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const debugRevealAiMulligan = useMemo(() => isDebugAiMulliganEnabled(), []);
   const debugAiMulliganCount = useMemo(() => getDebugAiMulliganCount(), []);
   const activeSetupKey = setupKey(setupConfig, startSeed);
+  const activeMatchKey = `${activeSetupKey}|run:${matchPresentationRun}`;
 
   useEffect(() => {
     setMulliganExitAnimation(null);
@@ -870,6 +873,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setReadyAiMulliganDecisionKey(null);
     setAiMulliganBaseHand(null);
     setStartMatchModalDismissed(false);
+    setMatchPresentationRun((current) => current + 1);
     if (setupConfig) {
       dispatch(startEngineMatch(setupConfigToStartEngineOptions(setupConfig)));
       return;
@@ -901,7 +905,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     if (!latestHumanMulliganRecord || latestHumanMulliganRecord.command.cardIds.length === 0) {
       return null;
     }
-    const animationKey = `${activeSetupKey}|human|${latestHumanMulliganRecord.sequence}`;
+    const animationKey = `${activeMatchKey}|human|${latestHumanMulliganRecord.sequence}`;
     if (animationKey === completedHumanMulliganAnimationKey) {
       return null;
     }
@@ -927,14 +931,14 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       selectedCardIds: latestHumanMulliganRecord.command.cardIds,
       drawnCardIds,
     };
-  }, [activeSetupKey, completedHumanMulliganAnimationKey, engine.lastTransactionEvents, humanSeat, latestHumanMulliganRecord]);
+  }, [activeMatchKey, completedHumanMulliganAnimationKey, engine.lastTransactionEvents, humanSeat, latestHumanMulliganRecord]);
   const pendingMulliganExitAnimation = useMemo<MulliganExitAnimation | null>(() => {
     if (!latestAiMulliganRecord || match?.phase !== "playing") {
       return null;
     }
     const firstRedrawRecord = latestAiMulliganRedrawBatch[0] ?? null;
     const lastRedrawRecord = latestAiMulliganRedrawBatch[latestAiMulliganRedrawBatch.length - 1] ?? null;
-    const animationKey = `${activeSetupKey}|${firstRedrawRecord?.sequence ?? latestAiMulliganRecord.sequence}-${
+    const animationKey = `${activeMatchKey}|${firstRedrawRecord?.sequence ?? latestAiMulliganRecord.sequence}-${
       lastRedrawRecord?.sequence ?? latestAiMulliganRecord.sequence
     }`;
     const selectedCardIds = latestAiMulliganRedrawBatch.flatMap((record) => record.command.cardIds);
@@ -956,10 +960,11 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       selectedCount: selectedCardIds.length,
       selectedCardIds,
       drawnCardIds,
-      baseHandCardIds: aiMulliganBaseHand?.cardIds ?? [],
+      baseHandCardIds: aiMulliganBaseHand?.key === `${activeMatchKey}|ai-mulligan-base` ? aiMulliganBaseHand.cardIds : [],
     };
   }, [
-    activeSetupKey,
+    activeMatchKey,
+    aiMulliganBaseHand?.key,
     aiMulliganBaseHand?.cardIds,
     aiSeat,
     commandEventsBySequence,
@@ -985,8 +990,9 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     match.seats[humanSeat].mulliganComplete &&
     !match.seats[aiSeat].mulliganComplete &&
     !visibleHumanMulliganAnimation &&
-    !visibleMulliganExitAnimation
-      ? `${activeSetupKey}|ai-thinking|${match.seats[aiSeat].mulligansUsed}`
+    !visibleMulliganExitAnimation &&
+    !pendingSetupConfirmation
+      ? `${activeMatchKey}|ai-thinking|${match.seats[aiSeat].mulligansUsed}`
       : null;
   const isAiMulliganChoosing = Boolean(
     aiMulliganDecisionKey && readyAiMulliganDecisionKey !== aiMulliganDecisionKey,
@@ -996,11 +1002,11 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     if (!aiMulliganDecisionKey || !match) {
       return;
     }
-    const baseKey = `${activeSetupKey}|ai-mulligan-base`;
+    const baseKey = `${activeMatchKey}|ai-mulligan-base`;
     setAiMulliganBaseHand((current) =>
       current?.key === baseKey ? current : { key: baseKey, cardIds: [...match.seats[aiSeat].hand] },
     );
-  }, [activeSetupKey, aiMulliganDecisionKey, aiSeat, match]);
+  }, [activeMatchKey, aiMulliganDecisionKey, aiSeat, match]);
 
   useEffect(() => {
     if (!pendingHumanMulliganAnimation) {
@@ -1012,7 +1018,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   }, [pendingHumanMulliganAnimation]);
 
   useEffect(() => {
-    if (!visibleHumanMulliganAnimationKey) {
+    if (!visibleHumanMulliganAnimationKey || pendingSetupConfirmation) {
       return;
     }
     const timeoutId = window.setTimeout(() => {
@@ -1023,7 +1029,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     }, HUMAN_MULLIGAN_ANIMATION_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [visibleHumanMulliganAnimationKey]);
+  }, [pendingSetupConfirmation, visibleHumanMulliganAnimationKey]);
 
   useEffect(() => {
     if (!pendingMulliganExitAnimation) {
@@ -1042,7 +1048,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   }, [visibleMulliganExitAnimationKey]);
 
   useEffect(() => {
-    if (!visibleMulliganExitAnimation || !visibleMulliganExitAnimationKey) {
+    if (!visibleMulliganExitAnimation || !visibleMulliganExitAnimationKey || pendingSetupConfirmation) {
       return;
     }
 
@@ -1051,10 +1057,10 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     }, aiMulliganReviewDelay(visibleMulliganExitAnimation.selectedCount));
 
     return () => window.clearTimeout(timeoutId);
-  }, [visibleMulliganExitAnimation, visibleMulliganExitAnimationKey]);
+  }, [pendingSetupConfirmation, visibleMulliganExitAnimation, visibleMulliganExitAnimationKey]);
 
   useEffect(() => {
-    if (!aiMulliganDecisionKey || readyAiMulliganDecisionKey === aiMulliganDecisionKey) {
+    if (!aiMulliganDecisionKey || readyAiMulliganDecisionKey === aiMulliganDecisionKey || pendingSetupConfirmation) {
       return;
     }
 
@@ -1063,9 +1069,12 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     }, AI_MULLIGAN_THINKING_MS);
 
     return () => window.clearTimeout(timeoutId);
-  }, [aiMulliganDecisionKey, readyAiMulliganDecisionKey]);
+  }, [aiMulliganDecisionKey, pendingSetupConfirmation, readyAiMulliganDecisionKey]);
 
   useEffect(() => {
+    if (pendingSetupConfirmation) {
+      return;
+    }
     if (visibleMulliganExitAnimation || visibleHumanMulliganAnimation) {
       return;
     }
@@ -1079,14 +1088,12 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
 
     if (debugRevealAiMulligan && debugAiMulliganCount !== null && command.type === "ChooseMulligan") {
       const usedRedraws = engine.match?.seats[aiSeat].mulligansUsed ?? 0;
-      const shouldDebugRedraw = usedRedraws < debugAiMulliganCount;
-      const debugMulliganMove = shouldDebugRedraw
-        ? aiMoves.find((move) => move.kind === "choose_mulligan" && move.cardIds.length === 1)
-        : (
-            aiMoves.find((move) => move.kind === "choose_mulligan" && move.cardIds.length === 0) ??
-            aiMoves.find((move) => move.kind === "choose_mulligan")
-          );
-      if (debugMulliganMove?.kind === "choose_mulligan") {
+      const debugMulliganMove = chooseDebugAiMulliganMove({
+        moves: aiMoves,
+        mulligansUsed: usedRedraws,
+        desiredRedrawCount: debugAiMulliganCount,
+      });
+      if (debugMulliganMove) {
         dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: aiSeat, cardIds: debugMulliganMove.cardIds }));
         return;
       }
@@ -1102,6 +1109,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     engine,
     humanSeat,
     aiMulliganDecisionKey,
+    pendingSetupConfirmation,
     readyAiMulliganDecisionKey,
     visibleHumanMulliganAnimation,
     visibleMulliganExitAnimation,
@@ -1117,7 +1125,9 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setHumanMulliganAnimation(null);
     setCompletedHumanMulliganAnimationKey(null);
     setReadyAiMulliganDecisionKey(null);
+    setAiMulliganBaseHand(null);
     setStartMatchModalDismissed(false);
+    setMatchPresentationRun((current) => current + 1);
     dispatch(startEngineMatch(setupConfig ? setupConfigToStartEngineOptions(setupConfig) : { seed: startSeed }));
   }, [dispatch, setupConfig, startSeed]);
 
