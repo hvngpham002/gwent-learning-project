@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-29
-- Phase/spec: `cBp5` implemented with follow-up catalog cleanup, Muster links, and Dwarven Skirmisher normalization
-- Latest relevant commit: `cBp5` implementation; this update covers follow-up duplicate pruning, stale deck-builder storage, leader image path reconciliation, official Muster group links, and Dwarven Skirmisher source consolidation
+- Phase/spec: `cCp10` specs authored for implemented engine ruleset audit
+- Latest relevant commit: `cBp5` implementation; this update adds the next documentation-only engine audit spec after follow-up catalog cleanup, Muster links, and Dwarven Skirmisher source consolidation
 
 ## Required Reading For Every Coding Instance
 
@@ -252,7 +252,7 @@ Latest Engine Rule implementation:
 
 ## Next Recommended Step
 
-Pick the next leader/rules implementation phase. Candidates: implement `play_fog`/`play_frost`/`play_rain`/`play_any_weather` so weather-pulling leaders generate executable legal moves; implement `scorch_siege`/`scorch_range` so the existing Foltest variants stop being placeholders; implement `avenger` so `neutral.cow-bovine-defense-force` and the planned Cow record can be promoted.
+Run `docs/spec/2026-04-29-cCp10-specs.md` before adding more rule effects. This is a documentation-only implemented-rules audit: inspect current engine behavior, catalog rule data, and existing tests against `docs/gwent-rules.md`; create `audit/reports/2026-04-29-cCp10-report.md`; update this file with the audit outcome; do not change implementation code or tests. After the audit report is reviewed, choose the next implementation spec from its ranked findings, likely one of: weather-pulling leaders, row Scorch leaders, Avenger/Cow, or focused bug fixes if the audit finds blocking issues.
 
 ## Update Requirements
 
