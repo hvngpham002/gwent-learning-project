@@ -18,101 +18,129 @@ import {
   validateDeckPresets,
 } from "@/game/catalog";
 
-const DEFER_PREFIXES = [
-  "ability_unknown:",
-  "ability_status:",
-  "rule_gap:",
-  "catalog_split_required:berserker",
-  "transform_link_required:",
-  "source_id_conflict:",
-];
-
-const isDeferred = (issues: readonly string[]): boolean =>
-  issues.some((issue) => DEFER_PREFIXES.some((prefix) => issue.startsWith(prefix)));
-
-describe("official catalog promotion (cBp4)", () => {
-  it("promotes exactly 157 official non-leader candidates and defers 2 Berserker combined candidates", () => {
-    expect(officialPromotionManifest.promotedCount).toBe(157);
-    expect(officialPromotionManifest.deferredCount).toBe(2);
-    expect(officialPromotionManifest.promotedSourceIds).toHaveLength(157);
-    expect(officialPromotionManifest.deferred).toHaveLength(2);
-    const deferredIds = officialPromotionManifest.deferred.map((entry) => entry.sourceId);
-    expect(deferredIds).toEqual([
-      "skellige.berserker-vildkaarl",
-      "skellige.young-berserker-young-vildkaarl",
-    ]);
-    officialPromotionManifest.deferred.forEach((entry) => {
-      expect(entry.reasons.some((r) => r.startsWith("transform_link_required:"))).toBe(true);
-      expect(entry.reasons.some((r) => r.startsWith("catalog_split_required:berserker"))).toBe(true);
-    });
+describe("official catalog promotion (cBp4 + cBp4.1)", () => {
+  it("reports 156 directly promoted candidates, 1 deferred candidate, and 160 promoted catalog sources", () => {
+    expect(officialPromotionManifest.directPromotedCandidateCount).toBe(156);
+    expect(officialPromotionManifest.deferredCandidateCount).toBe(1);
+    expect(officialPromotionManifest.promotedCatalogSourceCount).toBe(160);
+    expect(officialPromotionManifest.directPromotedCandidateIds).toHaveLength(156);
+    expect(officialPromotionManifest.promotedCatalogSourceIds).toHaveLength(160);
+    expect(officialPromotionManifest.deferred).toHaveLength(1);
+    expect(officialPromotionManifest.splitResolutions).toHaveLength(2);
   });
 
-  it("matches spec counts by faction and kind", () => {
+  it("matches cBp4.1 counts by faction and kind", () => {
     expect(officialPromotionManifest.countsByFaction).toEqual({
-      neutral: 22,
+      neutral: 21,
       northern_realms: 25,
       nilfgaard: 29,
       monsters: 35,
       scoiatael: 24,
-      skellige: 22,
+      skellige: 26,
     });
     expect(officialPromotionManifest.countsByKind).toEqual({
       hero: 25,
-      unit: 123,
+      unit: 126,
       special: 4,
       weather: 5,
     });
   });
 
-  it("cross-checks the manifest against the cBp3 staging scrape coverage", () => {
-    // Note: the staging matching is name-keyed, so it can introduce post-hoc
-    // source_id_conflict issues once promoted cards land in currentCatalogCards
-    // (e.g. duplicate-name physical cards like the two Dwarven Skirmisher copies).
-    // The manifest snapshot is the authoritative classification taken at promotion
-    // time. This test only verifies that every staging candidate is accounted for
-    // somewhere in the manifest and that the totals add up to the scrape size.
-    const stagingIds = new Set(
-      game8OfficialCardCandidates.map((candidate) => candidate.source.sourceId),
+  it("defers neutral.cow-bovine-defense-force with avenger split + rule_gap reasons", () => {
+    const deferredIds = officialPromotionManifest.deferred.map((entry) => entry.sourceId);
+    expect(deferredIds).toEqual(["neutral.cow-bovine-defense-force"]);
+    const cowEntry = officialPromotionManifest.deferred[0];
+    expect(cowEntry.reasons.some((r) => r.startsWith("catalog_split_required:avenger"))).toBe(true);
+    expect(cowEntry.reasons.some((r) => r.startsWith("rule_gap:avenger"))).toBe(true);
+  });
+
+  it("resolves the two combined Skellige Berserker scrape candidates via split catalog records", () => {
+    const splitByOriginal = new Map(
+      officialPromotionManifest.splitResolutions.map((resolution) => [
+        resolution.originalSourceId,
+        resolution,
+      ]),
     );
-    const manifestIds = new Set([
-      ...officialPromotionManifest.promotedSourceIds,
-      ...officialPromotionManifest.deferred.map((entry) => entry.sourceId),
+    expect(splitByOriginal.get("skellige.berserker-vildkaarl")?.catalogSourceIds).toEqual([
+      "skellige.berserker",
+      "skellige.vildkaarl",
     ]);
-    expect(officialPromotionManifest.promotedCount + officialPromotionManifest.deferredCount).toBe(
-      game8OfficialCardCandidates.length,
-    );
-    manifestIds.forEach((id) => expect(stagingIds.has(id)).toBe(true));
-    // Strictly Berserker-deferred candidates remain so under any catalog state because
-    // the transform_link_required:berserker issue does not depend on current catalog.
-    const stillDeferredBerserkers = game8OfficialCardCandidates
-      .filter((candidate) => isDeferred(candidate.portingIssues))
-      .filter((candidate) =>
-        candidate.portingIssues.some((issue) =>
-          issue.startsWith("transform_link_required:berserker"),
-        ),
+    expect(splitByOriginal.get("skellige.young-berserker-young-vildkaarl")?.catalogSourceIds).toEqual([
+      "skellige.young-berserker",
+      "skellige.young-vildkaarl",
+    ]);
+    officialPromotionManifest.splitResolutions.forEach((resolution) => {
+      expect(resolution.reasons.some((r) => r.startsWith("transform_link_required:berserker"))).toBe(
+        true,
       );
-    expect(stillDeferredBerserkers).toHaveLength(2);
-    stillDeferredBerserkers.forEach((candidate) => {
-      expect(
-        officialPromotionManifest.deferred.some(
-          (entry) => entry.sourceId === candidate.source.sourceId,
-        ),
-      ).toBe(true);
+      expect(resolution.reasons.some((r) => r.startsWith("catalog_split_required:berserker"))).toBe(
+        true,
+      );
     });
   });
 
-  it("includes every promoted source id in currentCatalogCards", () => {
+  it("totals direct promoted + deferred + split resolutions to the full Game8 scrape set", () => {
+    expect(
+      officialPromotionManifest.directPromotedCandidateCount +
+        officialPromotionManifest.deferredCandidateCount +
+        officialPromotionManifest.splitResolutions.length,
+    ).toBe(game8OfficialCardCandidates.length);
+    const accountedCandidateIds = new Set([
+      ...officialPromotionManifest.directPromotedCandidateIds,
+      ...officialPromotionManifest.deferred.map((entry) => entry.sourceId),
+      ...officialPromotionManifest.splitResolutions.map(
+        (resolution) => resolution.originalSourceId,
+      ),
+    ]);
+    expect(accountedCandidateIds.size).toBe(game8OfficialCardCandidates.length);
+    const stagingIds = new Set(
+      game8OfficialCardCandidates.map((candidate) => candidate.source.sourceId),
+    );
+    accountedCandidateIds.forEach((id) => expect(stagingIds.has(id)).toBe(true));
+  });
+
+  it("includes every promoted catalog source id in currentCatalogCards", () => {
     const presentIds = new Set(currentCatalogCards.map((card) => card.sourceId));
-    officialPromotionManifest.promotedSourceIds.forEach((id) => {
+    officialPromotionManifest.promotedCatalogSourceIds.forEach((id) => {
       expect(presentIds.has(id)).toBe(true);
     });
   });
 
-  it("excludes deferred Berserker combined candidates from currentCatalogCards", () => {
+  it("includes the four split Skellige source ids and links Berserker bases to their replacements", () => {
+    const skelligeIds = new Set(skelligeCatalogCards.map((card) => card.sourceId));
+    ["skellige.berserker", "skellige.vildkaarl", "skellige.young-berserker", "skellige.young-vildkaarl"].forEach(
+      (id) => expect(skelligeIds.has(id)).toBe(true),
+    );
+    const berserker = skelligeCatalogCards.find((card) => card.sourceId === "skellige.berserker");
+    const youngBerserker = skelligeCatalogCards.find(
+      (card) => card.sourceId === "skellige.young-berserker",
+    );
+    expect(berserker?.linkedSourceIds?.[0]).toBe("skellige.vildkaarl");
+    expect(youngBerserker?.linkedSourceIds?.[0]).toBe("skellige.young-vildkaarl");
+  });
+
+  it("tags replacement Vildkaarl forms as side_deck_only", () => {
+    const vildkaarl = skelligeCatalogCards.find((card) => card.sourceId === "skellige.vildkaarl");
+    const youngVildkaarl = skelligeCatalogCards.find(
+      (card) => card.sourceId === "skellige.young-vildkaarl",
+    );
+    expect(vildkaarl?.tags).toContain("side_deck_only");
+    expect(youngVildkaarl?.tags).toContain("side_deck_only");
+  });
+
+  it("excludes deferred and original combined source ids from currentCatalogCards", () => {
     const presentIds = new Set(currentCatalogCards.map((card) => card.sourceId));
-    officialPromotionManifest.deferred.forEach((entry) => {
-      expect(presentIds.has(entry.sourceId)).toBe(false);
-    });
+    [
+      "neutral.cow-bovine-defense-force",
+      "skellige.berserker-vildkaarl",
+      "skellige.young-berserker-young-vildkaarl",
+    ].forEach((id) => expect(presentIds.has(id)).toBe(false));
+  });
+
+  it("keeps the legacy split Cow/Bovine records intact", () => {
+    const presentIds = new Set(currentCatalogCards.map((card) => card.sourceId));
+    expect(presentIds.has("neutral.cow")).toBe(true);
+    expect(presentIds.has("neutral.bovine-defense-force")).toBe(true);
   });
 
   it("currentCatalogCards still validates and source ids remain unique", () => {
@@ -165,10 +193,10 @@ describe("official catalog promotion (cBp4)", () => {
     expect(presentIds.has("neutral.skellige-storm")).toBe(true);
   });
 
-  it("only promotes scrape candidates whose staging-derived abilities are implemented", () => {
-    const promotedIds = new Set(officialPromotionManifest.promotedSourceIds);
+  it("only directly promotes scrape candidates whose staging-derived abilities are implemented", () => {
+    const directIds = new Set(officialPromotionManifest.directPromotedCandidateIds);
     game8OfficialCardCandidates
-      .filter((candidate) => promotedIds.has(candidate.source.sourceId))
+      .filter((candidate) => directIds.has(candidate.source.sourceId))
       .forEach((candidate) => {
         candidate.source.abilities.forEach((ability) => {
           if (ability === "none") return;
@@ -179,18 +207,27 @@ describe("official catalog promotion (cBp4)", () => {
   });
 
   it("covers a representative spread of implemented abilities across promoted candidates", () => {
-    const promotedIds = new Set(officialPromotionManifest.promotedSourceIds);
+    const directIds = new Set(officialPromotionManifest.directPromotedCandidateIds);
     const abilities = new Set<string>();
     // Source-of-truth for "what abilities are promoted" is the staging-derived data,
     // not the catalog entry, since some current entries still use planned alias
     // abilities (e.g. muster_roach) that the scrape pipeline normalizes to muster.
     game8OfficialCardCandidates
-      .filter((candidate) => promotedIds.has(candidate.source.sourceId))
+      .filter((candidate) => directIds.has(candidate.source.sourceId))
       .forEach((candidate) =>
         candidate.source.abilities.forEach((ability) => abilities.add(ability)),
       );
+    // Also include abilities from the split Skellige catalog records (Berserker
+    // base forms emit `berserker`, not present on the original combined scrape rows
+    // alone after their staging-derived abilities are normalized).
+    skelligeCatalogCards
+      .filter((card) =>
+        ["skellige.berserker", "skellige.young-berserker"].includes(card.sourceId),
+      )
+      .forEach((card) => card.abilities.forEach((ability) => abilities.add(ability)));
     [
       "mardroeme",
+      "berserker",
       "skellige_storm",
       "muster",
       "medic",
@@ -211,11 +248,12 @@ describe("official catalog promotion (cBp4)", () => {
     });
   });
 
-  it("does not regress the missing-image count below the documented floor", () => {
+  it("keeps the documented missing-image floor at 1 (only Elven Skirmisher unresolved)", () => {
     // The promotion phase reconciles image paths against existing repo assets.
     // Only the truly absent `scoiatael.elven-skirmisher` should remain unresolved.
+    const promotedSet = new Set(officialPromotionManifest.promotedCatalogSourceIds);
     const unresolved = currentCatalogCards.filter((card) => {
-      if (!officialPromotionManifest.promotedSourceIds.includes(card.sourceId)) return false;
+      if (!promotedSet.has(card.sourceId)) return false;
       return /\/units\/Elven_Skirmisher\.png$/.test(card.image);
     });
     expect(unresolved).toHaveLength(1);

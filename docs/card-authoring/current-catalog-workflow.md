@@ -36,7 +36,9 @@ The official porting route is:
 
 Official candidates are not Card Studio custom records and do not use `custom_*` source IDs.
 
-cBp4 promoted 157 engine-ready official non-leader candidates into the permanent catalog under `src/data/catalog/cards/*`. The promotion manifest lives at `src/data/catalog/cards/official-promotion.ts`. Legacy current entries remain authoritative — promotion only appends unmatched scrape candidates. Two combined Skellige Berserker scrape candidates are still deferred until a narrow data phase splits them. Official leaders and full official-faction deck presets remain out of scope until later phases.
+cBp4 promoted 157 engine-ready official non-leader candidates into the permanent catalog under `src/data/catalog/cards/*`. cBp4.1 then split the two combined Skellige Berserker scrape candidates into four catalog records (`skellige.berserker`, `skellige.vildkaarl`, `skellige.young-berserker`, `skellige.young-vildkaarl`), removed the redundant combined Cow/Bovine source, and added a `side_deck_only` tag plus narrow Deck Builder V1 guards. The promotion manifest lives at `src/data/catalog/cards/official-promotion.ts` and exposes `directPromotedCandidateCount`, `deferredCandidateCount`, `promotedCatalogSourceCount`, `splitResolutions`, and counts by faction/kind. Legacy current entries remain authoritative. Official leaders and full official-faction deck presets remain out of scope until later phases.
+
+When you tag a card `side_deck_only` (a `tags` entry), Deck Builder V1 hides it from the main-deck pool, refuses to add it to a main deck, and emits a `side_deck_only_main_deck` validation error if a stored deck contains one. Side-deck editing UI and non-empty `sideDeck` arrays remain unsupported until a later phase lands them.
 
 ## Files
 

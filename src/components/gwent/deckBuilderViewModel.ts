@@ -36,6 +36,9 @@ export const DECK_BUILDER_MIN_BATTLEFIELD_CARDS = 22;
 export const DECK_BUILDER_MAX_SPECIAL_CARDS = 10;
 export const DECK_BUILDER_DEFAULT_UNIT_CARD_LIMIT = 3;
 
+export const isSideDeckOnlyCard = (card: CatalogCardSource): boolean =>
+  card.tags.includes("side_deck_only");
+
 const NON_NEUTRAL_FACTIONS = CATALOG_FACTIONS.filter((faction) => faction !== "neutral") as EditableDeckFaction[];
 
 const cloneDeck = (deck: CatalogDeckPreset): CatalogDeckPreset => ({
@@ -201,6 +204,7 @@ export const buildCardPool = (
   const countById = new Map(deck.mainDeck.map((entry) => [entry.sourceId, entry.count]));
   return cards
     .filter((card) => card.faction === "neutral" || card.faction === deck.faction)
+    .filter((card) => !isSideDeckOnlyCard(card))
     .map((card) => {
       const count = countById.get(card.sourceId) ?? 0;
       const limit = getDeckBuilderCardLimit(card);
@@ -235,6 +239,9 @@ export const getDeckBuilderAddState = (
   const card = catalogCardById(cards).get(sourceId);
   if (!card) {
     return { canAdd: false, reasonCode: "unknown_card", reason: "unknown card" };
+  }
+  if (isSideDeckOnlyCard(card)) {
+    return { canAdd: false, reasonCode: "side_deck_only", reason: "side deck only" };
   }
   if (card.faction !== "neutral" && card.faction !== deck.faction) {
     return { canAdd: false, reasonCode: "wrong_faction", reason: "wrong faction" };
@@ -441,6 +448,15 @@ export const validateDeckPreset = (
     if (!card) {
       pushIssue(issues, "error", "unknown_card", `Unknown card: ${entry.sourceId}`, entry.sourceId);
       return;
+    }
+    if (isSideDeckOnlyCard(card)) {
+      pushIssue(
+        issues,
+        "error",
+        "side_deck_only_main_deck",
+        `${card.name} is side-deck only and cannot enter the main deck.`,
+        card.sourceId,
+      );
     }
 
     totalCards += entry.count;

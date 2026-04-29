@@ -323,6 +323,14 @@ const cardIssues = (
       "catalog_split_required:zero_strength: scraped strength is null/zero with multiple copies; review base/replacement split before catalog promotion.",
     );
   }
+  if (source.sourceId === "neutral.cow-bovine-defense-force") {
+    issues.push(
+      "catalog_split_required:avenger: combined Cow/Bovine Defense Force scrape candidate is split in the permanent catalog as `neutral.cow` and `neutral.bovine-defense-force`.",
+    );
+    issues.push(
+      "rule_gap:avenger: Avenger remains a planned ability; the combined candidate cannot be cleanly promoted until Avenger lands.",
+    );
+  }
   return issues;
 };
 

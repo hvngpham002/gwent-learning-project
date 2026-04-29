@@ -303,4 +303,41 @@ describe("authentic deck builder view model", () => {
       expect.arrayContaining(["unplayable_custom_card", "unplayable_custom_leader", "too_few_battlefield_cards"]),
     );
   });
+
+  it("hides side-deck-only cards from the main-deck card pool", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+    };
+    const pool = buildCardPool(skelligeDeck);
+    const poolIds = new Set(pool.map((item) => item.card.sourceId));
+    expect(poolIds.has("skellige.berserker")).toBe(true);
+    expect(poolIds.has("skellige.young-berserker")).toBe(true);
+    expect(poolIds.has("skellige.vildkaarl")).toBe(false);
+    expect(poolIds.has("skellige.young-vildkaarl")).toBe(false);
+  });
+
+  it("blocks side-deck-only cards in getDeckBuilderAddState and addCardToDeck", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      mainDeck: [],
+    };
+    const addState = getDeckBuilderAddState(skelligeDeck, "skellige.vildkaarl");
+    expect(addState).toEqual(expect.objectContaining({ canAdd: false, reasonCode: "side_deck_only" }));
+    const after = addCardToDeck(skelligeDeck, "skellige.vildkaarl");
+    expect(after.mainDeck.find((entry) => entry.sourceId === "skellige.vildkaarl")).toBeUndefined();
+  });
+
+  it("flags side_deck_only cards present in a main deck via validateDeckPreset", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      mainDeck: [{ sourceId: "skellige.vildkaarl", count: 1 }],
+    };
+    const stats = validateDeckPreset(skelligeDeck, currentCatalogCards, currentCatalogLeaders);
+    expect(stats.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["side_deck_only_main_deck"]),
+    );
+  });
 });

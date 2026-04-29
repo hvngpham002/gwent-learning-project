@@ -1,24 +1,68 @@
-// Manifest of cBp4 official non-leader catalog promotion.
-// Records which Game8 scrape candidates were promoted into permanent catalog
-// source files and which combined Berserker scrape candidates remain deferred.
-// This module is data-only and does not import the Game8 scrape or staging at runtime;
-// tests cross-check the manifest against the cBp3 staging exports.
+// Manifest of official Game8 non-leader catalog promotion (cBp4 + cBp4.1).
+// Records which scrape candidates were directly promoted, which were split into
+// multiple permanent catalog source records, which were deferred, and the resulting
+// permanent catalog source counts by faction and kind.
+//
+// This module is data-only. It does not import the Game8 scrape JSON or the cBp3
+// staging candidate arrays at runtime. Tests cross-check the manifest against the
+// staging exports.
 
 export interface OfficialPromotionDeferredEntry {
   readonly sourceId: string;
   readonly reasons: readonly string[];
 }
 
+export interface OfficialPromotionSplitResolution {
+  readonly originalSourceId: string;
+  readonly catalogSourceIds: readonly string[];
+  readonly reasons: readonly string[];
+}
+
 export interface OfficialPromotionManifest {
-  readonly promotedCount: number;
-  readonly deferredCount: number;
-  readonly promotedSourceIds: readonly string[];
+  readonly directPromotedCandidateCount: number;
+  readonly deferredCandidateCount: number;
+  readonly promotedCatalogSourceCount: number;
+  readonly directPromotedCandidateIds: readonly string[];
+  readonly promotedCatalogSourceIds: readonly string[];
   readonly deferred: readonly OfficialPromotionDeferredEntry[];
+  readonly splitResolutions: readonly OfficialPromotionSplitResolution[];
   readonly countsByFaction: Readonly<Record<string, number>>;
   readonly countsByKind: Readonly<Record<string, number>>;
 }
 
-const promotedSourceIds: readonly string[] = [
+const splitResolutions: readonly OfficialPromotionSplitResolution[] = [
+  {
+    originalSourceId: "skellige.berserker-vildkaarl",
+    catalogSourceIds: ["skellige.berserker", "skellige.vildkaarl"],
+    reasons: [
+      "transform_link_required:berserker: combined base/replacement scrape row split into a base Berserker and a side-deck Vildkaarl replacement linked through linkedSourceIds[0].",
+      "catalog_split_required:berserker: split into separate base/replacement catalog source records.",
+    ],
+  },
+  {
+    originalSourceId: "skellige.young-berserker-young-vildkaarl",
+    catalogSourceIds: ["skellige.young-berserker", "skellige.young-vildkaarl"],
+    reasons: [
+      "transform_link_required:berserker: combined base/replacement scrape row split into a base Young Berserker and a side-deck Young Vildkaarl replacement linked through linkedSourceIds[0].",
+      "catalog_split_required:berserker: split into separate base/replacement catalog source records.",
+    ],
+  },
+];
+
+const deferred: readonly OfficialPromotionDeferredEntry[] = [
+  {
+    sourceId: "neutral.cow-bovine-defense-force",
+    reasons: [
+      "catalog_split_required:avenger: combined Cow/Bovine Defense Force scrape candidate is already represented in the permanent catalog as the legacy split records `neutral.cow` and `neutral.bovine-defense-force`.",
+      "rule_gap:avenger: Avenger remains a planned ability, so the combined candidate cannot be cleanly promoted until Avenger lands.",
+    ],
+  },
+];
+
+// Original Game8 scrape candidate IDs that were directly promoted (i.e. ended up
+// in `currentCatalogCards` as a single matching catalog source record). Excludes
+// candidates resolved through `splitResolutions` and candidates listed in `deferred`.
+const directPromotedCandidateIds: readonly string[] = [
   "monsters.arachas",
   "monsters.arachas-behemoth",
   "monsters.botchling",
@@ -58,7 +102,6 @@ const promotedSourceIds: readonly string[] = [
   "neutral.cirilla-fiona-elen-riannon",
   "neutral.clear-weather",
   "neutral.commanders-horn",
-  "neutral.cow-bovine-defense-force",
   "neutral.dandelion",
   "neutral.decoy",
   "neutral.emiel-regis-rohellec-terzieff",
@@ -178,38 +221,39 @@ const promotedSourceIds: readonly string[] = [
   "skellige.war-longship",
 ];
 
-const deferred: readonly OfficialPromotionDeferredEntry[] = [
-  {
-    sourceId: "skellige.berserker-vildkaarl",
-    reasons: ["transform_link_required:berserker: official Berserker scrape candidates need a side-deck transform link before catalog promotion.", "catalog_split_required:berserker: official Berserker scrape candidates may be combined base/replacement rows; split into separate sources before catalog promotion."],
-  },
-  {
-    sourceId: "skellige.young-berserker-young-vildkaarl",
-    reasons: ["transform_link_required:berserker: official Berserker scrape candidates need a side-deck transform link before catalog promotion.", "catalog_split_required:berserker: official Berserker scrape candidates may be combined base/replacement rows; split into separate sources before catalog promotion."],
-  },
-];
+const splitCatalogSourceIds: readonly string[] = splitResolutions.flatMap(
+  (resolution) => resolution.catalogSourceIds,
+);
+
+const promotedCatalogSourceIds: readonly string[] = [
+  ...directPromotedCandidateIds,
+  ...splitCatalogSourceIds,
+].sort();
 
 const countsByFaction: Readonly<Record<string, number>> = {
-  "monsters": 35,
-  "neutral": 22,
-  "nilfgaard": 29,
-  "northern_realms": 25,
-  "scoiatael": 24,
-  "skellige": 22,
+  monsters: 35,
+  neutral: 21,
+  nilfgaard: 29,
+  northern_realms: 25,
+  scoiatael: 24,
+  skellige: 26,
 };
 
 const countsByKind: Readonly<Record<string, number>> = {
-  "hero": 25,
-  "special": 4,
-  "unit": 123,
-  "weather": 5,
+  hero: 25,
+  special: 4,
+  unit: 126,
+  weather: 5,
 };
 
 export const officialPromotionManifest: OfficialPromotionManifest = {
-  promotedCount: 157,
-  deferredCount: 2,
-  promotedSourceIds,
+  directPromotedCandidateCount: directPromotedCandidateIds.length,
+  deferredCandidateCount: deferred.length,
+  promotedCatalogSourceCount: promotedCatalogSourceIds.length,
+  directPromotedCandidateIds,
+  promotedCatalogSourceIds,
   deferred,
+  splitResolutions,
   countsByFaction,
   countsByKind,
 };

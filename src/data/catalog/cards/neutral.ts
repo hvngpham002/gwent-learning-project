@@ -314,16 +314,4 @@ export const neutralCatalogCards = [
     image: "/images/neutral/skellige_storm.png",
     description: "Sets the strength of all Ranged and Siege units to 1",
   },
-  {
-    sourceId: "neutral.cow-bovine-defense-force",
-    name: "Cow/Bovine Defense Force",
-    faction: "neutral",
-    kind: "unit",
-    strength: 0,
-    rows: ["ranged"],
-    abilities: ["none"],
-    tags: ["non_hero"],
-    deckLimit: 1,
-    image: "/images/neutral/cow.png",
-  },
 ] as const satisfies CatalogCardSource[];

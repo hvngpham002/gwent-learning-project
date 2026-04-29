@@ -116,6 +116,12 @@ describe("official Game8 catalog staging import", () => {
     expect(storm?.portingStatus).not.toBe("needs_rule");
     expect(storm?.portingIssues.join(" ")).not.toContain("metadata_mismatch");
     expect(berserker?.portingIssues.join(" ")).toMatch(/transform_link_required|catalog_split_required/);
+    const cowBovine = game8OfficialCardCandidates.find(
+      (candidate) => candidate.source.sourceId === "neutral.cow-bovine-defense-force",
+    );
+    expect(cowBovine?.portingStatus).not.toBe("ready_for_catalog");
+    expect(cowBovine?.portingIssues.join(" ")).toMatch(/catalog_split_required:avenger/);
+    expect(cowBovine?.portingIssues.join(" ")).toMatch(/rule_gap:avenger/);
     expect(clearWeatherLeader?.mappedAbilityId).toBe("clear_weather");
     expect(clearWeatherLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
     expect(fogLeader?.portingStatus).toBe("needs_leader_rule");
