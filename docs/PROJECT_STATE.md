@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-29
-- Phase/spec: `cBp4.1` implemented, official combined-card data cleanup
-- Latest relevant commit: `cBp4.1` implementation in current branch history
+- Phase/spec: `cBp5` specified, official leaders, starter presets, and linked side decks
+- Latest relevant commit: `cBp4.1` implementation in current branch history; `cBp5` spec added in working tree
 
 ## Required Reading For Every Coding Instance
 
@@ -191,6 +191,7 @@ Latest Catalog implementation:
 - Official staged cards are not custom Card Studio records, do not use `custom_*` IDs, are not written into `gwent_custom_catalog_v1`, and are not promoted into `currentCatalogCards`, `currentCatalogLeaders`, current deck presets, deck-builder source sets, or engine runtime catalog in this phase.
 - `docs/spec/2026-04-29-cBp4-specs.md` has been implemented. `currentCatalogCards` includes the 157 promoted official non-leader candidates from cBp4. Existing legacy current entries are preserved as authority — promotion only appends unmatched scrape candidates and never overwrites current `strength`, `deckLimit`, `abilities`, `description`, or `linkedSourceIds`. Default Northern Realms and Nilfgaard deck presets are unchanged. Catalog files remain plain TypeScript data and do not import the Game8 scrape or staging at runtime.
 - `docs/spec/2026-04-29-cBp4.1-specs.md` has been implemented. The two combined Skellige Berserker scrape candidates are now represented by four permanent catalog records: `skellige.berserker` (4 strength, close, ability `berserker`, `linkedSourceIds[0] = "skellige.vildkaarl"`), `skellige.vildkaarl` (14 strength, close, ability `morale_boost`, tag `side_deck_only`), `skellige.young-berserker` (2 strength, ranged, ability `berserker`, `linkedSourceIds[0] = "skellige.young-vildkaarl"`), and `skellige.young-vildkaarl` (8 strength, ranged, ability `tight_bond`, tag `side_deck_only`). The cBp4-added `neutral.cow-bovine-defense-force` combined source has been removed; the legacy split records `neutral.cow` (with planned `avenger` ability) and `neutral.bovine-defense-force` remain intact. cBp3 staging now flags the combined Cow/Bovine candidate with `catalog_split_required:avenger` and `rule_gap:avenger`. `officialPromotionManifest` was rewritten with `OfficialPromotionSplitResolution` entries, separate `directPromotedCandidateCount` (156), `deferredCandidateCount` (1), and `promotedCatalogSourceCount` (160), and updated counts by faction (Neutral 21, Northern Realms 25, Nilfgaard 29, Monsters 35, Scoia'tael 24, Skellige 26) and kind (heroes 25, units 126, specials 4, weather 5). Deck Builder V1 gained a narrow `isSideDeckOnlyCard` helper, hides side-deck-only cards from the main-deck pool, blocks them in `getDeckBuilderAddState` with reason code `side_deck_only`, and emits `side_deck_only_main_deck` validation errors for imported decks that include them; side-deck editing UI and non-empty side decks remain unsupported.
+- `docs/spec/2026-04-29-cBp5-specs.md` is the active next catalog/product-data spec. It scopes official leader promotion, placeholder leader ability metadata, five official starter deck presets, and narrow linked side-deck Deck Builder support so Skellige Berserker/Vildkaarl decks can validate and start without implementing new leader rules.
 
 Latest Engine Rule implementation:
 
@@ -241,12 +242,12 @@ Latest Engine Rule implementation:
 - The official porting review bundle is browser-local until exported. cBp4/cBp4.1 covered the non-leader promotion + combined-card cleanup; future phases must still consume the bundle for official leaders, official-faction starter decks, and side-deck authoring.
 - The combined Cow/Bovine scrape candidate (`neutral.cow-bovine-defense-force`) remains deferred until Avenger lands as an implemented ability; the legacy split `neutral.cow` and `neutral.bovine-defense-force` records cover the playable form today.
 - One promoted card (`scoiatael.elven-skirmisher`) still references `/images/scoiatael/units/Elven_Skirmisher.png`, which is not present in the repo image manifest yet; the deterministic `SvgCardArt` fallback covers this until the asset is added.
-- Side-deck authoring UI is intentionally absent. cBp4.1 added the `side_deck_only` tag and Deck Builder V1 main-deck guards, but side decks remain unsupported in the deck-builder until a scoped UI/persistence phase lands.
+- Side-deck authoring UI is intentionally absent in the current implementation. cBp4.1 added the `side_deck_only` tag and Deck Builder V1 main-deck guards; the active cBp5 spec narrows the next implementation to linked side-deck replacements rather than a free-form side-deck pool.
 - Faction-specific card-back files are not present in the repository yet. Until they are added under `public/images/card-backs/`, the authentic back component falls back to synthetic faction-colored sleeves.
 
 ## Next Recommended Step
 
- Proceed to `cBp5`: promote official leaders into `src/data/catalog/leaders/*`, build official-faction starter deck presets (Skellige is now Berserker/Vildkaarl-ready via `side_deck_only` linked replacements from cBp4.1), and add side-deck authoring UI plus persistence so Berserker decks can be exercised end-to-end in Deck Builder. Pre-cBp5 follow-up: source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset (the only promoted card whose preferred path is not yet in the repo image manifest); revisit `neutral.cow-bovine-defense-force` once an Avenger rules phase lands.
+ Implement `docs/spec/2026-04-29-cBp5-specs.md`: promote official leaders, add placeholder leader ability metadata, create official starter deck presets for all five factions, and add linked side-deck validation/persistence/UI for Berserker replacements. Keep `clear_weather` as the only executable leader ability. Pre-cBp5 follow-up remains: source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset when convenient; revisit `neutral.cow-bovine-defense-force` once an Avenger rules phase lands.
 
 ## Update Requirements
 
