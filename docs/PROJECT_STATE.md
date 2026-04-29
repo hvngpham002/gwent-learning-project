@@ -2,9 +2,9 @@
 
 ## Last Updated
 
-- Date: 2026-04-29
-- Phase/spec: `cCp10` specs authored for implemented engine ruleset audit
-- Latest relevant commit: `cBp5` implementation; this update adds the next documentation-only engine audit spec after follow-up catalog cleanup, Muster links, and Dwarven Skirmisher source consolidation
+- Date: 2026-04-30
+- Phase/spec: `cCp10` documentation-only audit complete
+- Latest relevant commit: `cCp10` audit report at `audit/reports/2026-04-29-cCp10-report.md` covering the implemented engine ruleset against `docs/gwent-rules.md`; no implementation code, tests, catalog data, UI, AI, simulation, scripts, or config were changed in this phase
 
 ## Required Reading For Every Coding Instance
 
@@ -198,6 +198,12 @@ Latest Engine Rule implementation:
 
 - `docs/spec/2026-04-29-cCp9-specs.md` has been implemented. Skellige Storm metadata is now `implemented` (scoring already worked); special Mardroeme cards now produce legal `board_row` moves on the acting seat's own close, ranged, and siege rows; Mardroeme is treated as an ongoing row ability via the centralized pure helper `settleMardroemeRow`; Berserkers transform through the controlling seat's side deck using `linkedSourceIds[0]`, sending the original Berserker to `removed_from_game` and moving the linked replacement onto the same board side and row. Settlement is hooked into PlayCard, Decoy bounce-and-place, Medic prompt resolution, Muster placement, and Skellige round-three return. Missing transform links and missing side-deck replacements are explicit `ability_resolved` outcomes with reason codes `missing_transform_link`/`missing_transform_replacement` and do not crash or remove the Berserker. Card Studio validation now blocks non-draft custom Berserkers from becoming playable when their transform link is empty or unresolved. Official porting classification no longer counts `mardroeme`, `berserker`, or `skellige_storm` as unsupported rule gaps; combined official Berserker scrape candidates remain conservatively flagged with non-rule data issues such as `transform_link_required` or `catalog_split_required`.
 
+## Latest Audit
+
+- `audit/reports/2026-04-29-cCp10-report.md` (cCp10) audited the implemented engine ruleset against `docs/gwent-rules.md`. No implementation code, tests, catalog data, UI, AI policy, simulation code, scripts, or config were changed.
+- The default Northern Realms vs Nilfgaard match path is conformant; setup, identity, zones, mulligan, normal play, Spy, weather, Clear Weather (card and leader), Decoy, Medic with prompt chains, Special Scorch, Unit Scorch Close, scoring modifier order, board-side discard for Spies and Scorched cards, round resolution, gem decrement, game end, Monsters keep, Northern Realms draw, Nilfgaard draw-win, Skellige round-three return, and the cCp9 Mardroeme/Berserker pipeline all match the rulebook for current playable matches.
+- 0 P0 and 0 P1 findings. Three P2 findings surface only when a cBp5 official starter preset is selected: hero `morale_boost` source (Isengrim) does not boost row, unit-source `scorch` (Schirru, Clan Dimun Pirate) does not fire, and Cerys hero `muster` lacks `linkedSourceIds`. Scoia'tael first-player choice and all non-`clear_weather` leader abilities remain intentionally deferred (placeholder metadata).
+
 ## Known Architectural Rules
 
 - Engine legal moves are the UI/AI contract.
@@ -252,7 +258,25 @@ Latest Engine Rule implementation:
 
 ## Next Recommended Step
 
-Run `docs/spec/2026-04-29-cCp10-specs.md` before adding more rule effects. This is a documentation-only implemented-rules audit: inspect current engine behavior, catalog rule data, and existing tests against `docs/gwent-rules.md`; create `audit/reports/2026-04-29-cCp10-report.md`; update this file with the audit outcome; do not change implementation code or tests. After the audit report is reviewed, choose the next implementation spec from its ranked findings, likely one of: weather-pulling leaders, row Scorch leaders, Avenger/Cow, or focused bug fixes if the audit finds blocking issues.
+`docs/spec/2026-04-29-cCp10-specs.md` has been completed; see `audit/reports/2026-04-29-cCp10-report.md`. No P0 or P1 issues block continuing rule work. Recommended next implementation specs, ranked (full rationale in §11 of the report):
+
+1. **Hero ability sources for row effects (P2 F-1).** Allow hero-source Morale Boost (and future hero Tight Bond / Commander's Horn) to fire for the row while keeping receivers gated by `isUnit && !isHero`. Unblocks Isengrim Faoiltiarna in the official Scoia'tael starter.
+2. **Unit-source Scorch (P2 F-2).** Add a unit-Scorch path mirroring Special Scorch, with Clan Dimun Pirate self-protection per §17.21. Unblocks Schirru in the official Scoia'tael starter and Clan Dimun Pirate in the deck builder.
+3. **Cerys Muster catalog wiring (P2 F-3).** Catalog-only fix: confirm Cerys's printed target group and add `linkedSourceIds` for `skellige.cerys`; current catalog/starter data indicates the target should be Clan Drummond Shield Maiden.
+4. **Avenger ability + `neutral.cow-bovine-defense-force` promotion.** Implements the discard-trigger resolver and unblocks the deferred official Cow/Bovine combined source.
+5. **Weather-pulling leaders (`play_frost`, `play_fog`, `play_rain`, `play_any_weather`).** Reuse the existing weather pipeline.
+6. **King Bran passive (`weather_half_penalty`).** Wire `determineRoundResult` to set `weatherPolicyBySeat[seatId] = "king_bran"` when the seat's leader source is `skellige.king-bran`; engine already supports the policy.
+7. **Foltest scorch-row leaders (`scorch_siege`, `scorch_range`).**
+8. **Summon discard-trigger resolver.**
+
+If product wants the official Scoia'tael starter to be playable without divergences before adding new abilities, prioritize spec 1 + spec 2 first.
+
+## Active Risks (cCp10 additions)
+
+- F-1 Hero `morale_boost` source not counted: Isengrim Faoiltiarna's row never receives his +1 in the official Scoia'tael starter. P2.
+- F-2 Unit-source `scorch` does not fire: Schirru lands as a stat-stick in the official Scoia'tael starter; Clan Dimun Pirate (catalog-only) has the same gap and additionally lacks the §17.21 self-protection rule. P2.
+- F-3 Hero Cerys's printed Muster ability resolves with `no_linked_sources` because `skellige.cerys.linkedSourceIds` is unset. P2 (catalog data only; no engine change required).
+- These three only surface in the cBp5 official starters; the default Northern Realms vs Nilfgaard match remains unaffected.
 
 ## Update Requirements
 
