@@ -2,7 +2,7 @@
 
 The authentic deck builder is available at `/?engine=1&ui=authentic&view=deck-builder`.
 
-It edits browser-local `CatalogDeckPreset` objects using the current catalog cards/leaders plus playable browser-local Card Studio sources. The localStorage key is `gwent_authentic_decks_v1`; when no saved decks exist, local editable copies are seeded from the current catalog presets with `local-` preset IDs.
+It edits browser-local `CatalogDeckPreset` objects using the current catalog cards/leaders plus playable browser-local Card Studio sources. The localStorage key is `gwent_authentic_decks_v1`; when no saved decks exist, local editable copies are seeded from the current catalog presets with `local-` preset IDs. When new catalog seed decks are added later, reads merge any missing seed copies into existing saved storage by stable `local-${catalogPresetId}` or normalized deck name without overwriting user-edited decks.
 
 Local deck identity is normalized on read and write. Browser-local `presetId` values stay unique, and deck names are trimmed, whitespace-normalized, and auto-suffixed (`Name 2`, `Name 3`) when create, duplicate, import, rename, or stale localStorage would otherwise collide. Editing a selected deck updates that deck in place by stable `presetId`.
 

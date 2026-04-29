@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { currentNorthernRealmsDeckPreset } from "@/data/catalog";
+import {
+  currentNilfgaardDeckPreset,
+  currentNorthernRealmsDeckPreset,
+  officialSkelligeStarterDeckPreset,
+} from "@/data/catalog";
 import {
   AUTHENTIC_DECK_SCHEMA_VERSION,
   AUTHENTIC_DECK_STORAGE_KEY,
@@ -62,6 +66,66 @@ describe("authentic deck builder storage", () => {
     expect(loaded.store.activePresetId).toBe(currentNorthernRealmsDeckPreset.presetId);
   });
 
+  it("merges newly added catalog starter decks into existing saved storage without overwriting local edits", () => {
+    const storage = new MemoryStorage();
+    const savedStore = {
+      schemaVersion: AUTHENTIC_DECK_SCHEMA_VERSION,
+      decks: [
+        {
+          ...currentNorthernRealmsDeckPreset,
+          presetId: "local-current-northern-realms",
+          name: "My Northern Realms",
+        },
+        {
+          ...currentNilfgaardDeckPreset,
+          presetId: "local-current-nilfgaard",
+        },
+      ],
+      activePresetId: "local-current-northern-realms",
+    } as const;
+    storage.setItem(AUTHENTIC_DECK_STORAGE_KEY, JSON.stringify(savedStore));
+
+    const loaded = readDeckBuilderStore(storage, [
+      currentNorthernRealmsDeckPreset,
+      currentNilfgaardDeckPreset,
+      officialSkelligeStarterDeckPreset,
+    ]);
+
+    expect(loaded.warning).toBeNull();
+    expect(loaded.store.activePresetId).toBe("local-current-northern-realms");
+    expect(loaded.store.decks.map((deck) => deck.presetId)).toEqual([
+      "local-current-northern-realms",
+      "local-current-nilfgaard",
+      "local-official-skellige-starter",
+    ]);
+    expect(loaded.store.decks[0]?.name).toBe("My Northern Realms");
+    expect(loaded.store.decks[2]).toEqual({
+      ...normalizeDeckPreset(officialSkelligeStarterDeckPreset),
+      presetId: "local-official-skellige-starter",
+    });
+  });
+
+  it("does not add a new seed deck when an existing local deck already shadows it by normalized name", () => {
+    const storage = new MemoryStorage();
+    const savedStore = {
+      schemaVersion: AUTHENTIC_DECK_SCHEMA_VERSION,
+      decks: [
+        {
+          ...officialSkelligeStarterDeckPreset,
+          presetId: "my-skellige",
+          name: "  Official   Skellige Starter ",
+        },
+      ],
+      activePresetId: "my-skellige",
+    } as const;
+    storage.setItem(AUTHENTIC_DECK_STORAGE_KEY, JSON.stringify(savedStore));
+
+    const loaded = readDeckBuilderStore(storage, [officialSkelligeStarterDeckPreset]);
+
+    expect(loaded.store.decks.map((deck) => deck.presetId)).toEqual(["my-skellige"]);
+    expect(loaded.store.decks[0]?.name).toBe("Official Skellige Starter");
+  });
+
   it("normalizes saved duplicate deck names and IDs to one editable instance per name", () => {
     const storage = new MemoryStorage();
     const store = {
@@ -74,7 +138,7 @@ describe("authentic deck builder storage", () => {
     } as const;
 
     expect(writeDeckBuilderStore(store, storage)).toEqual({ ok: true, warning: null });
-    const loaded = readDeckBuilderStore(storage);
+    const loaded = readDeckBuilderStore(storage, [currentNorthernRealmsDeckPreset]);
 
     expect(loaded.store.decks.map((deck) => deck.presetId)).toEqual(["local-copy", "local-copy-2"]);
     expect(loaded.store.decks.map((deck) => deck.name)).toEqual(["Current Northern Realms", "Current Northern Realms 2"]);

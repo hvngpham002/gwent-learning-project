@@ -172,5 +172,5 @@ Future phases should:
 
 - Promote leader engine rules so each official leader ability becomes `implemented` and produces real legal leader moves; only `clear_weather` is executable today.
 - Implement `avenger` (and unblock `neutral.cow`) and `summon` so currently planned card abilities can be promoted without warnings.
-- Source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset and the new `/images/{monsters,scoiatael,skellige}/leaders/*.png` art so the deterministic SVG fallback is no longer needed for those records.
+- Source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset so the deterministic SVG fallback is no longer needed for that promoted card. Promoted official leader image paths now resolve to committed public assets after the cBp5 follow-up.
 - Update deck-builder source sets and `currentDeckPresets` only when rule and image gaps are intentionally accepted or fixed.

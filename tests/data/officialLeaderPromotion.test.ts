@@ -14,6 +14,7 @@ import {
   CATALOG_LEADER_ABILITY_METADATA,
   validateLeaderSources,
 } from "@/game/catalog";
+import { game8PublicImagePaths } from "@/data/catalog/official/game8PublicImagePaths";
 
 describe("official leader promotion (cBp5)", () => {
   it("validates the permanent leader catalog with 22 records and 5/5/5/5/2 by faction", () => {
@@ -48,6 +49,14 @@ describe("official leader promotion (cBp5)", () => {
     game8OfficialLeaderCandidates.forEach((candidate) => {
       const matchedId = candidate.matchedCurrentSourceId ?? candidate.sourceId;
       expect(present.has(matchedId)).toBe(true);
+    });
+  });
+
+  it("uses existing public image paths for every promoted official leader", () => {
+    const publicImagePathSet = new Set<string>(game8PublicImagePaths);
+
+    currentCatalogLeaders.forEach((leader) => {
+      expect(publicImagePathSet.has(leader.image), leader.sourceId).toBe(true);
     });
   });
 

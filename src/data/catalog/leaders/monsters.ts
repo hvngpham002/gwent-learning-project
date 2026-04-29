@@ -38,7 +38,7 @@ export const monstersCatalogLeaders = [
     name: "Eredin Breacc Glas: The Treacherous",
     faction: "monsters",
     ability: "double_spies",
-    image: "/images/monsters/leaders/Eredin_Breacc_Glas_The_Treacherous.png",
+    image: "/images/monsters/leaders/Eredin_The_Treacherous.png",
     description: "Doubles the strength of all spy cards already on the battlefield.",
   },
 ] as const satisfies CatalogLeaderSource[];

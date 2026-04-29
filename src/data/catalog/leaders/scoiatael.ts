@@ -22,7 +22,7 @@ export const scoiataelCatalogLeaders = [
     name: "Francesca Findabair: The Beautiful",
     faction: "scoiatael",
     ability: "double_ranged",
-    image: "/images/scoiatael/leaders/Francesca_Findabair_The_Beautiful.png",
+    image: "/images/scoiatael/leaders/Francesca_Findabair_the_Beautiful.png",
     description: "Doubles the strength of all your Ranged Combat units (unless a Commander's Horn is also present on that row).",
   },
   {
@@ -30,7 +30,7 @@ export const scoiataelCatalogLeaders = [
     name: "Francesca Findabair: Daisy of the Valley",
     faction: "scoiatael",
     ability: "draw_extra_card",
-    image: "/images/scoiatael/leaders/Francesca_Findabair_Daisy_of_the_Valley.png",
+    image: "/images/scoiatael/leaders/Francesca_Findabair_Daisy_of_The_Valley.png",
     description: "Draw 1 extra card at the start of the battle.",
   },
   {

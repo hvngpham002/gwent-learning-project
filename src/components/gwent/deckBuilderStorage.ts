@@ -2,7 +2,7 @@ import { currentDeckPresets } from "@/data/catalog";
 import type { CatalogDeckPreset } from "@/game/catalog";
 
 import type { DeckBuilderStoreV1 } from "./deckBuilderTypes";
-import { cloneDeckPresets, normalizeDeckCollection } from "./deckBuilderViewModel";
+import { cloneDeckPresets, deckNameKey, normalizeDeckCollection } from "./deckBuilderViewModel";
 
 export const AUTHENTIC_DECK_STORAGE_KEY = "gwent_authentic_decks_v1";
 export const AUTHENTIC_DECK_SCHEMA_VERSION = "authentic-decks-v1";
@@ -53,6 +53,32 @@ const makeSeedStore = (
   };
 };
 
+const seededLocalPresetId = (preset: CatalogDeckPreset): string => `local-${preset.presetId}`;
+
+const mergeMissingSeedDecks = (
+  decks: readonly CatalogDeckPreset[],
+  seedDecks: readonly CatalogDeckPreset[],
+): CatalogDeckPreset[] => {
+  const merged = [...decks];
+  const existingIds = new Set(merged.map((deck) => deck.presetId));
+  const existingNames = new Set(merged.map((deck) => deckNameKey(deck.name)));
+
+  seedDecks.forEach((seed) => {
+    const localPresetId = seededLocalPresetId(seed);
+    if (existingIds.has(localPresetId) || existingNames.has(deckNameKey(seed.name))) {
+      return;
+    }
+    merged.push({
+      ...cloneDeckPresets([seed])[0],
+      presetId: localPresetId,
+    });
+    existingIds.add(localPresetId);
+    existingNames.add(deckNameKey(seed.name));
+  });
+
+  return merged;
+};
+
 export const normalizeDeckStore = (
   decks: readonly CatalogDeckPreset[],
   activePresetId?: string,
@@ -94,10 +120,12 @@ export const readDeckBuilderStore = (
       return { store: seedStore, warning: "Saved local decks were invalid; seeded from catalog presets." };
     }
 
+    const activePresetId = typeof parsed.activePresetId === "string" ? parsed.activePresetId : undefined;
+    const normalized = normalizeDeckStore(parsed.decks, activePresetId);
     return {
       store: normalizeDeckStore(
-        parsed.decks,
-        typeof parsed.activePresetId === "string" ? parsed.activePresetId : undefined,
+        mergeMissingSeedDecks(normalized.decks, seedDecks),
+        normalized.activePresetId,
       ),
       warning: null,
     };
