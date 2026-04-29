@@ -4,12 +4,18 @@ import { getAuthenticUiViewFromSearch } from "@/appMode";
 import type { CatalogDeckPreset } from "@/game/catalog";
 
 import AuthenticComponentFoundationPage from "./AuthenticComponentFoundationPage";
+import AuthenticCardStudioScreen from "./AuthenticCardStudioScreen";
 import AuthenticDeckBuilderScreen from "./AuthenticDeckBuilderScreen";
 import AuthenticMatchScreen from "./AuthenticMatchScreen";
 import AuthenticPreGameScreen from "./AuthenticPreGameScreen";
 import AuthenticUiHarness from "./AuthenticUiHarness";
 import { normalizeDeckStore, readDeckBuilderStore, writeDeckBuilderStore } from "./deckBuilderStorage";
 import { createEmptyDeckPreset, makeUniqueDeckName } from "./deckBuilderViewModel";
+import { readCardStudioStore, writeCardStudioStore } from "./cardStudioStorage";
+import {
+  buildCardStudioBlockedSources,
+  buildCustomCatalogSourceSets,
+} from "./cardStudioViewModel";
 import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import { seedFromSearch, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 
@@ -19,9 +25,13 @@ interface AuthenticGameAppProps {
 
 const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.location.search }) => {
   const routeView = getAuthenticUiViewFromSearch(search);
-  const [viewOverride, setViewOverride] = useState<"pregame" | "deck-builder" | null>(null);
+  const [viewOverride, setViewOverride] = useState<"pregame" | "deck-builder" | "card-studio" | null>(null);
+  const [returnViewFromStudio, setReturnViewFromStudio] = useState<"pregame" | "deck-builder">("pregame");
   const [setupConfig, setSetupConfig] = useState<AuthenticMatchSetupConfig | null>(null);
   const [deckStore, setDeckStore] = useState(() => readDeckBuilderStore());
+  const [customCatalogStore, setCustomCatalogStore] = useState(() => readCardStudioStore());
+  const customSourceSets = buildCustomCatalogSourceSets(customCatalogStore.store);
+  const blockedCustomSources = buildCardStudioBlockedSources(customCatalogStore.store);
   const view = setupConfig ? "match" : (viewOverride ?? routeView);
 
   const updateDecks = (decks: readonly CatalogDeckPreset[], activePresetId?: string) => {
@@ -37,12 +47,24 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
       const deck = createEmptyDeckPreset(
         `local-${Date.now().toString(36)}-${deckStore.store.decks.length + 1}`,
         makeUniqueDeckName("New Deck", deckStore.store.decks),
+        "northern_realms",
+        customSourceSets.leaders,
       );
       const nextStore = normalizeDeckStore([...deckStore.store.decks, deck], deck.presetId);
       const write = writeDeckBuilderStore(nextStore);
       setDeckStore({ store: nextStore, warning: write.warning });
     }
     setViewOverride("deck-builder");
+  };
+
+  const openCardStudio = (returnView: "pregame" | "deck-builder" = view === "deck-builder" ? "deck-builder" : "pregame") => {
+    setReturnViewFromStudio(returnView);
+    setViewOverride("card-studio");
+  };
+
+  const updateCustomCatalog = (store: typeof customCatalogStore.store) => {
+    const write = writeCardStudioStore(store);
+    setCustomCatalogStore({ store, warning: write.warning });
   };
 
   const playDeck = (deck: CatalogDeckPreset) => {
@@ -57,6 +79,8 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
       formatId: "best-of-3",
       seed,
       aiPolicyId: ENGINE_AI_POLICY_ID,
+      catalogCards: customSourceSets.cards,
+      catalogLeaders: customSourceSets.leaders,
     });
   };
 
@@ -97,9 +121,27 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
           decks={deckStore.store.decks}
           activePresetId={deckStore.store.activePresetId}
           storageWarning={deckStore.warning}
+          sourceSets={customSourceSets}
+          blockedSources={blockedCustomSources}
           onDecksChange={updateDecks}
           onExit={() => setViewOverride("pregame")}
           onPlay={playDeck}
+          onOpenCardStudio={() => openCardStudio("deck-builder")}
+        />
+      </div>
+    );
+  }
+
+  if (view === "card-studio") {
+    return (
+      <div data-testid="authentic-game-app">
+        <AuthenticCardStudioScreen
+          store={customCatalogStore.store}
+          decks={deckStore.store.decks}
+          storageWarning={customCatalogStore.warning}
+          onStoreChange={updateCustomCatalog}
+          onDecksChange={updateDecks}
+          onExit={() => setViewOverride(returnViewFromStudio)}
         />
       </div>
     );
@@ -110,8 +152,11 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
         <AuthenticPreGameScreen
           search={search}
           localDecks={deckStore.store.decks}
+          sourceSets={customSourceSets}
+          blockedSources={blockedCustomSources}
           onBeginMatch={setSetupConfig}
           onOpenDeckBuilder={openDeckBuilder}
+          onOpenCardStudio={() => openCardStudio("pregame")}
         />
     </div>
   );

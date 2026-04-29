@@ -1,4 +1,6 @@
 import type { CatalogDeckPreset } from "@/game/catalog";
+import type { CatalogCardSource, CatalogLeaderSource } from "@/game/catalog";
+import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
 
 import type { DeckBuilderImportResult } from "./deckBuilderTypes";
 import { normalizeDeckPreset, validateDeckPreset } from "./deckBuilderViewModel";
@@ -38,6 +40,11 @@ export const stringifyDeckExport = (preset: CatalogDeckPreset): string =>
 export const parseDeckImport = (
   text: string,
   existingPresetIds: readonly string[] = [],
+  sourceSets: {
+    readonly cards: readonly CatalogCardSource[];
+    readonly leaders: readonly CatalogLeaderSource[];
+  } = { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+  blockedSources: Parameters<typeof validateDeckPreset>[3] = {},
 ): DeckBuilderImportResult => {
   let parsed: unknown;
   try {
@@ -54,14 +61,14 @@ export const parseDeckImport = (
     };
   }
 
-  const rawStats = validateDeckPreset(maybePreset);
+  const rawStats = validateDeckPreset(maybePreset, sourceSets.cards, sourceSets.leaders, blockedSources);
   const rawErrors = rawStats.issues.filter((issue) => issue.severity === "error").map((issue) => issue.message);
   if (rawErrors.length > 0) {
     return { ok: false, errors: rawErrors };
   }
 
   const preset = normalizeDeckPreset(maybePreset);
-  const stats = validateDeckPreset(preset);
+  const stats = validateDeckPreset(preset, sourceSets.cards, sourceSets.leaders, blockedSources);
   const errors = stats.issues.filter((issue) => issue.severity === "error").map((issue) => issue.message);
   if (errors.length > 0) {
     return { ok: false, errors };

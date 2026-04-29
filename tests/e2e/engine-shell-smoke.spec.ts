@@ -4,6 +4,7 @@ const engineUrl = "/?engine=1&seed=dp6-smoke";
 const authenticPregameUrl = "/?engine=1&ui=authentic&seed=ep4-smoke";
 const authenticPregameRestartUrl = "/?engine=1&ui=authentic&seed=ep4-restart&debugAiMulligan=1&debugAiMulliganCount=0";
 const authenticDeckBuilderUrl = "/?engine=1&ui=authentic&view=deck-builder&seed=ep5-builder";
+const authenticCardStudioUrl = "/?engine=1&ui=authentic&view=card-studio&seed=ep7-studio";
 const authenticDirectUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-direct";
 const authenticMulliganDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-debug&debugAiMulligan=1&debugAiMulliganCount=2";
 const authenticMulliganOneDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-one&debugAiMulligan=1&debugAiMulliganCount=1";
@@ -523,6 +524,52 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
 
   const pageText = await visiblePageText(page);
   expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic Card Studio imports a playable custom unit for the deck builder", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+  const customRecord = {
+    schemaVersion: "custom-catalog-record-v1",
+    record: {
+      recordId: "smoke-card",
+      createdAt: "2026-04-28T00:00:00.000Z",
+      updatedAt: "2026-04-28T00:00:00.000Z",
+      imageMode: "path",
+      draft: false,
+      source: {
+        sourceId: "custom_smoke_unit",
+        name: "Smoke Unit",
+        faction: "northern_realms",
+        kind: "unit",
+        strength: 6,
+        rows: ["close"],
+        abilities: ["none"],
+        tags: [],
+        deckLimit: 3,
+        image: "/images/custom/smoke-unit.png",
+      },
+    },
+  };
+
+  await page.goto(authenticCardStudioUrl);
+  await expect(page.getByTestId("authentic-card-studio")).toBeVisible();
+  await page.getByRole("button", { name: "import" }).click();
+  await page.locator(".authentic-card-studio__modal-box textarea").fill(JSON.stringify(customRecord));
+  await page.getByRole("button", { name: "import" }).last().click();
+  await expect(page.getByRole("button", { name: /Smoke Unit custom_smoke_unit/ })).toBeVisible();
+  await expect(page.getByTestId("authentic-card-studio-validation")).toContainText(/playable|No validation issues/i);
+
+  await page.goto(authenticDeckBuilderUrl);
+  await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  await page.getByLabel("Search cards").fill("Smoke Unit");
+  const customPoolItem = page.locator('[data-source-id="custom_smoke_unit"]');
+  await expect(customPoolItem).toBeVisible();
+  const total = page.getByTestId("authentic-deck-builder-total");
+  const before = await total.innerText();
+  await customPoolItem.getByTestId("authentic-card").click();
+  await expect(total).not.toHaveText(before);
+
   expect(pageErrors).toEqual([]);
 });
 

@@ -1,5 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
+import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
+import type { CatalogCardSource, CatalogLeaderSource } from "@/game/catalog";
 import type {
   CardInstanceId,
   EngineCommand,
@@ -39,8 +41,14 @@ export interface EngineCommandRecord {
   error?: EngineAdapterError;
 }
 
+export interface EngineRuntimeCatalogSnapshot {
+  readonly cards: readonly CatalogCardSource[];
+  readonly leaders: readonly CatalogLeaderSource[];
+}
+
 export interface EngineAdapterState {
   match: MatchState | null;
+  runtimeCatalog: EngineRuntimeCatalogSnapshot;
   status: EngineAdapterStatus;
   lock: EngineActionLock | null;
   seatMap: { human: SeatId; ai: SeatId };
@@ -87,6 +95,10 @@ const deriveStatusAndLock = (
 
 export const createInitialEngineState = (): EngineAdapterState => ({
   match: null,
+  runtimeCatalog: {
+    cards: currentCatalogCards,
+    leaders: currentCatalogLeaders,
+  },
   status: "idle",
   lock: null,
   seatMap: defaultSeatMap,
@@ -109,10 +121,15 @@ const engineSlice = createSlice({
         match: MatchState;
         events: GameEvent[];
         seatMap?: EngineAdapterState["seatMap"];
+        runtimeCatalog?: EngineRuntimeCatalogSnapshot;
       }>,
     ) => {
       const derived = deriveStatusAndLock(action.payload.match, 0);
       state.match = action.payload.match as typeof state.match;
+      state.runtimeCatalog = (action.payload.runtimeCatalog ?? {
+        cards: currentCatalogCards,
+        leaders: currentCatalogLeaders,
+      }) as typeof state.runtimeCatalog;
       state.status = derived.status;
       state.lock = derived.lock;
       state.seatMap = action.payload.seatMap ?? defaultSeatMap;

@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 
-import { currentCatalogCards } from "@/data/catalog";
 import type { CardInstanceId, SeatId } from "@/game/core";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -15,6 +14,7 @@ import {
   selectEngineLeaderStatus,
   selectEngineLegalMovesForHuman,
   selectEngineMatch,
+  selectEngineRuntimeCatalogCards,
   selectEngineSelectedCardIds,
   type EngineCardViewModel,
 } from "@/store/selectors/engineSelectors";
@@ -57,9 +57,6 @@ interface AuthenticMulliganScreenProps {
 
 const hiddenHandBacks = (count: number) => Array.from({ length: Math.max(0, count) }, (_, index) => index);
 const EMPTY_DEBUG_AI_HAND: readonly EngineCardViewModel[] = [];
-const catalogCardBySourceId: ReadonlyMap<string, (typeof currentCatalogCards)[number]> = new Map(
-  currentCatalogCards.map((card) => [card.sourceId, card]),
-);
 
 const leaderCard = (
   leaders: NonNullable<ReturnType<typeof selectEngineLeaderStatus>>,
@@ -90,6 +87,7 @@ const AuthenticMulliganScreen: React.FC<AuthenticMulliganScreenProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const match = useAppSelector(selectEngineMatch);
+  const runtimeCatalogCards = useAppSelector(selectEngineRuntimeCatalogCards);
   const humanSeat = useAppSelector(selectEngineHumanSeat);
   const aiSeat = useAppSelector(selectEngineAiSeat);
   const humanHand = useAppSelector(selectEngineHumanHand);
@@ -103,6 +101,10 @@ const AuthenticMulliganScreen: React.FC<AuthenticMulliganScreenProps> = ({
   const legalMoves = useAppSelector(selectEngineLegalMovesForHuman);
   const selectedCardIds = useAppSelector(selectEngineSelectedCardIds);
   const lastError = useAppSelector(selectEngineLastError);
+  const catalogCardBySourceId = useMemo(
+    () => new Map(runtimeCatalogCards.map((card) => [card.sourceId, card])),
+    [runtimeCatalogCards],
+  );
 
   const selectedMulliganMove = useMemo(
     () => findLegalMulliganMove(legalMoves, selectedCardIds),
@@ -156,7 +158,7 @@ const AuthenticMulliganScreen: React.FC<AuthenticMulliganScreenProps> = ({
             ]
           : [];
       }),
-    [humanMulliganAnimation?.selectedCardIds, match?.cardsById],
+    [catalogCardBySourceId, humanMulliganAnimation?.selectedCardIds, match?.cardsById],
   );
   const debugAiRuntimeCards = useMemo(
     () => (debugRevealAiCards ? debugAiHand.map(toRuntimeCard) : []),
@@ -194,7 +196,7 @@ const AuthenticMulliganScreen: React.FC<AuthenticMulliganScreenProps> = ({
           : [];
       });
     },
-    [aiMulliganAnimation?.baseHandCardIds, aiMulliganBaseHandCardIds, debugRevealAiCards, match?.cardsById],
+    [aiMulliganAnimation?.baseHandCardIds, aiMulliganBaseHandCardIds, catalogCardBySourceId, debugRevealAiCards, match?.cardsById],
   );
   const debugSelectedAiRuntimeCards = useMemo(
     () => {
@@ -228,7 +230,7 @@ const AuthenticMulliganScreen: React.FC<AuthenticMulliganScreenProps> = ({
           : [];
       });
     },
-    [aiMulliganAnimation?.selectedCardIds, debugRevealAiCards, match?.cardsById],
+    [aiMulliganAnimation?.selectedCardIds, catalogCardBySourceId, debugRevealAiCards, match?.cardsById],
   );
   const debugDrawnAiRuntimeCards = useMemo(
     () => {
@@ -262,7 +264,7 @@ const AuthenticMulliganScreen: React.FC<AuthenticMulliganScreenProps> = ({
           : [];
       });
     },
-    [aiMulliganAnimation?.drawnCardIds, debugRevealAiCards, match?.cardsById],
+    [aiMulliganAnimation?.drawnCardIds, catalogCardBySourceId, debugRevealAiCards, match?.cardsById],
   );
   const debugAiSlotCards =
     (isAiMulliganChoosing || (aiMulliganAnimation && !isMulliganReviewReady)) && debugAiBaseRuntimeCards.length > 0

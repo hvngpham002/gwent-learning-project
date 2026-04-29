@@ -62,7 +62,7 @@ export type EditableDeckFaction = Exclude<CatalogFaction, "neutral">;
 
 export interface DeckBuilderAddState {
   readonly canAdd: boolean;
-  readonly reasonCode?: "deck_limit" | "special_cap" | "wrong_faction" | "unknown_card";
+  readonly reasonCode?: "deck_limit" | "special_cap" | "wrong_faction" | "unknown_card" | "unplayable_custom";
   readonly reason?: string;
 }
 

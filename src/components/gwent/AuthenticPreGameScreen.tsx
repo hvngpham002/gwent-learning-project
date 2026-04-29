@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 
 import type { CatalogDeckPreset } from "@/game/catalog";
+import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
 
 import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
@@ -17,22 +18,32 @@ import {
   seedFromSearch,
   type AuthenticMatchSetupConfig,
 } from "./preGameViewModel";
+import type { CardStudioBlockedSources, CardStudioSourceSets } from "./cardStudioTypes";
 import "./authentic-pregame.css";
 
 interface AuthenticPreGameScreenProps {
   readonly search?: string;
   readonly localDecks?: readonly CatalogDeckPreset[];
+  readonly sourceSets?: CardStudioSourceSets;
+  readonly blockedSources?: CardStudioBlockedSources;
   readonly onBeginMatch: (config: AuthenticMatchSetupConfig) => void;
   readonly onOpenDeckBuilder?: (mode?: "create" | "edit") => void;
+  readonly onOpenCardStudio?: () => void;
 }
 
 const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
   search = window.location.search,
   localDecks = [],
+  sourceSets = { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+  blockedSources = { cards: new Map(), leaders: new Map() },
   onBeginMatch,
   onOpenDeckBuilder,
+  onOpenCardStudio,
 }) => {
-  const deckOptions = useMemo(() => buildPreGameDeckOptionsWithLocal(localDecks), [localDecks]);
+  const deckOptions = useMemo(
+    () => buildPreGameDeckOptionsWithLocal(localDecks, sourceSets, blockedSources),
+    [blockedSources, localDecks, sourceSets],
+  );
   const opponentOptions = useMemo(() => buildPreGameDeckOptions(), []);
   const modeOptions = useMemo(() => buildPreGameModeOptions(), []);
   const roundOptions = useMemo(() => buildPreGameRoundOptions(), []);
@@ -80,6 +91,8 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
       roundId,
       formatId,
       seed,
+      catalogCards: sourceSets.cards,
+      catalogLeaders: sourceSets.leaders,
     });
     setSeed(String(config.seed));
     onBeginMatch(config);
@@ -115,6 +128,16 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
           >
             open deck builder →
           </button>
+          {onOpenCardStudio ? (
+            <button
+              type="button"
+              className="authentic-button authentic-button--ghost authentic-pregame__ghost"
+              data-testid="authentic-pregame-card-studio"
+              onClick={onOpenCardStudio}
+            >
+              card studio →
+            </button>
+          ) : null}
         </header>
 
         <div className="authentic-pregame__body">

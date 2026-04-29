@@ -8,7 +8,8 @@ import { getLegalMoves, type EngineCommand, type SeatId } from "@/game/core";
 import type { EngineAdapterState } from "@/store/slices/engineSlice";
 
 export const getLegalHeuristicAiCommand = (
-  engine: Pick<EngineAdapterState, "match" | "status" | "lock">,
+  engine: Pick<EngineAdapterState, "match" | "status" | "lock"> &
+    Partial<Pick<EngineAdapterState, "runtimeCatalog">>,
   aiSeat: SeatId,
   humanSeat: SeatId,
 ): Exclude<EngineCommand, { type: "StartMatch" }> | null => {
@@ -42,17 +43,22 @@ export const getLegalHeuristicAiCommand = (
     return null;
   }
 
+  const runtimeCatalog = engine.runtimeCatalog ?? {
+    cards: currentCatalogCards,
+    leaders: currentCatalogLeaders,
+  };
+
   const legalMoves = getLegalMoves({
     state: match,
     seatId: aiSeat,
-    catalogCards: currentCatalogCards,
-    catalogLeaders: currentCatalogLeaders,
+    catalogCards: runtimeCatalog.cards,
+    catalogLeaders: runtimeCatalog.leaders,
   });
   const observation = buildSeatObservation({
     state: match,
     seatId: aiSeat,
-    catalogCards: currentCatalogCards,
-    catalogLeaders: currentCatalogLeaders,
+    catalogCards: runtimeCatalog.cards,
+    catalogLeaders: runtimeCatalog.leaders,
   });
   const selectedMove = legalHeuristicPolicyV0.selectMove({ seatId: aiSeat, observation, legalMoves });
 

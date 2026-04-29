@@ -28,6 +28,10 @@ import type {
 } from "./deckBuilderTypes";
 import { getFactionDisplay } from "./displayMetadata";
 
+interface DeckBuilderBlockedSource {
+  readonly reason: string;
+}
+
 export const DECK_BUILDER_MIN_BATTLEFIELD_CARDS = 22;
 export const DECK_BUILDER_MAX_SPECIAL_CARDS = 10;
 export const DECK_BUILDER_DEFAULT_UNIT_CARD_LIMIT = 3;
@@ -192,6 +196,7 @@ export const buildDeckCardItems = (
 export const buildCardPool = (
   deck: CatalogDeckPreset,
   cards: readonly CatalogCardSource[] = currentCatalogCards,
+  blockedCardSources: ReadonlyMap<string, DeckBuilderBlockedSource> = new Map(),
 ): DeckBuilderCardPoolItem[] => {
   const countById = new Map(deck.mainDeck.map((entry) => [entry.sourceId, entry.count]));
   return cards
@@ -199,7 +204,7 @@ export const buildCardPool = (
     .map((card) => {
       const count = countById.get(card.sourceId) ?? 0;
       const limit = getDeckBuilderCardLimit(card);
-      const addState = getDeckBuilderAddState(deck, card.sourceId, cards);
+      const addState = getDeckBuilderAddState(deck, card.sourceId, cards, blockedCardSources);
       return { card, count, limit, atLimit: addState.reasonCode === "deck_limit", addState };
     })
     .sort((a, b) => {
@@ -221,7 +226,12 @@ export const getDeckBuilderAddState = (
   deck: CatalogDeckPreset,
   sourceId: string,
   cards: readonly CatalogCardSource[] = currentCatalogCards,
+  blockedCardSources: ReadonlyMap<string, DeckBuilderBlockedSource> = new Map(),
 ): DeckBuilderAddState => {
+  const blocked = blockedCardSources.get(sourceId);
+  if (blocked) {
+    return { canAdd: false, reasonCode: "unplayable_custom", reason: blocked.reason };
+  }
   const card = catalogCardById(cards).get(sourceId);
   if (!card) {
     return { canAdd: false, reasonCode: "unknown_card", reason: "unknown card" };
@@ -274,8 +284,9 @@ export const addCardToDeck = (
   deck: CatalogDeckPreset,
   sourceId: string,
   cards: readonly CatalogCardSource[] = currentCatalogCards,
+  blockedCardSources: ReadonlyMap<string, DeckBuilderBlockedSource> = new Map(),
 ): CatalogDeckPreset => {
-  const addState = getDeckBuilderAddState(deck, sourceId, cards);
+  const addState = getDeckBuilderAddState(deck, sourceId, cards, blockedCardSources);
   if (!addState.canAdd) return deck;
   const card = catalogCardById(cards).get(sourceId);
   if (!card) return deck;
@@ -358,6 +369,10 @@ export const validateDeckPreset = (
   deck: CatalogDeckPreset,
   cards: readonly CatalogCardSource[] = currentCatalogCards,
   leaders: readonly CatalogLeaderSource[] = currentCatalogLeaders,
+  blockedSources: {
+    readonly cards?: ReadonlyMap<string, DeckBuilderBlockedSource>;
+    readonly leaders?: ReadonlyMap<string, DeckBuilderBlockedSource>;
+  } = {},
 ): DeckBuilderStats => {
   const issues: DeckBuilderValidationIssue[] = [];
   const byCardId = catalogCardById(cards);
@@ -379,7 +394,10 @@ export const validateDeckPreset = (
     pushIssue(issues, "error", "invalid_faction", "Deck faction must be a known non-neutral faction.");
   }
 
-  if (!leader) {
+  const blockedLeader = blockedSources.leaders?.get(deck.leaderSourceId);
+  if (blockedLeader) {
+    pushIssue(issues, "error", "unplayable_custom_leader", blockedLeader.reason, deck.leaderSourceId);
+  } else if (!leader) {
     pushIssue(issues, "error", "unknown_leader", `Leader is missing: ${deck.leaderSourceId}`, deck.leaderSourceId);
   } else if (leader.faction !== deck.faction) {
     pushIssue(issues, "error", "wrong_faction_leader", `${leader.name} does not belong to this deck faction.`, leader.sourceId);
@@ -414,7 +432,12 @@ export const validateDeckPreset = (
       return;
     }
 
+    const blockedCard = blockedSources.cards?.get(entry.sourceId);
     const card = byCardId.get(entry.sourceId);
+    if (blockedCard) {
+      pushIssue(issues, "error", "unplayable_custom_card", blockedCard.reason, entry.sourceId);
+      return;
+    }
     if (!card) {
       pushIssue(issues, "error", "unknown_card", `Unknown card: ${entry.sourceId}`, entry.sourceId);
       return;

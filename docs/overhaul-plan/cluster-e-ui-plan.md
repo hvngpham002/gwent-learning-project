@@ -233,20 +233,27 @@ Acceptance:
 
 ### `cEp7`: Card Studio And Content Workflow
 
-Goal: make future card population easier for the user.
+Goal: make future card population easier for the user and support full in-game custom card/leader creation.
 
 Scope:
 
-- add a Card Studio or card-authoring workflow for catalog-compatible records;
-- include image path guidance and preview;
-- validate source IDs, factions, rows, abilities, leader fields, deck limits, and image metadata;
-- export/import card records and optionally generated deck presets.
+- add an authentic Card Studio route for browser-local custom cards and leaders;
+- support cards and leaders as draft or playable custom records;
+- allow unit, hero, special/weather, and leader creation over known catalog factions, rows, abilities, and leader abilities;
+- include live authentic card/leader preview;
+- support path-based images for permanent repo workflows plus local uploaded image data URLs for browser-local prototypes;
+- validate source IDs, factions, rows, ability applicability, implemented-vs-unimplemented ability status, leader fields, deck limits, linked source IDs, and image metadata;
+- export/import selected records and full custom catalog bundles as JSON;
+- integrate playable custom cards/leaders into the deck builder and pre-game validation;
+- extend the runtime engine adapter catalog path so custom sources can be used by setup, legal moves, selectors, scoring, command execution, and AI observation.
 
 Acceptance:
 
-- a user can create a custom card record through the UI, export it, import it, and include it in a deck if all abilities are implemented;
-- unknown ability IDs are blocked or clearly marked as unsupported;
-- docs explain where repo images and catalog data belong for permanent source commits.
+- a user can create a custom card or leader through the UI, export it, import it, and include playable custom sources in a deck when all abilities are implemented;
+- draft custom records with planned/placeholder abilities can be saved and previewed but cannot silently enter playable decks or match start;
+- custom cards can render in the deck builder and at least one engine-backed match path;
+- hidden-info behavior still holds for custom AI hand/deck contents;
+- docs explain browser-local storage, JSON backup, image path/upload limits, and where repo images/catalog data belong for permanent source commits.
 
 ### `cEp8`: Product Promotion And Mode Expansion
 

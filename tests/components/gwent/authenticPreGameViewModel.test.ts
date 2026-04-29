@@ -14,9 +14,22 @@ import {
   seedFromSearch,
   setupConfigToStartEngineOptions,
 } from "@/components/gwent/preGameViewModel";
-import { currentNorthernRealmsDeckPreset } from "@/data/catalog";
+import { currentCatalogCards, currentCatalogLeaders, currentNorthernRealmsDeckPreset } from "@/data/catalog";
+import type { CatalogCardSource } from "@/game/catalog";
 
 describe("authentic pre-game view model", () => {
+  const customCard: CatalogCardSource = {
+    sourceId: "custom_pregame_unit",
+    name: "Pregame Unit",
+    faction: "northern_realms",
+    kind: "unit",
+    strength: 5,
+    rows: ["close"],
+    abilities: ["none"],
+    tags: [],
+    deckLimit: 3,
+    image: "/images/custom/pregame-unit.png",
+  };
   it("maps current catalog presets to ready deck options", () => {
     const options = buildPreGameDeckOptions();
 
@@ -149,6 +162,31 @@ describe("authentic pre-game view model", () => {
         aiSeat: "seat_b",
       }),
     );
+  });
+
+  it("resolves local decks against explicit custom source sets", () => {
+    const localDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      presetId: "local-custom",
+      name: "Local Custom",
+      mainDeck: [...currentNorthernRealmsDeckPreset.mainDeck, { sourceId: customCard.sourceId, count: 1 }],
+    };
+    const sourceSets = { cards: [...currentCatalogCards, customCard], leaders: currentCatalogLeaders };
+    const option = buildPreGameDeckOptionsWithLocal([localDeck], sourceSets).find((entry) => entry.presetId === "local-custom");
+
+    expect(option).toEqual(expect.objectContaining({ ready: true, source: "local" }));
+
+    const config = buildSetupConfig({
+      humanDeckPresetId: localDeck.presetId,
+      humanDeckPreset: localDeck,
+      opponentDeckPresetId: "current-nilfgaard",
+      roundId: "standard",
+      formatId: "best-of-3",
+      seed: "custom-pregame",
+      catalogCards: sourceSets.cards,
+      catalogLeaders: sourceSets.leaders,
+    });
+    expect(setupConfigToStartEngineOptions(config).catalogCards?.map((card) => card.sourceId)).toContain(customCard.sourceId);
   });
 
   it("converts a local selected deck into start options with an inline preset", () => {

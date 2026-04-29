@@ -5,7 +5,9 @@ import {
   resolveCatalogDeckPreset,
 } from "@/data/catalog";
 import type { CatalogCardKind, CatalogDeckPreset, CatalogFaction, CatalogLeaderSource } from "@/game/catalog";
+import type { CatalogCardSource } from "@/game/catalog";
 import type { StartEngineMatchOptions } from "@/store/thunks/engineThunks";
+import type { CardStudioBlockedSources, CardStudioSourceSets } from "./cardStudioTypes";
 
 import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import { deckNameKey, validateDeckPreset } from "./deckBuilderViewModel";
@@ -20,6 +22,8 @@ export interface AuthenticMatchSetupConfig {
   readonly formatId: "best-of-3";
   readonly seed: string | number;
   readonly aiPolicyId: typeof ENGINE_AI_POLICY_ID;
+  readonly catalogCards?: readonly CatalogCardSource[];
+  readonly catalogLeaders?: readonly CatalogLeaderSource[];
 }
 
 export interface PreGameDeckOptionViewModel {
@@ -66,8 +70,11 @@ export interface PreGameRoundOptionViewModel {
 
 const countEntries = (entries: CatalogDeckPreset["mainDeck"]) => entries.reduce((total, entry) => total + entry.count, 0);
 
-const countKinds = (preset: CatalogDeckPreset): Record<CatalogCardKind, number> => {
-  const byId = new Map<string, (typeof currentCatalogCards)[number]>(currentCatalogCards.map((card) => [card.sourceId, card]));
+const countKinds = (
+  preset: CatalogDeckPreset,
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+): Record<CatalogCardKind, number> => {
+  const byId = new Map<string, CatalogCardSource>(cards.map((card) => [card.sourceId, card]));
   return preset.mainDeck.reduce<Record<CatalogCardKind, number>>(
     (counts, entry) => {
       const kind = byId.get(entry.sourceId)?.kind;
@@ -83,14 +90,16 @@ const countKinds = (preset: CatalogDeckPreset): Record<CatalogCardKind, number> 
 export const buildPreGameDeckOptions = (
   presets: readonly CatalogDeckPreset[] = currentDeckPresets,
   source: "catalog" | "local" = "catalog",
+  sourceSets: CardStudioSourceSets = { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+  blockedSources: CardStudioBlockedSources = { cards: new Map(), leaders: new Map() },
 ): readonly PreGameDeckOptionViewModel[] =>
   presets.map((preset) => {
     try {
-      const resolved = resolveCatalogDeckPreset(preset, currentCatalogCards, currentCatalogLeaders);
-      const kindCounts = countKinds(preset);
+      const resolved = resolveCatalogDeckPreset(preset, sourceSets.cards, sourceSets.leaders);
+      const kindCounts = countKinds(preset, sourceSets.cards);
       const leaderAbility = getLeaderAbilityDisplay(resolved.leader.ability);
       const faction = getFactionDisplay(preset.faction);
-      const validation = validateDeckPreset(preset);
+      const validation = validateDeckPreset(preset, sourceSets.cards, sourceSets.leaders, blockedSources);
       const errors = validation.issues.filter((issue) => issue.severity === "error");
       return {
         optionId: `${source}:${preset.presetId}`,
@@ -141,7 +150,11 @@ const findShadowedCatalogPresetId = (localDeck: CatalogDeckPreset): string | nul
   return currentDeckPresets.find((preset) => deckNameKey(preset.name) === deckNameKey(localDeck.name))?.presetId ?? null;
 };
 
-export const buildPreGameDeckOptionsWithLocal = (localDecks: readonly CatalogDeckPreset[] = []) => {
+export const buildPreGameDeckOptionsWithLocal = (
+  localDecks: readonly CatalogDeckPreset[] = [],
+  sourceSets: CardStudioSourceSets = { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+  blockedSources: CardStudioBlockedSources = { cards: new Map(), leaders: new Map() },
+) => {
   const localByCatalogId = new Map<string, CatalogDeckPreset>();
   const unmatchedLocalDecks: CatalogDeckPreset[] = [];
 
@@ -158,10 +171,10 @@ export const buildPreGameDeckOptionsWithLocal = (localDecks: readonly CatalogDec
     ...currentDeckPresets.flatMap((preset) => {
       const localReplacement = localByCatalogId.get(preset.presetId);
       return localReplacement
-        ? buildPreGameDeckOptions([localReplacement], "local")
-        : buildPreGameDeckOptions([preset], "catalog");
+        ? buildPreGameDeckOptions([localReplacement], "local", sourceSets, blockedSources)
+        : buildPreGameDeckOptions([preset], "catalog", sourceSets, blockedSources);
     }),
-    ...buildPreGameDeckOptions(unmatchedLocalDecks, "local"),
+    ...buildPreGameDeckOptions(unmatchedLocalDecks, "local", sourceSets, blockedSources),
   ];
 };
 
@@ -226,6 +239,8 @@ export const buildSetupConfig = (input: {
   readonly roundId: "standard";
   readonly formatId: "best-of-3";
   readonly seed: string;
+  readonly catalogCards?: readonly CatalogCardSource[];
+  readonly catalogLeaders?: readonly CatalogLeaderSource[];
 }): AuthenticMatchSetupConfig => {
   const config: AuthenticMatchSetupConfig = {
     humanDeckPresetId: input.humanDeckPresetId,
@@ -235,6 +250,8 @@ export const buildSetupConfig = (input: {
     formatId: input.formatId,
     seed: normalizePreGameSeed(input.seed),
     aiPolicyId: ENGINE_AI_POLICY_ID,
+    ...(input.catalogCards ? { catalogCards: input.catalogCards } : {}),
+    ...(input.catalogLeaders ? { catalogLeaders: input.catalogLeaders } : {}),
   };
   return input.humanDeckPreset ? { ...config, humanDeckPreset: input.humanDeckPreset } : config;
 };
@@ -248,4 +265,6 @@ export const setupConfigToStartEngineOptions = (config: AuthenticMatchSetupConfi
   aiSeat: "seat_b",
   playerIds: { seat_a: "human", seat_b: "ai" },
   controllerKinds: { seat_a: "human", seat_b: "ai" },
+  ...(config.catalogCards ? { catalogCards: config.catalogCards } : {}),
+  ...(config.catalogLeaders ? { catalogLeaders: config.catalogLeaders } : {}),
 });

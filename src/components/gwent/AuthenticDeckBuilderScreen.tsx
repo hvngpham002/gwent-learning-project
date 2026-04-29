@@ -25,6 +25,7 @@ import {
 import { parseDeckImport, stringifyDeckExport } from "./deckBuilderImportExport";
 import { writeDeckBuilderStore } from "./deckBuilderStorage";
 import type { DeckBuilderFilter } from "./deckBuilderTypes";
+import type { CardStudioBlockedSources, CardStudioSourceSets } from "./cardStudioTypes";
 import { fromCatalogCard } from "./cardViewModel";
 import { getAbilityDisplay, getFactionDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
 import Listbox from "./Listbox";
@@ -34,9 +35,12 @@ interface AuthenticDeckBuilderScreenProps {
   readonly decks: readonly CatalogDeckPreset[];
   readonly activePresetId?: string;
   readonly storageWarning?: string | null;
+  readonly sourceSets?: CardStudioSourceSets;
+  readonly blockedSources?: CardStudioBlockedSources;
   readonly onDecksChange: (decks: readonly CatalogDeckPreset[], activePresetId?: string) => void;
   readonly onExit: () => void;
   readonly onPlay: (deck: CatalogDeckPreset) => void;
+  readonly onOpenCardStudio?: () => void;
 }
 
 const newLocalId = () => `local-${Date.now().toString(36)}`;
@@ -55,9 +59,12 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   decks,
   activePresetId,
   storageWarning,
+  sourceSets = { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+  blockedSources = { cards: new Map(), leaders: new Map() },
   onDecksChange,
   onExit,
   onPlay,
+  onOpenCardStudio,
 }) => {
   const activeDeck = decks.find((deck) => deck.presetId === activePresetId) ?? decks[0];
   const [filter, setFilter] = useState<DeckBuilderFilter>("all");
@@ -71,16 +78,22 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const stats = useMemo(() => (activeDeck ? validateDeckPreset(activeDeck) : null), [activeDeck]);
-  const pool = useMemo(() => (activeDeck ? filterCardPool(buildCardPool(activeDeck), filter, search) : []), [activeDeck, filter, search]);
-  const deckItems = useMemo(() => (activeDeck ? buildDeckCardItems(activeDeck) : []), [activeDeck]);
-  const factionOptions = useMemo(() => buildFactionOptions(), []);
+  const stats = useMemo(
+    () => (activeDeck ? validateDeckPreset(activeDeck, sourceSets.cards, sourceSets.leaders, blockedSources) : null),
+    [activeDeck, blockedSources, sourceSets.cards, sourceSets.leaders],
+  );
+  const pool = useMemo(
+    () => (activeDeck ? filterCardPool(buildCardPool(activeDeck, sourceSets.cards, blockedSources.cards), filter, search) : []),
+    [activeDeck, blockedSources.cards, filter, search, sourceSets.cards],
+  );
+  const deckItems = useMemo(() => (activeDeck ? buildDeckCardItems(activeDeck, sourceSets.cards) : []), [activeDeck, sourceSets.cards]);
+  const factionOptions = useMemo(() => buildFactionOptions(sourceSets.cards, sourceSets.leaders), [sourceSets.cards, sourceSets.leaders]);
   const catalogSource = useMemo(() => (activeDeck ? findCatalogSourceForLocalDeck(activeDeck) : null), [activeDeck]);
   const selectedCard =
-    currentCatalogCards.find((card) => card.sourceId === selectedSourceId) ?? deckItems[0]?.card ?? pool[0]?.card ?? null;
-  const leaderOptions = activeDeck ? leadersForFaction(activeDeck.faction) : [];
+    sourceSets.cards.find((card) => card.sourceId === selectedSourceId) ?? deckItems[0]?.card ?? pool[0]?.card ?? null;
+  const leaderOptions = activeDeck ? leadersForFaction(activeDeck.faction, sourceSets.leaders) : [];
   const leader: CatalogLeaderSource | null =
-    currentCatalogLeaders.find((candidate) => candidate.sourceId === activeDeck?.leaderSourceId) ?? null;
+    sourceSets.leaders.find((candidate) => candidate.sourceId === activeDeck?.leaderSourceId) ?? null;
   const leaderAbility = leader ? getLeaderAbilityDisplay(leader.ability) : null;
   const selectedAbility = selectedCard?.abilities.find((ability) => ability !== "none");
   const selectedAbilityDisplay = selectedAbility ? getAbilityDisplay(selectedAbility) : null;
@@ -109,7 +122,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   const addCard = (sourceId: string) => {
     if (!activeDeck) return;
     setSelectedSourceId(sourceId);
-    updateActiveDeck(addCardToDeck(activeDeck, sourceId));
+    updateActiveDeck(addCardToDeck(activeDeck, sourceId, sourceSets.cards, blockedSources.cards));
   };
 
   const removeCard = (sourceId: string) => {
@@ -119,7 +132,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   };
 
   const createDeck = () => {
-    const deck = createEmptyDeckPreset(newLocalId(), makeUniqueDeckName("New Deck", decks));
+    const deck = createEmptyDeckPreset(newLocalId(), makeUniqueDeckName("New Deck", decks), "northern_realms", sourceSets.leaders);
     updateDecks([...decks, deck], deck.presetId);
     setSelectedSourceId(null);
     setNotice("Choose a faction, then add cards.");
@@ -151,7 +164,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
 
   const updateFaction = (nextFaction: CatalogDeckPreset["faction"]) => {
     if (!activeDeck || nextFaction === activeDeck.faction) return;
-    const result = changeDeckFaction(activeDeck, nextFaction);
+    const result = changeDeckFaction(activeDeck, nextFaction, sourceSets.cards, sourceSets.leaders);
     const applyFactionChange = () => {
       updateActiveDeck(result.deck);
       setSelectedSourceId(result.deck.mainDeck[0]?.sourceId ?? null);
@@ -195,7 +208,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
 
   const playCurrentDeck = () => {
     if (!activeDeck) return;
-    const currentStats = validateDeckPreset(activeDeck);
+    const currentStats = validateDeckPreset(activeDeck, sourceSets.cards, sourceSets.leaders, blockedSources);
     if (!currentStats.playable) return;
     const write = writeDeckBuilderStore({
       schemaVersion: "authentic-decks-v1",
@@ -224,10 +237,15 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   };
 
   const importDeck = () => {
-    const result = parseDeckImport(importText, [
-      ...decks.map((deck) => deck.presetId),
-      ...currentDeckPresets.map((deck) => deck.presetId),
-    ]);
+    const result = parseDeckImport(
+      importText,
+      [
+        ...decks.map((deck) => deck.presetId),
+        ...currentDeckPresets.map((deck) => deck.presetId),
+      ],
+      sourceSets,
+      blockedSources,
+    );
     if (!result.ok || !result.preset) {
       setImportErrors(result.errors);
       return;
@@ -277,6 +295,9 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
             <button type="button" className="authentic-button authentic-button--secondary" onClick={() => setImportOpen(true)}>import</button>
             <button type="button" className="authentic-button authentic-button--secondary" onClick={exportJson}>export</button>
             <button type="button" className="authentic-button authentic-button--secondary" onClick={copyJson} disabled={!navigator.clipboard}>copy</button>
+            {onOpenCardStudio ? (
+              <button type="button" className="authentic-button authentic-button--secondary" onClick={onOpenCardStudio}>card studio →</button>
+            ) : null}
             <button type="button" className="authentic-button authentic-button--secondary" onClick={saveNow}>save</button>
             <button type="button" className="authentic-button authentic-button--primary is-primary" disabled={!stats.playable} onClick={playCurrentDeck}>
               play →
@@ -288,7 +309,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
           <aside className="authentic-deck-builder__deck-list" data-testid="authentic-deck-builder-deck-list">
             <div className="authentic-deck-builder__label">your decks · {decks.length}</div>
             {decks.map((deck) => {
-              const deckStats = validateDeckPreset(deck);
+              const deckStats = validateDeckPreset(deck, sourceSets.cards, sourceSets.leaders, blockedSources);
               return (
                 <button
                   key={deck.presetId}

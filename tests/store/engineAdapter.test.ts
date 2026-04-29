@@ -13,6 +13,9 @@ import {
   selectEngineScoreBreakdown,
 } from "@/store/selectors/engineSelectors";
 import type { CardInstanceId, MatchState, PlayCardMove, SeatId, UseLeaderMove } from "@/game/core";
+import type { CatalogCardSource, CatalogDeckPreset } from "@/game/catalog";
+import { currentCatalogCards, currentCatalogLeaders, currentNilfgaardDeckPreset, currentNorthernRealmsDeckPreset } from "@/data/catalog";
+import { getLegalHeuristicAiCommand } from "@/components/game/engine/legalHeuristicAiController";
 
 const createTestStore = () =>
   configureStore({
@@ -62,6 +65,26 @@ const putOnBoard = (match: MatchState, seatId: SeatId, cardId: CardInstanceId) =
 };
 
 describe("engine Redux adapter", () => {
+  const customRuntimeCard: CatalogCardSource = {
+    sourceId: "custom_runtime_unit",
+    name: "Runtime Unit",
+    faction: "northern_realms",
+    kind: "unit",
+    strength: 9,
+    rows: ["close"],
+    abilities: ["none"],
+    tags: [],
+    deckLimit: 22,
+    image: "/images/custom/runtime-unit.png",
+  };
+  const customRuntimeDeck: CatalogDeckPreset = {
+    presetId: "local-runtime-custom",
+    name: "Runtime Custom",
+    faction: "northern_realms",
+    leaderSourceId: currentNorthernRealmsDeckPreset.leaderSourceId,
+    mainDeck: [{ sourceId: customRuntimeCard.sourceId, count: 22 }],
+    sideDeck: [],
+  };
   it("starts a deterministic engine match with the requested seed and seat map", () => {
     const store = createTestStore();
 
@@ -409,6 +432,50 @@ describe("engine Redux adapter", () => {
     expect(Object.keys(state.engine).includes("aiHandCards")).toBe(false);
     expect(selectEngineHumanHand(state).map((card) => card.name)).not.toEqual(
       selectEngineDebugAiHandCards(state).map((card) => card.name),
+    );
+  });
+
+  it("uses the active runtime catalog for custom cards across selectors, legal moves, scoring, commands, and AI", () => {
+    const store = createTestStore();
+    const catalogCards = [...currentCatalogCards, customRuntimeCard];
+    store.dispatch(
+      startEngineMatch({
+        seed: "adapter-custom-runtime",
+        humanDeckPresetId: customRuntimeDeck.presetId,
+        humanDeckPreset: customRuntimeDeck,
+        aiDeckPresetId: currentNilfgaardDeckPreset.presetId,
+        catalogCards,
+        catalogLeaders: currentCatalogLeaders,
+      }),
+    );
+
+    expect(store.getState().engine.runtimeCatalog.cards.map((card) => card.sourceId)).toContain(customRuntimeCard.sourceId);
+    expect(selectEngineHumanHand(store.getState()).map((card) => card.sourceId)).toEqual(
+      Array.from({ length: 10 }, () => customRuntimeCard.sourceId),
+    );
+
+    store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_a", cardIds: [] }));
+    const aiCommand = getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a");
+    expect(aiCommand?.type).toBe("ChooseMulligan");
+    store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_b", cardIds: [] }));
+    passAiIfNeeded(store);
+
+    const playMove = selectEngineLegalMovesForHuman(store.getState()).find(
+      (move): move is PlayCardMove => move.kind === "play_card" && move.sourceId === customRuntimeCard.sourceId,
+    );
+    expect(playMove).toBeTruthy();
+    store.dispatch(
+      dispatchEngineCommand({
+        type: "PlayCard",
+        seatId: "seat_a",
+        cardId: playMove!.sourceCardId,
+        target: playMove!.target,
+      }),
+    );
+
+    expect(selectEngineScoreBreakdown(store.getState())?.totalBySeat.seat_a).toBe(customRuntimeCard.strength);
+    expect(store.getState().engine.lastTransactionEvents).toEqual(
+      expect.arrayContaining([expect.objectContaining({ type: "card_played", cardId: playMove!.sourceCardId })]),
     );
   });
 });

@@ -2,6 +2,28 @@
 
 The legacy default route still has legacy card-data paths, but the current engine/authentic product path consumes catalog source data. New content should be added to the catalog source tree.
 
+## Browser-Local Card Studio
+
+The authentic UI now includes Card Studio at:
+
+```text
+/?engine=1&ui=authentic&view=card-studio
+```
+
+Card Studio creates browser-local custom cards and leaders under localStorage key `gwent_custom_catalog_v1`. It does not write files into the repository. Use it for prototyping, previewing authentic card faces, validating source IDs/abilities/images, and exporting handoff JSON.
+
+Playable custom records can enter the deck builder and engine matches only when they use implemented ability IDs. Draft records with planned or placeholder abilities can be saved, previewed, imported, and exported, but they are blocked from playable decks and match start.
+
+Permanent source migration remains a code/data workflow:
+
+1. Export the selected Card Studio record or full bundle as JSON.
+2. Move real art into `public/images/custom/` or the long-term catalog image path.
+3. Replace any browser-local data URL image with a stable `/images/...` path.
+4. Add the source record to `src/data/catalog/cards/` or `src/data/catalog/leaders/` in a later coding phase.
+5. Run catalog and project validation.
+
+Uploaded image previews are stored as data URLs in browser storage and in exported JSON. They are useful for prototypes, but they can make JSON large and are not a substitute for committed image assets.
+
 ## Files
 
 Card source packs live in:

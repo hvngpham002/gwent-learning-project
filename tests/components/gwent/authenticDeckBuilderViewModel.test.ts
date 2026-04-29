@@ -24,8 +24,35 @@ import {
   resetDeckToCatalogSource,
   validateDeckPreset,
 } from "@/components/gwent/deckBuilderViewModel";
+import type { CatalogCardSource, CatalogLeaderSource } from "@/game/catalog";
 
 describe("authentic deck builder view model", () => {
+  const customNorthernCard: CatalogCardSource = {
+    sourceId: "custom_training_unit",
+    name: "Training Unit",
+    faction: "northern_realms",
+    kind: "unit",
+    strength: 6,
+    rows: ["close"],
+    abilities: ["none"],
+    tags: [],
+    deckLimit: 3,
+    image: "/images/custom/training-unit.png",
+  };
+  const customNilfgaardCard: CatalogCardSource = {
+    ...customNorthernCard,
+    sourceId: "custom_nilfgaard_unit",
+    name: "Nilfgaard Training Unit",
+    faction: "nilfgaard",
+  };
+  const customLeader: CatalogLeaderSource = {
+    sourceId: "custom_leader_training",
+    name: "Training Leader",
+    faction: "northern_realms",
+    ability: "clear_weather",
+    image: "/images/custom/training-leader.png",
+  };
+
   it("builds a faction plus neutral pool and hides wrong-faction cards", () => {
     const pool = buildCardPool(currentNorthernRealmsDeckPreset);
     const factions = new Set(pool.map((item) => item.card.faction));
@@ -241,6 +268,39 @@ describe("authentic deck builder view model", () => {
       expect.arrayContaining([
         expect.objectContaining({ severity: "warning", code: "leader_ability_not_implemented" }),
       ]),
+    );
+  });
+
+  it("uses explicit merged source sets for playable custom cards and leaders", () => {
+    const cards = [...currentCatalogCards, customNorthernCard, customNilfgaardCard];
+    const leaders = [...currentCatalogLeaders, customLeader];
+    const deck = {
+      ...currentNorthernRealmsDeckPreset,
+      leaderSourceId: customLeader.sourceId,
+      mainDeck: [...currentNorthernRealmsDeckPreset.mainDeck, { sourceId: customNorthernCard.sourceId, count: 1 }],
+    };
+
+    const pool = buildCardPool(deck, cards);
+    expect(pool.map((item) => item.card.sourceId)).toContain(customNorthernCard.sourceId);
+    expect(pool.map((item) => item.card.sourceId)).not.toContain(customNilfgaardCard.sourceId);
+    expect(validateDeckPreset(deck, cards, leaders).playable).toBe(true);
+  });
+
+  it("blocks local decks that still reference draft or deleted custom sources", () => {
+    const blockedSources = {
+      cards: new Map([[customNorthernCard.sourceId, { reason: "Training Unit is saved as a Card Studio draft." }]]),
+      leaders: new Map([[customLeader.sourceId, { reason: "Training Leader is saved as a Card Studio draft." }]]),
+    };
+    const deck = {
+      ...currentNorthernRealmsDeckPreset,
+      leaderSourceId: customLeader.sourceId,
+      mainDeck: [{ sourceId: customNorthernCard.sourceId, count: 1 }],
+    };
+    const stats = validateDeckPreset(deck, currentCatalogCards, currentCatalogLeaders, blockedSources);
+
+    expect(stats.playable).toBe(false);
+    expect(stats.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["unplayable_custom_card", "unplayable_custom_leader", "too_few_battlefield_cards"]),
     );
   });
 });

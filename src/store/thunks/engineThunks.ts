@@ -7,7 +7,7 @@ import {
   currentNilfgaardDeckPreset,
   currentNorthernRealmsDeckPreset,
 } from "@/data/catalog";
-import type { CatalogDeckPreset } from "@/game/catalog";
+import type { CatalogCardSource, CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
 import {
   EngineRuleError,
   executeCommand,
@@ -40,6 +40,8 @@ export interface StartEngineMatchOptions {
   aiDeckPresetId?: string;
   humanDeckPreset?: CatalogDeckPreset;
   aiDeckPreset?: CatalogDeckPreset;
+  catalogCards?: readonly CatalogCardSource[];
+  catalogLeaders?: readonly CatalogLeaderSource[];
   playerIds?: Partial<Record<SeatId, string>>;
   controllerKinds?: Partial<Record<SeatId, ControllerKind>>;
 }
@@ -74,6 +76,8 @@ const createDefaultConfig = ({
   aiDeckPresetId,
   humanDeckPreset,
   aiDeckPreset,
+  catalogCards = currentCatalogCards,
+  catalogLeaders = currentCatalogLeaders,
   playerIds = {},
   controllerKinds = {},
 }: StartEngineMatchOptions): MatchConfig => {
@@ -111,8 +115,8 @@ const createDefaultConfig = ({
       },
     ],
     catalog: {
-      cards: currentCatalogCards,
-      leaders: currentCatalogLeaders,
+      cards: catalogCards,
+      leaders: catalogLeaders,
     },
   };
 };
@@ -129,6 +133,10 @@ export const startEngineMatch =
           seatMap: {
             human: options.humanSeat ?? "seat_a",
             ai: options.aiSeat ?? "seat_b",
+          },
+          runtimeCatalog: {
+            cards: options.catalogCards ?? currentCatalogCards,
+            leaders: options.catalogLeaders ?? currentCatalogLeaders,
           },
         }),
       );
@@ -180,8 +188,8 @@ export const dispatchEngineCommand =
       const transaction = executeCommand({
         state: engine.match,
         command,
-        catalogCards: currentCatalogCards,
-        catalogLeaders: currentCatalogLeaders,
+        catalogCards: engine.runtimeCatalog.cards,
+        catalogLeaders: engine.runtimeCatalog.leaders,
       });
       dispatch(engineCommandApplied({ command, match: transaction.state, events: transaction.events, sequence }));
       dispatch(engineSelectionCleared());
