@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-29
-- Phase/spec: `cBp4` implemented, official non-leader catalog promotion
-- Latest relevant commit: `cBp4` implementation in current branch history
+- Phase/spec: `cBp4.1` specified, official combined-card data cleanup
+- Latest relevant commit: `cBp4` implementation in current branch history; `cBp4.1` spec is the active next implementation target
 
 ## Required Reading For Every Coding Instance
 
@@ -189,6 +189,7 @@ Latest Catalog implementation:
 - `docs/spec/2026-04-29-cBp3-specs.md` has been implemented. It consumes `audit/scrapes/2026-04-29-game8-gwent-cards.json` as factual input, verifies the `254` instance / `181` unique-card scrape contract, exposes `159` official card candidates, `22` leader candidates, `181` image manifest entries, and `officialPortingSummary`, preserves current catalog source IDs for clear matches, stores Game8 image URLs only as provenance, and keeps unsupported rules visible through porting issues instead of dropping candidates.
 - Official staged cards are not custom Card Studio records, do not use `custom_*` IDs, are not written into `gwent_custom_catalog_v1`, and are not promoted into `currentCatalogCards`, `currentCatalogLeaders`, current deck presets, deck-builder source sets, or engine runtime catalog in this phase.
 - `docs/spec/2026-04-29-cBp4-specs.md` has been implemented. `currentCatalogCards` now includes the 157 promoted official non-leader candidates: Neutral 22, Northern Realms 25, Nilfgaard 29, Monsters 35, Scoia'tael 24, Skellige 22 — broken down as 25 heroes, 123 units, 4 specials, and 5 weather cards. `src/data/catalog/cards/official-promotion.ts` exports `officialPromotionManifest` with promoted source IDs, deferred entries, and counts by faction/kind. The two combined Berserker scrape candidates `skellige.berserker-vildkaarl` and `skellige.young-berserker-young-vildkaarl` remain deferred under `transform_link_required:berserker` and `catalog_split_required:berserker`. Existing legacy current entries are preserved as authority — promotion only appends unmatched scrape candidates and never overwrites current `strength`, `deckLimit`, `abilities`, `description`, or `linkedSourceIds`. Default Northern Realms and Nilfgaard deck presets are unchanged. Catalog files remain plain TypeScript data and do not import the Game8 scrape or staging at runtime.
+- `docs/spec/2026-04-29-cBp4.1-specs.md` is the active next catalog spec. It resolves the cBp4 combined-card tail by splitting the two Skellige Berserker scrape candidates into base/replacement catalog records, tagging replacement forms as `side_deck_only`, blocking those replacement forms from Deck Builder V1 main decks, and removing the extra combined `neutral.cow-bovine-defense-force` source while preserving the existing legacy `neutral.cow` and `neutral.bovine-defense-force` split records. It does not implement Avenger, side-deck authoring, official leaders, or official faction starter presets.
 
 Latest Engine Rule implementation:
 
@@ -243,7 +244,7 @@ Latest Engine Rule implementation:
 
 ## Next Recommended Step
 
- Proceed to `cBp5`: promote official leaders, build official-faction starter deck presets, and progress side-deck authoring; alternatively, scope a narrow Berserker split/link data phase to clear the two deferred Skellige Berserker scrape candidates so Skellige can ship a complete official deck. Pre-cBp5 follow-up: source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset (the only promoted card whose preferred path is not yet in the repo image manifest).
+ Proceed with `cBp4.1` implementation from `docs/spec/2026-04-29-cBp4.1-specs.md`: split the Skellige Berserker combined candidates, remove the redundant combined Cow/Bovine source, and add side-deck-only guardrails before broader `cBp5` leader/starter-deck work.
 
 ## Update Requirements
 
