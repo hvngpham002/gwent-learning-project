@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-29
-- Phase/spec: `cCp9` implemented, official Mardroeme/Berserker/Skellige Storm engine rule completion
-- Latest relevant commit: `cCp9` implementation in current branch history
+- Phase/spec: `cBp4` specified, official non-leader catalog promotion
+- Latest relevant commit: `cCp9` implementation in current branch history; `cBp4` spec is the active next implementation target
 
 ## Required Reading For Every Coding Instance
 
@@ -187,6 +187,7 @@ Latest Catalog implementation:
 
 - `docs/spec/2026-04-29-cBp3-specs.md` has been implemented. It consumes `audit/scrapes/2026-04-29-game8-gwent-cards.json` as factual input, verifies the `254` instance / `181` unique-card scrape contract, exposes `159` official card candidates, `22` leader candidates, `181` image manifest entries, and `officialPortingSummary`, preserves current catalog source IDs for clear matches, stores Game8 image URLs only as provenance, and keeps unsupported rules visible through porting issues instead of dropping candidates.
 - Official staged cards are not custom Card Studio records, do not use `custom_*` IDs, are not written into `gwent_custom_catalog_v1`, and are not promoted into `currentCatalogCards`, `currentCatalogLeaders`, current deck presets, deck-builder source sets, or engine runtime catalog in this phase.
+- `docs/spec/2026-04-29-cBp4-specs.md` is the active next catalog spec. It promotes the `157` engine-ready official non-leader candidates into permanent catalog card source packs, keeps the two combined Berserker scrape candidates deferred for split/link work, reconciles image paths without downloading images, leaves official leaders and new faction deck presets out of scope, and requires default Northern Realms/Nilfgaard presets to remain unchanged.
 
 Latest Engine Rule implementation:
 
@@ -239,7 +240,7 @@ Latest Engine Rule implementation:
 
 ## Next Recommended Step
 
- Proceed to `cBp4`: promote reviewed engine-ready official non-leader candidates into permanent catalog source files and start constructing real official faction source packs, while leaving leader abilities and side-deck authoring as separate scoped work. After cCp9, Mardroeme, Berserker, and Skellige Storm are no longer counted as unimplemented engine rules; remaining official Berserker scrape candidates still need data split or transform-link work before catalog promotion.
+ Proceed with `cBp4` implementation from `docs/spec/2026-04-29-cBp4-specs.md`: promote reviewed engine-ready official non-leader candidates into permanent catalog source files, keep default deck presets stable, and leave official leaders plus the combined Berserker split/link work for later scoped phases.
 
 ## Update Requirements
 
