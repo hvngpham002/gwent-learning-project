@@ -33,14 +33,14 @@ import {
 
 describe("official catalog promotion (cBp4 + cBp4.1)", () => {
   it("reports direct, deferred, split, duplicate-resolved, and promoted catalog source counts", () => {
-    expect(officialPromotionManifest.directPromotedCandidateCount).toBe(155);
+    expect(officialPromotionManifest.directPromotedCandidateCount).toBe(154);
     expect(officialPromotionManifest.deferredCandidateCount).toBe(1);
-    expect(officialPromotionManifest.promotedCatalogSourceCount).toBe(160);
-    expect(officialPromotionManifest.directPromotedCandidateIds).toHaveLength(155);
-    expect(officialPromotionManifest.promotedCatalogSourceIds).toHaveLength(160);
+    expect(officialPromotionManifest.promotedCatalogSourceCount).toBe(159);
+    expect(officialPromotionManifest.directPromotedCandidateIds).toHaveLength(154);
+    expect(officialPromotionManifest.promotedCatalogSourceIds).toHaveLength(159);
     expect(officialPromotionManifest.deferred).toHaveLength(1);
     expect(officialPromotionManifest.splitResolutions).toHaveLength(2);
-    expect(officialPromotionManifest.duplicateResolutions).toHaveLength(1);
+    expect(officialPromotionManifest.duplicateResolutions).toHaveLength(2);
   });
 
   it("matches cBp4.1 counts by faction and kind", () => {
@@ -49,12 +49,12 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
       northern_realms: 25,
       nilfgaard: 29,
       monsters: 35,
-      scoiatael: 24,
+      scoiatael: 23,
       skellige: 26,
     });
     expect(officialPromotionManifest.countsByKind).toEqual({
       hero: 25,
-      unit: 126,
+      unit: 125,
       special: 4,
       weather: 5,
     });
@@ -93,15 +93,23 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
     });
   });
 
-  it("resolves the spelling-mismatched Menno scrape candidate to the existing catalog source", () => {
-    expect(officialPromotionManifest.duplicateResolutions).toEqual([
-      expect.objectContaining({
-        originalSourceId: "nilfgaard.menno-coehorn",
-        catalogSourceId: "nilfgaard.menno-coehoorn",
-      }),
-    ]);
+  it("resolves duplicate scrape candidates to existing catalog sources", () => {
+    expect(officialPromotionManifest.duplicateResolutions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          originalSourceId: "nilfgaard.menno-coehorn",
+          catalogSourceId: "nilfgaard.menno-coehoorn",
+        }),
+        expect.objectContaining({
+          originalSourceId: "scoiatael.dwarven-skirmisher-2",
+          catalogSourceId: "scoiatael.dwarven-skirmisher",
+        }),
+      ]),
+    );
     expect(officialPromotionManifest.promotedCatalogSourceIds).toContain("nilfgaard.menno-coehoorn");
     expect(officialPromotionManifest.promotedCatalogSourceIds).not.toContain("nilfgaard.menno-coehorn");
+    expect(officialPromotionManifest.promotedCatalogSourceIds).toContain("scoiatael.dwarven-skirmisher");
+    expect(officialPromotionManifest.promotedCatalogSourceIds).not.toContain("scoiatael.dwarven-skirmisher-2");
   });
 
   it("totals direct promoted + deferred + split + duplicate resolutions to the full Game8 scrape set", () => {
@@ -163,9 +171,21 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
       "neutral.cow-bovine-defense-force",
       "nilfgaard.menno-coehorn",
       "nilfgaard.heavy-fire-zerrikanian-scorpion",
+      "scoiatael.dwarven-skirmisher-2",
       "skellige.berserker-vildkaarl",
       "skellige.young-berserker-young-vildkaarl",
     ].forEach((id) => expect(presentIds.has(id)).toBe(false));
+  });
+
+  it("represents Dwarven Skirmisher as one Close Combat Muster source with three copies", () => {
+    const dwarvenSkirmisher = currentCatalogCards.find(
+      (card) => card.sourceId === "scoiatael.dwarven-skirmisher",
+    );
+
+    expect(dwarvenSkirmisher?.rows).toEqual(["close"]);
+    expect(dwarvenSkirmisher?.abilities).toEqual(["muster"]);
+    expect(dwarvenSkirmisher?.linkedSourceIds).toEqual(["scoiatael.dwarven-skirmisher"]);
+    expect(dwarvenSkirmisher?.deckLimit).toBe(3);
   });
 
   it("keeps the legacy split Cow/Bovine records intact", () => {

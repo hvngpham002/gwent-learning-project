@@ -74,6 +74,13 @@ const duplicateResolutions: readonly OfficialPromotionDuplicateResolution[] = [
       "duplicate_existing_current_source: spelling-mismatched Game8 source resolved to the existing Menno Coehoorn catalog record.",
     ],
   },
+  {
+    originalSourceId: "scoiatael.dwarven-skirmisher-2",
+    catalogSourceId: "scoiatael.dwarven-skirmisher",
+    reasons: [
+      "duplicate_physical_copy: Game8 scrape split Dwarven Skirmisher copies into separate source rows, but the official card is one Close Combat Muster source with deckLimit 3.",
+    ],
+  },
 ];
 
 // Original Game8 scrape candidate IDs that were directly promoted (i.e. ended up
@@ -195,7 +202,6 @@ const directPromotedCandidateIds: readonly string[] = [
   "scoiatael.dol-blathanna-archer",
   "scoiatael.dol-blathanna-scout",
   "scoiatael.dwarven-skirmisher",
-  "scoiatael.dwarven-skirmisher-2",
   "scoiatael.eithne",
   "scoiatael.elven-skirmisher",
   "scoiatael.filavandrel-aen-fidhail",
@@ -245,9 +251,11 @@ const duplicateResolvedCatalogSourceIds: readonly string[] = duplicateResolution
 );
 
 const promotedCatalogSourceIds: readonly string[] = [
-  ...directPromotedCandidateIds,
-  ...splitCatalogSourceIds,
-  ...duplicateResolvedCatalogSourceIds,
+  ...new Set([
+    ...directPromotedCandidateIds,
+    ...splitCatalogSourceIds,
+    ...duplicateResolvedCatalogSourceIds,
+  ]),
 ].sort();
 
 const countsByFaction: Readonly<Record<string, number>> = {
@@ -255,14 +263,14 @@ const countsByFaction: Readonly<Record<string, number>> = {
   neutral: 21,
   nilfgaard: 29,
   northern_realms: 25,
-  scoiatael: 24,
+  scoiatael: 23,
   skellige: 26,
 };
 
 const countsByKind: Readonly<Record<string, number>> = {
   hero: 25,
   special: 4,
-  unit: 126,
+  unit: 125,
   weather: 5,
 };
 
