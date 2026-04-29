@@ -9,6 +9,7 @@ This document tracks the current opt-in authentic product loop after cEp7.
 - `/?engine=1&ui=authentic` and `/?engine=1&ui=authentic&view=pregame` open the authentic pre-game setup screen.
 - `/?engine=1&ui=authentic&view=deck-builder` opens the browser-local catalog deck builder.
 - `/?engine=1&ui=authentic&view=card-studio` opens browser-local Card Studio for custom cards and leaders.
+- `/?engine=1&ui=authentic&view=official-porting` opens the official-card porting review tool for staged Game8 official candidates. It is an authoring route and does not add official staged cards to product deck sources.
 - `/?engine=1&ui=authentic&view=match` starts a direct authentic match from the URL seed, then shows the mulligan screen first.
 - `/?engine=1&ui=authentic&view=harness` opens the cEp1 card foundation harness.
 - `/?engine=1&ui=authentic&view=ui-component-foundation` opens the review surface for shared authentic UI primitives.
@@ -40,6 +41,10 @@ Runtime engine state is not encoded into the URL. In-app transitions are coordin
 Card Studio records live in browser localStorage under `gwent_custom_catalog_v1`. Playable custom records are merged with the current catalog for deck-builder/pre-game validation and are passed into `startEngineMatch` as the active runtime catalog. The Redux engine adapter stores that serializable runtime catalog snapshot and uses it for legal moves, command execution, scoring, selectors, and `legal-heuristic-v0` AI observation.
 
 Draft custom records remain visible in Card Studio but do not enter match runtime. If a local deck references a draft or deleted custom source, pre-game and deck builder block play with a validation error instead of deleting the deck.
+
+## Official Porting Runtime Boundary
+
+Official porting review state lives in browser localStorage under `gwent_official_porting_v1`. It contains review overrides, image crop metadata, approvals, and notes for staged official candidates. It is not merged into deck builder, pre-game, or match runtime in cBp3.
 
 ## Hidden Information
 

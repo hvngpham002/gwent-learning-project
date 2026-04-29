@@ -2,9 +2,9 @@
 
 ## Last Updated
 
-- Date: 2026-04-28
-- Phase/spec: `cEp7` implemented, in-game Card Studio and custom catalog workflow
-- Latest relevant commit: `85723d2` (`Cluster E Phase 6.1: Stabilize mulligan flow`)
+- Date: 2026-04-29
+- Phase/spec: `cBp3` implemented, official Game8 catalog porting pipeline and review UI
+- Latest relevant commit: `cBp3` implementation in current branch history
 
 ## Required Reading For Every Coding Instance
 
@@ -19,7 +19,7 @@
 
 - Legacy UI remains the default route.
 - Engine UI is opt-in through `?engine=1` or `VITE_ENGINE_UI=1`.
-- The opt-in authentic UI route `?engine=1&ui=authentic` now renders the product pre-game setup screen. Direct match remains available at `?engine=1&ui=authentic&view=match`, the cEp1 gallery harness remains available at `?engine=1&ui=authentic&view=harness`, and the component review foundation is available at `?engine=1&ui=authentic&view=ui-component-foundation`.
+- The opt-in authentic UI route `?engine=1&ui=authentic` now renders the product pre-game setup screen. Direct match remains available at `?engine=1&ui=authentic&view=match`, the cEp1 gallery harness remains available at `?engine=1&ui=authentic&view=harness`, the official porting review tool is available at `?engine=1&ui=authentic&view=official-porting`, and the component review foundation is available at `?engine=1&ui=authentic&view=ui-component-foundation`.
 - The pure engine under `src/game/core/` owns rules, legal moves, scoring, prompts, command transactions, round resolution, and game end.
 - The Redux engine adapter stores `MatchState`, status/locks, command history, event logs, adapter errors, and UI-only selection while dispatching engine commands.
 - Catalog and deck preset data under `src/game/catalog/` and `src/data/catalog/` define card, leader, faction, ability metadata, and current playable presets.
@@ -33,6 +33,7 @@
 | `cAp0` | Cluster A Phase 0 | `audit/reports/2026-04-24-cAp0-report.md` | Added baseline safety net, smoke notes, and initial regression fixture structure. |
 | `cBp1` | Cluster B Phase 1 | `audit/reports/2026-04-24-cBp1-report.md` | Added catalog schema, identity model, validators, and ability registry shape. |
 | `cBp2` | Cluster B Phase 2 | `audit/reports/2026-04-24-cBp2-report.md` | Migrated current cards/presets into catalog paths and documented Card Studio direction. |
+| `cBp3` | Cluster B Phase 3 | `audit/reports/2026-04-29-cBp3-report.md` | Added Game8 official catalog staging candidates, image manifest, local review bundle store, Official Porting route, docs, and focused tests without promoting official cards into product decks. |
 | `cCp3` | Cluster C Phase 3 | `audit/reports/2026-04-25-cCp3-report.md` | Added pure match state, setup, seeded RNG, commands, events, and transactions. |
 | `cCp4` | Cluster C Phase 4 | `audit/reports/2026-04-25-cCp4-report.md` | Added legal move generation as the engine UI/AI contract. |
 | `cCp5` | Inserted command transaction split before original Cluster C Phase 5 | `audit/reports/2026-04-25-cCp5-report.md` | Added immutable command execution, validation, stateful transactions, and Redux-ready command semantics. |
@@ -90,11 +91,12 @@ The authentic product UI now ships behind `?engine=1&ui=authentic` with a pre-ga
 - `/?engine=1&ui=authentic` and `/?engine=1&ui=authentic&view=pregame` now mount the product pre-game setup screen, backed by current catalog deck presets and deterministic seed controls;
 - `/?engine=1&ui=authentic&view=deck-builder` opens the catalog-backed authentic deck builder, and the pre-game deck-builder controls now navigate there in-app;
 - `/?engine=1&ui=authentic&view=card-studio` opens the browser-local Card Studio for custom cards and leaders, with pre-game and deck-builder entry points plus back navigation to the prior authentic surface;
+- `/?engine=1&ui=authentic&view=official-porting` opens the official Game8 porting review tool for staged official card/leader candidates, image/crop review, local approval notes, and JSON review bundle import/export; it is an authoring route and does not add official staged cards to the product deck builder;
 - `/?engine=1&ui=authentic&view=match` remains the direct-match development/smoke route and starts the default Northern Realms vs Nilfgaard engine match from the URL seed, but now shows the dedicated mulligan screen before the match table;
 - `/?engine=1&ui=authentic&view=harness` keeps the cEp1 `AuthenticUiHarness` available for card foundation review;
 - `/?engine=1&ui=authentic&view=ui-component-foundation` opens a consolidated component foundation review page covering tokens, audited typography/font stacks, button variants, selection controls, form controls, cards, leaders, backs, alerts, toasts, handoff modals, and game-surface patterns so UI decisions can be finalized in one place;
 - `AuthenticGameApp` owns the small authentic route layer and passes an explicit serializable setup config from pre-game or deck-builder `play →` into the engine-backed authentic match flow without requiring URL edits;
-- `AuthenticGameApp` also owns browser-local deck state and browser-local custom catalog state for the authentic flow; local editable decks are loaded from `gwent_authentic_decks_v1`, custom catalog records are loaded from `gwent_custom_catalog_v1`, and playable custom sources can be passed into `startEngineMatch` as a runtime catalog snapshot;
+- `AuthenticGameApp` also owns browser-local deck state, browser-local custom catalog state, and browser-local official porting review state for the authentic flow; local editable decks are loaded from `gwent_authentic_decks_v1`, custom catalog records are loaded from `gwent_custom_catalog_v1`, official review bundles are loaded from `gwent_official_porting_v1`, and playable custom sources can be passed into `startEngineMatch` as a runtime catalog snapshot;
 - the deck builder uses an explicit merged source set of current catalog plus playable Card Studio custom cards/leaders; it supports create, rename, save, delete, search/filter, leader selection, add/remove within `deckLimit`, export, clipboard copy, paste/file import, validation, Card Studio navigation, and Play-from-builder;
 - Card Studio supports custom unit, hero, special, and leader records; source IDs use the `custom_...` / `custom_leader_...` namespace, drafts can be saved/exported/imported/previewed, playable records require structurally valid data and implemented abilities, and uploaded images are stored only as browser-local data URLs with a 1 MB guard;
 - shared authentic alert primitives now live under `src/components/gwent/alert/`, with ledger and seal variants, severity sigils, action buttons, and toast support adapted from `handoff-alerts/`;
@@ -180,6 +182,11 @@ Latest Cluster E implementation:
 - `docs/spec/2026-04-28-cEp6.1-specs.md` remains the latest mulligan stabilization patch over cEp6. It did not add AI mulligan strategy, `legal-heuristic-v1`, route promotion, or new product modes.
 - Final cEp6 documentation consolidation has aligned `docs/spec/2026-04-27-cEp6-specs.md`, `docs/spec/2026-04-27-cEp5-specs.md`, `docs/overhaul-plan/cluster-e-ui-plan.md`, `docs/ui-handoff/README.md`, `docs/card-authoring/current-catalog-workflow.md`, `docs/ui/authentic-product-flow.md`, `docs/ui/authentic-ui-foundation.md`, `docs/ui/authentic-button-style-guide.md`, `docs/testing/browser-smoke.md`, and `audit/reports/2026-04-27-cEp6-report.md` with the implemented sequential mulligan, hidden-safe AI presentation, start/return modal, fresh setup restart, shared button, typography, and component foundation behavior. Older cEp5/cEp5.1/handoff-alert forward-looking report notes now explicitly mark their "Card Studio as cEp6" recommendation as superseded; this file, the cEp6 report, and the cEp6.1 report are the current source of truth.
 
+Latest Catalog implementation:
+
+- `docs/spec/2026-04-29-cBp3-specs.md` has been implemented. It consumes `audit/scrapes/2026-04-29-game8-gwent-cards.json` as factual input, verifies the `254` instance / `181` unique-card scrape contract, exposes `159` official card candidates, `22` leader candidates, `181` image manifest entries, and `officialPortingSummary`, preserves current catalog source IDs for clear matches, stores Game8 image URLs only as provenance, and keeps unsupported rules visible through porting issues instead of dropping candidates.
+- Official staged cards are not custom Card Studio records, do not use `custom_*` IDs, are not written into `gwent_custom_catalog_v1`, and are not promoted into `currentCatalogCards`, `currentCatalogLeaders`, current deck presets, deck-builder source sets, or engine runtime catalog in this phase.
+
 ## Known Architectural Rules
 
 - Engine legal moves are the UI/AI contract.
@@ -221,11 +228,13 @@ Latest Cluster E implementation:
 - The authentic UI foundation harness is now a development view only. The pre-game route starts configured matches, the deck-builder route edits browser-local catalog/custom decks, the Card Studio route edits browser-local custom cards/leaders, and the direct match route exercises engine commands, legal moves, prompts, and AI, but the product UI still lacks full drag-and-drop and match animations.
 - The authentic harness depends on a Google Fonts `@import` for `EB Garamond` and `JetBrains Mono`, currently loading normal/italic EB Garamond 400/500/600/700 and JetBrains Mono 400/500/600/700. Production deployments without external font access fall back to the documented serif/monospace stacks. JetBrains Mono is intentionally opt-in through `--font-data` rather than a general label font. The legacy default route still references `Inter, sans-serif` from `src/styles/global.css` without importing Inter.
 - Card images are still incomplete by design. The `SvgCardArt` placeholder is a deterministic fallback, not a content workflow.
+- The official porting image manifest uses preferred `/images/<faction>/<kind-folder>/...` paths and records many missing preferred paths by design; Game8 image URLs are provenance only and no scraped image binaries are committed.
+- The official porting review bundle is browser-local until exported. It is not a source-code promotion step and must be consumed by a later coding/codegen phase before official candidates become permanent catalog entries.
 - Faction-specific card-back files are not present in the repository yet. Until they are added under `public/images/card-backs/`, the authentic back component falls back to synthetic faction-colored sleeves.
 
 ## Next Recommended Step
 
- Proceed to `cEp8`: product UI promotion and mode expansion only after the Card Studio/runtime catalog path has had broader browser coverage.
+ Choose between `cBp4` and `cCp9`: promote reviewed ready official non-leader candidates into permanent catalog source files and deck-builder source sets, or implement remaining official rule gaps first, especially Mardroeme/Berserker and the Skellige Storm metadata mismatch, if those gaps block the next decks the project needs to play.
 
 ## Update Requirements
 

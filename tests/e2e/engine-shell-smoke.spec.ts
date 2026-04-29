@@ -5,6 +5,7 @@ const authenticPregameUrl = "/?engine=1&ui=authentic&seed=ep4-smoke";
 const authenticPregameRestartUrl = "/?engine=1&ui=authentic&seed=ep4-restart&debugAiMulligan=1&debugAiMulliganCount=0";
 const authenticDeckBuilderUrl = "/?engine=1&ui=authentic&view=deck-builder&seed=ep5-builder";
 const authenticCardStudioUrl = "/?engine=1&ui=authentic&view=card-studio&seed=ep7-studio";
+const authenticOfficialPortingUrl = "/?engine=1&ui=authentic&view=official-porting&seed=bp3-porting";
 const authenticDirectUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-direct";
 const authenticMulliganDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-debug&debugAiMulligan=1&debugAiMulliganCount=2";
 const authenticMulliganOneDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-one&debugAiMulligan=1&debugAiMulliganCount=1";
@@ -570,6 +571,22 @@ test("authentic Card Studio imports a playable custom unit for the deck builder"
   await customPoolItem.getByTestId("authentic-card").click();
   await expect(total).not.toHaveText(before);
 
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic official porting route mounts without mobile overflow", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(authenticOfficialPortingUrl);
+
+  await expect(page.getByTestId("authentic-official-porting")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Official Porting" })).toBeVisible();
+  await expect(page.getByTestId("official-porting-counts")).toContainText("181 candidates");
+  await expect(page.getByTestId("official-porting-candidate-list")).toBeVisible();
+  await expect(page.getByTestId("official-porting-preview")).toBeVisible();
+  await expect(page.getByTestId("official-porting-status")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
 });
 

@@ -24,6 +24,18 @@ Permanent source migration remains a code/data workflow:
 
 Uploaded image previews are stored as data URLs in browser storage and in exported JSON. They are useful for prototypes, but they can make JSON large and are not a substitute for committed image assets.
 
+## Official Card Porting
+
+Official Witcher 3 Gwent cards scraped from Game8 use a separate staging workflow documented in `docs/card-authoring/official-card-porting.md`.
+
+The official porting route is:
+
+```text
+/?engine=1&ui=authentic&view=official-porting
+```
+
+Official candidates are not Card Studio custom records, do not use `custom_*` source IDs, and do not enter deck-builder source sets until a later promotion/codegen phase.
+
 ## Files
 
 Card source packs live in:

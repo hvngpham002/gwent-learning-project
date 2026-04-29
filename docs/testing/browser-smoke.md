@@ -48,7 +48,7 @@ The default local `npm run ci` gate remains the fast deterministic unit/lint/bui
 
 ## Current Committed Coverage
 
-The committed smoke spec currently runs 14 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, mulligan, modal, and match entry flows.
+The committed smoke spec currently runs 15 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, and match entry flows.
 
 ## dp6-smoke Engine Shell Coverage
 
@@ -83,6 +83,7 @@ The same smoke spec verifies:
 - `/?engine=1&ui=authentic&view=harness` still opens the cEp1 foundation harness.
 - `/?engine=1&ui=authentic&view=ui-component-foundation` opens the component foundation page with shared tokens, audited typography, button variants, form controls, cards, backs, leaders, alerts, toasts, modals, and hidden-info-safe samples.
 - Card Studio opens at `/?engine=1&ui=authentic&view=card-studio`, can import and save a minimal playable custom card, and exposes that card in the deck-builder pool without requiring repository file writes.
+- Official Porting opens at `/?engine=1&ui=authentic&view=official-porting`, shows the `181` official candidate count, renders candidate list/status/preview surfaces, and avoids mobile horizontal overflow without promoting staged official cards into deck sources.
 - Pre-game `begin match →` opens the dedicated mulligan flow before the match table.
 - Direct `view=match` and deck-builder `play →` also land on mulligan first.
 - Human keep-hand and one-card redraw paths dispatch legal mulligan commands and present the player replacement animation.

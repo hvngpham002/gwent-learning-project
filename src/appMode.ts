@@ -4,7 +4,14 @@ export interface EngineUiFlagInput {
 }
 
 export type EngineUiVariant = "shell" | "authentic";
-export type AuthenticUiView = "pregame" | "match" | "harness" | "deck-builder" | "card-studio" | "ui-component-foundation";
+export type AuthenticUiView =
+  | "pregame"
+  | "match"
+  | "harness"
+  | "deck-builder"
+  | "card-studio"
+  | "official-porting"
+  | "ui-component-foundation";
 
 const buildSearchParams = (search: string) =>
   new URLSearchParams(search.startsWith("?") ? search : `?${search}`);
@@ -33,6 +40,7 @@ export const getAuthenticUiViewFromSearch = (search = ""): AuthenticUiView => {
     view === "pregame" ||
     view === "deck-builder" ||
     view === "card-studio" ||
+    view === "official-porting" ||
     view === "ui-component-foundation"
   ) {
     return view;

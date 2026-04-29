@@ -27,6 +27,19 @@ export {
 } from "./cards";
 export { currentNilfgaardDeckPreset, currentNorthernRealmsDeckPreset } from "./deck-presets";
 export {
+  game8OfficialCardCandidates,
+  game8OfficialImageCandidates,
+  game8OfficialLeaderCandidates,
+  officialPortingSummary,
+} from "./official";
+export type {
+  OfficialCardCandidate,
+  OfficialImageCandidate,
+  OfficialLeaderCandidate,
+  OfficialPortingStatus,
+  OfficialPortingSummary,
+} from "./official";
+export {
   monstersCatalogLeaders,
   nilfgaardCatalogLeaders,
   northernRealmsCatalogLeaders,
