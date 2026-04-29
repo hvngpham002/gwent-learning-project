@@ -253,6 +253,15 @@ const statusFromIssues = (issues: readonly string[], imageExists: boolean): Offi
   if (issues.some((issue) => issue.startsWith("ability_") || issue.startsWith("rule_gap:"))) {
     return "needs_rule";
   }
+  if (
+    issues.some(
+      (issue) =>
+        issue.startsWith("catalog_split_required:") ||
+        issue.startsWith("transform_link_required:"),
+    )
+  ) {
+    return "needs_review";
+  }
   if (!imageExists) {
     return "needs_image";
   }
@@ -278,6 +287,8 @@ const imageCandidate = (
 const cardIssues = (
   source: CatalogCardSource,
   imageExists: boolean,
+  copyCount: number,
+  rawStrength: number,
 ): readonly string[] => {
   const issues: string[] = [];
   if (!imageExists) {
@@ -292,15 +303,26 @@ const cardIssues = (
     if (ability !== "none" && metadata.status !== "implemented") {
       issues.push(`ability_status:${ability}:${metadata.status}`);
     }
-    if (ability === "mardroeme" || ability === "berserker") {
-      issues.push(`rule_gap:${ability}: engine rule is not implemented in this phase.`);
-    }
-    if (ability === "skellige_storm") {
-      issues.push(
-        "ability_status:skellige_storm:metadata_mismatch; legal/scoring support must be reviewed intentionally.",
-      );
+    if (ability === "berserker") {
+      const linkedCount = source.linkedSourceIds?.length ?? 0;
+      if (linkedCount === 0) {
+        issues.push(
+          "transform_link_required:berserker: official Berserker scrape candidates need a side-deck transform link before catalog promotion.",
+        );
+      }
     }
   });
+  const isUnitOrHero = source.kind === "unit" || source.kind === "hero";
+  if (isUnitOrHero && rawStrength <= 0 && source.abilities.includes("berserker")) {
+    issues.push(
+      "catalog_split_required:berserker: official Berserker scrape candidates may be combined base/replacement rows; split into separate sources before catalog promotion.",
+    );
+  }
+  if (isUnitOrHero && rawStrength <= 0 && copyCount > 1 && !source.abilities.includes("berserker")) {
+    issues.push(
+      "catalog_split_required:zero_strength: scraped strength is null/zero with multiple copies; review base/replacement split before catalog promotion.",
+    );
+  }
   return issues;
 };
 
@@ -465,19 +487,23 @@ export const buildOfficialCandidatesFromGame8Scrape = (
       preservedCurrentSourceIds.add(matched.sourceId);
     }
     const image = imageCandidate(sourceId, path, game8ImageUrl);
+    const rawStrength = integerValue(raw.strength, 0);
+    const rawCopyCount = integerValue(raw.copyCount, 1);
+    const matchedLinkedSourceIds = matched?.linkedSourceIds ? [...matched.linkedSourceIds] : undefined;
     const source: CatalogCardSource = {
       sourceId,
       name,
       faction,
       kind: cardKind,
-      strength: cardKind === "special" ? 0 : integerValue(raw.strength, 0),
+      strength: cardKind === "special" ? 0 : rawStrength,
       rows: [...catalogRows(raw.rows)],
       abilities: [...catalogAbilities(raw.abilities, cardKind)],
       tags: [...catalogTags(raw.tags, cardKind)],
-      deckLimit: integerValue(raw.deckLimitSuggestion, Math.max(1, integerValue(raw.copyCount, 1))),
+      deckLimit: integerValue(raw.deckLimitSuggestion, Math.max(1, rawCopyCount)),
       image: path,
+      ...(matchedLinkedSourceIds ? { linkedSourceIds: matchedLinkedSourceIds } : {}),
     };
-    const cardSpecificIssues = cardIssues(source, image.existsInPublicImages);
+    const cardSpecificIssues = cardIssues(source, image.existsInPublicImages, rawCopyCount, rawStrength);
     const portingIssues = [...issues, ...cardSpecificIssues];
     sourceIdConflicts.push(...issues);
     cards.push({
@@ -499,7 +525,7 @@ export const buildOfficialCandidatesFromGame8Scrape = (
     candidate.source.abilities.forEach((ability) => {
       if (ability === "none") return;
       const metadata = CATALOG_ABILITY_METADATA[ability];
-      if (metadata.status !== "implemented" || ability === "skellige_storm") {
+      if (metadata.status !== "implemented") {
         unsupportedAbilityCounts[ability] = (unsupportedAbilityCounts[ability] ?? 0) + candidate.copyCount;
       }
     });

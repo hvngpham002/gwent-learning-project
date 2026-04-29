@@ -99,14 +99,14 @@ Bundles do not include engine runtime instance IDs, match state, AI observations
 
 Candidates remain visible even when they are not engine-ready. Unsupported rules are reported through `portingStatus` and `portingIssues`, not by dropping cards.
 
-Current cBp3 flags include:
+Current flags include:
 
-- `mardroeme`;
-- `berserker`;
 - any catalog ability whose metadata status is not `implemented`;
-- `skellige_storm`, with an explicit metadata/implementation mismatch note;
+- official Berserker scrape candidates that are still represented as combined base/replacement rows, have null/zero source strength, or lack a transform link, flagged with non-rule data issues such as `transform_link_required` or `catalog_split_required`;
 - all leaders except executable `clear_weather` leaders;
 - leaders whose scraped ability has no current catalog leader ability ID.
+
+After cCp9, Mardroeme, Berserker, and Skellige Storm are no longer reported as unimplemented engine rules. Skellige Storm has full scoring and legal-move support; Mardroeme is a real row-based ongoing ability; Berserker transforms through the side deck via `linkedSourceIds[0]`. Official Berserker candidates remain conservatively flagged for data split or transform-link work until promotion.
 
 ## Future Promotion
 

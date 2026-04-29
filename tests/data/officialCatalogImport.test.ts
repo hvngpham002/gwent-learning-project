@@ -101,6 +101,9 @@ describe("official Game8 catalog staging import", () => {
   it("keeps non-ready rules visible with explicit issue codes", () => {
     const mardroeme = game8OfficialCardCandidates.find((candidate) => candidate.source.sourceId === "skellige.mardroeme");
     const storm = game8OfficialCardCandidates.find((candidate) => candidate.source.sourceId === "neutral.skellige-storm");
+    const berserker = game8OfficialCardCandidates.find((candidate) =>
+      candidate.source.abilities.includes("berserker"),
+    );
     const clearWeatherLeader = game8OfficialLeaderCandidates.find(
       (candidate) => candidate.sourceId === "northern-realms.foltest-lord-commander-of-the-north",
     );
@@ -108,21 +111,18 @@ describe("official Game8 catalog staging import", () => {
       (candidate) => candidate.sourceId === "northern-realms.foltest-king-of-temeria",
     );
 
-    expect(mardroeme?.portingStatus).toBe("needs_rule");
-    expect(mardroeme?.portingIssues.join(" ")).toContain("mardroeme");
-    expect(storm?.portingStatus).toBe("needs_rule");
-    expect(storm?.portingIssues.join(" ")).toContain("metadata_mismatch");
+    expect(mardroeme?.portingStatus).not.toBe("needs_rule");
+    expect(mardroeme?.portingIssues.join(" ")).not.toContain("rule_gap:mardroeme");
+    expect(storm?.portingStatus).not.toBe("needs_rule");
+    expect(storm?.portingIssues.join(" ")).not.toContain("metadata_mismatch");
+    expect(berserker?.portingIssues.join(" ")).toMatch(/transform_link_required|catalog_split_required/);
     expect(clearWeatherLeader?.mappedAbilityId).toBe("clear_weather");
     expect(clearWeatherLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
     expect(fogLeader?.portingStatus).toBe("needs_leader_rule");
     expect(fogLeader?.portingIssues.join(" ")).toContain("leader_engine_gap");
-    expect(officialPortingSummary.unsupportedAbilityCounts).toEqual(
-      expect.objectContaining({
-        mardroeme: expect.any(Number),
-        berserker: expect.any(Number),
-        skellige_storm: expect.any(Number),
-      }),
-    );
+    expect(officialPortingSummary.unsupportedAbilityCounts.mardroeme).toBeUndefined();
+    expect(officialPortingSummary.unsupportedAbilityCounts.berserker).toBeUndefined();
+    expect(officialPortingSummary.unsupportedAbilityCounts.skellige_storm).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_fog).toBeGreaterThan(0);
   });
 

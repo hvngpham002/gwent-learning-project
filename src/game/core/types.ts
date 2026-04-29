@@ -191,7 +191,8 @@ export type GameEvent =
         | "scorch_discard"
         | "round_cleanup"
         | "northern_realms_draw"
-        | "skellige_return";
+        | "skellige_return"
+        | "mardroeme_transform";
     }
   | {
       type: "initial_hand_drawn";
@@ -266,4 +267,15 @@ export type GameEvent =
       policy?: string;
     }
   | { type: "round_ended"; round: number; winner: SeatId | "draw" }
-  | { type: "game_ended"; winner: SeatId | "draw" };
+  | { type: "game_ended"; winner: SeatId | "draw" }
+  | {
+      type: "card_transformed";
+      triggerCardId: CardInstanceId;
+      fromCardId: CardInstanceId;
+      fromSourceId: string;
+      toCardId: CardInstanceId;
+      toSourceId: string;
+      seatId: SeatId;
+      row: CatalogRow;
+      abilityId: "berserker";
+    };

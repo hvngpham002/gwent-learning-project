@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-29
-- Phase/spec: `cBp3` implemented, official Game8 catalog porting pipeline and review UI
-- Latest relevant commit: `cBp3` implementation in current branch history
+- Phase/spec: `cCp9` implemented, official Mardroeme/Berserker/Skellige Storm engine rule completion
+- Latest relevant commit: `cCp9` implementation in current branch history
 
 ## Required Reading For Every Coding Instance
 
@@ -34,6 +34,7 @@
 | `cBp1` | Cluster B Phase 1 | `audit/reports/2026-04-24-cBp1-report.md` | Added catalog schema, identity model, validators, and ability registry shape. |
 | `cBp2` | Cluster B Phase 2 | `audit/reports/2026-04-24-cBp2-report.md` | Migrated current cards/presets into catalog paths and documented Card Studio direction. |
 | `cBp3` | Cluster B Phase 3 | `audit/reports/2026-04-29-cBp3-report.md` | Added Game8 official catalog staging candidates, image manifest, local review bundle store, Official Porting route, docs, and focused tests without promoting official cards into product decks. |
+| `cCp9` | Cluster C Phase 9 | `audit/reports/2026-04-29-cCp9-report.md` | Promoted Skellige Storm metadata to implemented, added special Mardroeme legal row targets, added a centralized row-based Mardroeme settlement helper, implemented Berserker transformation via the controlling seat's side deck through `linkedSourceIds[0]`, hooked settlement into PlayCard/Decoy/Medic/Muster/Skellige round-three return, removed `mardroeme`/`berserker`/`skellige_storm` from official-porting unsupported ability counts, added Card Studio Berserker transform-link guard, and added focused engine and Card Studio tests. |
 | `cCp3` | Cluster C Phase 3 | `audit/reports/2026-04-25-cCp3-report.md` | Added pure match state, setup, seeded RNG, commands, events, and transactions. |
 | `cCp4` | Cluster C Phase 4 | `audit/reports/2026-04-25-cCp4-report.md` | Added legal move generation as the engine UI/AI contract. |
 | `cCp5` | Inserted command transaction split before original Cluster C Phase 5 | `audit/reports/2026-04-25-cCp5-report.md` | Added immutable command execution, validation, stateful transactions, and Redux-ready command semantics. |
@@ -187,6 +188,10 @@ Latest Catalog implementation:
 - `docs/spec/2026-04-29-cBp3-specs.md` has been implemented. It consumes `audit/scrapes/2026-04-29-game8-gwent-cards.json` as factual input, verifies the `254` instance / `181` unique-card scrape contract, exposes `159` official card candidates, `22` leader candidates, `181` image manifest entries, and `officialPortingSummary`, preserves current catalog source IDs for clear matches, stores Game8 image URLs only as provenance, and keeps unsupported rules visible through porting issues instead of dropping candidates.
 - Official staged cards are not custom Card Studio records, do not use `custom_*` IDs, are not written into `gwent_custom_catalog_v1`, and are not promoted into `currentCatalogCards`, `currentCatalogLeaders`, current deck presets, deck-builder source sets, or engine runtime catalog in this phase.
 
+Latest Engine Rule implementation:
+
+- `docs/spec/2026-04-29-cCp9-specs.md` has been implemented. Skellige Storm metadata is now `implemented` (scoring already worked); special Mardroeme cards now produce legal `board_row` moves on the acting seat's own close, ranged, and siege rows; Mardroeme is treated as an ongoing row ability via the centralized pure helper `settleMardroemeRow`; Berserkers transform through the controlling seat's side deck using `linkedSourceIds[0]`, sending the original Berserker to `removed_from_game` and moving the linked replacement onto the same board side and row. Settlement is hooked into PlayCard, Decoy bounce-and-place, Medic prompt resolution, Muster placement, and Skellige round-three return. Missing transform links and missing side-deck replacements are explicit `ability_resolved` outcomes with reason codes `missing_transform_link`/`missing_transform_replacement` and do not crash or remove the Berserker. Card Studio validation now blocks non-draft custom Berserkers from becoming playable when their transform link is empty or unresolved. Official porting classification no longer counts `mardroeme`, `berserker`, or `skellige_storm` as unsupported rule gaps; combined official Berserker scrape candidates remain conservatively flagged with non-rule data issues such as `transform_link_required` or `catalog_split_required`.
+
 ## Known Architectural Rules
 
 - Engine legal moves are the UI/AI contract.
@@ -234,7 +239,7 @@ Latest Catalog implementation:
 
 ## Next Recommended Step
 
- Choose between `cBp4` and `cCp9`: promote reviewed ready official non-leader candidates into permanent catalog source files and deck-builder source sets, or implement remaining official rule gaps first, especially Mardroeme/Berserker and the Skellige Storm metadata mismatch, if those gaps block the next decks the project needs to play.
+ Proceed to `cBp4`: promote reviewed engine-ready official non-leader candidates into permanent catalog source files and start constructing real official faction source packs, while leaving leader abilities and side-deck authoring as separate scoped work. After cCp9, Mardroeme, Berserker, and Skellige Storm are no longer counted as unimplemented engine rules; remaining official Berserker scrape candidates still need data split or transform-link work before catalog promotion.
 
 ## Update Requirements
 

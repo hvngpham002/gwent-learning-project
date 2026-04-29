@@ -268,6 +268,27 @@ export const validateCustomCardRecord = (
     }
   });
 
+  if (source.abilities.includes("berserker")) {
+    const transformLinkId = source.linkedSourceIds?.[0];
+    if (!transformLinkId) {
+      pushIssue(
+        issues,
+        "error",
+        "berserker_requires_side_deck",
+        "linkedSourceIds",
+        "Berserker custom cards require a transform link to a side-deck replacement card.",
+      );
+    } else if (!knownCardIds.has(transformLinkId)) {
+      pushIssue(
+        issues,
+        "error",
+        "berserker_requires_side_deck",
+        "linkedSourceIds",
+        "Berserker transform link must reference a known catalog or custom card source.",
+      );
+    }
+  }
+
   return finish(issues, record.draft);
 };
 

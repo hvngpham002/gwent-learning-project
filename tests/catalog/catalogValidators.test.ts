@@ -119,7 +119,9 @@ describe("catalog validation", () => {
   it("marks current and planned abilities with registry metadata", () => {
     expect(CATALOG_ABILITY_METADATA.tight_bond.status).toBe("implemented");
     expect(CATALOG_ABILITY_METADATA.summon.status).toBe("planned");
-    expect(CATALOG_ABILITY_METADATA.skellige_storm.status).toBe("placeholder");
+    expect(CATALOG_ABILITY_METADATA.skellige_storm.status).toBe("implemented");
+    expect(CATALOG_ABILITY_METADATA.mardroeme.status).toBe("implemented");
+    expect(CATALOG_ABILITY_METADATA.berserker.status).toBe("implemented");
     expect(CATALOG_LEADER_ABILITY_METADATA.draw_opponent_discard.status).toBe("placeholder");
   });
 

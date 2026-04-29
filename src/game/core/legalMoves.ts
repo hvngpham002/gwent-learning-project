@@ -265,41 +265,49 @@ const getDecoyMoves = (
     }),
   );
 
-const createSpecialMove = (seatId: SeatId, instance: CardInstance, source: CatalogCardSource): PlayCardMove | null => {
+const createSpecialMove = (seatId: SeatId, instance: CardInstance, source: CatalogCardSource): PlayCardMove[] | null => {
   if (source.abilities.some((ability) => WEATHER_ABILITIES.has(ability))) {
-    return {
-      kind: "play_card",
-      moveId: `play:${seatId}:${instance.instanceId}:weather`,
-      seatId,
-      sourceCardId: instance.instanceId,
-      sourceId: instance.sourceId,
-      target: { kind: "weather" },
-      label: `Play ${source.name} to weather`,
-      metadata: {
-        cardName: source.name,
-        cardKind: source.kind,
-        abilities: source.abilities,
-        targetLabel: "weather",
+    return [
+      {
+        kind: "play_card",
+        moveId: `play:${seatId}:${instance.instanceId}:weather`,
+        seatId,
+        sourceCardId: instance.instanceId,
+        sourceId: instance.sourceId,
+        target: { kind: "weather" },
+        label: `Play ${source.name} to weather`,
+        metadata: {
+          cardName: source.name,
+          cardKind: source.kind,
+          abilities: source.abilities,
+          targetLabel: "weather",
+        },
       },
-    };
+    ];
   }
 
   if (hasAbility(source, "scorch")) {
-    return {
-      kind: "play_card",
-      moveId: `play:${seatId}:${instance.instanceId}:none`,
-      seatId,
-      sourceCardId: instance.instanceId,
-      sourceId: instance.sourceId,
-      target: { kind: "none" },
-      label: `Play ${source.name}`,
-      metadata: {
-        cardName: source.name,
-        cardKind: source.kind,
-        abilities: source.abilities,
-        targetLabel: "global",
+    return [
+      {
+        kind: "play_card",
+        moveId: `play:${seatId}:${instance.instanceId}:none`,
+        seatId,
+        sourceCardId: instance.instanceId,
+        sourceId: instance.sourceId,
+        target: { kind: "none" },
+        label: `Play ${source.name}`,
+        metadata: {
+          cardName: source.name,
+          cardKind: source.kind,
+          abilities: source.abilities,
+          targetLabel: "global",
+        },
       },
-    };
+    ];
+  }
+
+  if (hasAbility(source, "mardroeme")) {
+    return ROWS.map((row) => createBoardRowMove(seatId, instance, source, seatId, "own", row));
   }
 
   return null;
@@ -329,8 +337,8 @@ const getCardMoves = (
     return getDecoyMoves(state, seatId, lookups, instance, source);
   }
 
-  const specialMove = createSpecialMove(seatId, instance, source);
-  return specialMove ? [specialMove] : [];
+  const specialMoves = createSpecialMove(seatId, instance, source);
+  return specialMoves ?? [];
 };
 
 const getLeaderMove = (state: MatchState, seatId: SeatId, lookups: CatalogLookups): UseLeaderMove[] => {

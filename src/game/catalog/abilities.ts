@@ -80,7 +80,7 @@ export const CATALOG_ABILITY_METADATA: Record<CatalogAbilityId, CatalogAbilityMe
   skellige_storm: {
     id: "skellige_storm",
     name: "Skellige Storm",
-    status: "placeholder",
+    status: "implemented",
     appliesTo: ["special"],
     description: "Weather for ranged and siege rows.",
   },
@@ -129,14 +129,14 @@ export const CATALOG_ABILITY_METADATA: Record<CatalogAbilityId, CatalogAbilityMe
   mardroeme: {
     id: "mardroeme",
     name: "Mardroeme",
-    status: "planned",
-    appliesTo: ["unit", "special"],
+    status: "implemented",
+    appliesTo: ["unit", "hero", "special"],
     description: "Transforms berserker cards on a row.",
   },
   berserker: {
     id: "berserker",
     name: "Berserker",
-    status: "planned",
+    status: "implemented",
     appliesTo: ["unit"],
     description: "Transforms when Mardroeme resolves.",
   },

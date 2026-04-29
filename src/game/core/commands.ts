@@ -1,6 +1,6 @@
 import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
 
-import { resolveCardAbilities, resolvePromptOption } from "./abilities";
+import { resolveCardAbilities, resolvePromptOption, settleMardroemeRow } from "./abilities";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
 import { calculateScores, findSpecialScorchTargets } from "./scoring";
@@ -55,8 +55,6 @@ const SKELLIGE_DEFERRED_RETURN_ABILITIES = new Set<CatalogAbilityId>([
   "muster",
   "muster_roach",
   "scorch_close",
-  "mardroeme",
-  "berserker",
 ]);
 const opponentOf = (seatId: SeatId): SeatId => (seatId === "seat_a" ? "seat_b" : "seat_a");
 
@@ -393,6 +391,16 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
     moveCard(state, events, command.cardId, { kind: "board_row", seat: target.seatId, row: target.row }, "play_card");
     events.push({ type: "card_played", seatId: command.seatId, cardId: command.cardId, target: card.zone });
     resolveCardAbilities({ state, events, catalogCards: input.catalogCards, seatId: command.seatId, cardId: command.cardId });
+    if (!state.pendingPrompt && card.zone.kind === "board_row") {
+      settleMardroemeRow({
+        state,
+        events,
+        catalogLookup: sourceLookup,
+        boardSeat: card.zone.seat,
+        row: card.zone.row,
+        triggerCardId: command.cardId,
+      });
+    }
   } else if (target.kind === "row_horn") {
     card.controller = command.seatId;
     moveCard(state, events, command.cardId, { kind: "row_horn", seat: target.seatId, row: target.row }, "play_card");
@@ -432,6 +440,16 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
       targetIndex,
     );
     events.push({ type: "card_played", seatId: command.seatId, cardId: command.cardId, target: card.zone });
+    if (!state.pendingPrompt && card.zone.kind === "board_row") {
+      settleMardroemeRow({
+        state,
+        events,
+        catalogLookup: sourceLookup,
+        boardSeat: card.zone.seat,
+        row: card.zone.row,
+        triggerCardId: command.cardId,
+      });
+    }
   } else if (target.kind === "none" && source.kind === "special" && source.abilities.includes("scorch")) {
     resolveSpecialScorch(state, events, sourceLookup, input.catalogCards, command.seatId, command.cardId, source);
   } else {
@@ -659,6 +677,17 @@ const applySkelligeRoundThreeReturn = (
           });
         }
       });
+      const returned = state.cardsById[cardId];
+      if (returned?.zone.kind === "board_row") {
+        settleMardroemeRow({
+          state,
+          events,
+          catalogLookup: sourceLookup,
+          boardSeat: returned.zone.seat,
+          row: returned.zone.row,
+          triggerCardId: cardId,
+        });
+      }
     });
 
     events.push({
