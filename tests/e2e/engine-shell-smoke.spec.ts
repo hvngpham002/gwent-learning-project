@@ -306,6 +306,7 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(page.getByTestId("authentic-pregame-begin")).toHaveCSS("color", "rgb(138, 58, 31)");
 
   await page.getByTestId("authentic-pregame-begin").click();
+  await page.mouse.move(1, 1);
 
   await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
   await expect(page.getByTestId("authentic-match-screen")).toHaveCount(0);
@@ -427,6 +428,29 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(passButton).toBeEnabled();
   await passButton.click();
   await expect(activity).toContainText(/Human passed/);
+
+  const pageText = await visiblePageText(page);
+  expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic pre-game starts the official Skellige starter with linked side deck", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto("/?engine=1&ui=authentic&seed=bp5-skellige");
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+
+  const skelligeStarter = page
+    .getByTestId("authentic-pregame-deck-option")
+    .filter({ hasText: "Official Skellige Starter" });
+  await expect(skelligeStarter).toBeVisible();
+  await skelligeStarter.click();
+
+  await page.getByTestId("authentic-pregame-begin").click();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed bp5-skellige/i);
+  await expect(page.getByTestId("authentic-mulligan-ai")).toContainText(/hand \d+/i);
+  await expect(page.getByTestId("authentic-mulligan-ai").getByTestId("authentic-mulligan-card")).toHaveCount(0);
 
   const pageText = await visiblePageText(page);
   expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);

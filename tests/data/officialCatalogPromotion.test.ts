@@ -2,12 +2,21 @@ import { describe, expect, it } from "vitest";
 
 import {
   currentCatalogCards,
+  currentCatalogLeaders,
   currentDeckPresets,
+  currentNilfgaardDeckPreset,
+  currentNorthernRealmsDeckPreset,
   game8OfficialCardCandidates,
   monstersCatalogCards,
   neutralCatalogCards,
   nilfgaardCatalogCards,
   northernRealmsCatalogCards,
+  officialMonstersStarterDeckPreset,
+  officialNilfgaardStarterDeckPreset,
+  officialNorthernRealmsStarterDeckPreset,
+  officialScoiataelStarterDeckPreset,
+  officialSkelligeStarterDeckPreset,
+  officialStarterDeckPresets,
   scoiataelCatalogCards,
   skelligeCatalogCards,
 } from "@/data/catalog";
@@ -17,6 +26,10 @@ import {
   validateCardSources,
   validateDeckPresets,
 } from "@/game/catalog";
+import {
+  isSideDeckOnlyCard,
+  validateDeckPreset,
+} from "@/components/gwent/deckBuilderViewModel";
 
 describe("official catalog promotion (cBp4 + cBp4.1)", () => {
   it("reports 156 directly promoted candidates, 1 deferred candidate, and 160 promoted catalog sources", () => {
@@ -149,14 +162,74 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("preserves the unchanged current Northern Realms and Nilfgaard deck presets", () => {
-    const presetIds = currentDeckPresets.map((preset) => preset.presetId).sort();
-    expect(presetIds).toEqual(["current-nilfgaard", "current-northern-realms"]);
+  it("preserves the unchanged current Northern Realms and Nilfgaard deck presets and adds five official starter presets", () => {
+    const presetIds = currentDeckPresets.map((preset) => preset.presetId);
+    expect(presetIds).toEqual([
+      "current-northern-realms",
+      "current-nilfgaard",
+      "official-northern-realms-starter",
+      "official-nilfgaard-starter",
+      "official-monsters-starter",
+      "official-scoiatael-starter",
+      "official-skellige-starter",
+    ]);
+    expect(currentNorthernRealmsDeckPreset.mainDeck).toBe(currentNorthernRealmsDeckPreset.mainDeck);
+    expect(currentNilfgaardDeckPreset.mainDeck).toBe(currentNilfgaardDeckPreset.mainDeck);
     expect(
       validateDeckPresets(currentDeckPresets, currentCatalogCards, []).errors.filter(
         (error) => !error.path.includes("leaderSourceId") && !error.code.includes("leader"),
       ),
     ).toEqual([]);
+  });
+
+  it("validates every official starter preset through validateDeckPresets and validateDeckPreset", () => {
+    expect(
+      validateDeckPresets(officialStarterDeckPresets, currentCatalogCards, currentCatalogLeaders).errors,
+    ).toEqual([]);
+    officialStarterDeckPresets.forEach((preset) => {
+      const stats = validateDeckPreset(preset, currentCatalogCards, currentCatalogLeaders);
+      expect(stats.playable).toBe(true);
+      expect(stats.issues.filter((issue) => issue.severity === "error")).toEqual([]);
+      expect(stats.battlefieldCards).toBeGreaterThanOrEqual(22);
+      expect(stats.specialCards).toBeLessThanOrEqual(10);
+    });
+  });
+
+  it("starter decks contain only neutral plus their own faction and no side-deck-only cards in main deck", () => {
+    const cardById = new Map(currentCatalogCards.map((card) => [card.sourceId, card]));
+    officialStarterDeckPresets.forEach((preset) => {
+      preset.mainDeck.forEach((entry) => {
+        const card = cardById.get(entry.sourceId);
+        expect(card).toBeDefined();
+        expect(card!.faction === "neutral" || card!.faction === preset.faction).toBe(true);
+        expect(isSideDeckOnlyCard(card!)).toBe(false);
+      });
+    });
+  });
+
+  it("Skellige starter has linked side-deck replacements that match Berserker counts and exposes Mardroeme", () => {
+    const skelligeMain = officialSkelligeStarterDeckPreset.mainDeck;
+    const berserkerCount = skelligeMain.find((entry) => entry.sourceId === "skellige.berserker")?.count ?? 0;
+    const youngBerserkerCount = skelligeMain.find((entry) => entry.sourceId === "skellige.young-berserker")?.count ?? 0;
+    const mardroemeCount = skelligeMain.find((entry) => entry.sourceId === "skellige.mardroeme")?.count ?? 0;
+    expect(berserkerCount + youngBerserkerCount).toBeGreaterThan(0);
+    expect(mardroemeCount).toBeGreaterThan(0);
+    const sideDeckById = new Map(
+      officialSkelligeStarterDeckPreset.sideDeck.map((entry) => [entry.sourceId, entry.count]),
+    );
+    expect(sideDeckById.get("skellige.vildkaarl")).toBe(berserkerCount);
+    expect(sideDeckById.get("skellige.young-vildkaarl")).toBe(youngBerserkerCount);
+  });
+
+  it("non-Skellige official starter decks have empty side decks", () => {
+    [
+      officialNorthernRealmsStarterDeckPreset,
+      officialNilfgaardStarterDeckPreset,
+      officialMonstersStarterDeckPreset,
+      officialScoiataelStarterDeckPreset,
+    ].forEach((preset) => {
+      expect(preset.sideDeck).toEqual([]);
+    });
   });
 
   it("retains existing current source ids referenced by the spec", () => {

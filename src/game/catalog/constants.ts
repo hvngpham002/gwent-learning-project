@@ -47,6 +47,16 @@ export const CATALOG_LEADER_ABILITY_IDS = [
   "look_three_cards",
   "draw_opponent_discard",
   "random_medic",
+  "play_any_weather",
+  "double_close",
+  "discard_two_draw_one_from_deck",
+  "restore_discard_to_hand",
+  "double_spies",
+  "weather_half_penalty",
+  "optimize_agile_rows",
+  "double_ranged",
+  "draw_extra_card",
+  "shuffle_discards_into_decks",
 ] as const;
 
 export const CATALOG_IMAGE_PATH_PREFIX = "/images/";

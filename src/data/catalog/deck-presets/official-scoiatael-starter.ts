@@ -1,0 +1,32 @@
+import type { CatalogDeckPreset } from "@/game/catalog";
+
+export const officialScoiataelStarterDeckPreset = {
+  presetId: "official-scoiatael-starter",
+  name: "Official Scoia'tael Starter",
+  faction: "scoiatael",
+  leaderSourceId: "scoiatael.francesca-findabair-the-beautiful",
+  mainDeck: [
+    { sourceId: "scoiatael.isengrim-faoiltiarna", count: 1 },
+    { sourceId: "scoiatael.eithne", count: 1 },
+    { sourceId: "scoiatael.iorveth", count: 1 },
+    { sourceId: "scoiatael.saesenthessis", count: 1 },
+    { sourceId: "scoiatael.dol-blathanna-scout", count: 3 },
+    { sourceId: "scoiatael.havekar-smuggler", count: 3 },
+    { sourceId: "scoiatael.havekar-healer", count: 3 },
+    { sourceId: "scoiatael.mahakaman-defender", count: 3 },
+    { sourceId: "scoiatael.elven-skirmisher", count: 3 },
+    { sourceId: "scoiatael.vrihedd-brigade-veteran", count: 2 },
+    { sourceId: "scoiatael.barclay-els", count: 1 },
+    { sourceId: "scoiatael.filavandrel-aen-fidhail", count: 1 },
+    { sourceId: "scoiatael.milva", count: 1 },
+    { sourceId: "scoiatael.schirru", count: 1 },
+    { sourceId: "neutral.geralt-of-rivia", count: 1 },
+    { sourceId: "neutral.triss-merigold", count: 1 },
+    { sourceId: "neutral.decoy", count: 2 },
+    { sourceId: "neutral.commanders-horn", count: 2 },
+    { sourceId: "neutral.scorch", count: 2 },
+    { sourceId: "neutral.biting-frost", count: 1 },
+    { sourceId: "neutral.impenetrable-fog", count: 1 },
+  ],
+  sideDeck: [],
+} as const satisfies CatalogDeckPreset;

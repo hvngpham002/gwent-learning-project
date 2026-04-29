@@ -30,11 +30,19 @@ describe("authentic pre-game view model", () => {
     deckLimit: 3,
     image: "/images/custom/pregame-unit.png",
   };
-  it("maps current catalog presets to ready deck options", () => {
+  it("maps current and official starter presets to ready deck options", () => {
     const options = buildPreGameDeckOptions();
 
-    expect(options.map((option) => option.presetId)).toEqual(["current-northern-realms", "current-nilfgaard"]);
-    expect(options.map((option) => option.optionId)).toEqual([
+    expect(options.map((option) => option.presetId)).toEqual([
+      "current-northern-realms",
+      "current-nilfgaard",
+      "official-northern-realms-starter",
+      "official-nilfgaard-starter",
+      "official-monsters-starter",
+      "official-scoiatael-starter",
+      "official-skellige-starter",
+    ]);
+    expect(options.slice(0, 2).map((option) => option.optionId)).toEqual([
       "catalog:current-northern-realms",
       "catalog:current-nilfgaard",
     ]);
@@ -78,8 +86,8 @@ describe("authentic pre-game view model", () => {
   it("derives opponent descriptions from catalog deck and leader data", () => {
     const options = buildPreGameDeckOptions();
 
-    expect(options[1].description).toContain("Current Nilfgaard");
-    expect(options[1].description).toContain("Emhyr var Emreis");
+    expect(options[1].factionName).toBe("Nilfgaard");
+    expect(options[1].leaderName).toContain("Emhyr var Emreis");
   });
 
   it("prefills, normalizes, and generates visible seeds", () => {
@@ -110,7 +118,7 @@ describe("authentic pre-game view model", () => {
     const localDeck = { ...currentNorthernRealmsDeckPreset, presetId: "local-current-northern-realms" };
     const options = buildPreGameDeckOptionsWithLocal([localDeck]);
 
-    expect(options.map((option) => option.optionId)).toEqual([
+    expect(options.map((option) => option.optionId).slice(0, 2)).toEqual([
       "local:local-current-northern-realms",
       "catalog:current-nilfgaard",
     ]);

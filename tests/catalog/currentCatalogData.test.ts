@@ -68,13 +68,13 @@ describe("current catalog data", () => {
     ).toBe("/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png");
   });
 
-  it("populates Monsters, Scoia'tael, and Skellige card packs after cBp4 promotion", () => {
+  it("populates Monsters, Scoia'tael, and Skellige card packs after cBp4 promotion and leader packs after cBp5", () => {
     expect(monstersCatalogCards.length).toBeGreaterThan(0);
     expect(scoiataelCatalogCards.length).toBeGreaterThan(0);
     expect(skelligeCatalogCards.length).toBeGreaterThan(0);
-    expect(monstersCatalogLeaders).toEqual([]);
-    expect(scoiataelCatalogLeaders).toEqual([]);
-    expect(skelligeCatalogLeaders).toEqual([]);
+    expect(monstersCatalogLeaders).toHaveLength(5);
+    expect(scoiataelCatalogLeaders).toHaveLength(5);
+    expect(skelligeCatalogLeaders).toHaveLength(2);
     expect(validateCardSources([...monstersCatalogCards, ...scoiataelCatalogCards, ...skelligeCatalogCards]).valid).toBe(true);
     expect(validateLeaderSources([...monstersCatalogLeaders, ...scoiataelCatalogLeaders, ...skelligeCatalogLeaders]).valid).toBe(true);
   });
@@ -96,6 +96,9 @@ describe("current catalog data", () => {
   it("mirrors current default deck assembly counts without switching gameplay to catalog data", () => {
     expect(countPresetCards("current-northern-realms")).toBe(35);
     expect(countPresetCards("current-nilfgaard")).toBe(33);
-    expect(currentDeckPresets.every((preset) => preset.sideDeck.length === 0)).toBe(true);
+    const currentOnly = currentDeckPresets.filter((preset) =>
+      preset.presetId === "current-northern-realms" || preset.presetId === "current-nilfgaard",
+    );
+    expect(currentOnly.every((preset) => preset.sideDeck.length === 0)).toBe(true);
   });
 });

@@ -226,6 +226,66 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
     status: "placeholder",
     description: "Plays a random medic effect.",
   },
+  play_any_weather: {
+    id: "play_any_weather",
+    name: "Play Any Weather",
+    status: "placeholder",
+    description: "Plays a chosen weather card from the deck.",
+  },
+  double_close: {
+    id: "double_close",
+    name: "Double Close Combat",
+    status: "placeholder",
+    description: "Doubles the strength of close combat units.",
+  },
+  discard_two_draw_one_from_deck: {
+    id: "discard_two_draw_one_from_deck",
+    name: "Discard Two, Draw One",
+    status: "placeholder",
+    description: "Discards two cards and draws one from the deck.",
+  },
+  restore_discard_to_hand: {
+    id: "restore_discard_to_hand",
+    name: "Restore Discard To Hand",
+    status: "placeholder",
+    description: "Returns a card from the discard pile to the hand.",
+  },
+  double_spies: {
+    id: "double_spies",
+    name: "Double Spies",
+    status: "placeholder",
+    description: "Doubles the strength of spy units already on the battlefield.",
+  },
+  weather_half_penalty: {
+    id: "weather_half_penalty",
+    name: "Weather Half Penalty",
+    status: "placeholder",
+    description: "Reduces weather strength penalties for affected rows.",
+  },
+  optimize_agile_rows: {
+    id: "optimize_agile_rows",
+    name: "Optimize Agile Rows",
+    status: "placeholder",
+    description: "Moves agile units to their optimal row.",
+  },
+  double_ranged: {
+    id: "double_ranged",
+    name: "Double Ranged",
+    status: "placeholder",
+    description: "Doubles the strength of ranged units.",
+  },
+  draw_extra_card: {
+    id: "draw_extra_card",
+    name: "Draw Extra Card",
+    status: "placeholder",
+    description: "Draws an additional card from the deck.",
+  },
+  shuffle_discards_into_decks: {
+    id: "shuffle_discards_into_decks",
+    name: "Shuffle Discards Into Decks",
+    status: "placeholder",
+    description: "Shuffles both discard piles back into their respective decks.",
+  },
 };
 
 export const isCatalogAbilityId = (value: unknown): value is CatalogAbilityId =>

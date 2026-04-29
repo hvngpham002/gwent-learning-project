@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from "react";
 
 import { currentCatalogCards, currentCatalogLeaders, currentDeckPresets } from "@/data/catalog";
-import type { CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
+import type { CatalogCardSource, CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
 
 import AuthenticCard from "./AuthenticCard";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
@@ -12,6 +12,7 @@ import {
   buildDeckCardItems,
   buildFactionOptions,
   changeDeckFaction,
+  computeLinkedSideDeckRequirements,
   createEmptyDeckPreset,
   duplicateDeckPreset,
   findCatalogSourceForLocalDeck,
@@ -87,6 +88,20 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
     [activeDeck, blockedSources.cards, filter, search, sourceSets.cards],
   );
   const deckItems = useMemo(() => (activeDeck ? buildDeckCardItems(activeDeck, sourceSets.cards) : []), [activeDeck, sourceSets.cards]);
+  const sideDeckRequirements = useMemo(
+    () => (activeDeck ? computeLinkedSideDeckRequirements(activeDeck, sourceSets.cards) : []),
+    [activeDeck, sourceSets.cards],
+  );
+  const sideDeckItems = useMemo<Array<{ card: CatalogCardSource; count: number }>>(() => {
+    if (!activeDeck) return [];
+    const byId = new Map(sourceSets.cards.map((card) => [card.sourceId, card] as const));
+    return sideDeckRequirements
+      .map((entry) => {
+        const card = byId.get(entry.sourceId);
+        return card ? { card, count: entry.count } : null;
+      })
+      .filter((entry): entry is { card: CatalogCardSource; count: number } => entry !== null);
+  }, [activeDeck, sideDeckRequirements, sourceSets.cards]);
   const factionOptions = useMemo(() => buildFactionOptions(sourceSets.cards, sourceSets.leaders), [sourceSets.cards, sourceSets.leaders]);
   const catalogSource = useMemo(() => (activeDeck ? findCatalogSourceForLocalDeck(activeDeck) : null), [activeDeck]);
   const selectedCard =
@@ -128,7 +143,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   const removeCard = (sourceId: string) => {
     if (!activeDeck) return;
     setSelectedSourceId(sourceId);
-    updateActiveDeck(removeCardFromDeck(activeDeck, sourceId));
+    updateActiveDeck(removeCardFromDeck(activeDeck, sourceId, sourceSets.cards));
   };
 
   const createDeck = () => {
@@ -140,7 +155,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
 
   const duplicateDeck = () => {
     if (!activeDeck) return;
-    const duplicate = duplicateDeckPreset(activeDeck, decks);
+    const duplicate = duplicateDeckPreset(activeDeck, decks, sourceSets.cards);
     updateDecks([...decks, duplicate], duplicate.presetId);
     setSelectedSourceId(duplicate.mainDeck[0]?.sourceId ?? null);
     setNotice(`Duplicated as ${duplicate.name}.`);
@@ -500,6 +515,25 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                 ))}
               </div>
             </section>
+
+            {sideDeckItems.length > 0 ? (
+              <section data-testid="authentic-deck-builder-side-deck">
+                <div className="authentic-deck-builder__label">side deck · linked replacements</div>
+                <div className="authentic-deck-builder__deck-cards">
+                  {sideDeckItems.map(({ card, count }) => (
+                    <div
+                      key={card.sourceId}
+                      className="authentic-deck-builder__deck-card"
+                      data-source-id={card.sourceId}
+                    >
+                      <span>{card.kind === "special" ? "·" : card.strength}</span>
+                      <strong>{card.name}</strong>
+                      <em>x{count}</em>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </aside>
         </div>
       </div>

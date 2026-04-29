@@ -8,7 +8,15 @@ import {
   scoiataelCatalogCards,
   skelligeCatalogCards,
 } from "./cards";
-import { currentNilfgaardDeckPreset, currentNorthernRealmsDeckPreset } from "./deck-presets";
+import {
+  currentNilfgaardDeckPreset,
+  currentNorthernRealmsDeckPreset,
+  officialMonstersStarterDeckPreset,
+  officialNilfgaardStarterDeckPreset,
+  officialNorthernRealmsStarterDeckPreset,
+  officialScoiataelStarterDeckPreset,
+  officialSkelligeStarterDeckPreset,
+} from "./deck-presets";
 import {
   monstersCatalogLeaders,
   nilfgaardCatalogLeaders,
@@ -25,7 +33,15 @@ export {
   scoiataelCatalogCards,
   skelligeCatalogCards,
 } from "./cards";
-export { currentNilfgaardDeckPreset, currentNorthernRealmsDeckPreset } from "./deck-presets";
+export {
+  currentNilfgaardDeckPreset,
+  currentNorthernRealmsDeckPreset,
+  officialMonstersStarterDeckPreset,
+  officialNilfgaardStarterDeckPreset,
+  officialNorthernRealmsStarterDeckPreset,
+  officialScoiataelStarterDeckPreset,
+  officialSkelligeStarterDeckPreset,
+} from "./deck-presets";
 export {
   game8OfficialCardCandidates,
   game8OfficialImageCandidates,
@@ -43,9 +59,11 @@ export {
   monstersCatalogLeaders,
   nilfgaardCatalogLeaders,
   northernRealmsCatalogLeaders,
+  officialLeaderPromotionManifest,
   scoiataelCatalogLeaders,
   skelligeCatalogLeaders,
 } from "./leaders";
+export type { OfficialLeaderPromotionManifest } from "./leaders";
 
 export const currentCatalogCards = [
   ...neutralCatalogCards,
@@ -64,9 +82,18 @@ export const currentCatalogLeaders = [
   ...skelligeCatalogLeaders,
 ] as const satisfies CatalogLeaderSource[];
 
+export const officialStarterDeckPresets = [
+  officialNorthernRealmsStarterDeckPreset,
+  officialNilfgaardStarterDeckPreset,
+  officialMonstersStarterDeckPreset,
+  officialScoiataelStarterDeckPreset,
+  officialSkelligeStarterDeckPreset,
+] as const satisfies CatalogDeckPreset[];
+
 export const currentDeckPresets = [
   currentNorthernRealmsDeckPreset,
   currentNilfgaardDeckPreset,
+  ...officialStarterDeckPresets,
 ] as const satisfies CatalogDeckPreset[];
 
 export interface ResolvedCatalogDeckPreset {

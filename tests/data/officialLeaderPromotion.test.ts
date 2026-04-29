@@ -1,0 +1,126 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  currentCatalogLeaders,
+  game8OfficialLeaderCandidates,
+  monstersCatalogLeaders,
+  nilfgaardCatalogLeaders,
+  northernRealmsCatalogLeaders,
+  officialLeaderPromotionManifest,
+  scoiataelCatalogLeaders,
+  skelligeCatalogLeaders,
+} from "@/data/catalog";
+import {
+  CATALOG_LEADER_ABILITY_METADATA,
+  validateLeaderSources,
+} from "@/game/catalog";
+
+describe("official leader promotion (cBp5)", () => {
+  it("validates the permanent leader catalog with 22 records and 5/5/5/5/2 by faction", () => {
+    expect(validateLeaderSources(currentCatalogLeaders).errors).toEqual([]);
+    expect(currentCatalogLeaders).toHaveLength(22);
+    expect(northernRealmsCatalogLeaders).toHaveLength(5);
+    expect(nilfgaardCatalogLeaders).toHaveLength(5);
+    expect(monstersCatalogLeaders).toHaveLength(5);
+    expect(scoiataelCatalogLeaders).toHaveLength(5);
+    expect(skelligeCatalogLeaders).toHaveLength(2);
+  });
+
+  it("preserves the existing Northern Realms and Nilfgaard leader source IDs", () => {
+    const ids = new Set(currentCatalogLeaders.map((leader) => leader.sourceId));
+    [
+      "northern-realms.foltest-king-of-temeria",
+      "northern-realms.foltest-lord-commander-of-the-north",
+      "northern-realms.foltest-son-of-medell",
+      "northern-realms.foltest-the-siegemaster",
+      "northern-realms.foltest-the-steel-forged",
+      "nilfgaard.emhyr-var-emreis-emperor-of-nilfgaard",
+      "nilfgaard.emhyr-var-emreis-the-white-flame",
+      "nilfgaard.emhyr-var-emreis-the-relentless",
+      "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+      "nilfgaard.emhyr-var-emreis-invader-of-the-north",
+    ].forEach((id) => expect(ids.has(id)).toBe(true));
+  });
+
+  it("represents every official leader candidate with a permanent catalog leader", () => {
+    const present = new Set(currentCatalogLeaders.map((leader) => leader.sourceId));
+    expect(game8OfficialLeaderCandidates.length).toBeGreaterThan(0);
+    game8OfficialLeaderCandidates.forEach((candidate) => {
+      const matchedId = candidate.matchedCurrentSourceId ?? candidate.sourceId;
+      expect(present.has(matchedId)).toBe(true);
+    });
+  });
+
+  it("registers placeholder metadata for newly added leader ability IDs", () => {
+    [
+      "play_any_weather",
+      "double_close",
+      "discard_two_draw_one_from_deck",
+      "restore_discard_to_hand",
+      "double_spies",
+      "weather_half_penalty",
+      "optimize_agile_rows",
+      "double_ranged",
+      "draw_extra_card",
+      "shuffle_discards_into_decks",
+    ].forEach((ability) => {
+      const metadata =
+        CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
+      expect(metadata).toBeDefined();
+      expect(metadata.status).toBe("placeholder");
+      expect(metadata.name.length).toBeGreaterThan(0);
+      expect(metadata.description.length).toBeGreaterThan(0);
+    });
+  });
+
+  it("only the clear-weather Foltest leader has implemented ability metadata", () => {
+    const implementedLeaders = currentCatalogLeaders.filter(
+      (leader) => CATALOG_LEADER_ABILITY_METADATA[leader.ability].status === "implemented",
+    );
+    expect(implementedLeaders.map((leader) => leader.sourceId)).toEqual([
+      "northern-realms.foltest-lord-commander-of-the-north",
+    ]);
+  });
+
+  it("matches the manifest counts and source ID groups", () => {
+    expect(officialLeaderPromotionManifest.officialLeaderCandidateCount).toBe(22);
+    expect(officialLeaderPromotionManifest.promotedLeaderSourceCount).toBe(22);
+    expect(officialLeaderPromotionManifest.preservedCurrentLeaderSourceIds).toHaveLength(10);
+    expect(officialLeaderPromotionManifest.addedLeaderSourceIds).toHaveLength(12);
+    expect(officialLeaderPromotionManifest.promotedLeaderSourceIds).toHaveLength(22);
+    expect(officialLeaderPromotionManifest.countsByFaction).toEqual({
+      northern_realms: 5,
+      nilfgaard: 5,
+      monsters: 5,
+      scoiatael: 5,
+      skellige: 2,
+    });
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toEqual([
+      "northern-realms.foltest-lord-commander-of-the-north",
+    ]);
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toEqual(
+      expect.arrayContaining([
+        "play_any_weather",
+        "double_close",
+        "discard_two_draw_one_from_deck",
+        "restore_discard_to_hand",
+        "double_spies",
+        "weather_half_penalty",
+        "optimize_agile_rows",
+        "double_ranged",
+        "draw_extra_card",
+        "shuffle_discards_into_decks",
+      ]),
+    );
+  });
+
+  it("manifest source IDs are all present in currentCatalogLeaders", () => {
+    const present = new Set(currentCatalogLeaders.map((leader) => leader.sourceId));
+    officialLeaderPromotionManifest.promotedLeaderSourceIds.forEach((id) => {
+      expect(present.has(id)).toBe(true);
+    });
+    officialLeaderPromotionManifest.addedLeaderSourceIds.forEach((id) => {
+      expect(present.has(id)).toBe(true);
+    });
+  });
+});

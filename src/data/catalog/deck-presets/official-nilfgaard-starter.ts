@@ -1,0 +1,32 @@
+import type { CatalogDeckPreset } from "@/game/catalog";
+
+export const officialNilfgaardStarterDeckPreset = {
+  presetId: "official-nilfgaard-starter",
+  name: "Official Nilfgaard Starter",
+  faction: "nilfgaard",
+  leaderSourceId: "nilfgaard.emhyr-var-emreis-the-relentless",
+  mainDeck: [
+    { sourceId: "nilfgaard.letho-of-gulet", count: 1 },
+    { sourceId: "nilfgaard.menno-coehoorn", count: 1 },
+    { sourceId: "nilfgaard.morvran-voorhis", count: 1 },
+    { sourceId: "nilfgaard.tibor-eggebracht", count: 1 },
+    { sourceId: "nilfgaard.young-emissary", count: 3 },
+    { sourceId: "nilfgaard.impera-brigade-guard", count: 3 },
+    { sourceId: "nilfgaard.nausicaa-cavalry-rider", count: 3 },
+    { sourceId: "nilfgaard.black-infantry-archer", count: 2 },
+    { sourceId: "nilfgaard.etolian-auxiliary-archers", count: 1 },
+    { sourceId: "nilfgaard.rotten-mangonel", count: 1 },
+    { sourceId: "nilfgaard.shilard-fitz-oesterlen", count: 1 },
+    { sourceId: "nilfgaard.stefan-skellen", count: 1 },
+    { sourceId: "nilfgaard.vattier-de-rideaux", count: 1 },
+    { sourceId: "neutral.cirilla-fiona-elen-riannon", count: 1 },
+    { sourceId: "neutral.yennefer-of-vengerberg", count: 1 },
+    { sourceId: "neutral.decoy", count: 2 },
+    { sourceId: "neutral.commanders-horn", count: 2 },
+    { sourceId: "neutral.scorch", count: 2 },
+    { sourceId: "neutral.biting-frost", count: 1 },
+    { sourceId: "neutral.torrential-rain", count: 1 },
+    { sourceId: "neutral.clear-weather", count: 1 },
+  ],
+  sideDeck: [],
+} as const satisfies CatalogDeckPreset;

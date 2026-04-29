@@ -3,3 +3,5 @@ export { nilfgaardCatalogLeaders } from "./nilfgaard";
 export { northernRealmsCatalogLeaders } from "./northern-realms";
 export { scoiataelCatalogLeaders } from "./scoiatael";
 export { skelligeCatalogLeaders } from "./skellige";
+export { officialLeaderPromotionManifest } from "./official-promotion";
+export type { OfficialLeaderPromotionManifest } from "./official-promotion";

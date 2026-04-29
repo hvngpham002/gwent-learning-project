@@ -132,12 +132,45 @@ Other invariants from cBp4 still apply:
 - Promoted faction packs are plain hand-authored TypeScript data; they do not import the Game8 scrape JSON or the cBp3 staging modules at runtime.
 - Image paths are reconciled against existing repo assets; the deterministic `AuthenticCard` SVG fallback covers any unresolved path.
 
+## Leader Promotion (cBp5)
+
+cBp5 promotes the remaining official leader candidates and adds five official faction starter deck presets without implementing new leader engine rules.
+
+Leader catalog:
+
+- `currentCatalogLeaders` now contains all `22` official leaders: 5 Northern Realms + 5 Nilfgaard (preserved) plus 5 Monsters, 5 Scoia'tael, and 2 Skellige (added).
+- New permanent records live in `src/data/catalog/leaders/{monsters,scoiatael,skellige}.ts` with deterministic `/images/<faction>/leaders/<Name>.png` paths. Image binaries are not committed; missing images fall back to `AuthenticLeaderCard`'s synthetic faction-styled rendering.
+- `src/data/catalog/leaders/official-promotion.ts` exports `officialLeaderPromotionManifest` with `officialLeaderCandidateCount` (22), `promotedLeaderSourceCount` (22), preserved/added/promoted source ID groups, `countsByFaction` (5/5/5/5/2), `executableLeaderSourceIds` (clear-weather Foltest only), and `placeholderLeaderAbilityIds`.
+
+Placeholder leader ability metadata:
+
+- New catalog leader ability IDs added with `status: "placeholder"`: `play_any_weather`, `double_close`, `discard_two_draw_one_from_deck`, `restore_discard_to_hand`, `double_spies`, `weather_half_penalty`, `optimize_agile_rows`, `double_ranged`, `draw_extra_card`, `shuffle_discards_into_decks`.
+- Engine `legalMoves` and `commands` continue to gate executable leader use to `clear_weather` only. Placeholder leader records validate but do not produce executable legal leader moves.
+- `officialPortingSummary.unsupportedLeaderAbilityCounts` now keys non-executable leader abilities by their concrete ability ID instead of collapsing them into `unknown`.
+
+Official starter deck presets:
+
+- New presets: `official-northern-realms-starter`, `official-nilfgaard-starter`, `official-monsters-starter`, `official-scoiatael-starter`, `official-skellige-starter`.
+- Each starter deck has at least 22 battlefield cards, at most 10 specials, only neutral plus its own faction, and no `side_deck_only` cards in `mainDeck`.
+- The Skellige starter includes `skellige.berserker`, `skellige.young-berserker`, and `skellige.mardroeme`, with a synced `sideDeck` of `skellige.vildkaarl` and `skellige.young-vildkaarl` whose counts mirror the Berserker base counts in `mainDeck`.
+- `currentNorthernRealmsDeckPreset` and `currentNilfgaardDeckPreset` remain unchanged. They stay first in `currentDeckPresets`, and `getDefaultPreGameSelection()` continues to default to `current-northern-realms` versus `current-nilfgaard`.
+- Official starter presets that include placeholder leader abilities surface a deck-builder warning but remain `playable` in `validateDeckPreset`.
+- `neutral.cow` (planned `avenger`) is intentionally excluded from every official starter until Avenger lands.
+
+Linked side-deck Deck Builder support:
+
+- `computeLinkedSideDeckRequirements(deck, cards)` derives `replacement source id -> required count` by summing main-deck counts of cards whose `linkedSourceIds` reference a `side_deck_only` replacement.
+- `syncLinkedSideDeck(deck, cards)` rewrites `deck.sideDeck` to match those requirements without touching `mainDeck` order.
+- `addCardToDeck`, `removeCardFromDeck`, `changeDeckFaction`, and `duplicateDeckPreset` automatically resync the side deck. Faction changes also clear stale wrong-faction side-deck entries.
+- `validateDeckPreset` accepts a non-empty side deck only when every entry exists, is tagged `side_deck_only`, belongs to the deck faction, is linked from at least one main-deck card, and has a count that exactly matches the linked requirement. Error codes are `unknown_side_deck_card`, `invalid_side_deck_card`, `wrong_faction_side_deck_card`, `unlinked_side_deck_card`, and `side_deck_count_mismatch`. Side-deck-only cards in `mainDeck` continue to emit `side_deck_only_main_deck`.
+- `AuthenticDeckBuilderScreen` renders a compact `side deck · linked replacements` section listing the synced replacements when the active deck has any. The main-deck card pool still hides `side_deck_only` cards; there is no free-form side-deck pool.
+- LocalStorage persistence, JSON export/copy, JSON import, and `play →` all preserve valid linked side decks. Invalid side decks surface visible validation errors instead of silently shipping into the engine.
+
 ## Future Promotion
 
 Future phases should:
 
-- Promote official leaders into `src/data/catalog/leaders/*` and add official faction starter deck presets once leader abilities are scoped.
-- Add side-deck authoring UI and persistence so Berserker decks can be exercised end-to-end in Deck Builder.
-- Source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset (the only promoted card whose preferred path is not yet present in the repo image manifest).
-- Revisit `neutral.cow-bovine-defense-force` once an Avenger rules phase lands.
+- Promote leader engine rules so each official leader ability becomes `implemented` and produces real legal leader moves; only `clear_weather` is executable today.
+- Implement `avenger` (and unblock `neutral.cow`) and `summon` so currently planned card abilities can be promoted without warnings.
+- Source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset and the new `/images/{monsters,scoiatael,skellige}/leaders/*.png` art so the deterministic SVG fallback is no longer needed for those records.
 - Update deck-builder source sets and `currentDeckPresets` only when rule and image gaps are intentionally accepted or fixed.

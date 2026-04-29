@@ -39,6 +39,41 @@ export const DECK_BUILDER_DEFAULT_UNIT_CARD_LIMIT = 3;
 export const isSideDeckOnlyCard = (card: CatalogCardSource): boolean =>
   card.tags.includes("side_deck_only");
 
+export interface LinkedSideDeckRequirement {
+  readonly sourceId: string;
+  readonly count: number;
+}
+
+export const computeLinkedSideDeckRequirements = (
+  deck: CatalogDeckPreset,
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+): readonly LinkedSideDeckRequirement[] => {
+  const byId = catalogCardById(cards);
+  const required = new Map<string, number>();
+  deck.mainDeck.forEach((entry) => {
+    const card = byId.get(entry.sourceId);
+    if (!card || !card.linkedSourceIds || card.linkedSourceIds.length === 0) return;
+    if (!Number.isInteger(entry.count) || entry.count <= 0) return;
+    card.linkedSourceIds.forEach((linkedId) => {
+      const linkedCard = byId.get(linkedId);
+      if (!linkedCard || !isSideDeckOnlyCard(linkedCard)) return;
+      required.set(linkedId, (required.get(linkedId) ?? 0) + entry.count);
+    });
+  });
+  return [...required.entries()]
+    .map(([sourceId, count]) => ({ sourceId, count }))
+    .sort((a, b) => a.sourceId.localeCompare(b.sourceId));
+};
+
+export const syncLinkedSideDeck = (
+  deck: CatalogDeckPreset,
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+): CatalogDeckPreset => {
+  const requirements = computeLinkedSideDeckRequirements(deck, cards);
+  const sideDeck = requirements.map((entry) => ({ sourceId: entry.sourceId, count: entry.count }));
+  return { ...deck, sideDeck };
+};
+
 const NON_NEUTRAL_FACTIONS = CATALOG_FACTIONS.filter((faction) => faction !== "neutral") as EditableDeckFaction[];
 
 const cloneDeck = (deck: CatalogDeckPreset): CatalogDeckPreset => ({
@@ -279,12 +314,17 @@ export const filterCardPool = (
   });
 };
 
-const withEntryCount = (deck: CatalogDeckPreset, sourceId: string, count: number): CatalogDeckPreset => {
+const withEntryCount = (
+  deck: CatalogDeckPreset,
+  sourceId: string,
+  count: number,
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+): CatalogDeckPreset => {
   const nextEntries = deck.mainDeck.filter((entry) => entry.sourceId !== sourceId);
   if (count > 0) {
     nextEntries.push({ sourceId, count });
   }
-  return normalizeDeckPreset({ ...deck, mainDeck: nextEntries });
+  return syncLinkedSideDeck(normalizeDeckPreset({ ...deck, mainDeck: nextEntries }), cards);
 };
 
 export const addCardToDeck = (
@@ -298,12 +338,16 @@ export const addCardToDeck = (
   const card = catalogCardById(cards).get(sourceId);
   if (!card) return deck;
   const current = deck.mainDeck.find((entry) => entry.sourceId === sourceId)?.count ?? 0;
-  return withEntryCount(deck, sourceId, current + 1);
+  return withEntryCount(deck, sourceId, current + 1, cards);
 };
 
-export const removeCardFromDeck = (deck: CatalogDeckPreset, sourceId: string): CatalogDeckPreset => {
+export const removeCardFromDeck = (
+  deck: CatalogDeckPreset,
+  sourceId: string,
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+): CatalogDeckPreset => {
   const current = deck.mainDeck.find((entry) => entry.sourceId === sourceId)?.count ?? 0;
-  return current <= 0 ? deck : withEntryCount(deck, sourceId, current - 1);
+  return current <= 0 ? deck : withEntryCount(deck, sourceId, current - 1, cards);
 };
 
 export const changeDeckFaction = (
@@ -322,13 +366,16 @@ export const changeDeckFaction = (
     return keep;
   });
   return {
-    deck: normalizeDeckPreset({
-      ...deck,
-      faction,
-      leaderSourceId: defaultLeader?.sourceId ?? "",
-      mainDeck,
-      sideDeck: [],
-    }),
+    deck: syncLinkedSideDeck(
+      normalizeDeckPreset({
+        ...deck,
+        faction,
+        leaderSourceId: defaultLeader?.sourceId ?? "",
+        mainDeck,
+        sideDeck: [],
+      }),
+      cards,
+    ),
     removedCards,
   };
 };
@@ -336,11 +383,16 @@ export const changeDeckFaction = (
 export const duplicateDeckPreset = (
   deck: CatalogDeckPreset,
   decks: readonly CatalogDeckPreset[],
-): CatalogDeckPreset => ({
-  ...cloneDeck(deck),
-  presetId: makeUniqueLocalPresetId(`${deck.presetId}-copy`, decks),
-  name: makeUniqueDeckName(deck.name, decks),
-});
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+): CatalogDeckPreset =>
+  syncLinkedSideDeck(
+    {
+      ...cloneDeck(deck),
+      presetId: makeUniqueLocalPresetId(`${deck.presetId}-copy`, decks),
+      name: makeUniqueDeckName(deck.name, decks),
+    },
+    cards,
+  );
 
 export const findCatalogSourceForLocalDeck = (
   localDeck: CatalogDeckPreset,
@@ -423,8 +475,92 @@ export const validateDeckPreset = (
 
   if (!Array.isArray(deck.sideDeck)) {
     pushIssue(issues, "error", "invalid_side_deck", "Side deck must be an array.");
-  } else if (deck.sideDeck.length > 0) {
-    pushIssue(issues, "error", "side_deck_not_supported", "Side deck editing is not supported in Deck Builder V1.");
+  } else {
+    const requirements = computeLinkedSideDeckRequirements(deck, cards);
+    const requiredById = new Map(requirements.map((entry) => [entry.sourceId, entry.count]));
+    const sideSeen = new Set<string>();
+    deck.sideDeck.forEach((entry) => {
+      if (!Number.isInteger(entry.count) || entry.count <= 0) {
+        pushIssue(
+          issues,
+          "error",
+          "invalid_count",
+          `Invalid side-deck count for ${entry.sourceId}.`,
+          entry.sourceId,
+        );
+        return;
+      }
+      if (sideSeen.has(entry.sourceId)) {
+        pushIssue(
+          issues,
+          "error",
+          "duplicate_deck_entry",
+          `Duplicate side-deck entry: ${entry.sourceId}`,
+          entry.sourceId,
+        );
+      }
+      sideSeen.add(entry.sourceId);
+
+      const card = byCardId.get(entry.sourceId);
+      if (!card) {
+        pushIssue(
+          issues,
+          "error",
+          "unknown_side_deck_card",
+          `Unknown side-deck card: ${entry.sourceId}`,
+          entry.sourceId,
+        );
+        return;
+      }
+      if (!isSideDeckOnlyCard(card)) {
+        pushIssue(
+          issues,
+          "error",
+          "invalid_side_deck_card",
+          `${card.name} is not a side-deck-only card.`,
+          card.sourceId,
+        );
+      }
+      if (card.faction !== "neutral" && card.faction !== deck.faction) {
+        pushIssue(
+          issues,
+          "error",
+          "wrong_faction_side_deck_card",
+          `${card.name} cannot be used in this faction side deck.`,
+          card.sourceId,
+        );
+      }
+      const required = requiredById.get(entry.sourceId);
+      if (required === undefined) {
+        pushIssue(
+          issues,
+          "error",
+          "unlinked_side_deck_card",
+          `${card.name} is not linked from any main-deck card.`,
+          card.sourceId,
+        );
+      } else if (required !== entry.count) {
+        pushIssue(
+          issues,
+          "error",
+          "side_deck_count_mismatch",
+          `${card.name} side-deck count is ${entry.count}, expected ${required}.`,
+          card.sourceId,
+        );
+      }
+    });
+    requirements.forEach((requirement) => {
+      if (!sideSeen.has(requirement.sourceId)) {
+        const card = byCardId.get(requirement.sourceId);
+        pushIssue(
+          issues,
+          "error",
+          "side_deck_count_mismatch",
+          `${card?.name ?? requirement.sourceId} side-deck count is 0, expected ${requirement.count}.`,
+          requirement.sourceId,
+        );
+      }
+    });
   }
 
   const seen = new Set<string>();

@@ -12,6 +12,7 @@ import {
   buildDeckCardItems,
   buildFactionOptions,
   changeDeckFaction,
+  computeLinkedSideDeckRequirements,
   createEmptyDeckPreset,
   duplicateDeckPreset,
   filterCardPool,
@@ -22,6 +23,7 @@ import {
   normalizeDeckCollection,
   removeCardFromDeck,
   resetDeckToCatalogSource,
+  syncLinkedSideDeck,
   validateDeckPreset,
 } from "@/components/gwent/deckBuilderViewModel";
 import type { CatalogCardSource, CatalogLeaderSource } from "@/game/catalog";
@@ -338,6 +340,215 @@ describe("authentic deck builder view model", () => {
     const stats = validateDeckPreset(skelligeDeck, currentCatalogCards, currentCatalogLeaders);
     expect(stats.issues.map((issue) => issue.code)).toEqual(
       expect.arrayContaining(["side_deck_only_main_deck"]),
+    );
+  });
+
+  it("derives linked side-deck requirements from main-deck Berserker counts", () => {
+    const deck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      mainDeck: [
+        { sourceId: "skellige.berserker", count: 1 },
+        { sourceId: "skellige.young-berserker", count: 3 },
+      ],
+      sideDeck: [],
+    };
+
+    expect(computeLinkedSideDeckRequirements(deck)).toEqual([
+      { sourceId: "skellige.young-vildkaarl", count: 3 },
+      { sourceId: "skellige.vildkaarl", count: 1 },
+    ].sort((a, b) => a.sourceId.localeCompare(b.sourceId)));
+  });
+
+  it("syncs the side deck to derived linked replacements", () => {
+    const deck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      mainDeck: [
+        { sourceId: "skellige.berserker", count: 1 },
+        { sourceId: "skellige.young-berserker", count: 2 },
+      ],
+      sideDeck: [],
+    };
+
+    const synced = syncLinkedSideDeck(deck);
+    expect(synced.sideDeck).toEqual(
+      [
+        { sourceId: "skellige.vildkaarl", count: 1 },
+        { sourceId: "skellige.young-vildkaarl", count: 2 },
+      ].sort((a, b) => a.sourceId.localeCompare(b.sourceId)),
+    );
+  });
+
+  it("auto-syncs the side deck when adding and removing Berserker base cards", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      mainDeck: [],
+      sideDeck: [],
+    };
+
+    const withOne = addCardToDeck(skelligeDeck, "skellige.young-berserker");
+    expect(withOne.sideDeck).toEqual([{ sourceId: "skellige.young-vildkaarl", count: 1 }]);
+
+    const withTwo = addCardToDeck(withOne, "skellige.young-berserker");
+    expect(withTwo.sideDeck).toEqual([{ sourceId: "skellige.young-vildkaarl", count: 2 }]);
+
+    const removed = removeCardFromDeck(withTwo, "skellige.young-berserker");
+    expect(removed.sideDeck).toEqual([{ sourceId: "skellige.young-vildkaarl", count: 1 }]);
+
+    const cleared = removeCardFromDeck(removed, "skellige.young-berserker");
+    expect(cleared.sideDeck).toEqual([]);
+  });
+
+  it("clears the linked side deck when faction changes away from Skellige", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      mainDeck: [
+        { sourceId: "skellige.berserker", count: 1 },
+        { sourceId: "skellige.young-berserker", count: 2 },
+      ],
+      sideDeck: [
+        { sourceId: "skellige.vildkaarl", count: 1 },
+        { sourceId: "skellige.young-vildkaarl", count: 2 },
+      ],
+    };
+    const result = changeDeckFaction(skelligeDeck, "northern_realms");
+    expect(result.deck.sideDeck).toEqual([]);
+  });
+
+  it("accepts an exact linked-replacement side deck through validateDeckPreset", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      leaderSourceId: "skellige.king-bran",
+      mainDeck: [
+        { sourceId: "skellige.cerys", count: 1 },
+        { sourceId: "skellige.hjalmar", count: 1 },
+        { sourceId: "skellige.ermion", count: 1 },
+        { sourceId: "skellige.olaf", count: 1 },
+        { sourceId: "skellige.clan-an-craite-warrior", count: 3 },
+        { sourceId: "skellige.clan-drummond-shield-maiden", count: 3 },
+        { sourceId: "skellige.clan-brokvar-archer", count: 3 },
+        { sourceId: "skellige.light-longship", count: 3 },
+        { sourceId: "skellige.war-longship", count: 3 },
+        { sourceId: "skellige.young-berserker", count: 3 },
+        { sourceId: "skellige.berserker", count: 1 },
+        { sourceId: "skellige.draig-bon-dhu", count: 1 },
+      ],
+      sideDeck: [
+        { sourceId: "skellige.vildkaarl", count: 1 },
+        { sourceId: "skellige.young-vildkaarl", count: 3 },
+      ],
+    };
+    const stats = validateDeckPreset(skelligeDeck);
+    expect(stats.issues.filter((issue) => issue.severity === "error")).toEqual([]);
+    expect(stats.playable).toBe(true);
+  });
+
+  it("rejects unknown, non-side-only, unlinked, mismatched, and missing side deck entries", () => {
+    const wrongFactionSideDeckCard: CatalogCardSource = {
+      sourceId: "test.nilfgaard-side-deck-only",
+      name: "Nilfgaard Side Deck Only",
+      faction: "nilfgaard",
+      kind: "unit",
+      strength: 8,
+      rows: ["close"],
+      abilities: ["none"],
+      tags: ["side_deck_only"],
+      deckLimit: 1,
+      image: "/images/test/nilfgaard-side-deck-only.png",
+    };
+    const baseSkellige = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      leaderSourceId: "skellige.king-bran",
+      mainDeck: [
+        { sourceId: "skellige.cerys", count: 1 },
+        { sourceId: "skellige.hjalmar", count: 1 },
+        { sourceId: "skellige.ermion", count: 1 },
+        { sourceId: "skellige.olaf", count: 1 },
+        { sourceId: "skellige.clan-an-craite-warrior", count: 3 },
+        { sourceId: "skellige.clan-drummond-shield-maiden", count: 3 },
+        { sourceId: "skellige.clan-brokvar-archer", count: 3 },
+        { sourceId: "skellige.light-longship", count: 3 },
+        { sourceId: "skellige.war-longship", count: 3 },
+        { sourceId: "skellige.young-berserker", count: 3 },
+        { sourceId: "skellige.berserker", count: 1 },
+        { sourceId: "skellige.draig-bon-dhu", count: 1 },
+      ],
+    };
+
+    const unknownEntry = validateDeckPreset({
+      ...baseSkellige,
+      sideDeck: [
+        { sourceId: "skellige.vildkaarl", count: 1 },
+        { sourceId: "skellige.young-vildkaarl", count: 3 },
+        { sourceId: "skellige.does-not-exist", count: 1 },
+      ],
+    });
+    expect(unknownEntry.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["unknown_side_deck_card"]),
+    );
+
+    const unlinkedExtra = validateDeckPreset({
+      ...baseSkellige,
+      mainDeck: baseSkellige.mainDeck.filter((entry) => entry.sourceId !== "skellige.berserker"),
+      sideDeck: [
+        { sourceId: "skellige.young-vildkaarl", count: 3 },
+        { sourceId: "skellige.vildkaarl", count: 1 },
+      ],
+    });
+    expect(unlinkedExtra.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["unlinked_side_deck_card"]),
+    );
+
+    const nonSideDeckOnly = validateDeckPreset({
+      ...baseSkellige,
+      sideDeck: [
+        { sourceId: "skellige.vildkaarl", count: 1 },
+        { sourceId: "skellige.young-vildkaarl", count: 3 },
+        { sourceId: "skellige.cerys", count: 1 },
+      ],
+    });
+    expect(nonSideDeckOnly.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["invalid_side_deck_card", "unlinked_side_deck_card"]),
+    );
+
+    const wrongFaction = validateDeckPreset(
+      {
+        ...baseSkellige,
+        sideDeck: [
+          { sourceId: "skellige.vildkaarl", count: 1 },
+          { sourceId: "skellige.young-vildkaarl", count: 3 },
+          { sourceId: wrongFactionSideDeckCard.sourceId, count: 1 },
+        ],
+      },
+      [...currentCatalogCards, wrongFactionSideDeckCard],
+      currentCatalogLeaders,
+    );
+    expect(wrongFaction.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["wrong_faction_side_deck_card", "unlinked_side_deck_card"]),
+    );
+
+    const wrongCount = validateDeckPreset({
+      ...baseSkellige,
+      sideDeck: [
+        { sourceId: "skellige.vildkaarl", count: 1 },
+        { sourceId: "skellige.young-vildkaarl", count: 1 },
+      ],
+    });
+    expect(wrongCount.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["side_deck_count_mismatch"]),
+    );
+
+    const missing = validateDeckPreset({
+      ...baseSkellige,
+      sideDeck: [{ sourceId: "skellige.vildkaarl", count: 1 }],
+    });
+    expect(missing.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["side_deck_count_mismatch"]),
     );
   });
 });
