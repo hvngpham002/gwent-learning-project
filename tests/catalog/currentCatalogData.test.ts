@@ -68,10 +68,10 @@ describe("current catalog data", () => {
     ).toBe("/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png");
   });
 
-  it("keeps future faction placeholder packs intentionally inert and valid", () => {
-    expect(monstersCatalogCards).toEqual([]);
-    expect(scoiataelCatalogCards).toEqual([]);
-    expect(skelligeCatalogCards).toEqual([]);
+  it("populates Monsters, Scoia'tael, and Skellige card packs after cBp4 promotion", () => {
+    expect(monstersCatalogCards.length).toBeGreaterThan(0);
+    expect(scoiataelCatalogCards.length).toBeGreaterThan(0);
+    expect(skelligeCatalogCards.length).toBeGreaterThan(0);
     expect(monstersCatalogLeaders).toEqual([]);
     expect(scoiataelCatalogLeaders).toEqual([]);
     expect(skelligeCatalogLeaders).toEqual([]);
@@ -79,15 +79,15 @@ describe("current catalog data", () => {
     expect(validateLeaderSources([...monstersCatalogLeaders, ...scoiataelCatalogLeaders, ...skelligeCatalogLeaders]).valid).toBe(true);
   });
 
-  it("matches migrated pack counts to legacy source modules", () => {
-    expect(neutralCatalogCards).toHaveLength(
+  it("preserves legacy source-module counts as a floor for migrated packs", () => {
+    expect(neutralCatalogCards.length).toBeGreaterThanOrEqual(
       neutralDeck.heroes.length + neutralDeck.units.length + neutralDeck.specials.length,
     );
-    expect(northernRealmsCatalogCards).toHaveLength(
+    expect(northernRealmsCatalogCards.length).toBeGreaterThanOrEqual(
       northernRealmsDeck.heroes.length + northernRealmsDeck.units.length,
     );
     expect(northernRealmsCatalogLeaders).toHaveLength(northernRealmsDeck.leaders.length);
-    expect(nilfgaardCatalogCards).toHaveLength(
+    expect(nilfgaardCatalogCards.length).toBeGreaterThanOrEqual(
       nilfgaardianEmpireDeck.heroes.length + nilfgaardianEmpireDeck.units.length,
     );
     expect(nilfgaardCatalogLeaders).toHaveLength(nilfgaardianEmpireDeck.leaders.length);

@@ -108,6 +108,28 @@ Current flags include:
 
 After cCp9, Mardroeme, Berserker, and Skellige Storm are no longer reported as unimplemented engine rules. Skellige Storm has full scoring and legal-move support; Mardroeme is a real row-based ongoing ability; Berserker transforms through the side deck via `linkedSourceIds[0]`. Official Berserker candidates remain conservatively flagged for data split or transform-link work until promotion.
 
+## Promotion Status (cBp4)
+
+cBp4 promoted 157 engine-ready official non-leader candidates from the cBp3 staging layer into permanent `src/data/catalog/cards/*` packs:
+
+- Neutral 22, Northern Realms 25, Nilfgaard 29, Monsters 35, Scoia'tael 24, Skellige 22 (heroes 25, units 123, specials 4, weather 5).
+- The promotion manifest at `src/data/catalog/cards/official-promotion.ts` exports `officialPromotionManifest` with promoted source IDs, deferred entries, and counts by faction/kind.
+- Existing legacy current entries are preserved as authority. Promotion only appends unmatched scrape candidates and never overwrites current `strength`, `deckLimit`, `abilities`, `description`, or `linkedSourceIds`. Default Northern Realms and Nilfgaard deck presets are unchanged.
+- Promoted faction packs are plain hand-authored TypeScript data; they do not import the Game8 scrape JSON or the cBp3 staging modules at runtime.
+- Image paths are reconciled against existing repo assets first (legacy current paths, faction-root snake-case files, faction subfolder Title_Case files, and a basename-fuzzy fallback). The deterministic `AuthenticCard` SVG fallback covers any unresolved path.
+
+The two combined Skellige Berserker scrape candidates remain deferred:
+
+- `skellige.berserker-vildkaarl`
+- `skellige.young-berserker-young-vildkaarl`
+
+Both carry `transform_link_required:berserker` and `catalog_split_required:berserker` in the manifest's `deferred` list. They stay out of `currentCatalogCards` until a narrow data phase splits combined rows into base/replacement records and supplies side-deck linkage.
+
 ## Future Promotion
 
-A later promotion/codegen phase should consume the reviewed bundle, move approved source records into `src/data/catalog/cards/*` and `src/data/catalog/leaders/*`, place production images under `public/images/`, and update deck-builder source sets only when rule and image gaps are intentionally accepted or fixed.
+Future phases should:
+
+- Promote official leaders into `src/data/catalog/leaders/*` and add official faction starter deck presets once leader abilities and side-deck authoring land in scoped specs.
+- Resolve the two deferred combined Berserker candidates by splitting the scrape rows and supplying `linkedSourceIds[0]` to a side-deck replacement.
+- Source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset (the only promoted card whose preferred path is not yet present in the repo image manifest).
+- Update deck-builder source sets and `currentDeckPresets` only when rule and image gaps are intentionally accepted or fixed.

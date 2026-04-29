@@ -3,8 +3,8 @@
 ## Last Updated
 
 - Date: 2026-04-29
-- Phase/spec: `cBp4` specified, official non-leader catalog promotion
-- Latest relevant commit: `cCp9` implementation in current branch history; `cBp4` spec is the active next implementation target
+- Phase/spec: `cBp4` implemented, official non-leader catalog promotion
+- Latest relevant commit: `cBp4` implementation in current branch history
 
 ## Required Reading For Every Coding Instance
 
@@ -34,6 +34,7 @@
 | `cBp1` | Cluster B Phase 1 | `audit/reports/2026-04-24-cBp1-report.md` | Added catalog schema, identity model, validators, and ability registry shape. |
 | `cBp2` | Cluster B Phase 2 | `audit/reports/2026-04-24-cBp2-report.md` | Migrated current cards/presets into catalog paths and documented Card Studio direction. |
 | `cBp3` | Cluster B Phase 3 | `audit/reports/2026-04-29-cBp3-report.md` | Added Game8 official catalog staging candidates, image manifest, local review bundle store, Official Porting route, docs, and focused tests without promoting official cards into product decks. |
+| `cBp4` | Cluster B Phase 4 | `audit/reports/2026-04-29-cBp4-report.md` | Promoted 157 engine-ready official non-leader candidates into permanent Monsters/Scoia'tael/Skellige/Neutral/Northern Realms/Nilfgaard catalog packs, added the `officialPromotionManifest`, reconciled image paths against existing repo assets, kept the two combined Berserker scrape candidates deferred, preserved current Northern Realms/Nilfgaard deck presets, and left official leader promotion plus side-deck authoring as separately scoped work. |
 | `cCp9` | Cluster C Phase 9 | `audit/reports/2026-04-29-cCp9-report.md` | Promoted Skellige Storm metadata to implemented, added special Mardroeme legal row targets, added a centralized row-based Mardroeme settlement helper, implemented Berserker transformation via the controlling seat's side deck through `linkedSourceIds[0]`, hooked settlement into PlayCard/Decoy/Medic/Muster/Skellige round-three return, removed `mardroeme`/`berserker`/`skellige_storm` from official-porting unsupported ability counts, added Card Studio Berserker transform-link guard, and added focused engine and Card Studio tests. |
 | `cCp3` | Cluster C Phase 3 | `audit/reports/2026-04-25-cCp3-report.md` | Added pure match state, setup, seeded RNG, commands, events, and transactions. |
 | `cCp4` | Cluster C Phase 4 | `audit/reports/2026-04-25-cCp4-report.md` | Added legal move generation as the engine UI/AI contract. |
@@ -187,7 +188,7 @@ Latest Catalog implementation:
 
 - `docs/spec/2026-04-29-cBp3-specs.md` has been implemented. It consumes `audit/scrapes/2026-04-29-game8-gwent-cards.json` as factual input, verifies the `254` instance / `181` unique-card scrape contract, exposes `159` official card candidates, `22` leader candidates, `181` image manifest entries, and `officialPortingSummary`, preserves current catalog source IDs for clear matches, stores Game8 image URLs only as provenance, and keeps unsupported rules visible through porting issues instead of dropping candidates.
 - Official staged cards are not custom Card Studio records, do not use `custom_*` IDs, are not written into `gwent_custom_catalog_v1`, and are not promoted into `currentCatalogCards`, `currentCatalogLeaders`, current deck presets, deck-builder source sets, or engine runtime catalog in this phase.
-- `docs/spec/2026-04-29-cBp4-specs.md` is the active next catalog spec. It promotes the `157` engine-ready official non-leader candidates into permanent catalog card source packs, keeps the two combined Berserker scrape candidates deferred for split/link work, reconciles image paths without downloading images, leaves official leaders and new faction deck presets out of scope, and requires default Northern Realms/Nilfgaard presets to remain unchanged.
+- `docs/spec/2026-04-29-cBp4-specs.md` has been implemented. `currentCatalogCards` now includes the 157 promoted official non-leader candidates: Neutral 22, Northern Realms 25, Nilfgaard 29, Monsters 35, Scoia'tael 24, Skellige 22 — broken down as 25 heroes, 123 units, 4 specials, and 5 weather cards. `src/data/catalog/cards/official-promotion.ts` exports `officialPromotionManifest` with promoted source IDs, deferred entries, and counts by faction/kind. The two combined Berserker scrape candidates `skellige.berserker-vildkaarl` and `skellige.young-berserker-young-vildkaarl` remain deferred under `transform_link_required:berserker` and `catalog_split_required:berserker`. Existing legacy current entries are preserved as authority — promotion only appends unmatched scrape candidates and never overwrites current `strength`, `deckLimit`, `abilities`, `description`, or `linkedSourceIds`. Default Northern Realms and Nilfgaard deck presets are unchanged. Catalog files remain plain TypeScript data and do not import the Game8 scrape or staging at runtime.
 
 Latest Engine Rule implementation:
 
@@ -235,12 +236,14 @@ Latest Engine Rule implementation:
 - The authentic harness depends on a Google Fonts `@import` for `EB Garamond` and `JetBrains Mono`, currently loading normal/italic EB Garamond 400/500/600/700 and JetBrains Mono 400/500/600/700. Production deployments without external font access fall back to the documented serif/monospace stacks. JetBrains Mono is intentionally opt-in through `--font-data` rather than a general label font. The legacy default route still references `Inter, sans-serif` from `src/styles/global.css` without importing Inter.
 - Card images are still incomplete by design. The `SvgCardArt` placeholder is a deterministic fallback, not a content workflow.
 - The official porting image manifest uses preferred `/images/<faction>/<kind-folder>/...` paths and records many missing preferred paths by design; Game8 image URLs are provenance only and no scraped image binaries are committed.
-- The official porting review bundle is browser-local until exported. It is not a source-code promotion step and must be consumed by a later coding/codegen phase before official candidates become permanent catalog entries.
+- The official porting review bundle is browser-local until exported. cBp4 was the non-leader promotion step for engine-ready candidates; future phases must still consume the bundle for official leaders, full faction deck presets, and side-deck authoring.
+- Two combined Skellige Berserker scrape candidates (`skellige.berserker-vildkaarl`, `skellige.young-berserker-young-vildkaarl`) remain deferred under `transform_link_required:berserker` and `catalog_split_required:berserker` until a narrow data phase splits them into base/replacement records and supplies side-deck linkage.
+- One promoted card (`scoiatael.elven-skirmisher`) still references `/images/scoiatael/units/Elven_Skirmisher.png`, which is not present in the repo image manifest yet; the deterministic `SvgCardArt` fallback covers this until the asset is added.
 - Faction-specific card-back files are not present in the repository yet. Until they are added under `public/images/card-backs/`, the authentic back component falls back to synthetic faction-colored sleeves.
 
 ## Next Recommended Step
 
- Proceed with `cBp4` implementation from `docs/spec/2026-04-29-cBp4-specs.md`: promote reviewed engine-ready official non-leader candidates into permanent catalog source files, keep default deck presets stable, and leave official leaders plus the combined Berserker split/link work for later scoped phases.
+ Proceed to `cBp5`: promote official leaders, build official-faction starter deck presets, and progress side-deck authoring; alternatively, scope a narrow Berserker split/link data phase to clear the two deferred Skellige Berserker scrape candidates so Skellige can ship a complete official deck. Pre-cBp5 follow-up: source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset (the only promoted card whose preferred path is not yet in the repo image manifest).
 
 ## Update Requirements
 

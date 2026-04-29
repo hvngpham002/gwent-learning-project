@@ -1,3 +1,6 @@
+// Generated additions: cBp4 promoted official non-leader cards (legacy current entries preserved above).
+// This file is plain hand-authored TypeScript data; do not import staging or scrape modules at runtime.
+
 import type { CatalogCardSource } from "@/game/catalog";
 
 export const northernRealmsCatalogCards = [

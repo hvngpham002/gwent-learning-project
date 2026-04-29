@@ -34,7 +34,9 @@ The official porting route is:
 /?engine=1&ui=authentic&view=official-porting
 ```
 
-Official candidates are not Card Studio custom records, do not use `custom_*` source IDs, and do not enter deck-builder source sets until a later promotion/codegen phase.
+Official candidates are not Card Studio custom records and do not use `custom_*` source IDs.
+
+cBp4 promoted 157 engine-ready official non-leader candidates into the permanent catalog under `src/data/catalog/cards/*`. The promotion manifest lives at `src/data/catalog/cards/official-promotion.ts`. Legacy current entries remain authoritative — promotion only appends unmatched scrape candidates. Two combined Skellige Berserker scrape candidates are still deferred until a narrow data phase splits them. Official leaders and full official-faction deck presets remain out of scope until later phases.
 
 ## Files
 

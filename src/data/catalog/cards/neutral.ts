@@ -1,3 +1,6 @@
+// Generated additions: cBp4 promoted official non-leader cards (legacy current entries preserved above).
+// This file is plain hand-authored TypeScript data; do not import staging or scrape modules at runtime.
+
 import type { CatalogCardSource } from "@/game/catalog";
 
 export const neutralCatalogCards = [
@@ -310,5 +313,17 @@ export const neutralCatalogCards = [
     deckLimit: 3,
     image: "/images/neutral/skellige_storm.png",
     description: "Sets the strength of all Ranged and Siege units to 1",
+  },
+  {
+    sourceId: "neutral.cow-bovine-defense-force",
+    name: "Cow/Bovine Defense Force",
+    faction: "neutral",
+    kind: "unit",
+    strength: 0,
+    rows: ["ranged"],
+    abilities: ["none"],
+    tags: ["non_hero"],
+    deckLimit: 1,
+    image: "/images/neutral/cow.png",
   },
 ] as const satisfies CatalogCardSource[];

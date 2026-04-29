@@ -1,3 +1,6 @@
+// Generated additions: cBp4 promoted official non-leader cards (legacy current entries preserved above).
+// This file is plain hand-authored TypeScript data; do not import staging or scrape modules at runtime.
+
 import type { CatalogCardSource } from "@/game/catalog";
 
 export const nilfgaardCatalogCards = [
@@ -348,5 +351,41 @@ export const nilfgaardCatalogCards = [
     deckLimit: 6,
     image: "/images/nilfgaard/young_emmisary.png",
     description: "Tight Bond: Place next to a card with the same name to double the strength of both cards.",
+  },
+  {
+    sourceId: "nilfgaard.menno-coehorn",
+    name: "Menno Coehorn",
+    faction: "nilfgaard",
+    kind: "hero",
+    strength: 10,
+    rows: ["close"],
+    abilities: ["medic"],
+    tags: ["hero", "medic"],
+    deckLimit: 1,
+    image: "/images/nilfgaard/heroes/Menno_Coehoorn.png",
+  },
+  {
+    sourceId: "nilfgaard.heavy-zerrikanian-fire-scorpion",
+    name: "Heavy Zerrikanian Fire Scorpion",
+    faction: "nilfgaard",
+    kind: "unit",
+    strength: 10,
+    rows: ["siege"],
+    abilities: ["none"],
+    tags: ["non_hero"],
+    deckLimit: 1,
+    image: "/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png",
+  },
+  {
+    sourceId: "nilfgaard.zerrikanian-fire-scorpion",
+    name: "Zerrikanian Fire Scorpion",
+    faction: "nilfgaard",
+    kind: "unit",
+    strength: 5,
+    rows: ["siege"],
+    abilities: ["none"],
+    tags: ["non_hero"],
+    deckLimit: 1,
+    image: "/images/nilfgaard/zerrikanian_fire_scorpion.png",
   },
 ] as const satisfies CatalogCardSource[];
