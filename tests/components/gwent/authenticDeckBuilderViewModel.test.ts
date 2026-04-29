@@ -88,7 +88,7 @@ describe("authentic deck builder view model", () => {
   });
 
   it("allows normal unit cards up to the deck-builder unit limit even when catalog source count is one", () => {
-    const scorpion = currentCatalogCards.find((card) => card.sourceId === "nilfgaard.heavy-fire-zerrikanian-scorpion");
+    const scorpion = currentCatalogCards.find((card) => card.sourceId === "nilfgaard.heavy-zerrikanian-fire-scorpion");
     expect(scorpion).toBeDefined();
     expect(scorpion!.deckLimit).toBe(1);
     expect(getDeckBuilderCardLimit(scorpion!)).toBe(3);

@@ -18,6 +18,12 @@ export interface OfficialPromotionSplitResolution {
   readonly reasons: readonly string[];
 }
 
+export interface OfficialPromotionDuplicateResolution {
+  readonly originalSourceId: string;
+  readonly catalogSourceId: string;
+  readonly reasons: readonly string[];
+}
+
 export interface OfficialPromotionManifest {
   readonly directPromotedCandidateCount: number;
   readonly deferredCandidateCount: number;
@@ -26,6 +32,7 @@ export interface OfficialPromotionManifest {
   readonly promotedCatalogSourceIds: readonly string[];
   readonly deferred: readonly OfficialPromotionDeferredEntry[];
   readonly splitResolutions: readonly OfficialPromotionSplitResolution[];
+  readonly duplicateResolutions: readonly OfficialPromotionDuplicateResolution[];
   readonly countsByFaction: Readonly<Record<string, number>>;
   readonly countsByKind: Readonly<Record<string, number>>;
 }
@@ -59,9 +66,19 @@ const deferred: readonly OfficialPromotionDeferredEntry[] = [
   },
 ];
 
+const duplicateResolutions: readonly OfficialPromotionDuplicateResolution[] = [
+  {
+    originalSourceId: "nilfgaard.menno-coehorn",
+    catalogSourceId: "nilfgaard.menno-coehoorn",
+    reasons: [
+      "duplicate_existing_current_source: spelling-mismatched Game8 source resolved to the existing Menno Coehoorn catalog record.",
+    ],
+  },
+];
+
 // Original Game8 scrape candidate IDs that were directly promoted (i.e. ended up
 // in `currentCatalogCards` as a single matching catalog source record). Excludes
-// candidates resolved through `splitResolutions` and candidates listed in `deferred`.
+// candidates resolved through `splitResolutions`, `duplicateResolutions`, and candidates listed in `deferred`.
 const directPromotedCandidateIds: readonly string[] = [
   "monsters.arachas",
   "monsters.arachas-behemoth",
@@ -129,7 +146,6 @@ const directPromotedCandidateIds: readonly string[] = [
   "nilfgaard.heavy-zerrikanian-fire-scorpion",
   "nilfgaard.impera-brigade-guard",
   "nilfgaard.letho-of-gulet",
-  "nilfgaard.menno-coehorn",
   "nilfgaard.morteisen",
   "nilfgaard.morvran-voorhis",
   "nilfgaard.nausicaa-cavalry-rider",
@@ -224,10 +240,14 @@ const directPromotedCandidateIds: readonly string[] = [
 const splitCatalogSourceIds: readonly string[] = splitResolutions.flatMap(
   (resolution) => resolution.catalogSourceIds,
 );
+const duplicateResolvedCatalogSourceIds: readonly string[] = duplicateResolutions.map(
+  (resolution) => resolution.catalogSourceId,
+);
 
 const promotedCatalogSourceIds: readonly string[] = [
   ...directPromotedCandidateIds,
   ...splitCatalogSourceIds,
+  ...duplicateResolvedCatalogSourceIds,
 ].sort();
 
 const countsByFaction: Readonly<Record<string, number>> = {
@@ -254,6 +274,7 @@ export const officialPromotionManifest: OfficialPromotionManifest = {
   promotedCatalogSourceIds,
   deferred,
   splitResolutions,
+  duplicateResolutions,
   countsByFaction,
   countsByKind,
 };

@@ -32,14 +32,15 @@ import {
 } from "@/components/gwent/deckBuilderViewModel";
 
 describe("official catalog promotion (cBp4 + cBp4.1)", () => {
-  it("reports 156 directly promoted candidates, 1 deferred candidate, and 160 promoted catalog sources", () => {
-    expect(officialPromotionManifest.directPromotedCandidateCount).toBe(156);
+  it("reports direct, deferred, split, duplicate-resolved, and promoted catalog source counts", () => {
+    expect(officialPromotionManifest.directPromotedCandidateCount).toBe(155);
     expect(officialPromotionManifest.deferredCandidateCount).toBe(1);
     expect(officialPromotionManifest.promotedCatalogSourceCount).toBe(160);
-    expect(officialPromotionManifest.directPromotedCandidateIds).toHaveLength(156);
+    expect(officialPromotionManifest.directPromotedCandidateIds).toHaveLength(155);
     expect(officialPromotionManifest.promotedCatalogSourceIds).toHaveLength(160);
     expect(officialPromotionManifest.deferred).toHaveLength(1);
     expect(officialPromotionManifest.splitResolutions).toHaveLength(2);
+    expect(officialPromotionManifest.duplicateResolutions).toHaveLength(1);
   });
 
   it("matches cBp4.1 counts by faction and kind", () => {
@@ -92,16 +93,31 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
     });
   });
 
-  it("totals direct promoted + deferred + split resolutions to the full Game8 scrape set", () => {
+  it("resolves the spelling-mismatched Menno scrape candidate to the existing catalog source", () => {
+    expect(officialPromotionManifest.duplicateResolutions).toEqual([
+      expect.objectContaining({
+        originalSourceId: "nilfgaard.menno-coehorn",
+        catalogSourceId: "nilfgaard.menno-coehoorn",
+      }),
+    ]);
+    expect(officialPromotionManifest.promotedCatalogSourceIds).toContain("nilfgaard.menno-coehoorn");
+    expect(officialPromotionManifest.promotedCatalogSourceIds).not.toContain("nilfgaard.menno-coehorn");
+  });
+
+  it("totals direct promoted + deferred + split + duplicate resolutions to the full Game8 scrape set", () => {
     expect(
       officialPromotionManifest.directPromotedCandidateCount +
         officialPromotionManifest.deferredCandidateCount +
-        officialPromotionManifest.splitResolutions.length,
+        officialPromotionManifest.splitResolutions.length +
+        officialPromotionManifest.duplicateResolutions.length,
     ).toBe(game8OfficialCardCandidates.length);
     const accountedCandidateIds = new Set([
       ...officialPromotionManifest.directPromotedCandidateIds,
       ...officialPromotionManifest.deferred.map((entry) => entry.sourceId),
       ...officialPromotionManifest.splitResolutions.map(
+        (resolution) => resolution.originalSourceId,
+      ),
+      ...officialPromotionManifest.duplicateResolutions.map(
         (resolution) => resolution.originalSourceId,
       ),
     ]);
@@ -145,6 +161,8 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
     const presentIds = new Set(currentCatalogCards.map((card) => card.sourceId));
     [
       "neutral.cow-bovine-defense-force",
+      "nilfgaard.menno-coehorn",
+      "nilfgaard.heavy-fire-zerrikanian-scorpion",
       "skellige.berserker-vildkaarl",
       "skellige.young-berserker-young-vildkaarl",
     ].forEach((id) => expect(presentIds.has(id)).toBe(false));
@@ -321,15 +339,14 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
     });
   });
 
-  it("keeps the documented missing-image floor at 1 (only Elven Skirmisher unresolved)", () => {
-    // The promotion phase reconciles image paths against existing repo assets.
-    // Only the truly absent `scoiatael.elven-skirmisher` should remain unresolved.
+  it("resolves the formerly missing Elven Skirmisher image to the committed asset", () => {
     const promotedSet = new Set(officialPromotionManifest.promotedCatalogSourceIds);
-    const unresolved = currentCatalogCards.filter((card) => {
-      if (!promotedSet.has(card.sourceId)) return false;
-      return /\/units\/Elven_Skirmisher\.png$/.test(card.image);
-    });
-    expect(unresolved).toHaveLength(1);
+    const elvenSkirmisher = currentCatalogCards.find(
+      (card) => card.sourceId === "scoiatael.elven-skirmisher",
+    );
+
+    expect(promotedSet.has("scoiatael.elven-skirmisher")).toBe(true);
+    expect(elvenSkirmisher?.image).toBe("/images/scoiatael/Elven_Skirmisher.png");
   });
 
   it("keeps faction packs as plain hand-authored data (no scrape/staging imports at runtime)", () => {

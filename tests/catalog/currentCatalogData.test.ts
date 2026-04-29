@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -62,10 +65,17 @@ describe("current catalog data", () => {
     });
   });
 
-  it("uses the available Heavy Fire Zerrikanian Scorpion image asset", () => {
+  it("uses the available Heavy Zerrikanian Fire Scorpion image asset", () => {
     expect(
-      currentCatalogCards.find((card) => card.sourceId === "nilfgaard.heavy-fire-zerrikanian-scorpion")?.image,
+      currentCatalogCards.find((card) => card.sourceId === "nilfgaard.heavy-zerrikanian-fire-scorpion")?.image,
     ).toBe("/images/nilfgaard/heavy_zerrikanian_fire_scorpion.png");
+  });
+
+  it("points every current card and leader image at a committed public asset", () => {
+    [...currentCatalogCards, ...currentCatalogLeaders].forEach((source) => {
+      const publicPath = join(process.cwd(), "public", source.image.replace(/^\//, ""));
+      expect(existsSync(publicPath), source.sourceId).toBe(true);
+    });
   });
 
   it("populates Monsters, Scoia'tael, and Skellige card packs after cBp4 promotion and leader packs after cBp5", () => {

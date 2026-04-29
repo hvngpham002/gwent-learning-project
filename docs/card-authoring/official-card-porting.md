@@ -112,7 +112,7 @@ After cCp9, Mardroeme, Berserker, and Skellige Storm are no longer reported as u
 
 cBp4 promoted 157 engine-ready official non-leader candidates from the cBp3 staging layer into permanent `src/data/catalog/cards/*` packs. cBp4.1 then split the two combined Skellige Berserker scrape candidates into four real catalog records, removed the redundant combined Cow/Bovine source, and added a `side_deck_only` tag plus narrow Deck Builder V1 guards.
 
-The promotion manifest at `src/data/catalog/cards/official-promotion.ts` exports `officialPromotionManifest` with `directPromotedCandidateCount` (156), `deferredCandidateCount` (1), `promotedCatalogSourceCount` (160), `splitResolutions`, and counts by faction (Neutral 21, Northern Realms 25, Nilfgaard 29, Monsters 35, Scoia'tael 24, Skellige 26) and kind (heroes 25, units 126, specials 4, weather 5).
+The promotion manifest at `src/data/catalog/cards/official-promotion.ts` exports `officialPromotionManifest` with `directPromotedCandidateCount` (155), `deferredCandidateCount` (1), `promotedCatalogSourceCount` (160), `splitResolutions`, `duplicateResolutions`, and counts by faction (Neutral 21, Northern Realms 25, Nilfgaard 29, Monsters 35, Scoia'tael 24, Skellige 26) and kind (heroes 25, units 126, specials 4, weather 5). The duplicate resolution maps the spelling-mismatched Game8 Menno candidate (`nilfgaard.menno-coehorn`) to the existing `nilfgaard.menno-coehoorn` catalog source instead of keeping a second card record.
 
 Combined-card cleanup (cBp4.1):
 
@@ -172,5 +172,5 @@ Future phases should:
 
 - Promote leader engine rules so each official leader ability becomes `implemented` and produces real legal leader moves; only `clear_weather` is executable today.
 - Implement `avenger` (and unblock `neutral.cow`) and `summon` so currently planned card abilities can be promoted without warnings.
-- Source the missing `/images/scoiatael/units/Elven_Skirmisher.png` asset so the deterministic SVG fallback is no longer needed for that promoted card. Promoted official leader image paths now resolve to committed public assets after the cBp5 follow-up.
+- Current promoted card and leader image paths now resolve to committed public assets after the cBp5 follow-ups. Future official-porting work should keep the disk-existence regression green when adding new permanent sources.
 - Update deck-builder source sets and `currentDeckPresets` only when rule and image gaps are intentionally accepted or fixed.

@@ -5,6 +5,7 @@ import {
   currentCatalogLeaders,
   currentNilfgaardDeckPreset,
   currentNorthernRealmsDeckPreset,
+  officialMonstersStarterDeckPreset,
 } from "@/data/catalog";
 import {
   EngineRuleError,
@@ -367,6 +368,51 @@ describe("core ability resolver", () => {
     expect(result.state.seats.seat_a.deck).not.toContain(darknessDeck);
     expect(result.events).toContainEqual(expect.objectContaining({ type: "deck_shuffled", seatId: "seat_a", reason: "muster" }));
     assertNoDuplicateZones(result.state);
+  });
+
+  it("resolves linked Monster starter Muster groups from hand and deck", () => {
+    const state = createState("monster-starter-muster", officialMonstersStarterDeckPreset);
+    const [arachasPlayed, arachasDeckA, arachasDeckB] = findCards(state, "monsters.arachas");
+    const brewess = findCard(state, "monsters.crone-brewess");
+    const weavess = findCard(state, "monsters.crone-weavess");
+    const whispess = findCard(state, "monsters.crone-whispess");
+
+    preparePlayingTurn(state);
+    putInHand(state, "seat_a", [arachasPlayed, brewess]);
+    putInDeck(state, "seat_a", [arachasDeckA, arachasDeckB, weavess, whispess]);
+
+    const arachasResult = execute(state, {
+      type: "PlayCard",
+      seatId: "seat_a",
+      cardId: arachasPlayed,
+      target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+    });
+
+    expect(arachasResult.state.seats.seat_a.board.close.units).toEqual(
+      expect.arrayContaining([arachasPlayed, arachasDeckA, arachasDeckB]),
+    );
+    expect(arachasResult.events).toContainEqual(
+      expect.objectContaining({ type: "ability_resolved", abilityId: "muster", outcome: "played_linked" }),
+    );
+    expect(arachasResult.events).toContainEqual(
+      expect.objectContaining({ type: "deck_shuffled", seatId: "seat_a", reason: "muster" }),
+    );
+
+    preparePlayingTurn(arachasResult.state);
+    const croneResult = execute(arachasResult.state, {
+      type: "PlayCard",
+      seatId: "seat_a",
+      cardId: brewess,
+      target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+    });
+
+    expect(croneResult.state.seats.seat_a.board.close.units).toEqual(
+      expect.arrayContaining([brewess, weavess, whispess]),
+    );
+    expect(croneResult.events).toContainEqual(
+      expect.objectContaining({ type: "ability_resolved", abilityId: "muster", outcome: "played_linked" }),
+    );
+    assertNoDuplicateZones(croneResult.state);
   });
 
   it("resolves Muster Roach for linked Hero catalog entries", () => {
