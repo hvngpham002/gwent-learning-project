@@ -370,7 +370,7 @@ describe("core ability resolver", () => {
     assertNoDuplicateZones(result.state);
   });
 
-  it("resolves Gaunter O'Dimm Darkness Muster back to Gaunter and other Darkness copies", () => {
+  it("resolves Gaunter O'Dimm Darkness Muster to other Darkness copies only", () => {
     const state = createState("muster-darkness-reverse");
     const gaunter = findCard(state, "neutral.gaunter-odimm");
     const [darknessPlayed, darknessDeck] = findCards(state, "neutral.gaunter-odimm-darkness");
@@ -386,8 +386,9 @@ describe("core ability resolver", () => {
     });
 
     expect(result.state.seats.seat_a.board.ranged.units).toEqual(expect.arrayContaining([darknessPlayed, darknessDeck]));
-    expect(result.state.seats.seat_a.board.siege.units).toContain(gaunter);
-    expect(result.state.seats.seat_a.deck).not.toEqual(expect.arrayContaining([gaunter, darknessDeck]));
+    expect(result.state.seats.seat_a.board.siege.units).not.toContain(gaunter);
+    expect(result.state.seats.seat_a.deck).toContain(gaunter);
+    expect(result.state.seats.seat_a.deck).not.toContain(darknessDeck);
     expect(result.events).toContainEqual(expect.objectContaining({ type: "ability_resolved", abilityId: "muster", outcome: "played_linked" }));
     expect(result.events).toContainEqual(expect.objectContaining({ type: "deck_shuffled", seatId: "seat_a", reason: "muster" }));
     assertNoDuplicateZones(result.state);

@@ -15,7 +15,7 @@ const musterUnit = (id: string, name: string): UnitCard => ({
 });
 
 describe("legacy Muster card grouping", () => {
-  it("treats colon-named variants as one symmetric Muster group", () => {
+  it("lets a base Muster card call colon variants without letting variants call the base", () => {
     const gaunter = musterUnit("gaunter", "Gaunter O'Dimm");
     const darknessPlayed = musterUnit("darkness-played", "Gaunter O'Dimm: Darkness");
     const darknessDeck = musterUnit("darkness-deck", "Gaunter O'Dimm: Darkness");
@@ -26,7 +26,6 @@ describe("legacy Muster card grouping", () => {
     ]);
 
     expect(findMusterCards(darknessPlayed, [gaunter], [darknessDeck]).map((card) => card.id)).toEqual([
-      "gaunter",
       "darkness-deck",
     ]);
   });

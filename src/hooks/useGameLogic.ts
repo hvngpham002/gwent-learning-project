@@ -14,7 +14,15 @@ export const findMusterCards = (
   hand: Card[],
   deck: Card[]
 ): UnitCard[] => {
-  const groupKey = getMusterGroupKey(card.name);
+  const canMuster = (candidate: UnitCard): boolean => {
+    if (candidate.name === card.name) {
+      return true;
+    }
+
+    // Gaunter O'Dimm can call O'Dimm: Darkness, but Darkness should only
+    // call other Darkness copies. Colon-named variants are therefore one-way.
+    return !isMusterVariant(card.name) && candidate.name.startsWith(`${card.name}:`);
+  };
   const isUnitCard = (candidate: Card): candidate is UnitCard =>
     candidate.type === CardType.UNIT || candidate.type === CardType.HERO;
 
@@ -22,11 +30,11 @@ export const findMusterCards = (
     isUnitCard(candidate) &&
     candidate.id !== card.id &&
     candidate.ability === CardAbility.MUSTER &&
-    getMusterGroupKey(candidate.name) === groupKey,
+    canMuster(candidate),
   );
 };
 
-const getMusterGroupKey = (cardName: string): string => cardName.split(':')[0].trim().toLocaleLowerCase();
+const isMusterVariant = (cardName: string): boolean => cardName.includes(':');
 
 export const handleDecoyAction = (
   gameState: GameState,
