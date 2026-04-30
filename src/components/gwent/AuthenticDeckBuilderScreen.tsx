@@ -1,7 +1,7 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { currentCatalogCards, currentCatalogLeaders, currentDeckPresets } from "@/data/catalog";
-import type { CatalogCardSource, CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
+import type { CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
 
 import AuthenticCard from "./AuthenticCard";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
@@ -9,10 +9,12 @@ import { Alert, Toast } from "./alert";
 import {
   addCardToDeck,
   buildCardPool,
+  buildDeckBuilderCardActions,
+  buildDeckBuilderCardInspection,
   buildDeckCardItems,
   buildFactionOptions,
+  buildGeneratedCardItems,
   changeDeckFaction,
-  computeLinkedSideDeckRequirements,
   createEmptyDeckPreset,
   duplicateDeckPreset,
   findCatalogSourceForLocalDeck,
@@ -25,10 +27,19 @@ import {
 } from "./deckBuilderViewModel";
 import { parseDeckImport, stringifyDeckExport } from "./deckBuilderImportExport";
 import { writeDeckBuilderStore } from "./deckBuilderStorage";
-import type { DeckBuilderFilter } from "./deckBuilderTypes";
+import type {
+  DeckBuilderCardActionOrigin,
+  DeckBuilderFilter,
+} from "./deckBuilderTypes";
 import type { CardStudioBlockedSources, CardStudioSourceSets } from "./cardStudioTypes";
 import { fromCatalogCard } from "./cardViewModel";
-import { getAbilityDisplay, getFactionDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
+import {
+  getAbilityDisplay,
+  getCardKindDisplay,
+  getFactionDisplay,
+  getLeaderAbilityDisplay,
+  getRowDisplay,
+} from "./displayMetadata";
 import Listbox from "./Listbox";
 import "./authentic-deck-builder.css";
 
@@ -56,6 +67,26 @@ interface PendingConfirmation {
   readonly onConfirm: () => void;
 }
 
+interface CardContextMenuState {
+  readonly sourceId: string;
+  readonly origin: DeckBuilderCardActionOrigin;
+  readonly x: number;
+  readonly y: number;
+}
+
+const CONTEXT_MENU_WIDTH = 200;
+const CONTEXT_MENU_HEIGHT = 132;
+
+const clampMenuPosition = (x: number, y: number) => {
+  if (typeof window === "undefined") return { x, y };
+  const maxX = Math.max(8, window.innerWidth - CONTEXT_MENU_WIDTH - 8);
+  const maxY = Math.max(8, window.innerHeight - CONTEXT_MENU_HEIGHT - 8);
+  return {
+    x: Math.min(Math.max(8, x), maxX),
+    y: Math.min(Math.max(8, y), maxY),
+  };
+};
+
 const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   decks,
   activePresetId,
@@ -77,6 +108,8 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
   const [notice, setNotice] = useState(storageWarning ?? "");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingConfirmation | null>(null);
+  const [contextMenu, setContextMenu] = useState<CardContextMenuState | null>(null);
+  const [inspectTarget, setInspectTarget] = useState<{ readonly sourceId: string; readonly origin: DeckBuilderCardActionOrigin } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const stats = useMemo(
@@ -88,20 +121,10 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
     [activeDeck, blockedSources.cards, filter, search, sourceSets.cards],
   );
   const deckItems = useMemo(() => (activeDeck ? buildDeckCardItems(activeDeck, sourceSets.cards) : []), [activeDeck, sourceSets.cards]);
-  const sideDeckRequirements = useMemo(
-    () => (activeDeck ? computeLinkedSideDeckRequirements(activeDeck, sourceSets.cards) : []),
+  const generatedItems = useMemo(
+    () => (activeDeck ? buildGeneratedCardItems(activeDeck, sourceSets.cards) : []),
     [activeDeck, sourceSets.cards],
   );
-  const sideDeckItems = useMemo<Array<{ card: CatalogCardSource; count: number }>>(() => {
-    if (!activeDeck) return [];
-    const byId = new Map(sourceSets.cards.map((card) => [card.sourceId, card] as const));
-    return sideDeckRequirements
-      .map((entry) => {
-        const card = byId.get(entry.sourceId);
-        return card ? { card, count: entry.count } : null;
-      })
-      .filter((entry): entry is { card: CatalogCardSource; count: number } => entry !== null);
-  }, [activeDeck, sideDeckRequirements, sourceSets.cards]);
   const factionOptions = useMemo(() => buildFactionOptions(sourceSets.cards, sourceSets.leaders), [sourceSets.cards, sourceSets.leaders]);
   const catalogSource = useMemo(() => (activeDeck ? findCatalogSourceForLocalDeck(activeDeck) : null), [activeDeck]);
   const selectedCard =
@@ -145,6 +168,39 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
     setSelectedSourceId(sourceId);
     updateActiveDeck(removeCardFromDeck(activeDeck, sourceId, sourceSets.cards));
   };
+
+  const closeCardContextMenu = useCallback(() => setContextMenu(null), []);
+
+  const openCardContextMenu = useCallback(
+    (event: React.MouseEvent, sourceId: string, origin: DeckBuilderCardActionOrigin) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const { x, y } = clampMenuPosition(event.clientX, event.clientY);
+      setContextMenu({ sourceId, origin, x, y });
+    },
+    [],
+  );
+
+  const inspectCard = useCallback((sourceId: string, origin: DeckBuilderCardActionOrigin) => {
+    setInspectTarget({ sourceId, origin });
+    setContextMenu(null);
+  }, []);
+
+  const closeInspect = useCallback(() => setInspectTarget(null), []);
+
+  useEffect(() => {
+    if (!contextMenu && !inspectTarget) return;
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (inspectTarget) {
+        setInspectTarget(null);
+      } else {
+        setContextMenu(null);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [contextMenu, inspectTarget]);
 
   const createDeck = () => {
     const deck = createEmptyDeckPreset(newLocalId(), makeUniqueDeckName("New Deck", decks), "northern_realms", sourceSets.leaders);
@@ -391,6 +447,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                   className="authentic-deck-builder__pool-item"
                   data-source-id={card.sourceId}
                   title={`${card.sourceId} · ${card.image}${addState.reason ? ` · ${addState.reason}` : ""}`}
+                  onContextMenu={(event) => openCardContextMenu(event, card.sourceId, "pool")}
                 >
                   <AuthenticCard card={fromCatalogCard(card)} size="md" dimmed={!addState.canAdd} onClick={addState.canAdd ? () => addCard(card.sourceId) : undefined} />
                   {count > 0 ? <span className="authentic-deck-builder__count">{count}/{limit}</span> : null}
@@ -499,7 +556,12 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               <div className="authentic-deck-builder__deck-cards">
                 {deckItems.length === 0 ? <p>(empty)</p> : null}
                 {deckItems.map(({ card, count }) => (
-                  <div key={card.sourceId} className="authentic-deck-builder__deck-card">
+                  <div
+                    key={card.sourceId}
+                    className="authentic-deck-builder__deck-card"
+                    data-source-id={card.sourceId}
+                    onContextMenu={(event) => openCardContextMenu(event, card.sourceId, "deck")}
+                  >
                     <span>{card.kind === "special" ? "·" : card.strength}</span>
                     <strong>{card.name}</strong>
                     <em>x{count}</em>
@@ -516,21 +578,39 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               </div>
             </section>
 
-            {sideDeckItems.length > 0 ? (
-              <section data-testid="authentic-deck-builder-side-deck">
-                <div className="authentic-deck-builder__label">side deck · linked replacements</div>
-                <div className="authentic-deck-builder__deck-cards">
-                  {sideDeckItems.map(({ card, count }) => (
-                    <div
-                      key={card.sourceId}
-                      className="authentic-deck-builder__deck-card"
-                      data-source-id={card.sourceId}
-                    >
-                      <span>{card.kind === "special" ? "·" : card.strength}</span>
-                      <strong>{card.name}</strong>
-                      <em>x{count}</em>
-                    </div>
-                  ))}
+            {generatedItems.length > 0 ? (
+              <section data-testid="authentic-deck-builder-generated">
+                <div className="authentic-deck-builder__label">generated cards</div>
+                <p className="authentic-deck-builder__generated-help">
+                  Automatically created by cards in your deck. Not manually added.
+                </p>
+                <div className="authentic-deck-builder__generated-grid">
+                  {generatedItems.map(({ card, count, generatedBy }) => {
+                    const generatorText = generatedBy.length > 0
+                      ? `generated by ${generatedBy.map((source) => source.name).join(", ")}`
+                      : "generated card";
+                    return (
+                      <div
+                        key={card.sourceId}
+                        className="authentic-deck-builder__generated-item"
+                        data-source-id={card.sourceId}
+                        data-testid="authentic-deck-builder-generated-item"
+                        title={`${card.sourceId} · ${generatorText}`}
+                        onContextMenu={(event) => openCardContextMenu(event, card.sourceId, "generated")}
+                      >
+                        <AuthenticCard
+                          card={fromCatalogCard(card)}
+                          size="sm"
+                          onClick={() => inspectCard(card.sourceId, "generated")}
+                        />
+                        <div className="authentic-deck-builder__generated-meta">
+                          <strong>{card.name}</strong>
+                          <em>x{count}</em>
+                          <span>{generatorText}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
             ) : null}
@@ -593,6 +673,211 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
           />
         </div>
       ) : null}
+      {contextMenu ? (() => {
+        const card = sourceSets.cards.find((entry) => entry.sourceId === contextMenu.sourceId);
+        if (!card) return null;
+        const actions = buildDeckBuilderCardActions({
+          deck: activeDeck,
+          card,
+          cards: sourceSets.cards,
+          blockedSources: blockedSources.cards,
+          origin: contextMenu.origin,
+        });
+        return (
+          <>
+            <div
+              className="authentic-deck-builder__context-overlay"
+              onClick={closeCardContextMenu}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                closeCardContextMenu();
+              }}
+            />
+            <div
+              className="authentic-deck-builder__context-menu"
+              role="menu"
+              aria-label={`Actions for ${card.name}`}
+              data-testid="authentic-deck-builder-context-menu"
+              style={{ left: contextMenu.x, top: contextMenu.y, width: CONTEXT_MENU_WIDTH }}
+            >
+              <div className="authentic-deck-builder__context-title">{card.name}</div>
+              <button
+                type="button"
+                role="menuitem"
+                className="authentic-button authentic-button--ghost authentic-deck-builder__context-action"
+                disabled={!actions.add.enabled}
+                title={actions.add.reason}
+                data-testid="authentic-deck-builder-context-add"
+                onClick={() => {
+                  if (!actions.add.enabled) return;
+                  addCard(card.sourceId);
+                  closeCardContextMenu();
+                }}
+              >
+                add{actions.add.enabled ? "" : ` · ${actions.add.reason ?? "disabled"}`}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className="authentic-button authentic-button--ghost authentic-deck-builder__context-action"
+                disabled={!actions.remove.enabled}
+                title={actions.remove.reason}
+                data-testid="authentic-deck-builder-context-remove"
+                onClick={() => {
+                  if (!actions.remove.enabled) return;
+                  removeCard(card.sourceId);
+                  closeCardContextMenu();
+                }}
+              >
+                remove{actions.remove.enabled ? "" : ` · ${actions.remove.reason ?? "disabled"}`}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className="authentic-button authentic-button--ghost authentic-deck-builder__context-action"
+                data-testid="authentic-deck-builder-context-inspect"
+                onClick={() => inspectCard(card.sourceId, contextMenu.origin)}
+              >
+                inspect
+              </button>
+            </div>
+          </>
+        );
+      })() : null}
+      {inspectTarget ? (() => {
+        const card = sourceSets.cards.find((entry) => entry.sourceId === inspectTarget.sourceId);
+        if (!card) return null;
+        const inspection = buildDeckBuilderCardInspection({
+          deck: activeDeck,
+          card,
+          cards: sourceSets.cards,
+          blockedSources: blockedSources.cards,
+          origin: inspectTarget.origin,
+        });
+        const cardAbilities = card.abilities
+          .filter((id) => id !== "none")
+          .map((id) => getAbilityDisplay(id));
+        const rowDisplays = card.rows.map((row) => getRowDisplay(row));
+        const factionDisplay = getFactionDisplay(card.faction);
+        const kindDisplay = getCardKindDisplay(card.kind);
+        const showStrength = card.kind !== "special";
+        const limitLabel = card.kind === "hero" ? 1 : inspection.limit;
+        return (
+          <div
+            className="authentic-deck-builder__modal authentic-deck-builder__modal--inspect"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="authentic-deck-builder-inspect-title"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                closeInspect();
+              }
+            }}
+          >
+            <div
+              className="authentic-deck-builder__inspect-box"
+              data-testid="authentic-deck-builder-inspect"
+            >
+              <div className="authentic-deck-builder__inspect-header">
+                <h2 id="authentic-deck-builder-inspect-title">{card.name}</h2>
+                <button
+                  type="button"
+                  className="authentic-button authentic-button--ghost"
+                  onClick={closeInspect}
+                  aria-label="Close"
+                  data-testid="authentic-deck-builder-inspect-close"
+                >
+                  close
+                </button>
+              </div>
+              <div className="authentic-deck-builder__inspect-body">
+                <div className="authentic-deck-builder__inspect-art">
+                  <AuthenticCard card={fromCatalogCard(card)} size="lg" />
+                </div>
+                <dl className="authentic-deck-builder__inspect-facts">
+                  <dt>Source ID</dt><dd data-testid="authentic-deck-builder-inspect-source-id">{card.sourceId}</dd>
+                  <dt>Faction</dt><dd>{factionDisplay.name}</dd>
+                  <dt>Kind</dt><dd>{kindDisplay.name}</dd>
+                  {showStrength ? (<><dt>Strength</dt><dd>{card.strength}</dd></>) : null}
+                  <dt>Rows</dt><dd>{rowDisplays.length === 0 ? "—" : rowDisplays.map((row) => row.name).join(", ")}</dd>
+                  <dt>Deck limit</dt><dd>{limitLabel}</dd>
+                  <dt>Image path</dt><dd>{card.image}</dd>
+                  {card.tags.length > 0 ? (<><dt>Tags</dt><dd>{card.tags.join(", ")}</dd></>) : null}
+                </dl>
+                <section className="authentic-deck-builder__inspect-section">
+                  <div className="authentic-deck-builder__label">Abilities</div>
+                  {cardAbilities.length === 0 ? (
+                    <p>None.</p>
+                  ) : (
+                    <ul className="authentic-deck-builder__inspect-abilities">
+                      {cardAbilities.map((ability) => (
+                        <li key={ability.id}>
+                          <strong>{ability.name}</strong>
+                          {ability.glyph ? <span aria-hidden="true"> {ability.glyph}</span> : null}
+                          <em> · {ability.status}</em>
+                          {ability.description ? <p>{ability.description}</p> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
+                {(inspection.linkedGenerated.length > 0 || inspection.generatedBy.length > 0) ? (
+                  <section className="authentic-deck-builder__inspect-section">
+                    <div className="authentic-deck-builder__label">Generated</div>
+                    {inspection.linkedGenerated.length > 0 ? (
+                      <p data-testid="authentic-deck-builder-inspect-linked">
+                        Generates: {inspection.linkedGenerated.map((entry) => entry.name).join(", ")}
+                      </p>
+                    ) : null}
+                    {inspection.generatedBy.length > 0 ? (
+                      <p data-testid="authentic-deck-builder-inspect-generated-by">
+                        Generated by: {inspection.generatedBy.map((entry) => entry.name).join(", ")}
+                      </p>
+                    ) : null}
+                  </section>
+                ) : null}
+                <section className="authentic-deck-builder__inspect-section">
+                  <div className="authentic-deck-builder__label">In Current Deck</div>
+                  <p>
+                    Main deck: {inspection.currentCount}
+                    {inspection.currentGeneratedCount > 0 ? ` · generated: ${inspection.currentGeneratedCount}` : ""}
+                  </p>
+                </section>
+              </div>
+              <div className="authentic-deck-builder__inspect-actions">
+                <button
+                  type="button"
+                  className="authentic-button authentic-button--secondary"
+                  disabled={!inspection.actions.add.enabled}
+                  title={inspection.actions.add.reason}
+                  data-testid="authentic-deck-builder-inspect-add"
+                  onClick={() => {
+                    if (!inspection.actions.add.enabled) return;
+                    addCard(card.sourceId);
+                    closeInspect();
+                  }}
+                >
+                  {inspection.actions.add.enabled ? "add" : `add · ${inspection.actions.add.reason ?? "disabled"}`}
+                </button>
+                <button
+                  type="button"
+                  className="authentic-button authentic-button--secondary"
+                  disabled={!inspection.actions.remove.enabled}
+                  title={inspection.actions.remove.reason}
+                  data-testid="authentic-deck-builder-inspect-remove"
+                  onClick={() => {
+                    if (!inspection.actions.remove.enabled) return;
+                    removeCard(card.sourceId);
+                    closeInspect();
+                  }}
+                >
+                  {inspection.actions.remove.enabled ? "remove" : `remove · ${inspection.actions.remove.reason ?? "disabled"}`}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })() : null}
       <Toast open={Boolean(toastMessage)} message={toastMessage ?? ""} onDismiss={() => setToastMessage(null)} />
     </main>
   );

@@ -17,11 +17,15 @@ import {
 
 import type {
   DeckBuilderAddState,
+  DeckBuilderCardActionAvailability,
+  DeckBuilderCardActionOrigin,
+  DeckBuilderCardActions,
   DeckBuilderCardPoolItem,
   DeckBuilderDeckCardItem,
   DeckBuilderFactionChangeResult,
   DeckBuilderFactionOption,
   DeckBuilderFilter,
+  DeckBuilderGeneratedCardItem,
   DeckBuilderStats,
   DeckBuilderValidationIssue,
   EditableDeckFaction,
@@ -663,5 +667,129 @@ export const validateDeckPreset = (
     rowCounts,
     issues,
     playable: !issues.some((issue) => issue.severity === "error"),
+  };
+};
+
+export const buildGeneratedCardItems = (
+  deck: CatalogDeckPreset,
+  cards: readonly CatalogCardSource[] = currentCatalogCards,
+): readonly DeckBuilderGeneratedCardItem[] => {
+  const byId = catalogCardById(cards);
+  const requirements = computeLinkedSideDeckRequirements(deck, cards);
+  const generatorsBySource = new Map<string, CatalogCardSource[]>();
+  deck.mainDeck.forEach((entry) => {
+    if (!Number.isInteger(entry.count) || entry.count <= 0) return;
+    const card = byId.get(entry.sourceId);
+    if (!card || !card.linkedSourceIds || card.linkedSourceIds.length === 0) return;
+    card.linkedSourceIds.forEach((linkedId) => {
+      const linkedCard = byId.get(linkedId);
+      if (!linkedCard || !isSideDeckOnlyCard(linkedCard)) return;
+      const list = generatorsBySource.get(linkedId) ?? [];
+      if (!list.some((existing) => existing.sourceId === card.sourceId)) {
+        list.push(card);
+        generatorsBySource.set(linkedId, list);
+      }
+    });
+  });
+  const items: DeckBuilderGeneratedCardItem[] = [];
+  requirements.forEach((entry) => {
+    const card = byId.get(entry.sourceId);
+    if (!card) return;
+    const generators = (generatorsBySource.get(entry.sourceId) ?? [])
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name) || a.sourceId.localeCompare(b.sourceId));
+    items.push({ card, count: entry.count, generatedBy: generators });
+  });
+  return items;
+};
+
+interface CardActionsInput {
+  readonly deck: CatalogDeckPreset;
+  readonly card: CatalogCardSource;
+  readonly cards?: readonly CatalogCardSource[];
+  readonly blockedSources?: ReadonlyMap<string, DeckBuilderBlockedSource>;
+  readonly origin: DeckBuilderCardActionOrigin;
+}
+
+const disabled = (
+  reasonCode: string,
+  reason: string,
+): DeckBuilderCardActionAvailability => ({ enabled: false, reasonCode, reason });
+
+const enabledAction: DeckBuilderCardActionAvailability = { enabled: true };
+
+export const buildDeckBuilderCardActions = ({
+  deck,
+  card,
+  cards = currentCatalogCards,
+  blockedSources = new Map(),
+  origin,
+}: CardActionsInput): DeckBuilderCardActions => {
+  const addState = getDeckBuilderAddState(deck, card.sourceId, cards, blockedSources);
+  const currentCount = deck.mainDeck.find((entry) => entry.sourceId === card.sourceId)?.count ?? 0;
+
+  const add: DeckBuilderCardActionAvailability =
+    origin === "generated"
+      ? disabled("generated_only", "Generated card; not directly addable.")
+      : addState.canAdd
+        ? enabledAction
+        : disabled(addState.reasonCode ?? "cannot_add", addState.reason ?? "Cannot add to deck.");
+
+  const remove: DeckBuilderCardActionAvailability =
+    origin === "generated"
+      ? disabled("generated_only", "Generated card; remove its source instead.")
+      : currentCount > 0
+        ? enabledAction
+        : disabled("not_in_deck", "Not in main deck.");
+
+  return { add, remove, inspect: enabledAction };
+};
+
+export interface DeckBuilderCardInspection {
+  readonly card: CatalogCardSource;
+  readonly origin: DeckBuilderCardActionOrigin;
+  readonly currentCount: number;
+  readonly currentGeneratedCount: number;
+  readonly limit: number;
+  readonly linkedGenerated: readonly CatalogCardSource[];
+  readonly generatedBy: readonly CatalogCardSource[];
+  readonly actions: DeckBuilderCardActions;
+}
+
+interface CardInspectionInput {
+  readonly deck: CatalogDeckPreset;
+  readonly card: CatalogCardSource;
+  readonly cards?: readonly CatalogCardSource[];
+  readonly blockedSources?: ReadonlyMap<string, DeckBuilderBlockedSource>;
+  readonly origin: DeckBuilderCardActionOrigin;
+}
+
+export const buildDeckBuilderCardInspection = ({
+  deck,
+  card,
+  cards = currentCatalogCards,
+  blockedSources = new Map(),
+  origin,
+}: CardInspectionInput): DeckBuilderCardInspection => {
+  const byId = catalogCardById(cards);
+  const linkedGenerated = (card.linkedSourceIds ?? [])
+    .map((linkedId) => byId.get(linkedId))
+    .filter((entry): entry is CatalogCardSource => Boolean(entry) && isSideDeckOnlyCard(entry as CatalogCardSource));
+  const generatedItems = buildGeneratedCardItems(deck, cards);
+  const generatedItem = generatedItems.find((entry) => entry.card.sourceId === card.sourceId);
+  const generatedBy = generatedItem ? generatedItem.generatedBy : [];
+  const currentCount = deck.mainDeck.find((entry) => entry.sourceId === card.sourceId)?.count ?? 0;
+  const currentGeneratedCount = generatedItem?.count ?? 0;
+  const actions = buildDeckBuilderCardActions({ deck, card, cards, blockedSources, origin });
+  const limit = getDeckBuilderCardLimit(card);
+  return {
+    card,
+    origin,
+    currentCount,
+    currentGeneratedCount,
+    limit,
+    linkedGenerated,
+    generatedBy,
+    actions,
   };
 };

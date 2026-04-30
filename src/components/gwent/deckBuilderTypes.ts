@@ -40,6 +40,26 @@ export interface DeckBuilderDeckCardItem {
   readonly count: number;
 }
 
+export interface DeckBuilderGeneratedCardItem {
+  readonly card: CatalogCardSource;
+  readonly count: number;
+  readonly generatedBy: readonly CatalogCardSource[];
+}
+
+export type DeckBuilderCardActionOrigin = "pool" | "deck" | "generated";
+
+export interface DeckBuilderCardActionAvailability {
+  readonly enabled: boolean;
+  readonly reasonCode?: string;
+  readonly reason?: string;
+}
+
+export interface DeckBuilderCardActions {
+  readonly add: DeckBuilderCardActionAvailability;
+  readonly remove: DeckBuilderCardActionAvailability;
+  readonly inspect: DeckBuilderCardActionAvailability;
+}
+
 export interface DeckBuilderImportResult {
   readonly ok: boolean;
   readonly preset?: CatalogDeckPreset;

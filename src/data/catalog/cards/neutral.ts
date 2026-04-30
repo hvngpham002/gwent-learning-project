@@ -127,7 +127,7 @@ export const neutralCatalogCards = [
     strength: 8,
     rows: ["close"],
     abilities: ["none"],
-    tags: ["non_hero"],
+    tags: ["non_hero", "side_deck_only"],
     deckLimit: 1,
     image: "/images/neutral/bovine_defense_force.png",
   },
