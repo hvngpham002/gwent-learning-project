@@ -29,4 +29,31 @@ describe("legacy Muster card grouping", () => {
       "darkness-deck",
     ]);
   });
+
+  it("never returns base Gaunter when Darkness is played, even with multiple base copies in hand and deck", () => {
+    const baseInHand = musterUnit("gaunter-hand", "Gaunter O'Dimm");
+    const baseInDeck = musterUnit("gaunter-deck", "Gaunter O'Dimm");
+    const darknessPlayed = musterUnit("darkness-played", "Gaunter O'Dimm: Darkness");
+    const otherDarkness = musterUnit("other-darkness", "Gaunter O'Dimm: Darkness");
+
+    const targets = findMusterCards(darknessPlayed, [baseInHand, otherDarkness], [baseInDeck]);
+
+    expect(targets.map((card) => card.id)).toEqual(["other-darkness"]);
+    expect(targets.find((card) => card.name === "Gaunter O'Dimm")).toBeUndefined();
+  });
+
+  it("base Gaunter still pulls all Darkness copies across hand and deck", () => {
+    const gaunter = musterUnit("gaunter", "Gaunter O'Dimm");
+    const darknessHandA = musterUnit("darkness-hand-a", "Gaunter O'Dimm: Darkness");
+    const darknessHandB = musterUnit("darkness-hand-b", "Gaunter O'Dimm: Darkness");
+    const darknessDeck = musterUnit("darkness-deck", "Gaunter O'Dimm: Darkness");
+
+    const targets = findMusterCards(gaunter, [darknessHandA, darknessHandB], [darknessDeck]);
+
+    expect(targets.map((card) => card.id).sort()).toEqual([
+      "darkness-deck",
+      "darkness-hand-a",
+      "darkness-hand-b",
+    ]);
+  });
 });
