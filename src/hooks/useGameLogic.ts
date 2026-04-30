@@ -14,54 +14,19 @@ export const findMusterCards = (
   hand: Card[],
   deck: Card[]
 ): UnitCard[] => {
-  const musterCards: UnitCard[] = [];
-  const cardName = card.name;
+  const groupKey = getMusterGroupKey(card.name);
+  const isUnitCard = (candidate: Card): candidate is UnitCard =>
+    candidate.type === CardType.UNIT || candidate.type === CardType.HERO;
 
-  // If this is a variant card (longer name that contains the base card name)
-  const baseCardName = findBaseCardName(cardName, [...hand, ...deck]);
-
-  if (cardName === baseCardName) {
-    // Base card can find all variants
-    const handMatches = hand.filter(c =>
-      c.id !== card.id &&
-      c.name.startsWith(baseCardName)
-    ) as UnitCard[];
-
-    const deckMatches = deck.filter(c =>
-      c.name.startsWith(baseCardName)
-    ) as UnitCard[];
-
-    musterCards.push(...handMatches, ...deckMatches);
-  } else {
-    // Variant cards can only find exact matches
-    const handMatches = hand.filter(c =>
-      c.id !== card.id &&
-      c.name === cardName
-    ) as UnitCard[];
-
-    const deckMatches = deck.filter(c =>
-      c.name === cardName
-    ) as UnitCard[];
-
-    musterCards.push(...handMatches, ...deckMatches);
-  }
-
-  return musterCards;
-};
-
-// Helper function to find the base card name
-const findBaseCardName = (cardName: string, allCards: Card[]): string => {
-  // Sort all card names by length (shortest first)
-  const allNames = [...new Set(allCards.map(c => c.name))].sort((a, b) => a.length - b.length);
-
-  // Find the shortest name that is contained in the current card name
-  const baseName = allNames.find(name =>
-    cardName.startsWith(name) &&
-    allCards.some(c => c.name === name && (c as UnitCard).ability === CardAbility.MUSTER)
+  return [...hand, ...deck].filter((candidate): candidate is UnitCard =>
+    isUnitCard(candidate) &&
+    candidate.id !== card.id &&
+    candidate.ability === CardAbility.MUSTER &&
+    getMusterGroupKey(candidate.name) === groupKey,
   );
-
-  return baseName || cardName;
 };
+
+const getMusterGroupKey = (cardName: string): string => cardName.split(':')[0].trim().toLocaleLowerCase();
 
 export const handleDecoyAction = (
   gameState: GameState,
@@ -562,4 +527,3 @@ export const playCard = ({
 
   return logStateAndReturn(gameState);
 };
-

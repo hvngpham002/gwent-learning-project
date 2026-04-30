@@ -370,6 +370,29 @@ describe("core ability resolver", () => {
     assertNoDuplicateZones(result.state);
   });
 
+  it("resolves Gaunter O'Dimm Darkness Muster back to Gaunter and other Darkness copies", () => {
+    const state = createState("muster-darkness-reverse");
+    const gaunter = findCard(state, "neutral.gaunter-odimm");
+    const [darknessPlayed, darknessDeck] = findCards(state, "neutral.gaunter-odimm-darkness");
+    preparePlayingTurn(state);
+    putInHand(state, "seat_a", [darknessPlayed]);
+    putInDeck(state, "seat_a", [gaunter, darknessDeck]);
+
+    const result = execute(state, {
+      type: "PlayCard",
+      seatId: "seat_a",
+      cardId: darknessPlayed,
+      target: { kind: "board_row", side: "own", seatId: "seat_a", row: "ranged" },
+    });
+
+    expect(result.state.seats.seat_a.board.ranged.units).toEqual(expect.arrayContaining([darknessPlayed, darknessDeck]));
+    expect(result.state.seats.seat_a.board.siege.units).toContain(gaunter);
+    expect(result.state.seats.seat_a.deck).not.toEqual(expect.arrayContaining([gaunter, darknessDeck]));
+    expect(result.events).toContainEqual(expect.objectContaining({ type: "ability_resolved", abilityId: "muster", outcome: "played_linked" }));
+    expect(result.events).toContainEqual(expect.objectContaining({ type: "deck_shuffled", seatId: "seat_a", reason: "muster" }));
+    assertNoDuplicateZones(result.state);
+  });
+
   it("resolves linked Monster starter Muster groups from hand and deck", () => {
     const state = createState("monster-starter-muster", officialMonstersStarterDeckPreset);
     const [arachasPlayed, arachasDeckA, arachasDeckB] = findCards(state, "monsters.arachas");

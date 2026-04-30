@@ -207,7 +207,7 @@ export const neutralCatalogCards = [
     tags: ["non_hero"],
     deckLimit: 3,
     image: "/images/neutral/gaunter_odimm_darkness.png",
-    linkedSourceIds: ["neutral.gaunter-odimm"],
+    linkedSourceIds: ["neutral.gaunter-odimm", "neutral.gaunter-odimm-darkness"],
     description: "Muster: Find any cards with the same name in your deck and play them instantly. ",
   },
   {
