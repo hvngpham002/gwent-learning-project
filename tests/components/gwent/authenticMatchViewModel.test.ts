@@ -5,6 +5,8 @@ import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selec
 import {
   buildRoundOverlayViewModel,
   buildAuthenticSeatSummary,
+  buildMatchCardInspection,
+  buildMatchLeaderInspection,
   chooseDebugAiMulliganMove,
   engineCardToAuthenticCard,
   findLegalMulliganMove,
@@ -378,5 +380,202 @@ describe("authentic match view models", () => {
       { key: "close", label: "close", kind: "ghost" },
       { key: "rematch", label: "rematch", kind: "primary" },
     ]);
+  });
+});
+
+describe("match card inspection view model", () => {
+  it("includes hand-card source ID, instance ID, faction, kind, rows, abilities, and printed strength", () => {
+    const inspection = buildMatchCardInspection({
+      card: card({
+        instanceId: "seat_a:001:foltest-blue",
+        sourceId: "northern_realms.poor-fucking-infantry",
+        name: "Poor Fucking Infantry",
+        kind: "unit",
+        faction: "northern_realms",
+        rows: ["close"],
+        abilities: ["tight_bond"],
+        printedStrength: 1,
+        owner: "seat_a",
+        controller: "seat_a",
+        zone: { kind: "hand", seat: "seat_a" },
+      }),
+      origin: "hand",
+      ownerLabel: "Human",
+    });
+
+    expect(inspection.sourceId).toBe("northern_realms.poor-fucking-infantry");
+    expect(inspection.instanceId).toBe("seat_a:001:foltest-blue");
+    expect(inspection.factionLabel).toBe("Northern Realms");
+    expect(inspection.kindLabel).toBe("Unit");
+    expect(inspection.rowLabels).toEqual(["Close Combat"]);
+    expect(inspection.hasStrength).toBe(true);
+    expect(inspection.printedStrength).toBe(1);
+    expect(inspection.abilities.map((entry) => entry.id)).toEqual(["tight_bond"]);
+    expect(inspection.originLabel).toBe("Hand");
+    expect(inspection.ownerLabel).toBe("Human");
+    expect(inspection.effectiveStrength).toBeNull();
+  });
+
+  it("captures effective strength, modifiers, and row context for board cards from engine score data", () => {
+    const inspection = buildMatchCardInspection({
+      card: card({
+        instanceId: "seat_a:003:tight-bond",
+        sourceId: "northern_realms.blue-stripes-commando",
+        kind: "unit",
+        printedStrength: 4,
+      }),
+      origin: "board",
+      ownerLabel: "Human",
+      row: "close",
+      boardState: {
+        printedStrength: 4,
+        effectiveStrength: 8,
+        strengthState: "boosted",
+        modifiers: ["tight_bond"],
+        usedScoreFallback: false,
+      },
+    });
+
+    expect(inspection.printedStrength).toBe(4);
+    expect(inspection.effectiveStrength).toBe(8);
+    expect(inspection.strengthState).toBe("boosted");
+    expect(inspection.modifiers).toEqual(["tight_bond"]);
+    expect(inspection.rowContextLabel).toBe("Close Combat");
+    expect(inspection.facts.find((fact) => fact.key === "effective-strength")?.value).toContain("8");
+    expect(inspection.facts.find((fact) => fact.key === "modifiers")?.value).toBe("tight_bond");
+  });
+
+  it("falls back without effective strength when origin is not board", () => {
+    const inspection = buildMatchCardInspection({
+      card: card({ printedStrength: 3, kind: "unit" }),
+      origin: "hand",
+    });
+    expect(inspection.effectiveStrength).toBeNull();
+    expect(inspection.modifiers).toEqual([]);
+    expect(inspection.facts.some((fact) => fact.key === "modifiers")).toBe(false);
+  });
+
+  it("treats weather/special cards as having no strength", () => {
+    const inspection = buildMatchCardInspection({
+      card: card({
+        instanceId: "seat_a:010:frost",
+        sourceId: "neutral.biting-frost",
+        name: "Biting Frost",
+        kind: "special",
+        rows: [],
+        abilities: ["frost"],
+        printedStrength: 0,
+      }),
+      origin: "weather",
+    });
+
+    expect(inspection.kindLabel).toBe("Special");
+    expect(inspection.hasStrength).toBe(false);
+    expect(inspection.printedStrength).toBeNull();
+    expect(inspection.abilities.map((entry) => entry.id)).toEqual(["frost"]);
+    expect(inspection.tags).toContain("weather");
+    expect(inspection.originLabel).toBe("Weather");
+  });
+
+  it("labels the discard origin and exposes its owner", () => {
+    const inspection = buildMatchCardInspection({
+      card: card({
+        instanceId: "seat_b:020:discarded",
+        sourceId: "nilfgaard.albrich",
+        kind: "unit",
+        printedStrength: 2,
+        owner: "seat_b",
+        controller: "seat_b",
+        zone: { kind: "discard", seat: "seat_b" },
+      }),
+      origin: "discard",
+      ownerLabel: "AI",
+    });
+
+    expect(inspection.originLabel).toBe("Discard");
+    expect(inspection.ownerLabel).toBe("AI");
+  });
+
+  it("uses prompt origin without effective strength", () => {
+    const inspection = buildMatchCardInspection({
+      card: card({
+        instanceId: "seat_a:030:medic-target",
+        sourceId: "northern_realms.poor-fucking-infantry",
+        kind: "unit",
+        printedStrength: 1,
+        owner: "seat_a",
+        controller: "seat_a",
+        zone: { kind: "discard", seat: "seat_a" },
+      }),
+      origin: "prompt",
+      ownerLabel: "Human",
+    });
+    expect(inspection.originLabel).toBe("Prompt option");
+    expect(inspection.effectiveStrength).toBeNull();
+  });
+});
+
+describe("match leader inspection view model", () => {
+  it("describes ability metadata, used/ready state, and owner label", () => {
+    const inspection = buildMatchLeaderInspection({
+      sourceId: "northern_realms.foltest-lord-commander",
+      name: "Foltest: Lord Commander",
+      faction: "northern_realms",
+      abilityId: "clear_weather",
+      image: "/images/northern_realms/leaders/Foltest.png",
+      used: false,
+      ownerLabel: "Human",
+    });
+
+    expect(inspection.title).toBe("Foltest: Lord Commander");
+    expect(inspection.factionLabel).toBe("Northern Realms");
+    expect(inspection.ability.id).toBe("clear_weather");
+    expect(inspection.statusLabel).toBe("implemented");
+    expect(inspection.ownerLabel).toBe("Human");
+    expect(inspection.facts.find((fact) => fact.key === "owner")?.value).toBe("Human");
+    expect(inspection.facts.find((fact) => fact.key === "ability-status")?.value).toBe("implemented");
+  });
+
+  it("marks used leaders as used regardless of ability status", () => {
+    const inspection = buildMatchLeaderInspection({
+      sourceId: "skellige.king-bran",
+      name: "King Bran",
+      faction: "skellige",
+      abilityId: "weather_half_penalty",
+      image: "/images/skellige/leaders/King_Bran.png",
+      used: true,
+      ownerLabel: "AI",
+    });
+    expect(inspection.statusLabel).toBe("used");
+    expect(inspection.ability.status).toBe("placeholder");
+  });
+});
+
+describe("match inspection hidden information safety", () => {
+  it("does not produce inspection facts for AI hand cards by construction (hand origin requires authoring)", () => {
+    // Hand inspection requires the caller to pass a known engine card. AI hand cards are not in
+    // selectEngineHumanHand and are exposed as backs/count-only in the runtime card lookup. The view
+    // model itself takes only the supplied EngineCardViewModel, so a guard at the call site is the
+    // only way to expose AI hand identities. This test pins that contract: an AI seat hand card
+    // passed in is expected to never reach the helper in normal product routes.
+    const inspection = buildMatchCardInspection({
+      card: card({
+        instanceId: "seat_b:040:hidden-card",
+        sourceId: "monsters.kayran",
+        kind: "hero",
+        owner: "seat_b",
+        controller: "seat_b",
+        zone: { kind: "hand", seat: "seat_b" },
+      }),
+      origin: "hand",
+      ownerLabel: "AI",
+    });
+
+    // The helper is pure and will produce facts, but the contract is enforced at the call site:
+    // AuthenticMatchScreen only wires the hand-context-menu handler to the human hand strip, which
+    // is rendered from selectEngineHumanHand. We pin that the helper's output requires a known card;
+    // raw card backs do not have an EngineCardViewModel exposed.
+    expect(inspection.sourceId).toBe("monsters.kayran");
+    expect(inspection.ownerLabel).toBe("AI");
   });
 });

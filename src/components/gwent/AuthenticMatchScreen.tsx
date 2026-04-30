@@ -62,10 +62,13 @@ import { StartMatchModal } from "./modal/StartMatchModal";
 import {
   buildAuthenticSeatSummary,
   buildGameEndNavigationActions,
+  buildMatchCardInspection,
+  buildMatchLeaderInspection,
   buildMedicPromptOptions,
   buildRoundOverlayViewModel,
   buildVisibleCardLookup,
   chooseDebugAiMulliganMove,
+  getBoardCardState,
   getBoardCardTargetsById,
   getBoardRowTargetsByKey,
   groupDiscardCards,
@@ -75,10 +78,50 @@ import {
   type AuthenticBoardRowViewModel,
   type AuthenticRuntimeCardViewModel,
   type AuthenticSeatSummaryViewModel,
+  type MatchCardInspectionOrigin,
 } from "./matchViewModel";
 import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 import { getAbilityDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
 import "./authentic-match.css";
+
+const MATCH_CONTEXT_MENU_WIDTH = 200;
+const MATCH_CONTEXT_MENU_HEIGHT = 92;
+
+const clampMatchMenuPosition = (x: number, y: number) => {
+  if (typeof window === "undefined") {
+    return { x, y };
+  }
+  const maxX = Math.max(8, window.innerWidth - MATCH_CONTEXT_MENU_WIDTH - 8);
+  const maxY = Math.max(8, window.innerHeight - MATCH_CONTEXT_MENU_HEIGHT - 8);
+  return {
+    x: Math.min(Math.max(8, x), maxX),
+    y: Math.min(Math.max(8, y), maxY),
+  };
+};
+
+interface MatchCardContextTarget {
+  readonly cardInstanceId: CardInstanceId;
+  readonly origin: MatchCardInspectionOrigin;
+  readonly ownerLabel?: string;
+  readonly row?: import("@/game/catalog").CatalogRow | null;
+  readonly seatId?: SeatId;
+}
+
+interface MatchCardContextMenuState extends MatchCardContextTarget {
+  readonly x: number;
+  readonly y: number;
+}
+
+type MatchInspectTarget = MatchCardContextTarget;
+
+interface MatchLeaderContextTarget {
+  readonly seatId: SeatId;
+}
+
+interface MatchLeaderContextMenuState extends MatchLeaderContextTarget {
+  readonly x: number;
+  readonly y: number;
+}
 
 const SEAT_LABELS: Record<SeatId, string> = {
   seat_a: "Human",
@@ -135,18 +178,25 @@ const ScoreCard: React.FC<{
   leaderAbility: string;
   leaderUsed: boolean;
   active: boolean;
-}> = ({ seat, leaderName, leaderImage, leaderAbility, leaderUsed, active }) => (
+  onLeaderContextMenu: (event: React.MouseEvent) => void;
+}> = ({ seat, leaderName, leaderImage, leaderAbility, leaderUsed, active, onLeaderContextMenu }) => (
   <article className={`authentic-score-card${active ? " is-active" : ""}`} data-testid={`authentic-seat-${seat.role}`}>
-    <AuthenticLeaderCard
-      leader={{
-        sourceId: `${seat.faction}:${leaderName}`,
-        name: leaderName,
-        faction: seat.faction,
-        abilityName: leaderAbility,
-        image: leaderImage,
-      }}
-      size="match"
-    />
+    <div
+      className="authentic-score-card__leader"
+      data-seat={seat.seatId}
+      onContextMenu={onLeaderContextMenu}
+    >
+      <AuthenticLeaderCard
+        leader={{
+          sourceId: `${seat.faction}:${leaderName}`,
+          name: leaderName,
+          faction: seat.faction,
+          abilityName: leaderAbility,
+          image: leaderImage,
+        }}
+        size="match"
+      />
+    </div>
     <div className="authentic-score-card__body">
       <div>
         <h2>{seat.label}</h2>
@@ -189,13 +239,24 @@ const PilePair: React.FC<{
   </div>
 );
 
-const WeatherSummary: React.FC<{ cards: readonly AuthenticRuntimeCardViewModel[] }> = ({ cards }) => (
+const WeatherSummary: React.FC<{
+  cards: readonly AuthenticRuntimeCardViewModel[];
+  onCardContextMenu: (event: React.MouseEvent, cardId: CardInstanceId) => void;
+}> = ({ cards, onCardContextMenu }) => (
   <section className="authentic-panel authentic-weather">
     <h2>Weather</h2>
     <div className="authentic-weather__cards">
       {cards.length === 0 ? <span>Clear skies</span> : null}
       {cards.map((card) => (
-        <AuthenticCard key={card.key} card={card.card} size="xs" />
+        <div
+          key={card.key}
+          className="authentic-weather__card"
+          data-source-id={card.card.sourceId}
+          data-instance-id={card.key}
+          onContextMenu={(event) => onCardContextMenu(event, card.key)}
+        >
+          <AuthenticCard card={card.card} size="xs" />
+        </div>
       ))}
     </div>
   </section>
@@ -207,7 +268,8 @@ const BoardRow: React.FC<{
   legalCardTargets: ReadonlyMap<CardInstanceId, { moveId: string }>;
   motionByCardId: ReadonlyMap<CardInstanceId, string>;
   onTargetClick: (moveId: string) => void;
-}> = ({ row, legalTargetMoveId, legalCardTargets, motionByCardId, onTargetClick }) => {
+  onCardContextMenu: (event: React.MouseEvent, target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow }) => void;
+}> = ({ row, legalTargetMoveId, legalCardTargets, motionByCardId, onTargetClick, onCardContextMenu }) => {
   const renderBoardCard = (unit: AuthenticBoardRuntimeCardViewModel) => {
     const cardTarget = legalCardTargets.get(unit.key);
     const motion = motionByCardId.get(unit.key);
@@ -217,6 +279,12 @@ const BoardRow: React.FC<{
     const strengthTitle = unit.boardState.modifiers.join(", ") || "No active modifier";
     const content = <AuthenticCard card={unit.card} size="xs" />;
 
+    const handleContextMenu = (event: React.MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onCardContextMenu(event, { cardId: unit.key, origin: "board", seatId: row.seatId, row: row.row });
+    };
+
     if (!cardTarget) {
       return (
         <div
@@ -225,7 +293,10 @@ const BoardRow: React.FC<{
           data-testid="authentic-effective-strength"
           data-strength-state={unit.boardState.strengthState}
           data-card-motion={motion}
+          data-source-id={unit.card.sourceId}
+          data-instance-id={unit.key}
           title={strengthTitle}
+          onContextMenu={handleContextMenu}
         >
           {content}
         </div>
@@ -240,16 +311,28 @@ const BoardRow: React.FC<{
         data-testid="authentic-board-card-target"
         data-strength-state={unit.boardState.strengthState}
         data-card-motion={motion}
+        data-source-id={unit.card.sourceId}
+        data-instance-id={unit.key}
         title={strengthTitle}
         onClick={(event) => {
           event.stopPropagation();
           onTargetClick(cardTarget.moveId);
         }}
+        onContextMenu={handleContextMenu}
       >
         {content}
       </button>
     );
   };
+
+  const horn = row.horn;
+  const handleHornContextMenu = horn
+    ? (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onCardContextMenu(event, { cardId: horn.key, origin: "board", seatId: row.seatId, row: row.row });
+      }
+    : undefined;
 
   const content = (
     <>
@@ -258,8 +341,18 @@ const BoardRow: React.FC<{
         <strong>{row.rowName}</strong>
       </div>
       <div className="authentic-board-row__cards">
-        {row.horn ? <AuthenticCard key={row.horn.key} card={row.horn.card} size="xs" /> : null}
-        {row.units.length === 0 && !row.horn ? <span className="authentic-board-row__empty">empty</span> : null}
+        {horn ? (
+          <div
+            key={horn.key}
+            className="authentic-board-row__horn"
+            data-source-id={horn.card.sourceId}
+            data-instance-id={horn.key}
+            onContextMenu={handleHornContextMenu}
+          >
+            <AuthenticCard card={horn.card} size="xs" />
+          </div>
+        ) : null}
+        {row.units.length === 0 && !horn ? <span className="authentic-board-row__empty">empty</span> : null}
         {row.units.map(renderBoardCard)}
       </div>
       <div className="authentic-board-row__score">{row.score}</div>
@@ -288,7 +381,11 @@ const BoardTable: React.FC<{
   legalCardTargets: ReadonlyMap<CardInstanceId, { moveId: string }>;
   motionByCardId: ReadonlyMap<CardInstanceId, string>;
   onTargetClick: (moveId: string) => void;
-}> = ({ rows, legalTargets, legalCardTargets, motionByCardId, onTargetClick }) => (
+  onCardContextMenu: (
+    event: React.MouseEvent,
+    target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow },
+  ) => void;
+}> = ({ rows, legalTargets, legalCardTargets, motionByCardId, onTargetClick, onCardContextMenu }) => (
   <section className="authentic-board-table" aria-label="Authentic board">
     {rows.map((row, index) => (
       <React.Fragment key={row.key}>
@@ -299,6 +396,7 @@ const BoardTable: React.FC<{
           legalCardTargets={legalCardTargets}
           motionByCardId={motionByCardId}
           onTargetClick={onTargetClick}
+          onCardContextMenu={onCardContextMenu}
         />
       </React.Fragment>
     ))}
@@ -311,7 +409,8 @@ const HandStrip: React.FC<{
   playableCardIds: ReadonlySet<CardInstanceId>;
   disabledByCardId: ReadonlyMap<CardInstanceId, string | null>;
   onCardClick: (cardId: CardInstanceId) => void;
-}> = ({ cards, selectedCardId, playableCardIds, disabledByCardId, onCardClick }) => (
+  onCardContextMenu: (event: React.MouseEvent, cardId: CardInstanceId) => void;
+}> = ({ cards, selectedCardId, playableCardIds, disabledByCardId, onCardClick, onCardContextMenu }) => (
   <section className="authentic-hand" data-testid="authentic-human-hand">
     <div className="authentic-hand__label">hand · {cards.length}</div>
     <div className="authentic-hand__cards">
@@ -325,6 +424,9 @@ const HandStrip: React.FC<{
               disabledReason ? " is-disabled" : ""
             }`}
             title={disabledReason ?? entry.card.name}
+            data-source-id={entry.card.sourceId}
+            data-instance-id={entry.key}
+            onContextMenu={(event) => onCardContextMenu(event, entry.key)}
           >
             <AuthenticCard
               card={entry.card}
@@ -341,7 +443,10 @@ const HandStrip: React.FC<{
   </section>
 );
 
-const InspectorPanel: React.FC<{ selected: AuthenticRuntimeCardViewModel | null }> = ({ selected }) => (
+const InspectorPanel: React.FC<{
+  selected: AuthenticRuntimeCardViewModel | null;
+  onInspectSelected?: () => void;
+}> = ({ selected, onInspectSelected }) => (
   <section className="authentic-panel authentic-inspector" data-testid="authentic-selected-card-inspector">
     <h2>Inspector</h2>
     {selected ? (
@@ -352,6 +457,16 @@ const InspectorPanel: React.FC<{ selected: AuthenticRuntimeCardViewModel | null 
           {selected.card.kind} · strength {selected.card.strength} · {abilitySummary(selected)}
         </p>
         {selected.card.description ? <p>{selected.card.description}</p> : null}
+        {onInspectSelected ? (
+          <button
+            type="button"
+            className="authentic-button authentic-button--ghost authentic-button--compact"
+            data-testid="authentic-inspector-inspect"
+            onClick={onInspectSelected}
+          >
+            inspect details
+          </button>
+        ) : null}
       </>
     ) : (
       <p>Select a playable card to inspect legal actions.</p>
@@ -435,7 +550,8 @@ const PromptPanel: React.FC<{
   options: readonly { moveId: string; label: string }[];
   medicOptions: readonly ReturnType<typeof buildMedicPromptOptions>[number][];
   onChoose: (moveId: string) => void;
-}> = ({ promptTitle, ownerLabel, sourceLabel, isAiPrompt, options, medicOptions, onChoose }) => (
+  onCardContextMenu: (event: React.MouseEvent, cardId: CardInstanceId) => void;
+}> = ({ promptTitle, ownerLabel, sourceLabel, isAiPrompt, options, medicOptions, onChoose, onCardContextMenu }) => (
   <section
     className={`authentic-panel authentic-prompt${medicOptions.length > 0 ? " authentic-prompt--medic" : ""}`}
     data-testid="authentic-prompt"
@@ -455,7 +571,13 @@ const PromptPanel: React.FC<{
                 type="button"
                 className="authentic-button authentic-button--tile authentic-medic-option"
                 data-testid="authentic-medic-option"
+                data-source-id={option.card?.card.sourceId}
+                data-instance-id={option.card?.key}
                 onClick={() => onChoose(option.moveId)}
+                onContextMenu={(event) => {
+                  if (!option.card) return;
+                  onCardContextMenu(event, option.card.key);
+                }}
               >
                 {option.card ? <AuthenticCard card={option.card.card} size="xs" /> : null}
                 <span>
@@ -485,7 +607,8 @@ const DiscardBrowser: React.FC<{
   count: number;
   groups: ReturnType<typeof groupDiscardCards>;
   onClose: () => void;
-}> = ({ ownerLabel, count, groups, onClose }) => (
+  onCardContextMenu: (event: React.MouseEvent, cardId: CardInstanceId) => void;
+}> = ({ ownerLabel, count, groups, onClose, onCardContextMenu }) => (
   <div className="authentic-modal" data-testid="authentic-discard-browser" role="dialog" aria-modal="true" aria-label={`${ownerLabel} discard pile`}>
     <section className="authentic-discard-browser">
       <header>
@@ -510,7 +633,15 @@ const DiscardBrowser: React.FC<{
           <h3>{group.label}</h3>
           <div>
             {group.cards.map((entry) => (
-              <AuthenticCard key={entry.key} card={entry.card} size="md" testId="authentic-discard-card" />
+              <div
+                key={entry.key}
+                className="authentic-discard-card"
+                data-source-id={entry.card.sourceId}
+                data-instance-id={entry.key}
+                onContextMenu={(event) => onCardContextMenu(event, entry.key)}
+              >
+                <AuthenticCard card={entry.card} size="md" testId="authentic-discard-card" />
+              </div>
             ))}
           </div>
         </section>
@@ -824,6 +955,10 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const [discardOpenSeat, setDiscardOpenSeat] = useState<SeatId | null>(null);
   const [dismissedRoundOverlayKey, setDismissedRoundOverlayKey] = useState<string | null>(null);
   const [pendingSetupConfirmation, setPendingSetupConfirmation] = useState(false);
+  const [cardContextMenu, setCardContextMenu] = useState<MatchCardContextMenuState | null>(null);
+  const [cardInspectTarget, setCardInspectTarget] = useState<MatchInspectTarget | null>(null);
+  const [leaderContextMenu, setLeaderContextMenu] = useState<MatchLeaderContextMenuState | null>(null);
+  const [leaderInspectSeat, setLeaderInspectSeat] = useState<SeatId | null>(null);
   const [mulliganExitAnimation, setMulliganExitAnimation] = useState<MulliganExitAnimation | null>(null);
   const [completedMulliganAnimationKey, setCompletedMulliganAnimationKey] = useState<string | null>(null);
   const [readyMulliganAnimationKey, setReadyMulliganAnimationKey] = useState<string | null>(null);
@@ -1127,6 +1262,10 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setReadyAiMulliganDecisionKey(null);
     setAiMulliganBaseHand(null);
     setStartMatchModalDismissed(false);
+    setCardContextMenu(null);
+    setLeaderContextMenu(null);
+    setCardInspectTarget(null);
+    setLeaderInspectSeat(null);
     setMatchPresentationRun((current) => current + 1);
     dispatch(startEngineMatch(setupConfig ? setupConfigToStartEngineOptions(setupConfig) : { seed: startSeed }));
   }, [dispatch, setupConfig, startSeed]);
@@ -1152,6 +1291,71 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setStartMatchModalDismissed(false);
   }, []);
 
+  const closeCardContextMenu = useCallback(() => setCardContextMenu(null), []);
+  const closeLeaderContextMenu = useCallback(() => setLeaderContextMenu(null), []);
+  const closeCardInspect = useCallback(() => setCardInspectTarget(null), []);
+  const closeLeaderInspect = useCallback(() => setLeaderInspectSeat(null), []);
+
+  const openCardContextMenuAt = useCallback(
+    (event: React.MouseEvent, target: MatchCardContextTarget) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const { x, y } = clampMatchMenuPosition(event.clientX, event.clientY);
+      setLeaderContextMenu(null);
+      setCardContextMenu({ ...target, x, y });
+    },
+    [],
+  );
+
+  const openLeaderContextMenuAt = useCallback(
+    (event: React.MouseEvent, seatId: SeatId) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const { x, y } = clampMatchMenuPosition(event.clientX, event.clientY);
+      setCardContextMenu(null);
+      setLeaderContextMenu({ seatId, x, y });
+    },
+    [],
+  );
+
+  const inspectCardTarget = useCallback((target: MatchCardContextTarget) => {
+    setCardInspectTarget(target);
+    setCardContextMenu(null);
+    setLeaderContextMenu(null);
+  }, []);
+
+  const inspectLeaderForSeat = useCallback((seatId: SeatId) => {
+    setLeaderInspectSeat(seatId);
+    setLeaderContextMenu(null);
+    setCardContextMenu(null);
+  }, []);
+
+  useEffect(() => {
+    if (!cardContextMenu && !leaderContextMenu && !cardInspectTarget && leaderInspectSeat === null) {
+      return;
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (cardInspectTarget) {
+        setCardInspectTarget(null);
+        return;
+      }
+      if (leaderInspectSeat !== null) {
+        setLeaderInspectSeat(null);
+        return;
+      }
+      if (cardContextMenu) {
+        setCardContextMenu(null);
+        return;
+      }
+      if (leaderContextMenu) {
+        setLeaderContextMenu(null);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [cardContextMenu, cardInspectTarget, leaderContextMenu, leaderInspectSeat]);
+
   const returnToPreGame = useCallback(() => {
     if (!onReturnToPreGame) {
       return;
@@ -1167,6 +1371,10 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setReadyAiMulliganDecisionKey(null);
     setAiMulliganBaseHand(null);
     setStartMatchModalDismissed(false);
+    setCardContextMenu(null);
+    setLeaderContextMenu(null);
+    setCardInspectTarget(null);
+    setLeaderInspectSeat(null);
     dispatch(engineMatchCleared());
     onReturnToPreGame();
   }, [dispatch, onReturnToPreGame]);
@@ -1313,6 +1521,86 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     },
     [canHumanAct, dispatch, match?.phase, playableCardIds, prompt, selectedCardId],
   );
+
+  const handleHandContextMenu = useCallback(
+    (event: React.MouseEvent, cardId: CardInstanceId) => {
+      openCardContextMenuAt(event, {
+        cardInstanceId: cardId,
+        origin: "hand",
+        ownerLabel: SEAT_LABELS[humanSeat],
+        seatId: humanSeat,
+      });
+    },
+    [humanSeat, openCardContextMenuAt],
+  );
+
+  const handleBoardContextMenu = useCallback(
+    (
+      event: React.MouseEvent,
+      target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow },
+    ) => {
+      openCardContextMenuAt(event, {
+        cardInstanceId: target.cardId,
+        origin: target.origin,
+        ownerLabel: SEAT_LABELS[target.seatId],
+        seatId: target.seatId,
+        row: target.row,
+      });
+    },
+    [openCardContextMenuAt],
+  );
+
+  const handleWeatherContextMenu = useCallback(
+    (event: React.MouseEvent, cardId: CardInstanceId) => {
+      openCardContextMenuAt(event, {
+        cardInstanceId: cardId,
+        origin: "weather",
+      });
+    },
+    [openCardContextMenuAt],
+  );
+
+  const handleDiscardContextMenu = useCallback(
+    (event: React.MouseEvent, cardId: CardInstanceId) => {
+      const ownerSeat = discardOpenSeat;
+      openCardContextMenuAt(event, {
+        cardInstanceId: cardId,
+        origin: "discard",
+        ownerLabel: ownerSeat ? SEAT_LABELS[ownerSeat] : undefined,
+        seatId: ownerSeat ?? undefined,
+      });
+    },
+    [discardOpenSeat, openCardContextMenuAt],
+  );
+
+  const handlePromptContextMenu = useCallback(
+    (event: React.MouseEvent, cardId: CardInstanceId) => {
+      openCardContextMenuAt(event, {
+        cardInstanceId: cardId,
+        origin: "prompt",
+        ownerLabel: SEAT_LABELS[humanSeat],
+        seatId: humanSeat,
+      });
+    },
+    [humanSeat, openCardContextMenuAt],
+  );
+
+  const handleLeaderContextMenu = useCallback(
+    (event: React.MouseEvent, seatId: SeatId) => {
+      openLeaderContextMenuAt(event, seatId);
+    },
+    [openLeaderContextMenuAt],
+  );
+
+  const inspectSelectedHandCard = useCallback(() => {
+    if (!selectedCardId) return;
+    inspectCardTarget({
+      cardInstanceId: selectedCardId,
+      origin: "hand",
+      ownerLabel: SEAT_LABELS[humanSeat],
+      seatId: humanSeat,
+    });
+  }, [humanSeat, inspectCardTarget, selectedCardId]);
 
   const canPass = humanMoves.some((move) => move.kind === "pass");
   const canResolveRound = humanMoves.some((move) => move.kind === "resolve_round_end");
@@ -1533,13 +1821,14 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                   leaderAbility={getLeaderAbilityDisplay(leaders[aiSeat].ability).name}
                   leaderUsed={leaders[aiSeat].used}
                   active={match?.currentTurn === aiSeat}
+                  onLeaderContextMenu={(event) => handleLeaderContextMenu(event, aiSeat)}
                 />
                 <PilePair
                   seat={seatSummaries.ai}
                   topDiscard={topAiDiscard ? toRuntimeCard(topAiDiscard) : null}
                   onDiscardOpen={() => setDiscardOpenSeat(aiSeat)}
                 />
-                <WeatherSummary cards={weatherRuntimeCards} />
+                <WeatherSummary cards={weatherRuntimeCards} onCardContextMenu={handleWeatherContextMenu} />
                 <PilePair
                   seat={seatSummaries.human}
                   topDiscard={topHumanDiscard ? toRuntimeCard(topHumanDiscard) : null}
@@ -1552,6 +1841,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                   leaderAbility={getLeaderAbilityDisplay(leaders[humanSeat].ability).name}
                   leaderUsed={leaders[humanSeat].used}
                   active={match?.currentTurn === humanSeat}
+                  onLeaderContextMenu={(event) => handleLeaderContextMenu(event, humanSeat)}
                 />
               </>
             ) : null}
@@ -1564,6 +1854,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               legalCardTargets={cardTargets}
               motionByCardId={motionByCardId}
               onTargetClick={playCard}
+              onCardContextMenu={handleBoardContextMenu}
             />
             <HandStrip
               cards={handCards}
@@ -1571,11 +1862,15 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               playableCardIds={playableCardIds}
               disabledByCardId={disabledByCardId}
               onCardClick={selectHandCard}
+              onCardContextMenu={handleHandContextMenu}
             />
           </section>
 
           <aside className="authentic-match__right-rail">
-            <InspectorPanel selected={selectedAuthenticCard} />
+            <InspectorPanel
+              selected={selectedAuthenticCard}
+              onInspectSelected={selectedAuthenticCard ? inspectSelectedHandCard : undefined}
+            />
             <ActionPanel
               targetGroups={targetGroups}
               onPlayMove={playCard}
@@ -1597,6 +1892,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                 options={prompt.seatId === humanSeat ? (promptView?.options ?? []) : []}
                 medicOptions={medicOptions}
                 onChoose={choosePromptOption}
+                onCardContextMenu={handlePromptContextMenu}
               />
             ) : null}
             {roundEndSummary && match?.phase === "round_end" ? (
@@ -1632,8 +1928,316 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
             count={discardBrowserSeat.discardCount}
             groups={discardGroups}
             onClose={() => setDiscardOpenSeat(null)}
+            onCardContextMenu={handleDiscardContextMenu}
           />
         ) : null}
+        {cardContextMenu
+          ? (() => {
+              const card = engineCardsById.get(cardContextMenu.cardInstanceId);
+              if (!card) {
+                return null;
+              }
+              return (
+                <>
+                  <div
+                    className="authentic-match__context-overlay"
+                    onClick={closeCardContextMenu}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      closeCardContextMenu();
+                    }}
+                  />
+                  <div
+                    className="authentic-match__context-menu"
+                    role="menu"
+                    aria-label={`Actions for ${card.name}`}
+                    data-testid="authentic-match-card-context-menu"
+                    style={{ left: cardContextMenu.x, top: cardContextMenu.y, width: MATCH_CONTEXT_MENU_WIDTH }}
+                  >
+                    <div className="authentic-match__context-title">{card.name}</div>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="authentic-button authentic-button--ghost authentic-match__context-action"
+                      data-testid="authentic-match-context-inspect"
+                      onClick={() => {
+                        inspectCardTarget({
+                          cardInstanceId: cardContextMenu.cardInstanceId,
+                          origin: cardContextMenu.origin,
+                          ownerLabel: cardContextMenu.ownerLabel,
+                          row: cardContextMenu.row ?? null,
+                          seatId: cardContextMenu.seatId,
+                        });
+                      }}
+                    >
+                      inspect
+                    </button>
+                  </div>
+                </>
+              );
+            })()
+          : null}
+        {leaderContextMenu && leaders
+          ? (() => {
+              const leaderStatus = leaders[leaderContextMenu.seatId];
+              if (!leaderStatus) {
+                return null;
+              }
+              return (
+                <>
+                  <div
+                    className="authentic-match__context-overlay"
+                    onClick={closeLeaderContextMenu}
+                    onContextMenu={(event) => {
+                      event.preventDefault();
+                      closeLeaderContextMenu();
+                    }}
+                  />
+                  <div
+                    className="authentic-match__context-menu"
+                    role="menu"
+                    aria-label={`Actions for ${leaderStatus.name}`}
+                    data-testid="authentic-match-leader-context-menu"
+                    style={{ left: leaderContextMenu.x, top: leaderContextMenu.y, width: MATCH_CONTEXT_MENU_WIDTH }}
+                  >
+                    <div className="authentic-match__context-title">{leaderStatus.name}</div>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="authentic-button authentic-button--ghost authentic-match__context-action"
+                      data-testid="authentic-match-leader-context-inspect"
+                      onClick={() => inspectLeaderForSeat(leaderContextMenu.seatId)}
+                    >
+                      inspect
+                    </button>
+                  </div>
+                </>
+              );
+            })()
+          : null}
+        {cardInspectTarget
+          ? (() => {
+              const card = engineCardsById.get(cardInspectTarget.cardInstanceId);
+              if (!card) {
+                return null;
+              }
+              const scoreByCardId = new Map((score?.cards ?? []).map((entry) => [entry.cardId, entry]));
+              const boardState =
+                cardInspectTarget.origin === "board" ? getBoardCardState(card, scoreByCardId) : null;
+              const inspection = buildMatchCardInspection({
+                card,
+                origin: cardInspectTarget.origin,
+                ownerLabel: cardInspectTarget.ownerLabel ?? null,
+                row: cardInspectTarget.row ?? null,
+                boardState,
+              });
+              return (
+                <div
+                  className="authentic-modal authentic-match__inspect-modal"
+                  data-testid="authentic-match-card-inspect"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="authentic-match-inspect-title"
+                  onClick={(event) => {
+                    if (event.target === event.currentTarget) {
+                      closeCardInspect();
+                    }
+                  }}
+                >
+                  <div className="authentic-match__inspect-box">
+                    <div className="authentic-match__inspect-header">
+                      <h2 id="authentic-match-inspect-title">{inspection.title}</h2>
+                      <button
+                        type="button"
+                        className="authentic-button authentic-button--ghost authentic-button--compact"
+                        onClick={closeCardInspect}
+                        data-testid="authentic-match-inspect-close"
+                        aria-label="Close"
+                      >
+                        close
+                      </button>
+                    </div>
+                    <div className="authentic-match__inspect-body">
+                      <div className="authentic-match__inspect-art">
+                        <AuthenticCard card={inspection.card} size="lg" />
+                      </div>
+                      <dl className="authentic-match__inspect-facts">
+                        <dt>Source ID</dt>
+                        <dd data-testid="authentic-match-inspect-source-id">{inspection.sourceId}</dd>
+                        <dt>Instance ID</dt>
+                        <dd data-testid="authentic-match-inspect-instance-id">{inspection.instanceId}</dd>
+                        <dt>Faction</dt>
+                        <dd>{inspection.factionLabel}</dd>
+                        <dt>Kind</dt>
+                        <dd>{inspection.kindLabel}</dd>
+                        {inspection.rowLabels.length > 0 ? (
+                          <>
+                            <dt>Rows</dt>
+                            <dd>{inspection.rowLabels.join(", ")}</dd>
+                          </>
+                        ) : null}
+                        {inspection.hasStrength && inspection.printedStrength !== null ? (
+                          <>
+                            <dt>Printed strength</dt>
+                            <dd>{inspection.printedStrength}</dd>
+                          </>
+                        ) : null}
+                        {inspection.origin === "board" && inspection.effectiveStrength !== null ? (
+                          <>
+                            <dt>Effective strength</dt>
+                            <dd
+                              data-testid="authentic-match-inspect-effective-strength"
+                              data-strength-state={inspection.strengthState ?? "normal"}
+                            >
+                              {inspection.effectiveStrength} ({inspection.strengthState ?? "normal"})
+                            </dd>
+                          </>
+                        ) : null}
+                        {inspection.origin === "board" && inspection.modifiers.length > 0 ? (
+                          <>
+                            <dt>Modifiers</dt>
+                            <dd data-testid="authentic-match-inspect-modifiers">
+                              {inspection.modifiers.join(", ")}
+                            </dd>
+                          </>
+                        ) : null}
+                        <dt>Where</dt>
+                        <dd>{inspection.originLabel}</dd>
+                        {inspection.ownerLabel ? (
+                          <>
+                            <dt>Side</dt>
+                            <dd>{inspection.ownerLabel}</dd>
+                          </>
+                        ) : null}
+                        {inspection.rowContextLabel ? (
+                          <>
+                            <dt>Board row</dt>
+                            <dd>{inspection.rowContextLabel}</dd>
+                          </>
+                        ) : null}
+                        {inspection.tags.length > 0 ? (
+                          <>
+                            <dt>Tags</dt>
+                            <dd>{inspection.tags.join(", ")}</dd>
+                          </>
+                        ) : null}
+                        {inspection.imagePath ? (
+                          <>
+                            <dt>Image path</dt>
+                            <dd>{inspection.imagePath}</dd>
+                          </>
+                        ) : null}
+                      </dl>
+                      <section className="authentic-match__inspect-section">
+                        <div className="authentic-match__inspect-label">Abilities</div>
+                        {inspection.abilities.length === 0 ? (
+                          <p>None.</p>
+                        ) : (
+                          <ul className="authentic-match__inspect-abilities">
+                            {inspection.abilities.map((ability) => (
+                              <li key={ability.id}>
+                                <strong>{ability.name}</strong>
+                                {ability.glyph ? <span aria-hidden="true"> {ability.glyph}</span> : null}
+                                <em> · {ability.status}</em>
+                                {ability.description ? <p>{ability.description}</p> : null}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </section>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          : null}
+        {leaderInspectSeat !== null && leaders
+          ? (() => {
+              const seatId = leaderInspectSeat;
+              const leaderStatus = leaders[seatId];
+              if (!leaderStatus) {
+                return null;
+              }
+              const seatFaction = match?.seats[seatId].faction ?? "neutral";
+              const ownerLabel = SEAT_LABELS[seatId];
+              const inspection = buildMatchLeaderInspection({
+                sourceId: leaderStatus.sourceId,
+                name: leaderStatus.name,
+                faction: seatFaction,
+                abilityId: leaderStatus.ability,
+                image: leaderStatus.image,
+                used: leaderStatus.used,
+                ownerLabel,
+              });
+              return (
+                <div
+                  className="authentic-modal authentic-match__inspect-modal authentic-match__inspect-modal--leader"
+                  data-testid="authentic-match-leader-inspect"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="authentic-match-leader-inspect-title"
+                  onClick={(event) => {
+                    if (event.target === event.currentTarget) {
+                      closeLeaderInspect();
+                    }
+                  }}
+                >
+                  <div className="authentic-match__inspect-box">
+                    <div className="authentic-match__inspect-header">
+                      <h2 id="authentic-match-leader-inspect-title">{inspection.title}</h2>
+                      <button
+                        type="button"
+                        className="authentic-button authentic-button--ghost authentic-button--compact"
+                        onClick={closeLeaderInspect}
+                        data-testid="authentic-match-leader-inspect-close"
+                        aria-label="Close"
+                      >
+                        close
+                      </button>
+                    </div>
+                    <div className="authentic-match__inspect-body authentic-match__inspect-body--leader">
+                      <div className="authentic-match__inspect-art">
+                        <AuthenticLeaderCard
+                          leader={{
+                            sourceId: inspection.sourceId,
+                            name: inspection.title,
+                            faction: seatFaction,
+                            abilityName: inspection.ability.name,
+                            image: inspection.imagePath,
+                          }}
+                          size="match"
+                        />
+                      </div>
+                      <dl className="authentic-match__inspect-facts">
+                        <dt>Source ID</dt>
+                        <dd data-testid="authentic-match-leader-inspect-source-id">{inspection.sourceId}</dd>
+                        <dt>Faction</dt>
+                        <dd>{inspection.factionLabel}</dd>
+                        <dt>Ability</dt>
+                        <dd>{inspection.ability.name}</dd>
+                        <dt>Status</dt>
+                        <dd>{inspection.statusLabel}</dd>
+                        <dt>Side</dt>
+                        <dd>{inspection.ownerLabel}</dd>
+                        {inspection.ability.description ? (
+                          <>
+                            <dt>Description</dt>
+                            <dd>{inspection.ability.description}</dd>
+                          </>
+                        ) : null}
+                        {inspection.imagePath ? (
+                          <>
+                            <dt>Image path</dt>
+                            <dd>{inspection.imagePath}</dd>
+                          </>
+                        ) : null}
+                      </dl>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
+          : null}
         {showRoundOverlay && latestRoundOverlay && latestRound ? (
           <RoundOverlay
             overlay={latestRoundOverlay}

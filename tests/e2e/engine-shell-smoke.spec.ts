@@ -837,3 +837,74 @@ test("authentic pre-game, deck builder, and direct match avoid horizontal overfl
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
 });
+
+test("authentic match supports in-match card inspection without breaking gameplay (cEp5.3)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto(authenticDirectUrl);
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-start-match-confirm").click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+
+  // Right-click a human hand card.
+  const handCard = page.locator(".authentic-hand__card").first();
+  await expect(handCard).toBeVisible();
+  await handCard.click({ button: "right" });
+  const cardMenu = page.getByTestId("authentic-match-card-context-menu");
+  await expect(cardMenu).toBeVisible();
+  await expect(page.getByTestId("authentic-match-context-inspect")).toBeVisible();
+
+  // Open the inspect modal.
+  await page.getByTestId("authentic-match-context-inspect").click();
+  await expect(cardMenu).toHaveCount(0);
+  const inspectModal = page.getByTestId("authentic-match-card-inspect");
+  await expect(inspectModal).toBeVisible();
+  await expect(page.getByTestId("authentic-match-inspect-source-id")).toBeVisible();
+  await expect(page.getByTestId("authentic-match-inspect-instance-id")).toBeVisible();
+  await expect(inspectModal).toContainText(/Hand|Faction|Kind/);
+
+  // Close with Escape.
+  await page.keyboard.press("Escape");
+  await expect(inspectModal).toHaveCount(0);
+
+  // Hand card left-click still selects card.
+  await handCard.click();
+  await expect(page.getByTestId("authentic-target-groups")).toBeVisible();
+
+  // Right-click the leader card and inspect.
+  const humanLeader = page.getByTestId("authentic-seat-human").locator(".authentic-score-card__leader");
+  await humanLeader.click({ button: "right" });
+  const leaderMenu = page.getByTestId("authentic-match-leader-context-menu");
+  await expect(leaderMenu).toBeVisible();
+  await page.getByTestId("authentic-match-leader-context-inspect").click();
+  const leaderInspect = page.getByTestId("authentic-match-leader-inspect");
+  await expect(leaderInspect).toBeVisible();
+  await expect(page.getByTestId("authentic-match-leader-inspect-source-id")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(leaderInspect).toHaveCount(0);
+
+  // Now play a card so that there's a board card to inspect.
+  await page.getByTestId("authentic-target-action").first().click();
+
+  // Board card right-click should open inspect with effective strength.
+  const boardCard = page.locator('[data-testid="authentic-effective-strength"]').first();
+  await expect(boardCard).toBeVisible();
+  await boardCard.click({ button: "right" });
+  await expect(cardMenu).toBeVisible();
+  await page.getByTestId("authentic-match-context-inspect").click();
+  await expect(inspectModal).toBeVisible();
+  await expect(page.getByTestId("authentic-match-inspect-effective-strength")).toBeVisible();
+  await expect(inspectModal).toContainText(/Board row/);
+  await page.getByTestId("authentic-match-inspect-close").click();
+  await expect(inspectModal).toHaveCount(0);
+
+  // Verify hidden-info: no AI hand source IDs/names appear in product text.
+  const aiHandSection = page.getByTestId("authentic-seat-ai");
+  await expect(aiHandSection.getByTestId("authentic-hand-card")).toHaveCount(0);
+  const matchPageText = await visiblePageText(page);
+  expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
+  expect(pageErrors).toEqual([]);
+});

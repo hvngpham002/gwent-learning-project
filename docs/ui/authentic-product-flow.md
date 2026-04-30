@@ -46,6 +46,29 @@ Draft custom records remain visible in Card Studio but do not enter match runtim
 
 Official porting review state lives in browser localStorage under `gwent_official_porting_v1`. It contains review overrides, image crop metadata, approvals, and notes for staged official candidates. It is not merged into deck builder, pre-game, or match runtime in cBp3.
 
+## In-Match Card Inspection
+
+Visible cards in the authentic match screen are read-only inspectable through right-click. cEp5.3 adds:
+
+- A small in-match card context menu with a single `inspect` action, opened by right-click on a visible card surface (human hand, public board card, row horn, public weather, public discard browser cards, Medic prompt option cards), and a leader-specific menu opened by right-click on either score-card leader.
+- A read-only inspect modal that renders the large authentic card art plus source ID, instance ID, faction, kind, rows, abilities (with display name/status/glyph/description), tags, image path, printed strength for unit/hero cards, effective strength and modifier list for board cards (sourced from `selectEngineScoreBreakdown`), origin/zone label, board row label when inspecting a board card, and side/owner label when known.
+- A read-only leader inspect modal that shows leader name, faction, ability display name/description, used/ready state, owner, and image path.
+
+Behavior contract:
+
+- Left-click gameplay interactions are unchanged. Hand left-click still selects/deselects through `engineSelectedCardSet`. Board card left-click still dispatches legal target moves. Row left-click still dispatches row target moves. Medic prompt left-click still chooses the prompt option. Discard pile buttons still open/close the discard browser.
+- Right-click on a visible card calls `event.preventDefault()` so the browser context menu does not appear, never dispatches an engine command, never triggers a target click, and only opens the inspect menu.
+- The context menu and inspect modals close on `close`, click outside (overlay), `Escape`, `inspect` action, opening another menu, or returning to setup/rematch.
+- The right-rail `InspectorPanel` keeps its compact selected-card summary and adds a single `inspect details` button that opens the same read-only modal for the selected human hand card; no second strength overlay is rendered.
+
+Hidden-information rules are preserved:
+
+- The match screen wires hand context menus only to the human hand strip rendered from `selectEngineHumanHand`. AI hand backs do not have an `EngineCardViewModel` exposed in the runtime card lookup, so they cannot be inspected through normal product routes.
+- AI hand and AI deck card identities (source IDs, instance IDs, names) remain hidden behind backs/counts in normal routes. Public board cards, public weather, public discard cards, visible human prompt options, and visible leaders are the only inspectable surfaces.
+- The debug-only `debugAiMulligan=1` route continues to reveal AI mulligan choices for animation inspection. cEp5.3 does not extend that surface and does not add inspect entry points to AI hand backs.
+
+Inspect modal styling reuses the deck-builder inspect-modal vocabulary (`authentic-match__inspect-modal`, `authentic-match__inspect-box`, `authentic-match__inspect-art`, `authentic-match__inspect-facts`, `authentic-match__inspect-section`) without sharing component code; this keeps deck-builder add/remove semantics out of the match surface.
+
 ## Hidden Information
 
 The mulligan screen renders the human hand with authentic cards, but AI hand is represented only by card backs and a count. The AI mulligan presentation animates hidden back slots and selected counts only: zero-card keeps play a hidden-back wave, while redraw commands freeze the pre-AI hand during sequential choices, remove selected cards from their original frozen slots, use right-anchored selected slots, push held backs left, and slide selected backs out and replacement backs into those slots one card at a time. After the animation, the AI hand returns to static backs for the player review/start modal. AI deck identities and hidden hand card names/source IDs/instance IDs are not rendered in product text.

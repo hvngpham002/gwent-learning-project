@@ -3,7 +3,15 @@ import type { CatalogRow } from "@/game/catalog";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 
 import type { AuthenticCardViewModel } from "./cardViewModel";
-import { getFactionDisplay, getRowDisplay } from "./displayMetadata";
+import {
+  getAbilityDisplay,
+  getCardKindDisplay,
+  getFactionDisplay,
+  getLeaderAbilityDisplay,
+  getRowDisplay,
+  type AbilityDisplay,
+  type LeaderAbilityDisplay,
+} from "./displayMetadata";
 
 export type MatchSeatRole = "human" | "ai";
 
@@ -424,3 +432,214 @@ export const buildGameEndNavigationActions = (canReturnToSetup: boolean): GameEn
     : { key: "close", label: "close", kind: "ghost" },
   { key: "rematch", label: "rematch", kind: "primary" },
 ];
+
+export type MatchCardInspectionOrigin =
+  | "hand"
+  | "board"
+  | "weather"
+  | "discard"
+  | "prompt";
+
+export interface MatchCardInspectionFact {
+  readonly key: string;
+  readonly label: string;
+  readonly value: string;
+}
+
+export type MatchCardInspectionAbility = AbilityDisplay;
+
+export interface MatchCardInspectionViewModel {
+  readonly card: AuthenticCardViewModel;
+  readonly engineCard: EngineCardViewModel;
+  readonly origin: MatchCardInspectionOrigin;
+  readonly title: string;
+  readonly sourceId: string;
+  readonly instanceId: CardInstanceId;
+  readonly factionLabel: string;
+  readonly kindLabel: string;
+  readonly rowLabels: readonly string[];
+  readonly abilities: readonly MatchCardInspectionAbility[];
+  readonly tags: readonly string[];
+  readonly imagePath: string;
+  readonly hasStrength: boolean;
+  readonly printedStrength: number | null;
+  readonly effectiveStrength: number | null;
+  readonly strengthState: AuthenticStrengthState | null;
+  readonly modifiers: readonly string[];
+  readonly usedScoreFallback: boolean;
+  readonly originLabel: string;
+  readonly ownerLabel: string | null;
+  readonly rowContextLabel: string | null;
+  readonly facts: readonly MatchCardInspectionFact[];
+}
+
+const ORIGIN_LABELS: Record<MatchCardInspectionOrigin, string> = {
+  hand: "Hand",
+  board: "Board",
+  weather: "Weather",
+  discard: "Discard",
+  prompt: "Prompt option",
+};
+
+const isUnitOrHeroEngine = (card: EngineCardViewModel): boolean =>
+  card.kind === "unit" || card.kind === "hero";
+
+export const buildMatchCardInspection = ({
+  card,
+  origin,
+  ownerLabel,
+  row,
+  boardState,
+}: {
+  readonly card: EngineCardViewModel;
+  readonly origin: MatchCardInspectionOrigin;
+  readonly ownerLabel?: string | null;
+  readonly row?: CatalogRow | null;
+  readonly boardState?: AuthenticBoardCardState | null;
+}): MatchCardInspectionViewModel => {
+  const factionDisplay = getFactionDisplay(card.faction);
+  const kindDisplay = getCardKindDisplay(card.kind === "leader" ? "unit" : card.kind);
+  const rowDisplays = (card.rows ?? []).map((entry) => getRowDisplay(entry));
+  const abilities = (card.abilities ?? [])
+    .filter((entry) => entry !== "none")
+    .map((entry) => getAbilityDisplay(entry));
+  const authenticCard = engineCardToAuthenticCard(card);
+  const hasStrength = isUnitOrHeroEngine(card);
+  const printedStrength = hasStrength ? card.printedStrength : null;
+  const effectiveStrength =
+    origin === "board" && boardState ? boardState.effectiveStrength : null;
+  const strengthState = origin === "board" && boardState ? boardState.strengthState : null;
+  const modifiers = origin === "board" && boardState ? boardState.modifiers : [];
+  const usedScoreFallback = origin === "board" && boardState ? boardState.usedScoreFallback : false;
+  const rowContextDisplay = row ? getRowDisplay(row) : null;
+  const ownerLabelText = ownerLabel ?? null;
+
+  const facts: MatchCardInspectionFact[] = [
+    { key: "source-id", label: "Source ID", value: card.sourceId },
+    { key: "instance-id", label: "Instance ID", value: card.instanceId },
+    { key: "faction", label: "Faction", value: factionDisplay.name },
+    { key: "kind", label: "Kind", value: kindDisplay.name },
+  ];
+  if (rowDisplays.length > 0) {
+    facts.push({
+      key: "rows",
+      label: "Rows",
+      value: rowDisplays.map((entry) => entry.name).join(", "),
+    });
+  }
+  if (hasStrength && printedStrength !== null) {
+    facts.push({ key: "printed-strength", label: "Printed strength", value: String(printedStrength) });
+  }
+  if (origin === "board" && effectiveStrength !== null && hasStrength) {
+    const stateLabel =
+      strengthState === "boosted"
+        ? "boosted"
+        : strengthState === "reduced"
+          ? "reduced"
+          : "normal";
+    facts.push({
+      key: "effective-strength",
+      label: "Effective strength",
+      value: `${effectiveStrength} (${stateLabel})`,
+    });
+  }
+  if (origin === "board" && modifiers.length > 0) {
+    facts.push({ key: "modifiers", label: "Modifiers", value: modifiers.join(", ") });
+  }
+  if (rowContextDisplay) {
+    facts.push({ key: "row-context", label: "Board row", value: rowContextDisplay.name });
+  }
+  facts.push({ key: "origin", label: "Where", value: ORIGIN_LABELS[origin] });
+  if (ownerLabelText) {
+    facts.push({ key: "owner", label: "Side", value: ownerLabelText });
+  }
+  if (authenticCard.tags.length > 0) {
+    facts.push({ key: "tags", label: "Tags", value: authenticCard.tags.join(", ") });
+  }
+  if (authenticCard.image) {
+    facts.push({ key: "image", label: "Image path", value: authenticCard.image });
+  }
+
+  return {
+    card: authenticCard,
+    engineCard: card,
+    origin,
+    title: card.name,
+    sourceId: card.sourceId,
+    instanceId: card.instanceId,
+    factionLabel: factionDisplay.name,
+    kindLabel: kindDisplay.name,
+    rowLabels: rowDisplays.map((entry) => entry.name),
+    abilities,
+    tags: authenticCard.tags,
+    imagePath: authenticCard.image ?? "",
+    hasStrength,
+    printedStrength,
+    effectiveStrength,
+    strengthState,
+    modifiers,
+    usedScoreFallback,
+    originLabel: ORIGIN_LABELS[origin],
+    ownerLabel: ownerLabelText,
+    rowContextLabel: rowContextDisplay?.name ?? null,
+    facts,
+  };
+};
+
+export interface MatchLeaderInspectionViewModel {
+  readonly title: string;
+  readonly sourceId: string;
+  readonly factionLabel: string;
+  readonly imagePath: string;
+  readonly ability: LeaderAbilityDisplay;
+  readonly used: boolean;
+  readonly statusLabel: string;
+  readonly ownerLabel: string;
+  readonly facts: readonly MatchCardInspectionFact[];
+}
+
+export const buildMatchLeaderInspection = ({
+  sourceId,
+  name,
+  faction,
+  abilityId,
+  image,
+  used,
+  ownerLabel,
+}: {
+  readonly sourceId: string;
+  readonly name: string;
+  readonly faction: string;
+  readonly abilityId: string | null | undefined;
+  readonly image: string | null | undefined;
+  readonly used: boolean;
+  readonly ownerLabel: string;
+}): MatchLeaderInspectionViewModel => {
+  const factionDisplay = getFactionDisplay(faction);
+  const ability = getLeaderAbilityDisplay(abilityId);
+  const statusLabel = used ? "used" : ability.status;
+  const facts: MatchCardInspectionFact[] = [
+    { key: "source-id", label: "Source ID", value: sourceId },
+    { key: "faction", label: "Faction", value: factionDisplay.name },
+    { key: "ability", label: "Ability", value: ability.name },
+    { key: "ability-status", label: "Status", value: statusLabel },
+    { key: "owner", label: "Side", value: ownerLabel },
+  ];
+  if (ability.description) {
+    facts.push({ key: "ability-description", label: "Description", value: ability.description });
+  }
+  if (image) {
+    facts.push({ key: "image", label: "Image path", value: image });
+  }
+  return {
+    title: name,
+    sourceId,
+    factionLabel: factionDisplay.name,
+    imagePath: image ?? "",
+    ability,
+    used,
+    statusLabel,
+    ownerLabel,
+    facts,
+  };
+};
