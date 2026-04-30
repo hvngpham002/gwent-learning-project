@@ -284,9 +284,11 @@ Weather cards are played face-up into the shared Weather Cards area and affect t
 | **Impenetrable Fog** (cloud) | Sets Strength of all **Ranged Combat** (bow) Units to **1** for both players. |
 | **Torrential Rain** (raindrop) | Sets Strength of all **Siege** (catapult) Units to **1** for both players. |
 | **Skellige Storm** (lightning) | Sets Strength of all **Ranged AND Siege** Units to **1** for both players. |
-| **Clear Weather** (sun) | **Discard all Weather cards currently on the battlefield**; their effects are cancelled. Discard this card after playing (one-shot). |
+| **Clear Weather** (sun) | **Discard all Weather cards currently on the battlefield, including Skellige Storm**; their effects are cancelled. Discard this card after playing (one-shot). |
 
 **Important:** Heroes are immune to Weather (as it is a special ability). Weather does not set a Hero's Strength to 1.
+
+> **Clear Weather scope:** Clear Weather (card or leader) iterates every card in the shared weather zone and discards all of them, regardless of which weather effect they emit. Biting Frost, Impenetrable Fog, Torrential Rain, and Skellige Storm are all neutral special weather cards covered by Clear Weather.
 
 ---
 
@@ -360,6 +362,7 @@ Heroes are immune to **Special Card, Unit Card, and Leader Card abilities**. Con
 - **[Derived] Heroes *can* still be chosen by Eredin, Destroyer of Worlds**, whose FAQ text says "Unit Card or Special Card of the player's choice" — with no Hero exclusion. The Golden Rule says the card takes precedence.
 - **[Derived] Heroes *can* still be tutored from deck by Emhyr var Emreis** for the same reason.
 - **[Derived] A Hero's *own* abilities still function.** A Hero with Muster, Scorch, or Tight Bond printed on it still resolves that ability when played — the Hero rule prevents **external** abilities from affecting the Hero, but it doesn't prevent the Hero from *being* an ability source.
+- **Hero-source row effects (Morale Boost, future row-wide Tight Bond / Commander's Horn).** A hero may *emit* its printed row effect to other non-hero units on the row, even though the hero remains immune to *receiving* row effects. Concretely: a hero printed with Morale Boost adds +1 to the other non-hero units on its row; the hero source itself does not receive +1, and other heroes on the row do not receive +1. **Hero Tight Bond is intentionally not implemented as a functional rule** — heroes are immune to Tight Bond as receivers, so a hero with printed Tight Bond is effectively useless and the engine does not invent a new functional rule for it.
 
 ### 17.2 Medic — Chain Revivals
 
@@ -406,15 +409,28 @@ Heroes are immune to **Special Card, Unit Card, and Leader Card abilities**. Con
 
 ### 17.5 Scorch Interactions
 
-Two separate Scorch effects exist — don't confuse them:
+Multiple Scorch effects exist — don't confuse them:
 
 | Type | Scope | Trigger |
 |---|---|---|
 | **Scorch (Special Card)** | Whole battlefield (both sides) | Always, when the Special card is played. |
 | **Scorch (Close-Combat Unit ability)** | The **opposite row** only | Only if the opponent has **≥10 Strength** on that opposite row. |
-| **Clan Dimun Pirate (unit)** | Whole battlefield (both sides) — treated as the Special version per the FAQ. Cannot discard itself. | On play. |
+| **Scorch - Ranged (Unit ability)** | The **opposite ranged row** only | Only if the opponent has **≥10 Strength** on that opposite ranged row. |
+| **Scorch - Siege (Unit ability)** | The **opposite siege row** only | Only if the opponent has **≥10 Strength** on that opposite siege row. |
+| **Clan Dimun Pirate (unit)** | Whole battlefield (both sides) including the source itself. | On play. |
 
-- **Heroes are excluded** from both Scorch effects.
+- **Heroes are excluded** from all Scorch effects.
+- **Row-scoped unit Scorch (`scorch_close`, `scorch_range`, `scorch_siege`)** uses the same template:
+  the source plays normally onto its legal board row; after placement, it inspects the
+  opponent's matching opposite row (close→close, ranged→ranged, siege→siege); it fires only
+  when that row's effective strength is **≥10**; it destroys all tied highest non-hero units
+  on that opponent row using post-modifier effective strength.
+- **Unit-source whole-board Scorch (Clan Dimun Pirate)** plays normally onto its legal board
+  row; after placement, it considers all non-hero units across both seats and all three rows,
+  including the source itself; it destroys every non-hero unit tied for the highest
+  effective strength. Per the user-confirmed rule patch, the source is *not* protected: if
+  Clan Dimun Pirate is the unique highest strength it destroys itself; if it ties for
+  highest it destroys itself and the tied cards.
 - **Ties are resolved by discarding all tied highest-Strength non-Hero units.** **[Derived from "Unit Card(s)" — the plural suggests multiple may be destroyed.]**
 - **What if the highest-Strength unit on the field is a Hero?** Scorch targets the next-highest non-Hero. If *all* units on the relevant area are Heroes, nothing is discarded.
 - **What if your own unit is the highest Strength on the battlefield when you play Special Scorch?** You destroy your own unit. There is no "my side only" restriction — it's "the entire battlefield."
@@ -466,6 +482,34 @@ Two separate Scorch effects exist — don't confuse them:
 - **[Derived] Scorch DOES trigger Summon** — Scorch sends the highest-Strength unit(s) to discard, which is exactly the Summon condition.
 - **[Derived] Monsters faction "one Unit stays" interaction:** If a Summon unit is selected to stay on the battlefield, it isn't discarded, so Summon doesn't trigger. Other Summon units that weren't chosen *do* go to discard and trigger their Summons.
 - **[Derived] Side-deck exhaustion:** If the Summon target is already in play (or was used), the rulebook doesn't address what happens. Most groups rule that if the specified side-deck card is unavailable, no replacement happens.
+
+### 17.10b Avenger (Cow / Kambi) Battlefield Removal Replacement
+
+Avenger covers cards like Cow and Kambi that summon a powerful replacement when the
+source is **removed from the battlefield**.
+
+- The Avenger source must declare its replacement through `linkedSourceIds[0]`.
+- Existing playable Avenger pairs:
+  - `neutral.cow` → `neutral.bovine-defense-force`;
+  - `skellige.kambi` → `skellige.hemdall`.
+- The replacement is taken from the controlling seat's **side deck**.
+- The replacement lands on the same board side and row that the Avenger source occupied.
+- The Avenger source still moves according to the original removal operation:
+  - round cleanup sends it to its board-side discard pile;
+  - Scorch sends it to its board-side discard pile;
+  - Decoy returns it to the active player's hand;
+  - other movement reasons keep their existing destination unless an effect says otherwise.
+- Avenger differs from Berserker/Mardroeme transformation:
+  - Berserker is *removed from the game* before the side-deck replacement enters play;
+  - Avenger keeps the source's normal movement destination and only summons the replacement.
+- Round-cleanup policy: Avenger replacements are summoned **after** the row sweep for the
+  departing round so they remain on the board for the next round. Round-end scoring/gem
+  loss is based on the board before cleanup; the replacement affects the next round only.
+- Active-round removal policy: Avenger summons the replacement immediately after the
+  source leaves the battlefield (Scorch, Decoy, etc.), so it can affect subsequent
+  scoring within the active round.
+- If the linked source ID is missing, or the linked replacement is not present in the
+  controlling seat's side deck, the engine emits a structured non-crashing outcome.
 
 ### 17.11 Muster Interactions
 
@@ -531,9 +575,15 @@ Two separate Scorch effects exist — don't confuse them:
 
 - **[Derived]** The rulebook doesn't detail what happens if an ability says "draw from deck" and the deck is empty. The natural resolution is: draw as many cards as are available, and no more. Cards that require a deck search (Emhyr, Muster) simply find 0 copies there.
 
-### 17.21 Clan Dimun Pirate Self-Protection
+### 17.21 Clan Dimun Pirate Whole-Board Scorch (Self-Including)
 
-- Clan Dimun Pirate has a Scorch effect (whole-battlefield), but the FAQ explicitly says **it cannot discard itself**, even if tied for highest Strength. So it safely clears big threats including its equals.
+- Clan Dimun Pirate has a Scorch effect that targets the whole battlefield using effective
+  (post-modifier) strength. Per the user-confirmed rule patch:
+  - if no other card has more strength than Clan Dimun Pirate, it destroys itself;
+  - if other cards tie with Clan Dimun Pirate for highest strength, it destroys those cards
+    and itself;
+  - heroes are still immune.
+- This supersedes any prior reading that Clan Dimun Pirate could not discard itself.
 
 ### 17.22 Agile Unit Placement
 
@@ -587,6 +637,9 @@ Heroes are not affected by: Weather, Commander's Horn, Morale Boost, Scorch (Uni
 - Global cards and non-row effect discards → **controller's** discard pile unless
   an effect says otherwise.
 - Berserkers triggered by Mardroeme → **removed from game**, *not* discarded.
+- Avenger sources (Cow, Kambi) → keep the original removal destination (discard or
+  hand). Their linked replacement is pulled from side deck onto the source's old
+  board row/side after the source leaves.
 
 ### Deck Construction
 

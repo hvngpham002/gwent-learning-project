@@ -54,6 +54,14 @@ const splitResolutions: readonly OfficialPromotionSplitResolution[] = [
       "catalog_split_required:berserker: split into separate base/replacement catalog source records.",
     ],
   },
+  {
+    originalSourceId: "skellige.kambi-hemdall",
+    catalogSourceIds: ["skellige.kambi", "skellige.hemdall"],
+    reasons: [
+      "catalog_split_required:avenger: cCp11 split combined Kambi/Hemdall scrape candidate into a Kambi battlefield-trigger source and a side-deck Hemdall replacement linked through linkedSourceIds[0].",
+      "rule_implementation:avenger: Avenger battlefield removal replacement is now implemented and Kambi summons Hemdall via the side-deck linked replacement.",
+    ],
+  },
 ];
 
 const deferred: readonly OfficialPromotionDeferredEntry[] = [
@@ -233,7 +241,6 @@ const directPromotedCandidateIds: readonly string[] = [
   "skellige.ermion",
   "skellige.hjalmar",
   "skellige.holger-blackhand",
-  "skellige.kambi-hemdall",
   "skellige.light-longship",
   "skellige.madman-lugos",
   "skellige.mardroeme",
@@ -264,13 +271,13 @@ const countsByFaction: Readonly<Record<string, number>> = {
   nilfgaard: 29,
   northern_realms: 25,
   scoiatael: 23,
-  skellige: 26,
+  skellige: 27,
 };
 
 const countsByKind: Readonly<Record<string, number>> = {
   hero: 25,
   special: 4,
-  unit: 125,
+  unit: 126,
   weather: 5,
 };
 

@@ -33,28 +33,28 @@ import {
 
 describe("official catalog promotion (cBp4 + cBp4.1)", () => {
   it("reports direct, deferred, split, duplicate-resolved, and promoted catalog source counts", () => {
-    expect(officialPromotionManifest.directPromotedCandidateCount).toBe(154);
+    expect(officialPromotionManifest.directPromotedCandidateCount).toBe(153);
     expect(officialPromotionManifest.deferredCandidateCount).toBe(1);
-    expect(officialPromotionManifest.promotedCatalogSourceCount).toBe(159);
-    expect(officialPromotionManifest.directPromotedCandidateIds).toHaveLength(154);
-    expect(officialPromotionManifest.promotedCatalogSourceIds).toHaveLength(159);
+    expect(officialPromotionManifest.promotedCatalogSourceCount).toBe(160);
+    expect(officialPromotionManifest.directPromotedCandidateIds).toHaveLength(153);
+    expect(officialPromotionManifest.promotedCatalogSourceIds).toHaveLength(160);
     expect(officialPromotionManifest.deferred).toHaveLength(1);
-    expect(officialPromotionManifest.splitResolutions).toHaveLength(2);
+    expect(officialPromotionManifest.splitResolutions).toHaveLength(3);
     expect(officialPromotionManifest.duplicateResolutions).toHaveLength(2);
   });
 
-  it("matches cBp4.1 counts by faction and kind", () => {
+  it("matches cCp11 counts by faction and kind", () => {
     expect(officialPromotionManifest.countsByFaction).toEqual({
       neutral: 21,
       northern_realms: 25,
       nilfgaard: 29,
       monsters: 35,
       scoiatael: 23,
-      skellige: 26,
+      skellige: 27,
     });
     expect(officialPromotionManifest.countsByKind).toEqual({
       hero: 25,
-      unit: 125,
+      unit: 126,
       special: 4,
       weather: 5,
     });
@@ -83,14 +83,33 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
       "skellige.young-berserker",
       "skellige.young-vildkaarl",
     ]);
-    officialPromotionManifest.splitResolutions.forEach((resolution) => {
-      expect(resolution.reasons.some((r) => r.startsWith("transform_link_required:berserker"))).toBe(
+    [
+      splitByOriginal.get("skellige.berserker-vildkaarl"),
+      splitByOriginal.get("skellige.young-berserker-young-vildkaarl"),
+    ].forEach((resolution) => {
+      expect(resolution).toBeDefined();
+      expect(resolution!.reasons.some((r) => r.startsWith("transform_link_required:berserker"))).toBe(
         true,
       );
-      expect(resolution.reasons.some((r) => r.startsWith("catalog_split_required:berserker"))).toBe(
+      expect(resolution!.reasons.some((r) => r.startsWith("catalog_split_required:berserker"))).toBe(
         true,
       );
     });
+  });
+
+  it("resolves the combined Kambi/Hemdall scrape candidate via the cCp11 avenger split", () => {
+    const splitByOriginal = new Map(
+      officialPromotionManifest.splitResolutions.map((resolution) => [
+        resolution.originalSourceId,
+        resolution,
+      ]),
+    );
+    const kambiResolution = splitByOriginal.get("skellige.kambi-hemdall");
+    expect(kambiResolution).toBeDefined();
+    expect(kambiResolution!.catalogSourceIds).toEqual(["skellige.kambi", "skellige.hemdall"]);
+    expect(kambiResolution!.reasons.some((r) => r.startsWith("catalog_split_required:avenger"))).toBe(
+      true,
+    );
   });
 
   it("resolves duplicate scrape candidates to existing catalog sources", () => {
@@ -174,6 +193,7 @@ describe("official catalog promotion (cBp4 + cBp4.1)", () => {
       "scoiatael.dwarven-skirmisher-2",
       "skellige.berserker-vildkaarl",
       "skellige.young-berserker-young-vildkaarl",
+      "skellige.kambi-hemdall",
     ].forEach((id) => expect(presentIds.has(id)).toBe(false));
   });
 

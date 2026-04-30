@@ -145,6 +145,8 @@ const ABILITY_GLYPH: Record<CatalogAbilityId, string> = {
   agile: "↔",
   avenger: "✜",
   scorch_close: "✦",
+  scorch_range: "✦",
+  scorch_siege: "✦",
   scorch: "✦",
   skellige_storm: "❅",
   commanders_horn: "◊",

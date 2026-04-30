@@ -21,6 +21,8 @@ export const CATALOG_ABILITY_IDS = [
   "agile",
   "avenger",
   "scorch_close",
+  "scorch_range",
+  "scorch_siege",
   "scorch",
   "skellige_storm",
   "commanders_horn",

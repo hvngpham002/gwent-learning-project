@@ -59,9 +59,9 @@ export const CATALOG_ABILITY_METADATA: Record<CatalogAbilityId, CatalogAbilityMe
   avenger: {
     id: "avenger",
     name: "Avenger",
-    status: "planned",
+    status: "implemented",
     appliesTo: ["unit"],
-    description: "Summons a replacement when the source leaves play.",
+    description: "Summons a linked side-deck replacement when the source leaves the battlefield.",
   },
   scorch_close: {
     id: "scorch_close",
@@ -70,12 +70,26 @@ export const CATALOG_ABILITY_METADATA: Record<CatalogAbilityId, CatalogAbilityMe
     appliesTo: ["unit"],
     description: "Scorches highest units on the opposing close row when threshold is met.",
   },
+  scorch_range: {
+    id: "scorch_range",
+    name: "Scorch Ranged",
+    status: "implemented",
+    appliesTo: ["unit"],
+    description: "Scorches highest units on the opposing ranged row when threshold is met.",
+  },
+  scorch_siege: {
+    id: "scorch_siege",
+    name: "Scorch Siege",
+    status: "implemented",
+    appliesTo: ["unit"],
+    description: "Scorches highest units on the opposing siege row when threshold is met.",
+  },
   scorch: {
     id: "scorch",
     name: "Scorch",
     status: "implemented",
-    appliesTo: ["special"],
-    description: "Scorches highest non-hero units across the battlefield.",
+    appliesTo: ["unit", "special"],
+    description: "Scorches highest non-hero units across the battlefield. Special form discards itself; unit form remains on board and is included as a target.",
   },
   skellige_storm: {
     id: "skellige_storm",

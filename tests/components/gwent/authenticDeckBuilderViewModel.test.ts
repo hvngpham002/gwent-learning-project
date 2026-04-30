@@ -380,6 +380,42 @@ describe("authentic deck builder view model", () => {
     );
   });
 
+  it("syncs Hemdall into the side deck when Kambi is added to the main deck", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      mainDeck: [],
+      sideDeck: [],
+    };
+
+    const withKambi = addCardToDeck(skelligeDeck, "skellige.kambi");
+    expect(withKambi.mainDeck.find((entry) => entry.sourceId === "skellige.kambi")?.count).toBe(1);
+    expect(withKambi.sideDeck.find((entry) => entry.sourceId === "skellige.hemdall")?.count).toBe(1);
+  });
+
+  it("hides Hemdall from the main-deck card pool because it is side-deck only", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+    };
+    const pool = buildCardPool(skelligeDeck);
+    const poolIds = new Set(pool.map((item) => item.card.sourceId));
+    expect(poolIds.has("skellige.kambi")).toBe(true);
+    expect(poolIds.has("skellige.hemdall")).toBe(false);
+  });
+
+  it("rejects Hemdall in the main deck via validateDeckPreset", () => {
+    const skelligeDeck = {
+      ...currentNorthernRealmsDeckPreset,
+      faction: "skellige" as const,
+      mainDeck: [{ sourceId: "skellige.hemdall", count: 1 }],
+    };
+    const stats = validateDeckPreset(skelligeDeck, currentCatalogCards, currentCatalogLeaders);
+    expect(stats.issues.map((issue) => issue.code)).toEqual(
+      expect.arrayContaining(["side_deck_only_main_deck"]),
+    );
+  });
+
   it("auto-syncs the side deck when adding and removing Berserker base cards", () => {
     const skelligeDeck = {
       ...currentNorthernRealmsDeckPreset,

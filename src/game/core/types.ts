@@ -192,7 +192,8 @@ export type GameEvent =
         | "round_cleanup"
         | "northern_realms_draw"
         | "skellige_return"
-        | "mardroeme_transform";
+        | "mardroeme_transform"
+        | "avenger_summon";
     }
   | {
       type: "initial_hand_drawn";
@@ -228,7 +229,7 @@ export type GameEvent =
       type: "scorch_resolved";
       sourceId: string;
       cardId: CardInstanceId;
-      abilityId: "scorch" | "scorch_close";
+      abilityId: "scorch" | "scorch_close" | "scorch_range" | "scorch_siege";
       targetCardIds: CardInstanceId[];
       outcome: "destroyed" | "no_targets" | "below_threshold";
     }
@@ -278,4 +279,14 @@ export type GameEvent =
       seatId: SeatId;
       row: CatalogRow;
       abilityId: "berserker";
+    }
+  | {
+      type: "card_summoned";
+      triggerCardId: CardInstanceId;
+      fromSourceId: string;
+      toCardId: CardInstanceId;
+      toSourceId: string;
+      seatId: SeatId;
+      row: CatalogRow;
+      abilityId: "avenger";
     };

@@ -282,7 +282,7 @@ export const northernRealmsCatalogCards = [
   },
   {
     sourceId: "northern-realms.siege-tower",
-    name: "\tSiege Tower",
+    name: "Siege Tower",
     faction: "northern_realms",
     kind: "unit",
     strength: 6,

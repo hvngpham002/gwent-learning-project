@@ -519,6 +519,47 @@ describe("core command transactions", () => {
     assertNoDuplicateZones(result.state);
   });
 
+  it("Clear Weather (card) clears Skellige Storm alongside other weather effects", () => {
+    const state = createState("clear-weather-skellige-storm");
+    const frost = findCard(state, "neutral.biting-frost");
+    // Repurpose a different weather card instance as Skellige Storm — the engine reads
+    // the source by id at runtime, so swapping sourceId emulates a Storm in deck.
+    const stormProxy = findCard(state, "neutral.torrential-rain");
+    state.cardsById[stormProxy].sourceId = "neutral.skellige-storm";
+    const clearWeather = findCard(state, "neutral.clear-weather");
+    state.phase = "playing";
+    state.currentTurn = "seat_a";
+    putWeather(state, "seat_a", frost);
+    putWeather(state, "seat_b", stormProxy);
+    putInHand(state, "seat_a", [clearWeather]);
+
+    const result = execute(state, {
+      type: "PlayCard",
+      seatId: "seat_a",
+      cardId: clearWeather,
+      target: { kind: "weather" },
+    });
+
+    expect(result.state.weather.entries).toEqual([]);
+    expect(result.state.seats.seat_a.discard).toContain(frost);
+    expect(result.state.seats.seat_b.discard).toContain(stormProxy);
+    expect(result.state.seats.seat_a.discard).toContain(clearWeather);
+  });
+
+  it("Clear Weather (leader) also clears Skellige Storm", () => {
+    const state = createState("clear-weather-leader-skellige-storm");
+    const stormProxy = findCard(state, "neutral.torrential-rain");
+    state.cardsById[stormProxy].sourceId = "neutral.skellige-storm";
+    state.phase = "playing";
+    state.currentTurn = "seat_a";
+    putWeather(state, "seat_b", stormProxy);
+
+    const result = execute(state, { type: "UseLeader", seatId: "seat_a", target: { kind: "none" } });
+
+    expect(result.state.weather.entries).toEqual([]);
+    expect(result.state.seats.seat_b.discard).toContain(stormProxy);
+  });
+
   it("sends a Unit Scorch Close destroyed Spy to the discard pile for the side it occupies", () => {
     const state = createState("unit-scorch-spy-side");
     const scorchUnit = findCard(state, "neutral.villentretenmerth");

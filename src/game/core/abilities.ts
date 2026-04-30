@@ -1,7 +1,11 @@
 import type { CatalogAbilityId, CatalogCardSource, CatalogRow } from "@/game/catalog";
 
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
-import { calculateScores, findUnitScorchCloseTargets } from "./scoring";
+import {
+  calculateScores,
+  findSpecialScorchTargets,
+  findUnitScorchRowTargets,
+} from "./scoring";
 import type {
   CardInstanceId,
   GameEvent,
@@ -35,7 +39,6 @@ const ONGOING_STATE_ABILITIES = new Set<CatalogAbilityId>([
   "agile",
 ]);
 
-const PLANNED_DEFERRED_ABILITIES = new Set<CatalogAbilityId>(["summon", "avenger"]);
 const opponentOf = (seatId: SeatId): SeatId => (seatId === "seat_a" ? "seat_b" : "seat_a");
 
 const createCardLookup = (catalogCards: readonly CatalogCardSource[]) =>
@@ -168,10 +171,119 @@ const emitDiscardTriggerDeferrals = (
   targetCardId: CardInstanceId,
 ) => {
   targetSource?.abilities.forEach((abilityId) => {
-    if (abilityId === "summon" || abilityId === "avenger") {
+    if (abilityId === "summon") {
       emitDeferred(events, targetSource, targetCardId, abilityId, "discard_trigger_pending");
     }
   });
+};
+
+export interface ResolveAvengerInput {
+  state: MatchState;
+  events: GameEvent[];
+  catalogLookup: ReadonlyMap<string, CatalogCardSource>;
+  cardId: CardInstanceId;
+  destination?: ZoneRef;
+}
+
+export type AvengerResolutionOutcome =
+  | "no_avenger"
+  | "missing_link"
+  | "missing_replacement"
+  | "missing_origin_row"
+  | "summoned";
+
+export const resolveAvengerForCard = ({
+  state,
+  events,
+  catalogLookup,
+  cardId,
+  destination,
+}: ResolveAvengerInput): AvengerResolutionOutcome => {
+  const instance = state.cardsById[cardId];
+  if (!instance) {
+    return "no_avenger";
+  }
+  const source = catalogLookup.get(instance.sourceId);
+  if (!source || !source.abilities.includes("avenger")) {
+    return "no_avenger";
+  }
+  const replacementSourceId = source.linkedSourceIds?.[0];
+  if (!replacementSourceId) {
+    events.push({
+      type: "ability_resolved",
+      sourceId: source.sourceId,
+      cardId,
+      abilityId: "avenger",
+      outcome: "missing_link",
+    });
+    return "missing_link";
+  }
+  const controllerSeat = instance.controller;
+  const replacementId = state.seats[controllerSeat].sideDeck.find(
+    (sideId) => state.cardsById[sideId]?.sourceId === replacementSourceId,
+  );
+  if (!replacementId) {
+    events.push({
+      type: "ability_resolved",
+      sourceId: source.sourceId,
+      cardId,
+      abilityId: "avenger",
+      outcome: "missing_replacement",
+    });
+    return "missing_replacement";
+  }
+
+  let originSeat: SeatId | null = null;
+  let originRow: CatalogRow | null = null;
+  if (destination?.kind === "board_row") {
+    originSeat = destination.seat;
+    originRow = destination.row;
+  } else if (instance.zone.kind === "board_row") {
+    originSeat = instance.zone.seat;
+    originRow = instance.zone.row;
+  }
+
+  if (!originSeat || !originRow) {
+    events.push({
+      type: "ability_resolved",
+      sourceId: source.sourceId,
+      cardId,
+      abilityId: "avenger",
+      outcome: "missing_origin_row",
+    });
+    return "missing_origin_row";
+  }
+
+  const replacement = state.cardsById[replacementId];
+  replacement.controller = controllerSeat;
+  moveCard(
+    state,
+    events,
+    replacementId,
+    { kind: "board_row", seat: originSeat, row: originRow },
+    "avenger_summon",
+  );
+
+  events.push({
+    type: "card_summoned",
+    triggerCardId: cardId,
+    fromSourceId: source.sourceId,
+    toCardId: replacementId,
+    toSourceId: replacement.sourceId,
+    seatId: originSeat,
+    row: originRow,
+    abilityId: "avenger",
+  });
+
+  events.push({
+    type: "ability_resolved",
+    sourceId: source.sourceId,
+    cardId,
+    abilityId: "avenger",
+    outcome: "summoned",
+  });
+
+  return "summoned";
 };
 
 const drawCards = (state: MatchState, events: GameEvent[], seatId: SeatId, count: number) => {
@@ -326,7 +438,13 @@ const resolveMusterLike = (
   });
 };
 
-const resolveScorchClose = (
+const SCORCH_ROW_ABILITIES: Record<"scorch_close" | "scorch_range" | "scorch_siege", CatalogRow> = {
+  scorch_close: "close",
+  scorch_range: "ranged",
+  scorch_siege: "siege",
+};
+
+const resolveScorchRow = (
   state: MatchState,
   events: GameEvent[],
   catalogCards: readonly CatalogCardSource[],
@@ -334,25 +452,72 @@ const resolveScorchClose = (
   source: CatalogCardSource,
   seatId: SeatId,
   cardId: CardInstanceId,
+  abilityId: "scorch_close" | "scorch_range" | "scorch_siege",
 ) => {
-  emitTriggered(events, source, cardId, "scorch_close");
+  emitTriggered(events, source, cardId, abilityId);
   const breakdown = calculateScores({ state, catalogCards });
-  const result = findUnitScorchCloseTargets(breakdown, seatId);
+  const result = findUnitScorchRowTargets(breakdown, seatId, SCORCH_ROW_ABILITIES[abilityId]);
 
   result.targets.forEach((target) => {
+    const origin: ZoneRef = { kind: "board_row", seat: target.seatId, row: target.row };
     moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
     emitDiscardTriggerDeferrals(events, catalogLookup.get(target.sourceId), target.cardId);
+    resolveAvengerForCard({
+      state,
+      events,
+      catalogLookup,
+      cardId: target.cardId,
+      destination: origin,
+    });
   });
 
   events.push({
     type: "scorch_resolved",
     sourceId: source.sourceId,
     cardId,
-    abilityId: "scorch_close",
+    abilityId,
     targetCardIds: result.targets.map((target) => target.cardId),
     outcome: result.outcome,
   });
-  emitResolved(events, source, cardId, "scorch_close", result.outcome);
+  emitResolved(events, source, cardId, abilityId, result.outcome);
+};
+
+const resolveUnitScorchGlobal = (
+  state: MatchState,
+  events: GameEvent[],
+  catalogCards: readonly CatalogCardSource[],
+  catalogLookup: ReadonlyMap<string, CatalogCardSource>,
+  source: CatalogCardSource,
+  _seatId: SeatId,
+  cardId: CardInstanceId,
+) => {
+  emitTriggered(events, source, cardId, "scorch");
+  const breakdown = calculateScores({ state, catalogCards });
+  const targets = findSpecialScorchTargets(breakdown);
+  const targetIds = targets.map((target) => target.cardId);
+
+  targets.forEach((target) => {
+    const origin: ZoneRef = { kind: "board_row", seat: target.seatId, row: target.row };
+    moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
+    emitDiscardTriggerDeferrals(events, catalogLookup.get(target.sourceId), target.cardId);
+    resolveAvengerForCard({
+      state,
+      events,
+      catalogLookup,
+      cardId: target.cardId,
+      destination: origin,
+    });
+  });
+
+  events.push({
+    type: "scorch_resolved",
+    sourceId: source.sourceId,
+    cardId,
+    abilityId: "scorch",
+    targetCardIds: targetIds,
+    outcome: targets.length > 0 ? "destroyed" : "no_targets",
+  });
+  emitResolved(events, source, cardId, "scorch", targets.length > 0 ? "destroyed" : "no_targets");
 };
 
 export interface SettleMardroemeRowInput {
@@ -618,18 +783,29 @@ export const resolveCardAbilities = ({ state, events, catalogCards, seatId, card
       resolveMusterLike(state, events, catalogLookup, source, seatId, cardId, "muster");
     } else if (abilityId === "muster_roach") {
       resolveMusterLike(state, events, catalogLookup, source, seatId, cardId, "muster_roach");
-    } else if (abilityId === "scorch_close") {
-      resolveScorchClose(state, events, catalogCards, catalogLookup, source, seatId, cardId);
+    } else if (
+      abilityId === "scorch_close" ||
+      abilityId === "scorch_range" ||
+      abilityId === "scorch_siege"
+    ) {
+      resolveScorchRow(state, events, catalogCards, catalogLookup, source, seatId, cardId, abilityId);
     } else if (abilityId === "scorch") {
-      emitTriggered(events, source, cardId, abilityId);
-      emitDeferred(events, source, cardId, abilityId, "requires_special_resolution");
+      if (source.kind === "special") {
+        emitTriggered(events, source, cardId, abilityId);
+        emitDeferred(events, source, cardId, abilityId, "requires_special_resolution");
+      } else {
+        resolveUnitScorchGlobal(state, events, catalogCards, catalogLookup, source, seatId, cardId);
+      }
     } else if (abilityId === "berserker") {
       emitTriggered(events, source, cardId, abilityId);
       emitDeferred(events, source, cardId, abilityId, "awaits_mardroeme");
     } else if (ONGOING_STATE_ABILITIES.has(abilityId)) {
       emitTriggered(events, source, cardId, abilityId);
       emitResolved(events, source, cardId, abilityId, "represented_by_board_state");
-    } else if (PLANNED_DEFERRED_ABILITIES.has(abilityId)) {
+    } else if (abilityId === "avenger") {
+      emitTriggered(events, source, cardId, abilityId);
+      emitResolved(events, source, cardId, abilityId, "armed_for_removal");
+    } else if (abilityId === "summon") {
       emitTriggered(events, source, cardId, abilityId);
       emitDeferred(events, source, cardId, abilityId, "planned_ability");
     }

@@ -111,4 +111,87 @@ describe("current catalog data", () => {
     );
     expect(currentOnly.every((preset) => preset.sideDeck.length === 0)).toBe(true);
   });
+
+  describe("cCp11 catalog reconciliation", () => {
+    it("links Cerys to Clan Drummond Shield Maiden via linkedSourceIds", () => {
+      const cerys = currentCatalogCards.find((card) => card.sourceId === "skellige.cerys");
+      expect(cerys).toBeDefined();
+      expect(cerys!.kind).toBe("hero");
+      expect(cerys!.rows).toEqual(["close"]);
+      expect(cerys!.abilities).toEqual(["muster"]);
+      expect(cerys!.linkedSourceIds).toEqual(["skellige.clan-drummond-shield-maiden"]);
+    });
+
+    it("Kayran has hero kind, close+ranged rows, and agile + morale_boost abilities", () => {
+      const kayran = currentCatalogCards.find((card) => card.sourceId === "monsters.kayran");
+      expect(kayran).toBeDefined();
+      expect(kayran!.kind).toBe("hero");
+      expect(kayran!.strength).toBe(8);
+      expect(kayran!.rows).toEqual(["close", "ranged"]);
+      expect(kayran!.abilities).toEqual(["agile", "morale_boost"]);
+    });
+
+    it("Toad has scorch_range ability on the ranged row", () => {
+      const toad = currentCatalogCards.find((card) => card.sourceId === "monsters.toad");
+      expect(toad).toBeDefined();
+      expect(toad!.kind).toBe("unit");
+      expect(toad!.strength).toBe(7);
+      expect(toad!.rows).toEqual(["ranged"]);
+      expect(toad!.abilities).toEqual(["scorch_range"]);
+    });
+
+    it("Schirru has scorch_siege ability on the siege row", () => {
+      const schirru = currentCatalogCards.find((card) => card.sourceId === "scoiatael.schirru");
+      expect(schirru).toBeDefined();
+      expect(schirru!.abilities).toEqual(["scorch_siege"]);
+      expect(schirru!.rows).toEqual(["siege"]);
+      expect(schirru!.strength).toBe(8);
+    });
+
+    it("Triss Merigold is now a Close Combat hero", () => {
+      const triss = currentCatalogCards.find((card) => card.sourceId === "neutral.triss-merigold");
+      expect(triss).toBeDefined();
+      expect(triss!.rows).toEqual(["close"]);
+    });
+
+    it("Siege Tower has no leading tab in its display name", () => {
+      const siegeTower = currentCatalogCards.find(
+        (card) => card.sourceId === "northern-realms.siege-tower",
+      );
+      expect(siegeTower).toBeDefined();
+      expect(siegeTower!.name).toBe("Siege Tower");
+      expect(siegeTower!.name.startsWith("\t")).toBe(false);
+    });
+
+    it("Kambi/Hemdall split exists as separate sources", () => {
+      const kambi = currentCatalogCards.find((card) => card.sourceId === "skellige.kambi");
+      const hemdall = currentCatalogCards.find((card) => card.sourceId === "skellige.hemdall");
+      const combined = currentCatalogCards.find(
+        (card) => card.sourceId === "skellige.kambi-hemdall",
+      );
+
+      expect(kambi).toBeDefined();
+      expect(kambi!.kind).toBe("unit");
+      expect(kambi!.strength).toBe(0);
+      expect(kambi!.rows).toEqual(["close"]);
+      expect(kambi!.abilities).toEqual(["avenger"]);
+      expect(kambi!.linkedSourceIds).toEqual(["skellige.hemdall"]);
+
+      expect(hemdall).toBeDefined();
+      expect(hemdall!.kind).toBe("hero");
+      expect(hemdall!.strength).toBe(11);
+      expect(hemdall!.rows).toEqual(["close"]);
+      expect(hemdall!.tags).toContain("hero");
+      expect(hemdall!.tags).toContain("side_deck_only");
+
+      expect(combined).toBeUndefined();
+    });
+
+    it("Hemdall image resolves to a committed public asset", () => {
+      const hemdall = currentCatalogCards.find((card) => card.sourceId === "skellige.hemdall");
+      expect(hemdall).toBeDefined();
+      const publicPath = join(process.cwd(), "public", hemdall!.image.replace(/^\//, ""));
+      expect(existsSync(publicPath)).toBe(true);
+    });
+  });
 });

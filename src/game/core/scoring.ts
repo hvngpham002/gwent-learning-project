@@ -232,12 +232,15 @@ export const calculateScores = ({
         return instance ? catalogLookup.get(instance.sourceId) : undefined;
       });
       const moraleSourceCount = rowSources.filter(
-        (source) => source?.kind === "unit" && hasAbility(source, "morale_boost"),
+        (source) =>
+          (source?.kind === "unit" || source?.kind === "hero") && hasAbility(source, "morale_boost"),
       ).length;
       const specialHornSourceId = rowState.horn;
       const unitHornSourceIds = rowState.units.filter((cardId) => {
         const source = rowSources[rowState.units.indexOf(cardId)];
-        return source?.kind === "unit" && hasAbility(source, "commanders_horn");
+        return (
+          (source?.kind === "unit" || source?.kind === "hero") && hasAbility(source, "commanders_horn")
+        );
       });
       const hornSourceId = specialHornSourceId ?? unitHornSourceIds[0] ?? null;
       const hasHorn = Boolean(hornSourceId);
@@ -372,33 +375,59 @@ export const findSpecialScorchTargets = (breakdown: MatchScoreBreakdown): Scorch
   return candidates.filter((entry) => entry.finalStrength === maxStrength).map(toScorchTarget);
 };
 
-export const findUnitScorchCloseTargets = (
+export interface UnitScorchRowResult {
+  outcome: "destroyed" | "no_targets" | "below_threshold";
+  oppositeSeatId: SeatId;
+  row: CatalogRow;
+  rowTotal: number;
+  targets: ScorchTarget[];
+}
+
+export const findUnitScorchRowTargets = (
   breakdown: MatchScoreBreakdown,
   sourceController: SeatId,
-): UnitScorchCloseResult => {
+  row: CatalogRow,
+): UnitScorchRowResult => {
   const oppositeSeatId = opponentOf(sourceController);
-  const rowTotal = breakdown.rowTotalsBySeat[oppositeSeatId].close;
+  const rowTotal = breakdown.rowTotalsBySeat[oppositeSeatId][row];
 
   if (rowTotal < 10) {
     return {
       outcome: "below_threshold",
       oppositeSeatId,
+      row,
       rowTotal,
       targets: [],
     };
   }
 
   const candidates = breakdown.cards.filter(
-    (entry) => entry.seatId === oppositeSeatId && entry.row === "close" && entry.eligibleForScorch,
+    (entry) => entry.seatId === oppositeSeatId && entry.row === row && entry.eligibleForScorch,
   );
   const maxStrength = Math.max(0, ...candidates.map((entry) => entry.finalStrength));
   const targets =
-    maxStrength > 0 ? candidates.filter((entry) => entry.finalStrength === maxStrength).map(toScorchTarget) : [];
+    maxStrength > 0
+      ? candidates.filter((entry) => entry.finalStrength === maxStrength).map(toScorchTarget)
+      : [];
 
   return {
     outcome: targets.length > 0 ? "destroyed" : "no_targets",
     oppositeSeatId,
+    row,
     rowTotal,
     targets,
+  };
+};
+
+export const findUnitScorchCloseTargets = (
+  breakdown: MatchScoreBreakdown,
+  sourceController: SeatId,
+): UnitScorchCloseResult => {
+  const result = findUnitScorchRowTargets(breakdown, sourceController, "close");
+  return {
+    outcome: result.outcome,
+    oppositeSeatId: result.oppositeSeatId,
+    rowTotal: result.rowTotal,
+    targets: result.targets,
   };
 };

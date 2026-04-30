@@ -51,7 +51,7 @@ export const neutralCatalogCards = [
     faction: "neutral",
     kind: "hero",
     strength: 7,
-    rows: ["ranged"],
+    rows: ["close"],
     abilities: ["none"],
     tags: ["hero"],
     deckLimit: 1,

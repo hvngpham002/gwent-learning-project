@@ -10,6 +10,7 @@ export const officialSkelligeStarterDeckPreset = {
     { sourceId: "skellige.hjalmar", count: 1 },
     { sourceId: "skellige.ermion", count: 1 },
     { sourceId: "skellige.olaf", count: 1 },
+    { sourceId: "skellige.kambi", count: 1 },
     { sourceId: "skellige.clan-an-craite-warrior", count: 3 },
     { sourceId: "skellige.clan-drummond-shield-maiden", count: 3 },
     { sourceId: "skellige.clan-brokvar-archer", count: 3 },
@@ -27,6 +28,7 @@ export const officialSkelligeStarterDeckPreset = {
     { sourceId: "neutral.skellige-storm", count: 1 },
   ],
   sideDeck: [
+    { sourceId: "skellige.hemdall", count: 1 },
     { sourceId: "skellige.young-vildkaarl", count: 3 },
     { sourceId: "skellige.vildkaarl", count: 1 },
   ],

@@ -1,6 +1,11 @@
 import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
 
-import { resolveCardAbilities, resolvePromptOption, settleMardroemeRow } from "./abilities";
+import {
+  resolveAvengerForCard,
+  resolveCardAbilities,
+  resolvePromptOption,
+  settleMardroemeRow,
+} from "./abilities";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
 import { calculateScores, findSpecialScorchTargets } from "./scoring";
@@ -347,8 +352,16 @@ const resolveSpecialScorch = (
   const targets = findSpecialScorchTargets(breakdown);
 
   targets.forEach((target) => {
+    const origin: ZoneRef = { kind: "board_row", seat: target.seatId, row: target.row };
     moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
     emitDiscardTriggerDeferrals(events, sourceLookup, state, target.cardId);
+    resolveAvengerForCard({
+      state,
+      events,
+      catalogLookup: sourceLookup,
+      cardId: target.cardId,
+      destination: origin,
+    });
   });
 
   moveCard(state, events, cardId, { kind: "discard", seat: seatId }, "scorch_discard");
@@ -428,8 +441,16 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
       throw new EngineRuleError("invalid_target", "Decoy target is not in its row.", { target });
     }
 
+    const decoyOriginZone: ZoneRef = { kind: "board_row", seat: targetZone.seat, row: targetZone.row };
     moveCard(state, events, target.cardId, { kind: "hand", seat: command.seatId }, "decoy_return");
     state.cardsById[target.cardId].controller = command.seatId;
+    resolveAvengerForCard({
+      state,
+      events,
+      catalogLookup: sourceLookup,
+      cardId: target.cardId,
+      destination: decoyOriginZone,
+    });
     card.controller = command.seatId;
     moveCard(
       state,
@@ -575,8 +596,10 @@ const sweepBattlefield = (
   events: GameEvent[],
   round: number,
   keepCardIds: ReadonlySet<CardInstanceId>,
+  sourceLookup: ReadonlyMap<string, CatalogCardSource>,
 ) => {
   const movedCardIds: CardInstanceId[] = [];
+  const avengerOrigins: Array<{ cardId: CardInstanceId; origin: ZoneRef }> = [];
 
   SEATS.forEach((seatId) => {
     ROWS.forEach((row) => {
@@ -584,6 +607,14 @@ const sweepBattlefield = (
       unitIds.forEach((cardId) => {
         if (keepCardIds.has(cardId)) {
           return;
+        }
+        const sourceId = state.cardsById[cardId].sourceId;
+        const source = sourceLookup.get(sourceId);
+        if (source?.abilities.includes("avenger")) {
+          avengerOrigins.push({
+            cardId,
+            origin: { kind: "board_row", seat: seatId, row },
+          });
         }
         moveCard(state, events, cardId, { kind: "discard", seat: seatId }, "round_cleanup");
         movedCardIds.push(cardId);
@@ -604,6 +635,16 @@ const sweepBattlefield = (
   });
 
   events.push({ type: "board_swept", round, movedCardIds, keptCardIds: [...keepCardIds] });
+
+  avengerOrigins.forEach(({ cardId, origin }) => {
+    resolveAvengerForCard({
+      state,
+      events,
+      catalogLookup: sourceLookup,
+      cardId,
+      destination: origin,
+    });
+  });
 };
 
 const applyNorthernRealmsDraw = (
@@ -787,7 +828,7 @@ const resolveRoundEnd = (input: StatefulCommandInput): EngineTransaction => {
   state.lastResolvedRound = resolvedRound;
 
   const keepCardIds = continues ? getMonstersKeepCardIds(state, events, sourceLookup) : new Set<CardInstanceId>();
-  sweepBattlefield(state, events, resolvedRound, keepCardIds);
+  sweepBattlefield(state, events, resolvedRound, keepCardIds, sourceLookup);
 
   if (!continues) {
     const from = state.phase;
