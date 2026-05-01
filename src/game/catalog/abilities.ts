@@ -183,14 +183,14 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   scorch_siege: {
     id: "scorch_siege",
     name: "Scorch Siege",
-    status: "placeholder",
-    description: "Scorches highest siege units when threshold is met.",
+    status: "implemented",
+    description: "Active leader: destroys all tied highest non-hero units on the opponent Siege Combat row when that row's effective strength is at least 10.",
   },
   scorch_range: {
     id: "scorch_range",
     name: "Scorch Ranged",
-    status: "placeholder",
-    description: "Scorches highest ranged units when threshold is met.",
+    status: "implemented",
+    description: "Active leader: destroys all tied highest non-hero units on the opponent Ranged Combat row when that row's effective strength is at least 10.",
   },
   double_siege: {
     id: "double_siege",

@@ -133,6 +133,18 @@ describe("official Game8 catalog staging import", () => {
     expect(kingBranLeader?.mappedAbilityId).toBe("weather_half_penalty");
     expect(kingBranLeader?.portingStatus).not.toBe("needs_leader_rule");
     expect(kingBranLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
+    const sonOfMedellLeader = game8OfficialLeaderCandidates.find(
+      (candidate) => candidate.sourceId === "northern-realms.foltest-son-of-medell",
+    );
+    expect(sonOfMedellLeader?.mappedAbilityId).toBe("scorch_range");
+    expect(sonOfMedellLeader?.portingStatus).not.toBe("needs_leader_rule");
+    expect(sonOfMedellLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
+    const steelForgedLeader = game8OfficialLeaderCandidates.find(
+      (candidate) => candidate.sourceId === "northern-realms.foltest-the-steel-forged",
+    );
+    expect(steelForgedLeader?.mappedAbilityId).toBe("scorch_siege");
+    expect(steelForgedLeader?.portingStatus).not.toBe("needs_leader_rule");
+    expect(steelForgedLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
     expect(officialPortingSummary.unsupportedAbilityCounts.mardroeme).toBeUndefined();
     expect(officialPortingSummary.unsupportedAbilityCounts.berserker).toBeUndefined();
     expect(officialPortingSummary.unsupportedAbilityCounts.skellige_storm).toBeUndefined();
@@ -141,6 +153,8 @@ describe("official Game8 catalog staging import", () => {
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_rain).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_any_weather).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.weather_half_penalty).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.scorch_range).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.scorch_siege).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.double_close).toBeGreaterThan(0);
   });
 

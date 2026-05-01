@@ -11,6 +11,11 @@ import {
   isWeatherLeaderAbility,
   sortedWeatherSourceIds,
 } from "./leaderWeather";
+import {
+  isLeaderRowScorchAbility,
+  leaderRowScorchRowForAbility,
+} from "./leaderRowScorch";
+import { calculateScores, findUnitScorchRowTargets } from "./scoring";
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
 export type LegalMoveKind =
@@ -82,6 +87,11 @@ export interface UseLeaderMove extends LegalMoveBase {
     targetSourceId?: string;
     targetCardName?: string;
     targetLabel?: string;
+    targetRow?: CatalogRow;
+    targetSeatId?: SeatId;
+    targetCardIds?: CardInstanceId[];
+    rowTotal?: number;
+    targetCount?: number;
   };
 }
 
@@ -350,7 +360,15 @@ const getCardMoves = (
   return specialMoves ?? [];
 };
 
-const getLeaderMove = (state: MatchState, seatId: SeatId, lookups: CatalogLookups): UseLeaderMove[] => {
+const opposingSeatOf = (seatId: SeatId): SeatId => (seatId === "seat_a" ? "seat_b" : "seat_a");
+
+const getLeaderMove = (
+  state: MatchState,
+  seatId: SeatId,
+  lookups: CatalogLookups,
+  catalogCards: readonly CatalogCardSource[],
+  catalogLeaders: readonly CatalogLeaderSource[],
+): UseLeaderMove[] => {
   const seat = state.seats[seatId];
   const leaderCardId = seat.leader;
 
@@ -423,13 +441,53 @@ const getLeaderMove = (state: MatchState, seatId: SeatId, lookups: CatalogLookup
     });
   }
 
+  if (isLeaderRowScorchAbility(leader.ability)) {
+    const row = leaderRowScorchRowForAbility(leader.ability);
+    const breakdown = calculateScores({ state, catalogCards, catalogLeaders });
+    const result = findUnitScorchRowTargets(breakdown, seatId, row);
+    if (result.outcome !== "destroyed" || result.targets.length === 0) {
+      return [];
+    }
+    const targetCardIds = result.targets.map((target) => target.cardId);
+    const opposingSeatId = opposingSeatOf(seatId);
+    return [
+      {
+        kind: "use_leader",
+        moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+        seatId,
+        leaderCardId,
+        sourceId: leader.sourceId,
+        target: { kind: "none" },
+        label: `Use ${leader.name}`,
+        metadata: {
+          leaderName: leader.name,
+          ability: leader.ability,
+          abilityStatus: abilityMetadata.status,
+          targetRequirement: "none",
+          targetRow: row,
+          targetSeatId: opposingSeatId,
+          targetCardIds,
+          rowTotal: result.rowTotal,
+          targetCount: targetCardIds.length,
+          targetLabel: `opponent ${row}`,
+        },
+      },
+    ];
+  }
+
   // Implemented passive leaders (cCp15: King Bran's `weather_half_penalty`) do
   // not produce a `use_leader` legal move. Their effect is wired into scoring
   // through `getWeatherPolicyBySeat`, not through a clickable command.
   return [];
 };
 
-const getPlayingMoves = (state: MatchState, seatId: SeatId, lookups: CatalogLookups): LegalMove[] => {
+const getPlayingMoves = (
+  state: MatchState,
+  seatId: SeatId,
+  lookups: CatalogLookups,
+  catalogCards: readonly CatalogCardSource[],
+  catalogLeaders: readonly CatalogLeaderSource[],
+): LegalMove[] => {
   const seat = state.seats[seatId];
 
   if (state.currentTurn !== seatId || seat.passed) {
@@ -444,7 +502,7 @@ const getPlayingMoves = (state: MatchState, seatId: SeatId, lookups: CatalogLook
       target: { kind: "none" },
       label: "Pass",
     },
-    ...getLeaderMove(state, seatId, lookups),
+    ...getLeaderMove(state, seatId, lookups, catalogCards, catalogLeaders),
     ...seat.hand.flatMap((cardId) => {
       const instance = state.cardsById[cardId];
       return instance ? getCardMoves(state, seatId, lookups, instance) : [];
@@ -502,7 +560,7 @@ export const getLegalMoves = ({ state, seatId, catalogCards, catalogLeaders }: G
   }
 
   if (state.phase === "playing") {
-    return getPlayingMoves(state, seatId, lookups);
+    return getPlayingMoves(state, seatId, lookups, catalogCards, catalogLeaders);
   }
 
   if (state.phase === "round_end") {

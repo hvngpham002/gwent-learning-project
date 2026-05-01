@@ -60,7 +60,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for newly added leader ability IDs that remain placeholder after cCp15", () => {
+  it("registers placeholder metadata for newly added leader ability IDs that remain placeholder after cCp16", () => {
     [
       "double_close",
       "discard_two_draw_one_from_deck",
@@ -80,7 +80,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the four cCp14 weather-pulling abilities, and cCp15 weather_half_penalty", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, and cCp16 row-Scorch abilities", () => {
     [
       "clear_weather",
       "play_frost",
@@ -88,6 +88,8 @@ describe("official leader promotion (cBp5)", () => {
       "play_rain",
       "play_any_weather",
       "weather_half_penalty",
+      "scorch_range",
+      "scorch_siege",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -106,6 +108,8 @@ describe("official leader promotion (cBp5)", () => {
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
+        "northern-realms.foltest-son-of-medell",
+        "northern-realms.foltest-the-steel-forged",
         "scoiatael.francesca-findabair-pureblood-elf",
         "skellige.king-bran",
       ].sort(),
@@ -131,11 +135,19 @@ describe("official leader promotion (cBp5)", () => {
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
+        "northern-realms.foltest-son-of-medell",
+        "northern-realms.foltest-the-steel-forged",
         "scoiatael.francesca-findabair-pureblood-elf",
       ].sort(),
     );
     expect(officialLeaderPromotionManifest.executableLeaderSourceIds).not.toContain(
       "skellige.king-bran",
+    );
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
+      "northern-realms.foltest-son-of-medell",
+    );
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
+      "northern-realms.foltest-the-steel-forged",
     );
     expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
       "skellige.king-bran",
@@ -146,6 +158,8 @@ describe("official leader promotion (cBp5)", () => {
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
+        "northern-realms.foltest-son-of-medell",
+        "northern-realms.foltest-the-steel-forged",
         "scoiatael.francesca-findabair-pureblood-elf",
         "skellige.king-bran",
       ].sort(),
@@ -166,6 +180,8 @@ describe("official leader promotion (cBp5)", () => {
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
       "weather_half_penalty",
     );
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("scorch_range");
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("scorch_siege");
   });
 
   it("manifest source IDs are all present in currentCatalogLeaders", () => {

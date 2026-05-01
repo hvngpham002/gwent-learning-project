@@ -610,6 +610,52 @@ in §15 is preserved). The score modifier marker for affected entries is
 Identity gate: King Bran is derived from leader identity, not faction. A
 Skellige seat with Crach an Craite continues to use the normal weather rule.
 
+### 17.12c Foltest Row-Scorch Leaders (cCp16)
+
+The two Foltest row-Scorch active leaders destroy the opponent's strongest
+non-hero unit(s) on a fixed row when that row's effective strength is at
+least 10:
+
+- `Foltest: Son of Medell` (`scorch_range`) targets the opponent's
+  **Ranged Combat** row;
+- `Foltest: The Steel-Forged` (`scorch_siege`) targets the opponent's
+  **Siege Combat** row.
+
+Both leaders share the same row-Scorch semantics as unit-source row Scorch
+cards (`scorch_range` / `scorch_siege` on Toad / Schirru / etc., introduced
+in cCp11) — the row is fixed by the leader ability rather than by the unit's
+printed row:
+
+- effective row total uses the full scoring pipeline (Weather, King Bran,
+  Tight Bond, Morale Boost, Commander's Horn);
+- the leader fires only when the opponent's matching row's effective
+  strength is **≥10**;
+- on fire, the engine destroys all tied highest-strength **non-hero** units
+  on that opponent row, using post-modifier effective strength;
+- Heroes are immune and cannot be targeted;
+- destroyed cards go to the discard pile for the **board side they
+  occupied** (a Spy on the opponent side goes to the opponent's discard);
+- Avenger replacement handling matches existing row-Scorch destruction
+  behavior — a destroyed Avenger source pulls its `linkedSourceIds[0]`
+  side-deck replacement back onto the same row.
+
+Engine policy for legal-move generation (cCp16):
+
+- the leader produces exactly one legal `use_leader` move (no-target,
+  `target.kind === "none"`) only when the engine can actually destroy at
+  least one eligible non-hero unit;
+- if the opponent row total is below 10, **no** `use_leader` move is
+  emitted;
+- if the row total is at least 10 but the row contains only Heroes (or
+  otherwise has no eligible non-hero target), **no** `use_leader` move is
+  emitted;
+- the leader is consumed (`seat.leaderUsed = true`, `leader_used` event)
+  only after a successful destroy.
+
+Each leader is usable **once per game** like other active leaders, replaces
+the player's card play for that turn, and hands off the turn after
+resolution.
+
 ### 17.13 Draws, Ties, and Nilfgaard
 
 - Default rule for a Strength **tie** at end of round: **both players lose a gem.**

@@ -67,14 +67,18 @@ const countsByFaction: Readonly<Record<string, number>> = {
 };
 
 // Active executable leaders: leaders whose ability emits a legal `use_leader`
-// move during play. After cCp14 the four weather-pulling leaders joined the
-// original clear-weather Foltest leader as the active executable set. cCp15
-// keeps this list unchanged: King Bran's passive does NOT belong here.
+// move during play. cCp14 added the four weather-pulling leaders to the
+// original clear-weather Foltest leader. cCp16 adds the two Foltest
+// row-Scorch leaders (`scorch_range`, `scorch_siege`) to bring the active
+// executable set to seven. King Bran (cCp15) is implemented passive and
+// does NOT belong here.
 const executableLeaderSourceIds: readonly string[] = [
   "monsters.eredin-king-of-the-wild-hunt",
   "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
   "northern-realms.foltest-king-of-temeria",
   "northern-realms.foltest-lord-commander-of-the-north",
+  "northern-realms.foltest-son-of-medell",
+  "northern-realms.foltest-the-steel-forged",
   "scoiatael.francesca-findabair-pureblood-elf",
 ];
 

@@ -6,3 +6,4 @@ export * from "./abilities";
 export * from "./scoring";
 export * from "./types";
 export * from "./leaderWeather";
+export * from "./leaderRowScorch";

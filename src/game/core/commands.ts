@@ -6,10 +6,14 @@ import {
   resolvePromptOption,
   settleMardroemeRow,
 } from "./abilities";
+import {
+  isLeaderRowScorchAbility,
+  leaderRowScorchRowForAbility,
+} from "./leaderRowScorch";
 import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
-import { calculateScores, findSpecialScorchTargets } from "./scoring";
+import { calculateScores, findSpecialScorchTargets, findUnitScorchRowTargets } from "./scoring";
 import { startMatch } from "./setup";
 import type {
   CardInstanceId,
@@ -951,6 +955,86 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
     events.push({ type: "card_played", seatId, cardId: matchingCardId, target: state.cardsById[matchingCardId].zone });
     seat.leaderUsed = true;
     events.push({ type: "leader_used", seatId, leaderCardId: seat.leader as CardInstanceId, abilityId: leader.ability });
+    handoffTurn(state, events, seatId);
+    return { state, events };
+  }
+
+  if (isLeaderRowScorchAbility(leader.ability)) {
+    const target = command.target as LegalMoveTarget | undefined;
+    if (target && target.kind !== "none") {
+      throw new EngineRuleError("invalid_target", "Row-Scorch leader does not accept a target.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        target,
+      });
+    }
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const leaderCardId = seat.leader as CardInstanceId;
+    const row = leaderRowScorchRowForAbility(leader.ability);
+    const breakdown = calculateScores({
+      state,
+      catalogCards: input.catalogCards,
+      catalogLeaders: input.catalogLeaders,
+    });
+    const result = findUnitScorchRowTargets(breakdown, seatId, row);
+
+    events.push({
+      type: "ability_triggered",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+    });
+
+    result.targets.forEach((target) => {
+      const origin: ZoneRef = { kind: "board_row", seat: target.seatId, row: target.row };
+      moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
+      const targetSource = sourceLookup.get(target.sourceId);
+      targetSource?.abilities.forEach((abilityId) => {
+        if (abilityId === "summon" || abilityId === "avenger") {
+          events.push({
+            type: "ability_deferred",
+            sourceId: targetSource.sourceId,
+            cardId: target.cardId,
+            abilityId,
+            reason: "discard_trigger_pending",
+          });
+        }
+      });
+      resolveAvengerForCard({
+        state,
+        events,
+        catalogLookup: sourceLookup,
+        cardId: target.cardId,
+        destination: origin,
+      });
+    });
+
+    events.push({
+      type: "scorch_resolved",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+      targetCardIds: result.targets.map((target) => target.cardId),
+      outcome: result.outcome,
+    });
+    events.push({
+      type: "ability_resolved",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+      outcome: result.outcome,
+    });
+
+    seat.leaderUsed = true;
+    events.push({
+      type: "leader_used",
+      seatId,
+      leaderCardId,
+      abilityId: leader.ability,
+    });
     handoffTurn(state, events, seatId);
     return { state, events };
   }
