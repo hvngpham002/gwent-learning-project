@@ -60,9 +60,8 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for newly added leader ability IDs", () => {
+  it("registers placeholder metadata for newly added leader ability IDs that remain placeholder after cCp14", () => {
     [
-      "play_any_weather",
       "double_close",
       "discard_two_draw_one_from_deck",
       "restore_discard_to_hand",
@@ -82,13 +81,28 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("only the clear-weather Foltest leader has implemented ability metadata", () => {
+  it("registers implemented metadata for clear_weather and the four cCp14 weather-pulling abilities", () => {
+    ["clear_weather", "play_frost", "play_fog", "play_rain", "play_any_weather"].forEach((ability) => {
+      const metadata =
+        CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
+      expect(metadata).toBeDefined();
+      expect(metadata.status).toBe("implemented");
+    });
+  });
+
+  it("clear_weather and the four weather-pulling leaders have implemented ability metadata", () => {
     const implementedLeaders = currentCatalogLeaders.filter(
       (leader) => CATALOG_LEADER_ABILITY_METADATA[leader.ability].status === "implemented",
     );
-    expect(implementedLeaders.map((leader) => leader.sourceId)).toEqual([
-      "northern-realms.foltest-lord-commander-of-the-north",
-    ]);
+    expect(implementedLeaders.map((leader) => leader.sourceId).sort()).toEqual(
+      [
+        "monsters.eredin-king-of-the-wild-hunt",
+        "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+        "northern-realms.foltest-king-of-temeria",
+        "northern-realms.foltest-lord-commander-of-the-north",
+        "scoiatael.francesca-findabair-pureblood-elf",
+      ].sort(),
+    );
   });
 
   it("matches the manifest counts and source ID groups", () => {
@@ -104,12 +118,17 @@ describe("official leader promotion (cBp5)", () => {
       scoiatael: 5,
       skellige: 2,
     });
-    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toEqual([
-      "northern-realms.foltest-lord-commander-of-the-north",
-    ]);
+    expect([...officialLeaderPromotionManifest.executableLeaderSourceIds].sort()).toEqual(
+      [
+        "monsters.eredin-king-of-the-wild-hunt",
+        "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+        "northern-realms.foltest-king-of-temeria",
+        "northern-realms.foltest-lord-commander-of-the-north",
+        "scoiatael.francesca-findabair-pureblood-elf",
+      ].sort(),
+    );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toEqual(
       expect.arrayContaining([
-        "play_any_weather",
         "double_close",
         "discard_two_draw_one_from_deck",
         "restore_discard_to_hand",
@@ -121,6 +140,7 @@ describe("official leader promotion (cBp5)", () => {
         "shuffle_discards_into_decks",
       ]),
     );
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("play_any_weather");
   });
 
   it("manifest source IDs are all present in currentCatalogLeaders", () => {

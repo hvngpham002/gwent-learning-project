@@ -201,20 +201,20 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   play_frost: {
     id: "play_frost",
     name: "Play Frost",
-    status: "placeholder",
-    description: "Plays or creates a Frost weather effect.",
+    status: "implemented",
+    description: "Pulls a Biting Frost card from the acting deck and plays it to the shared weather zone.",
   },
   play_fog: {
     id: "play_fog",
     name: "Play Fog",
-    status: "placeholder",
-    description: "Plays or creates a Fog weather effect.",
+    status: "implemented",
+    description: "Pulls an Impenetrable Fog card from the acting deck and plays it to the shared weather zone.",
   },
   play_rain: {
     id: "play_rain",
     name: "Play Rain",
-    status: "placeholder",
-    description: "Plays or creates a Rain weather effect.",
+    status: "implemented",
+    description: "Pulls a Torrential Rain card from the acting deck and plays it to the shared weather zone.",
   },
   cancel_leader: {
     id: "cancel_leader",
@@ -243,8 +243,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   play_any_weather: {
     id: "play_any_weather",
     name: "Play Any Weather",
-    status: "placeholder",
-    description: "Plays a chosen weather card from the deck.",
+    status: "implemented",
+    description: "Pulls one chosen weather effect card (Frost, Fog, Rain, or Skellige Storm) from the acting deck and plays it to the shared weather zone. Cannot pull Clear Weather.",
   },
   double_close: {
     id: "double_close",

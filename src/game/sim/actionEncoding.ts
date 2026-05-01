@@ -11,6 +11,7 @@ import { lookupCatalogCard, safeCardRefForId } from "./exportObservation";
 const sideForTarget = (target: LegalMoveTarget): "own" | "opponent" | "public" | "none" => {
   if (target.kind === "weather") return "public";
   if (target.kind === "none") return "none";
+  if (target.kind === "deck_card_source") return "own";
   return target.side;
 };
 
@@ -23,6 +24,9 @@ const encodeTarget = (
   if (target.kind === "weather") return { kind: "weather", side: "public" };
   if (target.kind === "board_row") return { kind: "board_row", side: target.side, row: target.row };
   if (target.kind === "row_horn") return { kind: "row_horn", side: target.side, row: target.row };
+  if (target.kind === "deck_card_source") {
+    return { kind: "deck_card_source", side: "own", sourceId: target.sourceId };
+  }
 
   const visibleCard = safeCardRefForId(state, perspectiveSeatId, target.cardId);
   return visibleCard

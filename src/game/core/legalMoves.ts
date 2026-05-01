@@ -6,6 +6,11 @@ import {
   type CatalogRow,
 } from "@/game/catalog";
 
+import {
+  isEligibleWeatherSourceForLeader,
+  isWeatherLeaderAbility,
+  sortedWeatherSourceIds,
+} from "./leaderWeather";
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
 export type LegalMoveKind =
@@ -21,6 +26,7 @@ export type LegalMoveTarget =
   | { kind: "row_horn"; side: "own"; seatId: SeatId; row: CatalogRow }
   | { kind: "weather" }
   | { kind: "card_instance"; side: "own" | "opponent"; seatId: SeatId; cardId: CardInstanceId; row?: CatalogRow }
+  | { kind: "deck_card_source"; seatId: SeatId; sourceId: string }
   | { kind: "none" };
 
 export interface LegalMoveBase {
@@ -72,7 +78,10 @@ export interface UseLeaderMove extends LegalMoveBase {
     leaderName: string;
     ability: CatalogLeaderSource["ability"];
     abilityStatus: "implemented" | "planned" | "placeholder";
-    targetRequirement: "none" | "future_prompt";
+    targetRequirement: "none" | "future_prompt" | "deck_weather_source";
+    targetSourceId?: string;
+    targetCardName?: string;
+    targetLabel?: string;
   };
 }
 
@@ -356,29 +365,65 @@ const getLeaderMove = (state: MatchState, seatId: SeatId, lookups: CatalogLookup
     return [];
   }
 
-  if (leader.ability !== "clear_weather" || abilityMetadata.status !== "implemented") {
+  if (abilityMetadata.status !== "implemented") {
     return [];
   }
 
-  const targetRequirement = "none";
-
-  return [
-    {
-      kind: "use_leader",
-      moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
-      seatId,
-      leaderCardId,
-      sourceId: leader.sourceId,
-      target: { kind: "none" },
-      label: `Use ${leader.name}`,
-      metadata: {
-        leaderName: leader.name,
-        ability: leader.ability,
-        abilityStatus: abilityMetadata.status,
-        targetRequirement,
+  if (leader.ability === "clear_weather") {
+    return [
+      {
+        kind: "use_leader",
+        moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+        seatId,
+        leaderCardId,
+        sourceId: leader.sourceId,
+        target: { kind: "none" },
+        label: `Use ${leader.name}`,
+        metadata: {
+          leaderName: leader.name,
+          ability: leader.ability,
+          abilityStatus: abilityMetadata.status,
+          targetRequirement: "none",
+        },
       },
-    },
-  ];
+    ];
+  }
+
+  if (isWeatherLeaderAbility(leader.ability)) {
+    const eligibleSourceIds = new Set<string>();
+    seat.deck.forEach((cardId) => {
+      const instance = state.cardsById[cardId];
+      const source = instance ? lookups.cardsBySourceId.get(instance.sourceId) : undefined;
+      if (source && isEligibleWeatherSourceForLeader(leader.ability, source)) {
+        eligibleSourceIds.add(source.sourceId);
+      }
+    });
+
+    return sortedWeatherSourceIds([...eligibleSourceIds]).map((sourceId) => {
+      const targetSource = lookups.cardsBySourceId.get(sourceId);
+      const targetName = targetSource?.name ?? sourceId;
+      return {
+        kind: "use_leader" as const,
+        moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}:${sourceId}`,
+        seatId,
+        leaderCardId,
+        sourceId: leader.sourceId,
+        target: { kind: "deck_card_source" as const, seatId, sourceId },
+        label: `Use ${leader.name}: ${targetName}`,
+        metadata: {
+          leaderName: leader.name,
+          ability: leader.ability,
+          abilityStatus: abilityMetadata.status,
+          targetRequirement: "deck_weather_source" as const,
+          targetSourceId: sourceId,
+          targetCardName: targetName,
+          targetLabel: `deck ${targetName}`,
+        },
+      };
+    });
+  }
+
+  return [];
 };
 
 const getPlayingMoves = (state: MatchState, seatId: SeatId, lookups: CatalogLookups): LegalMove[] => {

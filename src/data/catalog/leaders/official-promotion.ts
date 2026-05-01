@@ -60,16 +60,21 @@ const countsByFaction: Readonly<Record<string, number>> = {
 };
 
 // Only leaders whose ability metadata is `implemented` are considered executable.
-// The clear-weather Foltest leader is the only such record at present.
+// After cCp14 the four weather-pulling leaders join the original clear-weather
+// Foltest leader as executable through the pure engine.
 const executableLeaderSourceIds: readonly string[] = [
+  "monsters.eredin-king-of-the-wild-hunt",
+  "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+  "northern-realms.foltest-king-of-temeria",
   "northern-realms.foltest-lord-commander-of-the-north",
+  "scoiatael.francesca-findabair-pureblood-elf",
 ];
 
 // Leader abilities introduced by this manifest that remain placeholder metadata.
 // They validate as known catalog leader abilities but do not produce executable
-// engine commands.
+// engine commands. cCp14 promoted `play_any_weather` to implemented; the rest
+// continue as placeholders.
 const placeholderLeaderAbilityIds: readonly string[] = [
-  "play_any_weather",
   "double_close",
   "discard_two_draw_one_from_deck",
   "restore_discard_to_hand",

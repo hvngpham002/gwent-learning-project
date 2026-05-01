@@ -249,7 +249,9 @@ describe("authentic deck builder view model", () => {
 
   it("reports non-implemented card and leader abilities as warnings", () => {
     const plannedCard = currentCatalogCards.find((card) => card.abilities.includes("muster_roach"));
-    const placeholderLeader = currentCatalogLeaders.find((leader) => leader.ability === "play_fog");
+    const placeholderLeader = currentCatalogLeaders.find(
+      (leader) => leader.faction === "northern_realms" && leader.ability === "double_siege",
+    );
     expect(plannedCard).toBeDefined();
     expect(placeholderLeader).toBeDefined();
 

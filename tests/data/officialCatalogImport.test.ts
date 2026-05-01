@@ -124,12 +124,17 @@ describe("official Game8 catalog staging import", () => {
     expect(cowBovine?.portingIssues.join(" ")).toMatch(/rule_gap:avenger/);
     expect(clearWeatherLeader?.mappedAbilityId).toBe("clear_weather");
     expect(clearWeatherLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
-    expect(fogLeader?.portingStatus).toBe("needs_leader_rule");
-    expect(fogLeader?.portingIssues.join(" ")).toContain("leader_engine_gap");
+    expect(fogLeader?.mappedAbilityId).toBe("play_fog");
+    expect(fogLeader?.portingStatus).not.toBe("needs_leader_rule");
+    expect(fogLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
     expect(officialPortingSummary.unsupportedAbilityCounts.mardroeme).toBeUndefined();
     expect(officialPortingSummary.unsupportedAbilityCounts.berserker).toBeUndefined();
     expect(officialPortingSummary.unsupportedAbilityCounts.skellige_storm).toBeUndefined();
-    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_fog).toBeGreaterThan(0);
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_fog).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_frost).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_rain).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_any_weather).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.double_close).toBeGreaterThan(0);
   });
 
   it("assigns every official candidate a porting status", () => {

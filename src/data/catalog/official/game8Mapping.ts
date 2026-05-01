@@ -350,9 +350,7 @@ const leaderIssues = (
   const metadata = CATALOG_LEADER_ABILITY_METADATA[mappedAbilityId];
   if (metadata.status !== "implemented") {
     issues.push(`leader_ability_status:${mappedAbilityId}:${metadata.status}`);
-  }
-  if (mappedAbilityId !== "clear_weather") {
-    issues.push(`leader_engine_gap:${mappedAbilityId}: only clear_weather is executable now.`);
+    issues.push(`leader_engine_gap:${mappedAbilityId}: ${metadata.name} is not executable.`);
   }
   return issues;
 };
@@ -542,7 +540,11 @@ export const buildOfficialCandidatesFromGame8Scrape = (
   const unsupportedLeaderAbilityCounts: Record<string, number> = {};
   leaders.forEach((leader) => {
     const key = leader.mappedAbilityId ?? leader.pendingAbilityId ?? "unknown";
-    if (!leader.mappedAbilityId || leader.mappedAbilityId !== "clear_weather") {
+    if (!leader.mappedAbilityId) {
+      unsupportedLeaderAbilityCounts[key] = (unsupportedLeaderAbilityCounts[key] ?? 0) + 1;
+      return;
+    }
+    if (CATALOG_LEADER_ABILITY_METADATA[leader.mappedAbilityId].status !== "implemented") {
       unsupportedLeaderAbilityCounts[key] = (unsupportedLeaderAbilityCounts[key] ?? 0) + 1;
     }
   });

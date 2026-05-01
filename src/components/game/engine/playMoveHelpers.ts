@@ -97,6 +97,10 @@ export const describePlayTarget = (
     return `${SIDE_LABELS[target.side]} ${cardName}${rowLabel}`;
   }
 
+  if (target.kind === "deck_card_source") {
+    return `Deck ${target.sourceId}`;
+  }
+
   return move.metadata.targetLabel === "global" ? "Global" : "No target";
 };
 

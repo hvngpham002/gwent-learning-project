@@ -193,7 +193,8 @@ export type GameEvent =
         | "northern_realms_draw"
         | "skellige_return"
         | "mardroeme_transform"
-        | "avenger_summon";
+        | "avenger_summon"
+        | "leader_weather";
     }
   | {
       type: "initial_hand_drawn";

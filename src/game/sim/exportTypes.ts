@@ -115,6 +115,7 @@ export type SafeActionTargetRef =
   | { kind: "row_horn"; side: "own"; row: CatalogRow }
   | { kind: "weather"; side: "public" }
   | { kind: "card"; side: "own" | "opponent" | "public"; row?: CatalogRow; card: SafeVisibleCardRef }
+  | { kind: "deck_card_source"; side: "own"; sourceId: string }
   | { kind: "none"; side: "none" };
 
 export interface SafeActionPromptRef {

@@ -6,6 +6,7 @@ import {
   resolvePromptOption,
   settleMardroemeRow,
 } from "./abilities";
+import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
 import { calculateScores, findSpecialScorchTargets } from "./scoring";
@@ -864,32 +865,83 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
   }
 
   assertLegal(input);
-  const state = cloneState(input.state);
-  const events: GameEvent[] = [];
-  const { seatId } = input.command as Extract<EngineCommand, { type: "UseLeader" }>;
+  const command = input.command as Extract<EngineCommand, { type: "UseLeader" }>;
+  const { seatId } = command;
   const leaderLookup = createLeaderLookup(input.catalogLeaders);
-  const seat = state.seats[seatId];
-  const leader = leaderLookup.get(seat.leaderSourceId);
+  const sourceLookup = createCardLookup(input.catalogCards);
+  const inputSeat = input.state.seats[seatId];
+  const leader = leaderLookup.get(inputSeat.leaderSourceId);
 
-  if (!seat.leader || !leader) {
+  if (!inputSeat.leader || !leader) {
     throw new EngineRuleError("missing_catalog_source", "Missing leader source for leader command.", {
-      leaderSourceId: seat.leaderSourceId,
+      leaderSourceId: inputSeat.leaderSourceId,
     });
   }
 
-  if (leader.ability !== "clear_weather") {
-    throw new EngineRuleError("unsupported_command", "Only leader Clear Weather is executable in this phase.", {
-      leaderSourceId: leader.sourceId,
-      ability: leader.ability,
-    });
+  if (leader.ability === "clear_weather") {
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    clearWeather(state, events, seatId, "leader");
+    seat.leaderUsed = true;
+    events.push({ type: "leader_used", seatId, leaderCardId: seat.leader as CardInstanceId, abilityId: leader.ability });
+    handoffTurn(state, events, seatId);
+    return { state, events };
   }
 
-  clearWeather(state, events, seatId, "leader");
-  seat.leaderUsed = true;
-  events.push({ type: "leader_used", seatId, leaderCardId: seat.leader, abilityId: leader.ability });
-  handoffTurn(state, events, seatId);
+  if (isWeatherLeaderAbility(leader.ability)) {
+    const target = command.target as LegalMoveTarget | undefined;
+    if (!target || target.kind !== "deck_card_source") {
+      throw new EngineRuleError("invalid_target", "Weather-pulling leader requires a deck_card_source target.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        target,
+      });
+    }
+    if (target.seatId !== seatId) {
+      throw new EngineRuleError("invalid_target", "Weather-pulling leader target seat must match the acting seat.", {
+        target,
+        seatId,
+      });
+    }
 
-  return { state, events };
+    const targetSource = sourceLookup.get(target.sourceId);
+    if (!targetSource || !isEligibleWeatherSourceForLeader(leader.ability, targetSource)) {
+      throw new EngineRuleError("invalid_target", "Target source is not eligible for this weather-pulling leader.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        targetSourceId: target.sourceId,
+      });
+    }
+
+    const matchingCardId = input.state.seats[seatId].deck.find(
+      (cardId) => input.state.cardsById[cardId]?.sourceId === target.sourceId,
+    );
+    if (!matchingCardId) {
+      throw new EngineRuleError("invalid_target", "No matching weather source card in acting deck.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        targetSourceId: target.sourceId,
+      });
+    }
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const movedCard = state.cardsById[matchingCardId];
+    movedCard.controller = seatId;
+    moveCard(state, events, matchingCardId, { kind: "weather" }, "leader_weather");
+    events.push({ type: "card_played", seatId, cardId: matchingCardId, target: state.cardsById[matchingCardId].zone });
+    seat.leaderUsed = true;
+    events.push({ type: "leader_used", seatId, leaderCardId: seat.leader as CardInstanceId, abilityId: leader.ability });
+    handoffTurn(state, events, seatId);
+    return { state, events };
+  }
+
+  throw new EngineRuleError("unsupported_command", "Leader ability is not yet executable.", {
+    leaderSourceId: leader.sourceId,
+    ability: leader.ability,
+  });
 };
 
 const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {

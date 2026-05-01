@@ -540,6 +540,33 @@ The catalog distinguishes four Muster categories. The production engine resolves
 - **King Bran (Skellige Leader, Passive):** "Friendly Units only lose **half** their Strength in bad weather conditions. (Rounded down)." This means if a Close Combat unit with Strength 7 is under Biting Frost, it would normally become 1 — but with King Bran, it loses only half of its Strength: 7 − ⌊7÷2⌋ = 7 − 3 = **4**. **[Derived from card text.]** Note King Bran overrides normal weather via the Golden Rule.
 - **[Derived] Weather + Commander's Horn on Units:** Weather sets to 1 first; Horn then doubles to 2.
 
+### 17.12a Weather-Pulling Leaders (cCp14)
+
+The four weather-pulling leader abilities — `play_frost` (Francesca: Pureblood
+Elf), `play_fog` (Foltest: King of Temeria), `play_rain` (Emhyr: His Imperial
+Majesty), and `play_any_weather` (Eredin: King of the Wild Hunt) — all share
+the same shape:
+
+- The leader pulls a matching weather effect card from the **acting player's
+  deck** and plays it directly to the shared weather zone.
+- Single-weather leaders require their specific weather card in deck:
+  - `play_frost` → `neutral.biting-frost`;
+  - `play_fog` → `neutral.impenetrable-fog`;
+  - `play_rain` → `neutral.torrential-rain`.
+- `play_any_weather` may choose Biting Frost, Impenetrable Fog, Torrential
+  Rain, or Skellige Storm from deck. Clear Weather is **not** a weather effect
+  source and is excluded.
+- Matching weather copies in hand, discard, or already in the weather zone are
+  **not** eligible. Only deck instances qualify.
+- If no eligible card exists in the acting deck, the leader has no legal
+  executable move; the leader is consumed only after a successful pull.
+- Pulled weather cards become controlled by the acting seat once they enter
+  the weather zone.
+- cCp14 intentionally does **not** shuffle the remaining deck after the
+  search. The rulebook's Muster shuffle requirement does not apply to leader
+  weather pulls. If a future rules audit changes this, it will land in a
+  separate phase.
+
 ### 17.13 Draws, Ties, and Nilfgaard
 
 - Default rule for a Strength **tie** at end of round: **both players lose a gem.**
