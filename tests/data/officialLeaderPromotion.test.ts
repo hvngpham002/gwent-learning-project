@@ -60,13 +60,12 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for newly added leader ability IDs that remain placeholder after cCp14", () => {
+  it("registers placeholder metadata for newly added leader ability IDs that remain placeholder after cCp15", () => {
     [
       "double_close",
       "discard_two_draw_one_from_deck",
       "restore_discard_to_hand",
       "double_spies",
-      "weather_half_penalty",
       "optimize_agile_rows",
       "double_ranged",
       "draw_extra_card",
@@ -81,8 +80,15 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather and the four cCp14 weather-pulling abilities", () => {
-    ["clear_weather", "play_frost", "play_fog", "play_rain", "play_any_weather"].forEach((ability) => {
+  it("registers implemented metadata for clear_weather, the four cCp14 weather-pulling abilities, and cCp15 weather_half_penalty", () => {
+    [
+      "clear_weather",
+      "play_frost",
+      "play_fog",
+      "play_rain",
+      "play_any_weather",
+      "weather_half_penalty",
+    ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
       expect(metadata).toBeDefined();
@@ -90,7 +96,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("clear_weather and the four weather-pulling leaders have implemented ability metadata", () => {
+  it("active executable, passive implemented, and combined implemented leaders match expected sets", () => {
     const implementedLeaders = currentCatalogLeaders.filter(
       (leader) => CATALOG_LEADER_ABILITY_METADATA[leader.ability].status === "implemented",
     );
@@ -101,6 +107,7 @@ describe("official leader promotion (cBp5)", () => {
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
         "scoiatael.francesca-findabair-pureblood-elf",
+        "skellige.king-bran",
       ].sort(),
     );
   });
@@ -127,13 +134,28 @@ describe("official leader promotion (cBp5)", () => {
         "scoiatael.francesca-findabair-pureblood-elf",
       ].sort(),
     );
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).not.toContain(
+      "skellige.king-bran",
+    );
+    expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
+      "skellige.king-bran",
+    ]);
+    expect([...officialLeaderPromotionManifest.implementedLeaderSourceIds].sort()).toEqual(
+      [
+        "monsters.eredin-king-of-the-wild-hunt",
+        "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+        "northern-realms.foltest-king-of-temeria",
+        "northern-realms.foltest-lord-commander-of-the-north",
+        "scoiatael.francesca-findabair-pureblood-elf",
+        "skellige.king-bran",
+      ].sort(),
+    );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toEqual(
       expect.arrayContaining([
         "double_close",
         "discard_two_draw_one_from_deck",
         "restore_discard_to_hand",
         "double_spies",
-        "weather_half_penalty",
         "optimize_agile_rows",
         "double_ranged",
         "draw_extra_card",
@@ -141,6 +163,9 @@ describe("official leader promotion (cBp5)", () => {
       ]),
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("play_any_weather");
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
+      "weather_half_penalty",
+    );
   });
 
   it("manifest source IDs are all present in currentCatalogLeaders", () => {

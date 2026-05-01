@@ -423,6 +423,9 @@ const getLeaderMove = (state: MatchState, seatId: SeatId, lookups: CatalogLookup
     });
   }
 
+  // Implemented passive leaders (cCp15: King Bran's `weather_half_penalty`) do
+  // not produce a `use_leader` legal move. Their effect is wired into scoring
+  // through `getWeatherPolicyBySeat`, not through a clickable command.
   return [];
 };
 

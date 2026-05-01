@@ -537,7 +537,7 @@ The catalog distinguishes four Muster categories. The production engine resolves
 - **Clear Weather** removes all active weather cards (including the opponent's), then is discarded.
 - **[Derived] Clear Weather playing onto a board with no weather** — it has no effect but is still discarded after play.
 - **Heroes ignore weather** (Hero immunity to special abilities).
-- **King Bran (Skellige Leader, Passive):** "Friendly Units only lose **half** their Strength in bad weather conditions. (Rounded down)." This means if a Close Combat unit with Strength 7 is under Biting Frost, it would normally become 1 — but with King Bran, it loses only half of its Strength: 7 − ⌊7÷2⌋ = 7 − 3 = **4**. **[Derived from card text.]** Note King Bran overrides normal weather via the Golden Rule.
+- **King Bran (Skellige Leader, Passive):** "Friendly Units only lose **half** their Strength in bad weather conditions. (Rounded down)." This means if a Close Combat unit with Strength 7 is under Biting Frost, it would normally become 1 — but with King Bran, it loses only half of its Strength: 7 − ⌊7÷2⌋ = 7 − 3 = **4**. **[Derived from card text.]** Note King Bran overrides normal weather via the Golden Rule. See §17.12b for the engine treatment.
 - **[Derived] Weather + Commander's Horn on Units:** Weather sets to 1 first; Horn then doubles to 2.
 
 ### 17.12a Weather-Pulling Leaders (cCp14)
@@ -566,6 +566,49 @@ the same shape:
   search. The rulebook's Muster shuffle requirement does not apply to leader
   weather pulls. If a future rules audit changes this, it will land in a
   separate phase.
+
+### 17.12b King Bran Weather Half Penalty (cCp15)
+
+King Bran (`skellige.king-bran`, leader ability `weather_half_penalty`) is the
+first **passive** implemented leader. He is always on for the seat whose leader
+source is `skellige.king-bran` and is **not** an active executable
+`UseLeader` command:
+
+- King Bran does not produce a `use_leader` legal move.
+- `seat.leaderUsed` is never set by King Bran and no `leader_used` event is
+  emitted for the passive.
+- His effect is wired into scoring through a derived `WeatherPolicy` of
+  `"king_bran"` for the King Bran seat. Other seats keep `"normal"`.
+
+Rule:
+
+- Applies only to the King Bran player's **friendly non-hero Unit cards**.
+- Applies only when a unit's row is affected by active bad weather:
+  - Frost affects Close;
+  - Fog affects Ranged;
+  - Rain affects Siege;
+  - Skellige Storm affects Ranged and Siege.
+- Does **not** affect Heroes (hero immunity is unchanged).
+- Does **not** affect the opponent. Opposing rows still use the normal
+  "set Strength to 1" rule unless that opponent also somehow has King Bran
+  as leader.
+- Does not depend on which player controlled or played the weather card.
+- Replaces normal weather's "set Strength to 1" effect for the King Bran
+  seat's affected units with the half-loss formula.
+
+Formula and examples (`afterWeather = printedStrength - Math.floor(printedStrength / 2)`):
+
+- printed 7 under matching weather → 4;
+- printed 4 under matching weather → 2;
+- printed 1 under matching weather → 1.
+
+King Bran's weather adjustment happens in the **weather step**, before Tight
+Bond, Morale Boost, and Commander's Horn (the standard order of operations
+in §15 is preserved). The score modifier marker for affected entries is
+`weather:king_bran` instead of `weather`.
+
+Identity gate: King Bran is derived from leader identity, not faction. A
+Skellige seat with Crach an Craite continues to use the normal weather rule.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 

@@ -344,12 +344,13 @@ const resolveSpecialScorch = (
   events: GameEvent[],
   sourceLookup: ReadonlyMap<string, CatalogCardSource>,
   catalogCards: readonly CatalogCardSource[],
+  catalogLeaders: readonly CatalogLeaderSource[],
   seatId: SeatId,
   cardId: CardInstanceId,
   source: CatalogCardSource,
 ) => {
   events.push({ type: "ability_triggered", sourceId: source.sourceId, cardId, abilityId: "scorch" });
-  const breakdown = calculateScores({ state, catalogCards });
+  const breakdown = calculateScores({ state, catalogCards, catalogLeaders });
   const targets = findSpecialScorchTargets(breakdown);
 
   targets.forEach((target) => {
@@ -404,7 +405,14 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
     card.controller = command.seatId;
     moveCard(state, events, command.cardId, { kind: "board_row", seat: target.seatId, row: target.row }, "play_card");
     events.push({ type: "card_played", seatId: command.seatId, cardId: command.cardId, target: card.zone });
-    resolveCardAbilities({ state, events, catalogCards: input.catalogCards, seatId: command.seatId, cardId: command.cardId });
+    resolveCardAbilities({
+      state,
+      events,
+      catalogCards: input.catalogCards,
+      catalogLeaders: input.catalogLeaders,
+      seatId: command.seatId,
+      cardId: command.cardId,
+    });
     if (!state.pendingPrompt && card.zone.kind === "board_row") {
       settleMardroemeRow({
         state,
@@ -473,7 +481,16 @@ const playCard = (input: StatefulCommandInput): EngineTransaction => {
       });
     }
   } else if (target.kind === "none" && source.kind === "special" && source.abilities.includes("scorch")) {
-    resolveSpecialScorch(state, events, sourceLookup, input.catalogCards, command.seatId, command.cardId, source);
+    resolveSpecialScorch(
+      state,
+      events,
+      sourceLookup,
+      input.catalogCards,
+      input.catalogLeaders,
+      command.seatId,
+      command.cardId,
+      source,
+    );
   } else {
     throw new EngineRuleError("invalid_target", "Unsupported play target.", { cardId: command.cardId, target });
   }
@@ -970,6 +987,7 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
     state,
     events,
     catalogCards: input.catalogCards,
+    catalogLeaders: input.catalogLeaders,
     seatId: command.seatId,
     optionId: command.optionId,
   });

@@ -212,10 +212,30 @@ const createMissingEntry = (cardId: CardInstanceId, seatId: SeatId, row: Catalog
   modifiers: ["diagnostic:missing"],
 });
 
+export const getWeatherPolicyBySeat = (
+  state: MatchState,
+  catalogLeaders: readonly CatalogLeaderSource[],
+): Partial<Record<SeatId, WeatherPolicy>> => {
+  const lookup = new Map(catalogLeaders.map((leader) => [leader.sourceId, leader]));
+  const policy: Partial<Record<SeatId, WeatherPolicy>> = {};
+  SEATS.forEach((seatId) => {
+    const leaderSourceId = state.seats[seatId]?.leaderSourceId;
+    if (!leaderSourceId) {
+      return;
+    }
+    const leader = lookup.get(leaderSourceId);
+    if (leader?.ability === "weather_half_penalty") {
+      policy[seatId] = "king_bran";
+    }
+  });
+  return policy;
+};
+
 export const calculateScores = ({
   state,
   catalogCards,
-  weatherPolicyBySeat = {},
+  catalogLeaders,
+  weatherPolicyBySeat,
 }: CalculateScoresInput): MatchScoreBreakdown => {
   const catalogLookup = createCardLookup(catalogCards);
   const diagnostics: ScoringDiagnostic[] = [];
@@ -223,6 +243,11 @@ export const calculateScores = ({
   const rowTotalsBySeat = createEmptySeatTotals();
   const totalBySeat: Record<SeatId, number> = { seat_a: 0, seat_b: 0 };
   const cards: CardScoreEntry[] = [];
+  const derivedPolicy = catalogLeaders ? getWeatherPolicyBySeat(state, catalogLeaders) : {};
+  const policyBySeat: Partial<Record<SeatId, WeatherPolicy>> = {
+    ...derivedPolicy,
+    ...(weatherPolicyBySeat ?? {}),
+  };
 
   SEATS.forEach((seatId) => {
     ROWS.forEach((row) => {
@@ -292,7 +317,7 @@ export const calculateScores = ({
         if (isHero) {
           modifiers.push("hero_immune");
         } else if (isUnit && isWeatheredRow(row, activeWeatherEffects)) {
-          const policy = weatherPolicyBySeat[seatId] ?? "normal";
+          const policy = policyBySeat[seatId] ?? "normal";
           afterWeather = getWeatheredStrength(printedStrength, policy);
           modifiers.push(policy === "king_bran" ? "weather:king_bran" : "weather");
         }

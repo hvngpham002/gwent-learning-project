@@ -273,8 +273,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   weather_half_penalty: {
     id: "weather_half_penalty",
     name: "Weather Half Penalty",
-    status: "placeholder",
-    description: "Reduces weather strength penalties for affected rows.",
+    status: "implemented",
+    description: "Passive: friendly non-hero units lose only half their printed strength (rounded down) on rows under matching weather, instead of being set to 1.",
   },
   optimize_agile_rows: {
     id: "optimize_agile_rows",

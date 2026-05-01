@@ -1,4 +1,4 @@
-import type { CatalogAbilityId, CatalogCardSource, CatalogRow } from "@/game/catalog";
+import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
 
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
 import {
@@ -20,6 +20,7 @@ export interface AbilityResolverInput {
   state: MatchState;
   events: GameEvent[];
   catalogCards: readonly CatalogCardSource[];
+  catalogLeaders?: readonly CatalogLeaderSource[];
   seatId: SeatId;
   cardId: CardInstanceId;
 }
@@ -28,6 +29,7 @@ export interface PromptResolutionInput {
   state: MatchState;
   events: GameEvent[];
   catalogCards: readonly CatalogCardSource[];
+  catalogLeaders?: readonly CatalogLeaderSource[];
   seatId: SeatId;
   optionId: string;
 }
@@ -448,6 +450,7 @@ const resolveScorchRow = (
   state: MatchState,
   events: GameEvent[],
   catalogCards: readonly CatalogCardSource[],
+  catalogLeaders: readonly CatalogLeaderSource[] | undefined,
   catalogLookup: ReadonlyMap<string, CatalogCardSource>,
   source: CatalogCardSource,
   seatId: SeatId,
@@ -455,7 +458,7 @@ const resolveScorchRow = (
   abilityId: "scorch_close" | "scorch_range" | "scorch_siege",
 ) => {
   emitTriggered(events, source, cardId, abilityId);
-  const breakdown = calculateScores({ state, catalogCards });
+  const breakdown = calculateScores({ state, catalogCards, catalogLeaders });
   const result = findUnitScorchRowTargets(breakdown, seatId, SCORCH_ROW_ABILITIES[abilityId]);
 
   result.targets.forEach((target) => {
@@ -486,13 +489,14 @@ const resolveUnitScorchGlobal = (
   state: MatchState,
   events: GameEvent[],
   catalogCards: readonly CatalogCardSource[],
+  catalogLeaders: readonly CatalogLeaderSource[] | undefined,
   catalogLookup: ReadonlyMap<string, CatalogCardSource>,
   source: CatalogCardSource,
   _seatId: SeatId,
   cardId: CardInstanceId,
 ) => {
   emitTriggered(events, source, cardId, "scorch");
-  const breakdown = calculateScores({ state, catalogCards });
+  const breakdown = calculateScores({ state, catalogCards, catalogLeaders });
   const targets = findSpecialScorchTargets(breakdown);
   const targetIds = targets.map((target) => target.cardId);
 
@@ -762,7 +766,14 @@ export const settleMardroemeForCard = ({
   });
 };
 
-export const resolveCardAbilities = ({ state, events, catalogCards, seatId, cardId }: AbilityResolverInput) => {
+export const resolveCardAbilities = ({
+  state,
+  events,
+  catalogCards,
+  catalogLeaders,
+  seatId,
+  cardId,
+}: AbilityResolverInput) => {
   const catalogLookup = createCardLookup(catalogCards);
   const source = catalogLookup.get(state.cardsById[cardId].sourceId);
 
@@ -788,13 +799,13 @@ export const resolveCardAbilities = ({ state, events, catalogCards, seatId, card
       abilityId === "scorch_range" ||
       abilityId === "scorch_siege"
     ) {
-      resolveScorchRow(state, events, catalogCards, catalogLookup, source, seatId, cardId, abilityId);
+      resolveScorchRow(state, events, catalogCards, catalogLeaders, catalogLookup, source, seatId, cardId, abilityId);
     } else if (abilityId === "scorch") {
       if (source.kind === "special") {
         emitTriggered(events, source, cardId, abilityId);
         emitDeferred(events, source, cardId, abilityId, "requires_special_resolution");
       } else {
-        resolveUnitScorchGlobal(state, events, catalogCards, catalogLookup, source, seatId, cardId);
+        resolveUnitScorchGlobal(state, events, catalogCards, catalogLeaders, catalogLookup, source, seatId, cardId);
       }
     } else if (abilityId === "berserker") {
       emitTriggered(events, source, cardId, abilityId);
@@ -812,7 +823,14 @@ export const resolveCardAbilities = ({ state, events, catalogCards, seatId, card
   });
 };
 
-export const resolvePromptOption = ({ state, events, catalogCards, seatId, optionId }: PromptResolutionInput) => {
+export const resolvePromptOption = ({
+  state,
+  events,
+  catalogCards,
+  catalogLeaders,
+  seatId,
+  optionId,
+}: PromptResolutionInput) => {
   const prompt = state.pendingPrompt;
   if (!prompt) {
     return;
@@ -845,7 +863,7 @@ export const resolvePromptOption = ({ state, events, catalogCards, seatId, optio
     });
   }
 
-  resolveCardAbilities({ state, events, catalogCards, seatId, cardId: revivedId });
+  resolveCardAbilities({ state, events, catalogCards, catalogLeaders, seatId, cardId: revivedId });
 
   if (revived.zone.kind === "board_row") {
     settleMardroemeRow({

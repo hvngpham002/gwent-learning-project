@@ -14,7 +14,14 @@ export interface OfficialLeaderPromotionManifest {
   readonly addedLeaderSourceIds: readonly string[];
   readonly promotedLeaderSourceIds: readonly string[];
   readonly countsByFaction: Readonly<Record<string, number>>;
+  // Active executable leaders: produce a legal `use_leader` move during play.
   readonly executableLeaderSourceIds: readonly string[];
+  // Passive implemented leaders: rule-effect is on for the whole match through
+  // the engine but does not produce a `use_leader` legal move.
+  readonly implementedPassiveLeaderSourceIds: readonly string[];
+  // Union of active + passive implemented leaders. Convenience set for code or
+  // tests that need to know "is this leader's ability implemented at all?".
+  readonly implementedLeaderSourceIds: readonly string[];
   readonly placeholderLeaderAbilityIds: readonly string[];
 }
 
@@ -59,9 +66,10 @@ const countsByFaction: Readonly<Record<string, number>> = {
   skellige: 2,
 };
 
-// Only leaders whose ability metadata is `implemented` are considered executable.
-// After cCp14 the four weather-pulling leaders join the original clear-weather
-// Foltest leader as executable through the pure engine.
+// Active executable leaders: leaders whose ability emits a legal `use_leader`
+// move during play. After cCp14 the four weather-pulling leaders joined the
+// original clear-weather Foltest leader as the active executable set. cCp15
+// keeps this list unchanged: King Bran's passive does NOT belong here.
 const executableLeaderSourceIds: readonly string[] = [
   "monsters.eredin-king-of-the-wild-hunt",
   "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
@@ -70,16 +78,30 @@ const executableLeaderSourceIds: readonly string[] = [
   "scoiatael.francesca-findabair-pureblood-elf",
 ];
 
+// Passive implemented leaders: leaders whose ability metadata is `implemented`
+// but is a passive engine rule rather than an active `use_leader` command.
+// cCp15 added King Bran (`weather_half_penalty`) here.
+const implementedPassiveLeaderSourceIds: readonly string[] = [
+  "skellige.king-bran",
+];
+
+// Union of active executable + passive implemented leaders. Use this set when
+// asking "is this leader's ability implemented in the engine at all?".
+const implementedLeaderSourceIds: readonly string[] = [
+  ...executableLeaderSourceIds,
+  ...implementedPassiveLeaderSourceIds,
+].slice().sort();
+
 // Leader abilities introduced by this manifest that remain placeholder metadata.
 // They validate as known catalog leader abilities but do not produce executable
-// engine commands. cCp14 promoted `play_any_weather` to implemented; the rest
+// engine commands or passive engine rules. cCp14 promoted `play_any_weather`
+// to implemented; cCp15 promotes `weather_half_penalty` (passive). The rest
 // continue as placeholders.
 const placeholderLeaderAbilityIds: readonly string[] = [
   "double_close",
   "discard_two_draw_one_from_deck",
   "restore_discard_to_hand",
   "double_spies",
-  "weather_half_penalty",
   "optimize_agile_rows",
   "double_ranged",
   "draw_extra_card",
@@ -94,5 +116,7 @@ export const officialLeaderPromotionManifest: OfficialLeaderPromotionManifest = 
   promotedLeaderSourceIds,
   countsByFaction,
   executableLeaderSourceIds,
+  implementedPassiveLeaderSourceIds,
+  implementedLeaderSourceIds,
   placeholderLeaderAbilityIds,
 };

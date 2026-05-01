@@ -538,11 +538,11 @@ describe("match leader inspection view model", () => {
 
   it("marks used leaders as used regardless of ability status", () => {
     const inspection = buildMatchLeaderInspection({
-      sourceId: "skellige.king-bran",
-      name: "King Bran",
+      sourceId: "skellige.crach-an-craite",
+      name: "Crach an Craite",
       faction: "skellige",
-      abilityId: "weather_half_penalty",
-      image: "/images/skellige/leaders/King_Bran.png",
+      abilityId: "shuffle_discards_into_decks",
+      image: "/images/skellige/leaders/Crach_an_Craite.png",
       used: true,
       ownerLabel: "AI",
     });

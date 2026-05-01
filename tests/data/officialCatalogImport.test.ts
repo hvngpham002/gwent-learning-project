@@ -127,6 +127,12 @@ describe("official Game8 catalog staging import", () => {
     expect(fogLeader?.mappedAbilityId).toBe("play_fog");
     expect(fogLeader?.portingStatus).not.toBe("needs_leader_rule");
     expect(fogLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
+    const kingBranLeader = game8OfficialLeaderCandidates.find(
+      (candidate) => candidate.sourceId === "skellige.king-bran",
+    );
+    expect(kingBranLeader?.mappedAbilityId).toBe("weather_half_penalty");
+    expect(kingBranLeader?.portingStatus).not.toBe("needs_leader_rule");
+    expect(kingBranLeader?.portingIssues.join(" ")).not.toContain("leader_engine_gap");
     expect(officialPortingSummary.unsupportedAbilityCounts.mardroeme).toBeUndefined();
     expect(officialPortingSummary.unsupportedAbilityCounts.berserker).toBeUndefined();
     expect(officialPortingSummary.unsupportedAbilityCounts.skellige_storm).toBeUndefined();
@@ -134,6 +140,7 @@ describe("official Game8 catalog staging import", () => {
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_frost).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_rain).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.play_any_weather).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.weather_half_penalty).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.double_close).toBeGreaterThan(0);
   });
 
