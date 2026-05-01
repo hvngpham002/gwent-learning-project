@@ -61,7 +61,7 @@ export const CATALOG_ABILITY_METADATA: Record<CatalogAbilityId, CatalogAbilityMe
     name: "Avenger",
     status: "implemented",
     appliesTo: ["unit"],
-    description: "Summons a linked side-deck replacement when the source leaves the battlefield.",
+    description: "Summons a linked side-deck replacement when the source is removed from the battlefield (round cleanup, Scorch, Decoy bounce).",
   },
   scorch_close: {
     id: "scorch_close",
@@ -157,9 +157,9 @@ export const CATALOG_ABILITY_METADATA: Record<CatalogAbilityId, CatalogAbilityMe
   summon: {
     id: "summon",
     name: "Summon",
-    status: "planned",
+    status: "implemented",
     appliesTo: ["unit"],
-    description: "Summons a card from the side deck or linked source.",
+    description: "Summons a linked side-deck replacement only when the source is discarded from a board row (Scorch, round cleanup, Foltest row-Scorch leaders). Decoy returns to hand and does not trigger Summon.",
   },
   none: {
     id: "none",

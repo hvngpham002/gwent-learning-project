@@ -4,6 +4,7 @@ import {
   resolveAvengerForCard,
   resolveCardAbilities,
   resolvePromptOption,
+  resolveSummonForCard,
   settleMardroemeRow,
 } from "./abilities";
 import {
@@ -331,7 +332,7 @@ const emitDiscardTriggerDeferrals = (
 ) => {
   const source = sourceLookup.get(state.cardsById[cardId].sourceId);
   source?.abilities.forEach((abilityId) => {
-    if (abilityId === "summon" || abilityId === "avenger") {
+    if (abilityId === "avenger") {
       events.push({
         type: "ability_deferred",
         sourceId: source.sourceId,
@@ -361,6 +362,13 @@ const resolveSpecialScorch = (
     const origin: ZoneRef = { kind: "board_row", seat: target.seatId, row: target.row };
     moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
     emitDiscardTriggerDeferrals(events, sourceLookup, state, target.cardId);
+    resolveSummonForCard({
+      state,
+      events,
+      catalogLookup: sourceLookup,
+      cardId: target.cardId,
+      origin,
+    });
     resolveAvengerForCard({
       state,
       events,
@@ -622,6 +630,7 @@ const sweepBattlefield = (
 ) => {
   const movedCardIds: CardInstanceId[] = [];
   const avengerOrigins: Array<{ cardId: CardInstanceId; origin: ZoneRef }> = [];
+  const summonOrigins: Array<{ cardId: CardInstanceId; origin: ZoneRef }> = [];
 
   SEATS.forEach((seatId) => {
     ROWS.forEach((row) => {
@@ -634,6 +643,12 @@ const sweepBattlefield = (
         const source = sourceLookup.get(sourceId);
         if (source?.abilities.includes("avenger")) {
           avengerOrigins.push({
+            cardId,
+            origin: { kind: "board_row", seat: seatId, row },
+          });
+        }
+        if (source?.abilities.includes("summon")) {
+          summonOrigins.push({
             cardId,
             origin: { kind: "board_row", seat: seatId, row },
           });
@@ -657,6 +672,16 @@ const sweepBattlefield = (
   });
 
   events.push({ type: "board_swept", round, movedCardIds, keptCardIds: [...keepCardIds] });
+
+  summonOrigins.forEach(({ cardId, origin }) => {
+    resolveSummonForCard({
+      state,
+      events,
+      catalogLookup: sourceLookup,
+      cardId,
+      origin,
+    });
+  });
 
   avengerOrigins.forEach(({ cardId, origin }) => {
     resolveAvengerForCard({
@@ -993,7 +1018,7 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
       moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
       const targetSource = sourceLookup.get(target.sourceId);
       targetSource?.abilities.forEach((abilityId) => {
-        if (abilityId === "summon" || abilityId === "avenger") {
+        if (abilityId === "avenger") {
           events.push({
             type: "ability_deferred",
             sourceId: targetSource.sourceId,
@@ -1002,6 +1027,13 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
             reason: "discard_trigger_pending",
           });
         }
+      });
+      resolveSummonForCard({
+        state,
+        events,
+        catalogLookup: sourceLookup,
+        cardId: target.cardId,
+        origin,
       });
       resolveAvengerForCard({
         state,

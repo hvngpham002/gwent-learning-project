@@ -194,6 +194,7 @@ export type GameEvent =
         | "skellige_return"
         | "mardroeme_transform"
         | "avenger_summon"
+        | "summon_replacement"
         | "leader_weather";
     }
   | {
@@ -289,5 +290,5 @@ export type GameEvent =
       toSourceId: string;
       seatId: SeatId;
       row: CatalogRow;
-      abilityId: "avenger";
+      abilityId: "avenger" | "summon";
     };

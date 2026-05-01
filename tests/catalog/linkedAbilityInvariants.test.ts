@@ -4,7 +4,7 @@ import {
   currentCatalogCards,
   currentDeckPresets,
 } from "@/data/catalog";
-import type { CatalogCardSource, CatalogDeckPreset } from "@/game/catalog";
+import { CATALOG_ABILITY_METADATA, type CatalogCardSource, type CatalogDeckPreset } from "@/game/catalog";
 
 const SIDE_DECK_ONLY_TAG = "side_deck_only";
 
@@ -484,15 +484,21 @@ describe("Linked ability invariants (cCp12)", () => {
     });
   });
 
-  describe("Documented ambiguity / deferred placeholders", () => {
-    // `summon` remains a `planned` ability per CATALOG_ABILITY_METADATA. When
-    // the discard-trigger resolver is implemented, replace this todo with a
-    // concrete engine regression that asserts side-deck replacement on
-    // discard for `summon` sources.
-    it.todo(
-      "summon discard-trigger resolves linked side-deck replacement",
-    );
+  describe("Summon discard-trigger lock (cCp17)", () => {
+    // cCp17 promoted `summon` from `planned` to `implemented`. The active
+    // engine regressions live in `tests/game/coreSummonDiscardTrigger.test.ts`
+    // (Special Scorch, unit row-Scorch, unit whole-board Scorch, Foltest
+    // row-Scorch leaders, round cleanup, board-side discard, on-play
+    // armed_for_discard, Decoy / Medic / Skellige-return / Monsters-keep
+    // non-triggers, and the missing_link / missing_replacement /
+    // missing_origin_row outcomes). Lock the metadata contract here so the
+    // status cannot regress without breaking this invariant suite.
+    it("Summon ability metadata is implemented (cCp17)", () => {
+      expect(CATALOG_ABILITY_METADATA.summon.status).toBe("implemented");
+    });
+  });
 
+  describe("Documented ambiguity / deferred placeholders", () => {
     // Placeholder leader tutor/restore effects (Eredin, Emhyr, etc.) currently
     // emit no legal moves. When they begin to consume `linkedSourceIds`,
     // promote this todo to an active engine regression covering the

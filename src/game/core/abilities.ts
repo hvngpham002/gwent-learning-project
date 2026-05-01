@@ -167,17 +167,11 @@ const emitDeferred = (
   events.push({ type: "ability_deferred", sourceId: source.sourceId, cardId, abilityId, reason });
 };
 
-const emitDiscardTriggerDeferrals = (
-  events: GameEvent[],
-  targetSource: CatalogCardSource | undefined,
-  targetCardId: CardInstanceId,
-) => {
-  targetSource?.abilities.forEach((abilityId) => {
-    if (abilityId === "summon") {
-      emitDeferred(events, targetSource, targetCardId, abilityId, "discard_trigger_pending");
-    }
-  });
-};
+// cCp17 promoted `summon` from `planned` to `implemented`. Its discard
+// trigger now resolves directly through `resolveSummonForCard` at each
+// discard call site, so the Scorch helpers below no longer emit
+// `ability_deferred` for `summon`. Avenger discard-trigger deferrals stay in
+// `commands.ts` to preserve their existing event-trace shape.
 
 export interface ResolveAvengerInput {
   state: MatchState;
@@ -282,6 +276,115 @@ export const resolveAvengerForCard = ({
     sourceId: source.sourceId,
     cardId,
     abilityId: "avenger",
+    outcome: "summoned",
+  });
+
+  return "summoned";
+};
+
+export interface ResolveSummonInput {
+  state: MatchState;
+  events: GameEvent[];
+  catalogLookup: ReadonlyMap<string, CatalogCardSource>;
+  cardId: CardInstanceId;
+  origin?: ZoneRef;
+}
+
+export type SummonResolutionOutcome =
+  | "no_summon"
+  | "missing_link"
+  | "missing_replacement"
+  | "missing_origin_row"
+  | "summoned";
+
+export const resolveSummonForCard = ({
+  state,
+  events,
+  catalogLookup,
+  cardId,
+  origin,
+}: ResolveSummonInput): SummonResolutionOutcome => {
+  const instance = state.cardsById[cardId];
+  if (!instance) {
+    return "no_summon";
+  }
+  const source = catalogLookup.get(instance.sourceId);
+  if (!source || !source.abilities.includes("summon")) {
+    return "no_summon";
+  }
+  const replacementSourceId = source.linkedSourceIds?.[0];
+  if (!replacementSourceId) {
+    events.push({
+      type: "ability_resolved",
+      sourceId: source.sourceId,
+      cardId,
+      abilityId: "summon",
+      outcome: "missing_link",
+    });
+    return "missing_link";
+  }
+  const controllerSeat = instance.controller;
+  const replacementId = state.seats[controllerSeat].sideDeck.find(
+    (sideId) => state.cardsById[sideId]?.sourceId === replacementSourceId,
+  );
+  if (!replacementId) {
+    events.push({
+      type: "ability_resolved",
+      sourceId: source.sourceId,
+      cardId,
+      abilityId: "summon",
+      outcome: "missing_replacement",
+    });
+    return "missing_replacement";
+  }
+
+  let originSeat: SeatId | null = null;
+  let originRow: CatalogRow | null = null;
+  if (origin?.kind === "board_row") {
+    originSeat = origin.seat;
+    originRow = origin.row;
+  } else if (instance.zone.kind === "board_row") {
+    originSeat = instance.zone.seat;
+    originRow = instance.zone.row;
+  }
+
+  if (!originSeat || !originRow) {
+    events.push({
+      type: "ability_resolved",
+      sourceId: source.sourceId,
+      cardId,
+      abilityId: "summon",
+      outcome: "missing_origin_row",
+    });
+    return "missing_origin_row";
+  }
+
+  const replacement = state.cardsById[replacementId];
+  replacement.controller = controllerSeat;
+  moveCard(
+    state,
+    events,
+    replacementId,
+    { kind: "board_row", seat: originSeat, row: originRow },
+    "summon_replacement",
+  );
+
+  events.push({
+    type: "card_summoned",
+    triggerCardId: cardId,
+    fromSourceId: source.sourceId,
+    toCardId: replacementId,
+    toSourceId: replacement.sourceId,
+    seatId: originSeat,
+    row: originRow,
+    abilityId: "summon",
+  });
+
+  events.push({
+    type: "ability_resolved",
+    sourceId: source.sourceId,
+    cardId,
+    abilityId: "summon",
     outcome: "summoned",
   });
 
@@ -464,7 +567,13 @@ const resolveScorchRow = (
   result.targets.forEach((target) => {
     const origin: ZoneRef = { kind: "board_row", seat: target.seatId, row: target.row };
     moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
-    emitDiscardTriggerDeferrals(events, catalogLookup.get(target.sourceId), target.cardId);
+    resolveSummonForCard({
+      state,
+      events,
+      catalogLookup,
+      cardId: target.cardId,
+      origin,
+    });
     resolveAvengerForCard({
       state,
       events,
@@ -503,7 +612,13 @@ const resolveUnitScorchGlobal = (
   targets.forEach((target) => {
     const origin: ZoneRef = { kind: "board_row", seat: target.seatId, row: target.row };
     moveCard(state, events, target.cardId, { kind: "discard", seat: target.seatId }, "scorch_destroyed");
-    emitDiscardTriggerDeferrals(events, catalogLookup.get(target.sourceId), target.cardId);
+    resolveSummonForCard({
+      state,
+      events,
+      catalogLookup,
+      cardId: target.cardId,
+      origin,
+    });
     resolveAvengerForCard({
       state,
       events,
@@ -818,7 +933,7 @@ export const resolveCardAbilities = ({
       emitResolved(events, source, cardId, abilityId, "armed_for_removal");
     } else if (abilityId === "summon") {
       emitTriggered(events, source, cardId, abilityId);
-      emitDeferred(events, source, cardId, abilityId, "planned_ability");
+      emitResolved(events, source, cardId, abilityId, "armed_for_discard");
     }
   });
 };

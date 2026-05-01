@@ -476,17 +476,67 @@ Multiple Scorch effects exist — don't confuse them:
 
 ### 17.10 Summon Interactions
 
-- **Trigger:** When the Summon card is **discarded from the battlefield** — *any* way, including end-of-round cleanup.
-- **Replacement** comes from the side deck.
-- **[Derived] Decoy does NOT trigger Summon** — Decoy returns the card to hand, not to discard.
-- **[Derived] Scorch DOES trigger Summon** — Scorch sends the highest-Strength unit(s) to discard, which is exactly the Summon condition.
-- **[Derived] Monsters faction "one Unit stays" interaction:** If a Summon unit is selected to stay on the battlefield, it isn't discarded, so Summon doesn't trigger. Other Summon units that weren't chosen *do* go to discard and trigger their Summons.
-- **[Derived] Side-deck exhaustion:** If the Summon target is already in play (or was used), the rulebook doesn't address what happens. Most groups rule that if the specified side-deck card is unavailable, no replacement happens.
+- **Trigger:** When the Summon card is **discarded from a board row** — Special
+  Scorch, unit row-Scorch (Schirru / Toad / Villentretenmerth), unit-source
+  whole-board Scorch (Clan Dimun Pirate), Foltest row-Scorch leaders, and
+  end-of-round cleanup.
+- **Replacement** comes from the **controlling seat's side deck** (the
+  controller of the destroyed Summon source, not the seat whose board side it
+  occupied). The replacement source ID is `linkedSourceIds[0]`.
+- **Replacement placement:** the replacement lands on the same board side and
+  row that the Summon source occupied immediately before being discarded. If
+  the source was on the opponent board side (e.g. a Spy), the replacement still
+  lands on that opponent board side. The replacement's controller is set to
+  the source's controller.
+- **[Derived] Decoy does NOT trigger Summon** — Decoy returns the card to hand,
+  not to discard. The pure engine resolves Decoy bounce as a non-discard
+  movement and does not call the Summon resolver.
+- **[Derived] Scorch DOES trigger Summon** — Scorch sends the highest-Strength
+  unit(s) to discard, which is exactly the Summon condition.
+- **[Derived] Monsters faction "one Unit stays" interaction:** If a Summon unit
+  is selected to stay on the battlefield, it isn't discarded, so Summon doesn't
+  trigger. Other Summon units that weren't chosen *do* go to discard and
+  trigger their Summons.
+- **[Derived] Side-deck exhaustion:** If the linked side-deck card is missing,
+  the engine emits a structured `ability_resolved` outcome (`missing_link`,
+  `missing_replacement`, or `missing_origin_row`) and continues — no replacement
+  is summoned and no crash occurs.
+- **Engine treatment (cCp17):** Summon is an **armed-for-discard** trigger. On
+  play it emits `ability_triggered` + `ability_resolved` with outcome
+  `"armed_for_discard"`. The discard trigger fires through the centralised
+  `resolveSummonForCard` helper at every implemented discard-from-board path:
+  Special Scorch, unit row-Scorch, unit whole-board Scorch, Foltest
+  `scorch_range`/`scorch_siege` leader execution, and round cleanup (after the
+  row sweep, so replacements persist into the next round). Movement uses
+  `card_moved.reason: "summon_replacement"` (distinct from Avenger's
+  `"avenger_summon"`); the summon emits `card_summoned` with
+  `abilityId: "summon"` and a final `ability_resolved` with outcome
+  `"summoned"`.
+- **Replacement is summoned, not played:** the engine does not call
+  `resolveCardAbilities` on the replacement. Ongoing scoring effects apply
+  naturally once the replacement is on the board.
+- **Avenger vs Summon:**
+  - *Summon* triggers only when the source moves from a board row to a discard
+    zone.
+  - *Avenger* triggers on broader battlefield removal (round cleanup, Scorch
+    discard, and Decoy bounce per current project policy in §17.10b).
+  - A source declaring both abilities would fire both at a discard boundary,
+    in the order Summon → Avenger; no current catalog source declares both.
+- **Medic / Skellige round-three return:** revival from discard is not a
+  discard, so Summon does not fire when the source re-enters the battlefield
+  through Medic, Muster, or Skellige round-three return. The next time the
+  source is discarded from a board row, Summon fires again.
 
 ### 17.10b Avenger (Cow / Kambi) Battlefield Removal Replacement
 
 Avenger covers cards like Cow and Kambi that summon a powerful replacement when the
 source is **removed from the battlefield**.
+
+Avenger and generic Summon (§17.10) are deliberately distinct in the engine:
+Summon triggers only on **discard from a board row**, while Avenger triggers
+on broader battlefield removal (currently round cleanup, Scorch discard, and
+Decoy bounce per the policy below). Cow and Kambi remain Avenger sources, not
+generic Summon sources.
 
 - The Avenger source must declare its replacement through `linkedSourceIds[0]`.
 - Existing playable Avenger pairs:
