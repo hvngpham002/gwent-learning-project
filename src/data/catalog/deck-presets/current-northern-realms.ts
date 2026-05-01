@@ -10,6 +10,7 @@ export const currentNorthernRealmsDeckPreset = {
     { sourceId: "northern-realms.esterad-thyssen", count: 1 },
     { sourceId: "northern-realms.philippa-eilhart", count: 1 },
     { sourceId: "neutral.geralt-of-rivia", count: 1 },
+    { sourceId: "neutral.roach", count: 1 },
     { sourceId: "neutral.triss-merigold", count: 1 },
     { sourceId: "neutral.mysterious-elf", count: 1 },
     { sourceId: "northern-realms.prince-stennis", count: 1 },

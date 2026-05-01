@@ -521,6 +521,15 @@ source is **removed from the battlefield**.
 - **[Derived] Muster played while opponent has active Scorch threat:** Because Muster places the card(s) *before* Scorch checks, a bunch of small Muster units can be a defensive play even when big units would be scorched.
 - **[Derived] Medic revives a Muster unit:** The Muster triggers, pulling all same-name copies from hand and deck — but the revived Muster was already in the discard, so it only pulls remaining copies (not itself again from discard).
 
+#### 17.11a Muster Taxonomy (cCp13)
+
+The catalog distinguishes four Muster categories. The production engine resolves each category through explicit `linkedSourceIds` on the catalog source — runtime name-prefix matching is not used in the pure engine path.
+
+- **Exact-source copy Muster.** A source pulls additional copies of the same `sourceId` from hand and deck. `linkedSourceIds` includes the source's own ID. Members: Arachas (`monsters.arachas`), Nekker (`monsters.nekker`), Ghoul (`monsters.ghoul`), Havekar Smuggler (`scoiatael.havekar-smuggler`), Dwarven Skirmisher (`scoiatael.dwarven-skirmisher`), Elven Skirmisher (`scoiatael.elven-skirmisher`), Light Longship (`skellige.light-longship`).
+- **Symmetric family Muster.** Multiple distinct source IDs share a printed family title (e.g. `Crone:` / `Vampire:`) and pull each other from hand and deck. The family is title-like, but the engine must use the explicit `linkedSourceIds` arrays on each catalog source rather than a runtime prefix scan. Members: Crones (`monsters.crone-brewess`, `monsters.crone-weavess`, `monsters.crone-whispess`); Vampires (`monsters.vampire-bruxa`, `monsters.vampire-ekimmara`, `monsters.vampire-fleder`, `monsters.vampire-garkain`, `monsters.vampire-katakan`).
+- **One-way linked Muster.** A named source pulls a different group; the targets do not reciprocally summon the source. Members: Cerys → Clan Drummond Shield Maidens; Arachas Behemoth → regular Arachas; Gaunter O'Dimm → Gaunter O'Dimm: Darkness; Geralt of Rivia → Roach; Cirilla Fiona Elen Riannon → Roach.
+- **Non-reciprocal exceptions.** The reverse direction of a one-way Muster intentionally does **not** trigger a pull: Darkness does not pull base Gaunter; regular Arachas does not pull Arachas Behemoth; Roach does not pull Geralt or Ciri; Shield Maidens do not pull Cerys.
+
 ### 17.12 Weather Interactions
 
 - **Multiple weather cards can be active at once** (FAQ explicit).

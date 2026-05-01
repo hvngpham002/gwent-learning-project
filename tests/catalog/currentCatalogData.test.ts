@@ -104,8 +104,10 @@ describe("current catalog data", () => {
   });
 
   it("mirrors current default deck assembly counts without switching gameplay to catalog data", () => {
-    expect(countPresetCards("current-northern-realms")).toBe(35);
-    expect(countPresetCards("current-nilfgaard")).toBe(33);
+    // cCp13: each preset contains Geralt or Ciri, so it now also ships one Roach
+    // (35 → 36 in current-northern-realms; 33 → 34 in current-nilfgaard).
+    expect(countPresetCards("current-northern-realms")).toBe(36);
+    expect(countPresetCards("current-nilfgaard")).toBe(34);
     const currentOnly = currentDeckPresets.filter((preset) =>
       preset.presetId === "current-northern-realms" || preset.presetId === "current-nilfgaard",
     );

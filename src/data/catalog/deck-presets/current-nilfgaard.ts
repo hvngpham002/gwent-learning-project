@@ -7,6 +7,7 @@ export const currentNilfgaardDeckPreset = {
   leaderSourceId: "nilfgaard.emhyr-var-emreis-the-relentless",
   mainDeck: [
     { sourceId: "neutral.cirilla-fiona-elen-riannon", count: 1 },
+    { sourceId: "neutral.roach", count: 1 },
     { sourceId: "neutral.yennefer-of-vengerberg", count: 1 },
     { sourceId: "neutral.mysterious-elf", count: 1 },
     { sourceId: "nilfgaard.letho-of-gulet", count: 1 },

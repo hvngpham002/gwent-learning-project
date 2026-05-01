@@ -62,7 +62,12 @@ describe("headless AI-vs-AI simulation", () => {
   });
 
   it("resolves prompts through policy-selected choose_prompt_option moves when they occur", () => {
-    const result = runHeadlessMatchSimulation({ seed: "sim-smoke-001" });
+    // cCp13 added a Roach copy to current-northern-realms / current-nilfgaard for
+    // muster_roach visibility. The reshuffle no longer triggers a Medic prompt
+    // under sim-smoke-001; sim-smoke-002 still resolves at least one Medic
+    // prompt under the same legal-heuristic-v0 policy and remains part of the
+    // current-smoke-v1 suite.
+    const result = runHeadlessMatchSimulation({ seed: "sim-smoke-002" });
 
     expect(result.summary.promptsResolved).toBeGreaterThan(0);
     expect(result.steps.some((step) => step.chosenMoveKind === "choose_prompt_option")).toBe(true);

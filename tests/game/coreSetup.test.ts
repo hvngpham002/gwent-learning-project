@@ -101,12 +101,16 @@ describe("core match setup", () => {
   });
 
   it("draws 10-card initial hands and shrinks decks by 10", () => {
+    // cCp13: each seat's preset gained one Roach for muster_roach visibility,
+    // so seat_a (current-northern-realms) now starts at 36 cards (was 35) and
+    // seat_b (current-nilfgaard) at 34 (was 33). After the 10-card initial
+    // draw the decks shrink to 26 and 24 respectively.
     const { state, events } = startMatch(createConfig("draws"));
 
     expect(state.seats.seat_a.hand).toHaveLength(10);
     expect(state.seats.seat_b.hand).toHaveLength(10);
-    expect(state.seats.seat_a.deck).toHaveLength(25);
-    expect(state.seats.seat_b.deck).toHaveLength(23);
+    expect(state.seats.seat_a.deck).toHaveLength(26);
+    expect(state.seats.seat_b.deck).toHaveLength(24);
     expect(events.filter((event) => event.type === "initial_hand_drawn")).toHaveLength(2);
   });
 

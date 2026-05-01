@@ -20,6 +20,7 @@ export const officialNorthernRealmsStarterDeckPreset = {
     { sourceId: "northern-realms.sigismund-dijkstra", count: 1 },
     { sourceId: "northern-realms.thaler", count: 1 },
     { sourceId: "neutral.geralt-of-rivia", count: 1 },
+    { sourceId: "neutral.roach", count: 1 },
     { sourceId: "neutral.triss-merigold", count: 1 },
     { sourceId: "neutral.decoy", count: 2 },
     { sourceId: "neutral.commanders-horn", count: 2 },

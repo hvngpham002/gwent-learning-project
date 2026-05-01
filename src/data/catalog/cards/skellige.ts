@@ -230,6 +230,7 @@ export const skelligeCatalogCards = [
     strength: 4,
     rows: ["ranged"],
     abilities: ["muster"],
+    linkedSourceIds: ["skellige.light-longship"],
     tags: ["muster"],
     deckLimit: 3,
     image: "/images/skellige/light_longship.png",

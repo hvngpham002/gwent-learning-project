@@ -32,14 +32,12 @@ const sourceLinkers = ((): Map<string, string[]> => {
   return map;
 })();
 
-// Light Longship is the only catalog source that prints `muster` without
-// `linkedSourceIds`. Its target group is intentionally deferred (cBp4.1
-// follow-up); the resolver emits `no_linked_sources` rather than guessing.
-// Any future change should either add an explicit linked group or update this
-// allowlist together with matching catalog/test changes.
-const MUSTER_WITHOUT_LINKED_ALLOWLIST = new Set<string>([
-  "skellige.light-longship",
-]);
+// cCp13 confirmed Light Longship is a same-source Muster: playing one Light
+// Longship pulls other Light Longship copies from hand and deck. The catalog
+// now lists `linkedSourceIds: ["skellige.light-longship"]`, so the previous
+// deferred allowlist is empty. Any future deferred Muster source must be added
+// here together with matching catalog/test/report changes.
+const MUSTER_WITHOUT_LINKED_ALLOWLIST = new Set<string>();
 
 describe("Linked ability invariants (cCp12)", () => {
   describe("link resolution", () => {
@@ -254,6 +252,7 @@ describe("Linked ability invariants (cCp12)", () => {
       "scoiatael.havekar-smuggler",
       "scoiatael.dwarven-skirmisher",
       "scoiatael.elven-skirmisher",
+      "skellige.light-longship",
     ];
 
     it("each known same-source Muster card lists itself in linkedSourceIds", () => {
@@ -264,10 +263,22 @@ describe("Linked ability invariants (cCp12)", () => {
         expect(card!.linkedSourceIds).toContain(sourceId);
       });
     });
+
+    it("Light Longship lists only itself in linkedSourceIds (cCp13)", () => {
+      const longship = cardById.get("skellige.light-longship");
+      expect(longship).toBeDefined();
+      expect(longship!.abilities).toContain("muster");
+      expect(longship!.linkedSourceIds).toEqual(["skellige.light-longship"]);
+    });
   });
 
-  describe("Multi-card named groups", () => {
-    it("Crones each link to the other two Crones and never to themselves", () => {
+  describe("Symmetric family Muster groups (cCp13)", () => {
+    // The Crone and Vampire families are visually title-like (`Crone:` /
+    // `Vampire:`), but the production engine resolves Muster only through
+    // explicit `linkedSourceIds`. Runtime name-prefix matching is not used in
+    // the pure engine path. These assertions lock that contract.
+
+    it("Crones each link to the other two Crones via explicit linkedSourceIds, not name-prefix matching", () => {
       const ids = [
         "monsters.crone-brewess",
         "monsters.crone-weavess",
@@ -276,6 +287,7 @@ describe("Linked ability invariants (cCp12)", () => {
       ids.forEach((sourceId) => {
         const card = cardById.get(sourceId);
         expect(card, `${sourceId} missing from catalog`).toBeDefined();
+        expect(card!.name.startsWith("Crone:")).toBe(true);
         const linked = card!.linkedSourceIds ?? [];
         expect(linked).not.toContain(sourceId);
         ids
@@ -286,7 +298,7 @@ describe("Linked ability invariants (cCp12)", () => {
       });
     });
 
-    it("Vampires each link to all four other vampire variants and never to themselves", () => {
+    it("Vampires each link to all four other Vampire variants via explicit linkedSourceIds, not name-prefix matching", () => {
       const ids = [
         "monsters.vampire-bruxa",
         "monsters.vampire-ekimmara",
@@ -297,6 +309,7 @@ describe("Linked ability invariants (cCp12)", () => {
       ids.forEach((sourceId) => {
         const card = cardById.get(sourceId);
         expect(card, `${sourceId} missing from catalog`).toBeDefined();
+        expect(card!.name.startsWith("Vampire:")).toBe(true);
         const linked = card!.linkedSourceIds ?? [];
         expect(linked).not.toContain(sourceId);
         ids
@@ -307,16 +320,39 @@ describe("Linked ability invariants (cCp12)", () => {
       });
     });
 
-    it("Arachas Behemoth links to Arachas (one-way as currently catalogued)", () => {
+    it("no other catalog source shares the Crone family title prefix unintentionally", () => {
+      const crones = currentCatalogCards.filter((card) => card.name.startsWith("Crone:"));
+      expect(crones.map((card) => card.sourceId).sort()).toEqual([
+        "monsters.crone-brewess",
+        "monsters.crone-weavess",
+        "monsters.crone-whispess",
+      ]);
+    });
+
+    it("no other catalog source shares the Vampire family title prefix unintentionally", () => {
+      const vampires = currentCatalogCards.filter((card) => card.name.startsWith("Vampire:"));
+      expect(vampires.map((card) => card.sourceId).sort()).toEqual([
+        "monsters.vampire-bruxa",
+        "monsters.vampire-ekimmara",
+        "monsters.vampire-fleder",
+        "monsters.vampire-garkain",
+        "monsters.vampire-katakan",
+      ]);
+    });
+  });
+
+  describe("Arachas Behemoth one-way directionality (cCp13)", () => {
+    it("Behemoth links forward to regular Arachas only", () => {
       const behemoth = cardById.get("monsters.arachas-behemoth");
       expect(behemoth).toBeDefined();
       expect(behemoth!.linkedSourceIds).toEqual(["monsters.arachas"]);
+    });
 
-      // Arachas currently links only to itself; reverse Behemoth coverage is
-      // a documented ambiguity tracked in the cCp12 report.
+    it("regular Arachas links to itself only and never to Arachas Behemoth", () => {
       const arachas = cardById.get("monsters.arachas");
       expect(arachas).toBeDefined();
       expect(arachas!.linkedSourceIds).toEqual(["monsters.arachas"]);
+      expect(arachas!.linkedSourceIds).not.toContain("monsters.arachas-behemoth");
     });
   });
 
@@ -347,15 +383,108 @@ describe("Linked ability invariants (cCp12)", () => {
     });
   });
 
-  describe("Documented ambiguity / deferred placeholders", () => {
-    // Arachas Behemoth currently links one-way to Arachas; whether Arachas
-    // should reciprocally pull Behemoth is documented in the cCp12 report as
-    // an ambiguous-rule note. Promote this `todo` to an active assertion when
-    // the project decides on full symmetric Arachas grouping.
-    it.todo(
-      "Arachas reciprocally pulls Arachas Behemoth (full symmetric grouping)",
-    );
+  describe("Hemdall ability-less hero lock (cCp13)", () => {
+    const hemdall = cardById.get("skellige.hemdall");
 
+    it("Hemdall is a hero with no implemented on-play ability", () => {
+      expect(hemdall).toBeDefined();
+      expect(hemdall!.kind).toBe("hero");
+      expect(hemdall!.abilities).toEqual(["none"]);
+    });
+
+    it("Hemdall remains side_deck_only and tagged hero", () => {
+      expect(hemdall).toBeDefined();
+      expect(hemdall!.tags).toContain("side_deck_only");
+      expect(hemdall!.tags).toContain("hero");
+    });
+
+    it("Kambi links to Hemdall through linkedSourceIds[0]", () => {
+      const kambi = cardById.get("skellige.kambi");
+      expect(kambi).toBeDefined();
+      expect(kambi!.abilities).toContain("avenger");
+      expect(kambi!.linkedSourceIds?.[0]).toBe("skellige.hemdall");
+    });
+
+    it("no other catalog source links to Hemdall, so Avenger is the only summon path", () => {
+      const linkers = sourceLinkers.get("skellige.hemdall") ?? [];
+      expect(linkers).toEqual(["skellige.kambi"]);
+    });
+  });
+
+  describe("Roach starter visibility (cCp13)", () => {
+    const roachId = "neutral.roach";
+    const heroIds = new Set([
+      "neutral.geralt-of-rivia",
+      "neutral.cirilla-fiona-elen-riannon",
+    ]);
+
+    const presetContains = (preset: CatalogDeckPreset, sourceId: string) =>
+      preset.mainDeck.some((entry) => entry.sourceId === sourceId);
+    const presetCount = (preset: CatalogDeckPreset, sourceId: string) =>
+      preset.mainDeck.find((entry) => entry.sourceId === sourceId)?.count ?? 0;
+
+    it("every current preset containing Geralt or Ciri also contains at least one Roach", () => {
+      const offences: string[] = [];
+      currentDeckPresets.forEach((preset) => {
+        const includesHero = preset.mainDeck.some((entry) => heroIds.has(entry.sourceId));
+        if (!includesHero) return;
+        if (!presetContains(preset, roachId)) {
+          offences.push(preset.presetId);
+        }
+      });
+      expect(offences).toEqual([]);
+    });
+
+    it("Roach count never exceeds neutral.roach deckLimit in any preset", () => {
+      const roach = cardById.get(roachId);
+      expect(roach).toBeDefined();
+      const limit = roach!.deckLimit;
+      const offences: string[] = [];
+      currentDeckPresets.forEach((preset) => {
+        const count = presetCount(preset, roachId);
+        if (count > limit) {
+          offences.push(`${preset.presetId} has ${count} Roach (limit ${limit})`);
+        }
+      });
+      expect(offences).toEqual([]);
+    });
+
+    it("Roach is never added to a preset that contains neither Geralt nor Ciri", () => {
+      const offences: string[] = [];
+      currentDeckPresets.forEach((preset) => {
+        const includesHero = preset.mainDeck.some((entry) => heroIds.has(entry.sourceId));
+        if (includesHero) return;
+        if (presetContains(preset, roachId)) {
+          offences.push(preset.presetId);
+        }
+      });
+      expect(offences).toEqual([]);
+    });
+
+    it("Roach itself remains non-recursive and does not summon Geralt or Ciri", () => {
+      const roach = cardById.get(roachId);
+      expect(roach).toBeDefined();
+      expect(roach!.linkedSourceIds ?? []).toEqual([]);
+      expect(roach!.abilities).not.toContain("muster");
+      expect(roach!.abilities).not.toContain("muster_roach");
+    });
+  });
+
+  describe("Light Longship starter visibility (cCp13)", () => {
+    it("the official Skellige starter has at least 2 Light Longship copies so Muster can visibly resolve", () => {
+      const skelligeStarter = currentDeckPresets.find(
+        (preset) => preset.presetId === "official-skellige-starter",
+      );
+      expect(skelligeStarter).toBeDefined();
+      const longshipEntry = skelligeStarter!.mainDeck.find(
+        (entry) => entry.sourceId === "skellige.light-longship",
+      );
+      expect(longshipEntry).toBeDefined();
+      expect(longshipEntry!.count).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe("Documented ambiguity / deferred placeholders", () => {
     // `summon` remains a `planned` ability per CATALOG_ABILITY_METADATA. When
     // the discard-trigger resolver is implemented, replace this todo with a
     // concrete engine regression that asserts side-deck replacement on

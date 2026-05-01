@@ -366,6 +366,131 @@ describe("Linked ability engine regressions (cCp12)", () => {
     });
   });
 
+  describe("Light Longship same-source Muster (cCp13)", () => {
+    it("Light Longship pulls other Light Longship copies from hand and deck", () => {
+      const state = createState("light-longship-forward", {
+        humanDeck: officialSkelligeStarterDeckPreset,
+      });
+      const longships = findCards(state, "skellige.light-longship");
+      expect(longships.length).toBeGreaterThanOrEqual(3);
+      const [played, fromHand, fromDeck] = longships;
+      preparePlayingTurn(state);
+      putInHand(state, "seat_a", [played, fromHand]);
+      putInDeck(state, "seat_a", [fromDeck]);
+
+      const result = execute(state, {
+        type: "PlayCard",
+        seatId: "seat_a",
+        cardId: played,
+        target: { kind: "board_row", side: "own", seatId: "seat_a", row: "ranged" },
+      });
+
+      expect(result.state.seats.seat_a.board.ranged.units).toEqual(
+        expect.arrayContaining([played, fromHand, fromDeck]),
+      );
+      expect(result.state.seats.seat_a.hand).not.toContain(fromHand);
+      expect(result.state.seats.seat_a.deck).not.toContain(fromDeck);
+      expect(result.events).toContainEqual(
+        expect.objectContaining({
+          type: "ability_resolved",
+          abilityId: "muster",
+          outcome: "played_linked",
+        }),
+      );
+    });
+
+    it("Light Longship Muster does not pull copies already on board or in discard", () => {
+      const state = createState("light-longship-exclusions", {
+        humanDeck: officialSkelligeStarterDeckPreset,
+      });
+      const baseInstances = findCards(state, "skellige.light-longship");
+      expect(baseInstances.length).toBe(3);
+      const [played, onBoard, inDiscard] = baseInstances;
+      const handExtra = addCardInstance(state, "seat_a", "skellige.light-longship", "hand-extra");
+      const deckExtra = addCardInstance(state, "seat_a", "skellige.light-longship", "deck-extra");
+
+      preparePlayingTurn(state);
+      putInHand(state, "seat_a", [played, handExtra]);
+      putOnBoard(state, "seat_a", onBoard, "ranged");
+      putInDiscard(state, "seat_a", [inDiscard]);
+      putInDeck(state, "seat_a", [deckExtra]);
+
+      const result = execute(state, {
+        type: "PlayCard",
+        seatId: "seat_a",
+        cardId: played,
+        target: { kind: "board_row", side: "own", seatId: "seat_a", row: "ranged" },
+      });
+
+      expect(result.state.seats.seat_a.board.ranged.units).toEqual(
+        expect.arrayContaining([played, onBoard, handExtra, deckExtra]),
+      );
+      expect(result.state.seats.seat_a.discard).toContain(inDiscard);
+      expect(result.state.seats.seat_a.hand).not.toContain(handExtra);
+      expect(result.state.seats.seat_a.deck).not.toContain(deckExtra);
+    });
+  });
+
+  describe("Arachas Behemoth one-way directionality (cCp13)", () => {
+    it("Arachas Behemoth pulls regular Arachas copies from hand and deck", () => {
+      const state = createState("behemoth-forward", {
+        humanDeck: officialMonstersStarterDeckPreset,
+      });
+      const behemoth = addCardInstance(state, "seat_a", "monsters.arachas-behemoth", "behemoth");
+      const arachasInstances = findCards(state, "monsters.arachas");
+      expect(arachasInstances.length).toBeGreaterThanOrEqual(3);
+      const [arachasHand, arachasDeckA, arachasDeckB] = arachasInstances;
+
+      preparePlayingTurn(state);
+      putInHand(state, "seat_a", [behemoth, arachasHand]);
+      putInDeck(state, "seat_a", [arachasDeckA, arachasDeckB]);
+
+      const result = execute(state, {
+        type: "PlayCard",
+        seatId: "seat_a",
+        cardId: behemoth,
+        target: { kind: "board_row", side: "own", seatId: "seat_a", row: "siege" },
+      });
+
+      expect(result.state.seats.seat_a.board.siege.units).toContain(behemoth);
+      expect(result.state.seats.seat_a.board.close.units).toEqual(
+        expect.arrayContaining([arachasHand, arachasDeckA, arachasDeckB]),
+      );
+      expect(result.state.seats.seat_a.hand).not.toContain(arachasHand);
+      expect(result.state.seats.seat_a.deck).not.toContain(arachasDeckA);
+      expect(result.state.seats.seat_a.deck).not.toContain(arachasDeckB);
+    });
+
+    it("regular Arachas does not summon Arachas Behemoth when played", () => {
+      const state = createState("arachas-no-behemoth", {
+        humanDeck: officialMonstersStarterDeckPreset,
+      });
+      const behemoth = addCardInstance(state, "seat_a", "monsters.arachas-behemoth", "behemoth");
+      const [arachasPlayed, arachasOther] = findCards(state, "monsters.arachas");
+
+      preparePlayingTurn(state);
+      putInHand(state, "seat_a", [arachasPlayed]);
+      putInDeck(state, "seat_a", [behemoth, arachasOther]);
+
+      const result = execute(state, {
+        type: "PlayCard",
+        seatId: "seat_a",
+        cardId: arachasPlayed,
+        target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+      });
+
+      // Other Arachas copy is still pulled (same-source link).
+      expect(result.state.seats.seat_a.board.close.units).toEqual(
+        expect.arrayContaining([arachasPlayed, arachasOther]),
+      );
+      // Behemoth must remain in deck — Arachas does not pull Behemoth.
+      expect(result.state.seats.seat_a.deck).toContain(behemoth);
+      expect(result.state.seats.seat_a.board.siege.units).not.toContain(behemoth);
+      expect(result.state.seats.seat_a.board.close.units).not.toContain(behemoth);
+      expect(result.state.seats.seat_a.board.ranged.units).not.toContain(behemoth);
+    });
+  });
+
   describe("Avenger and Berserker linked side-deck replacements", () => {
     it("Cow Avenger summons Bovine from side deck via linkedSourceIds[0]", () => {
       // Frost normalizes close-row strengths to 1 so Cow (printed 0) becomes a valid Scorch target.

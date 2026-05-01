@@ -79,7 +79,9 @@ describe("simulation export dataset", () => {
   });
 
   it("does not emit prompt target strength without a visible prompt target", () => {
-    const dataset = buildSimulationExportDataset({ batchInput: { seeds: ["sim-smoke-001"] } });
+    // cCp13: sim-smoke-001 no longer reaches a Medic prompt after the Roach
+    // visibility addition; sim-smoke-002 still does and is in the suite.
+    const dataset = buildSimulationExportDataset({ batchInput: { seeds: ["sim-smoke-002"] } });
     const promptOptions = dataset.rows.flatMap((row) => row.observation.pendingPrompt?.options ?? []);
 
     expect(promptOptions.length).toBeGreaterThan(0);

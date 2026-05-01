@@ -20,6 +20,7 @@ export const officialNilfgaardStarterDeckPreset = {
     { sourceId: "nilfgaard.stefan-skellen", count: 1 },
     { sourceId: "nilfgaard.vattier-de-rideaux", count: 1 },
     { sourceId: "neutral.cirilla-fiona-elen-riannon", count: 1 },
+    { sourceId: "neutral.roach", count: 1 },
     { sourceId: "neutral.yennefer-of-vengerberg", count: 1 },
     { sourceId: "neutral.decoy", count: 2 },
     { sourceId: "neutral.commanders-horn", count: 2 },

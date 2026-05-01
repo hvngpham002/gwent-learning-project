@@ -193,7 +193,19 @@ describe("engine AI policy", () => {
     match.seats.seat_a.mulliganComplete = true;
     match.seats.seat_b.mulliganComplete = true;
     match.seats.seat_a.passed = true;
-    const strongCardId = match.seats.seat_b.hand[0];
+    // Pick the strongest card currently in seat_b's hand so the heuristic
+    // treats seat_b as clearly ahead. The previous test relied on `hand[0]`
+    // being strong enough, but cCp13's added Roach reshuffled the deal and
+    // sometimes leaves a small unit in slot 0. Choosing the maximum-strength
+    // hand card keeps the lead unambiguous and makes the test deck-shape
+    // independent.
+    const strongCardId = match.seats.seat_b.hand
+      .slice()
+      .sort((aId, bId) => {
+        const aSource = currentCatalogCards.find((card) => card.sourceId === match.cardsById[aId].sourceId);
+        const bSource = currentCatalogCards.find((card) => card.sourceId === match.cardsById[bId].sourceId);
+        return (bSource?.strength ?? 0) - (aSource?.strength ?? 0);
+      })[0];
     match.seats.seat_b.hand = match.seats.seat_b.hand.filter((cardId) => cardId !== strongCardId);
     match.seats.seat_b.board.close.units.push(strongCardId);
     match.cardsById[strongCardId].zone = { kind: "board_row", seat: "seat_b", row: "close" };
