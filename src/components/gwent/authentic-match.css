@@ -442,6 +442,32 @@ button.authentic-board-card {
   gap: 7px;
 }
 
+.authentic-leader-action {
+  position: relative;
+}
+
+.authentic-leader-choice-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  background: var(--bg-paper);
+  box-shadow: 0 14px 40px rgba(31, 26, 18, 0.32);
+}
+
+.authentic-leader-choice-option {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.authentic-leader-choice-option__rows {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
 .authentic-target-group {
   padding-top: 7px;
   border-top: 1px dotted var(--rule);

@@ -908,3 +908,167 @@ test("authentic match supports in-match card inspection without breaking gamepla
 
   expect(pageErrors).toEqual([]);
 });
+
+test("authentic match exposes a weather choice menu for play_any_weather (cEp8)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  // Seed a custom Monsters deck with all four weather cards so Eredin's
+  // play_any_weather can offer at least two distinct legal options after a
+  // keep-hand mulligan. The deck is intentionally bulked with units so the
+  // four weather cards are unlikely to all land in the initial 10-card draw.
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "gwent_authentic_decks_v1",
+      JSON.stringify({
+        schemaVersion: "authentic-decks-v1",
+        activePresetId: "local-eredin-cep8",
+        decks: [
+          {
+            presetId: "local-eredin-cep8",
+            name: "Eredin Weather Choice Smoke",
+            faction: "monsters",
+            leaderSourceId: "monsters.eredin-king-of-the-wild-hunt",
+            mainDeck: [
+              { sourceId: "monsters.draug", count: 1 },
+              { sourceId: "monsters.imlerith", count: 1 },
+              { sourceId: "monsters.leshen", count: 1 },
+              { sourceId: "monsters.kayran", count: 1 },
+              { sourceId: "monsters.crone-brewess", count: 1 },
+              { sourceId: "monsters.crone-weavess", count: 1 },
+              { sourceId: "monsters.crone-whispess", count: 1 },
+              { sourceId: "monsters.fiend", count: 1 },
+              { sourceId: "monsters.forktail", count: 1 },
+              { sourceId: "monsters.frightener", count: 1 },
+              { sourceId: "monsters.griffin", count: 1 },
+              { sourceId: "monsters.werewolf", count: 1 },
+              { sourceId: "monsters.foglet", count: 1 },
+              { sourceId: "monsters.harpy", count: 1 },
+              { sourceId: "monsters.arachas", count: 3 },
+              { sourceId: "monsters.nekker", count: 3 },
+              { sourceId: "monsters.ghoul", count: 3 },
+              { sourceId: "neutral.biting-frost", count: 1 },
+              { sourceId: "neutral.impenetrable-fog", count: 1 },
+              { sourceId: "neutral.torrential-rain", count: 1 },
+              { sourceId: "neutral.skellige-storm", count: 1 },
+            ],
+            sideDeck: [],
+          },
+        ],
+      }),
+    );
+  });
+
+  // Iterate over a small fixed seed list to find one that leaves at least two
+  // distinct eligible weather source IDs in deck after the initial draw. The
+  // search is bounded and deterministic; production engine seed semantics are
+  // unchanged.
+  const candidateSeeds = ["cep8-eredin-1", "cep8-eredin-2", "cep8-eredin-3", "cep8-eredin-4", "cep8-eredin-5"];
+  let chosenSeed: string | null = null;
+  let optionCount = 0;
+  let optionLabels: string[] = [];
+
+  for (const seed of candidateSeeds) {
+    await page.goto(`/?engine=1&ui=authentic&seed=${seed}`);
+    await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+
+    const eredinDeck = page
+      .getByTestId("authentic-pregame-deck-option")
+      .filter({ hasText: "Eredin Weather Choice Smoke" });
+    await expect(eredinDeck).toBeVisible();
+    await eredinDeck.click();
+
+    await page.getByTestId("authentic-pregame-begin").click();
+    await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+    await page.getByTestId("authentic-confirm-mulligan").click();
+    await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+    await page.getByTestId("authentic-start-match-confirm").click();
+    await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+
+    const trigger = page.getByTestId("authentic-leader-action");
+    await expect(trigger).toBeVisible();
+
+    if (await trigger.isDisabled()) {
+      continue;
+    }
+
+    await trigger.click();
+    const menu = page.getByTestId("authentic-leader-choice-menu");
+    if ((await menu.count()) === 0) {
+      continue;
+    }
+
+    const options = page.getByTestId("authentic-leader-choice-option");
+    const count = await options.count();
+    if (count >= 2) {
+      chosenSeed = seed;
+      optionCount = count;
+      optionLabels = await options.allTextContents();
+      break;
+    }
+  }
+
+  expect(chosenSeed, "no candidate seed produced >=2 play_any_weather options").not.toBeNull();
+  expect(optionCount).toBeGreaterThanOrEqual(2);
+  // Labels must be human-readable weather names — never raw deck instance IDs.
+  for (const label of optionLabels) {
+    expect(label).not.toMatch(/seat_[ab]:\d{3}:/);
+    expect(label.length).toBeGreaterThan(0);
+  }
+  expect(optionLabels.some((label) => /biting frost|impenetrable fog|torrential rain|skellige storm/i.test(label))).toBe(true);
+  // The compact row hint should be visible alongside each weather name so the
+  // player knows which row each weather affects (e.g. "biting frost · close
+  // combat", "skellige storm · ranged + siege"). Assert at least one option
+  // shows a row suffix.
+  expect(optionLabels.some((label) => /·\s+(close combat|ranged|siege)/i.test(label))).toBe(true);
+
+  // Trigger has the expected ARIA wiring while the menu is open.
+  const trigger = page.getByTestId("authentic-leader-action");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(trigger).toHaveAttribute("aria-controls", "authentic-leader-choice-menu");
+  await expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+
+  // Pick a non-first option when possible so we can prove the chosen option
+  // (not just the first legal one) was dispatched. Resolve the source ID from
+  // the option element's data attribute rather than parsing the visible label,
+  // since labels now include row-hint suffixes ("biting frost · close combat").
+  const options = page.getByTestId("authentic-leader-choice-option");
+  const optionSourceIds = await options.evaluateAll((elements) =>
+    elements.map((element) => element.getAttribute("data-source-id") ?? ""),
+  );
+  let chosenIndex = 0;
+  for (let index = 1; index < optionCount; index += 1) {
+    const sourceId = optionSourceIds[index] ?? "";
+    if (sourceId !== "neutral.biting-frost" && sourceId.startsWith("neutral.")) {
+      chosenIndex = index;
+      break;
+    }
+  }
+  if (chosenIndex === 0 && optionCount > 1) {
+    chosenIndex = 1;
+  }
+  const expectedSourceId = optionSourceIds[chosenIndex];
+  expect(expectedSourceId).toMatch(/^neutral\.(biting-frost|impenetrable-fog|torrential-rain|skellige-storm)$/);
+
+  await options.nth(chosenIndex).click();
+
+  // Menu closes after dispatch.
+  await expect(page.getByTestId("authentic-leader-choice-menu")).toHaveCount(0);
+
+  // Leader action becomes used/disabled afterward.
+  await expect(page.getByTestId("authentic-leader-action")).toBeDisabled();
+
+  // Recent activity confirms the human used the leader.
+  const activity = page.getByTestId("authentic-recent-activity");
+  await expect(activity).toContainText(/Human used leader/);
+
+  // Weather zone reflects the chosen option, not just the first legal one.
+  const weatherCard = page.locator(`.authentic-weather__card[data-source-id="${expectedSourceId}"]`);
+  await expect(weatherCard.first()).toBeVisible();
+
+  // Hidden-info guard: no raw deck instance IDs or opponent hidden card data
+  // leak into visible page text.
+  const matchPageText = await visiblePageText(page);
+  expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
+  expect(pageErrors).toEqual([]);
+});

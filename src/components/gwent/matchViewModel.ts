@@ -1,5 +1,14 @@
-import type { CardInstanceId, ChooseMulliganMove, LegalMove, MatchScoreBreakdown, PlayCardMove, RoundResult, SeatId } from "@/game/core";
-import type { CatalogRow } from "@/game/catalog";
+import type {
+  CardInstanceId,
+  ChooseMulliganMove,
+  LegalMove,
+  MatchScoreBreakdown,
+  PlayCardMove,
+  RoundResult,
+  SeatId,
+  UseLeaderMove,
+} from "@/game/core";
+import type { CatalogLeaderAbilityId, CatalogRow } from "@/game/catalog";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 
 import type { AuthenticCardViewModel } from "./cardViewModel";
@@ -641,5 +650,72 @@ export const buildMatchLeaderInspection = ({
     statusLabel,
     ownerLabel,
     facts,
+  };
+};
+
+export interface LeaderActionChoiceOption {
+  readonly moveId: string;
+  readonly move: UseLeaderMove;
+  readonly label: string;
+  readonly sourceId?: string;
+  readonly targetCardName?: string;
+  readonly ability: CatalogLeaderAbilityId;
+  readonly affectedRows: readonly CatalogRow[];
+  readonly affectedRowsLabel: string | null;
+}
+
+export type LeaderActionViewModel =
+  | { readonly kind: "none" }
+  | { readonly kind: "single"; readonly option: LeaderActionChoiceOption }
+  | { readonly kind: "choice"; readonly options: readonly LeaderActionChoiceOption[] };
+
+const WEATHER_SOURCE_TO_ROWS: Record<string, readonly CatalogRow[]> = {
+  "neutral.biting-frost": ["close"],
+  "neutral.impenetrable-fog": ["ranged"],
+  "neutral.torrential-rain": ["siege"],
+  "neutral.skellige-storm": ["ranged", "siege"],
+};
+
+const formatAffectedRowsLabel = (rows: readonly CatalogRow[]): string | null => {
+  if (rows.length === 0) {
+    return null;
+  }
+  return rows.map((row) => getRowDisplay(row).name).join(" + ");
+};
+
+const buildLeaderActionOption = (move: UseLeaderMove): LeaderActionChoiceOption => {
+  const sourceId =
+    move.target.kind === "deck_card_source" ? move.target.sourceId : move.metadata.targetSourceId;
+  const targetCardName = move.metadata.targetCardName;
+  const fallbackLabel =
+    targetCardName ??
+    move.metadata.targetLabel ??
+    sourceId ??
+    move.label;
+  const affectedRows: readonly CatalogRow[] = sourceId ? WEATHER_SOURCE_TO_ROWS[sourceId] ?? [] : [];
+  return {
+    moveId: move.moveId,
+    move,
+    label: fallbackLabel,
+    sourceId,
+    targetCardName,
+    ability: move.metadata.ability,
+    affectedRows,
+    affectedRowsLabel: formatAffectedRowsLabel(affectedRows),
+  };
+};
+
+export const buildLeaderActionViewModel = (
+  moves: readonly UseLeaderMove[],
+): LeaderActionViewModel => {
+  if (moves.length === 0) {
+    return { kind: "none" };
+  }
+  if (moves.length === 1) {
+    return { kind: "single", option: buildLeaderActionOption(moves[0]) };
+  }
+  return {
+    kind: "choice",
+    options: moves.map(buildLeaderActionOption),
   };
 };

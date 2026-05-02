@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { LegalMove, PlayCardMove } from "@/game/core";
+import type { LegalMove, PlayCardMove, UseLeaderMove } from "@/game/core";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 import {
+  buildLeaderActionViewModel,
   buildRoundOverlayViewModel,
   buildAuthenticSeatSummary,
   buildMatchCardInspection,
@@ -548,6 +549,181 @@ describe("match leader inspection view model", () => {
     });
     expect(inspection.statusLabel).toBe("used");
     expect(inspection.ability.status).toBe("placeholder");
+  });
+});
+
+describe("leader action view model", () => {
+  const noTargetLeaderMove = (overrides: Partial<UseLeaderMove> = {}): UseLeaderMove => ({
+    kind: "use_leader",
+    moveId: "leader:seat_a:foltest:clear_weather",
+    seatId: "seat_a",
+    leaderCardId: "seat_a:leader:foltest",
+    sourceId: "northern-realms.foltest-lord-commander-of-the-north",
+    target: { kind: "none" },
+    label: "Use Foltest",
+    metadata: {
+      leaderName: "Foltest: Lord Commander of The North",
+      ability: "clear_weather",
+      abilityStatus: "implemented",
+      targetRequirement: "none",
+    },
+    ...overrides,
+  });
+
+  const weatherLeaderMove = ({
+    sourceId,
+    targetCardName,
+    targetLabel,
+    moveId,
+  }: {
+    sourceId: string;
+    targetCardName?: string;
+    targetLabel?: string;
+    moveId: string;
+  }): UseLeaderMove => ({
+    kind: "use_leader",
+    moveId,
+    seatId: "seat_a",
+    leaderCardId: "seat_a:leader:eredin",
+    sourceId: "monsters.eredin-king-of-the-wild-hunt",
+    target: { kind: "deck_card_source", seatId: "seat_a", sourceId },
+    label: `Use Eredin (${sourceId})`,
+    metadata: {
+      leaderName: "Eredin: King of the Wild Hunt",
+      ability: "play_any_weather",
+      abilityStatus: "implemented",
+      targetRequirement: "deck_weather_source",
+      targetSourceId: sourceId,
+      targetCardName,
+      targetLabel,
+    },
+  });
+
+  it("returns kind 'none' when no leader moves are available", () => {
+    expect(buildLeaderActionViewModel([])).toEqual({ kind: "none" });
+  });
+
+  it("returns kind 'single' for a single no-target leader move", () => {
+    const move = noTargetLeaderMove();
+    const result = buildLeaderActionViewModel([move]);
+    expect(result.kind).toBe("single");
+    if (result.kind !== "single") {
+      throw new Error("expected single");
+    }
+    expect(result.option.move).toBe(move);
+    expect(result.option.moveId).toBe(move.moveId);
+    expect(result.option.ability).toBe("clear_weather");
+    expect(result.option.affectedRows).toEqual([]);
+    expect(result.option.affectedRowsLabel).toBeNull();
+  });
+
+  it("returns kind 'single' for a single deck_card_source leader move", () => {
+    const move = weatherLeaderMove({
+      sourceId: "neutral.biting-frost",
+      targetCardName: "Biting Frost",
+      targetLabel: "deck Biting Frost",
+      moveId: "leader:seat_a:eredin:frost",
+    });
+    const result = buildLeaderActionViewModel([move]);
+    expect(result.kind).toBe("single");
+    if (result.kind !== "single") {
+      throw new Error("expected single");
+    }
+    expect(result.option.move).toBe(move);
+    expect(result.option.label).toBe("Biting Frost");
+    expect(result.option.sourceId).toBe("neutral.biting-frost");
+    expect(result.option.affectedRows).toEqual(["close"]);
+    expect(result.option.affectedRowsLabel).toBe("Close Combat");
+  });
+
+  it("returns kind 'choice' for multiple play_any_weather moves preserving engine order", () => {
+    const moves = [
+      weatherLeaderMove({ sourceId: "neutral.biting-frost", targetCardName: "Biting Frost", moveId: "m:1" }),
+      weatherLeaderMove({ sourceId: "neutral.impenetrable-fog", targetCardName: "Impenetrable Fog", moveId: "m:2" }),
+      weatherLeaderMove({ sourceId: "neutral.torrential-rain", targetCardName: "Torrential Rain", moveId: "m:3" }),
+      weatherLeaderMove({ sourceId: "neutral.skellige-storm", targetCardName: "Skellige Storm", moveId: "m:4" }),
+    ];
+    const result = buildLeaderActionViewModel(moves);
+    expect(result.kind).toBe("choice");
+    if (result.kind !== "choice") {
+      throw new Error("expected choice");
+    }
+    expect(result.options.map((option) => option.moveId)).toEqual(["m:1", "m:2", "m:3", "m:4"]);
+    expect(result.options.map((option) => option.label)).toEqual([
+      "Biting Frost",
+      "Impenetrable Fog",
+      "Torrential Rain",
+      "Skellige Storm",
+    ]);
+    expect(result.options.map((option) => option.sourceId)).toEqual([
+      "neutral.biting-frost",
+      "neutral.impenetrable-fog",
+      "neutral.torrential-rain",
+      "neutral.skellige-storm",
+    ]);
+    expect(result.options.map((option) => option.affectedRowsLabel)).toEqual([
+      "Close Combat",
+      "Ranged",
+      "Siege",
+      "Ranged + Siege",
+    ]);
+    expect(result.options[3].affectedRows).toEqual(["ranged", "siege"]);
+  });
+
+  it("prefers metadata.targetCardName for the option label", () => {
+    const moves = [
+      weatherLeaderMove({
+        sourceId: "neutral.biting-frost",
+        targetCardName: "Biting Frost",
+        targetLabel: "deck Biting Frost",
+        moveId: "m:1",
+      }),
+      weatherLeaderMove({
+        sourceId: "neutral.impenetrable-fog",
+        targetCardName: "Impenetrable Fog",
+        targetLabel: "deck Impenetrable Fog",
+        moveId: "m:2",
+      }),
+    ];
+    const result = buildLeaderActionViewModel(moves);
+    if (result.kind !== "choice") throw new Error("expected choice");
+    expect(result.options[0].label).toBe("Biting Frost");
+    expect(result.options[1].label).toBe("Impenetrable Fog");
+  });
+
+  it("falls back to targetLabel and then sourceId when targetCardName is missing without exposing instance ids", () => {
+    const moves = [
+      weatherLeaderMove({
+        sourceId: "neutral.impenetrable-fog",
+        targetLabel: "deck Impenetrable Fog",
+        moveId: "m:label",
+      }),
+      weatherLeaderMove({
+        sourceId: "neutral.skellige-storm",
+        moveId: "m:source",
+      }),
+    ];
+    const result = buildLeaderActionViewModel(moves);
+    if (result.kind !== "choice") throw new Error("expected choice");
+    expect(result.options[0].label).toBe("deck Impenetrable Fog");
+    expect(result.options[1].label).toBe("neutral.skellige-storm");
+    for (const option of result.options) {
+      expect(option.label).not.toMatch(/seat_[ab]:\d{3}:/);
+    }
+  });
+
+  it("exposes the exact UseLeader command target for a chosen option without rebuilding it manually", () => {
+    const moves = [
+      weatherLeaderMove({ sourceId: "neutral.biting-frost", targetCardName: "Biting Frost", moveId: "m:frost" }),
+      weatherLeaderMove({ sourceId: "neutral.impenetrable-fog", targetCardName: "Impenetrable Fog", moveId: "m:fog" }),
+    ];
+    const result = buildLeaderActionViewModel(moves);
+    if (result.kind !== "choice") throw new Error("expected choice");
+    const fog = result.options.find((option) => option.moveId === "m:fog");
+    expect(fog).toBeDefined();
+    if (!fog) throw new Error("missing fog");
+    expect(fog.move.target).toEqual({ kind: "deck_card_source", seatId: "seat_a", sourceId: "neutral.impenetrable-fog" });
+    expect(fog.move).toBe(moves[1]);
   });
 });
 

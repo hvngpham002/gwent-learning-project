@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getEngineSeedFromSearch } from "@/appMode";
 import type { CardInstanceId, GameEvent, RoundResult, SeatId } from "@/game/core";
@@ -62,6 +62,7 @@ import { StartMatchModal } from "./modal/StartMatchModal";
 import {
   buildAuthenticSeatSummary,
   buildGameEndNavigationActions,
+  buildLeaderActionViewModel,
   buildMatchCardInspection,
   buildMatchLeaderInspection,
   buildMedicPromptOptions,
@@ -78,6 +79,7 @@ import {
   type AuthenticBoardRowViewModel,
   type AuthenticRuntimeCardViewModel,
   type AuthenticSeatSummaryViewModel,
+  type LeaderActionViewModel,
   type MatchCardInspectionOrigin,
 } from "./matchViewModel";
 import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
@@ -474,14 +476,24 @@ const InspectorPanel: React.FC<{
   </section>
 );
 
+const LEADER_CHOICE_MENU_ID = "authentic-leader-choice-menu";
+
+interface ActionPanelLeaderProps {
+  readonly label: string;
+  readonly disabled: boolean;
+  readonly action: LeaderActionViewModel;
+  readonly choiceMenuOpen: boolean;
+  readonly onActivate: () => void;
+  readonly onChooseOption: (moveId: string) => void;
+  readonly containerRef?: React.Ref<HTMLDivElement>;
+}
+
 const ActionPanel: React.FC<{
   targetGroups: ReturnType<typeof groupTargetActions>;
   onPlayMove: (moveId: string) => void;
   canPass: boolean;
   onPass: () => void;
-  leaderLabel: string;
-  leaderDisabled: boolean;
-  onUseLeader: () => void;
+  leader: ActionPanelLeaderProps;
   roundEndLabel: string | null;
   canResolveRound: boolean;
   onResolveRound: () => void;
@@ -490,57 +502,99 @@ const ActionPanel: React.FC<{
   onPlayMove,
   canPass,
   onPass,
-  leaderLabel,
-  leaderDisabled,
-  onUseLeader,
+  leader,
   roundEndLabel,
   canResolveRound,
   onResolveRound,
-}) => (
-  <section className="authentic-panel authentic-actions">
-    <h2>Actions</h2>
-    <div className="authentic-actions__block">
-      <p>{leaderLabel}</p>
-      <button type="button" className="authentic-button authentic-button--secondary" disabled={leaderDisabled} onClick={onUseLeader}>
-        use leader
+}) => {
+  const isChoice = leader.action.kind === "choice";
+  const triggerLabel = isChoice ? "choose weather" : "use leader";
+  const ariaExpanded = isChoice ? leader.choiceMenuOpen : undefined;
+  const ariaControls = isChoice ? LEADER_CHOICE_MENU_ID : undefined;
+  return (
+    <section className="authentic-panel authentic-actions">
+      <h2>Actions</h2>
+      <div className="authentic-actions__block authentic-leader-action" ref={leader.containerRef}>
+        <p>{leader.label}</p>
+        <button
+          type="button"
+          className="authentic-button authentic-button--secondary"
+          data-testid="authentic-leader-action"
+          disabled={leader.disabled}
+          aria-haspopup={isChoice ? "menu" : undefined}
+          aria-expanded={ariaExpanded}
+          aria-controls={leader.choiceMenuOpen ? ariaControls : undefined}
+          onClick={leader.onActivate}
+        >
+          {triggerLabel}
+        </button>
+        {isChoice && leader.choiceMenuOpen ? (
+          <div
+            id={LEADER_CHOICE_MENU_ID}
+            className="authentic-leader-choice-menu"
+            role="menu"
+            aria-label="Choose a weather card"
+            data-testid="authentic-leader-choice-menu"
+          >
+            {leader.action.options.map((option) => (
+              <button
+                key={option.moveId}
+                type="button"
+                role="menuitem"
+                className="authentic-button authentic-button--secondary authentic-leader-choice-option"
+                data-testid="authentic-leader-choice-option"
+                data-source-id={option.sourceId}
+                onClick={() => leader.onChooseOption(option.moveId)}
+              >
+                <span className="authentic-leader-choice-option__name">{option.label.toLocaleLowerCase()}</span>
+                {option.affectedRowsLabel ? (
+                  <span className="authentic-leader-choice-option__rows">
+                    {" · "}
+                    {option.affectedRowsLabel.toLocaleLowerCase()}
+                  </span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <button type="button" className="authentic-button authentic-button--secondary" data-testid="authentic-pass" disabled={!canPass} onClick={onPass}>
+        pass round
       </button>
-    </div>
-    <button type="button" className="authentic-button authentic-button--secondary" data-testid="authentic-pass" disabled={!canPass} onClick={onPass}>
-      pass round
-    </button>
-    {roundEndLabel ? (
-      <button
-        type="button"
-        className="authentic-button authentic-button--primary"
-        data-testid="authentic-resolve-round"
-        disabled={!canResolveRound}
-        onClick={onResolveRound}
-      >
-        {roundEndLabel.toLocaleLowerCase()}
-      </button>
-    ) : null}
-    <div className="authentic-target-groups" data-testid="authentic-target-groups">
-      {targetGroups.length === 0 ? <p>No selected-card target actions.</p> : null}
-      {targetGroups.map((group) => (
-        <div key={group.key} className="authentic-target-group">
-          <h3>{group.label}</h3>
-          {group.actions.map((action) => (
-            <button
-              key={action.moveId}
-              type="button"
-              className="authentic-button authentic-button--secondary"
-              data-testid="authentic-target-action"
-              title={action.title.toLocaleLowerCase()}
-              onClick={() => onPlayMove(action.moveId)}
-            >
-              {action.label.toLocaleLowerCase()}
-            </button>
-          ))}
-        </div>
-      ))}
-    </div>
-  </section>
-);
+      {roundEndLabel ? (
+        <button
+          type="button"
+          className="authentic-button authentic-button--primary"
+          data-testid="authentic-resolve-round"
+          disabled={!canResolveRound}
+          onClick={onResolveRound}
+        >
+          {roundEndLabel.toLocaleLowerCase()}
+        </button>
+      ) : null}
+      <div className="authentic-target-groups" data-testid="authentic-target-groups">
+        {targetGroups.length === 0 ? <p>No selected-card target actions.</p> : null}
+        {targetGroups.map((group) => (
+          <div key={group.key} className="authentic-target-group">
+            <h3>{group.label}</h3>
+            {group.actions.map((action) => (
+              <button
+                key={action.moveId}
+                type="button"
+                className="authentic-button authentic-button--secondary"
+                data-testid="authentic-target-action"
+                title={action.title.toLocaleLowerCase()}
+                onClick={() => onPlayMove(action.moveId)}
+              >
+                {action.label.toLocaleLowerCase()}
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const PromptPanel: React.FC<{
   promptTitle: string | null;
@@ -959,6 +1013,8 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const [cardInspectTarget, setCardInspectTarget] = useState<MatchInspectTarget | null>(null);
   const [leaderContextMenu, setLeaderContextMenu] = useState<MatchLeaderContextMenuState | null>(null);
   const [leaderInspectSeat, setLeaderInspectSeat] = useState<SeatId | null>(null);
+  const [leaderChoiceMenuOpen, setLeaderChoiceMenuOpen] = useState(false);
+  const leaderActionRef = useRef<HTMLDivElement | null>(null);
   const [mulliganExitAnimation, setMulliganExitAnimation] = useState<MulliganExitAnimation | null>(null);
   const [completedMulliganAnimationKey, setCompletedMulliganAnimationKey] = useState<string | null>(null);
   const [readyMulliganAnimationKey, setReadyMulliganAnimationKey] = useState<string | null>(null);
@@ -1331,7 +1387,13 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   }, []);
 
   useEffect(() => {
-    if (!cardContextMenu && !leaderContextMenu && !cardInspectTarget && leaderInspectSeat === null) {
+    if (
+      !cardContextMenu &&
+      !leaderContextMenu &&
+      !cardInspectTarget &&
+      leaderInspectSeat === null &&
+      !leaderChoiceMenuOpen
+    ) {
       return;
     }
     const handleKey = (event: KeyboardEvent) => {
@@ -1350,11 +1412,15 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       }
       if (leaderContextMenu) {
         setLeaderContextMenu(null);
+        return;
+      }
+      if (leaderChoiceMenuOpen) {
+        setLeaderChoiceMenuOpen(false);
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [cardContextMenu, cardInspectTarget, leaderContextMenu, leaderInspectSeat]);
+  }, [cardContextMenu, cardInspectTarget, leaderChoiceMenuOpen, leaderContextMenu, leaderInspectSeat]);
 
   const returnToPreGame = useCallback(() => {
     if (!onReturnToPreGame) {
@@ -1395,8 +1461,45 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const selectedCard = useMemo(() => humanHand.find((card) => card.instanceId === selectedCardId) ?? null, [humanHand, selectedCardId]);
   const selectedAuthenticCard = useMemo(() => (selectedCard ? toRuntimeCard(selectedCard) : null), [selectedCard]);
   const leaderMoves = useMemo(() => getUseLeaderMoves(humanMoves), [humanMoves]);
-  const leaderMove = leaderMoves[0] ?? null;
+  const leaderActionViewModel = useMemo<LeaderActionViewModel>(
+    () => buildLeaderActionViewModel(leaderMoves),
+    [leaderMoves],
+  );
+  const leaderMove =
+    leaderActionViewModel.kind === "single"
+      ? leaderActionViewModel.option.move
+      : leaderActionViewModel.kind === "choice"
+        ? leaderActionViewModel.options[0]?.move ?? null
+        : null;
   const promptMoves = useMemo(() => getPromptOptionMoves(humanMoves), [humanMoves]);
+
+  useEffect(() => {
+    if (!leaderChoiceMenuOpen) {
+      return;
+    }
+    if (leaderActionViewModel.kind !== "choice") {
+      setLeaderChoiceMenuOpen(false);
+    }
+  }, [leaderActionViewModel, leaderChoiceMenuOpen]);
+
+  useEffect(() => {
+    if (!leaderChoiceMenuOpen) {
+      return;
+    }
+    const handlePointerDown = (event: MouseEvent) => {
+      const container = leaderActionRef.current;
+      if (!container) {
+        return;
+      }
+      const target = event.target as Node | null;
+      if (target && container.contains(target)) {
+        return;
+      }
+      setLeaderChoiceMenuOpen(false);
+    };
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => window.removeEventListener("mousedown", handlePointerDown);
+  }, [leaderChoiceMenuOpen]);
 
   const publicCards = useMemo(
     () => [
@@ -1645,12 +1748,38 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     [dispatch, promptMoves],
   );
 
-  const useLeader = useCallback(() => {
-    if (!leaderMove) {
+  const dispatchLeaderMove = useCallback(
+    (move: { seatId: SeatId; target: typeof leaderMoves[number]["target"] }) => {
+      dispatch(dispatchEngineCommand({ type: "UseLeader", seatId: move.seatId, target: move.target }));
+    },
+    [dispatch],
+  );
+
+  const activateLeaderAction = useCallback(() => {
+    if (leaderActionViewModel.kind === "none") {
       return;
     }
-    dispatch(dispatchEngineCommand({ type: "UseLeader", seatId: humanSeat, target: leaderMove.target }));
-  }, [dispatch, humanSeat, leaderMove]);
+    if (leaderActionViewModel.kind === "single") {
+      dispatchLeaderMove(leaderActionViewModel.option.move);
+      return;
+    }
+    setLeaderChoiceMenuOpen((current) => !current);
+  }, [dispatchLeaderMove, leaderActionViewModel]);
+
+  const chooseLeaderOption = useCallback(
+    (moveId: string) => {
+      if (leaderActionViewModel.kind !== "choice") {
+        return;
+      }
+      const option = leaderActionViewModel.options.find((entry) => entry.moveId === moveId);
+      if (!option) {
+        return;
+      }
+      dispatchLeaderMove(option.move);
+      setLeaderChoiceMenuOpen(false);
+    },
+    [dispatchLeaderMove, leaderActionViewModel],
+  );
 
   const playCard = useCallback(
     (moveId: string) => {
@@ -1876,9 +2005,15 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               onPlayMove={playCard}
               canPass={canPass}
               onPass={pass}
-              leaderLabel={leaderActionLabel}
-              leaderDisabled={disableLeaderAction}
-              onUseLeader={useLeader}
+              leader={{
+                label: leaderActionLabel,
+                disabled: disableLeaderAction,
+                action: leaderActionViewModel,
+                choiceMenuOpen: leaderChoiceMenuOpen && !disableLeaderAction,
+                onActivate: activateLeaderAction,
+                onChooseOption: chooseLeaderOption,
+                containerRef: leaderActionRef,
+              }}
               roundEndLabel={match?.phase === "round_end" ? roundEndSummary?.resolveLabel ?? "resolve round" : null}
               canResolveRound={canResolveRound}
               onResolveRound={resolveRound}
