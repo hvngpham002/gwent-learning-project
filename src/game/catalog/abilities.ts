@@ -267,8 +267,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   double_spies: {
     id: "double_spies",
     name: "Double Spies",
-    status: "placeholder",
-    description: "Doubles the strength of spy units already on the battlefield.",
+    status: "implemented",
+    description: "Passive: applies a ×2 multiplier to every non-hero Spy unit on the battlefield, regardless of owner or row, for the entire match. Heroes are unaffected. The multiplier does not stack if both seats somehow have the same passive.",
   },
   weather_half_penalty: {
     id: "weather_half_penalty",

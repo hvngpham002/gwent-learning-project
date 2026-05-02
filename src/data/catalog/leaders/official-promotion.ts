@@ -86,8 +86,10 @@ const executableLeaderSourceIds: readonly string[] = [
 // but is a passive engine rule rather than an active `use_leader` command.
 // cCp15 added King Bran (`weather_half_penalty`) here. cCp19 adds the four
 // row-wide horn-like passive leaders (`double_siege`, `double_close` ×2,
-// `double_ranged`).
+// `double_ranged`). cCp20 adds Eredin Breacc Glas: The Treacherous
+// (`double_spies`).
 const implementedPassiveLeaderSourceIds: readonly string[] = [
+  "monsters.eredin-breacc-glas-the-treacherous",
   "monsters.eredin-commander-of-the-red-riders",
   "northern-realms.foltest-the-siegemaster",
   "scoiatael.francesca-findabair-queen-of-dol-blathanna",
@@ -103,17 +105,17 @@ const implementedLeaderSourceIds: readonly string[] = [
 ].slice().sort();
 
 // Leader ability IDs whose `CATALOG_LEADER_ABILITY_METADATA.status` is still
-// `placeholder` after cCp19. cCp14 promoted `play_any_weather` to implemented;
+// `placeholder` after cCp20. cCp14 promoted `play_any_weather` to implemented;
 // cCp15 promoted `weather_half_penalty` (passive); cCp16 promoted `scorch_range`
 // and `scorch_siege`; cCp19 promotes `double_siege`, `double_close`, and
-// `double_ranged`. The cCp18 audit (§C-7) flagged that this array previously
-// listed only the cBp5-introduced placeholders; cCp19 backfills the pre-cBp5
-// placeholders so the manifest now exhaustively reflects every placeholder
-// leader ability ID.
+// `double_ranged`; cCp20 promotes `double_spies` (passive). The cCp18 audit
+// (§C-7) flagged that this array previously listed only the cBp5-introduced
+// placeholders; cCp19 backfilled the pre-cBp5 placeholders so the manifest now
+// exhaustively reflects every placeholder leader ability ID, and cCp20 keeps
+// it exhaustive after removing `double_spies`.
 const placeholderLeaderAbilityIds: readonly string[] = [
   "cancel_leader",
   "discard_two_draw_one_from_deck",
-  "double_spies",
   "draw_extra_card",
   "draw_opponent_discard",
   "look_three_cards",

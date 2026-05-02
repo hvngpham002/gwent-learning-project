@@ -475,9 +475,10 @@ const getLeaderMove = (
     ];
   }
 
-  // Implemented passive leaders (cCp15: King Bran's `weather_half_penalty`) do
-  // not produce a `use_leader` legal move. Their effect is wired into scoring
-  // through `getWeatherPolicyBySeat`, not through a clickable command.
+  // Implemented passive leaders (cCp15 King Bran's `weather_half_penalty`,
+  // cCp19 row-wide horn-like passives, cCp20 `double_spies`) do not produce a
+  // `use_leader` legal move. Their effect is wired into scoring through
+  // dedicated policy helpers, not through a clickable command.
   return [];
 };
 

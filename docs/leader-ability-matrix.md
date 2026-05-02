@@ -1,15 +1,16 @@
 # Leader Ability Matrix
 
-This document is the durable cCp18 audit output, refreshed by cCp19. It
-enumerates every official leader source record, classifies the placeholder
-leaders by implementation pattern, lists local-source conflicts, and records
-engine, legal-move, prompt / UI, hidden-info, AI, and simulation implications.
-cCp19+ implementation specs should pull from this matrix rather than
-re-running the audit.
+This document is the durable cCp18 audit output, refreshed by cCp19 and
+cCp20. It enumerates every official leader source record, classifies the
+placeholder leaders by implementation pattern, lists local-source conflicts,
+and records engine, legal-move, prompt / UI, hidden-info, AI, and simulation
+implications. cCp19+ implementation specs should pull from this matrix
+rather than re-running the audit.
 
 The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
-horn-like passives) and updated this matrix to reflect that. The cCp19
-implementation phase did not implement any other tranche.
+horn-like passives) and cCp20 implemented `double_spies` as a full-game
+passive (Tranche 2 first leader). This file is updated to reflect both
+landings.
 
 ## Status
 
@@ -24,20 +25,21 @@ implementation phase did not implement any other tranche.
 - Implemented executable leaders: **7** (each emits a legal `use_leader`
   move): `clear_weather`, `play_frost`, `play_fog`, `play_rain`,
   `play_any_weather`, `scorch_range`, `scorch_siege`.
-- Implemented passive leaders: **5** after cCp19 — `weather_half_penalty`
-  on King Bran, plus the four cCp19 row-wide horn-like passives
+- Implemented passive leaders: **6** after cCp20 — `weather_half_penalty`
+  on King Bran (cCp15), the four cCp19 row-wide horn-like passives
   (`double_siege` on Foltest: The Siegemaster, `double_close` on Eredin:
   Commander of the Red Riders and Francesca: Queen of Dol Blathanna, and
-  `double_ranged` on Francesca: The Beautiful).
-- Placeholder leader records: **10** spanning **10** distinct ability IDs
-  after cCp19. (cCp19 promoted 4 leader records and 3 ability IDs out of
+  `double_ranged` on Francesca: The Beautiful), and `double_spies` on
+  Eredin Breacc Glas: The Treacherous (cCp20).
+- Placeholder leader records: **9** spanning **9** distinct ability IDs
+  after cCp20. (cCp20 promoted 1 leader record and 1 ability ID out of
   placeholder.)
-- `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` is now
-  **exhaustive** after cCp19 — it lists every leader ability whose
+- `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
+  **exhaustive** after cCp20 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
-  `cancel_leader`, `discard_two_draw_one_from_deck`, `double_spies`,
-  `draw_extra_card`, `draw_opponent_discard`, `look_three_cards`,
-  `optimize_agile_rows`, `random_medic`, `restore_discard_to_hand`,
+  `cancel_leader`, `discard_two_draw_one_from_deck`, `draw_extra_card`,
+  `draw_opponent_discard`, `look_three_cards`, `optimize_agile_rows`,
+  `random_medic`, `restore_discard_to_hand`,
   `shuffle_discards_into_decks`. (See Source Conflicts §C-7 for the cCp18
   audit finding that prompted this fix.)
 
@@ -66,6 +68,7 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | `monsters.eredin-commander-of-the-red-riders` | Eredin: Commander of the Red Riders | Monsters | `double_close` | scoring pipeline | cCp19. Same shape as `double_siege` but on the friendly close row. |
 | `scoiatael.francesca-findabair-queen-of-dol-blathanna` | Francesca Findabair: Queen of Dol Blathanna | Scoia'tael | `double_close` | scoring pipeline | cCp19. Shares the `double_close` policy with Eredin: Commander of the Red Riders. Selection is by leader identity, not faction. |
 | `scoiatael.francesca-findabair-the-beautiful` | Francesca Findabair: The Beautiful | Scoia'tael | `double_ranged` | scoring pipeline | cCp19. Same shape as `double_siege` but on the friendly ranged row. |
+| `monsters.eredin-breacc-glas-the-treacherous` | Eredin Breacc Glas: The Treacherous | Monsters | `double_spies` | scoring pipeline | cCp20. Derived from leader identity through `getDoubleSpiesPolicyBySeat`; whole-match passive that applies a ×2 multiplier to every battlefield non-hero Spy unit, on both board sides and all rows, regardless of owner or controller. Heroes remain immune. The multiplier does not stack ×4 if both seats somehow have the policy. The score breakdown's `modifiers` list carries `"leader_double_spies"` when the multiplier applies. Never sets `seat.leaderUsed` and never emits `leader_used`. |
 
 ## Placeholder Leader Matrix
 
@@ -282,18 +285,18 @@ Marker conventions:
 |---|---|
 | Source ID | `monsters.eredin-breacc-glas-the-treacherous` |
 | Faction | Monsters |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp20) |
 | Catalog description | "Doubles the strength of all spy cards already on the battlefield." |
 | Local rule / source text | The official Gwent text is "Doubles the Strength of all Spies on the battlefield." Monster faction with no Spy cards in mono-Monster decks; the leader is mostly used in mixed-faction (post-deck-builder) contexts. |
-| Likely official behavior | *Derived*: active leader; modifies effective strength of every battlefield Spy unit (`abilities` includes `spy`) by ×2 from now on. Affects both players' Spies on the battlefield (since Spies sit on the opponent side anyway, the acting player's own Spies and the opponent's own Spies are both buffed; the catalog text says "all spy cards"). |
-| Active vs passive vs setup | Active one-shot, but with a persistent ongoing scoring effect for the rest of the match. |
-| Expected legal move shape | `use_leader` with `target.kind === "none"`. Engine emits the move only when at least one Spy is on the battlefield (otherwise the once-per-game leader no-ops). |
-| Expected command transaction shape | `UseLeader` → set `seat.doubleSpiesActive = true` (new state) or, simpler, push a global `doubleSpies: true` flag to `MatchState.modifiers` → emit `leader_used` and a new `score_modifier_applied` event. Future scoring passes detect the flag and apply ×2 to every Spy. |
-| Prompt / choice UI need | None at choice time. UI shows the buff in the breakdown via a new modifier label `leader:double_spies`. |
+| Implemented behavior (cCp20) | **Whole-match passive**, derived from leader source identity by `getDoubleSpiesPolicyBySeat`. While the leader is the seat's leader, every battlefield non-hero card whose source includes the `spy` ability receives a ×2 multiplier on every scoring tick — on both board sides, all rows, regardless of owner or controller. Heroes remain immune (Hero immunity, §17.1). Spies played after the policy applies are doubled on the next scoring pass. The multiplier does not stack ×4 if both seats somehow have the same policy. The score breakdown's `modifiers` list carries the marker `"leader_double_spies"` when the multiplier applies, and `CardScoreEntry.spyMultiplier` / `CardScoreEntry.afterSpyMultiplier` record the explicit factor. |
+| Active vs passive vs setup | **Passive ongoing modifier** (post-cCp18 product decision: passive for the entire game). |
+| Expected legal move shape | None (no `use_leader` move). |
+| Expected command transaction shape | None (passive scoring derivation, mirroring King Bran and the cCp19 row-horn passives). |
+| Prompt / choice UI need | None. |
 | Hidden-info risk | None. |
-| Implementation difficulty | medium. Scoring pipeline must learn a new modifier. |
-| Recommended tranche | Tranche 1 (passive-style score modifier with a single trigger). |
-| Unresolved questions | (1) Does the doubling apply to Spies *played after* the leader fires, or only to ones already on the field at fire time? Catalog text says "already on the battlefield" — implementation choice: snapshot at fire time vs ongoing flag. The catalog wording strongly suggests snapshot-at-fire-time, which is unusual for a passive. Recommendation: snapshot-at-fire-time semantics, attaching a `+strength` modifier directly to the snapshot of Spy instance IDs. (2) Does it stack with Commander's Horn or Tight Bond? Per §17.6, multiple modifiers stack additively / multiplicatively per their printed form; the doubled value enters the same pipeline before Tight Bond / Horn. (3) Hero Spies — heroes are immune to leader effects per §17.1, but the leader text says "spy cards" without exclusion. Recommendation: hero Spies are *not* affected (Hero immunity has Golden-Rule precedence unless the leader explicitly overrides; this leader does not). |
+| Implementation difficulty | low — re-uses the cCp15 / cCp19 passive helper pattern. |
+| Recommended tranche | Tranche 2 (implemented in cCp20). |
+| Settled questions | (1) The doubling applies to **all battlefield Spies, including future ones** (settled product decision §9 — passive for the entire game). The earlier "snapshot at fire time" wording is superseded. (2) The multiplier composes through the standard scoring pipeline: Weather → Double Spies → Tight Bond → Morale Boost → Horn (per §15 and §17.12e). (3) Hero Spies are **not** affected (Hero immunity, §17.1). |
 
 ### Francesca Findabair: Hope of the Aen Seidhe — `optimize_agile_rows`
 
@@ -397,33 +400,48 @@ hidden-info risk, AI implications, and simulation export implications.
   fields required.
 - Effect classification: ongoing row modifier.
 
-### Pattern 2 — Ongoing Spy Score Modifier (snapshot-at-fire-time)
+### Pattern 2 — Whole-Match Spy Score Passive (IMPLEMENTED in cCp20)
 
 | Members | Ability IDs |
 |---|---|
 | Eredin Breacc Glas: The Treacherous | `double_spies` |
 
-- Trigger: active, one-shot, snapshot at fire time.
-- Effect: ×2 effective strength to every Spy currently on the battlefield
-  for the rest of the match. Hero Spies are excluded under §17.1.
+**Status:** Implemented in cCp20 (see
+`audit/reports/2026-05-02-cCp20-report.md`). The earlier "snapshot at fire
+time" wording in this matrix has been corrected per the settled product
+decision §9 — `double_spies` is passive for the entire game.
+
+- Trigger: passive, derived from leader identity through scoring (mirror of
+  King Bran's `getWeatherPolicyBySeat` and the cCp19 row-horn helper).
+- Effect: ×2 effective strength to every battlefield non-hero Spy unit
+  (`abilities` includes `spy`) on either board side, regardless of owner /
+  controller, for the entire match. Hero Spies are excluded under §17.1.
+  Future Spies are picked up on the next scoring pass automatically.
 - Engine surfaces:
-  - `state.scoreSnapshots.doubledSpies: Set<CardInstanceId>` (or similar).
-    `executeLeader` writes the current Spy set into this snapshot when the
-    leader fires.
-  - `calculateScores` reads the snapshot and adds a ×2 multiplier or
-    `+printedStrength` modifier to listed instance IDs.
-- Legal-move shape: `use_leader` with `target.kind === "none"`. Emit only if
-  at least one non-hero Spy is on the battlefield.
-- Command shape: `UseLeader` → snapshot Spies → consume leader.
-- Prompt / UI: none. Score breakdown labels add `leader:double_spies`.
-- Hidden-info risk: none.
-- AI: requires no behavioral update, but the heuristic could mis-value a
-  Spy after the leader fires; that's policy concern, not a correctness
-  issue.
-- Simulation export: a new snapshot field; only the acting seat's snapshot
-  is hidden-info-safe (it's already on the public battlefield).
-- Effect classification: one-shot active that creates a snapshot-based
-  ongoing modifier.
+  - new shared helper
+    `getDoubleSpiesPolicyBySeat(state, leaders) → Partial<Record<SeatId, true>>`
+    analogous to `getWeatherPolicyBySeat` and `getRowHornPolicyBySeat`.
+  - `calculateScores` reads the policy and applies a ×2 multiplier to every
+    non-hero Spy unit when at least one seat has the policy. The multiplier
+    does not stack: even if both seats somehow have `double_spies`, the
+    factor stays ×2.
+  - `CalculateScoresInput` exposes an optional explicit
+    `doubleSpiesPolicyBySeat` override for focused tests.
+  - `CardScoreEntry` records `spyMultiplier` and `afterSpyMultiplier` for
+    transparency. Modifier order in `CardScoreEntry.modifiers` lists
+    `"leader_double_spies"` when the multiplier applies.
+- Legal-move shape: none (passive — mirrors King Bran and cCp19 row-horn).
+- Command shape: none (passive). Manual `UseLeader` attempts raise the
+  existing `unsupported_command` rule error without consuming the leader.
+- Prompt / UI: none. Score breakdown carries `"leader_double_spies"` so
+  inspectors can show provenance.
+- Hidden-info risk: none. Spies sit on the public battlefield.
+- AI: `legal-heuristic-v0` already evaluates effective row strength; the
+  passive automatically improves the heuristic's evaluation of a Spy
+  without code change. No policy update needed.
+- Simulation export: passive; observation shape is unchanged. No new
+  export fields required.
+- Effect classification: ongoing whole-match scoring modifier.
 
 ### Pattern 3 — Deck Tutor / Discard Cost (multi-step prompt)
 
@@ -834,7 +852,7 @@ This table compares catalog leader descriptions, leader ability metadata,
 | Pattern | Legal target shape | New `pendingPrompt` kind | cEp8 menu sufficient | New product modal | Hidden-info exposure | AI-safe under `legal-heuristic-v0` | Simulation export new fields | Effect classification |
 |---|---|---|---|---|---|---|---|---|
 | 1. Row-Horn Passives | none (passive) | none | n/a | none | none | yes | none (passive) | ongoing row modifier |
-| 2. Double Spies (active snapshot) | `target.kind === "none"` | none | yes | none | none | yes | snapshot field | one-shot, ongoing modifier |
+| 2. Double Spies (whole-match passive) | none (passive) | none | n/a | none | none | yes | none (passive) | ongoing whole-match scoring modifier |
 | 3. Discard Two / Draw One | `target.kind === "none"` opens prompt | new `leader_multi_step` (or extended `choose_card`) | no | yes (multi-stage hand select) | medium (deck-draw choice) | needs multi-stage policy update | new prompt-stage rows | one-shot active w/ prompt chain |
 | 4. Discard Restore | `target.kind === "none"` opens prompt | `choose_card` over discard | yes (cEp3 discard browser already exists) | minor enhancement | low (discard already public) | needs discard-evaluation heuristic | none beyond standard prompt rows | one-shot active w/ single-step prompt |
 | 5. Look Three Cards | `target.kind === "none"` | none | n/a | UI overlay on opponent-hand backs | HIGH (first persistent reveal) | acting-seat only; redaction logic must be seat-aware | new reveal sets in observations | one-shot active w/ persistent observation surface |
@@ -904,24 +922,32 @@ Heroes remain immune as receivers.
 
 ### Tranche 2 — Active Score Modifier and Single-Step Prompt Leaders
 
-**Members:** `double_spies`, `restore_discard_to_hand`, `optimize_agile_rows`,
-`shuffle_discards_into_decks`, `random_medic`. Plus, contingent on §C-2
-resolution, `draw_opponent_discard` (under catalog interpretation).
+**Members:** `double_spies` (IMPLEMENTED in cCp20), `restore_discard_to_hand`,
+`optimize_agile_rows`, `shuffle_discards_into_decks`, `random_medic`. Plus,
+contingent on §C-2 resolution, `draw_opponent_discard` (under catalog
+interpretation).
 
-**Why second:**
+**Status:** First member (`double_spies`) implemented in cCp20 as a
+whole-match passive (see `audit/reports/2026-05-02-cCp20-report.md`).
+Remaining members are still placeholder. After cCp20, six implemented
+passive leader records exist (King Bran + four cCp19 row-horn + cCp20
+Treacherous), and nine leader records remain placeholder.
 
-- All five (or six) are one-shot actives, no multi-stage prompts.
+**Why second (retained for context):**
+
+- All five (or six) are one-shot actives or whole-match passives, no
+  multi-stage prompts.
 - Hidden-info risk is low or none.
 - They reuse the existing `pendingPrompt` machinery (Patterns 4, 8) and
-  the cEp8 leader-choice menu (Pattern 9), and they add at most one new
-  per-seat snapshot field (Pattern 2).
+  the cEp8 leader-choice menu (Pattern 9), and the cCp20 passive (Pattern
+  2) re-uses the cCp15 / cCp19 passive scoring-policy helper pattern.
 - Each can be implemented in a focused cCp phase (≈ one phase per
   pattern).
 - Testability is good: each leader has a deterministic test seed.
 
-**Suggested ordering inside Tranche 2 (by simplicity):**
+**Updated ordering inside Tranche 2 (post-cCp20):**
 
-1. `double_spies` — one snapshot, one event.
+1. `double_spies` — IMPLEMENTED in cCp20 (whole-match passive).
 2. `optimize_agile_rows` — one event per moved unit, but no prompt.
 3. `restore_discard_to_hand` — single-step prompt.
 4. `random_medic` — random pick, plays through normal Special-card path.
@@ -1021,9 +1047,11 @@ decisions are tracked here for the relevant later tranche.
    for the current round through the existing pure-function pipeline.
    Reaction window timing is part of the implementation tranche.
 9. **`double_spies` duration.** **Settled: passive for the entire game.**
-   The leader's effect is on for the rest of the match once it fires;
-   it doubles every battlefield Spy currently on the board and any future
-   battlefield Spies. Hero Spies remain immune (Hero immunity, §17.1).
+   The leader's effect is on for the rest of the match while the leader is
+   on the seat; it doubles every battlefield non-hero Spy currently on the
+   board and any future battlefield Spies. Hero Spies remain immune (Hero
+   immunity, §17.1). **Implemented in cCp20** as a passive scoring derivation
+   without a `use_leader` move; see §17.12e.
 10. **`shuffle_discards_into_decks` empty-discards policy.** **Settled:
     unusable when both discard piles are empty.** When both seats'
     discards are empty, the leader emits no legal `use_leader` move
@@ -1057,4 +1085,15 @@ cCp19+ implementation:
   leader source IDs and the placeholder ability list backfilled to be
   exhaustive. Settled the ten cCp18-blocker product decisions and
   recorded them in this matrix's *Settled Product Decisions* section.
+- 2026-05-02 (cCp20): `double_spies` (Eredin Breacc Glas: The Treacherous)
+  promoted from `placeholder` to `implemented` as a **whole-match passive**
+  (Pattern 2). New helper `getDoubleSpiesPolicyBySeat`, new
+  `"leader_double_spies"` score modifier, new `CardScoreEntry.spyMultiplier`
+  / `afterSpyMultiplier` fields. Modifier order is now Weather → Double
+  Spies → Tight Bond → Morale → Horn. The official promotion manifest
+  adds `monsters.eredin-breacc-glas-the-treacherous` to
+  `implementedPassiveLeaderSourceIds` (now 6) and removes `double_spies`
+  from `placeholderLeaderAbilityIds` (now 9). The earlier "snapshot at
+  fire time" wording in this matrix has been corrected. After cCp20, nine
+  leader records remain placeholder.
   See `audit/reports/2026-05-02-cCp19-report.md` for details.

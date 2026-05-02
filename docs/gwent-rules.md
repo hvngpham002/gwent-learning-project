@@ -340,6 +340,7 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 | **Clan Dimun Pirate** | Its Scorch ability follows the **Special Card Scorch** rules — it affects the **whole battlefield**. **Clan Dimun Pirate cannot discard itself.** |
 | **Eredin, Bringer of Death** | Restore a Unit Card **or** Special Card of the player's choice from their discard pile. (Notable — Medic is Units only and excludes Heroes; Eredin is broader.) The cCp18 audit confirmed that the original printed-rulebook table mis-attributed this row to *Eredin, Destroyer of Worlds*; the correct attribution is *Eredin, Bringer of Death* (catalog ability `restore_discard_to_hand`). *Eredin, Destroyer of Worlds* is the discard-cost / deck-draw leader (catalog ability `discard_two_draw_one_from_deck`). |
 | **Emhyr var Emreis, The Relentless** | The catalog assigns this leader the ability `draw_opponent_discard`: **draw a card from your opponent's discard pile** (not your own deck). The cCp18 audit recorded that an earlier printed-rulebook source said "tutor from your deck" for this same leader; the project treats the catalog as the local authority and the deck-tutor wording is superseded. The cCp19 implementation phase did not implement this leader; tracking is in `docs/leader-ability-matrix.md` §C-2. |
+| **Eredin Breacc Glas: The Treacherous** | The catalog ability `double_spies` is a **whole-match passive** (cCp20): every battlefield non-hero card whose source includes the `spy` ability receives a ×2 multiplier on every scoring tick, on both board sides and all rows, regardless of owner or controller. Hero Spies are unaffected (Hero immunity, §17.1). The leader emits no `use_leader` move and never sets `seat.leaderUsed`. See §17.12e. |
 
 ---
 
@@ -393,6 +394,10 @@ Heroes are immune to **Special Card, Unit Card, and Leader Card abilities**. Con
 - **Spy's Strength counts for opponent, so it adds to opponent's round total** — a big Spy can cost you a round. But the 2 cards drawn often overcompensate.
 - **Can you play a Spy onto a specific row on the opponent's side?** Yes — it goes onto the opponent's row matching its range icon (opponent's side, Spy's row).
 - **If the deck has 0 or 1 cards when you play a Spy, you only draw what remains.** **[Derived]** The rulebook doesn't detail empty-deck behavior, but you simply cannot draw cards that aren't there.
+- **Eredin Breacc Glas: The Treacherous** (`double_spies`) is a passive
+  whole-match leader that doubles the effective strength of every battlefield
+  non-hero Spy unit on either board side. Hero Spies remain immune. See
+  §17.12e for the engine treatment.
 
 ### 17.4 Decoy Edge Cases
 
@@ -761,10 +766,79 @@ Future interactions explicitly out of scope for cCp19:
   passives for the current round; cCp19 does not implement the cancel
   state, but the row-horn helper is structured so a future `seat.leaderCancelled`
   flag can short-circuit the policy without touching scoring math.
-- `double_spies` (Eredin Breacc Glas: The Treacherous) overlaps with the
-  row-horn passives only when a Spy occupies the leader's row; both
-  modifiers compose through the standard scoring pipeline once
-  `double_spies` is implemented.
+
+### 17.12e Double Spies Passive Leader (cCp20)
+
+Eredin Breacc Glas: The Treacherous
+(`monsters.eredin-breacc-glas-the-treacherous`, leader ability
+`double_spies`) is a **passive** implemented leader. He is always on for
+whichever seat owns him and is **not** an active executable `UseLeader`
+command:
+
+- The Treacherous does not produce a `use_leader` legal move.
+- `seat.leaderUsed` is never set by the passive and no `leader_used` event
+  is emitted.
+- His effect is wired into scoring through a derived
+  `DoubleSpiesPolicyBySeat` derived from leader source identity
+  (`getDoubleSpiesPolicyBySeat`), not from faction.
+
+Rule:
+
+- The effect is a **whole-match passive**: every battlefield non-hero card
+  whose catalog source includes the `spy` ability receives a ×2 multiplier
+  on every scoring tick, including Spy units played, moved, revived, or
+  summoned after the leader entered play and after the first scoring tick.
+- The effect applies to **both board sides** and **all rows** — opponent
+  Spies on the leader's side (the standard Spy placement) and the leader's
+  own Spies on the opponent's side are both doubled.
+- The effect applies regardless of the Spy's owner or controller: only
+  the `spy` ability and the non-hero kind matter.
+- **Heroes are immune** as receivers (Hero immunity, §17.1). A hero card
+  that prints `spy` is **not** doubled.
+- The effect **does not stack with itself**. If both seats somehow have
+  `double_spies` (a fixture-only scenario; no normal game has two
+  Treacherous leaders), every Spy is still multiplied ×2, never ×4.
+
+Modifier order in the scoring pipeline (per §15):
+
+1. Weather (including King Bran's half-loss);
+2. **Double Spies** (×2 for non-hero Spy units when at least one seat has
+   the policy);
+3. Tight Bond multiplier;
+4. Morale Boost bonus;
+5. Commander's Horn / leader-horn (×2 once if applicable, by §17.12d).
+
+A weathered non-hero Spy under normal weather becomes `1 × 2 = 2` before
+later modifiers. Under King Bran's half-loss policy, a printed-7 Spy
+becomes `4 × 2 = 8` before later modifiers. A Spy that also benefits from
+Tight Bond, Morale, and a Commander's Horn composes through the rest of
+the pipeline as usual.
+
+When the multiplier applies, the score breakdown's `modifiers` list
+includes the marker `"leader_double_spies"`. The
+`CardScoreEntry.spyMultiplier` and `CardScoreEntry.afterSpyMultiplier`
+fields record the explicit factor and intermediate strength so inspector
+UIs and test fixtures can show provenance.
+
+Because every score-dependent path goes through the central
+`calculateScores` pipeline, all of the following inherit the policy
+automatically:
+
+- normal score totals and row totals;
+- round resolution, round-winner determination, and gem loss;
+- Special Scorch target evaluation;
+- unit row-Scorch target evaluation (`scorch_close` / `scorch_range` /
+  `scorch_siege`);
+- unit-source whole-board Scorch (`scorch` on a non-special card);
+- Foltest row-Scorch leader target evaluation (`scorch_range` /
+  `scorch_siege`).
+
+Future interactions explicitly out of scope for cCp20:
+
+- `cancel_leader` (Emhyr: The White Flame) will eventually suppress this
+  passive for the current round; the double-spies helper is structured so
+  a future `seat.leaderCancelled` flag can short-circuit the policy
+  without touching scoring math.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 

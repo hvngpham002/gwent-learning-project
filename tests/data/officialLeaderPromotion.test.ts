@@ -60,11 +60,10 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp19", () => {
+  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp20", () => {
     [
       "cancel_leader",
       "discard_two_draw_one_from_deck",
-      "double_spies",
       "draw_extra_card",
       "draw_opponent_discard",
       "look_three_cards",
@@ -82,7 +81,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, and cCp19 row-horn passives", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, and cCp20 double_spies", () => {
     [
       "clear_weather",
       "play_frost",
@@ -95,6 +94,7 @@ describe("official leader promotion (cBp5)", () => {
       "double_siege",
       "double_close",
       "double_ranged",
+      "double_spies",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -109,6 +109,7 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(implementedLeaders.map((leader) => leader.sourceId).sort()).toEqual(
       [
+        "monsters.eredin-breacc-glas-the-treacherous",
         "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
@@ -159,6 +160,7 @@ describe("official leader promotion (cBp5)", () => {
       "northern-realms.foltest-the-steel-forged",
     );
     expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
+      "monsters.eredin-breacc-glas-the-treacherous",
       "monsters.eredin-commander-of-the-red-riders",
       "northern-realms.foltest-the-siegemaster",
       "scoiatael.francesca-findabair-queen-of-dol-blathanna",
@@ -167,6 +169,7 @@ describe("official leader promotion (cBp5)", () => {
     ]);
     expect([...officialLeaderPromotionManifest.implementedLeaderSourceIds].sort()).toEqual(
       [
+        "monsters.eredin-breacc-glas-the-treacherous",
         "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
@@ -185,7 +188,6 @@ describe("official leader promotion (cBp5)", () => {
       [
         "cancel_leader",
         "discard_two_draw_one_from_deck",
-        "double_spies",
         "draw_extra_card",
         "draw_opponent_discard",
         "look_three_cards",
@@ -204,6 +206,7 @@ describe("official leader promotion (cBp5)", () => {
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_siege");
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_close");
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_ranged");
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_spies");
   });
 
   it("manifest source IDs are all present in currentCatalogLeaders", () => {

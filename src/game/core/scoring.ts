@@ -7,12 +7,15 @@ export type WeatherEffectId = "frost" | "fog" | "rain" | "skellige_storm";
 
 export type RowHornPolicyBySeat = Partial<Record<SeatId, Partial<Record<CatalogRow, boolean>>>>;
 
+export type DoubleSpiesPolicyBySeat = Partial<Record<SeatId, boolean>>;
+
 export interface CalculateScoresInput {
   state: MatchState;
   catalogCards: readonly CatalogCardSource[];
   catalogLeaders?: readonly CatalogLeaderSource[];
   weatherPolicyBySeat?: Partial<Record<SeatId, WeatherPolicy>>;
   rowHornPolicyBySeat?: RowHornPolicyBySeat;
+  doubleSpiesPolicyBySeat?: DoubleSpiesPolicyBySeat;
 }
 
 export interface CardScoreEntry {
@@ -25,6 +28,8 @@ export interface CardScoreEntry {
   isHero: boolean;
   printedStrength: number;
   afterWeather: number;
+  spyMultiplier: number;
+  afterSpyMultiplier: number;
   tightBondMultiplier: number;
   afterTightBond: number;
   moraleBonus: number;
@@ -205,6 +210,8 @@ const createMissingEntry = (cardId: CardInstanceId, seatId: SeatId, row: Catalog
   isHero: false,
   printedStrength: 0,
   afterWeather: 0,
+  spyMultiplier: 1,
+  afterSpyMultiplier: 0,
   tightBondMultiplier: 1,
   afterTightBond: 0,
   moraleBonus: 0,
@@ -264,12 +271,32 @@ export const getRowHornPolicyBySeat = (
   return policy;
 };
 
+export const getDoubleSpiesPolicyBySeat = (
+  state: MatchState,
+  catalogLeaders: readonly CatalogLeaderSource[],
+): DoubleSpiesPolicyBySeat => {
+  const lookup = new Map(catalogLeaders.map((leader) => [leader.sourceId, leader]));
+  const policy: DoubleSpiesPolicyBySeat = {};
+  SEATS.forEach((seatId) => {
+    const leaderSourceId = state.seats[seatId]?.leaderSourceId;
+    if (!leaderSourceId) {
+      return;
+    }
+    const leader = lookup.get(leaderSourceId);
+    if (leader?.ability === "double_spies") {
+      policy[seatId] = true;
+    }
+  });
+  return policy;
+};
+
 export const calculateScores = ({
   state,
   catalogCards,
   catalogLeaders,
   weatherPolicyBySeat,
   rowHornPolicyBySeat,
+  doubleSpiesPolicyBySeat,
 }: CalculateScoresInput): MatchScoreBreakdown => {
   const catalogLookup = createCardLookup(catalogCards);
   const diagnostics: ScoringDiagnostic[] = [];
@@ -287,6 +314,14 @@ export const calculateScores = ({
     ...derivedRowHornPolicy,
     ...(rowHornPolicyBySeat ?? {}),
   };
+  const derivedDoubleSpiesPolicy = catalogLeaders
+    ? getDoubleSpiesPolicyBySeat(state, catalogLeaders)
+    : {};
+  const doubleSpiesPolicy: DoubleSpiesPolicyBySeat = {
+    ...derivedDoubleSpiesPolicy,
+    ...(doubleSpiesPolicyBySeat ?? {}),
+  };
+  const doubleSpiesActive = SEATS.some((seatId) => doubleSpiesPolicy[seatId] === true);
 
   SEATS.forEach((seatId) => {
     ROWS.forEach((row) => {
@@ -362,6 +397,14 @@ export const calculateScores = ({
           modifiers.push(policy === "king_bran" ? "weather:king_bran" : "weather");
         }
 
+        const isSpy = hasAbility(source, "spy");
+        const spyMultiplier =
+          isUnit && !isHero && isSpy && doubleSpiesActive ? 2 : 1;
+        if (spyMultiplier > 1) {
+          modifiers.push("leader_double_spies");
+        }
+        const afterSpyMultiplier = afterWeather * spyMultiplier;
+
         const tightBondMultiplier =
           isUnit && !isHero && hasAbility(source, "tight_bond")
             ? Math.max(1, countTightBondGroup(state, catalogLookup, seatId, source.sourceId))
@@ -369,7 +412,7 @@ export const calculateScores = ({
         if (tightBondMultiplier > 1) {
           modifiers.push("tight_bond");
         }
-        const afterTightBond = afterWeather * tightBondMultiplier;
+        const afterTightBond = afterSpyMultiplier * tightBondMultiplier;
 
         const moraleBonus =
           isUnit && !isHero ? moraleSourceCount - (hasAbility(source, "morale_boost") ? 1 : 0) : 0;
@@ -402,6 +445,8 @@ export const calculateScores = ({
           isHero,
           printedStrength,
           afterWeather,
+          spyMultiplier,
+          afterSpyMultiplier,
           tightBondMultiplier,
           afterTightBond,
           moraleBonus,
