@@ -11,6 +11,7 @@ import {
   isLeaderRowScorchAbility,
   leaderRowScorchRowForAbility,
 } from "./leaderRowScorch";
+import { planOptimizeAgileRows } from "./leaderOptimizeAgile";
 import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
@@ -1058,6 +1059,114 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
       cardId: leaderCardId,
       abilityId: leader.ability,
       outcome: result.outcome,
+    });
+
+    seat.leaderUsed = true;
+    events.push({
+      type: "leader_used",
+      seatId,
+      leaderCardId,
+      abilityId: leader.ability,
+    });
+    handoffTurn(state, events, seatId);
+    return { state, events };
+  }
+
+  if (leader.ability === "optimize_agile_rows") {
+    const target = command.target as LegalMoveTarget | undefined;
+    const plan = planOptimizeAgileRows({
+      state: input.state,
+      seatId,
+      catalogCards: input.catalogCards,
+      catalogLeaders: input.catalogLeaders,
+    });
+
+    if (plan.outcome !== "auto" && plan.outcome !== "choice") {
+      throw new EngineRuleError("invalid_target", "Optimize Agile Rows leader has no executable plan.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        outcome: plan.outcome,
+      });
+    }
+
+    let chosenRow: CatalogRow;
+    if (plan.outcome === "auto") {
+      if (target && target.kind !== "none") {
+        throw new EngineRuleError("invalid_target", "Optimize Agile Rows auto plan does not accept a target.", {
+          leaderSourceId: leader.sourceId,
+          ability: leader.ability,
+          target,
+        });
+      }
+      chosenRow = plan.bestCandidates[0].row;
+    } else {
+      if (!target || target.kind !== "board_row") {
+        throw new EngineRuleError("invalid_target", "Optimize Agile Rows tied plan requires a board_row target.", {
+          leaderSourceId: leader.sourceId,
+          ability: leader.ability,
+          target,
+        });
+      }
+      if (target.seatId !== seatId) {
+        throw new EngineRuleError("invalid_target", "Optimize Agile Rows target seat must match the acting seat.", {
+          leaderSourceId: leader.sourceId,
+          ability: leader.ability,
+          target,
+          seatId,
+        });
+      }
+      const tiedRows = new Set(plan.bestCandidates.map((candidate) => candidate.row));
+      if (!tiedRows.has(target.row)) {
+        throw new EngineRuleError("invalid_target", "Optimize Agile Rows target row is not tied for the best score.", {
+          leaderSourceId: leader.sourceId,
+          ability: leader.ability,
+          target,
+        });
+      }
+      chosenRow = target.row;
+    }
+
+    const winner = plan.bestCandidates.find((candidate) => candidate.row === chosenRow);
+    if (!winner) {
+      throw new EngineRuleError("invalid_target", "Optimize Agile Rows could not resolve chosen row.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        chosenRow,
+      });
+    }
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const leaderCardId = seat.leader as CardInstanceId;
+
+    events.push({
+      type: "ability_triggered",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+    });
+
+    const orderedMoves = ROWS.flatMap((row) =>
+      row === chosenRow ? [] : state.seats[seatId].board[row].units.filter((cardId) => winner.movedCardIds.includes(cardId)),
+    );
+
+    orderedMoves.forEach((cardId) => {
+      moveCard(
+        state,
+        events,
+        cardId,
+        { kind: "board_row", seat: seatId, row: chosenRow },
+        "leader_optimize_agile",
+      );
+    });
+
+    events.push({
+      type: "ability_resolved",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+      outcome: "moved",
     });
 
     seat.leaderUsed = true;

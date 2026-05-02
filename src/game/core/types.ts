@@ -195,7 +195,8 @@ export type GameEvent =
         | "mardroeme_transform"
         | "avenger_summon"
         | "summon_replacement"
-        | "leader_weather";
+        | "leader_weather"
+        | "leader_optimize_agile";
     }
   | {
       type: "initial_hand_drawn";

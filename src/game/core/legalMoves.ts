@@ -15,6 +15,7 @@ import {
   isLeaderRowScorchAbility,
   leaderRowScorchRowForAbility,
 } from "./leaderRowScorch";
+import { planOptimizeAgileRows, type OptimizeAgileRowsCandidate } from "./leaderOptimizeAgile";
 import { calculateScores, findUnitScorchRowTargets } from "./scoring";
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
@@ -83,7 +84,7 @@ export interface UseLeaderMove extends LegalMoveBase {
     leaderName: string;
     ability: CatalogLeaderSource["ability"];
     abilityStatus: "implemented" | "planned" | "placeholder";
-    targetRequirement: "none" | "future_prompt" | "deck_weather_source";
+    targetRequirement: "none" | "future_prompt" | "deck_weather_source" | "agile_row_choice";
     targetSourceId?: string;
     targetCardName?: string;
     targetLabel?: string;
@@ -92,6 +93,9 @@ export interface UseLeaderMove extends LegalMoveBase {
     targetCardIds?: CardInstanceId[];
     rowTotal?: number;
     targetCount?: number;
+    currentScore?: number;
+    bestScore?: number;
+    candidateRows?: CatalogRow[];
   };
 }
 
@@ -132,6 +136,12 @@ export interface CatalogLookups {
 
 const ROWS: readonly CatalogRow[] = ["close", "ranged", "siege"];
 const WEATHER_ABILITIES = new Set<CatalogAbilityId>(["frost", "fog", "rain", "skellige_storm", "clear_weather"]);
+
+const ROW_DISPLAY_LABEL: Record<CatalogRow, string> = {
+  close: "Close Combat",
+  ranged: "Ranged Combat",
+  siege: "Siege Combat",
+};
 
 export const createCatalogLookups = ({ catalogCards, catalogLeaders }: LegalMoveCatalogInput): CatalogLookups => ({
   cardsBySourceId: new Map(catalogCards.map((card) => [card.sourceId, card])),
@@ -473,6 +483,73 @@ const getLeaderMove = (
         },
       },
     ];
+  }
+
+  if (leader.ability === "optimize_agile_rows") {
+    const plan = planOptimizeAgileRows({
+      state,
+      seatId,
+      catalogCards,
+      catalogLeaders,
+    });
+    if (plan.outcome !== "auto" && plan.outcome !== "choice") {
+      return [];
+    }
+
+    const candidateRows = plan.bestCandidates.map((candidate) => candidate.row);
+
+    if (plan.outcome === "auto") {
+      const winner = plan.bestCandidates[0];
+      return [
+        {
+          kind: "use_leader",
+          moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+          seatId,
+          leaderCardId,
+          sourceId: leader.sourceId,
+          target: { kind: "none" },
+          label: `Use ${leader.name}`,
+          metadata: {
+            leaderName: leader.name,
+            ability: leader.ability,
+            abilityStatus: abilityMetadata.status,
+            targetRequirement: "none",
+            targetRow: winner.row,
+            targetSeatId: seatId,
+            targetCardIds: [...winner.movedCardIds],
+            targetCount: winner.movedCardIds.length,
+            targetLabel: ROW_DISPLAY_LABEL[winner.row],
+            currentScore: plan.currentScore,
+            bestScore: plan.bestScore,
+            candidateRows,
+          },
+        },
+      ];
+    }
+
+    return plan.bestCandidates.map((candidate: OptimizeAgileRowsCandidate) => ({
+      kind: "use_leader" as const,
+      moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}:${candidate.row}`,
+      seatId,
+      leaderCardId,
+      sourceId: leader.sourceId,
+      target: { kind: "board_row" as const, side: "own" as const, seatId, row: candidate.row },
+      label: `Use ${leader.name}: ${ROW_DISPLAY_LABEL[candidate.row]}`,
+      metadata: {
+        leaderName: leader.name,
+        ability: leader.ability,
+        abilityStatus: abilityMetadata.status,
+        targetRequirement: "agile_row_choice" as const,
+        targetRow: candidate.row,
+        targetSeatId: seatId,
+        targetCardIds: [...candidate.movedCardIds],
+        targetCount: candidate.movedCardIds.length,
+        targetLabel: ROW_DISPLAY_LABEL[candidate.row],
+        currentScore: plan.currentScore,
+        bestScore: plan.bestScore,
+        candidateRows,
+      },
+    }));
   }
 
   // Implemented passive leaders (cCp15 King Bran's `weather_half_penalty`,

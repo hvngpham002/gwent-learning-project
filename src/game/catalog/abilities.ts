@@ -279,8 +279,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   optimize_agile_rows: {
     id: "optimize_agile_rows",
     name: "Optimize Agile Rows",
-    status: "placeholder",
-    description: "Moves agile units to their optimal row.",
+    status: "implemented",
+    description: "Active one-shot: moves every friendly own-board non-hero Agile unit to the same destination row that yields the highest acting-seat score (heroes are excluded). When multiple destination rows tie for the best score, the player chooses among the tied best rows. Pure no-op rows are not executable, so the leader is never consumed without changing board state.",
   },
   double_ranged: {
     id: "double_ranged",

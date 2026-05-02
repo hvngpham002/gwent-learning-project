@@ -840,6 +840,92 @@ Future interactions explicitly out of scope for cCp20:
   a future `seat.leaderCancelled` flag can short-circuit the policy
   without touching scoring math.
 
+### 17.12f Optimize Agile Rows Active Leader (cCp21)
+
+Francesca Findabair: Hope of the Aen Seidhe
+(`scoiatael.francesca-findabair-hope-of-the-aen-seidhe`, leader ability
+`optimize_agile_rows`) is an **active one-shot** implemented leader. She
+emits a legal `use_leader` move during play whenever the move would
+actually change board state, and consumes the leader (`leaderUsed = true`)
+on success.
+
+Eligible cards (acting seat's own board):
+
+- the card occupies the acting seat's **own board side**;
+- the catalog source is a non-hero `unit` (heroes are excluded under
+  Hero immunity, §17.1);
+- the catalog source has the `agile` ability;
+- the catalog source has at least two legal board rows;
+- the destination row being evaluated is legal for that card.
+
+Cards explicitly NOT affected:
+
+- heroes, even if a future hero source has `agile`;
+- opponent-board-side cards;
+- Spies sitting on the opponent board side, even if the controller is
+  the acting seat (current production catalog has no `spy + agile`
+  card; the engine still defines the boundary);
+- hand, deck, discard, removed, weather, horn, or side-deck cards.
+
+Destination row selection:
+
+- The leader chooses **one common destination row** and moves every
+  eligible Agile unit to that same row. Candidate rows are the
+  intersection of the eligible units' legal rows. For the current
+  catalog, this is normally `close` and `ranged`.
+- Each candidate row is evaluated by simulating the bulk move, calling
+  the central `calculateScores` pipeline against the simulated state,
+  and reading `breakdown.totalBySeat[actingSeatId]`. Weather, King
+  Bran, row-horn passives (cCp19), double spies (cCp20), Tight Bond,
+  Morale Boost, and physical Commander's Horn all compose through the
+  shared scoring pipeline.
+- A candidate row is **executable** only when at least one eligible
+  card actually moves to it. Pure no-op rows are not executable, so
+  the leader is never consumed without changing board state.
+- Candidate rows are scored before the no-op filter is applied. If
+  the current no-op row is uniquely best and every row that would move
+  cards scores lower, the leader emits no legal move instead of
+  offering a worse move.
+
+Auto-place vs row choice:
+
+- If exactly one executable row ties the highest acting-seat score
+  across all candidate rows,
+  `getLegalMoves` exposes a single `use_leader` move with
+  `target.kind === "none"` and `metadata.targetRequirement === "none"`.
+  Command execution moves to that unique best row.
+- If multiple executable rows tie for the best score across all
+  candidate rows, `getLegalMoves`
+  exposes one `use_leader` move per tied best row. Each tied move uses
+  `target.kind === "board_row"` with `seat === actingSeatId` and the
+  tied destination row, plus
+  `metadata.targetRequirement === "agile_row_choice"` and a readable
+  `metadata.targetLabel` (e.g. `"Close Combat"` or `"Ranged Combat"`).
+  Command execution accepts only a tied best row target and rejects
+  any non-best or non-acting-seat board-row target.
+- If no executable plan exists (no eligible cards, no common row,
+  every candidate is a pure no-op, or only worse movable rows exist),
+  `getLegalMoves` emits no
+  `use_leader` move and a manual `UseLeader` raises an
+  `EngineRuleError` without consuming the leader.
+
+Mutation and event contract on success:
+
+- The engine clones state, never mutating the input.
+- Emits `ability_triggered` for the leader.
+- Moves each affected card in deterministic board order (`close →
+  ranged → siege`, preserving unit order within each row), using
+  `card_moved.reason === "leader_optimize_agile"`.
+- Emits `ability_resolved` with `outcome === "moved"`.
+- Sets `seat.leaderUsed = true` and emits `leader_used`.
+- Hands off the turn through the existing turn-handoff helper.
+- Cards already on the chosen destination row do not produce
+  `card_moved` events; only cards whose row actually changes move.
+
+The cEp8 leader-choice menu renders the tied-row options through the
+existing `metadata.targetLabel` fallback chain, so no new UI layout is
+needed.
+
 ### 17.13 Draws, Ties, and Nilfgaard
 
 - Default rule for a Strength **tie** at end of round: **both players lose a gem.**

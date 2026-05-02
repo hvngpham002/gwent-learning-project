@@ -1,16 +1,18 @@
 # Leader Ability Matrix
 
-This document is the durable cCp18 audit output, refreshed by cCp19 and
-cCp20. It enumerates every official leader source record, classifies the
-placeholder leaders by implementation pattern, lists local-source conflicts,
-and records engine, legal-move, prompt / UI, hidden-info, AI, and simulation
-implications. cCp19+ implementation specs should pull from this matrix
-rather than re-running the audit.
+This document is the durable cCp18 audit output, refreshed by cCp19,
+cCp20, and cCp21. It enumerates every official leader source record,
+classifies the placeholder leaders by implementation pattern, lists
+local-source conflicts, and records engine, legal-move, prompt / UI,
+hidden-info, AI, and simulation implications. cCp19+ implementation
+specs should pull from this matrix rather than re-running the audit.
 
 The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
-horn-like passives) and cCp20 implemented `double_spies` as a full-game
-passive (Tranche 2 first leader). This file is updated to reflect both
-landings.
+horn-like passives), cCp20 implemented `double_spies` as a full-game
+passive (Tranche 2 first leader), and cCp21 implemented
+`optimize_agile_rows` as the second Tranche 2 leader (active one-shot
+auto-place with tied-row player choice). This file is updated to reflect
+all three landings.
 
 ## Status
 
@@ -22,26 +24,27 @@ landings.
   record (Eredin: Commander of the Red Riders and Francesca: Queen of Dol
   Blathanna). `clear_weather` is both a card and leader ability ID, but only
   Foltest: Lord Commander of The North uses it as a leader.
-- Implemented executable leaders: **7** (each emits a legal `use_leader`
-  move): `clear_weather`, `play_frost`, `play_fog`, `play_rain`,
-  `play_any_weather`, `scorch_range`, `scorch_siege`.
+- Implemented executable leaders: **8** after cCp21 (each emits a legal
+  `use_leader` move): `clear_weather`, `play_frost`, `play_fog`,
+  `play_rain`, `play_any_weather`, `scorch_range`, `scorch_siege`,
+  `optimize_agile_rows`.
 - Implemented passive leaders: **6** after cCp20 — `weather_half_penalty`
   on King Bran (cCp15), the four cCp19 row-wide horn-like passives
   (`double_siege` on Foltest: The Siegemaster, `double_close` on Eredin:
   Commander of the Red Riders and Francesca: Queen of Dol Blathanna, and
   `double_ranged` on Francesca: The Beautiful), and `double_spies` on
   Eredin Breacc Glas: The Treacherous (cCp20).
-- Placeholder leader records: **9** spanning **9** distinct ability IDs
-  after cCp20. (cCp20 promoted 1 leader record and 1 ability ID out of
+- Placeholder leader records: **8** spanning **8** distinct ability IDs
+  after cCp21. (cCp21 promoted 1 leader record — Francesca: Hope of
+  the Aen Seidhe — and 1 ability ID — `optimize_agile_rows` — out of
   placeholder.)
 - `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp20 — it lists every leader ability whose
+  **exhaustive** after cCp21 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
   `cancel_leader`, `discard_two_draw_one_from_deck`, `draw_extra_card`,
-  `draw_opponent_discard`, `look_three_cards`, `optimize_agile_rows`,
-  `random_medic`, `restore_discard_to_hand`,
-  `shuffle_discards_into_decks`. (See Source Conflicts §C-7 for the cCp18
-  audit finding that prompted this fix.)
+  `draw_opponent_discard`, `look_three_cards`, `random_medic`,
+  `restore_discard_to_hand`, `shuffle_discards_into_decks`. (See Source
+  Conflicts §C-7 for the cCp18 audit finding that prompted this fix.)
 
 ## Implemented Baseline
 
@@ -58,6 +61,7 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | `scoiatael.francesca-findabair-pureblood-elf` | Francesca Findabair: Pureblood Elf | Scoia'tael | `play_frost` | `deck_card_source` | cCp14. Pulls a Frost from the acting deck only. |
 | `northern-realms.foltest-son-of-medell` | Foltest: Son of Medell | Northern Realms | `scorch_range` | `none` | cCp16. Emits a legal move only when destruction is possible (row total ≥ 10 and at least one tied highest non-hero target). |
 | `northern-realms.foltest-the-steel-forged` | Foltest: The Steel-Forged | Northern Realms | `scorch_siege` | `none` | cCp16. Same shape as Son of Medell but on the siege row. |
+| `scoiatael.francesca-findabair-hope-of-the-aen-seidhe` | Francesca Findabair: Hope of the Aen Seidhe | Scoia'tael | `optimize_agile_rows` | `none` (auto) **or** `board_row` (tied row choice) | cCp21. Auto-places when one movable common row ties the highest score across all candidate rows; emits one `board_row` move per tied best movable row otherwise. Pure no-op rows are not executable, and worse movable rows are not offered when the current no-op row is uniquely best. |
 
 ### Implemented passive leaders (no `use_leader` move)
 
@@ -304,18 +308,18 @@ Marker conventions:
 |---|---|
 | Source ID | `scoiatael.francesca-findabair-hope-of-the-aen-seidhe` |
 | Faction | Scoia'tael |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp21) |
 | Catalog description | "Move all your Agile units to the row that yields the most strength." |
-| Local rule / source text | Classic Witcher 3 leader text: "Move all your Agile Units to the row of your choice." (Scoia'tael Witcher 3 wording.) The catalog says "to the row that yields the most strength" — that auto-selection is a modern Gwent simplification, not the rulebook text. See conflict §C-4. |
-| Likely official behavior | *Derived* per the rulebook + official Gwent online wording: active leader, player picks a target row, every friendly Agile unit on the seat's board moves to that row. The catalog's "yields most strength" is an automation; the canonical text is "row of your choice". |
+| Local rule / source text | Classic Witcher 3 leader text says "Move all your Agile Units to the row of your choice." Catalog says "to the row that yields the most strength." Settled product decision §3 (refined in cCp21): **auto-place to the row that yields the highest acting-seat score; if multiple rows tie for the best score, expose only the tied best rows as legal player choices.** |
+| Implemented behavior (cCp21) | Active one-shot. The pure helper `planOptimizeAgileRows(state, seatId, catalogCards, catalogLeaders)` computes a single common destination row and the eligible own-board non-hero Agile units. For each candidate row (intersection of all eligible cards' legal rows), the helper simulates moving every eligible card to that row and reads `breakdown.totalBySeat[actingSeatId]` from the central `calculateScores` pipeline. Rows where no eligible card actually moves are not executable. Candidate rows are scored before no-op filtering: if the current no-op row is uniquely best and every movable row scores lower, the leader emits no legal move instead of offering a worse move. If exactly one executable row ties the best score across all candidate rows, `getLegalMoves` exposes one `use_leader` move with `target.kind === "none"`; if multiple executable rows tie for that best score, it exposes one `use_leader` move per tied row with `target.kind === "board_row"`, `seat === actingSeatId`, and `metadata.targetLabel` like `"Close Combat"` / `"Ranged Combat"` so the cEp8 leader-choice menu renders without UI changes. Command execution moves all eligible cards in deterministic board order (`close → ranged → siege`, preserving unit order within each row), emits `card_moved.reason === "leader_optimize_agile"` per moved card (cards already on the chosen row do not move and produce no event), emits `ability_triggered` / `ability_resolved.moved` / `leader_used`, sets `seat.leaderUsed = true`, and hands off the turn. Rejection paths (no eligible, no candidate row, no executable row, only worse movable rows, non-best target row, wrong-seat target, missing target on a tie, extra target on auto) raise `EngineRuleError` and never consume the leader. Heroes are excluded as eligible cards (Hero immunity, §17.1). Opponent-board-side cards — including any hypothetical agile Spy — are excluded. |
 | Active vs passive vs setup | Active one-shot. |
-| Expected legal move shape | If "row of your choice": one `use_leader` move per row that contains at least one current Agile unit (or per row period). Target shape `target.kind === "board_row"` with `seatId === actingSeatId`. If "auto-optimal": single `use_leader` with `target.kind === "none"`, engine computes optimal row server-side. |
-| Expected command transaction shape | `UseLeader` → for each Agile unit on seat board, move it to chosen row → emit `card_moved` events with reason `"leader_optimize_agile"` (new) → consume leader. |
-| Prompt / choice UI need | If "row of your choice": cEp8 leader-choice menu pattern works (3 rows ≤ 3 options). If "auto-optimal": no prompt. |
-| Hidden-info risk | None. |
-| Implementation difficulty | medium. Agile is already implemented for placement; the leader's bulk-move semantics need a new code path. |
-| Recommended tranche | Tranche 2 (prompt-light; row-choice selection). |
-| Unresolved questions | See §C-4 — product decision: row-choice (canonical) vs auto-optimal (catalog). Recommendation: implement row-choice, update catalog description to match, and surface the choice through cEp8's leader-choice menu. |
+| Implemented legal move shape | `target.kind === "none"` for the auto path; `target.kind === "board_row"` (acting seat) for the tied-row choice path. The acting seat's `leaderUsed` is never set on rejection; both paths reject the no-op consumption case explicitly. |
+| Implemented command transaction shape | `UseLeader` → engine recomputes the plan from public state → moves every eligible card to the chosen row → emits `card_moved` per moved card with `reason === "leader_optimize_agile"` → emits `ability_resolved.moved` + `leader_used` → hands off turn. |
+| Prompt / choice UI need | None at engine level. cEp8's leader-choice menu (already shipped) renders the tied-row options through the existing `metadata.targetLabel` fallback. |
+| Hidden-info risk | None. The plan only reads public board state and produces deterministic plans. |
+| Implementation difficulty | medium (delivered in cCp21). |
+| Recommended tranche | Tranche 2 (implemented in cCp21). |
+| Settled questions | (1) §C-4 product decision: **auto-place to the highest-scoring common row; tied best rows become legal player choices** (refined cCp21). (2) Heroes excluded under §17.1 — even hero sources with `agile` (Kayran, Villentretenmerth) are not eligible. (3) Opponent-board-side cards excluded — even if controlled by the acting seat. (4) Pure no-op rows excluded — leader is never consumed without movement. (5) Worse movable rows are excluded when the current no-op row is uniquely best. |
 
 ### Francesca Findabair: Daisy of the Valley — `draw_extra_card`
 
@@ -612,31 +616,55 @@ decision §9 — `double_spies` is passive for the entire game.
 - Effect classification: one-shot active; downstream effects are normal
   Special-card resolution.
 
-### Pattern 9 — Bulk Move Friendly Agile Units
+### Pattern 9 — Bulk Move Friendly Agile Units (IMPLEMENTED in cCp21)
 
 | Members | Ability IDs |
 |---|---|
 | Francesca: Hope of the Aen Seidhe | `optimize_agile_rows` |
 
+**Status:** Implemented in cCp21 (see
+`audit/reports/2026-05-02-cCp21-report.md`). The settled product
+decision §3 was refined to "auto-place to the highest-scoring common
+row; if tied, expose only the tied best rows as legal player choices."
+
 - Trigger: active one-shot.
-- Effect: every friendly Agile unit moves to a chosen row (canonical) or
-  the optimal row (catalog reading).
+- Effect: every eligible friendly own-board non-hero Agile unit moves
+  to one chosen common row, where the row is selected to maximize the
+  acting seat's score through `calculateScores` simulation.
 - Engine surfaces:
-  - `executeLeader` iterates the acting seat's board, moves every unit
-    whose source has `agile` to the chosen row, fires `card_moved` per
-    unit with reason `"leader_optimize_agile"`.
-- Legal-move shape: row-choice — one `use_leader` per legal target row;
-  auto-optimal — single `use_leader` with `target.kind === "none"`.
-- Command shape: `UseLeader` → bulk move → consume leader.
+  - new pure helper `planOptimizeAgileRows(state, seatId, catalogCards,
+    catalogLeaders)` in `src/game/core/leaderOptimizeAgile.ts` returns
+    `{ outcome, currentScore, bestScore?, eligibleCards, candidates,
+    bestCandidates }`.
+  - `getLeaderMove` calls the helper and emits no `use_leader` move on
+    `no_eligible` / `no_candidate_row` / `no_executable_row`; emits a
+    single no-target `use_leader` on `auto`; emits one
+    board-row-targeted `use_leader` per `bestCandidates` entry on
+    `choice`.
+  - `executeLeader` recomputes the plan, validates the target shape,
+    moves every eligible card to the chosen row in deterministic board
+    order, and emits the standard ability-resolved / leader-used /
+    turn-handoff event sequence.
+- Legal-move shape: `target.kind === "none"` (auto) or
+  `target.kind === "board_row"` (acting seat) for tied row choice.
+  `metadata.targetRequirement === "none"` (auto) or
+  `metadata.targetRequirement === "agile_row_choice"` (choice).
+  `metadata.targetLabel` is set to `"Close Combat"` /
+  `"Ranged Combat"` / `"Siege Combat"` so the cEp8 leader-choice menu
+  renders the option without UI changes.
+- Command shape: `UseLeader` → recompute plan → bulk move →
+  `card_moved.reason === "leader_optimize_agile"` per moved card →
+  `ability_resolved.moved` → `leader_used` → handoff.
 - Prompt / UI: row-choice fits cEp8's leader-choice menu pattern. The
-  metadata fallback chain (`targetCardName → targetLabel → sourceId →
-  move.label`) needs a new label for board-row targets; recommendation:
-  emit `metadata.targetLabel = "<row name>"`.
+  existing `metadata.targetLabel` fallback handles board-row targets
+  with no UI churn.
 - Hidden-info risk: none.
-- AI: heuristic does not need to choose — auto-optimal is decidable from
-  public state. If row-choice, the heuristic picks the highest-strength
-  row.
-- Simulation export: emits N `card_moved` rows per fire.
+- AI: heuristic does not need to choose — auto-optimal is decidable
+  from public state. For tied moves, picking any of the legal options
+  is equally optimal by definition.
+- Simulation export: emits N `card_moved` rows per fire (one per
+  actually-moved card; cards already on the chosen row do not move
+  and do not emit events).
 - Effect classification: one-shot active; instantaneous board mutation.
 
 ### Pattern 10 — Both-Discard Recycle
@@ -859,7 +887,7 @@ This table compares catalog leader descriptions, leader ability metadata,
 | 6. Leader Cancel | `target.kind === "none"` | none | n/a | leader display update | none directly; cross-cuts every passive | yes | new `seat.leaderCancelled` flag | one-shot active w/ persistent suppression flag |
 | 7. Setup Draw Extra | none | none | n/a | none | none | yes | none beyond standard hand size | setup-time event |
 | 8. Random Special Replay | `target.kind === "none"` | none (engine selects) | yes | none | low (own discard public) | yes | per-special replay rows | one-shot active w/ replay |
-| 9. Optimize Agile Rows | `board_row` per legal row OR `target.kind === "none"` | none | yes (cEp8 menu fits 1-3 rows) | minor row-label change | none | yes | per-card move rows | one-shot active w/ instantaneous board mutation |
+| 9. Optimize Agile Rows (IMPLEMENTED in cCp21) | `none` (auto) OR `board_row` (per tied row) | none | yes (cEp8 menu fits 1-3 rows) | none — `metadata.targetLabel` carries row name | none | yes | per-card move rows | one-shot active w/ instantaneous board mutation |
 | 10. Shuffle Discards Into Decks | `target.kind === "none"` | none | yes | none | low (deck order hidden post-shuffle, but contents previously public) | yes | per-card move + deck_shuffled event | one-shot active w/ bulk state mutation |
 
 Notes:
@@ -922,20 +950,22 @@ Heroes remain immune as receivers.
 
 ### Tranche 2 — Active Score Modifier and Single-Step Prompt Leaders
 
-**Members:** `double_spies` (IMPLEMENTED in cCp20), `restore_discard_to_hand`,
-`optimize_agile_rows`, `shuffle_discards_into_decks`, `random_medic`. Plus,
-contingent on §C-2 resolution, `draw_opponent_discard` (under catalog
-interpretation).
+**Members:** `double_spies` (IMPLEMENTED in cCp20),
+`optimize_agile_rows` (IMPLEMENTED in cCp21), `restore_discard_to_hand`,
+`shuffle_discards_into_decks`, `random_medic`. Plus, contingent on §C-2
+resolution, `draw_opponent_discard` (under catalog interpretation).
 
-**Status:** First member (`double_spies`) implemented in cCp20 as a
-whole-match passive (see `audit/reports/2026-05-02-cCp20-report.md`).
-Remaining members are still placeholder. After cCp20, six implemented
-passive leader records exist (King Bran + four cCp19 row-horn + cCp20
-Treacherous), and nine leader records remain placeholder.
+**Status:** First two members (`double_spies` in cCp20,
+`optimize_agile_rows` in cCp21) are implemented; the rest are still
+placeholder. After cCp21, six implemented passive leader records exist
+(King Bran + four cCp19 row-horn + cCp20 Treacherous), eight implemented
+active executable leader records exist (cCp14 weather + cCp16 row-Scorch
+× 2 + cCp7 clear-weather + cCp21 Hope of the Aen Seidhe), and eight
+leader records remain placeholder.
 
 **Why second (retained for context):**
 
-- All five (or six) are one-shot actives or whole-match passives, no
+- All members are one-shot actives or whole-match passives, no
   multi-stage prompts.
 - Hidden-info risk is low or none.
 - They reuse the existing `pendingPrompt` machinery (Patterns 4, 8) and
@@ -945,15 +975,17 @@ Treacherous), and nine leader records remain placeholder.
   pattern).
 - Testability is good: each leader has a deterministic test seed.
 
-**Updated ordering inside Tranche 2 (post-cCp20):**
+**Updated ordering inside Tranche 2 (post-cCp21):**
 
 1. `double_spies` — IMPLEMENTED in cCp20 (whole-match passive).
-2. `optimize_agile_rows` — one event per moved unit, but no prompt.
+2. `optimize_agile_rows` — IMPLEMENTED in cCp21 (active one-shot
+   auto-place with tied-row choice).
 3. `restore_discard_to_hand` — single-step prompt.
-4. `random_medic` — random pick, plays through normal Special-card path.
-5. `shuffle_discards_into_decks` — bulk move, requires deterministic
+4. `shuffle_discards_into_decks` — bulk move, requires deterministic
    shuffle.
-6. (`draw_opponent_discard` if §C-2 is resolved by Catalog Wins.)
+5. `draw_opponent_discard` — single-step prompt over opponent discard
+   per settled §C-2 (catalog wins).
+6. `random_medic` — passive Medic mutation per settled §5.
 
 ### Tranche 3 — Setup-Time Event and Multi-Step Prompt
 
@@ -1017,9 +1049,12 @@ decisions are tracked here for the relevant later tranche.
    (`discard_two_draw_one_from_deck`). cCp19 corrected the rulebook
    table accordingly.
 3. **Conflict §C-4 — `optimize_agile_rows` choice vs auto.**
-   **Settled: auto-place** (catalog wording). The leader does not
-   open a row-choice prompt; the engine selects the row that yields the
-   most strength. UI work is deferred to the implementation tranche.
+   **Settled: auto-place to the highest-scoring common row; if tied,
+   expose only the tied best rows as legal player choices** (refined
+   in cCp21). The catalog "yields most strength" wording is preserved
+   while the product-owner tie-break decision converts ties into a
+   small set of legal `use_leader` moves. **Implemented in cCp21** as
+   an active one-shot leader; see `docs/gwent-rules.md` §17.12f.
 4. **`discard_two_draw_one_from_deck` flow.** **Settled: discard up to two
    cards from hand, then show all remaining deck cards, choose any one
    card to draw, then shuffle the remaining deck.** Implementable with at
@@ -1097,3 +1132,31 @@ cCp19+ implementation:
   fire time" wording in this matrix has been corrected. After cCp20, nine
   leader records remain placeholder.
   See `audit/reports/2026-05-02-cCp19-report.md` for details.
+- 2026-05-02 (cCp21): `optimize_agile_rows` (Francesca Findabair: Hope
+  of the Aen Seidhe) promoted from `placeholder` to `implemented` as
+  an **active one-shot leader** (Pattern 9). New pure helper
+  `planOptimizeAgileRows(state, seatId, catalogCards, catalogLeaders)`
+  in `src/game/core/leaderOptimizeAgile.ts` chooses one common
+  destination row that yields the highest acting-seat score under the
+  central `calculateScores` pipeline; auto-place when one row is
+  uniquely best, expose tied best rows as legal `board_row` player
+  choices otherwise. Pure no-op rows are not executable. Heroes and
+  opponent-board-side cards are excluded as eligible cards.
+  `getLeaderMove` emits `targetRequirement === "none"` (auto) or
+  `targetRequirement === "agile_row_choice"` (choice) with readable
+  `metadata.targetLabel` ("Close Combat" / "Ranged Combat" /
+  "Siege Combat") so the cEp8 leader-choice menu renders without UI
+  changes. `executeLeader` recomputes the plan, validates the target,
+  moves all eligible cards in deterministic board order, emits
+  `card_moved.reason === "leader_optimize_agile"` per moved card,
+  emits `ability_resolved.moved` and `leader_used`, sets
+  `seat.leaderUsed = true`, and hands off the turn. The official
+  promotion manifest adds
+  `scoiatael.francesca-findabair-hope-of-the-aen-seidhe` to
+  `executableLeaderSourceIds` (now 8) and removes
+  `optimize_agile_rows` from `placeholderLeaderAbilityIds` (now 8).
+  Settled product decision §3 was refined from "auto-place" to
+  "auto-place to the highest-scoring common row; if tied, expose only
+  the tied best rows as legal player choices." After cCp21, eight
+  leader records remain placeholder. See
+  `audit/reports/2026-05-02-cCp21-report.md` for details.

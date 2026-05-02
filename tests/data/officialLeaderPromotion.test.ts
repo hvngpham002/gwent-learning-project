@@ -60,14 +60,13 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp20", () => {
+  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp21", () => {
     [
       "cancel_leader",
       "discard_two_draw_one_from_deck",
       "draw_extra_card",
       "draw_opponent_discard",
       "look_three_cards",
-      "optimize_agile_rows",
       "random_medic",
       "restore_discard_to_hand",
       "shuffle_discards_into_decks",
@@ -81,7 +80,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, and cCp20 double_spies", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, and cCp21 optimize_agile_rows", () => {
     [
       "clear_weather",
       "play_frost",
@@ -95,6 +94,7 @@ describe("official leader promotion (cBp5)", () => {
       "double_close",
       "double_ranged",
       "double_spies",
+      "optimize_agile_rows",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -118,6 +118,7 @@ describe("official leader promotion (cBp5)", () => {
         "northern-realms.foltest-son-of-medell",
         "northern-realms.foltest-the-siegemaster",
         "northern-realms.foltest-the-steel-forged",
+        "scoiatael.francesca-findabair-hope-of-the-aen-seidhe",
         "scoiatael.francesca-findabair-pureblood-elf",
         "scoiatael.francesca-findabair-queen-of-dol-blathanna",
         "scoiatael.francesca-findabair-the-beautiful",
@@ -147,6 +148,7 @@ describe("official leader promotion (cBp5)", () => {
         "northern-realms.foltest-lord-commander-of-the-north",
         "northern-realms.foltest-son-of-medell",
         "northern-realms.foltest-the-steel-forged",
+        "scoiatael.francesca-findabair-hope-of-the-aen-seidhe",
         "scoiatael.francesca-findabair-pureblood-elf",
       ].sort(),
     );
@@ -158,6 +160,9 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
       "northern-realms.foltest-the-steel-forged",
+    );
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
+      "scoiatael.francesca-findabair-hope-of-the-aen-seidhe",
     );
     expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
       "monsters.eredin-breacc-glas-the-treacherous",
@@ -178,6 +183,7 @@ describe("official leader promotion (cBp5)", () => {
         "northern-realms.foltest-son-of-medell",
         "northern-realms.foltest-the-siegemaster",
         "northern-realms.foltest-the-steel-forged",
+        "scoiatael.francesca-findabair-hope-of-the-aen-seidhe",
         "scoiatael.francesca-findabair-pureblood-elf",
         "scoiatael.francesca-findabair-queen-of-dol-blathanna",
         "scoiatael.francesca-findabair-the-beautiful",
@@ -191,7 +197,6 @@ describe("official leader promotion (cBp5)", () => {
         "draw_extra_card",
         "draw_opponent_discard",
         "look_three_cards",
-        "optimize_agile_rows",
         "random_medic",
         "restore_discard_to_hand",
         "shuffle_discards_into_decks",
@@ -207,6 +212,9 @@ describe("official leader promotion (cBp5)", () => {
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_close");
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_ranged");
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_spies");
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
+      "optimize_agile_rows",
+    );
   });
 
   it("manifest source IDs are all present in currentCatalogLeaders", () => {
