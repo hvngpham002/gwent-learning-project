@@ -155,7 +155,10 @@ describe("official Game8 catalog staging import", () => {
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.weather_half_penalty).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.scorch_range).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.scorch_siege).toBeUndefined();
-    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.double_close).toBeGreaterThan(0);
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.double_close).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.double_siege).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.double_ranged).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.discard_two_draw_one_from_deck).toBeGreaterThan(0);
   });
 
   it("assigns every official candidate a porting status", () => {

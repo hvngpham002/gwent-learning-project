@@ -129,7 +129,7 @@ describe("Card Studio helpers", () => {
     expect(validateCustomLeaderRecord(playableLeader({ faction: "neutral" as "northern_realms" }), context(store)).issues.map((issue) => issue.code)).toContain(
       "invalid_faction",
     );
-    const placeholder = playableLeader({ ability: "double_close" }, true);
+    const placeholder = playableLeader({ ability: "cancel_leader" }, true);
     const result = validateCustomLeaderRecord(placeholder, context({ ...store, leaders: [placeholder] }, placeholder.recordId));
     expect(result.structurallyValid).toBe(true);
     expect(result.playable).toBe(false);

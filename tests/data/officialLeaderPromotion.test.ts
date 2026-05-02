@@ -60,15 +60,17 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for newly added leader ability IDs that remain placeholder after cCp16", () => {
+  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp19", () => {
     [
-      "double_close",
+      "cancel_leader",
       "discard_two_draw_one_from_deck",
-      "restore_discard_to_hand",
       "double_spies",
-      "optimize_agile_rows",
-      "double_ranged",
       "draw_extra_card",
+      "draw_opponent_discard",
+      "look_three_cards",
+      "optimize_agile_rows",
+      "random_medic",
+      "restore_discard_to_hand",
       "shuffle_discards_into_decks",
     ].forEach((ability) => {
       const metadata =
@@ -80,7 +82,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, and cCp16 row-Scorch abilities", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, and cCp19 row-horn passives", () => {
     [
       "clear_weather",
       "play_frost",
@@ -90,6 +92,9 @@ describe("official leader promotion (cBp5)", () => {
       "weather_half_penalty",
       "scorch_range",
       "scorch_siege",
+      "double_siege",
+      "double_close",
+      "double_ranged",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -104,13 +109,17 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(implementedLeaders.map((leader) => leader.sourceId).sort()).toEqual(
       [
+        "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
         "northern-realms.foltest-son-of-medell",
+        "northern-realms.foltest-the-siegemaster",
         "northern-realms.foltest-the-steel-forged",
         "scoiatael.francesca-findabair-pureblood-elf",
+        "scoiatael.francesca-findabair-queen-of-dol-blathanna",
+        "scoiatael.francesca-findabair-the-beautiful",
         "skellige.king-bran",
       ].sort(),
     );
@@ -150,31 +159,41 @@ describe("official leader promotion (cBp5)", () => {
       "northern-realms.foltest-the-steel-forged",
     );
     expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
+      "monsters.eredin-commander-of-the-red-riders",
+      "northern-realms.foltest-the-siegemaster",
+      "scoiatael.francesca-findabair-queen-of-dol-blathanna",
+      "scoiatael.francesca-findabair-the-beautiful",
       "skellige.king-bran",
     ]);
     expect([...officialLeaderPromotionManifest.implementedLeaderSourceIds].sort()).toEqual(
       [
+        "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
         "northern-realms.foltest-son-of-medell",
+        "northern-realms.foltest-the-siegemaster",
         "northern-realms.foltest-the-steel-forged",
         "scoiatael.francesca-findabair-pureblood-elf",
+        "scoiatael.francesca-findabair-queen-of-dol-blathanna",
+        "scoiatael.francesca-findabair-the-beautiful",
         "skellige.king-bran",
       ].sort(),
     );
-    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toEqual(
-      expect.arrayContaining([
-        "double_close",
+    expect([...officialLeaderPromotionManifest.placeholderLeaderAbilityIds].sort()).toEqual(
+      [
+        "cancel_leader",
         "discard_two_draw_one_from_deck",
-        "restore_discard_to_hand",
         "double_spies",
-        "optimize_agile_rows",
-        "double_ranged",
         "draw_extra_card",
+        "draw_opponent_discard",
+        "look_three_cards",
+        "optimize_agile_rows",
+        "random_medic",
+        "restore_discard_to_hand",
         "shuffle_discards_into_decks",
-      ]),
+      ].sort(),
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("play_any_weather");
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
@@ -182,6 +201,9 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("scorch_range");
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("scorch_siege");
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_siege");
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_close");
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_ranged");
   });
 
   it("manifest source IDs are all present in currentCatalogLeaders", () => {

@@ -1,13 +1,15 @@
 # Leader Ability Matrix
 
-This document is the durable cCp18 audit output. It enumerates every official
-leader source record, classifies the placeholder leaders by implementation
-pattern, lists local-source conflicts, and records engine, legal-move, prompt
-/ UI, hidden-info, AI, and simulation implications. cCp19+ implementation
-specs should pull from this matrix rather than re-running the audit.
+This document is the durable cCp18 audit output, refreshed by cCp19. It
+enumerates every official leader source record, classifies the placeholder
+leaders by implementation pattern, lists local-source conflicts, and records
+engine, legal-move, prompt / UI, hidden-info, AI, and simulation implications.
+cCp19+ implementation specs should pull from this matrix rather than
+re-running the audit.
 
-The matrix is documentation only. It does not change production code, tests,
-catalog data, UI, AI, or simulation.
+The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
+horn-like passives) and updated this matrix to reflect that. The cCp19
+implementation phase did not implement any other tranche.
 
 ## Status
 
@@ -22,20 +24,22 @@ catalog data, UI, AI, or simulation.
 - Implemented executable leaders: **7** (each emits a legal `use_leader`
   move): `clear_weather`, `play_frost`, `play_fog`, `play_rain`,
   `play_any_weather`, `scorch_range`, `scorch_siege`.
-- Implemented passive leaders: **1** (`weather_half_penalty` on King Bran).
-- Placeholder leader records: **14** spanning **13** distinct ability IDs
-  (`double_close` is the shared ID).
-- `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` currently
-  lists **8** entries (the cBp5-introduced placeholders: `double_close`,
-  `discard_two_draw_one_from_deck`, `restore_discard_to_hand`,
-  `double_spies`, `optimize_agile_rows`, `double_ranged`,
-  `draw_extra_card`, `shuffle_discards_into_decks`). The five
-  pre-cBp5 placeholders that ship on the original Northern Realms /
-  Nilfgaard leader pack — `double_siege`, `look_three_cards`,
-  `cancel_leader`, `draw_opponent_discard`, `random_medic` — are NOT in
-  the manifest array even though their `CATALOG_LEADER_ABILITY_METADATA`
-  status is still `placeholder`. This is a documentation-only finding;
-  see Source Conflicts §C-7.
+- Implemented passive leaders: **5** after cCp19 — `weather_half_penalty`
+  on King Bran, plus the four cCp19 row-wide horn-like passives
+  (`double_siege` on Foltest: The Siegemaster, `double_close` on Eredin:
+  Commander of the Red Riders and Francesca: Queen of Dol Blathanna, and
+  `double_ranged` on Francesca: The Beautiful).
+- Placeholder leader records: **10** spanning **10** distinct ability IDs
+  after cCp19. (cCp19 promoted 4 leader records and 3 ability IDs out of
+  placeholder.)
+- `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` is now
+  **exhaustive** after cCp19 — it lists every leader ability whose
+  `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
+  `cancel_leader`, `discard_two_draw_one_from_deck`, `double_spies`,
+  `draw_extra_card`, `draw_opponent_discard`, `look_three_cards`,
+  `optimize_agile_rows`, `random_medic`, `restore_discard_to_hand`,
+  `shuffle_discards_into_decks`. (See Source Conflicts §C-7 for the cCp18
+  audit finding that prompted this fix.)
 
 ## Implemented Baseline
 
@@ -58,10 +62,19 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | Source ID | Name | Faction | Ability | Effect surface | Notes |
 |---|---|---|---|---|---|
 | `skellige.king-bran` | King Bran | Skellige | `weather_half_penalty` | scoring pipeline | cCp15. Derived from leader identity through `getWeatherPolicyBySeat`; never sets `seat.leaderUsed` and never emits `leader_used`. |
+| `northern-realms.foltest-the-siegemaster` | Foltest: The Siegemaster | Northern Realms | `double_siege` | scoring pipeline | cCp19. Derived from leader identity through `getRowHornPolicyBySeat`; doubles non-hero units on the friendly siege row at the horn stage; suppressed by any Commander's Horn on that row; never sets `seat.leaderUsed` and never emits `leader_used`. |
+| `monsters.eredin-commander-of-the-red-riders` | Eredin: Commander of the Red Riders | Monsters | `double_close` | scoring pipeline | cCp19. Same shape as `double_siege` but on the friendly close row. |
+| `scoiatael.francesca-findabair-queen-of-dol-blathanna` | Francesca Findabair: Queen of Dol Blathanna | Scoia'tael | `double_close` | scoring pipeline | cCp19. Shares the `double_close` policy with Eredin: Commander of the Red Riders. Selection is by leader identity, not faction. |
+| `scoiatael.francesca-findabair-the-beautiful` | Francesca Findabair: The Beautiful | Scoia'tael | `double_ranged` | scoring pipeline | cCp19. Same shape as `double_siege` but on the friendly ranged row. |
 
 ## Placeholder Leader Matrix
 
-Fourteen leader source records remain unimplemented. Catalog descriptions
+After cCp19, ten leader source records remain unimplemented. Four leader
+records (Foltest: The Siegemaster, Eredin: Commander of the Red Riders,
+Francesca Findabair: Queen of Dol Blathanna, Francesca Findabair: The
+Beautiful) were promoted to `implemented` passive in cCp19; they are kept in
+the matrix below for cross-reference but their `Ability metadata status`
+fields read `implemented` rather than `placeholder`. Catalog descriptions
 come from `src/data/catalog/leaders/*.ts`. "Local rule / source text" is the
 single-line summary cross-referencing `docs/gwent-rules.md`,
 `audit/scrapes/2026-04-29-game8-gwent-cards.json`, and
@@ -79,7 +92,7 @@ Marker conventions:
 |---|---|
 | Source ID | `northern-realms.foltest-the-siegemaster` |
 | Faction | Northern Realms |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp19) |
 | Catalog description | "Doubles the strength of all your Siege units (unless a Commander's Horn is also present on that row)." |
 | Local rule / source text | Persistent passive Commander's-Horn-equivalent on the friendly Siege row, suppressed if a Commander's Horn is already on that row. |
 | Likely official behavior | *Derived*: while Foltest: The Siegemaster is the seat's leader, the seat's siege row receives a Commander's-Horn-equivalent ×2 to non-hero unit strength, but only when no Commander's Horn (`commanders_horn` special or unit horn) is present on that row. Hero units are unaffected (Hero immunity). |
@@ -98,7 +111,7 @@ Marker conventions:
 |---|---|
 | Source ID | `monsters.eredin-commander-of-the-red-riders` |
 | Faction | Monsters |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp19) |
 | Catalog description | "Doubles the strength of all your Close Combat units (unless a Commander's Horn is also present on that row)." |
 | Local rule / source text | Same shape as `double_siege` but on the friendly close row. |
 | Likely official behavior | *Derived*: passive ongoing Horn-equivalent on the friendly close row, suppressed by an existing Commander's Horn on that row, hero-immune. |
@@ -117,7 +130,7 @@ Marker conventions:
 |---|---|
 | Source ID | `scoiatael.francesca-findabair-queen-of-dol-blathanna` |
 | Faction | Scoia'tael |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp19) |
 | Catalog description | "Doubles the strength of all your Close Combat units (unless a Commander's Horn is also present on that row)." |
 | Local rule / source text | Same as Eredin: Commander of the Red Riders. Two leaders share `double_close`. |
 | Likely official behavior | Same as Eredin: Commander. |
@@ -136,7 +149,7 @@ Marker conventions:
 |---|---|
 | Source ID | `scoiatael.francesca-findabair-the-beautiful` |
 | Faction | Scoia'tael |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp19) |
 | Catalog description | "Doubles the strength of all your Ranged Combat units (unless a Commander's Horn is also present on that row)." |
 | Local rule / source text | Same as `double_siege`/`double_close` but on the friendly ranged row. |
 | Likely official behavior | *Derived*: passive ongoing Horn-equivalent on the friendly ranged row, suppressed by an existing Commander's Horn on that row, hero-immune. |
@@ -858,11 +871,23 @@ cCp19+ tranches are ordered by ambiguity, blast radius, value to official
 starter decks, UI / prompt complexity, hidden-info risk, and testability.
 Each tranche is recommended as one cCp phase.
 
-### Tranche 1 — Row-Wide Horn-Like Passives (lowest ambiguity)
+### Tranche 1 — Row-Wide Horn-Like Passives (IMPLEMENTED in cCp19)
 
 **Members:** `double_siege`, `double_close` (×2), `double_ranged`.
 
-**Why first:**
+**Status:** Implemented in cCp19 (see
+`audit/reports/2026-05-02-cCp19-report.md`). The new helper
+`getRowHornPolicyBySeat(state, leaders)` mirrors the cCp15
+`getWeatherPolicyBySeat` pattern, derives a per-seat row-horn policy from
+leader identity, and is wired into `calculateScores` with an explicit
+`rowHornPolicyBySeat` override for focused tests. The score breakdown uses a
+distinct `"leader_horn"` modifier when the leader passive applies and the
+existing `"commanders_horn"` modifier when a physical horn applies.
+Suppression by physical Commander's Horn (special card or unit/hero
+`commanders_horn` source) is implemented; horn effects do not stack.
+Heroes remain immune as receivers.
+
+**Why first (retained for context):**
 
 - Smallest engine surface area: a single new helper
   `getRowHornPolicyBySeat` mirroring the cCp15 `getWeatherPolicyBySeat`
@@ -874,8 +899,8 @@ Each tranche is recommended as one cCp phase.
 - Testability is excellent: pure scoring tests over construction
   fixtures.
 
-**Out of scope:** Suppression interaction with `cancel_leader` (Tranche 4)
-is documented but not exercised in Tranche 1.
+**Out of scope (deferred to later tranches):** Suppression interaction with
+`cancel_leader` (Tranche 4) is documented but not exercised in Tranche 1.
 
 ### Tranche 2 — Active Score Modifier and Single-Step Prompt Leaders
 
@@ -946,50 +971,67 @@ deck tutor with hidden-info ramifications).
 - Simulation export schema bump if the new reveal sets / leader-cancel
   flag are to live in `sim-export-v1` rather than v2.
 
-## Open Product Questions
+## Settled Product Decisions (post-cCp18 review)
 
-These are blockers for cCp19. The product owner / user must resolve them
-before the relevant tranche can ship. cCp18 records them; it does not
-guess.
+These are the cCp18 open product questions, settled by the product owner on
+2026-05-02 and recorded here so future specs do not re-open them. cCp19
+implements only the row-horn subset (Tranche 1); the other settled
+decisions are tracked here for the relevant later tranche.
 
-1. **Conflict §C-2 — Emhyr: The Relentless.** Catalog says
-   `draw_opponent_discard`; rulebook §16 says deck tutor. Pick one.
-   Recommendation: rulebook wins.
+1. **Conflict §C-2 — Emhyr: The Relentless.** **Settled: catalog wins.**
+   `nilfgaard.emhyr-var-emreis-the-relentless` is the
+   `draw_opponent_discard` leader: draw a card from the **opponent's**
+   discard pile. The earlier rulebook deck-tutor wording is superseded.
+   `docs/gwent-rules.md` §16 was updated in cCp19 to match the catalog.
 2. **Conflict §C-1 — Eredin: Destroyer of Worlds rulebook entry.**
-   Confirm that `docs/gwent-rules.md` §16's Destroyer-of-Worlds row is
-   actually the Bringer-of-Death effect and re-attribute. The cCp18
-   audit treats this as confirmed, but the actual edit lands in cCp19
-   to keep cCp18 documentation-only.
-3. **Conflict §C-4 — `optimize_agile_rows` choice vs auto.** Should
-   the leader open a row-choice menu (canonical text) or auto-pick the
-   strongest row (catalog wording)? Recommendation: row-choice.
-4. **`discard_two_draw_one_from_deck` deck draw shape.** Chosen draw
-   from acting deck or blind top-of-deck? Recommendation: blind top-of-
-   deck for hidden-info simplicity.
-5. **`random_medic` Decoy filter.** When the random Special pick lands
-   on Decoy (which needs a target), engine should either (a) silently
-   exclude Decoy from the candidate set, (b) skip and re-roll, or (c)
-   no-op the leader. Recommendation: (a) — exclude Decoy from filter.
-6. **`look_three_cards` reveal duration.** Persistent for the rest of
-   the match, or only for the round? Recommendation: persistent (per
-   classic Witcher 3 reading).
-7. **`look_three_cards` and mulligan / setup-time use.** Confirm the
-   leader cannot be used during mulligan (the cCp18 audit assumes
-   yes — leaders fire in the play phase only, per `getLeaderMove`'s
-   existing gates).
-8. **`cancel_leader` retroactive timing.** If the cancel fires *after*
-   a passive has already affected the score, does the next scoring
-   tick un-apply the passive (recommended: yes, scoring is a pure
-   function of state) or stick (catalog text is silent)? Recommend
-   pure-function semantics.
-9. **`double_spies` snapshot vs ongoing.** Snapshot at fire time
-   (matches catalog "spy cards already on the battlefield") vs
-   ongoing for the rest of the match (catalog text is ambiguous).
-   Recommendation: snapshot.
-10. **`shuffle_discards_into_decks` empty-discards no-op policy.**
-    Consume the leader if both discards are empty, or refuse the move
-    (no legal `use_leader`)? Recommendation: refuse (mirrors `play_*`
-    weather and `scorch_*` row policies).
+   **Settled: confirmed rules-doc bug.** `docs/gwent-rules.md` §16's
+   restore-from-discard row belongs to *Eredin: Bringer of Death*
+   (`restore_discard_to_hand`), not *Eredin: Destroyer of Worlds*.
+   *Destroyer of Worlds* is the discard-cost / deck-draw leader
+   (`discard_two_draw_one_from_deck`). cCp19 corrected the rulebook
+   table accordingly.
+3. **Conflict §C-4 — `optimize_agile_rows` choice vs auto.**
+   **Settled: auto-place** (catalog wording). The leader does not
+   open a row-choice prompt; the engine selects the row that yields the
+   most strength. UI work is deferred to the implementation tranche.
+4. **`discard_two_draw_one_from_deck` flow.** **Settled: discard up to two
+   cards from hand, then show all remaining deck cards, choose any one
+   card to draw, then shuffle the remaining deck.** Implementable with at
+   least one card in hand; zero cards in hand makes it unusable. Hidden-info
+   redaction must keep the deck identities visible only to the acting seat.
+5. **`random_medic` ability ID.** **Settled: passive mutation of Medic
+   effects.** The leader does not play a random Special card from
+   discard. Instead, while it is the seat's leader, every Medic effect
+   (including chained Medic revivals) selects a **random non-hero unit**
+   from the discard pile rather than letting the player choose. It does
+   not affect hero sources that have Medic.
+6. **`look_three_cards` reveal duration / dismissal.** **Settled: one-time
+   modal.** The acting seat sees the three random opponent hand cards
+   in a single modal disclosure; if dismissed it cannot be reopened.
+   Implementation-time UI work captures the snapshot once and discards it.
+7. **`look_three_cards` and mulligan / setup-time use.** **Settled:
+   leaders fire in the play phase only.** Same gate as today's
+   implemented leaders (`getLeaderMove` returns no move during
+   mulligan).
+8. **`cancel_leader` semantics.** **Settled: reaction / current-round
+   suppression.** `cancel_leader` can be played as a reaction; it
+   suppresses the opponent's leader effect for the current round only.
+   If it cancels an active leader, that leader is still consumed (no
+   refund). If it suppresses a passive, scoring recalculates immediately
+   for the current round through the existing pure-function pipeline.
+   Reaction window timing is part of the implementation tranche.
+9. **`double_spies` duration.** **Settled: passive for the entire game.**
+   The leader's effect is on for the rest of the match once it fires;
+   it doubles every battlefield Spy currently on the board and any future
+   battlefield Spies. Hero Spies remain immune (Hero immunity, §17.1).
+10. **`shuffle_discards_into_decks` empty-discards policy.** **Settled:
+    unusable when both discard piles are empty.** When both seats'
+    discards are empty, the leader emits no legal `use_leader` move
+    (mirrors the `play_*` weather and `scorch_*` row "no no-op" policy).
+    A single non-empty discard pile is enough to enable the move.
+
+These ten decisions are now locked. The relevant tranches (Tranche 2-4)
+should treat them as inputs and not re-open them.
 
 ## Cross-Reference Index
 
@@ -1008,3 +1050,11 @@ cCp19+ implementation:
 ## Change Log
 
 - 2026-05-02 (cCp18): initial matrix per `docs/spec/2026-05-02-cCp18-specs.md`.
+- 2026-05-02 (cCp19): Tranche 1 implemented. `double_siege`, `double_close`
+  (×2), and `double_ranged` promoted from `placeholder` to `implemented`
+  passive. New helper `getRowHornPolicyBySeat`, new `"leader_horn"` score
+  modifier, official promotion manifest extended with the four passive
+  leader source IDs and the placeholder ability list backfilled to be
+  exhaustive. Settled the ten cCp18-blocker product decisions and
+  recorded them in this matrix's *Settled Product Decisions* section.
+  See `audit/reports/2026-05-02-cCp19-report.md` for details.

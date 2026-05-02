@@ -249,14 +249,17 @@ describe("authentic deck builder view model", () => {
 
   it("reports non-implemented card and leader abilities as warnings", () => {
     const plannedCard = currentCatalogCards.find((card) => card.abilities.includes("muster_roach"));
+    // Pick any placeholder Nilfgaard leader (no Northern Realms leader is still
+    // placeholder after cCp19). Emhyr: The Relentless (`draw_opponent_discard`)
+    // is currently placeholder.
     const placeholderLeader = currentCatalogLeaders.find(
-      (leader) => leader.faction === "northern_realms" && leader.ability === "double_siege",
+      (leader) => leader.faction === "nilfgaard" && leader.ability === "draw_opponent_discard",
     );
     expect(plannedCard).toBeDefined();
     expect(placeholderLeader).toBeDefined();
 
     const stats = validateDeckPreset({
-      ...currentNorthernRealmsDeckPreset,
+      ...currentNilfgaardDeckPreset,
       leaderSourceId: placeholderLeader!.sourceId,
     });
 

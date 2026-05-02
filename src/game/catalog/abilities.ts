@@ -195,8 +195,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   double_siege: {
     id: "double_siege",
     name: "Double Siege",
-    status: "placeholder",
-    description: "Applies a horn-like effect to siege.",
+    status: "implemented",
+    description: "Passive: applies a Commander's Horn-equivalent ×2 to non-hero units on the friendly Siege Combat row. Suppressed if a Commander's Horn is already on that row; horn effects do not stack. Heroes are unaffected.",
   },
   play_frost: {
     id: "play_frost",
@@ -249,8 +249,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   double_close: {
     id: "double_close",
     name: "Double Close Combat",
-    status: "placeholder",
-    description: "Doubles the strength of close combat units.",
+    status: "implemented",
+    description: "Passive: applies a Commander's Horn-equivalent ×2 to non-hero units on the friendly Close Combat row. Suppressed if a Commander's Horn is already on that row; horn effects do not stack. Heroes are unaffected.",
   },
   discard_two_draw_one_from_deck: {
     id: "discard_two_draw_one_from_deck",
@@ -285,8 +285,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   double_ranged: {
     id: "double_ranged",
     name: "Double Ranged",
-    status: "placeholder",
-    description: "Doubles the strength of ranged units.",
+    status: "implemented",
+    description: "Passive: applies a Commander's Horn-equivalent ×2 to non-hero units on the friendly Ranged Combat row. Suppressed if a Commander's Horn is already on that row; horn effects do not stack. Heroes are unaffected.",
   },
   draw_extra_card: {
     id: "draw_extra_card",

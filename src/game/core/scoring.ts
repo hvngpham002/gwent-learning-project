@@ -5,11 +5,14 @@ import type { CardInstanceId, MatchState, SeatId } from "./types";
 export type WeatherPolicy = "normal" | "king_bran";
 export type WeatherEffectId = "frost" | "fog" | "rain" | "skellige_storm";
 
+export type RowHornPolicyBySeat = Partial<Record<SeatId, Partial<Record<CatalogRow, boolean>>>>;
+
 export interface CalculateScoresInput {
   state: MatchState;
   catalogCards: readonly CatalogCardSource[];
   catalogLeaders?: readonly CatalogLeaderSource[];
   weatherPolicyBySeat?: Partial<Record<SeatId, WeatherPolicy>>;
+  rowHornPolicyBySeat?: RowHornPolicyBySeat;
 }
 
 export interface CardScoreEntry {
@@ -231,11 +234,42 @@ export const getWeatherPolicyBySeat = (
   return policy;
 };
 
+const ROW_HORN_LEADER_ABILITY_TO_ROW: Partial<Record<CatalogLeaderSource["ability"], CatalogRow>> = {
+  double_close: "close",
+  double_ranged: "ranged",
+  double_siege: "siege",
+};
+
+export const getRowHornPolicyBySeat = (
+  state: MatchState,
+  catalogLeaders: readonly CatalogLeaderSource[],
+): RowHornPolicyBySeat => {
+  const lookup = new Map(catalogLeaders.map((leader) => [leader.sourceId, leader]));
+  const policy: RowHornPolicyBySeat = {};
+  SEATS.forEach((seatId) => {
+    const leaderSourceId = state.seats[seatId]?.leaderSourceId;
+    if (!leaderSourceId) {
+      return;
+    }
+    const leader = lookup.get(leaderSourceId);
+    if (!leader) {
+      return;
+    }
+    const row = ROW_HORN_LEADER_ABILITY_TO_ROW[leader.ability];
+    if (!row) {
+      return;
+    }
+    policy[seatId] = { [row]: true };
+  });
+  return policy;
+};
+
 export const calculateScores = ({
   state,
   catalogCards,
   catalogLeaders,
   weatherPolicyBySeat,
+  rowHornPolicyBySeat,
 }: CalculateScoresInput): MatchScoreBreakdown => {
   const catalogLookup = createCardLookup(catalogCards);
   const diagnostics: ScoringDiagnostic[] = [];
@@ -247,6 +281,11 @@ export const calculateScores = ({
   const policyBySeat: Partial<Record<SeatId, WeatherPolicy>> = {
     ...derivedPolicy,
     ...(weatherPolicyBySeat ?? {}),
+  };
+  const derivedRowHornPolicy = catalogLeaders ? getRowHornPolicyBySeat(state, catalogLeaders) : {};
+  const rowHornPolicy: RowHornPolicyBySeat = {
+    ...derivedRowHornPolicy,
+    ...(rowHornPolicyBySeat ?? {}),
   };
 
   SEATS.forEach((seatId) => {
@@ -267,14 +306,15 @@ export const calculateScores = ({
           (source?.kind === "unit" || source?.kind === "hero") && hasAbility(source, "commanders_horn")
         );
       });
-      const hornSourceId = specialHornSourceId ?? unitHornSourceIds[0] ?? null;
-      const hasHorn = Boolean(hornSourceId);
+      const physicalHornSourceId = specialHornSourceId ?? unitHornSourceIds[0] ?? null;
+      const hasPhysicalHorn = Boolean(physicalHornSourceId);
+      const leaderHornActive = Boolean(rowHornPolicy[seatId]?.[row]);
 
       if ((specialHornSourceId ? 1 : 0) + unitHornSourceIds.length > 1) {
         diagnostics.push({
           code: "multiple_horn_sources",
           message: "Multiple horn sources found on a row; only one horn modifier was applied.",
-          cardId: hornSourceId ?? undefined,
+          cardId: physicalHornSourceId ?? undefined,
           seatId,
           row,
         });
@@ -338,10 +378,17 @@ export const calculateScores = ({
         }
         const afterMorale = afterTightBond + moraleBonus;
 
-        const hornMultiplier =
-          isUnit && !isHero && hasHorn && !(hornSourceId === cardId && hasAbility(source, "commanders_horn")) ? 2 : 1;
-        if (hornMultiplier > 1) {
+        const physicalHornAppliesToCard =
+          isUnit &&
+          !isHero &&
+          hasPhysicalHorn &&
+          !(physicalHornSourceId === cardId && hasAbility(source, "commanders_horn"));
+        const leaderHornAppliesToCard = isUnit && !isHero && leaderHornActive && !hasPhysicalHorn;
+        const hornMultiplier = physicalHornAppliesToCard || leaderHornAppliesToCard ? 2 : 1;
+        if (physicalHornAppliesToCard) {
           modifiers.push("commanders_horn");
+        } else if (leaderHornAppliesToCard) {
+          modifiers.push("leader_horn");
         }
         const finalStrength = afterMorale * hornMultiplier;
 

@@ -338,8 +338,8 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 | Card | Clarification |
 |---|---|
 | **Clan Dimun Pirate** | Its Scorch ability follows the **Special Card Scorch** rules — it affects the **whole battlefield**. **Clan Dimun Pirate cannot discard itself.** |
-| **Eredin, Destroyer of Worlds** | Restore a Unit Card **or** Special Card of the player's choice from their discard pile. (Notable — Medic is Units only and excludes Heroes; Eredin is broader.) |
-| **Emhyr var Emreis, The Relentless** | Draw a Unit Card or Special Card of the player's choice **from their deck**, then shuffle the deck. (Effectively a tutor for any card type.) |
+| **Eredin, Bringer of Death** | Restore a Unit Card **or** Special Card of the player's choice from their discard pile. (Notable — Medic is Units only and excludes Heroes; Eredin is broader.) The cCp18 audit confirmed that the original printed-rulebook table mis-attributed this row to *Eredin, Destroyer of Worlds*; the correct attribution is *Eredin, Bringer of Death* (catalog ability `restore_discard_to_hand`). *Eredin, Destroyer of Worlds* is the discard-cost / deck-draw leader (catalog ability `discard_two_draw_one_from_deck`). |
+| **Emhyr var Emreis, The Relentless** | The catalog assigns this leader the ability `draw_opponent_discard`: **draw a card from your opponent's discard pile** (not your own deck). The cCp18 audit recorded that an earlier printed-rulebook source said "tutor from your deck" for this same leader; the project treats the catalog as the local authority and the deck-tutor wording is superseded. The cCp19 implementation phase did not implement this leader; tracking is in `docs/leader-ability-matrix.md` §C-2. |
 
 ---
 
@@ -359,8 +359,8 @@ Heroes are immune to **Special Card, Unit Card, and Leader Card abilities**. Con
 - **Heroes cannot be revived by Medic** (explicit).
 - **Heroes cannot be pulled back by Skellige's third-round ability** (explicit "excluding Heroes").
 - **Heroes cannot be chosen as the Monsters "kept on the battlefield" unit** (explicit "excluding Heroes").
-- **[Derived] Heroes *can* still be chosen by Eredin, Destroyer of Worlds**, whose FAQ text says "Unit Card or Special Card of the player's choice" — with no Hero exclusion. The Golden Rule says the card takes precedence.
-- **[Derived] Heroes *can* still be tutored from deck by Emhyr var Emreis** for the same reason.
+- **[Derived] Heroes *can* still be chosen by Eredin, Bringer of Death** (catalog ability `restore_discard_to_hand`), whose FAQ text says "Unit Card or Special Card of the player's choice from their discard pile" — with no Hero exclusion. The Golden Rule says the card takes precedence. (See §16 — the printed rulebook originally mis-attributed this row to *Destroyer of Worlds*.)
+- **[Derived] Heroes *can* still be drawn from the opponent discard by Emhyr var Emreis: The Relentless** (catalog ability `draw_opponent_discard`) for the same reason.
 - **[Derived] A Hero's *own* abilities still function.** A Hero with Muster, Scorch, or Tight Bond printed on it still resolves that ability when played — the Hero rule prevents **external** abilities from affecting the Hero, but it doesn't prevent the Hero from *being* an ability source.
 - **Hero-source row effects (Morale Boost, future row-wide Tight Bond / Commander's Horn).** A hero may *emit* its printed row effect to other non-hero units on the row, even though the hero remains immune to *receiving* row effects. Concretely: a hero printed with Morale Boost adds +1 to the other non-hero units on its row; the hero source itself does not receive +1, and other heroes on the row do not receive +1. **Hero Tight Bond is intentionally not implemented as a functional rule** — heroes are immune to Tight Bond as receivers, so a hero with printed Tight Bond is effectively useless and the engine does not invent a new functional rule for it.
 
@@ -705,6 +705,66 @@ Engine policy for legal-move generation (cCp16):
 Each leader is usable **once per game** like other active leaders, replaces
 the player's card play for that turn, and hands off the turn after
 resolution.
+
+### 17.12d Row-Wide Horn-Like Leader Passives (cCp19)
+
+Four leader records share a passive **Commander's Horn-equivalent** effect on
+a fixed friendly row:
+
+- `Foltest: The Siegemaster` (`double_siege`) — friendly **Siege Combat** row;
+- `Eredin: Commander of the Red Riders` (`double_close`) — friendly
+  **Close Combat** row;
+- `Francesca Findabair: Queen of Dol Blathanna` (`double_close`) — friendly
+  **Close Combat** row;
+- `Francesca Findabair: The Beautiful` (`double_ranged`) — friendly **Ranged
+  Combat** row.
+
+Engine semantics:
+
+- the effect is **passive** and runs every scoring tick — it produces no
+  `use_leader` legal move, never sets `seat.leaderUsed`, and never emits a
+  `leader_used` event;
+- the policy is derived from the seat's leader source identity, not from
+  faction, through the helper `getRowHornPolicyBySeat(state, leaders)`
+  (mirrors the cCp15 King Bran helper);
+- when a seat has a row-horn policy for a row, **non-hero units** on that
+  friendly row are doubled at the normal Horn stage, after Weather, Tight
+  Bond, and Morale Boost (per §15);
+- **Heroes are immune** as receivers (Hero immunity, §17.1);
+- a physical Commander's Horn on the row — either a `commanders_horn`
+  Special card in the row's horn slot or a unit / hero source with the
+  `commanders_horn` ability — **suppresses** the leader horn for that row;
+  horn effects do not stack ("unless a Commander's Horn is also present on
+  that row");
+- when a physical horn applies, the score breakdown's `modifiers` list
+  uses the existing `"commanders_horn"` marker; when only the leader
+  policy applies, the score breakdown uses a distinct
+  `"leader_horn"` marker so inspectors can show provenance;
+- the existing `multiple_horn_sources` diagnostic continues to describe
+  only physical row horn sources — a suppressed leader policy never
+  produces a duplicate-horn diagnostic;
+- because every score-dependent path (round resolution, gem loss, Special
+  Scorch, unit row-Scorch, unit-source whole-board Scorch) goes through
+  the central `calculateScores` pipeline, all of those paths inherit the
+  row-horn policy automatically.
+
+Each leader's effect targets a **single fixed row on the leader's own
+side**; opponent rows and the opposite-side row of the same kind are
+unaffected. Two leaders share `double_close` (Eredin: Commander of the Red
+Riders for Monsters and Francesca: Queen of Dol Blathanna for Scoia'tael) —
+their behavior is identical and selected by the seat's leader, not the
+seat's faction.
+
+Future interactions explicitly out of scope for cCp19:
+
+- `cancel_leader` (Emhyr: The White Flame) will eventually suppress these
+  passives for the current round; cCp19 does not implement the cancel
+  state, but the row-horn helper is structured so a future `seat.leaderCancelled`
+  flag can short-circuit the policy without touching scoring math.
+- `double_spies` (Eredin Breacc Glas: The Treacherous) overlaps with the
+  row-horn passives only when a Spy occupies the leader's row; both
+  modifiers compose through the standard scoring pipeline once
+  `double_spies` is implemented.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 
