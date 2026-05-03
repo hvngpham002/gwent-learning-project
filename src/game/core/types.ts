@@ -136,8 +136,9 @@ export interface PendingPromptOption {
     /**
      * Optional board row hint. Required for Medic (`medic_revive`) prompts
      * because the resolver places the revived unit onto a specific row.
-     * cCp22 `choose_card` / `restore_discard_to_hand` prompts return the
-     * chosen card to the acting seat's hand, so they omit this field.
+     * cCp22 `choose_card` / `restore_discard_to_hand` and cCp24
+     * `choose_card` / `draw_opponent_discard` prompts return the chosen
+     * card to the acting seat's hand, so they omit this field.
      */
     row?: CatalogRow;
   };
@@ -204,7 +205,8 @@ export type GameEvent =
         | "leader_weather"
         | "leader_optimize_agile"
         | "leader_restore_discard_to_hand"
-        | "leader_shuffle_into_deck";
+        | "leader_shuffle_into_deck"
+        | "leader_draw_opponent_discard_to_hand";
     }
   | {
       type: "initial_hand_drawn";

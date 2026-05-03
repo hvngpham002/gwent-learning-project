@@ -60,12 +60,11 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp23", () => {
+  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp24", () => {
     [
       "cancel_leader",
       "discard_two_draw_one_from_deck",
       "draw_extra_card",
-      "draw_opponent_discard",
       "look_three_cards",
       "random_medic",
     ].forEach((ability) => {
@@ -78,7 +77,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, cCp22 restore_discard_to_hand, and cCp23 shuffle_discards_into_decks", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, cCp22 restore_discard_to_hand, cCp23 shuffle_discards_into_decks, and cCp24 draw_opponent_discard", () => {
     [
       "clear_weather",
       "play_frost",
@@ -95,6 +94,7 @@ describe("official leader promotion (cBp5)", () => {
       "optimize_agile_rows",
       "restore_discard_to_hand",
       "shuffle_discards_into_decks",
+      "draw_opponent_discard",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -114,6 +114,7 @@ describe("official leader promotion (cBp5)", () => {
         "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+        "nilfgaard.emhyr-var-emreis-the-relentless",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
         "northern-realms.foltest-son-of-medell",
@@ -147,6 +148,7 @@ describe("official leader promotion (cBp5)", () => {
         "monsters.eredin-bringer-of-death",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+        "nilfgaard.emhyr-var-emreis-the-relentless",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
         "northern-realms.foltest-son-of-medell",
@@ -174,6 +176,9 @@ describe("official leader promotion (cBp5)", () => {
     expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
       "skellige.crach-an-craite",
     );
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
+      "nilfgaard.emhyr-var-emreis-the-relentless",
+    );
     expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
       "monsters.eredin-breacc-glas-the-treacherous",
       "monsters.eredin-commander-of-the-red-riders",
@@ -189,6 +194,7 @@ describe("official leader promotion (cBp5)", () => {
         "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+        "nilfgaard.emhyr-var-emreis-the-relentless",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
         "northern-realms.foltest-son-of-medell",
@@ -207,7 +213,6 @@ describe("official leader promotion (cBp5)", () => {
         "cancel_leader",
         "discard_two_draw_one_from_deck",
         "draw_extra_card",
-        "draw_opponent_discard",
         "look_three_cards",
         "random_medic",
       ].sort(),
@@ -230,6 +235,9 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
       "shuffle_discards_into_decks",
+    );
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
+      "draw_opponent_discard",
     );
   });
 

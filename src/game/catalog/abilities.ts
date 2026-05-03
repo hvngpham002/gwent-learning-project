@@ -231,8 +231,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   draw_opponent_discard: {
     id: "draw_opponent_discard",
     name: "Draw Opponent Discard",
-    status: "placeholder",
-    description: "Draws from the opponent discard pile.",
+    status: "implemented",
+    description: "Active one-shot: opens a single-step `choose_card` prompt over the **opponent's** discard pile and moves the chosen card to the acting seat's hand. Any card kind physically in the opponent discard is eligible (units, heroes, specials, weather, generated / side-deck-only cards, and off-owner cards that ended up there). Empty opponent discard emits no legal `use_leader` move. The leader is consumed only after a legal prompt option resolves; drawn cards do not trigger their abilities — they enter hand and behave normally only if played later. The chosen card's `controller` becomes the acting seat; immutable `owner` is preserved. Settles the cCp18 §C-2 conflict in favor of the catalog (catalog wins; the older deck-tutor rulebook wording is superseded).",
   },
   random_medic: {
     id: "random_medic",

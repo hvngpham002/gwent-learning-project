@@ -339,7 +339,7 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 |---|---|
 | **Clan Dimun Pirate** | Its Scorch ability follows the **Special Card Scorch** rules — it affects the **whole battlefield**. **Clan Dimun Pirate cannot discard itself.** |
 | **Eredin, Bringer of Death** | Restore a card of the player's choice from their own discard pile (catalog ability `restore_discard_to_hand`). cCp22 implements this as an active one-shot leader resolved through a single-step `choose_card` prompt over the acting seat's own discard pile; **any card kind in own discard is eligible — units, heroes, specials, weather, and side-deck-only / generated cards that physically reach discard.** Heroes are included because the leader text says "card" without Medic's non-hero unit restriction. The cCp18 audit confirmed that the original printed-rulebook table mis-attributed this row to *Eredin, Destroyer of Worlds*; the correct attribution is *Eredin, Bringer of Death*. *Eredin, Destroyer of Worlds* is the discard-cost / deck-draw leader (catalog ability `discard_two_draw_one_from_deck`). See §17.12g. |
-| **Emhyr var Emreis, The Relentless** | The catalog assigns this leader the ability `draw_opponent_discard`: **draw a card from your opponent's discard pile** (not your own deck). The cCp18 audit recorded that an earlier printed-rulebook source said "tutor from your deck" for this same leader; the project treats the catalog as the local authority and the deck-tutor wording is superseded. The cCp19 implementation phase did not implement this leader; tracking is in `docs/leader-ability-matrix.md` §C-2. |
+| **Emhyr var Emreis, The Relentless** | The catalog assigns this leader the ability `draw_opponent_discard`: **draw a card from your opponent's discard pile** (not your own deck). cCp24 implements this as an **active one-shot leader** resolved through a single-step `choose_card` prompt over the **opponent's** discard pile. Any card kind physically in opponent discard is eligible — units, heroes, specials, weather, and side-deck-only / generated cards. The chosen card moves to the acting seat's hand, with `controller` reset to the acting seat and `owner` preserved. Drawn cards do **not** trigger their abilities. Empty opponent discard emits no legal `use_leader` move. The cCp18 audit recorded that an earlier printed-rulebook source said "tutor from your deck" for this same leader; the project treats the catalog as the local authority and the deck-tutor wording is superseded. The cCp18 §C-2 conflict is now settled and implemented. See §17.12i. |
 | **Eredin Breacc Glas: The Treacherous** | The catalog ability `double_spies` is a **whole-match passive** (cCp20): every battlefield non-hero card whose source includes the `spy` ability receives a ×2 multiplier on every scoring tick, on both board sides and all rows, regardless of owner or controller. Hero Spies are unaffected (Hero immunity, §17.1). The leader emits no `use_leader` move and never sets `seat.leaderUsed`. See §17.12e. |
 | **Crach an Craite** | The catalog ability `shuffle_discards_into_decks` is an **active one-shot leader** (cCp23). When fired, every non-empty discard pile is moved into the same seat's deck and that seat's deck is shuffled deterministically through the engine's seeded RNG; an empty-discard seat is **not** shuffled. A card moves to the deck of the seat whose discard it currently occupies — Spies and other off-owner cards recycle into the discard-pile seat's deck, with `owner` preserved and `controller` reset to the destination seat. Hand, deck, side deck, removed-from-game, board, row horns, weather zone, and leader zone are not touched. The leader emits no legal `use_leader` move when **both** discard piles are empty; a single non-empty discard is enough to enable it. Recycled cards do not resolve their abilities (no `card_played`); they behave normally only if drawn and played later. Skellige's round-three return §17.18 still operates on whatever is in discard at future round-end. See §17.12h. |
 
@@ -1056,6 +1056,97 @@ deck order through legal-move metadata, AI observation, simulation
 export rows, or any new event payload. The new `card_moved` and
 `deck_shuffled` events do not carry deck order; only the seat ID and
 the affected card ID are published.
+
+### 17.12i Draw Opponent Discard Active Leader (cCp24)
+
+`nilfgaard.emhyr-var-emreis-the-relentless` (Emhyr var Emreis: The
+Relentless) carries the `draw_opponent_discard` leader ability. cCp24
+promotes the metadata from `placeholder` to `implemented` as an
+**active one-shot** leader resolved through a single-step `choose_card`
+prompt over the **opponent's** discard pile.
+
+The cCp18 §C-2 conflict (catalog vs printed-rulebook tutor wording) is
+**settled in favor of the catalog**: The Relentless draws from the
+opponent discard pile. The deck-tutor reading is superseded.
+
+Effect contract:
+
+- **Eligible cards:** every card currently in the **opponent's**
+  discard pile whose catalog source can be resolved. Card kind does
+  not matter — units, heroes, specials, weather, and side-deck-only /
+  generated cards that physically reach the opponent discard are all
+  eligible.
+- **Off-owner cards eligible.** Because the rule targets the physical
+  opponent discard pile, an acting-seat-owned card sitting in the
+  opponent discard (e.g. a Spy that was discarded after round cleanup
+  on the opposite board side) is eligible. The chosen card moves to
+  the acting seat's hand; `owner` is preserved (so the acting-seat-
+  owned Spy remains owner-acting); `controller` is reset to the acting
+  seat.
+- **Not eligible:** cards in the acting seat's own discard pile, in
+  either hand or deck, on the board (units, row horns), in the weather
+  zone, in the removed-from-game zone, or with a missing card instance
+  / catalog source.
+- **Empty opponent discard:** emits no legal `use_leader` move; a
+  manual `UseLeader` attempt rejects with `EngineRuleError` and never
+  sets `seat.leaderUsed`. An empty opponent discard with a non-empty
+  own discard still emits no legal move — own discard is not a fall-
+  back source.
+- **Prompt-open transaction:** clones state, emits `ability_triggered`
+  for the leader, sets `state.pendingPrompt` (`kind === "choose_card"`,
+  `abilityId === "draw_opponent_discard"`, one option per eligible
+  opponent discard card in discard order, option IDs keyed
+  `draw-opponent-discard:<cardId>`, labels `"Draw <card name> from
+  opponent discard"`), emits `prompt_opened`, leaves
+  `seat.leaderUsed === false`, emits no `leader_used`, does not move
+  any discard card yet, does not emit `card_played`, does not resolve
+  any drawn card abilities, and keeps `currentTurn` on the acting seat
+  while the prompt is pending.
+- **Prompt resolution:** `ChoosePromptOption` validates seat ownership
+  and option legality, validates the chosen card is still in the
+  opponent's discard pile (rejects with `EngineRuleError` and does not
+  consume the leader if not), clones state, moves the chosen card from
+  the opponent discard pile to the acting seat's hand with
+  `card_moved.reason === "leader_draw_opponent_discard_to_hand"`, sets
+  the chosen card's `controller` to the acting seat (leaving `owner`
+  unchanged), emits `prompt_resolved`,
+  `ability_resolved.drew_opponent_discard`, sets
+  `seat.leaderUsed = true`, emits `leader_used`, clears
+  `state.pendingPrompt`, and hands off the turn through the existing
+  `handoffTurn` helper.
+- **Drawn cards do not trigger their abilities.** A drawn Medic, Spy,
+  Muster, Scorch, weather, hero, Avenger, Summon, or Berserker behaves
+  normally only if the player later plays the card from hand. The
+  leader is consumed only after a legal prompt option resolves, so
+  cancelling the prompt (where supported) leaves the leader unused.
+
+The legal-move target shape for prompt options points at the **physical
+opponent discard card**:
+
+```ts
+target: {
+  kind: "card_instance",
+  side: "opponent",
+  seatId: opponentSeat,
+  cardId
+}
+```
+
+This is distinct from cCp22 `restore_discard_to_hand` prompts, whose
+options use `side: "own"` because the candidate pile is the acting
+seat's own discard. `getPromptMoves` selects the side based on
+`prompt.abilityId`. Medic prompts continue to set `target.row`; cCp24
+prompts omit `row`.
+
+Hidden-info safety: opponent discard identities were already public,
+so exposing them in prompt options does not leak hidden information.
+AI-owned prompts remain hidden from the human UI through the existing
+prompt-move gate (`getPromptMoves` returns `[]` for any seat that does
+not own the prompt). `summarizeEvents` exposes only
+`prompt.seatId` / `prompt.abilityId` for `prompt_opened`, never option
+labels or card identities. Acting hand identities are public to the
+acting seat through `seatObservation` after the draw, just like any
+other card-to-hand event.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 

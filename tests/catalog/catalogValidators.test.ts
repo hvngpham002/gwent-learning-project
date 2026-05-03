@@ -122,7 +122,7 @@ describe("catalog validation", () => {
     expect(CATALOG_ABILITY_METADATA.skellige_storm.status).toBe("implemented");
     expect(CATALOG_ABILITY_METADATA.mardroeme.status).toBe("implemented");
     expect(CATALOG_ABILITY_METADATA.berserker.status).toBe("implemented");
-    expect(CATALOG_LEADER_ABILITY_METADATA.draw_opponent_discard.status).toBe("placeholder");
+    expect(CATALOG_LEADER_ABILITY_METADATA.cancel_leader.status).toBe("placeholder");
   });
 
   it("reports duplicate card source IDs", () => {

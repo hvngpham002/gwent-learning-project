@@ -1,12 +1,12 @@
 # Leader Ability Matrix
 
 This document is the durable cCp18 audit output, refreshed by cCp19,
-cCp20, cCp21, cCp22, and cCp23. It enumerates every official leader
-source record, classifies the placeholder leaders by implementation
-pattern, lists local-source conflicts, and records engine, legal-move,
-prompt / UI, hidden-info, AI, and simulation implications. cCp19+
-implementation specs should pull from this matrix rather than re-running
-the audit.
+cCp20, cCp21, cCp22, cCp23, and cCp24. It enumerates every official
+leader source record, classifies the placeholder leaders by
+implementation pattern, lists local-source conflicts, and records
+engine, legal-move, prompt / UI, hidden-info, AI, and simulation
+implications. cCp19+ implementation specs should pull from this matrix
+rather than re-running the audit.
 
 The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
 horn-like passives), cCp20 implemented `double_spies` as a full-game
@@ -14,10 +14,13 @@ passive (Tranche 2 first leader), cCp21 implemented
 `optimize_agile_rows` as the second Tranche 2 leader (active one-shot
 auto-place with tied-row player choice), cCp22 implemented
 `restore_discard_to_hand` as the third Tranche 2 leader (active one-shot
-prompt-based restore over own discard), and cCp23 implemented
+prompt-based restore over own discard), cCp23 implemented
 `shuffle_discards_into_decks` as the fourth Tranche 2 leader (active
 one-shot bulk discard-to-deck recycle with deterministic per-seat
-shuffle). This file is updated to reflect all five landings.
+shuffle), and cCp24 implemented `draw_opponent_discard` as the fifth
+Tranche 2 leader (active one-shot prompt-based draw over the opponent's
+discard pile, settling the cCp18 §C-2 conflict in favor of the catalog).
+This file is updated to reflect all six landings.
 
 ## Status
 
@@ -29,27 +32,27 @@ shuffle). This file is updated to reflect all five landings.
   record (Eredin: Commander of the Red Riders and Francesca: Queen of Dol
   Blathanna). `clear_weather` is both a card and leader ability ID, but only
   Foltest: Lord Commander of The North uses it as a leader.
-- Implemented executable leaders: **10** after cCp23 (each emits a legal
+- Implemented executable leaders: **11** after cCp24 (each emits a legal
   `use_leader` move): `clear_weather`, `play_frost`, `play_fog`,
   `play_rain`, `play_any_weather`, `scorch_range`, `scorch_siege`,
   `optimize_agile_rows`, `restore_discard_to_hand`,
-  `shuffle_discards_into_decks`.
+  `shuffle_discards_into_decks`, `draw_opponent_discard`.
 - Implemented passive leaders: **6** after cCp20 — `weather_half_penalty`
   on King Bran (cCp15), the four cCp19 row-wide horn-like passives
   (`double_siege` on Foltest: The Siegemaster, `double_close` on Eredin:
   Commander of the Red Riders and Francesca: Queen of Dol Blathanna, and
   `double_ranged` on Francesca: The Beautiful), and `double_spies` on
   Eredin Breacc Glas: The Treacherous (cCp20).
-- Placeholder leader records: **6** spanning **6** distinct ability IDs
-  after cCp23. (cCp23 promoted 1 leader record — Crach an Craite — and 1
-  ability ID — `shuffle_discards_into_decks` — out of placeholder.)
+- Placeholder leader records: **5** spanning **5** distinct ability IDs
+  after cCp24. (cCp24 promoted 1 leader record — Emhyr var Emreis: The
+  Relentless — and 1 ability ID — `draw_opponent_discard` — out of
+  placeholder.)
 - `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp23 — it lists every leader ability whose
+  **exhaustive** after cCp24 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
   `cancel_leader`, `discard_two_draw_one_from_deck`, `draw_extra_card`,
-  `draw_opponent_discard`, `look_three_cards`, `random_medic`. (See
-  Source Conflicts §C-7 for the cCp18 audit finding that prompted this
-  fix.)
+  `look_three_cards`, `random_medic`. (See Source Conflicts §C-7 for the
+  cCp18 audit finding that prompted this fix.)
 
 ## Implemented Baseline
 
@@ -69,6 +72,7 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | `scoiatael.francesca-findabair-hope-of-the-aen-seidhe` | Francesca Findabair: Hope of the Aen Seidhe | Scoia'tael | `optimize_agile_rows` | `none` (auto) **or** `board_row` (tied row choice) | cCp21. Auto-places when one movable common row ties the highest score across all candidate rows; emits one `board_row` move per tied best movable row otherwise. Pure no-op rows are not executable, and worse movable rows are not offered when the current no-op row is uniquely best. |
 | `monsters.eredin-bringer-of-death` | Eredin: Bringer of Death | Monsters | `restore_discard_to_hand` | `none` (opens a `choose_card` prompt over own discard) | cCp22. Active one-shot. Emits one no-target `use_leader` move when the acting seat's own discard has at least one eligible card; opens a `choose_card` prompt without consuming the leader. The leader is consumed only after a legal prompt option resolves; restored cards return to hand without resolving their abilities. Any card kind in own discard is eligible (units, heroes, specials, weather, side-deck-only / generated). |
 | `skellige.crach-an-craite` | Crach an Craite | Skellige | `shuffle_discards_into_decks` | `none` | cCp23. Active one-shot. Emits one no-target `use_leader` move when at least one seat has a non-empty discard pile; both-empty discards emit no legal move. Recycles each non-empty discard into the same seat's deck (off-owner cards follow the discard pile, not the original owner), shuffles only affected decks deterministically through the seeded RNG, leaves empty-discard seats untouched (no hidden no-op shuffle), and consumes the leader. Recycled cards do not resolve their abilities. |
+| `nilfgaard.emhyr-var-emreis-the-relentless` | Emhyr var Emreis: The Relentless | Nilfgaard | `draw_opponent_discard` | `none` (opens a `choose_card` prompt over opponent discard) | cCp24. Active one-shot. Emits one no-target `use_leader` move when the opponent discard has at least one eligible card; opens a `choose_card` prompt without consuming the leader. The leader is consumed only after a legal prompt option resolves; drawn cards return to the acting hand without resolving their abilities. Any card kind in opponent discard is eligible (units, heroes, specials, weather, side-deck-only / generated, off-owner). Settles cCp18 §C-2 (catalog wins). |
 
 ### Implemented passive leaders (no `use_leader` move)
 
@@ -220,18 +224,17 @@ Marker conventions:
 |---|---|
 | Source ID | `nilfgaard.emhyr-var-emreis-the-relentless` |
 | Faction | Nilfgaard |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp24) |
 | Catalog description | "Draw a card from your opponent's discard pile." |
-| Local rule / source text | Catalog text + `docs/gwent-rules.md` §16 / §17.1 conflict — see Source Conflicts §C-2. |
-| Likely official behavior | This is the source of conflict §C-2: the catalog calls this leader an "opponent-discard restore", while §16/§17.1 describes Emhyr var Emreis: The Relentless as a deck tutor ("Draw a Unit Card or Special Card of the player's choice **from their deck**, then shuffle"). One of the two needs a product decision (catalog vs rulebook). |
-| Active vs passive vs setup | Active one-shot. |
-| Expected legal move shape | If the catalog interpretation wins: `use_leader` opens a prompt over opponent discard. If the rulebook interpretation wins: `use_leader` opens a prompt over acting deck (a tutor). Either way, opens a `choose_card` prompt. |
-| Expected command transaction shape | `UseLeader` → `ChoosePromptOption` → card moved from chosen zone to acting hand (or discard, depending on rule decision); leader consumed. |
-| Prompt / choice UI need | New product prompt: opponent-discard browser (already rendered by cEp3 — visible to all players) OR own-deck browser (NEW; deck contents are hidden info, only the acting seat sees them in the UI). |
-| Hidden-info risk | (Catalog interpretation) low — opponent discard is already public. (Rulebook interpretation) HIGH — deck contents are hidden; the acting seat would see all 20+ deck identities, which is a brand-new hidden-info surface. AI safe-mode would need observation redaction. |
-| Implementation difficulty | medium under catalog interpretation; high under rulebook interpretation. |
-| Recommended tranche | Defer until conflict §C-2 is resolved by product. Place in Tranche 2 if catalog interpretation is chosen, or Tranche 3 if rulebook interpretation is chosen (because of hidden-info impact). |
-| Unresolved questions | See conflict §C-2. The text in `docs/gwent-rules.md` §16 attributes the deck-tutor effect to "Emhyr var Emreis, The Relentless" — but the catalog ability ID `draw_opponent_discard` says otherwise. The cCp18 audit flags this for product owner. |
+| Local rule / source text | Catalog text. The cCp18 §C-2 conflict is **settled in favor of the catalog**; the printed-rulebook deck-tutor wording is superseded. |
+| Implemented behavior (cCp24) | Active one-shot. The pure helper `getOpponentDiscardDrawCandidates({ state, seatId, catalogCards })` collects every card currently in the **opponent's** discard pile whose catalog source resolves, in opponent discard order. `getLeaderMove` emits exactly one no-target `use_leader` move when at least one candidate exists, with `target.kind === "none"`, `metadata.targetRequirement === "future_prompt"`, `metadata.targetCount === candidates.length`, and `metadata.targetLabel === "opponent discard"`. `executeLeader` rejects any non-`none` target, rejects if the candidate set is empty, then clones state, emits `ability_triggered`, builds a `pendingPrompt` (`kind === "choose_card"`, `abilityId === "draw_opponent_discard"`, one option per candidate keyed `draw-opponent-discard:<cardId>` with `label === "Draw <card name> from opponent discard"`, `target.kind === "card_instance"` with no `row` field), sets `state.pendingPrompt`, and emits `prompt_opened` — without setting `seat.leaderUsed`, without emitting `leader_used`, without moving any discard card, and without handing off the turn. `ChoosePromptOption` validates seat ownership and option legality, validates the chosen card is still in the opponent's discard pile (rejects with `EngineRuleError` and never consumes the leader if not), then clones state, moves the chosen card from the opponent discard pile to the acting seat's hand with `card_moved.reason === "leader_draw_opponent_discard_to_hand"`, sets the chosen card's `controller` to the acting seat (leaving `owner` unchanged), emits `prompt_resolved`, `ability_resolved.drew_opponent_discard`, sets `seat.leaderUsed = true`, emits `leader_used`, clears `state.pendingPrompt`, and hands off the turn through the existing `handoffTurn` helper. Drawn cards do **not** resolve their abilities (no `card_played`, no Medic chain, no Scorch, no on-play weather effect) — they enter hand and behave normally only if played later. Off-owner cards (acting-seat-owned cards physically in the opponent discard) are eligible; the chosen card moves to the acting seat's hand with `owner` preserved and `controller` reset to the acting seat. |
+| Implemented legal move shape | `use_leader` with `target.kind === "none"`, `metadata.targetRequirement === "future_prompt"`, `metadata.targetCount === candidates.length` (eligible opponent-discard count), and `metadata.targetLabel === "opponent discard"`. `getPromptMoves` emits opponent-side `card_instance` targets for `draw_opponent_discard` prompt options (`{ kind: "card_instance", side: "opponent", seatId: opponentSeat, cardId }`), distinguishing them from cCp22 restore prompts whose options use `side: "own"`. |
+| Implemented command transaction shape | `UseLeader { target: { kind: "none" } }` → reject if non-`none` target or empty opponent discard → clone state → emit `ability_triggered` → set `state.pendingPrompt` (`kind === "choose_card"`, `abilityId === "draw_opponent_discard"`) → emit `prompt_opened` → return without `leader_used`, without `seat.leaderUsed`, without moving cards, with `currentTurn` unchanged. `ChoosePromptOption` → validate seat / option / stale-target → clone → move from `discard:opponent` to `hand:acting` (`reason === "leader_draw_opponent_discard_to_hand"`) → set `controller = acting`, leave `owner` → emit `prompt_resolved` → clear `pendingPrompt` → emit `ability_resolved.drew_opponent_discard` → set `seat.leaderUsed = true` → emit `leader_used` → handoff. |
+| Prompt / choice UI need | None new. The existing generic `PromptPanel` renders the labelled `choose_card` options. The discard browser already shows opponent discard contents (public). |
+| Hidden-info risk | Low. Opponent discard contents are already public. AI-owned prompts remain hidden from the human UI through the existing prompt-move gate (`getPromptMoves` returns `[]` for any seat that does not own the prompt). `summarizeEvents` exposes only `prompt.seatId` / `prompt.abilityId` for `prompt_opened`, never option labels or card identities. |
+| Implementation difficulty (delivered) | medium (delivered in cCp24). |
+| Recommended tranche (implemented in cCp24) | Tranche 2. |
+| Settled questions | (1) Catalog vs rulebook? **Catalog wins** (settled). The Relentless draws from opponent discard, not own deck. (2) Heroes eligible? **Yes** — the catalog text says "card", not "unit", so heroes are included. (3) Specials / weather eligible? **Yes** — same reasoning. (4) Off-owner cards? **Yes** — the rule targets the physical opponent discard pile, so an acting-seat-owned Spy sitting in opponent discard is eligible. The chosen card moves to acting hand with `owner` preserved and `controller` reset to acting. (5) Empty opponent discard? **No legal move** — `getLeaderMove` emits no move when candidates is zero, so the once-per-game leader cannot no-op. Empty opponent discard with non-empty own discard still emits no legal move (own discard is not a fall-back source). (6) Leader consumption? **Only after a legal prompt option resolves** — `UseLeader` opens the prompt without setting `seat.leaderUsed`; `ChoosePromptOption` consumes the leader. (7) Drawn card abilities? **Do not resolve on draw** — the card enters hand and resolves abilities normally only if played later. |
 
 ### Emhyr var Emreis: Emperor of Nilfgaard — `look_three_cards`
 
@@ -484,72 +487,93 @@ decision §9 — `double_spies` is passive for the entire game.
   stable.
 - Effect classification: one-shot active with prompt chain.
 
-### Pattern 4 — Discard Restore (single-step prompt) — `restore_discard_to_hand` IMPLEMENTED in cCp22
+### Pattern 4 — Discard Restore (single-step prompt) — `restore_discard_to_hand` IMPLEMENTED in cCp22, `draw_opponent_discard` IMPLEMENTED in cCp24
 
 | Members | Ability IDs | Status |
 |---|---|---|
 | Eredin: Bringer of Death | `restore_discard_to_hand` | **IMPLEMENTED in cCp22** |
-| Emhyr: The Relentless (under catalog interpretation §C-2) | `draw_opponent_discard` | placeholder |
+| Emhyr: The Relentless | `draw_opponent_discard` | **IMPLEMENTED in cCp24** |
 
 **Status:** `restore_discard_to_hand` implemented in cCp22 (see
-`audit/reports/2026-05-02-cCp22-report.md`). The companion
-`draw_opponent_discard` member (Emhyr: The Relentless) remains placeholder
-pending the §C-2 product decision (catalog interpretation vs rulebook
-interpretation).
+`audit/reports/2026-05-02-cCp22-report.md`); `draw_opponent_discard`
+implemented in cCp24 (see `audit/reports/2026-05-03-cCp24-report.md`).
+The cCp18 §C-2 conflict is settled in favor of the catalog: The
+Relentless draws from opponent discard, not own deck. The two members
+share the single-step `choose_card` prompt machinery; the only
+differences are the candidate pile (own vs opponent discard) and the
+prompt-target side (`own` vs `opponent`).
 
 - Trigger: active one-shot.
-- Effect: choose one card from the acting seat's own discard pile and
-  move it back to the acting seat's hand. Restored cards do not trigger
-  their abilities — they return to hand and behave normally only if
-  played later.
+- Effect:
+  - `restore_discard_to_hand` (cCp22): choose one card from the acting
+    seat's **own** discard pile and move it to the acting seat's hand.
+  - `draw_opponent_discard` (cCp24): choose one card from the
+    **opponent's** discard pile and move it to the acting seat's hand.
+  - In both cases, the chosen card moves to the acting seat's hand; the
+    chosen card's `controller` is reset to the acting seat; the
+    immutable `owner` is preserved. Off-owner cards in the targeted
+    discard pile are eligible. Drawn / restored cards do **not**
+    trigger their abilities — they enter hand and behave normally only
+    if played later.
 - Engine surfaces:
-  - new pure helper
+  - pure helpers
     `getRestoreDiscardCandidates({ state, seatId, catalogCards })` in
-    `src/game/core/leaderDiscardRestore.ts`. Pure, deterministic,
-    discard-order output, own discard only, skips missing instances /
-    missing catalog sources, no hidden-info reads.
-  - `pendingPrompt.kind === "choose_card"` over own-discard candidates.
-  - `PendingPromptOption.target.row` is now optional. Medic
-    (`medic_revive`) prompts continue to set `row`; Restore Discard
-    (`choose_card` / `restore_discard_to_hand`) options omit `row`.
-  - new `card_moved.reason === "leader_restore_discard_to_hand"`.
+    `src/game/core/leaderDiscardRestore.ts` (own discard) and
+    `getOpponentDiscardDrawCandidates({ state, seatId, catalogCards })`
+    in `src/game/core/leaderOpponentDiscardDraw.ts` (opponent discard).
+    Both are pure, deterministic, discard-order output, skip missing
+    instances / missing catalog sources, and perform no hidden-info
+    reads.
+  - `pendingPrompt.kind === "choose_card"` with
+    `abilityId === "restore_discard_to_hand"` (cCp22) or
+    `abilityId === "draw_opponent_discard"` (cCp24).
+  - `PendingPromptOption.target.row` is optional. Medic (`medic_revive`)
+    prompts continue to set `row`; the cCp22 / cCp24 prompts omit it.
+  - `getPromptMoves` selects `target.side` by `prompt.abilityId`:
+    `side: "own"` for cCp22 restore, `side: "opponent"` for cCp24
+    draw. Both target shapes are `card_instance` with the appropriate
+    `seatId` and `cardId`.
+  - new movement reasons in the `card_moved.reason` union:
+    `"leader_restore_discard_to_hand"` (cCp22) and
+    `"leader_draw_opponent_discard_to_hand"` (cCp24).
   - `executeLeader` opens the prompt without consuming the leader;
-    `ChoosePromptOption` resolves the move and consumes the leader.
+    `ChoosePromptOption` validates the chosen card is still in the
+    expected discard pile (own for cCp22, opponent for cCp24) before
+    cloning state, then resolves the move and consumes the leader.
 - Legal-move shape: one no-target `use_leader` move
   (`target.kind === "none"`,
   `metadata.targetRequirement === "future_prompt"`,
   `metadata.targetCount === candidates.length`,
-  `metadata.targetLabel === "own discard"`) only when the acting seat's
-  own discard has at least one eligible card. Empty discard emits no
-  legal `use_leader` move.
+  `metadata.targetLabel === "own discard"` for cCp22 or `"opponent
+  discard"` for cCp24) only when the relevant discard pile has at
+  least one eligible card. Empty discard emits no legal `use_leader`
+  move; for cCp24, empty opponent discard with non-empty own discard
+  also emits no move (own discard is not a fall-back source).
 - Command shape: `UseLeader` (no target) → `pendingPrompt.choose_card`
   → `ChoosePromptOption` → card moves discard → hand → consume leader →
   hand off turn. Rejection (non-`none` target on `UseLeader`, empty
-  discard, wrong seat on `ChoosePromptOption`, invalid option ID, stale
-  target no longer in own discard, missing prompt) raises
-  `EngineRuleError` and never consumes the leader.
+  candidate set, wrong seat on `ChoosePromptOption`, invalid option ID,
+  stale target no longer in expected discard pile, missing prompt)
+  raises `EngineRuleError` and never consumes the leader.
 - Prompt / UI: existing generic `PromptPanel` renders the `choose_card`
-  options as plain labelled buttons (`"Restore <card name> to hand"`).
-  No new modal or card-tile UI. cEp3 discard browser already renders
+  options as plain labelled buttons (`"Restore <card name> to hand"`
+  for cCp22, `"Draw <card name> from opponent discard"` for cCp24). No
+  new modal or card-tile UI. cEp3 discard browser already renders both
   discard piles publicly; reuse for inspection.
-- Hidden-info risk: low. Acting seat's own discard is already public per
-  §13 / §17.5. AI-owned restore prompts remain hidden from the human UI
+- Hidden-info risk: low. Both discard piles are already public per
+  §13 / §17.5. AI-owned prompts remain hidden from the human UI
   because `getPromptMoves` returns `[]` for the non-acting seat and
   `summarizeEvents` only exposes `prompt.seatId` / `prompt.abilityId`
   for `prompt_opened`, never option labels or card identities.
 - AI: `legal-heuristic-v0` ranks `choose_prompt_option` moves by
   `option.targetStrength ?? 0` and falls back to deterministic moveId
   order. `seatObservation` derives `targetStrength` from the catalog
-  source (`catalogCardsBySourceId.get(option.target.sourceId)?.strength`),
-  which is defined for all card kinds (specials/weather have strength 0
-  by catalog convention). The existing nullish-fallback handles the
-  zero / undefined cases without crashing.
+  source for both flavors. cCp24 does not change strategic AI tuning.
 - Simulation export: prompt step shape already exists; no new export
-  fields. The new `card_moved.reason === "leader_restore_discard_to_hand"`
-  joins the engine event union and is inherited by JSONL replay
-  infrastructure.
+  fields. The new `card_moved.reason` variants join the engine event
+  union and are inherited by JSONL replay infrastructure.
 - Effect classification: one-shot active with single-step prompt
-  (delivered in cCp22).
+  (cCp22 own-discard variant; cCp24 opponent-discard variant).
 
 ### Pattern 5 — Opponent Hand Information Disclosure
 
@@ -798,9 +822,9 @@ This table compares catalog leader descriptions, leader ability metadata,
   matrix audit"; this single-row table fix qualifies but is left for
   cCp19 to bundle with the implementation).
 
-### §C-2 — Emhyr var Emreis: The Relentless
+### §C-2 — Emhyr var Emreis: The Relentless (SETTLED & IMPLEMENTED in cCp24)
 
-- `docs/gwent-rules.md` §16 reads:
+- `docs/gwent-rules.md` §16 originally read:
   > | **Emhyr var Emreis, The Relentless** | Draw a Unit Card or Special
   > Card of the player's choice **from their deck**, then shuffle the
   > deck. (Effectively a tutor for any card type.) |
@@ -810,24 +834,24 @@ This table compares catalog leader descriptions, leader ability metadata,
 - Game8 staging: `draw_opponent_discard` (matches catalog).
 - Witcher Fandom snapshot does not include leader effect text in the
   parsed pages.
-- **Classification: local sources disagree; product decision needed.**
-  The catalog vs `docs/gwent-rules.md` are inconsistent. Without a
-  third authoritative source (the Witcher 3 in-game rule), the cCp18
-  audit cannot pick a winner.
-- **Recommendation:** ask the product owner. Two options:
-  - **Option A — Catalog wins.** Implement `draw_opponent_discard` as a
-    discard-restore on the *opponent*'s discard pile (Pattern 4
-    variant). Update `docs/gwent-rules.md` §16 to attribute the deck-
-    tutor effect to a different (perhaps unimplemented) leader, OR
-    delete the §16 row.
-  - **Option B — Rulebook wins.** Re-purpose the catalog ability ID and
-    description to "Tutor: draw a card of your choice from your deck,
-    then shuffle." This becomes a new pattern (Pattern 11) — own-deck
-    tutor with hidden-info implications. Update the catalog
-    description in `nilfgaard.ts` accordingly.
-- The cCp18 audit recommends **Option B (rulebook wins)** because the
-  rulebook is generally treated as the authority in the project, but
-  this is a product decision, not a code decision.
+- **Classification (historical): local sources disagreed; product
+  decision was needed.** The catalog vs `docs/gwent-rules.md` were
+  inconsistent. The cCp18 audit could not pick a winner without a
+  product-owner call.
+- **Settled by product owner: catalog wins (Option A).** Implement
+  `draw_opponent_discard` as a discard-restore on the **opponent's**
+  discard pile (Pattern 4 variant). The deck-tutor wording in §16 is
+  superseded; §16 is updated to point at the cCp24 implementation.
+- **IMPLEMENTED in cCp24** as an active one-shot leader resolved
+  through a single-step `choose_card` prompt over the opponent's
+  discard pile. Pattern 4 / `draw_opponent_discard`. See
+  `audit/reports/2026-05-03-cCp24-report.md` and §17.12i. Heroes are
+  eligible (catalog text says "card", not "unit"). Off-owner cards in
+  the opponent discard are eligible. Drawn cards do not trigger their
+  abilities. Empty opponent discard emits no legal `use_leader` move.
+  The cCp18 audit's earlier "Option B (rulebook wins)" recommendation
+  was overridden by the product-owner call; this entry is preserved
+  as historical context only.
 
 ### §C-3 — `random_medic` ID is a misnomer
 
@@ -954,7 +978,7 @@ This table compares catalog leader descriptions, leader ability metadata,
 | 1. Row-Horn Passives | none (passive) | none | n/a | none | none | yes | none (passive) | ongoing row modifier |
 | 2. Double Spies (whole-match passive) | none (passive) | none | n/a | none | none | yes | none (passive) | ongoing whole-match scoring modifier |
 | 3. Discard Two / Draw One | `target.kind === "none"` opens prompt | new `leader_multi_step` (or extended `choose_card`) | no | yes (multi-stage hand select) | medium (deck-draw choice) | needs multi-stage policy update | new prompt-stage rows | one-shot active w/ prompt chain |
-| 4. Discard Restore (`restore_discard_to_hand` IMPLEMENTED in cCp22) | `target.kind === "none"` opens prompt | `choose_card` over own discard (PendingPromptOption.target.row now optional) | yes (existing generic PromptPanel renders labelled buttons) | none — generic `PromptPanel` handles it | low (own discard already public) | yes — `legal-heuristic-v0` ranks by `targetStrength ?? 0`, deterministic moveId fallback | new `card_moved.reason "leader_restore_discard_to_hand"` joins event union; standard prompt rows | one-shot active w/ single-step prompt |
+| 4. Discard Restore / Draw (`restore_discard_to_hand` IMPLEMENTED in cCp22, `draw_opponent_discard` IMPLEMENTED in cCp24) | `target.kind === "none"` opens prompt | `choose_card` over own discard (cCp22) or opponent discard (cCp24); PendingPromptOption.target.row optional; `getPromptMoves` selects target side by abilityId | yes (existing generic PromptPanel renders labelled buttons) | none — generic `PromptPanel` handles it | low (both discard piles already public) | yes — `legal-heuristic-v0` ranks by `targetStrength ?? 0`, deterministic moveId fallback | new `card_moved.reason "leader_restore_discard_to_hand"` (cCp22) and `card_moved.reason "leader_draw_opponent_discard_to_hand"` (cCp24) join event union; standard prompt rows | one-shot active w/ single-step prompt |
 | 5. Look Three Cards | `target.kind === "none"` | none | n/a | UI overlay on opponent-hand backs | HIGH (first persistent reveal) | acting-seat only; redaction logic must be seat-aware | new reveal sets in observations | one-shot active w/ persistent observation surface |
 | 6. Leader Cancel | `target.kind === "none"` | none | n/a | leader display update | none directly; cross-cuts every passive | yes | new `seat.leaderCancelled` flag | one-shot active w/ persistent suppression flag |
 | 7. Setup Draw Extra | none | none | n/a | none | none | yes | none beyond standard hand size | setup-time event |
@@ -1026,17 +1050,18 @@ Heroes remain immune as receivers.
 `optimize_agile_rows` (IMPLEMENTED in cCp21),
 `restore_discard_to_hand` (IMPLEMENTED in cCp22),
 `shuffle_discards_into_decks` (IMPLEMENTED in cCp23),
-`random_medic`. Plus, contingent on §C-2
-resolution, `draw_opponent_discard` (under catalog interpretation).
+`draw_opponent_discard` (IMPLEMENTED in cCp24),
+`random_medic`.
 
-**Status:** Four members (`double_spies` in cCp20,
+**Status:** Five members (`double_spies` in cCp20,
 `optimize_agile_rows` in cCp21, `restore_discard_to_hand` in cCp22,
-`shuffle_discards_into_decks` in cCp23) are implemented; the rest are
-still placeholder. After cCp23, six implemented passive leader records
-exist (King Bran + four cCp19 row-horn + cCp20 Treacherous), ten
-implemented active executable leader records exist (cCp14 weather +
-cCp16 row-Scorch × 2 + cCp7 clear-weather + cCp21 Hope of the Aen Seidhe
-+ cCp22 Bringer of Death + cCp23 Crach an Craite), and six leader
+`shuffle_discards_into_decks` in cCp23, `draw_opponent_discard` in
+cCp24) are implemented; only `random_medic` remains. After cCp24, six
+implemented passive leader records exist (King Bran + four cCp19
+row-horn + cCp20 Treacherous), eleven implemented active executable
+leader records exist (cCp14 weather + cCp16 row-Scorch × 2 + cCp7
+clear-weather + cCp21 Hope of the Aen Seidhe + cCp22 Bringer of Death
++ cCp23 Crach an Craite + cCp24 The Relentless), and five leader
 records remain placeholder.
 
 **Why second (retained for context):**
@@ -1051,7 +1076,7 @@ records remain placeholder.
   pattern).
 - Testability is good: each leader has a deterministic test seed.
 
-**Updated ordering inside Tranche 2 (post-cCp23):**
+**Updated ordering inside Tranche 2 (post-cCp24):**
 
 1. `double_spies` — IMPLEMENTED in cCp20 (whole-match passive).
 2. `optimize_agile_rows` — IMPLEMENTED in cCp21 (active one-shot
@@ -1061,8 +1086,9 @@ records remain placeholder.
 4. `shuffle_discards_into_decks` — IMPLEMENTED in cCp23 (active
    one-shot bulk discard-to-deck recycle with affected-decks-only
    deterministic shuffle).
-5. `draw_opponent_discard` — single-step prompt over opponent discard
-   per settled §C-2 (catalog wins).
+5. `draw_opponent_discard` — IMPLEMENTED in cCp24 (active one-shot
+   single-step prompt over opponent discard, per settled §C-2 catalog
+   wins).
 6. `random_medic` — passive Medic mutation per settled §5.
 
 ### Tranche 3 — Setup-Time Event and Multi-Step Prompt
@@ -1242,6 +1268,53 @@ cCp19+ implementation:
   the tied best rows as legal player choices." After cCp21, eight
   leader records remain placeholder. See
   `audit/reports/2026-05-02-cCp21-report.md` for details.
+- 2026-05-03 (cCp24): `draw_opponent_discard` (Emhyr var Emreis: The
+  Relentless) promoted from `placeholder` to `implemented` as an
+  **active one-shot leader** (Pattern 4 companion to cCp22). New pure
+  helper `getOpponentDiscardDrawCandidates({ state, seatId,
+  catalogCards })` in `src/game/core/leaderOpponentDiscardDraw.ts`
+  collects every card currently in the **opponent's** discard pile
+  whose catalog source resolves, in opponent discard order, skipping
+  missing instances and missing catalog sources. Any card kind in
+  opponent discard is eligible — units, heroes, specials, weather,
+  side-deck-only / generated cards, and off-owner cards (acting-seat-
+  owned cards physically in the opponent discard pile).
+  `getLeaderMove` emits exactly one no-target `use_leader` move
+  (`targetRequirement === "future_prompt"`,
+  `targetCount === candidates.length`,
+  `targetLabel === "opponent discard"`) when the opponent discard is
+  non-empty; empty opponent discard emits no legal move (even if own
+  discard has cards). `executeLeader` opens a `pendingPrompt`
+  (`kind === "choose_card"`,
+  `abilityId === "draw_opponent_discard"`, one option per candidate
+  keyed `draw-opponent-discard:<cardId>` with label
+  `"Draw <card name> from opponent discard"`) **without** consuming
+  the leader; `currentTurn` stays on the acting seat while the prompt
+  is pending. `getPromptMoves` selects opponent-side `card_instance`
+  targets for `draw_opponent_discard` prompts while preserving cCp22
+  restore prompts' own-side target shape and Medic prompts'
+  row-bearing targets. `ChoosePromptOption` validates the chosen card
+  is still in the opponent's discard pile (rejects with
+  `EngineRuleError` if not — leader untouched), moves it from opponent
+  discard to acting hand with the new `card_moved.reason ===
+  "leader_draw_opponent_discard_to_hand"`, sets the chosen card's
+  `controller` to the acting seat (leaving `owner` unchanged), emits
+  `prompt_resolved`, `ability_resolved.drew_opponent_discard`,
+  sets `seat.leaderUsed = true`, emits `leader_used`, clears the
+  pending prompt, and hands off the turn. Drawn cards do **not**
+  resolve their abilities — they enter hand and behave normally only
+  if played later. The `card_moved.reason` event union grows to
+  include `"leader_draw_opponent_discard_to_hand"`. The official
+  promotion manifest adds
+  `nilfgaard.emhyr-var-emreis-the-relentless` to
+  `executableLeaderSourceIds` (now 11) and removes
+  `draw_opponent_discard` from `placeholderLeaderAbilityIds` (now 5).
+  Pattern 4 marked IMPLEMENTED for both members (cCp22 own-discard
+  and cCp24 opponent-discard variants). Settled product decision
+  §C-2 reaffirmed: catalog wins; the printed-rulebook deck-tutor
+  wording is superseded. After cCp24, five leader records remain
+  placeholder. See `audit/reports/2026-05-03-cCp24-report.md` for
+  details.
 - 2026-05-03 (cCp23): `shuffle_discards_into_decks` (Crach an Craite)
   promoted from `placeholder` to `implemented` as an **active one-shot
   leader** (Pattern 10). New pure helper

@@ -14,6 +14,7 @@ import {
 import { planOptimizeAgileRows } from "./leaderOptimizeAgile";
 import { getRestoreDiscardCandidates } from "./leaderDiscardRestore";
 import { getDiscardRecyclePlan } from "./leaderDiscardRecycle";
+import { getOpponentDiscardDrawCandidates } from "./leaderOpponentDiscardDraw";
 import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
@@ -1239,6 +1240,63 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
     return { state, events, prompt };
   }
 
+  if (leader.ability === "draw_opponent_discard") {
+    const target = command.target as LegalMoveTarget | undefined;
+    if (target && target.kind !== "none") {
+      throw new EngineRuleError("invalid_target", "Draw Opponent Discard leader does not accept a target.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        target,
+      });
+    }
+
+    const candidates = getOpponentDiscardDrawCandidates({
+      state: input.state,
+      seatId,
+      catalogCards: input.catalogCards,
+    });
+    if (candidates.length === 0) {
+      throw new EngineRuleError("invalid_target", "Draw Opponent Discard has no eligible discard cards.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+      });
+    }
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const leaderCardId = seat.leader as CardInstanceId;
+
+    events.push({
+      type: "ability_triggered",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+    });
+
+    const prompt = {
+      promptId: `prompt:${state.round}:${seatId}:${leaderCardId}:draw-opponent-discard`,
+      seatId,
+      kind: "choose_card" as const,
+      sourceCardId: leaderCardId,
+      sourceId: leader.sourceId,
+      abilityId: leader.ability,
+      options: candidates.map((candidate) => ({
+        optionId: `draw-opponent-discard:${candidate.cardId}`,
+        label: candidate.label,
+        target: {
+          kind: "card_instance" as const,
+          cardId: candidate.cardId,
+          sourceId: candidate.sourceId,
+        },
+      })),
+    };
+    state.pendingPrompt = prompt;
+    events.push({ type: "prompt_opened", prompt });
+
+    return { state, events, prompt };
+  }
+
   if (leader.ability === "shuffle_discards_into_decks") {
     const target = command.target as LegalMoveTarget | undefined;
     if (target && target.kind !== "none") {
@@ -1350,6 +1408,22 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
       throw new EngineRuleError(
         "invalid_target",
         "Restore Discard To Hand target card is no longer in the acting seat's discard pile.",
+        { command, promptId: prompt.promptId, cardId: targetCardId },
+      );
+    }
+  }
+
+  if (prompt.kind === "choose_card" && prompt.abilityId === "draw_opponent_discard") {
+    const option = prompt.options.find((entry) => entry.optionId === command.optionId);
+    const targetCardId = option?.target.cardId;
+    const instance = targetCardId ? input.state.cardsById[targetCardId] : undefined;
+    const opponentSeatId: SeatId = opponentOf(command.seatId);
+    const inOpponentDiscard =
+      instance && instance.zone.kind === "discard" && instance.zone.seat === opponentSeatId;
+    if (!inOpponentDiscard) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Draw Opponent Discard target card is no longer in the opponent's discard pile.",
         { command, promptId: prompt.promptId, cardId: targetCardId },
       );
     }

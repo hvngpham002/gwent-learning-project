@@ -250,10 +250,10 @@ describe("authentic deck builder view model", () => {
   it("reports non-implemented card and leader abilities as warnings", () => {
     const plannedCard = currentCatalogCards.find((card) => card.abilities.includes("muster_roach"));
     // Pick any placeholder Nilfgaard leader (no Northern Realms leader is still
-    // placeholder after cCp19). Emhyr: The Relentless (`draw_opponent_discard`)
-    // is currently placeholder.
+    // placeholder after cCp19). Emhyr: Emperor of Nilfgaard
+    // (`look_three_cards`) is still placeholder after cCp24.
     const placeholderLeader = currentCatalogLeaders.find(
-      (leader) => leader.faction === "nilfgaard" && leader.ability === "draw_opponent_discard",
+      (leader) => leader.faction === "nilfgaard" && leader.ability === "look_three_cards",
     );
     expect(plannedCard).toBeDefined();
     expect(placeholderLeader).toBeDefined();
@@ -270,7 +270,19 @@ describe("authentic deck builder view model", () => {
   });
 
   it("keeps current Nilfgaard playable even with placeholder leader warning", () => {
-    const stats = validateDeckPreset(currentNilfgaardDeckPreset);
+    // The current Nilfgaard preset now uses Emhyr: The Relentless, which was
+    // promoted to `implemented` in cCp24. To exercise the placeholder-leader
+    // warning path, override the preset's leader to a still-placeholder
+    // Nilfgaard leader: Emhyr: Emperor of Nilfgaard (`look_three_cards`).
+    const placeholderLeader = currentCatalogLeaders.find(
+      (leader) => leader.faction === "nilfgaard" && leader.ability === "look_three_cards",
+    );
+    expect(placeholderLeader).toBeDefined();
+
+    const stats = validateDeckPreset({
+      ...currentNilfgaardDeckPreset,
+      leaderSourceId: placeholderLeader!.sourceId,
+    });
 
     expect(stats.playable).toBe(true);
     expect(stats.issues).toEqual(

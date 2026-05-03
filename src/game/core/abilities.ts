@@ -1035,4 +1035,43 @@ export const resolvePromptOption = ({
     }
     return;
   }
+
+  if (prompt.kind === "choose_card" && prompt.abilityId === "draw_opponent_discard") {
+    const drawnId = option.target.cardId;
+    const drawn = state.cardsById[drawnId];
+    const opponentSeatId = opponentOf(seatId);
+    if (!drawn || drawn.zone.kind !== "discard" || drawn.zone.seat !== opponentSeatId) {
+      // Defense-in-depth: `commands.choosePromptOption` already validates the
+      // target card is in the opponent's discard pile before mutation. If the
+      // resolver is invoked from a direct test or future caller with stale
+      // state, no-op rather than mutating.
+      return;
+    }
+    drawn.controller = seatId;
+    moveCard(state, events, drawnId, { kind: "hand", seat: seatId }, "leader_draw_opponent_discard_to_hand");
+    events.push({ type: "prompt_resolved", promptId: prompt.promptId, seatId, optionId });
+    state.pendingPrompt = null;
+
+    if (prompt.sourceId) {
+      events.push({
+        type: "ability_resolved",
+        sourceId: prompt.sourceId,
+        cardId: prompt.sourceCardId ?? drawnId,
+        abilityId: prompt.abilityId,
+        outcome: "drew_opponent_discard",
+      });
+    }
+
+    const seat = state.seats[seatId];
+    seat.leaderUsed = true;
+    if (prompt.sourceCardId) {
+      events.push({
+        type: "leader_used",
+        seatId,
+        leaderCardId: prompt.sourceCardId,
+        abilityId: prompt.abilityId,
+      });
+    }
+    return;
+  }
 };
