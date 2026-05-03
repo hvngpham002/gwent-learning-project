@@ -1,12 +1,12 @@
 # Leader Ability Matrix
 
 This document is the durable cCp18 audit output, refreshed by cCp19,
-cCp20, cCp21, cCp22, cCp23, cCp24, and cCp25. It enumerates every
-official leader source record, classifies the placeholder leaders by
-implementation pattern, lists local-source conflicts, and records
-engine, legal-move, prompt / UI, hidden-info, AI, and simulation
-implications. cCp19+ implementation specs should pull from this matrix
-rather than re-running the audit.
+cCp20, cCp21, cCp22, cCp23, cCp24, cCp25, and cCp26. It enumerates
+every official leader source record, classifies the placeholder
+leaders by implementation pattern, lists local-source conflicts, and
+records engine, legal-move, prompt / UI, hidden-info, AI, and
+simulation implications. cCp19+ implementation specs should pull from
+this matrix rather than re-running the audit.
 
 The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
 horn-like passives), cCp20 implemented `double_spies` as a full-game
@@ -24,7 +24,10 @@ and cCp25 implemented `random_medic` as the sixth and final Tranche 2
 leader (whole-match passive Medic mutation that randomizes non-hero
 Medic targets from own discard, settling the cCp18 §C-3 conflict in
 favor of the Medic-mutation reading). **Tranche 2 is complete after
-cCp25.** This file is updated to reflect all seven landings.
+cCp25.** cCp26 opens Tranche 3 with `draw_extra_card` (Pattern 7)
+implemented as a setup-time hand-size modifier on Francesca Findabair:
+Daisy of the Valley. This file is updated to reflect all eight
+landings.
 
 ## Status
 
@@ -42,23 +45,29 @@ cCp25.** This file is updated to reflect all seven landings.
   `optimize_agile_rows`, `restore_discard_to_hand`,
   `shuffle_discards_into_decks`, `draw_opponent_discard`. (cCp25 added
   no executable leader; `random_medic` is implemented as a passive.)
-- Implemented passive leaders: **7** after cCp25 — `weather_half_penalty`
-  on King Bran (cCp15), the four cCp19 row-wide horn-like passives
-  (`double_siege` on Foltest: The Siegemaster, `double_close` on Eredin:
-  Commander of the Red Riders and Francesca: Queen of Dol Blathanna, and
-  `double_ranged` on Francesca: The Beautiful), `double_spies` on Eredin
-  Breacc Glas: The Treacherous (cCp20), and `random_medic` on Emhyr var
-  Emreis: Invader of the North (cCp25).
-- Placeholder leader records: **4** spanning **4** distinct ability IDs
-  after cCp25. (cCp25 promoted 1 leader record — Emhyr var Emreis:
-  Invader of the North — and 1 ability ID — `random_medic` — out of
-  placeholder, completing Tranche 2.)
+- Implemented passive leaders: **7** after cCp25 (unchanged in cCp26)
+  — `weather_half_penalty` on King Bran (cCp15), the four cCp19
+  row-wide horn-like passives (`double_siege` on Foltest: The
+  Siegemaster, `double_close` on Eredin: Commander of the Red Riders
+  and Francesca: Queen of Dol Blathanna, and `double_ranged` on
+  Francesca: The Beautiful), `double_spies` on Eredin Breacc Glas: The
+  Treacherous (cCp20), and `random_medic` on Emhyr var Emreis: Invader
+  of the North (cCp25).
+- Implemented setup-time leaders: **1** after cCp26 — `draw_extra_card`
+  on Francesca Findabair: Daisy of the Valley (cCp26). This is a new
+  manifest bucket distinct from passive scoring policies; the leader's
+  effect fires during `startMatch` initial draw rather than during
+  play.
+- Placeholder leader records: **3** spanning **3** distinct ability IDs
+  after cCp26. (cCp26 promoted 1 leader record — Francesca Findabair:
+  Daisy of the Valley — and 1 ability ID — `draw_extra_card` — out of
+  placeholder, opening Tranche 3.)
 - `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp25 — it lists every leader ability whose
+  **exhaustive** after cCp26 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
-  `cancel_leader`, `discard_two_draw_one_from_deck`, `draw_extra_card`,
-  `look_three_cards`. (See Source Conflicts §C-7 for the cCp18 audit
-  finding that prompted this fix.)
+  `cancel_leader`, `discard_two_draw_one_from_deck`, `look_three_cards`.
+  (See Source Conflicts §C-7 for the cCp18 audit finding that prompted
+  this fix.)
 
 ## Implemented Baseline
 
@@ -91,6 +100,12 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | `scoiatael.francesca-findabair-the-beautiful` | Francesca Findabair: The Beautiful | Scoia'tael | `double_ranged` | scoring pipeline | cCp19. Same shape as `double_siege` but on the friendly ranged row. |
 | `monsters.eredin-breacc-glas-the-treacherous` | Eredin Breacc Glas: The Treacherous | Monsters | `double_spies` | scoring pipeline | cCp20. Derived from leader identity through `getDoubleSpiesPolicyBySeat`; whole-match passive that applies a ×2 multiplier to every battlefield non-hero Spy unit, on both board sides and all rows, regardless of owner or controller. Heroes remain immune. The multiplier does not stack ×4 if both seats somehow have the policy. The score breakdown's `modifiers` list carries `"leader_double_spies"` when the multiplier applies. Never sets `seat.leaderUsed` and never emits `leader_used`. |
 | `nilfgaard.emhyr-var-emreis-invader-of-the-north` | Emhyr var Emreis: Invader of the North | Nilfgaard | `random_medic` | Medic resolution path | cCp25. Whole-match passive Medic mutation derived from leader identity through `hasRandomMedicPolicyForSeat`. While this leader is the seat's leader, every non-hero Medic source controlled by that seat revives a **random eligible non-hero Unit** from the seat's own discard (uniform over candidate cards through the engine's seeded RNG; deterministic row fallback `close → ranged → siege` for multi-row targets) instead of opening a player-choice Medic prompt. Spy placement still flips to the opponent board side and resolves Spy draw; `controller` becomes the acting seat with `owner` preserved. **Hero Medic sources are unaffected** and continue to use the normal Medic prompt. The leader emits no `use_leader` move and never sets `seat.leaderUsed`. Settles the cCp18 §C-3 conflict in favor of the Medic-mutation reading. |
+
+### Implemented setup-time leaders (no `use_leader` move; effect fires during `startMatch`)
+
+| Source ID | Name | Faction | Ability | Effect surface | Notes |
+|---|---|---|---|---|---|
+| `scoiatael.francesca-findabair-daisy-of-the-valley` | Francesca Findabair: Daisy of the Valley | Scoia'tael | `draw_extra_card` | `startMatch` initial draw | cCp26. Setup-time hand-size modifier derived from leader identity through the new pure helper `getInitialHandDrawCountForLeader` in `src/game/core/leaderSetup.ts`. The seat draws 11 initial cards (top of the seeded-RNG-shuffled deck) instead of 10 before mulligan opens. Mulligan budget is unchanged at two redraws. The leader emits no `use_leader` move, never sets `seat.leaderUsed`, and never emits `leader_used`. Distinct manifest bucket from passive scoring policies (`implementedSetupLeaderSourceIds`). |
 
 ## Placeholder Leader Matrix
 
@@ -344,18 +359,18 @@ Marker conventions:
 |---|---|
 | Source ID | `scoiatael.francesca-findabair-daisy-of-the-valley` |
 | Faction | Scoia'tael |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp26, setup-time) |
 | Catalog description | "Draw 1 extra card at the start of the battle." |
-| Local rule / source text | Classic Witcher 3 / Gwent text: "Draw 1 extra card at the beginning of the battle." Setup-time event, fires before the mulligan or during initial draw. |
-| Likely official behavior | *Derived*: setup-time effect that increases the seat's initial hand size from 10 to 11 *before* the mulligan window opens. Does not produce a legal `use_leader` move; never sets `leaderUsed`. |
+| Local rule / source text | Classic Witcher 3 / Gwent text: "Draw 1 extra card at the beginning of the battle." Setup-time event, fires during `startMatch` initial draw before the mulligan window opens. |
+| Implemented behavior (cCp26) | **Setup-time initial hand-size modifier.** During `startMatch`, the engine consults the new pure helper `getInitialHandDrawCountForLeader({ leaderSourceId, catalogLeaders })` exported from `src/game/core/leaderSetup.ts`. The helper looks up the leader by source ID and returns `BASE_INITIAL_HAND_SIZE + 1` (i.e. 11) only when the resolved leader's `ability` is `draw_extra_card`; otherwise it returns the base 10. Setup uses the helper-derived count to slice the seat's already-shuffled deck top: the affected seat draws 11 initial cards (the next deterministic card off the seeded-RNG-shuffled top) and the deck shrinks by 11. Mulligan budget is unchanged — `mulligansUsed` starts at 0 and the seat can redraw at most two cards through the existing one-card mulligan flow. The leader emits no `use_leader` move, never sets `seat.leaderUsed`, and never emits `leader_used`; manual `UseLeader` rejects through the existing unsupported-leader path without state mutation. The match phase remains `mulligan` after `startMatch`. The 11th card is never chosen by prompt, kind, faction, strength, row, or ability — it is whatever the deterministic shuffle put on top. Tiny test decks shorter than 11 cards do not throw solely because of `draw_extra_card`; the existing `slice` behavior draws the available cards. |
 | Active vs passive vs setup | Setup-time event. |
-| Expected legal move shape | None. |
-| Expected command transaction shape | None at runtime. The effect is wired into `setup.ts` initial-draw computation; the seat draws 11 cards instead of 10. |
+| Implemented legal move shape | None. The leader emits no `use_leader` move at any phase. |
+| Implemented command transaction shape | None at runtime. The effect is wired into `setup.ts` initial-draw computation through the new `leaderSetup` helper module. |
 | Prompt / choice UI need | None. |
-| Hidden-info risk | None. |
-| Implementation difficulty | low. Just a setup-time hand-size adjustment. |
-| Recommended tranche | Tranche 3 (Setup / passive). |
-| Unresolved questions | (1) Does the extra card come from the deck top or a chosen card? Recommendation: deck top, deterministic with the existing seeded RNG. (2) Does the mulligan budget grow accordingly (3 redraws instead of 2)? No — the rulebook gives 2 redraws regardless of hand size. (3) Interaction with Crach an Craite (`shuffle_discards_into_decks`) — not relevant; that's a separate active leader. |
+| Hidden-info risk | None. Hand-size disclosure is already part of the public observation surface; the engine does not introduce a new public observation, UI label, AI observation, recent-activity summary, or simulation export field. |
+| Implementation difficulty | low (delivered in cCp26). |
+| Recommended tranche (implemented in cCp26) | Tranche 3 (Setup-Time Event and Multi-Step Prompt). |
+| Settled questions | (1) Extra card source: **deck top** through the existing seeded RNG shuffle. No prompt and no chosen-card path. (2) Mulligan budget: **unchanged at 2 redraws** regardless of hand size. (3) No new event types, no UI prompt machinery, and no AI heuristic change required. (4) Manifest classification is **`implementedSetupLeaderSourceIds`**, a new bucket distinct from passive scoring policies and active executable leaders. |
 
 ### King Bran (already implemented, listed above)
 
@@ -648,26 +663,54 @@ prompt-target side (`own` vs `opponent`).
 - Effect classification: one-shot active that flips a persistent
   suppression flag.
 
-### Pattern 7 — Setup-Time Hand-Size Modifier
+### Pattern 7 — Setup-Time Hand-Size Modifier (IMPLEMENTED in cCp26)
 
 | Members | Ability IDs |
 |---|---|
-| Francesca: Daisy of the Valley | `draw_extra_card` |
+| Francesca: Daisy of the Valley | **IMPLEMENTED in cCp26** — `draw_extra_card` |
 
-- Trigger: setup-time event during initial draw.
-- Effect: seat draws 11 cards instead of 10 before mulligan opens.
+**Status:** `draw_extra_card` implemented in cCp26 (see
+`audit/reports/2026-05-03-cCp26-report.md`) as a **setup-time initial
+hand-size modifier**. cCp26 opens Tranche 3.
+
+- Trigger: setup-time event during `startMatch` initial draw.
+- Effect: the affected seat draws 11 cards instead of 10 before
+  mulligan opens. The mulligan budget is unchanged at two redraws.
 - Engine surfaces:
-  - `setup.ts` initial-draw counts must consult leader identity and bump
-    by 1 when the seat's leader is `draw_extra_card`.
-  - mulligan budget unchanged (still 2 redraws).
-- Legal-move shape: none.
-- Command shape: none.
-- Prompt / UI: none.
-- Hidden-info risk: none.
-- AI: no change.
-- Simulation export: hand sizes already exposed in observations; one extra
-  hand entry is invisible to the schema.
-- Effect classification: setup-time event.
+  - new pure helper module `src/game/core/leaderSetup.ts` exporting
+    `DRAW_EXTRA_CARD_LEADER_SOURCE_ID`, `BASE_INITIAL_HAND_SIZE`, and
+    `getInitialHandDrawCountForLeader({ leaderSourceId,
+    catalogLeaders, baseDrawCount? })`. The helper looks up the
+    leader by source ID and returns `baseDrawCount + 1` only when
+    the resolved leader's `ability` is `draw_extra_card`; otherwise
+    it returns the base count. Missing catalog entries, other
+    abilities, or any inconsistent input fall back to the base.
+  - `src/game/core/setup.ts` replaces the hard-coded `10` with the
+    helper-derived per-seat draw count and keeps the rest of the
+    setup pipeline unchanged (instantiate → shuffle → slice with the
+    helper count → emit `card_moved.reason === "initial_draw"` per
+    drawn card → emit `initial_hand_drawn` → roll initial turn → set
+    phase to `mulligan`).
+- Legal-move shape: none. The leader emits no `use_leader` move at
+  any phase.
+- Command shape: none. The setup helper runs once at `startMatch`;
+  manual `UseLeader` rejects through the existing unsupported-leader
+  path without state mutation.
+- Prompt / UI: none. Mulligan UI naturally renders 11 cards plus the
+  existing keep-hand and one-card mulligan options (1 + 11 = 12 legal
+  mulligan moves on the first tick).
+- Hidden-info risk: none. Hand-size disclosure is already part of the
+  public observation surface; the engine does not introduce a new
+  public observation, UI label, AI observation, recent-activity
+  summary, or simulation export field.
+- AI: no change. `legal-heuristic-v0` consumes the 11-card hand
+  through the existing legal-move generator without code change.
+- Simulation export: hand sizes already exposed in observations; one
+  extra hand entry is invisible to the schema. No new event types.
+- Effect classification: setup-time event. New manifest bucket
+  `implementedSetupLeaderSourceIds` (1 entry: Daisy of the Valley)
+  records this distinctly from passive scoring policies and active
+  executable leaders.
 
 ### Pattern 8 — Passive Random Medic Mutation (IMPLEMENTED in cCp25)
 
@@ -1136,21 +1179,26 @@ either `draw_extra_card` (Pattern 7, setup-time hand-size modifier) or
 6. `random_medic` — IMPLEMENTED in cCp25 (whole-match passive Medic
    mutation, per settled §5; settles §C-3).
 
-### Tranche 3 — Setup-Time Event and Multi-Step Prompt
+### Tranche 3 — Setup-Time Event and Multi-Step Prompt (IN PROGRESS)
 
-**Members:** `draw_extra_card` (Pattern 7), `discard_two_draw_one_from_deck`
-(Pattern 3).
+**Members:** `draw_extra_card` (Pattern 7, **IMPLEMENTED in cCp26**),
+`discard_two_draw_one_from_deck` (Pattern 3, remaining).
+
+**Status:** cCp26 implements `draw_extra_card` as a setup-time hand-size
+modifier on Francesca Findabair: Daisy of the Valley. The remaining
+member is `discard_two_draw_one_from_deck` (Eredin: Destroyer of
+Worlds), which requires the engine's first multi-stage prompt.
 
 **Why third:**
 
 - `draw_extra_card` is trivial to implement (one branch in `setup.ts`)
   but gives a complete cross-tranche test exercise: setup-time leaders
   must not produce a `use_leader` move and must not flip `leaderUsed`,
-  same as King Bran.
+  same as King Bran. **Delivered in cCp26.**
 - `discard_two_draw_one_from_deck` requires the engine's first
   multi-stage prompt. The work is non-trivial but isolated; doing it
   here keeps the first hidden-info-disclosure leaders (Tranche 4) free
-  of prompt-stage churn.
+  of prompt-stage churn. **Recommended next.**
 
 ### Tranche 4 — Hidden-Info Disclosure and Suppression
 
@@ -1265,6 +1313,39 @@ cCp19+ implementation:
 
 ## Change Log
 
+- 2026-05-03 (cCp26): `draw_extra_card` (Francesca Findabair: Daisy of
+  the Valley) promoted from `placeholder` to `implemented` as a
+  **setup-time initial hand-size modifier** (Pattern 7 marked
+  IMPLEMENTED). New pure helper module `src/game/core/leaderSetup.ts`
+  exporting `DRAW_EXTRA_CARD_LEADER_SOURCE_ID`,
+  `BASE_INITIAL_HAND_SIZE`, and `getInitialHandDrawCountForLeader`.
+  `src/game/core/setup.ts` replaces the hard-coded `10` with the
+  helper-derived per-seat draw count, so the affected seat draws 11
+  initial cards (the next deterministic card off the seeded-RNG-
+  shuffled deck top) instead of 10 before mulligan opens. The
+  mulligan budget is unchanged at two redraws; legal mulligan moves
+  naturally include one-card mulligan options for all 11 hand cards
+  (1 keep-hand + 11 one-card mulligans = 12 legal moves on the first
+  tick). The leader emits no `use_leader` legal move, never sets
+  `seat.leaderUsed`, and never emits `leader_used`; manual `UseLeader`
+  rejects through the existing unsupported-leader path without state
+  mutation. The 11th card is never chosen by prompt, kind, faction,
+  strength, row, or ability — it is whatever the deterministic
+  shuffle put on top. Tiny test decks shorter than 11 cards do not
+  throw solely because of `draw_extra_card`; the existing `slice`
+  behavior draws available cards. Setup events reuse existing types
+  (`card_moved.reason === "initial_draw"` per drawn card and
+  `initial_hand_drawn` with `cardIds.length === 11`); no new event
+  types. The `OfficialLeaderPromotionManifest` introduces a new
+  bucket `implementedSetupLeaderSourceIds` (1 entry: Daisy of the
+  Valley) distinct from `executableLeaderSourceIds` and
+  `implementedPassiveLeaderSourceIds`. `implementedLeaderSourceIds`
+  becomes the sorted union of all three (now 11 + 7 + 1 = 19), and
+  `placeholderLeaderAbilityIds` shrinks from 4 to 3 (removes
+  `draw_extra_card`). Pattern 7 marked IMPLEMENTED. Tranche 3 opens;
+  the remaining Tranche 3 member is `discard_two_draw_one_from_deck`
+  (Pattern 3). After cCp26, three leader records remain placeholder.
+  See `audit/reports/2026-05-03-cCp26-report.md` for details.
 - 2026-05-03 (cCp25): `random_medic` (Emhyr var Emreis: Invader of the
   North) promoted from `placeholder` to `implemented` as a **whole-match
   passive Medic mutation** (Pattern 8, rewritten from "Random Special

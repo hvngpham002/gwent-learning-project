@@ -291,8 +291,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   draw_extra_card: {
     id: "draw_extra_card",
     name: "Draw Extra Card",
-    status: "placeholder",
-    description: "Draws an additional card from the deck.",
+    status: "implemented",
+    description: "Setup-time initial hand-size modifier. While this leader is the seat's leader, the seat draws 11 cards from the top of the already-shuffled deck during `startMatch` instead of the base 10 before mulligan opens. The mulligan budget is unchanged at two redraws. The leader emits no `use_leader` legal move, never sets `seat.leaderUsed`, and never emits `leader_used`. There is no prompt and no card-by-card target choice; the extra card is the next deterministic card off the seeded-RNG-shuffled deck top.",
   },
   shuffle_discards_into_decks: {
     id: "shuffle_discards_into_decks",

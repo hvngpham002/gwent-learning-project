@@ -12,3 +12,4 @@ export * from "./leaderDiscardRestore";
 export * from "./leaderDiscardRecycle";
 export * from "./leaderOpponentDiscardDraw";
 export * from "./leaderRandomMedic";
+export * from "./leaderSetup";

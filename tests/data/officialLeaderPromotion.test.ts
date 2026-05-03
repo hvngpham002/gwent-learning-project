@@ -60,11 +60,10 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp25", () => {
+  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp26", () => {
     [
       "cancel_leader",
       "discard_two_draw_one_from_deck",
-      "draw_extra_card",
       "look_three_cards",
     ].forEach((ability) => {
       const metadata =
@@ -76,7 +75,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, cCp22 restore_discard_to_hand, cCp23 shuffle_discards_into_decks, cCp24 draw_opponent_discard, and cCp25 random_medic", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, cCp22 restore_discard_to_hand, cCp23 shuffle_discards_into_decks, cCp24 draw_opponent_discard, cCp25 random_medic, and cCp26 draw_extra_card", () => {
     [
       "clear_weather",
       "play_frost",
@@ -95,6 +94,7 @@ describe("official leader promotion (cBp5)", () => {
       "shuffle_discards_into_decks",
       "draw_opponent_discard",
       "random_medic",
+      "draw_extra_card",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -103,7 +103,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("active executable, passive implemented, and combined implemented leaders match expected sets", () => {
+  it("active executable, passive implemented, setup-time implemented, and combined implemented leaders match expected sets", () => {
     const implementedLeaders = currentCatalogLeaders.filter(
       (leader) => CATALOG_LEADER_ABILITY_METADATA[leader.ability].status === "implemented",
     );
@@ -121,6 +121,7 @@ describe("official leader promotion (cBp5)", () => {
         "northern-realms.foltest-son-of-medell",
         "northern-realms.foltest-the-siegemaster",
         "northern-realms.foltest-the-steel-forged",
+        "scoiatael.francesca-findabair-daisy-of-the-valley",
         "scoiatael.francesca-findabair-hope-of-the-aen-seidhe",
         "scoiatael.francesca-findabair-pureblood-elf",
         "scoiatael.francesca-findabair-queen-of-dol-blathanna",
@@ -189,6 +190,9 @@ describe("official leader promotion (cBp5)", () => {
       "scoiatael.francesca-findabair-the-beautiful",
       "skellige.king-bran",
     ]);
+    expect([...officialLeaderPromotionManifest.implementedSetupLeaderSourceIds].sort()).toEqual([
+      "scoiatael.francesca-findabair-daisy-of-the-valley",
+    ]);
     expect([...officialLeaderPromotionManifest.implementedLeaderSourceIds].sort()).toEqual(
       [
         "monsters.eredin-breacc-glas-the-treacherous",
@@ -203,6 +207,7 @@ describe("official leader promotion (cBp5)", () => {
         "northern-realms.foltest-son-of-medell",
         "northern-realms.foltest-the-siegemaster",
         "northern-realms.foltest-the-steel-forged",
+        "scoiatael.francesca-findabair-daisy-of-the-valley",
         "scoiatael.francesca-findabair-hope-of-the-aen-seidhe",
         "scoiatael.francesca-findabair-pureblood-elf",
         "scoiatael.francesca-findabair-queen-of-dol-blathanna",
@@ -215,7 +220,6 @@ describe("official leader promotion (cBp5)", () => {
       [
         "cancel_leader",
         "discard_two_draw_one_from_deck",
-        "draw_extra_card",
         "look_three_cards",
       ].sort(),
     );
@@ -243,6 +247,9 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
       "random_medic",
+    );
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
+      "draw_extra_card",
     );
   });
 

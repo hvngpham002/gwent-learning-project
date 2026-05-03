@@ -1,5 +1,6 @@
 import type { CatalogCardSource, CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
 
+import { getInitialHandDrawCountForLeader } from "./leaderSetup";
 import { createSeededRng, shuffleWithRng } from "./rng";
 import type {
   BoardSide,
@@ -225,9 +226,13 @@ export const startMatch = (config: MatchConfig): EngineTransaction => {
       moveCard(cardsById, events, cardId, { kind: "deck", seat: seat.seatId }, "shuffle");
     });
 
-    const drawn = seat.deck.slice(0, 10);
+    const drawCount = getInitialHandDrawCountForLeader({
+      leaderSourceId: seat.leaderSourceId,
+      catalogLeaders: config.catalog.leaders,
+    });
+    const drawn = seat.deck.slice(0, drawCount);
     seat.hand = drawn;
-    seat.deck = seat.deck.slice(10);
+    seat.deck = seat.deck.slice(drawCount);
 
     drawn.forEach((cardId) => {
       moveCard(cardsById, events, cardId, { kind: "hand", seat: seat.seatId }, "initial_draw");

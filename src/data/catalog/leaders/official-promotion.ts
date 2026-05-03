@@ -19,8 +19,13 @@ export interface OfficialLeaderPromotionManifest {
   // Passive implemented leaders: rule-effect is on for the whole match through
   // the engine but does not produce a `use_leader` legal move.
   readonly implementedPassiveLeaderSourceIds: readonly string[];
-  // Union of active + passive implemented leaders. Convenience set for code or
-  // tests that need to know "is this leader's ability implemented at all?".
+  // Setup-time implemented leaders: rule-effect fires during `startMatch`
+  // initial draw rather than during play. They produce no `use_leader` move
+  // and never set `seat.leaderUsed`.
+  readonly implementedSetupLeaderSourceIds: readonly string[];
+  // Union of active + passive + setup-time implemented leaders. Convenience
+  // set for code or tests that need to know "is this leader's ability
+  // implemented at all?".
   readonly implementedLeaderSourceIds: readonly string[];
   readonly placeholderLeaderAbilityIds: readonly string[];
 }
@@ -109,15 +114,26 @@ const implementedPassiveLeaderSourceIds: readonly string[] = [
   "skellige.king-bran",
 ];
 
-// Union of active executable + passive implemented leaders. Use this set when
-// asking "is this leader's ability implemented in the engine at all?".
+// Setup-time implemented leaders: leaders whose ability metadata is
+// `implemented` but whose effect fires during `startMatch` initial draw
+// rather than during play. They produce no `use_leader` move and never set
+// `seat.leaderUsed`. cCp26 introduces this bucket with Francesca Findabair:
+// Daisy of the Valley (`draw_extra_card`).
+const implementedSetupLeaderSourceIds: readonly string[] = [
+  "scoiatael.francesca-findabair-daisy-of-the-valley",
+];
+
+// Union of active executable + passive implemented + setup-time implemented
+// leaders. Use this set when asking "is this leader's ability implemented in
+// the engine at all?".
 const implementedLeaderSourceIds: readonly string[] = [
   ...executableLeaderSourceIds,
   ...implementedPassiveLeaderSourceIds,
+  ...implementedSetupLeaderSourceIds,
 ].slice().sort();
 
 // Leader ability IDs whose `CATALOG_LEADER_ABILITY_METADATA.status` is still
-// `placeholder` after cCp25. cCp14 promoted `play_any_weather` to implemented;
+// `placeholder` after cCp26. cCp14 promoted `play_any_weather` to implemented;
 // cCp15 promoted `weather_half_penalty` (passive); cCp16 promoted `scorch_range`
 // and `scorch_siege`; cCp19 promotes `double_siege`, `double_close`, and
 // `double_ranged`; cCp20 promotes `double_spies` (passive); cCp21 promotes
@@ -127,17 +143,18 @@ const implementedLeaderSourceIds: readonly string[] = [
 // `draw_opponent_discard` (active executable, prompt-based over opponent
 // discard, settling the cCp18 §C-2 conflict in favor of the catalog); cCp25
 // promotes `random_medic` (passive Medic mutation, settling the cCp18 §C-3
-// conflict in favor of the Medic-mutation reading) and completes Tranche 2.
-// The cCp18 audit (§C-7) flagged that this array previously listed only the
-// cBp5-introduced placeholders; cCp19 backfilled the pre-cBp5 placeholders
-// so the manifest now exhaustively reflects every placeholder leader ability
-// ID, and cCp20/cCp21/cCp22/cCp23/cCp24/cCp25 keep it exhaustive after
-// removing `double_spies`, `optimize_agile_rows`, `restore_discard_to_hand`,
-// `shuffle_discards_into_decks`, `draw_opponent_discard`, and `random_medic`.
+// conflict in favor of the Medic-mutation reading) and completes Tranche 2;
+// cCp26 promotes `draw_extra_card` (setup-time hand-size modifier) and starts
+// Tranche 3. The cCp18 audit (§C-7) flagged that this array previously listed
+// only the cBp5-introduced placeholders; cCp19 backfilled the pre-cBp5
+// placeholders so the manifest now exhaustively reflects every placeholder
+// leader ability ID, and cCp20/cCp21/cCp22/cCp23/cCp24/cCp25/cCp26 keep it
+// exhaustive after removing `double_spies`, `optimize_agile_rows`,
+// `restore_discard_to_hand`, `shuffle_discards_into_decks`,
+// `draw_opponent_discard`, `random_medic`, and `draw_extra_card`.
 const placeholderLeaderAbilityIds: readonly string[] = [
   "cancel_leader",
   "discard_two_draw_one_from_deck",
-  "draw_extra_card",
   "look_three_cards",
 ];
 
@@ -150,6 +167,7 @@ export const officialLeaderPromotionManifest: OfficialLeaderPromotionManifest = 
   countsByFaction,
   executableLeaderSourceIds,
   implementedPassiveLeaderSourceIds,
+  implementedSetupLeaderSourceIds,
   implementedLeaderSourceIds,
   placeholderLeaderAbilityIds,
 };

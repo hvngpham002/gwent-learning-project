@@ -343,6 +343,7 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 | **Eredin Breacc Glas: The Treacherous** | The catalog ability `double_spies` is a **whole-match passive** (cCp20): every battlefield non-hero card whose source includes the `spy` ability receives a ×2 multiplier on every scoring tick, on both board sides and all rows, regardless of owner or controller. Hero Spies are unaffected (Hero immunity, §17.1). The leader emits no `use_leader` move and never sets `seat.leaderUsed`. See §17.12e. |
 | **Crach an Craite** | The catalog ability `shuffle_discards_into_decks` is an **active one-shot leader** (cCp23). When fired, every non-empty discard pile is moved into the same seat's deck and that seat's deck is shuffled deterministically through the engine's seeded RNG; an empty-discard seat is **not** shuffled. A card moves to the deck of the seat whose discard it currently occupies — Spies and other off-owner cards recycle into the discard-pile seat's deck, with `owner` preserved and `controller` reset to the destination seat. Hand, deck, side deck, removed-from-game, board, row horns, weather zone, and leader zone are not touched. The leader emits no legal `use_leader` move when **both** discard piles are empty; a single non-empty discard is enough to enable it. Recycled cards do not resolve their abilities (no `card_played`); they behave normally only if drawn and played later. Skellige's round-three return §17.18 still operates on whatever is in discard at future round-end. See §17.12h. |
 | **Emhyr var Emreis, Invader of the North** | The catalog ability `random_medic` is a **whole-match passive Medic mutation** (cCp25). While this leader is the seat's leader, every **non-hero** Medic source controlled by that seat revives a **random eligible non-hero Unit** from that seat's own discard pile (uniform over candidate cards through the engine's seeded RNG; deterministic row fallback `close → ranged → siege` for multi-row targets) instead of opening a player-choice Medic prompt. Spy placement still flips the revived card to the opponent board side and resolves Spy draw; `controller` becomes the acting seat with `owner` preserved. **Hero Medic sources are unaffected** and continue to use the normal Medic prompt. The leader emits no `use_leader` move and never sets `seat.leaderUsed`. The cCp18 §C-3 conflict is settled in favor of the Medic-mutation reading; the older "random Special replay from discard" wording is superseded. See §17.12j. |
+| **Francesca Findabair, Daisy of the Valley** | The catalog ability `draw_extra_card` is a **setup-time initial hand-size modifier** (cCp26). While this leader is the seat's leader, the seat draws **11 cards** (not 10) from the top of the already-shuffled deck during `startMatch` initial draw, before mulligan opens. The extra card is the next deterministic card off the seeded-RNG-shuffled deck top — there is no prompt, no card-by-card choice, and no faction/strength/row filtering. The mulligan budget is unchanged at two redraws. The leader emits no `use_leader` legal move, never sets `seat.leaderUsed`, and never emits `leader_used`. See §17.12k. |
 
 ---
 
@@ -1240,6 +1241,88 @@ random selection over own discard does not leak hidden information.
 Random Medic emits no prompt events, so AI-owned and human-owned
 random Medic resolutions look identical from the spectator side.
 `summarizeEvents` does not gain new fields.
+
+### 17.12k Draw Extra Card Setup Leader (cCp26)
+
+`scoiatael.francesca-findabair-daisy-of-the-valley` (Francesca
+Findabair: Daisy of the Valley) carries the `draw_extra_card` leader
+ability. cCp26 promotes the metadata from `placeholder` to
+`implemented` as a **setup-time initial hand-size modifier**, opening
+Tranche 3 of `docs/leader-ability-matrix.md`.
+
+Effect contract:
+
+- **Setup-time classification.** The leader's effect fires during
+  `startMatch` initial draw. It is **not** an active `use_leader`
+  command and **not** an ongoing whole-match passive. The leader emits
+  no `use_leader` legal move, never sets `seat.leaderUsed`, and never
+  emits `leader_used`. Manual `UseLeader` attempts continue to reject
+  through the existing unsupported-leader path without state mutation.
+  This is a new bucket distinct from the cCp15 King Bran / cCp19
+  row-horn / cCp20 `double_spies` / cCp25 `random_medic` passive
+  scoring derivations and from the active executable leaders.
+- **Initial draw count = 11.** During `startMatch`, the engine
+  computes the seat-specific draw count using the new pure helper
+  `getInitialHandDrawCountForLeader({ leaderSourceId, catalogLeaders })`
+  exported from `src/game/core/leaderSetup.ts`. The helper looks up
+  the leader by source ID and returns `BASE_INITIAL_HAND_SIZE + 1`
+  (i.e. 11) only when the resolved leader's `ability` is
+  `draw_extra_card`; otherwise it returns the base 10. Missing
+  catalog entries, other abilities, or any inconsistent setup input
+  fall back to the base 10. The helper is faction-agnostic and
+  name-agnostic; the catalog ability ID is the only switch.
+- **Top-of-shuffled-deck behavior.** The extra card is the next card
+  from the top of the already-shuffled deck. The shuffle uses the
+  existing seeded RNG flow (`createSeededRng(seed)` then
+  `shuffleWithRng(deck, rng)`); `draw_extra_card` does **not**
+  re-shuffle, does **not** call `Math.random`, and does **not**
+  advance RNG outside the existing shuffle and initial-turn roll.
+  There is no prompt, no card-kind / faction / strength / row /
+  ability filter — the 11th card is whatever the deterministic
+  shuffle put on top after the first 10 were taken.
+- **Determinism.** For a given seed and deck list, the Daisy seat's
+  setup is byte-for-byte deterministic. When two configs differ only
+  in leader identity, Daisy's first 10 hand cards match the
+  equivalent non-Daisy seat's first 10 hand cards exactly; Daisy's
+  11th hand card matches the next card that would otherwise have
+  remained at the top of the non-Daisy seat's deck.
+- **Mulligan budget unchanged.** `seat.mulligansUsed` starts at 0.
+  The seat can redraw at most two cards total through the existing
+  sequential one-card mulligan flow, mirroring every other leader.
+  `draw_extra_card` does **not** add a third redraw. Keep-hand still
+  completes mulligan normally. The match phase remains `mulligan`
+  after `startMatch`. Legal mulligan moves naturally include
+  one-card mulligan options for all 11 hand cards (1 keep-hand + 11
+  one-card mulligans = 12 legal moves on the first mulligan tick;
+  the cap of two total redraws applies as usual).
+- **Event contract.** Setup events reuse existing types: `card_moved`
+  with `reason === "initial_draw"` for each drawn card and
+  `initial_hand_drawn` with `cardIds.length === 11` for the affected
+  seat. No new event type is introduced.
+- **Robustness on tiny decks.** If a malformed or test deck has
+  fewer than 11 cards, the engine does **not** throw solely because
+  of `draw_extra_card`; the existing `slice` behavior draws the
+  available deck cards (e.g. a 4-card deck under Daisy yields a
+  4-card hand and an empty deck). Production decks always have
+  enough cards for an 11-card initial draw.
+
+Hidden-info safety: hand-size disclosure is already part of the
+public observation surface (every seat's hand count is visible to
+the opponent), so the extra card does not create a new disclosure.
+Raw engine setup transactions already include internal initial-hand
+card IDs for each seat; cCp26 does not introduce a new public
+observation, UI label, AI observation, recent-activity summary, or
+simulation export field. Seat observations and UI hand rendering
+continue to expose own hand identities to the acting seat and
+opponent hand count/backs only.
+
+Manifest classification: `draw_extra_card` is **not** in
+`implementedPassiveLeaderSourceIds` because it is a setup-time event,
+not a whole-match scoring policy. cCp26 introduces a new manifest
+bucket `implementedSetupLeaderSourceIds` (currently 1 entry) so
+setup-time leaders are accounted for distinctly from passive scoring
+derivations and active executable leaders. `implementedLeaderSourceIds`
+remains the union of active + passive + setup-time.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 
