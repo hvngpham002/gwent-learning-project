@@ -164,7 +164,11 @@ describe("official Game8 catalog staging import", () => {
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.shuffle_discards_into_decks).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.draw_opponent_discard).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.draw_extra_card).toBeUndefined();
-    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.discard_two_draw_one_from_deck).toBeGreaterThan(0);
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.discard_two_draw_one_from_deck).toBeUndefined();
+    // Sentinel: at least one placeholder leader ability still appears as
+    // unsupported. After cCp27, `cancel_leader` and `look_three_cards`
+    // remain placeholder; pick `look_three_cards` as the sentinel.
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.look_three_cards).toBeGreaterThan(0);
   });
 
   it("assigns every official candidate a porting status", () => {

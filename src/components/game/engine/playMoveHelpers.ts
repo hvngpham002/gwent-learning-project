@@ -97,6 +97,16 @@ export const describePlayTarget = (
     return `${SIDE_LABELS[target.side]} ${cardName}${rowLabel}`;
   }
 
+  if (target.kind === "card_instance_set") {
+    const names = target.cardIds.map((cardId) => cardLookup.get(cardId)?.name ?? cardId);
+    return names.length === 1 ? `Discard ${names[0]}` : `Discard ${names.join(" + ")}`;
+  }
+
+  if (target.kind === "deck_card_instance") {
+    const cardName = cardLookup.get(target.cardId)?.name ?? "deck card";
+    return `Deck ${cardName}`;
+  }
+
   if (target.kind === "deck_card_source") {
     return `Deck ${target.sourceId}`;
   }

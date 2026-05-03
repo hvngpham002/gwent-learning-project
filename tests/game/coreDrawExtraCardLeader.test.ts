@@ -190,20 +190,19 @@ describe("draw_extra_card metadata and manifest (cCp26)", () => {
     );
   });
 
-  it("placeholder list has exactly the three remaining placeholder abilities", () => {
+  it("placeholder list has exactly the two remaining placeholder abilities (after cCp27)", () => {
     expect([...officialLeaderPromotionManifest.placeholderLeaderAbilityIds].sort()).toEqual([
       "cancel_leader",
-      "discard_two_draw_one_from_deck",
       "look_three_cards",
     ]);
   });
 
-  it("has the expected manifest counts after cCp26", () => {
-    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(11);
+  it("has the expected manifest counts after cCp27", () => {
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(12);
     expect(officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds).toHaveLength(7);
     expect(officialLeaderPromotionManifest.implementedSetupLeaderSourceIds).toHaveLength(1);
-    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(19);
-    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toHaveLength(3);
+    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(20);
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toHaveLength(2);
   });
 });
 

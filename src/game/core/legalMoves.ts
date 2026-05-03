@@ -19,6 +19,7 @@ import { planOptimizeAgileRows, type OptimizeAgileRowsCandidate } from "./leader
 import { getRestoreDiscardCandidates } from "./leaderDiscardRestore";
 import { getDiscardRecyclePlan } from "./leaderDiscardRecycle";
 import { getOpponentDiscardDrawCandidates } from "./leaderOpponentDiscardDraw";
+import { getDiscardDrawEligibility } from "./leaderDiscardDraw";
 import { calculateScores, findUnitScorchRowTargets } from "./scoring";
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
@@ -35,6 +36,21 @@ export type LegalMoveTarget =
   | { kind: "row_horn"; side: "own"; seatId: SeatId; row: CatalogRow }
   | { kind: "weather" }
   | { kind: "card_instance"; side: "own" | "opponent"; seatId: SeatId; cardId: CardInstanceId; row?: CatalogRow }
+  | {
+      // cCp27 stage 1: a 1-or-2 card hand selection (acting seat only).
+      kind: "card_instance_set";
+      side: "own";
+      seatId: SeatId;
+      cardIds: readonly CardInstanceId[];
+    }
+  | {
+      // cCp27 stage 2: a deck-card-instance selection (acting seat only).
+      // Hidden-info safe consumers must only expose this to the acting seat.
+      kind: "deck_card_instance";
+      side: "own";
+      seatId: SeatId;
+      cardId: CardInstanceId;
+    }
   | { kind: "deck_card_source"; seatId: SeatId; sourceId: string }
   | { kind: "none" };
 
@@ -99,6 +115,13 @@ export interface UseLeaderMove extends LegalMoveBase {
     currentScore?: number;
     bestScore?: number;
     candidateRows?: CatalogRow[];
+    // cCp27 multi-stage discard/draw leader: diagnostic counts only, no
+    // hidden-info disclosure — the deck identities live in the
+    // post-discard prompt and are gated by `getPromptMoves`.
+    discardMin?: number;
+    discardMax?: number;
+    handCount?: number;
+    deckCount?: number;
   };
 }
 
@@ -644,6 +667,37 @@ const getLeaderMove = (
     ];
   }
 
+  if (leader.ability === "discard_two_draw_one_from_deck") {
+    const eligibility = getDiscardDrawEligibility({ state, seatId });
+    if (!eligibility.canUse) {
+      return [];
+    }
+
+    return [
+      {
+        kind: "use_leader",
+        moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+        seatId,
+        leaderCardId,
+        sourceId: leader.sourceId,
+        target: { kind: "none" },
+        label: `Use ${leader.name}`,
+        metadata: {
+          leaderName: leader.name,
+          ability: leader.ability,
+          abilityStatus: abilityMetadata.status,
+          targetRequirement: "future_prompt",
+          targetCount: eligibility.handCount + eligibility.deckCount,
+          targetLabel: "hand then deck",
+          discardMin: eligibility.minDiscardCount,
+          discardMax: eligibility.maxDiscardCount,
+          handCount: eligibility.handCount,
+          deckCount: eligibility.deckCount,
+        },
+      },
+    ];
+  }
+
   // Implemented passive leaders (cCp15 King Bran's `weather_half_penalty`,
   // cCp19 row-wide horn-like passives, cCp20 `double_spies`) do not produce a
   // `use_leader` legal move. Their effect is wired into scoring through
@@ -688,25 +742,42 @@ const getPromptMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
 
   const isOpponentDiscardPrompt =
     prompt.kind === "choose_card" && prompt.abilityId === "draw_opponent_discard";
-  const targetSide: "own" | "opponent" = isOpponentDiscardPrompt ? "opponent" : "own";
-  const targetSeatId: SeatId = isOpponentDiscardPrompt ? opposingSeatOf(seatId) : seatId;
+  const cardInstanceSide: "own" | "opponent" = isOpponentDiscardPrompt ? "opponent" : "own";
+  const cardInstanceSeatId: SeatId = isOpponentDiscardPrompt ? opposingSeatOf(seatId) : seatId;
 
   return prompt.options.map((option) => {
-    const target: LegalMoveTarget =
-      option.target.row === undefined
-        ? {
-            kind: "card_instance",
-            side: targetSide,
-            seatId: targetSeatId,
-            cardId: option.target.cardId,
-          }
-        : {
-            kind: "card_instance",
-            side: targetSide,
-            seatId: targetSeatId,
-            cardId: option.target.cardId,
-            row: option.target.row,
-          };
+    let target: LegalMoveTarget;
+    const promptOptionTarget = option.target;
+    if (promptOptionTarget.kind === "card_instance_set") {
+      target = {
+        kind: "card_instance_set",
+        side: "own",
+        seatId,
+        cardIds: promptOptionTarget.cardIds,
+      };
+    } else if (promptOptionTarget.kind === "deck_card_instance") {
+      target = {
+        kind: "deck_card_instance",
+        side: "own",
+        seatId,
+        cardId: promptOptionTarget.cardId,
+      };
+    } else if (promptOptionTarget.row === undefined) {
+      target = {
+        kind: "card_instance",
+        side: cardInstanceSide,
+        seatId: cardInstanceSeatId,
+        cardId: promptOptionTarget.cardId,
+      };
+    } else {
+      target = {
+        kind: "card_instance",
+        side: cardInstanceSide,
+        seatId: cardInstanceSeatId,
+        cardId: promptOptionTarget.cardId,
+        row: promptOptionTarget.row,
+      };
+    }
     return {
       kind: "choose_prompt_option",
       moveId: `prompt:${prompt.promptId}:${option.optionId}`,

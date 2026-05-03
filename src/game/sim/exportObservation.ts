@@ -98,7 +98,39 @@ export const buildSafeSimulationObservation = (
             ? safeCardRefForId(state, perspectiveSeatId, state.pendingPrompt.sourceCardId) ?? undefined
             : undefined,
           options: state.pendingPrompt.options.map((option, index) => {
-            const targetCard = safeCardRefForId(state, perspectiveSeatId, option.target.cardId);
+            const target = option.target;
+            if (target.kind === "card_instance_set") {
+              // cCp27 stage 1: hand-card combination, acting seat only.
+              // Expose the combined option label and aggregate strength so
+              // policy ranking still works without disclosing raw card IDs.
+              const targetStrength = target.sourceIds.reduce(
+                (sum, sourceId) => sum + (cardsBySourceId.get(sourceId)?.strength ?? 0),
+                0,
+              );
+              return {
+                optionRef: `prompt_option_${index}`,
+                label: option.label,
+                targetStrength,
+              };
+            }
+            if (target.kind === "deck_card_instance") {
+              // cCp27 stage 2: deck-card disclosure to the acting seat only.
+              // The deck zone has no public card index, so we mint a
+              // prompt-local own-deck ref keyed by option index.
+              const visibleDeckCard = safeCardRefForId(state, perspectiveSeatId, target.cardId);
+              const ownDeckCard = visibleDeckCard
+                ? { ...visibleDeckCard, cardRef: `own_deck_option_${index}` }
+                : null;
+              return {
+                optionRef: `prompt_option_${index}`,
+                label: option.label,
+                target: ownDeckCard
+                  ? { kind: "card" as const, side: "own" as const, card: ownDeckCard }
+                  : undefined,
+                targetStrength: cardsBySourceId.get(target.sourceId)?.strength,
+              };
+            }
+            const targetCard = safeCardRefForId(state, perspectiveSeatId, target.cardId);
             return {
               optionRef: `prompt_option_${index}`,
               label: option.label,
@@ -106,11 +138,11 @@ export const buildSafeSimulationObservation = (
                 ? {
                     kind: "card" as const,
                     side: "own" as const,
-                    row: option.target.row,
+                    row: target.row,
                     card: targetCard,
                   }
                 : undefined,
-              targetStrength: targetCard ? cardsBySourceId.get(option.target.sourceId)?.strength : undefined,
+              targetStrength: targetCard ? cardsBySourceId.get(target.sourceId)?.strength : undefined,
             };
           }),
         }

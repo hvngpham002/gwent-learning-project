@@ -339,6 +339,7 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 |---|---|
 | **Clan Dimun Pirate** | Its Scorch ability follows the **Special Card Scorch** rules — it affects the **whole battlefield**. **Clan Dimun Pirate cannot discard itself.** |
 | **Eredin, Bringer of Death** | Restore a card of the player's choice from their own discard pile (catalog ability `restore_discard_to_hand`). cCp22 implements this as an active one-shot leader resolved through a single-step `choose_card` prompt over the acting seat's own discard pile; **any card kind in own discard is eligible — units, heroes, specials, weather, and side-deck-only / generated cards that physically reach discard.** Heroes are included because the leader text says "card" without Medic's non-hero unit restriction. The cCp18 audit confirmed that the original printed-rulebook table mis-attributed this row to *Eredin, Destroyer of Worlds*; the correct attribution is *Eredin, Bringer of Death*. *Eredin, Destroyer of Worlds* is the discard-cost / deck-draw leader (catalog ability `discard_two_draw_one_from_deck`). See §17.12g. |
+| **Eredin, Destroyer of Worlds** | The catalog ability `discard_two_draw_one_from_deck` is an **active one-shot multi-stage prompt leader** (cCp27). Stage 1 opens a `choose_card_set` prompt over the acting seat's hand; the player discards **one or two** hand cards. Stage 2 opens a `choose_card` prompt over every remaining card in the acting seat's deck (visible only to the acting seat); the player chooses any card to draw into hand. After the draw, the remaining acting deck is shuffled through the engine's seeded RNG. Discarded hand cards do **not** trigger battlefield discard effects (no Summon, Avenger, Medic, Spy, Scorch, weather, Muster, Berserker, or Mardroeme); drawn cards do **not** trigger their abilities. Legal-use gates require at least one hand card and one deck card; empty hand or empty deck makes the leader unusable. The leader is consumed only after stage 2 resolves. See §17.12l. |
 | **Emhyr var Emreis, The Relentless** | The catalog assigns this leader the ability `draw_opponent_discard`: **draw a card from your opponent's discard pile** (not your own deck). cCp24 implements this as an **active one-shot leader** resolved through a single-step `choose_card` prompt over the **opponent's** discard pile. Any card kind physically in opponent discard is eligible — units, heroes, specials, weather, and side-deck-only / generated cards. The chosen card moves to the acting seat's hand, with `controller` reset to the acting seat and `owner` preserved. Drawn cards do **not** trigger their abilities. Empty opponent discard emits no legal `use_leader` move. The cCp18 audit recorded that an earlier printed-rulebook source said "tutor from your deck" for this same leader; the project treats the catalog as the local authority and the deck-tutor wording is superseded. The cCp18 §C-2 conflict is now settled and implemented. See §17.12i. |
 | **Eredin Breacc Glas: The Treacherous** | The catalog ability `double_spies` is a **whole-match passive** (cCp20): every battlefield non-hero card whose source includes the `spy` ability receives a ×2 multiplier on every scoring tick, on both board sides and all rows, regardless of owner or controller. Hero Spies are unaffected (Hero immunity, §17.1). The leader emits no `use_leader` move and never sets `seat.leaderUsed`. See §17.12e. |
 | **Crach an Craite** | The catalog ability `shuffle_discards_into_decks` is an **active one-shot leader** (cCp23). When fired, every non-empty discard pile is moved into the same seat's deck and that seat's deck is shuffled deterministically through the engine's seeded RNG; an empty-discard seat is **not** shuffled. A card moves to the deck of the seat whose discard it currently occupies — Spies and other off-owner cards recycle into the discard-pile seat's deck, with `owner` preserved and `controller` reset to the destination seat. Hand, deck, side deck, removed-from-game, board, row horns, weather zone, and leader zone are not touched. The leader emits no legal `use_leader` move when **both** discard piles are empty; a single non-empty discard is enough to enable it. Recycled cards do not resolve their abilities (no `card_played`); they behave normally only if drawn and played later. Skellige's round-three return §17.18 still operates on whatever is in discard at future round-end. See §17.12h. |
@@ -1323,6 +1324,143 @@ bucket `implementedSetupLeaderSourceIds` (currently 1 entry) so
 setup-time leaders are accounted for distinctly from passive scoring
 derivations and active executable leaders. `implementedLeaderSourceIds`
 remains the union of active + passive + setup-time.
+
+### 17.12l Discard Two Draw One Leader (cCp27)
+
+`monsters.eredin-destroyer-of-worlds` (Eredin: Destroyer of Worlds)
+carries the `discard_two_draw_one_from_deck` leader ability. cCp27
+promotes the metadata from `placeholder` to `implemented` as an
+**active one-shot multi-stage prompt** leader. This is the engine's
+first true two-stage prompt. cCp27 completes Tranche 3 of
+`docs/leader-ability-matrix.md`.
+
+Effect contract:
+
+- **Legal-use gates.** The leader is legal only when the acting seat
+  has at least **one** card in hand and at least **one** card in deck.
+  Hand size 0 makes the leader unusable. Deck size 0 makes the leader
+  unusable. The leader emits no `use_leader` legal move when either
+  gate fails. A manual `UseLeader` attempt rejects with
+  `EngineRuleError` and never sets `seat.leaderUsed`. Other gates
+  (phase/turn/pass/prompt) are inherited from the standard
+  `getLeaderMove` flow.
+- **Stage 1 — discard selection (1 or 2 cards).** `UseLeader { target:
+  { kind: "none" } }` clones state, emits `ability_triggered`, and
+  opens a `pendingPrompt` with `kind === "choose_card_set"`,
+  `abilityId === "discard_two_draw_one_from_deck"`,
+  `stage === "discard_selection"`. The prompt offers every legal
+  1-card discard and every legal 2-card combination in deterministic
+  acting-seat hand order: 1-card options first in hand order; 2-card
+  combinations next in ascending hand-index order, preserving each
+  pair's two card IDs in hand order. Option IDs are
+  `discard-draw:discard:<cardId>` for single-card and
+  `discard-draw:discard:<cardIdA>+<cardIdB>` for pairs. `seat.leaderUsed`
+  remains `false`, `leader_used` is **not** emitted, and the turn is
+  **not** handed off. `currentTurn` stays on the acting seat while
+  the prompt is pending. No card moves yet.
+- **Stage 1 resolution.** `ChoosePromptOption` validates seat
+  ownership, option ID legality, that exactly 1 or 2 unique cards are
+  selected, and that every selected card is still in the acting seat's
+  hand. On success, the resolver moves each selected card from hand to
+  the acting seat's discard pile with `card_moved.reason ===
+  "leader_discard_for_draw"`, sets each discarded card's `controller`
+  to the acting seat (its `owner` is preserved), emits
+  `prompt_resolved` for the discard prompt, and immediately opens
+  stage 2 over the *post-discard* deck. The leader is **not** consumed
+  yet — `seat.leaderUsed === false`, no `leader_used`, no turn handoff.
+  Discarded hand cards do **not** trigger battlefield discard effects:
+  no Summon, Avenger, Medic, Spy, Scorch, weather application, Muster,
+  Berserker, Mardroeme, Skellige round-three queueing, or any other
+  on-discard-from-board ability fires.
+- **Stage 2 — deck draw selection.** The stage 2 prompt has
+  `kind === "choose_card"`, `abilityId === "discard_two_draw_one_from_deck"`,
+  `stage === "deck_draw_selection"`, with one option per remaining
+  acting-seat deck card in deck order. Option IDs are
+  `discard-draw:draw:<cardId>`. Eligible kinds are unrestricted: units,
+  heroes, specials, weather, side-deck-only / generated cards (if they
+  somehow reached the acting seat's deck), and off-owner cards (if
+  they physically sit in the acting seat's deck). Missing instances
+  and missing catalog sources are skipped defensively. The
+  `pendingPrompt.context.discardedCardIds` carries the stage 1
+  selection so observers can describe the multi-stage flow without
+  re-deriving it.
+- **Stage 2 resolution.** `ChoosePromptOption` validates seat
+  ownership, option ID legality, and that the selected card is still
+  in the acting seat's deck. On success, the resolver moves the
+  chosen card from deck to the acting seat's hand with
+  `card_moved.reason === "leader_draw_from_deck"`, sets the chosen
+  card's `controller` to the acting seat (`owner` is preserved), then
+  shuffles the remaining acting deck through the existing seeded RNG
+  helpers (`createSeededRngFromState(state.rng.seed, state.rng.state)`
+  + `shuffleWithRng(remainingDeck, rng)`). RNG state advances only
+  when the remaining deck has ≥ 2 cards; for deck length 0 or 1,
+  `shuffleWithRng` is a deterministic no-op and `state.rng.state` is
+  preserved. The transaction emits `deck_shuffled` with
+  `reason === "leader_discard_draw"` (a distinct reason from cCp23's
+  `"leader_shuffle_into_deck"`), `prompt_resolved`,
+  `ability_resolved` with `outcome === "discarded_and_drew_card"`,
+  sets `seat.leaderUsed = true`, emits `leader_used`, clears
+  `state.pendingPrompt`, and hands off the turn through the existing
+  `handoffTurn` helper. Drawn cards do **not** trigger their abilities
+  — they enter hand and behave normally only if played later (no
+  `card_played`, no Medic, Scorch, weather, Spy, Muster, Avenger,
+  Summon, or Berserker resolution on draw).
+- **Partially resolved leader state.** Between stage 1 and stage 2
+  the engine state is partially resolved: stage 1's selected hand
+  cards are already in discard, `state.pendingPrompt` points at the
+  stage 2 deck-draw prompt, the acting seat still owns the turn,
+  `seat.leaderUsed === false`, and no `leader_used` event has fired.
+  Tests cover this state explicitly. Any non-prompt command attempted
+  during the pending stage 2 prompt rejects through the existing
+  `prompt_pending` rule guard.
+
+The legal-move target shape for the two stages:
+
+```ts
+// Stage 1 prompt option.
+target: {
+  kind: "card_instance_set",
+  side: "own",
+  seatId: actingSeat,
+  cardIds: [cardIdA] | [cardIdA, cardIdB],
+}
+
+// Stage 2 prompt option.
+target: {
+  kind: "deck_card_instance",
+  side: "own",
+  seatId: actingSeat,
+  cardId: deckCardId,
+}
+```
+
+`getPromptMoves` only emits these to the acting seat. Non-acting
+seats see an empty `legalMoves` array while either stage is open.
+
+Hidden-info safety:
+
+- The acting seat already sees its own hand and own deck identities
+  through the engine; this leader does not introduce a new public
+  disclosure. The two prompt stages are gated to the acting seat by
+  `getPromptMoves`.
+- The non-acting seat must not see prompt options for either stage.
+  `getPromptMoves` returns `[]` for any seat that does not own the
+  prompt; AI seat observations from `seatObservation.buildSeatObservation`
+  return `pendingPrompt: null` to the wrong seat.
+- Simulation export observations expose the acting seat's own deck
+  card to the acting perspective only, through a prompt-local safe
+  ref (`own_deck_option_<index>`) so raw deck instance IDs never
+  appear in the safe export. Action encoding falls back to a `none`
+  target side for both new target kinds — the prompt option's safe
+  ref lives on the observation side, not the action side, preserving
+  the existing `card_instance_set` / `deck_card_instance` / raw-id
+  redaction guarantees.
+- Recent-activity / event summaries continue to expose only
+  `prompt.seatId` and `prompt.abilityId` for `prompt_opened`, never
+  option labels or card identities.
+
+The §16 Specific Card FAQ row for *Eredin, Destroyer of Worlds* points
+at this section.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 

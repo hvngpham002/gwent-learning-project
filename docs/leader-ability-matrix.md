@@ -1,12 +1,12 @@
 # Leader Ability Matrix
 
 This document is the durable cCp18 audit output, refreshed by cCp19,
-cCp20, cCp21, cCp22, cCp23, cCp24, cCp25, and cCp26. It enumerates
-every official leader source record, classifies the placeholder
-leaders by implementation pattern, lists local-source conflicts, and
-records engine, legal-move, prompt / UI, hidden-info, AI, and
-simulation implications. cCp19+ implementation specs should pull from
-this matrix rather than re-running the audit.
+cCp20, cCp21, cCp22, cCp23, cCp24, cCp25, cCp26, and cCp27. It
+enumerates every official leader source record, classifies the
+placeholder leaders by implementation pattern, lists local-source
+conflicts, and records engine, legal-move, prompt / UI, hidden-info,
+AI, and simulation implications. cCp19+ implementation specs should
+pull from this matrix rather than re-running the audit.
 
 The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
 horn-like passives), cCp20 implemented `double_spies` as a full-game
@@ -26,7 +26,10 @@ Medic targets from own discard, settling the cCp18 §C-3 conflict in
 favor of the Medic-mutation reading). **Tranche 2 is complete after
 cCp25.** cCp26 opens Tranche 3 with `draw_extra_card` (Pattern 7)
 implemented as a setup-time hand-size modifier on Francesca Findabair:
-Daisy of the Valley. This file is updated to reflect all eight
+Daisy of the Valley. **cCp27 closes Tranche 3** with
+`discard_two_draw_one_from_deck` (Pattern 3) implemented as the
+engine's first true active multi-stage prompt leader on Eredin:
+Destroyer of Worlds. This file is updated to reflect all nine
 landings.
 
 ## Status
@@ -39,35 +42,35 @@ landings.
   record (Eredin: Commander of the Red Riders and Francesca: Queen of Dol
   Blathanna). `clear_weather` is both a card and leader ability ID, but only
   Foltest: Lord Commander of The North uses it as a leader.
-- Implemented executable leaders: **11** after cCp25 (each emits a legal
+- Implemented executable leaders: **12** after cCp27 (each emits a legal
   `use_leader` move): `clear_weather`, `play_frost`, `play_fog`,
   `play_rain`, `play_any_weather`, `scorch_range`, `scorch_siege`,
   `optimize_agile_rows`, `restore_discard_to_hand`,
-  `shuffle_discards_into_decks`, `draw_opponent_discard`. (cCp25 added
-  no executable leader; `random_medic` is implemented as a passive.)
-- Implemented passive leaders: **7** after cCp25 (unchanged in cCp26)
-  — `weather_half_penalty` on King Bran (cCp15), the four cCp19
+  `shuffle_discards_into_decks`, `draw_opponent_discard`,
+  `discard_two_draw_one_from_deck`. (cCp27 added Eredin: Destroyer of
+  Worlds with the engine's first true two-stage prompt leader.)
+- Implemented passive leaders: **7** after cCp25 (unchanged in cCp26 /
+  cCp27) — `weather_half_penalty` on King Bran (cCp15), the four cCp19
   row-wide horn-like passives (`double_siege` on Foltest: The
   Siegemaster, `double_close` on Eredin: Commander of the Red Riders
   and Francesca: Queen of Dol Blathanna, and `double_ranged` on
   Francesca: The Beautiful), `double_spies` on Eredin Breacc Glas: The
   Treacherous (cCp20), and `random_medic` on Emhyr var Emreis: Invader
   of the North (cCp25).
-- Implemented setup-time leaders: **1** after cCp26 — `draw_extra_card`
-  on Francesca Findabair: Daisy of the Valley (cCp26). This is a new
-  manifest bucket distinct from passive scoring policies; the leader's
-  effect fires during `startMatch` initial draw rather than during
-  play.
-- Placeholder leader records: **3** spanning **3** distinct ability IDs
-  after cCp26. (cCp26 promoted 1 leader record — Francesca Findabair:
-  Daisy of the Valley — and 1 ability ID — `draw_extra_card` — out of
-  placeholder, opening Tranche 3.)
+- Implemented setup-time leaders: **1** after cCp26 (unchanged in cCp27)
+  — `draw_extra_card` on Francesca Findabair: Daisy of the Valley
+  (cCp26). This is a new manifest bucket distinct from passive scoring
+  policies; the leader's effect fires during `startMatch` initial draw
+  rather than during play.
+- Placeholder leader records: **2** spanning **2** distinct ability IDs
+  after cCp27. (cCp27 promoted 1 leader record — Eredin: Destroyer of
+  Worlds — and 1 ability ID — `discard_two_draw_one_from_deck` — out
+  of placeholder, completing Tranche 3.)
 - `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp26 — it lists every leader ability whose
+  **exhaustive** after cCp27 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
-  `cancel_leader`, `discard_two_draw_one_from_deck`, `look_three_cards`.
-  (See Source Conflicts §C-7 for the cCp18 audit finding that prompted
-  this fix.)
+  `cancel_leader`, `look_three_cards`. (See Source Conflicts §C-7 for
+  the cCp18 audit finding that prompted this fix.)
 
 ## Implemented Baseline
 
@@ -208,18 +211,18 @@ Marker conventions:
 |---|---|
 | Source ID | `monsters.eredin-destroyer-of-worlds` |
 | Faction | Monsters |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp27) |
 | Catalog description | "Discard 2 cards, then draw 1 card from your deck." |
-| Local rule / source text | Catalog text + `docs/gwent-rules.md` §16 conflict — see Source Conflicts §C-1. |
-| Likely official behavior | *Derived*: active leader; player chooses 2 cards to discard from hand, then draws 1 card from the top of (or by choice from) deck. The catalog wording does not specify whether the draw is random or chosen. The Game8 staging label `discard_two_draw_one_from_deck` matches "discard cost, deck draw" semantics. The cCp18 product decision needed: chosen-discard plus blind-top-draw vs chosen-discard plus chosen-draw. |
-| Active vs passive vs setup | Active one-shot. |
-| Expected legal move shape | One `use_leader` move per legal target combination — needs a new prompt-based flow. Likely encoded as a `use_leader` command that opens a `pendingPrompt` of kind `choose_card` with two-step selection (choose 2 to discard, then optionally choose 1 to draw). Engine simpler shape: emit a single `use_leader` with `target.kind === "none"` that immediately opens a multi-step prompt. |
-| Expected command transaction shape | `UseLeader` → opens prompt → multi-step `ChoosePromptOption`. Final state: 2 hand cards discarded; 1 deck card revealed and moved to hand; `leaderUsed` set after both prompt steps resolve. |
-| Prompt / choice UI need | New product prompt: choose 2 hand cards to discard, then optionally choose deck draw. cEp8 leader-choice menu is insufficient. |
-| Hidden-info risk | Medium. Discard step is from acting hand (already visible to that player), but the deck draw exposes deck card identity; if AI uses a blind top-draw, deck ordering reveals to acting seat only. Opponent must not see acting seat's hand pre-discard or deck order post-search. |
-| Implementation difficulty | medium-high |
-| Recommended tranche | Tranche 2 (prompt-heavy hand+deck). |
-| Unresolved questions | (1) Is the deck draw chosen or blind? (2) Are the two discards required (illegal if hand has < 2)? (3) Does the leader still consume if no card was drawable (empty deck)? (4) Does the discard count for Skellige round-three return triggers? Per §17.18 the round-three return picks one card from discard; pre-discard via leader feeds that pool. |
+| Local rule / source text | Catalog text + `docs/gwent-rules.md` §16 — see also Source Conflicts §C-1 (settled). |
+| Implemented behavior (cCp27) | Active one-shot multi-stage prompt — the engine's first true two-stage prompt. The pure helper module `src/game/core/leaderDiscardDraw.ts` exports `getDiscardDrawEligibility`, `buildDiscardSelectionOptions`, and `buildDeckDrawOptions`. `getLeaderMove` emits exactly one no-target `use_leader` move when the acting seat has at least 1 card in hand and at least 1 card in deck (`target.kind === "none"`, `metadata.targetRequirement === "future_prompt"`, `metadata.targetCount === handCount + deckCount`, `metadata.targetLabel === "hand then deck"`, plus diagnostic `discardMin: 1`, `discardMax: 2`, `handCount`, `deckCount`). `executeLeader` clones state, emits `ability_triggered`, and opens stage 1: a `pendingPrompt` with `kind === "choose_card_set"`, `abilityId === "discard_two_draw_one_from_deck"`, `stage === "discard_selection"`, and `context: { minDiscardCount: 1, maxDiscardCount: 2 }`. Stage 1 options: every legal 1-card discard (option ID `discard-draw:discard:<cardId>`) followed by every legal 2-card combination (option ID `discard-draw:discard:<cardIdA>+<cardIdB>`) in deterministic acting-seat hand order. Stage 1 does **not** consume the leader (`seat.leaderUsed === false`, no `leader_used`, no turn handoff, no `card_moved` yet). `ChoosePromptOption` validates seat ownership, option legality, that the selection contains 1 or 2 unique cards, and that every selected card is still in the acting seat's hand. Stage 1 resolution moves each selected card from hand to acting discard with `card_moved.reason === "leader_discard_for_draw"`, sets each discarded card's `controller` to the acting seat (preserves `owner`), emits `prompt_resolved` for stage 1, and opens stage 2: a `pendingPrompt` with `kind === "choose_card"`, `stage === "deck_draw_selection"`, `context: { discardedCardIds }`, with one option per remaining acting-seat deck card in deck order (option ID `discard-draw:draw:<cardId>`). Discarded hand cards do **not** trigger Summon, Avenger, Medic, Spy, Scorch, weather, Muster, Berserker, Mardroeme, or any other battlefield discard effect. Stage 2 validates seat ownership, option legality, and that the chosen card is still in the acting seat's deck. Stage 2 resolution moves the chosen card from deck to acting hand with `card_moved.reason === "leader_draw_from_deck"`, sets `controller` to the acting seat (preserves `owner`), shuffles the remaining acting deck through `createSeededRngFromState(state.rng.seed, state.rng.state)` + `shuffleWithRng` (RNG advances only when remaining deck length ≥ 2; deck length 0 or 1 is a deterministic no-op), emits `deck_shuffled` with `reason === "leader_discard_draw"` (a distinct reason from cCp23's `"leader_shuffle_into_deck"`), `prompt_resolved`, `ability_resolved` with `outcome === "discarded_and_drew_card"`, sets `seat.leaderUsed = true`, emits `leader_used`, clears `state.pendingPrompt`, and hands off the turn through the existing `handoffTurn` helper. Drawn cards do **not** trigger their abilities — they enter hand and behave normally only if played later. |
+| Active vs passive vs setup | Active one-shot multi-stage. |
+| Implemented legal move shape | `use_leader` with `target.kind === "none"`, `metadata.targetRequirement === "future_prompt"`. Stage 1 prompt moves carry `target.kind === "card_instance_set"`, `side === "own"`, `cardIds: [cardIdA] | [cardIdA, cardIdB]`. Stage 2 prompt moves carry `target.kind === "deck_card_instance"`, `side === "own"`, `cardId`. `getPromptMoves` returns `[]` to the non-acting seat for both stages. |
+| Implemented command transaction shape | `UseLeader { target: { kind: "none" } }` → reject if non-`none` target, empty hand, or empty deck → clone state → emit `ability_triggered` → open stage 1 prompt (`choose_card_set` / `discard_selection`) → return without `leader_used`, without `seat.leaderUsed`, without `card_moved`, and with `currentTurn` unchanged. Stage 1 `ChoosePromptOption` → validate seat / option / 1-or-2 unique cards / cards in hand → clone → move each from hand to acting discard (`reason === "leader_discard_for_draw"`) → emit `prompt_resolved` for stage 1 → open stage 2 prompt (`choose_card` / `deck_draw_selection`) → emit `prompt_opened` → return without leader consumption or handoff (partially resolved leader state). Stage 2 `ChoosePromptOption` → validate seat / option / card in deck → clone → move from deck to acting hand (`reason === "leader_draw_from_deck"`) → shuffle remaining deck (RNG advances iff length ≥ 2) → emit `deck_shuffled` (`reason === "leader_discard_draw"`) → emit `prompt_resolved` for stage 2 → emit `ability_resolved.discarded_and_drew_card` → set `seat.leaderUsed = true` → emit `leader_used` → clear `pendingPrompt` → handoff. |
+| Prompt / choice UI need | The existing generic `PromptPanel` renders the labelled `choose_card_set` / `choose_card` options as buttons (e.g. `Discard <card>`, `Discard <card A> + <card B>`, `Draw <card> from deck`). Inspectable deck-card prompt tiles are deferred to a later Cluster E polish phase. |
+| Hidden-info risk | Acting seat already sees its own hand and own deck through the engine; the leader does not introduce a new public disclosure. The two prompt stages are gated to the acting seat by `getPromptMoves` (returns `[]` for non-acting seat). AI observations from `buildSeatObservation` return `pendingPrompt: null` to the wrong seat. Simulation export observation surfaces the acting seat's own deck card to the acting perspective only, via a prompt-local safe ref `own_deck_option_<index>` so raw deck instance IDs never reach the safe export. |
+| Implementation difficulty (delivered) | medium-high (delivered in cCp27). |
+| Recommended tranche (implemented in cCp27) | Tranche 3 (Setup-Time Event and Multi-Step Prompt; completes the tranche). |
+| Settled questions | (1) Is the deck draw chosen or blind? **Chosen.** (2) Are the two discards required? **No** — discard count is "up to two", with a minimum of one. Hand size 0 makes the leader unusable. Hand size 1 means the only legal stage 1 option is to discard that one card. (3) Does the leader still consume if no draw is possible (empty deck)? **No** — empty deck makes the leader unusable. (4) Does the discard interact with Skellige round-three return? **Yes, naturally.** Discarded hand cards land in the acting seat's discard pile through the normal `card_moved`/`reason === "leader_discard_for_draw"` event flow; if Skellige's round-three return §17.18 fires later, those cards are eligible candidates from discard. The discard step itself does not trigger any on-discard ability (no Summon, Avenger, Medic, Spy, Scorch, weather, Muster, Berserker, or Mardroeme). (5) Are drawn card abilities triggered? **No** — drawn cards return to hand and behave normally only if played later. (6) Leader consumption timing? **Only after stage 2 resolves** — opening stage 1 and resolving stage 1 do not set `seat.leaderUsed` or emit `leader_used`. (7) Remaining-deck shuffle? **Yes, after the draw**, through the engine's existing seeded RNG helpers; RNG advances only when remaining deck length ≥ 2. |
 
 ### Eredin: Bringer of Death — `restore_discard_to_hand`
 
@@ -478,36 +481,79 @@ decision §9 — `double_spies` is passive for the entire game.
   export fields required.
 - Effect classification: ongoing whole-match scoring modifier.
 
-### Pattern 3 — Deck Tutor / Discard Cost (multi-step prompt)
+### Pattern 3 — Deck Tutor / Discard Cost (multi-step prompt) — `discard_two_draw_one_from_deck` IMPLEMENTED in cCp27
 
-| Members | Ability IDs |
-|---|---|
-| Eredin: Destroyer of Worlds | `discard_two_draw_one_from_deck` |
+| Members | Ability IDs | Status |
+|---|---|---|
+| Eredin: Destroyer of Worlds | `discard_two_draw_one_from_deck` | implemented (cCp27) |
 
-- Trigger: active one-shot.
-- Effect: discard 2 hand cards (chosen) → draw 1 deck card. Whether the
-  draw is chosen or blind is a product decision.
+- Trigger: active one-shot multi-stage prompt — the engine's first true
+  two-stage prompt.
+- Implemented contract (cCp27): discard one or two hand cards (chosen
+  by the acting seat), then choose one deck card to draw, then shuffle
+  the remaining acting deck through the seeded RNG. Settles the cCp18
+  product decisions for this leader: chosen-discard plus chosen-draw;
+  discard count is 1-or-2 (minimum 1, hand size 0 makes the leader
+  unusable); empty deck makes the leader unusable; the leader is
+  consumed only after the deck draw and shuffle complete.
 - Engine surfaces:
-  - new `pendingPrompt.kind === "leader_multi_step"` (or extend
-    `choose_card` with a multi-stage payload).
-  - `executeLeader` opens a `pendingPrompt` of two stages: stage 1 expects
-    two `card_instance` selections from acting hand; stage 2 expects either
-    no input (blind top-of-deck) or one `deck_card_source` selection.
-- Legal-move shape: `use_leader` opens prompt; stages emit
-  `ChoosePromptOption` legal moves.
-- Command shape: `UseLeader` → opens prompt → multiple
-  `ChoosePromptOption` commands → finalize.
-- Prompt / UI: significant new product UI for hand multi-select and
-  optional deck browse. The existing cEp3 prompt panel shows one option
-  list at a time; multi-select is new.
-- Hidden-info risk: medium for chosen deck draw (acting deck contents
-  exposed to acting seat); none for blind top-draw. AI hand details remain
-  hidden from the human under all paths.
-- AI: `legal-heuristic-v0` would need to score multi-stage prompts; the
-  current implementation is one-shot per legal move.
-- Simulation export: new prompt-stage rows; encoding must keep stage IDs
-  stable.
-- Effect classification: one-shot active with prompt chain.
+  - new `PendingPrompt.kind === "choose_card_set"` for stage 1 with
+    `target.kind === "card_instance_set"` and 1-or-2 acting-seat hand
+    `cardIds`.
+  - new `PendingPrompt.stage === "discard_selection" | "deck_draw_selection"`
+    discriminator and an optional `context.discardedCardIds` payload
+    that stage 2 carries from stage 1.
+  - new prompt-option `target.kind === "deck_card_instance"` for
+    stage 2, with `cardId` referring to the acting seat's deck zone.
+  - new `card_moved.reason "leader_discard_for_draw"` (stage 1
+    movement) and `"leader_draw_from_deck"` (stage 2 movement).
+  - new `deck_shuffled.reason "leader_discard_draw"` (distinct from
+    cCp23's `"leader_shuffle_into_deck"`).
+  - new `ability_resolved.outcome === "discarded_and_drew_card"`.
+  - extended `LegalMoveTarget` with `card_instance_set` and
+    `deck_card_instance` variants (acting-seat-only, side `"own"`).
+  - `getPromptMoves` returns `[]` for the non-acting seat for both
+    stages.
+- Legal-move shape: one no-target `use_leader` move opens stage 1.
+  Stage 1 prompt moves are `choose_prompt_option` with
+  `target.kind === "card_instance_set"`. Stage 2 prompt moves are
+  `choose_prompt_option` with `target.kind === "deck_card_instance"`.
+- Command shape: `UseLeader { target: { kind: "none" } }` opens stage 1
+  without consuming the leader. `ChoosePromptOption` for stage 1
+  validates 1-or-2 unique acting-hand cards and resolves into stage 2
+  without consuming the leader. `ChoosePromptOption` for stage 2
+  validates the chosen deck card is still in the acting deck and
+  resolves into draw + shuffle, finalizing leader consumption and
+  handing off the turn.
+- Prompt / UI: the existing generic `PromptPanel` renders the labelled
+  options as buttons (e.g. `Discard <card>`, `Discard <card A> + <card B>`,
+  `Draw <card> from deck`); no new modal or card-tile UI was added in
+  cCp27. Inspectable deck-card prompt tiles are deferred to a later
+  Cluster E polish phase.
+- Hidden-info risk: low. The acting seat already sees its own hand and
+  own deck through the engine. Both stages are gated to the acting
+  seat by `getPromptMoves`. AI observations from `buildSeatObservation`
+  return `pendingPrompt: null` to the wrong seat. Simulation export
+  surfaces the acting seat's own deck card to the acting perspective
+  only, via a prompt-local safe ref `own_deck_option_<index>` so raw
+  deck instance IDs never appear in the safe export.
+- AI: the existing `legal-heuristic-v0` policy ranks
+  `choose_prompt_option` moves by `option.targetStrength ?? 0` with a
+  deterministic moveId fallback. `seatObservation` exposes per-option
+  `targetStrength` for stage 1 (sum of selected hand-card strengths)
+  and stage 2 (chosen deck card's catalog strength), so the heuristic
+  still picks an option deterministically without strategic timing
+  for the leader itself.
+- Simulation export: stage-1 prompt rows expose only labels and
+  aggregate `targetStrength`; stage-2 prompt rows expose the safe
+  own-deck ref described above. No raw card instance IDs are
+  exported. Validation continues to reject raw IDs through the
+  existing redaction scanner.
+- Effect classification: one-shot active with two-stage prompt chain.
+- Partially resolved leader state: between stage 1 and stage 2, the
+  selected hand cards are already in discard, `pendingPrompt` points
+  at stage 2, and `currentTurn` remains on the acting seat with
+  `seat.leaderUsed === false`. Tests cover this state explicitly.
 
 ### Pattern 4 — Discard Restore (single-step prompt) — `restore_discard_to_hand` IMPLEMENTED in cCp22, `draw_opponent_discard` IMPLEMENTED in cCp24
 
@@ -1179,15 +1225,17 @@ either `draw_extra_card` (Pattern 7, setup-time hand-size modifier) or
 6. `random_medic` — IMPLEMENTED in cCp25 (whole-match passive Medic
    mutation, per settled §5; settles §C-3).
 
-### Tranche 3 — Setup-Time Event and Multi-Step Prompt (IN PROGRESS)
+### Tranche 3 — Setup-Time Event and Multi-Step Prompt (COMPLETE)
 
 **Members:** `draw_extra_card` (Pattern 7, **IMPLEMENTED in cCp26**),
-`discard_two_draw_one_from_deck` (Pattern 3, remaining).
+`discard_two_draw_one_from_deck` (Pattern 3, **IMPLEMENTED in cCp27**).
 
-**Status:** cCp26 implements `draw_extra_card` as a setup-time hand-size
-modifier on Francesca Findabair: Daisy of the Valley. The remaining
-member is `discard_two_draw_one_from_deck` (Eredin: Destroyer of
-Worlds), which requires the engine's first multi-stage prompt.
+**Status: COMPLETE.** cCp26 implemented `draw_extra_card` as a
+setup-time hand-size modifier on Francesca Findabair: Daisy of the
+Valley. cCp27 implemented `discard_two_draw_one_from_deck` on Eredin:
+Destroyer of Worlds as the engine's first true two-stage prompt
+leader. Tranche 4 (hidden-info disclosure and suppression) is now
+the only remaining tranche.
 
 **Why third:**
 
@@ -1198,7 +1246,7 @@ Worlds), which requires the engine's first multi-stage prompt.
 - `discard_two_draw_one_from_deck` requires the engine's first
   multi-stage prompt. The work is non-trivial but isolated; doing it
   here keeps the first hidden-info-disclosure leaders (Tranche 4) free
-  of prompt-stage churn. **Recommended next.**
+  of prompt-stage churn. **Delivered in cCp27.**
 
 ### Tranche 4 — Hidden-Info Disclosure and Suppression
 
@@ -1261,6 +1309,9 @@ decisions are tracked here for the relevant later tranche.
    card to draw, then shuffle the remaining deck.** Implementable with at
    least one card in hand; zero cards in hand makes it unusable. Hidden-info
    redaction must keep the deck identities visible only to the acting seat.
+   **Implemented in cCp27** as the engine's first true two-stage prompt
+   leader (Pattern 3 IMPLEMENTED, Tranche 3 COMPLETE); see
+   `docs/gwent-rules.md` §17.12l.
 5. **`random_medic` ability ID.** **Settled: passive mutation of Medic
    effects.** The leader does not play a random Special card from
    discard. Instead, while it is the seat's leader, every Medic effect
@@ -1313,6 +1364,103 @@ cCp19+ implementation:
 
 ## Change Log
 
+- 2026-05-03 (cCp27): `discard_two_draw_one_from_deck` (Eredin: Destroyer
+  of Worlds) promoted from `placeholder` to `implemented` as the engine's
+  first **active one-shot multi-stage prompt** leader (Pattern 3 marked
+  IMPLEMENTED). cCp27 completes Tranche 3. New pure helper module
+  `src/game/core/leaderDiscardDraw.ts` exporting
+  `DISCARD_TWO_DRAW_ONE_LEADER_SOURCE_ID`, `MIN_DISCARD_COUNT`,
+  `MAX_DISCARD_COUNT`, `getDiscardDrawEligibility`,
+  `buildDiscardSelectionOptions`, and `buildDeckDrawOptions`.
+  `getLeaderMove` emits a single no-target `use_leader` move when the
+  acting seat has at least 1 hand card and at least 1 deck card,
+  `target.kind === "none"`, `metadata.targetRequirement === "future_prompt"`,
+  `metadata.targetCount === handCount + deckCount`,
+  `metadata.targetLabel === "hand then deck"`, plus diagnostic
+  `discardMin: 1`, `discardMax: 2`, `handCount`, `deckCount`. Empty
+  hand or empty deck emits no legal `use_leader` move. `executeLeader`
+  clones state, emits `ability_triggered`, and opens stage 1: a
+  `pendingPrompt` with `kind === "choose_card_set"`,
+  `stage === "discard_selection"`, `context: { minDiscardCount: 1,
+  maxDiscardCount: 2 }`, and one option per legal 1-card discard
+  followed by every 2-card combination in deterministic acting-seat
+  hand order. Stage 1 does **not** consume the leader. `ChoosePromptOption`
+  validates seat ownership, option ID legality, that the selection
+  contains 1 or 2 unique cards, and that every selected card is still
+  in the acting seat's hand. Stage 1 resolution moves each selected
+  card from hand to acting discard with `card_moved.reason ===
+  "leader_discard_for_draw"`, sets each discarded card's `controller`
+  to the acting seat (preserves `owner`), emits `prompt_resolved` for
+  stage 1, and immediately opens stage 2: a `pendingPrompt` with
+  `kind === "choose_card"`, `stage === "deck_draw_selection"`,
+  `context: { discardedCardIds }`, with one option per remaining
+  acting deck card in deck order. Discarded hand cards do **not**
+  trigger Summon, Avenger, Medic, Spy, Scorch, weather, Muster,
+  Berserker, Mardroeme, or any other battlefield discard effect.
+  Stage 2 validates seat ownership, option legality, and that the
+  chosen card is still in the acting seat's deck. Stage 2 resolution
+  moves the chosen card from deck to acting hand with
+  `card_moved.reason === "leader_draw_from_deck"`, sets `controller`
+  to the acting seat (preserves `owner`), shuffles the remaining
+  acting deck through `createSeededRngFromState` + `shuffleWithRng`
+  (RNG advances only when remaining deck length ≥ 2; deck length 0
+  or 1 is a deterministic no-op), emits `deck_shuffled` with
+  `reason === "leader_discard_draw"`, `prompt_resolved`,
+  `ability_resolved.discarded_and_drew_card`, sets `seat.leaderUsed
+  = true`, emits `leader_used`, clears `state.pendingPrompt`, and
+  hands off the turn through the existing `handoffTurn` helper. Drawn
+  cards do **not** trigger their abilities. Adds the new event
+  reasons `card_moved.reason "leader_discard_for_draw"` /
+  `"leader_draw_from_deck"` and `deck_shuffled.reason
+  "leader_discard_draw"` (distinct from cCp23's
+  `"leader_shuffle_into_deck"`). Extends `LegalMoveTarget` with two
+  new acting-seat-only target kinds: `card_instance_set` (stage 1)
+  and `deck_card_instance` (stage 2), both `side: "own"`. Extends
+  `PendingPromptTarget` with the matching prompt-option shapes,
+  introduces `PendingPromptStage`, and adds optional `stage` /
+  `context` fields on `PendingPrompt`. The `PendingPrompt.kind`
+  union grows to include `"choose_card_set"` for stage 1.
+  `getPromptMoves` returns `[]` to the non-acting seat for both
+  stages. Updates `OfficialLeaderPromotionManifest`:
+  `executableLeaderSourceIds` grows from 11 to 12 (adds Eredin:
+  Destroyer of Worlds); `implementedLeaderSourceIds` grows from 19 to
+  20; `placeholderLeaderAbilityIds` shrinks from 3 to 2 (removes
+  `discard_two_draw_one_from_deck`, leaving `cancel_leader` and
+  `look_three_cards`). Adds 49 focused tests in
+  `tests/game/coreDiscardDrawLeader.test.ts` covering metadata
+  promotion, manifest accounting, helper outcomes, eligibility gates,
+  legal-move integration, stage 1 prompt opening, stage 1 resolution
+  including off-owner cards and no-trigger of battlefield discard
+  effects, stage 2 resolution including controller / owner handling
+  and RNG advancement, deterministic deck shuffle behavior, rejection
+  paths (wrong seat, invalid option ID, stale hand card, stale deck
+  card, non-`none` UseLeader target, empty hand, empty deck, prompt
+  pending), legal prompt move shapes for both stages, hidden-info
+  safety (non-acting seat sees no prompt moves), and regression
+  guards (cCp22 restore-discard prompt, cCp24 draw-opponent-discard
+  prompt, Foltest Lord Commander `clear_weather`, no `Math.random`
+  in `src/game/core`). Updates `tests/data/officialLeaderPromotion.test.ts`
+  (placeholder list shrinks to 2 entries, executable set grows to 12
+  with Destroyer of Worlds, implemented union grows to 20, sanity
+  assertion that `placeholderLeaderAbilityIds` does not contain
+  `discard_two_draw_one_from_deck`); updates
+  `tests/data/officialCatalogImport.test.ts`
+  (`unsupportedLeaderAbilityCounts.discard_two_draw_one_from_deck` is
+  undefined; new sentinel `look_three_cards.unsupported > 0`);
+  updates `tests/game/coreDrawExtraCardLeader.test.ts` and
+  `tests/game/coreRandomMedicLeader.test.ts` placeholder-list and
+  manifest-count assertions to reflect the cCp27 totals (12 / 7 / 1
+  / 20 / 2). Updates living docs: `docs/gwent-rules.md` adds §17.12l
+  documenting the active multi-stage contract and a §16 row for
+  Eredin: Destroyer of Worlds; `docs/leader-ability-matrix.md` flips
+  the Destroyer of Worlds row to `implemented (cCp27)` with the full
+  implemented contract, marks Pattern 3 IMPLEMENTED, marks Tranche 3
+  COMPLETE, refines Settled Product Decision §4 status, and appends
+  this change-log entry. Pattern 3 marked IMPLEMENTED. Tranche 3
+  marked COMPLETE. Tranche 4 (`look_three_cards`, `cancel_leader`)
+  is the only remaining tranche. After cCp27, two leader records
+  remain placeholder. See `audit/reports/2026-05-03-cCp27-report.md`
+  for details.
 - 2026-05-03 (cCp26): `draw_extra_card` (Francesca Findabair: Daisy of
   the Valley) promoted from `placeholder` to `implemented` as a
   **setup-time initial hand-size modifier** (Pattern 7 marked

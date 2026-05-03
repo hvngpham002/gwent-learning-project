@@ -92,6 +92,8 @@ const TARGET_GROUP_LABELS: Record<LegalMoveTarget["kind"], string> = {
   row_horn: "Horn Slots",
   weather: "Weather",
   card_instance: "Cards",
+  card_instance_set: "Hand Selections",
+  deck_card_instance: "Deck Cards",
   deck_card_source: "Deck Sources",
   none: "Global",
 };

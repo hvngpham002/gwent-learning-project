@@ -60,12 +60,31 @@ const buildPromptSummary = (
     kind: prompt.kind,
     abilityId: prompt.abilityId,
     sourceCardId: prompt.sourceCardId,
-    options: prompt.options.map((option) => ({
-      optionId: option.optionId,
-      label: option.label,
-      targetCardId: option.target.cardId,
-      targetStrength: cardsBySourceId.get(option.target.sourceId)?.strength,
-    })),
+    options: prompt.options.map((option) => {
+      const target = option.target;
+      if (target.kind === "card_instance_set") {
+        // cCp27 stage 1: a hand-card combination. Expose target strengths
+        // as the sum of the selected cards' strengths so the heuristic
+        // policy can rank multi-card discards deterministically. The acting
+        // seat already sees its own hand, so this does not leak hidden info.
+        const targetStrength = target.sourceIds.reduce(
+          (sum, sourceId) => sum + (cardsBySourceId.get(sourceId)?.strength ?? 0),
+          0,
+        );
+        return {
+          optionId: option.optionId,
+          label: option.label,
+          targetStrength,
+        };
+      }
+      // card_instance and deck_card_instance both expose a single cardId.
+      return {
+        optionId: option.optionId,
+        label: option.label,
+        targetCardId: target.cardId,
+        targetStrength: cardsBySourceId.get(target.sourceId)?.strength,
+      };
+    }),
   };
 };
 

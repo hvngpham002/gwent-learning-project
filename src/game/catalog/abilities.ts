@@ -255,8 +255,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   discard_two_draw_one_from_deck: {
     id: "discard_two_draw_one_from_deck",
     name: "Discard Two, Draw One",
-    status: "placeholder",
-    description: "Discards two cards and draws one from the deck.",
+    status: "implemented",
+    description: "Active one-shot multi-stage prompt leader. Stage 1 opens a `choose_card_set` prompt over the acting seat's hand and the player discards one or two hand cards. Stage 2 opens a `choose_card` prompt over every remaining card in the acting seat's deck (visible only to the acting seat); the player chooses any card to draw into hand. After the draw, the remaining acting deck is shuffled deterministically through the engine's seeded RNG. Drawn cards do **not** trigger their abilities, and discarded hand cards do **not** trigger battlefield discard effects (Summon, Avenger, Medic, Spy, Scorch, weather, Muster, Berserker, Mardroeme). The leader requires at least one hand card and one deck card to use; the leader is consumed only after stage 2 resolves successfully.",
   },
   restore_discard_to_hand: {
     id: "restore_discard_to_hand",

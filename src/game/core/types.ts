@@ -116,32 +116,63 @@ export interface MatchConfig {
   };
 }
 
+export type PendingPromptStage = "discard_selection" | "deck_draw_selection";
+
+export type PendingPromptTarget =
+  | {
+      kind: "card_instance";
+      cardId: CardInstanceId;
+      sourceId: string;
+      /**
+       * Optional board row hint. Required for Medic (`medic_revive`) prompts
+       * because the resolver places the revived unit onto a specific row.
+       * cCp22 `choose_card` / `restore_discard_to_hand` and cCp24
+       * `choose_card` / `draw_opponent_discard` prompts return the chosen
+       * card to the acting seat's hand, so they omit this field.
+       */
+      row?: CatalogRow;
+    }
+  | {
+      // cCp27 stage 1 multi-card hand discard selection. Holds 1 or 2
+      // acting-seat hand card IDs in hand order.
+      kind: "card_instance_set";
+      cardIds: readonly CardInstanceId[];
+      sourceIds: readonly string[];
+    }
+  | {
+      // cCp27 stage 2 deck draw selection. Visible only to the acting seat
+      // through the prompt-move gate; export/observation surfaces redact.
+      kind: "deck_card_instance";
+      cardId: CardInstanceId;
+      sourceId: string;
+    };
+
+export interface PendingPromptContext {
+  // cCp27 stage 2 carries the cards discarded in stage 1 so the resolver
+  // and observers can describe the multi-stage flow without re-deriving it.
+  discardedCardIds?: readonly CardInstanceId[];
+  minDiscardCount?: number;
+  maxDiscardCount?: number;
+}
+
 export interface PendingPrompt {
   promptId: string;
   seatId: SeatId;
-  kind: "medic_revive" | "choose_row" | "choose_card" | "choose_option";
+  kind: "medic_revive" | "choose_row" | "choose_card" | "choose_card_set" | "choose_option";
   sourceCardId?: CardInstanceId;
   sourceId?: string;
   abilityId: string;
+  // cCp27 multi-stage prompts use this to disambiguate stage 1 (discard
+  // selection) from stage 2 (deck draw). Single-stage prompts omit it.
+  stage?: PendingPromptStage;
+  context?: PendingPromptContext;
   options: readonly PendingPromptOption[];
 }
 
 export interface PendingPromptOption {
   optionId: string;
   label: string;
-  target: {
-    kind: "card_instance";
-    cardId: CardInstanceId;
-    sourceId: string;
-    /**
-     * Optional board row hint. Required for Medic (`medic_revive`) prompts
-     * because the resolver places the revived unit onto a specific row.
-     * cCp22 `choose_card` / `restore_discard_to_hand` and cCp24
-     * `choose_card` / `draw_opponent_discard` prompts return the chosen
-     * card to the acting seat's hand, so they omit this field.
-     */
-    row?: CatalogRow;
-  };
+  target: PendingPromptTarget;
 }
 
 export interface EngineTransaction {
@@ -206,7 +237,9 @@ export type GameEvent =
         | "leader_optimize_agile"
         | "leader_restore_discard_to_hand"
         | "leader_shuffle_into_deck"
-        | "leader_draw_opponent_discard_to_hand";
+        | "leader_draw_opponent_discard_to_hand"
+        | "leader_discard_for_draw"
+        | "leader_draw_from_deck";
     }
   | {
       type: "initial_hand_drawn";
@@ -249,7 +282,11 @@ export type GameEvent =
   | { type: "card_drawn"; seatId: SeatId; cardId: CardInstanceId; sourceId: string }
   | { type: "prompt_opened"; prompt: PendingPrompt }
   | { type: "prompt_resolved"; promptId: string; seatId: SeatId; optionId: string }
-  | { type: "deck_shuffled"; seatId: SeatId; reason: "muster" | "mulligan" | "leader_shuffle_into_deck" }
+  | {
+      type: "deck_shuffled";
+      seatId: SeatId;
+      reason: "muster" | "mulligan" | "leader_shuffle_into_deck" | "leader_discard_draw";
+    }
   | {
       type: "round_resolved";
       round: number;

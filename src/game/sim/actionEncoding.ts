@@ -12,6 +12,8 @@ const sideForTarget = (target: LegalMoveTarget): "own" | "opponent" | "public" |
   if (target.kind === "weather") return "public";
   if (target.kind === "none") return "none";
   if (target.kind === "deck_card_source") return "own";
+  if (target.kind === "card_instance_set") return "own";
+  if (target.kind === "deck_card_instance") return "own";
   return target.side;
 };
 
@@ -26,6 +28,19 @@ const encodeTarget = (
   if (target.kind === "row_horn") return { kind: "row_horn", side: target.side, row: target.row };
   if (target.kind === "deck_card_source") {
     return { kind: "deck_card_source", side: "own", sourceId: target.sourceId };
+  }
+  if (target.kind === "card_instance_set") {
+    // cCp27 stage 1: hand-card combination. The action encoding hides raw
+    // card IDs by surfacing only the option label / index through the
+    // surrounding prompt ref. Encode as `none` to satisfy the existing
+    // safe-action target union without leaking raw instance IDs.
+    return { kind: "none", side: "none" };
+  }
+  if (target.kind === "deck_card_instance") {
+    // cCp27 stage 2: own-deck card disclosure. Without a stable own-deck
+    // ref in the safe action schema, fall back to `none`; the prompt
+    // option's safe own-deck ref lives on the observation side.
+    return { kind: "none", side: "none" };
   }
 
   const visibleCard = safeCardRefForId(state, perspectiveSeatId, target.cardId);

@@ -15,6 +15,12 @@ import { planOptimizeAgileRows } from "./leaderOptimizeAgile";
 import { getRestoreDiscardCandidates } from "./leaderDiscardRestore";
 import { getDiscardRecyclePlan } from "./leaderDiscardRecycle";
 import { getOpponentDiscardDrawCandidates } from "./leaderOpponentDiscardDraw";
+import {
+  buildDiscardSelectionOptions,
+  getDiscardDrawEligibility,
+  MAX_DISCARD_COUNT,
+  MIN_DISCARD_COUNT,
+} from "./leaderDiscardDraw";
 import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
@@ -1373,6 +1379,76 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
     return { state, events };
   }
 
+  if (leader.ability === "discard_two_draw_one_from_deck") {
+    const target = command.target as LegalMoveTarget | undefined;
+    if (target && target.kind !== "none") {
+      throw new EngineRuleError("invalid_target", "Discard Two Draw One leader does not accept a target.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        target,
+      });
+    }
+
+    const eligibility = getDiscardDrawEligibility({ state: input.state, seatId });
+    if (!eligibility.canUse) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Discard Two Draw One leader requires at least one card in hand and one card in deck.",
+        {
+          leaderSourceId: leader.sourceId,
+          ability: leader.ability,
+          handCount: eligibility.handCount,
+          deckCount: eligibility.deckCount,
+        },
+      );
+    }
+
+    const selectionOptions = buildDiscardSelectionOptions({
+      state: input.state,
+      seatId,
+      catalogCards: input.catalogCards,
+    });
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const leaderCardId = seat.leader as CardInstanceId;
+
+    events.push({
+      type: "ability_triggered",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+    });
+
+    const prompt = {
+      promptId: `prompt:${state.round}:${seatId}:${leaderCardId}:discard-draw:discard`,
+      seatId,
+      kind: "choose_card_set" as const,
+      sourceCardId: leaderCardId,
+      sourceId: leader.sourceId,
+      abilityId: leader.ability,
+      stage: "discard_selection" as const,
+      context: {
+        minDiscardCount: MIN_DISCARD_COUNT,
+        maxDiscardCount: MAX_DISCARD_COUNT,
+      },
+      options: selectionOptions.map((option) => ({
+        optionId: option.optionId,
+        label: option.label,
+        target: {
+          kind: "card_instance_set" as const,
+          cardIds: option.cardIds,
+          sourceIds: option.sourceIds,
+        },
+      })),
+    };
+    state.pendingPrompt = prompt;
+    events.push({ type: "prompt_opened", prompt });
+
+    return { state, events, prompt };
+  }
+
   throw new EngineRuleError("unsupported_command", "Leader ability is not yet executable.", {
     leaderSourceId: leader.sourceId,
     ability: leader.ability,
@@ -1400,7 +1476,7 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
 
   if (prompt.kind === "choose_card" && prompt.abilityId === "restore_discard_to_hand") {
     const option = prompt.options.find((entry) => entry.optionId === command.optionId);
-    const targetCardId = option?.target.cardId;
+    const targetCardId = option?.target.kind === "card_instance" ? option.target.cardId : undefined;
     const instance = targetCardId ? input.state.cardsById[targetCardId] : undefined;
     const inActingDiscard =
       instance && instance.zone.kind === "discard" && instance.zone.seat === command.seatId;
@@ -1415,7 +1491,7 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
 
   if (prompt.kind === "choose_card" && prompt.abilityId === "draw_opponent_discard") {
     const option = prompt.options.find((entry) => entry.optionId === command.optionId);
-    const targetCardId = option?.target.cardId;
+    const targetCardId = option?.target.kind === "card_instance" ? option.target.cardId : undefined;
     const instance = targetCardId ? input.state.cardsById[targetCardId] : undefined;
     const opponentSeatId: SeatId = opponentOf(command.seatId);
     const inOpponentDiscard =
@@ -1424,6 +1500,68 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
       throw new EngineRuleError(
         "invalid_target",
         "Draw Opponent Discard target card is no longer in the opponent's discard pile.",
+        { command, promptId: prompt.promptId, cardId: targetCardId },
+      );
+    }
+  }
+
+  if (
+    prompt.kind === "choose_card_set" &&
+    prompt.abilityId === "discard_two_draw_one_from_deck" &&
+    prompt.stage === "discard_selection"
+  ) {
+    const option = prompt.options.find((entry) => entry.optionId === command.optionId);
+    if (!option || option.target.kind !== "card_instance_set") {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Discard Two Draw One stage 1 prompt option has an unexpected target shape.",
+        { command, promptId: prompt.promptId },
+      );
+    }
+    const cardIds = option.target.cardIds;
+    if (cardIds.length < MIN_DISCARD_COUNT || cardIds.length > MAX_DISCARD_COUNT) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Discard Two Draw One stage 1 selection must contain 1 or 2 cards.",
+        { command, promptId: prompt.promptId, count: cardIds.length },
+      );
+    }
+    if (new Set(cardIds).size !== cardIds.length) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Discard Two Draw One stage 1 selection must not repeat the same card.",
+        { command, promptId: prompt.promptId, cardIds },
+      );
+    }
+    cardIds.forEach((cardId) => {
+      const instance = input.state.cardsById[cardId];
+      const inHand =
+        instance && instance.zone.kind === "hand" && instance.zone.seat === command.seatId;
+      if (!inHand) {
+        throw new EngineRuleError(
+          "invalid_target",
+          "Discard Two Draw One stage 1 selection card is no longer in the acting seat's hand.",
+          { command, promptId: prompt.promptId, cardId },
+        );
+      }
+    });
+  }
+
+  if (
+    prompt.kind === "choose_card" &&
+    prompt.abilityId === "discard_two_draw_one_from_deck" &&
+    prompt.stage === "deck_draw_selection"
+  ) {
+    const option = prompt.options.find((entry) => entry.optionId === command.optionId);
+    const targetCardId =
+      option?.target.kind === "deck_card_instance" ? option.target.cardId : undefined;
+    const instance = targetCardId ? input.state.cardsById[targetCardId] : undefined;
+    const inActingDeck =
+      instance && instance.zone.kind === "deck" && instance.zone.seat === command.seatId;
+    if (!inActingDeck) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Discard Two Draw One stage 2 selection card is no longer in the acting seat's deck.",
         { command, promptId: prompt.promptId, cardId: targetCardId },
       );
     }

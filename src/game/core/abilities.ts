@@ -5,6 +5,7 @@ import {
   getRandomMedicCandidates,
   hasRandomMedicPolicyForSeat,
 } from "./leaderRandomMedic";
+import { buildDeckDrawOptions } from "./leaderDiscardDraw";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
 import {
   calculateScores,
@@ -1075,6 +1076,9 @@ export const resolvePromptOption = ({
   const catalogLookup = createCardLookup(catalogCards);
 
   if (prompt.kind === "medic_revive") {
+    if (option.target.kind !== "card_instance") {
+      return;
+    }
     const revivedId = option.target.cardId;
     const revived = state.cardsById[revivedId];
     const revivedSource = catalogLookup.get(revived.sourceId);
@@ -1105,6 +1109,9 @@ export const resolvePromptOption = ({
   }
 
   if (prompt.kind === "choose_card" && prompt.abilityId === "restore_discard_to_hand") {
+    if (option.target.kind !== "card_instance") {
+      return;
+    }
     const restoredId = option.target.cardId;
     const restored = state.cardsById[restoredId];
     if (!restored || restored.zone.kind !== "discard" || restored.zone.seat !== seatId) {
@@ -1142,7 +1149,119 @@ export const resolvePromptOption = ({
     return;
   }
 
+  if (
+    prompt.kind === "choose_card_set" &&
+    prompt.abilityId === "discard_two_draw_one_from_deck" &&
+    prompt.stage === "discard_selection"
+  ) {
+    if (option.target.kind !== "card_instance_set") {
+      return;
+    }
+    const discardedCardIds = [...option.target.cardIds];
+    const stage1PromptId = prompt.promptId;
+    const sourceId = prompt.sourceId;
+    const sourceCardId = prompt.sourceCardId;
+    const abilityId = prompt.abilityId;
+
+    discardedCardIds.forEach((cardId) => {
+      const instance = state.cardsById[cardId];
+      if (!instance) {
+        return;
+      }
+      instance.controller = seatId;
+      moveCard(state, events, cardId, { kind: "discard", seat: seatId }, "leader_discard_for_draw");
+    });
+    events.push({ type: "prompt_resolved", promptId: stage1PromptId, seatId, optionId });
+
+    const deckOptions = buildDeckDrawOptions({
+      state,
+      seatId,
+      catalogCards,
+    });
+    const stage2Prompt = {
+      promptId: `${stage1PromptId}->draw`,
+      seatId,
+      kind: "choose_card" as const,
+      sourceCardId,
+      sourceId,
+      abilityId,
+      stage: "deck_draw_selection" as const,
+      context: {
+        discardedCardIds,
+      },
+      options: deckOptions.map((deckOption) => ({
+        optionId: deckOption.optionId,
+        label: deckOption.label,
+        target: {
+          kind: "deck_card_instance" as const,
+          cardId: deckOption.cardId,
+          sourceId: deckOption.sourceId,
+        },
+      })),
+    };
+    state.pendingPrompt = stage2Prompt;
+    events.push({ type: "prompt_opened", prompt: stage2Prompt });
+    return;
+  }
+
+  if (
+    prompt.kind === "choose_card" &&
+    prompt.abilityId === "discard_two_draw_one_from_deck" &&
+    prompt.stage === "deck_draw_selection"
+  ) {
+    if (option.target.kind !== "deck_card_instance") {
+      return;
+    }
+    const drawnId = option.target.cardId;
+    const drawn = state.cardsById[drawnId];
+    if (!drawn || drawn.zone.kind !== "deck" || drawn.zone.seat !== seatId) {
+      return;
+    }
+    drawn.controller = seatId;
+    moveCard(state, events, drawnId, { kind: "hand", seat: seatId }, "leader_draw_from_deck");
+    events.push({ type: "prompt_resolved", promptId: prompt.promptId, seatId, optionId });
+
+    const remainingDeck = state.seats[seatId].deck;
+    if (remainingDeck.length >= 2) {
+      const rng = createSeededRngFromState(state.rng.seed, state.rng.state);
+      state.seats[seatId].deck = shuffleWithRng(remainingDeck, rng);
+      state.rng.state = rng.getState();
+    }
+    events.push({
+      type: "deck_shuffled",
+      seatId,
+      reason: "leader_discard_draw",
+    });
+
+    state.pendingPrompt = null;
+
+    if (prompt.sourceId) {
+      events.push({
+        type: "ability_resolved",
+        sourceId: prompt.sourceId,
+        cardId: prompt.sourceCardId ?? drawnId,
+        abilityId: prompt.abilityId,
+        outcome: "discarded_and_drew_card",
+      });
+    }
+
+    const seat = state.seats[seatId];
+    seat.leaderUsed = true;
+    if (prompt.sourceCardId) {
+      events.push({
+        type: "leader_used",
+        seatId,
+        leaderCardId: prompt.sourceCardId,
+        abilityId: prompt.abilityId,
+      });
+    }
+    return;
+  }
+
   if (prompt.kind === "choose_card" && prompt.abilityId === "draw_opponent_discard") {
+    if (option.target.kind !== "card_instance") {
+      return;
+    }
     const drawnId = option.target.cardId;
     const drawn = state.cardsById[drawnId];
     const opponentSeatId = opponentOf(seatId);
