@@ -12,6 +12,7 @@ import {
   leaderRowScorchRowForAbility,
 } from "./leaderRowScorch";
 import { planOptimizeAgileRows } from "./leaderOptimizeAgile";
+import { getRestoreDiscardCandidates } from "./leaderDiscardRestore";
 import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
@@ -1180,6 +1181,63 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
     return { state, events };
   }
 
+  if (leader.ability === "restore_discard_to_hand") {
+    const target = command.target as LegalMoveTarget | undefined;
+    if (target && target.kind !== "none") {
+      throw new EngineRuleError("invalid_target", "Restore Discard To Hand leader does not accept a target.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        target,
+      });
+    }
+
+    const candidates = getRestoreDiscardCandidates({
+      state: input.state,
+      seatId,
+      catalogCards: input.catalogCards,
+    });
+    if (candidates.length === 0) {
+      throw new EngineRuleError("invalid_target", "Restore Discard To Hand has no eligible discard cards.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+      });
+    }
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const leaderCardId = seat.leader as CardInstanceId;
+
+    events.push({
+      type: "ability_triggered",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+    });
+
+    const prompt = {
+      promptId: `prompt:${state.round}:${seatId}:${leaderCardId}:restore-discard`,
+      seatId,
+      kind: "choose_card" as const,
+      sourceCardId: leaderCardId,
+      sourceId: leader.sourceId,
+      abilityId: leader.ability,
+      options: candidates.map((candidate) => ({
+        optionId: `restore:${candidate.cardId}`,
+        label: candidate.label,
+        target: {
+          kind: "card_instance" as const,
+          cardId: candidate.cardId,
+          sourceId: candidate.sourceId,
+        },
+      })),
+    };
+    state.pendingPrompt = prompt;
+    events.push({ type: "prompt_opened", prompt });
+
+    return { state, events, prompt };
+  }
+
   throw new EngineRuleError("unsupported_command", "Leader ability is not yet executable.", {
     leaderSourceId: leader.sourceId,
     ability: leader.ability,
@@ -1203,6 +1261,21 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
 
   if (prompt.promptId !== command.promptId || !prompt.options.some((option) => option.optionId === command.optionId)) {
     throw new EngineRuleError("illegal_command", "Prompt option is not legal.", { command, promptId: prompt.promptId });
+  }
+
+  if (prompt.kind === "choose_card" && prompt.abilityId === "restore_discard_to_hand") {
+    const option = prompt.options.find((entry) => entry.optionId === command.optionId);
+    const targetCardId = option?.target.cardId;
+    const instance = targetCardId ? input.state.cardsById[targetCardId] : undefined;
+    const inActingDiscard =
+      instance && instance.zone.kind === "discard" && instance.zone.seat === command.seatId;
+    if (!inActingDiscard) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Restore Discard To Hand target card is no longer in the acting seat's discard pile.",
+        { command, promptId: prompt.promptId, cardId: targetCardId },
+      );
+    }
   }
 
   assertLegal(input);

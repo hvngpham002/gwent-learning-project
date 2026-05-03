@@ -952,42 +952,87 @@ export const resolvePromptOption = ({
   }
 
   const option = prompt.options.find((candidate) => candidate.optionId === optionId);
-  if (!option || prompt.kind !== "medic_revive") {
+  if (!option) {
     return;
   }
 
-  const revivedId = option.target.cardId;
-  const revived = state.cardsById[revivedId];
   const catalogLookup = createCardLookup(catalogCards);
-  const revivedSource = catalogLookup.get(revived.sourceId);
-  const boardSeat = revivedSource?.abilities.includes("spy") ? opponentOf(seatId) : seatId;
-  revived.controller = seatId;
-  moveCard(state, events, revivedId, { kind: "board_row", seat: boardSeat, row: option.target.row }, "medic_revive");
-  events.push({ type: "prompt_resolved", promptId: prompt.promptId, seatId, optionId });
-  events.push({ type: "card_played", seatId, cardId: revivedId, target: revived.zone });
-  state.pendingPrompt = null;
 
-  const source = catalogLookup.get(prompt.sourceId ?? "");
-  if (source) {
-    events.push({
-      type: "ability_resolved",
-      sourceId: source.sourceId,
-      cardId: prompt.sourceCardId ?? revivedId,
-      abilityId: prompt.abilityId,
-      outcome: "revived_card",
-    });
+  if (prompt.kind === "medic_revive") {
+    const revivedId = option.target.cardId;
+    const revived = state.cardsById[revivedId];
+    const revivedSource = catalogLookup.get(revived.sourceId);
+    const boardSeat = revivedSource?.abilities.includes("spy") ? opponentOf(seatId) : seatId;
+    if (option.target.row === undefined) {
+      return;
+    }
+    revived.controller = seatId;
+    moveCard(state, events, revivedId, { kind: "board_row", seat: boardSeat, row: option.target.row }, "medic_revive");
+    events.push({ type: "prompt_resolved", promptId: prompt.promptId, seatId, optionId });
+    events.push({ type: "card_played", seatId, cardId: revivedId, target: revived.zone });
+    state.pendingPrompt = null;
+
+    const source = catalogLookup.get(prompt.sourceId ?? "");
+    if (source) {
+      events.push({
+        type: "ability_resolved",
+        sourceId: source.sourceId,
+        cardId: prompt.sourceCardId ?? revivedId,
+        abilityId: prompt.abilityId,
+        outcome: "revived_card",
+      });
+    }
+
+    resolveCardAbilities({ state, events, catalogCards, catalogLeaders, seatId, cardId: revivedId });
+
+    if (revived.zone.kind === "board_row") {
+      settleMardroemeRow({
+        state,
+        events,
+        catalogLookup,
+        boardSeat: revived.zone.seat,
+        row: revived.zone.row,
+        triggerCardId: revivedId,
+      });
+    }
+    return;
   }
 
-  resolveCardAbilities({ state, events, catalogCards, catalogLeaders, seatId, cardId: revivedId });
+  if (prompt.kind === "choose_card" && prompt.abilityId === "restore_discard_to_hand") {
+    const restoredId = option.target.cardId;
+    const restored = state.cardsById[restoredId];
+    if (!restored || restored.zone.kind !== "discard" || restored.zone.seat !== seatId) {
+      // Defense-in-depth: `commands.choosePromptOption` already validates the
+      // target card is in the acting seat's discard pile before mutation. If
+      // the resolver is invoked from a direct test or future caller with
+      // stale state, no-op rather than mutating.
+      return;
+    }
+    restored.controller = seatId;
+    moveCard(state, events, restoredId, { kind: "hand", seat: seatId }, "leader_restore_discard_to_hand");
+    events.push({ type: "prompt_resolved", promptId: prompt.promptId, seatId, optionId });
+    state.pendingPrompt = null;
 
-  if (revived.zone.kind === "board_row") {
-    settleMardroemeRow({
-      state,
-      events,
-      catalogLookup,
-      boardSeat: revived.zone.seat,
-      row: revived.zone.row,
-      triggerCardId: revivedId,
-    });
+    if (prompt.sourceId) {
+      events.push({
+        type: "ability_resolved",
+        sourceId: prompt.sourceId,
+        cardId: prompt.sourceCardId ?? restoredId,
+        abilityId: prompt.abilityId,
+        outcome: "restored_card",
+      });
+    }
+
+    const seat = state.seats[seatId];
+    seat.leaderUsed = true;
+    if (prompt.sourceCardId) {
+      events.push({
+        type: "leader_used",
+        seatId,
+        leaderCardId: prompt.sourceCardId,
+        abilityId: prompt.abilityId,
+      });
+    }
+    return;
   }
 };

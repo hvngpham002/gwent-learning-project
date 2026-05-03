@@ -338,7 +338,7 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 | Card | Clarification |
 |---|---|
 | **Clan Dimun Pirate** | Its Scorch ability follows the **Special Card Scorch** rules — it affects the **whole battlefield**. **Clan Dimun Pirate cannot discard itself.** |
-| **Eredin, Bringer of Death** | Restore a Unit Card **or** Special Card of the player's choice from their discard pile. (Notable — Medic is Units only and excludes Heroes; Eredin is broader.) The cCp18 audit confirmed that the original printed-rulebook table mis-attributed this row to *Eredin, Destroyer of Worlds*; the correct attribution is *Eredin, Bringer of Death* (catalog ability `restore_discard_to_hand`). *Eredin, Destroyer of Worlds* is the discard-cost / deck-draw leader (catalog ability `discard_two_draw_one_from_deck`). |
+| **Eredin, Bringer of Death** | Restore a card of the player's choice from their own discard pile (catalog ability `restore_discard_to_hand`). cCp22 implements this as an active one-shot leader resolved through a single-step `choose_card` prompt over the acting seat's own discard pile; **any card kind in own discard is eligible — units, heroes, specials, weather, and side-deck-only / generated cards that physically reach discard.** Heroes are included because the leader text says "card" without Medic's non-hero unit restriction. The cCp18 audit confirmed that the original printed-rulebook table mis-attributed this row to *Eredin, Destroyer of Worlds*; the correct attribution is *Eredin, Bringer of Death*. *Eredin, Destroyer of Worlds* is the discard-cost / deck-draw leader (catalog ability `discard_two_draw_one_from_deck`). See §17.12g. |
 | **Emhyr var Emreis, The Relentless** | The catalog assigns this leader the ability `draw_opponent_discard`: **draw a card from your opponent's discard pile** (not your own deck). The cCp18 audit recorded that an earlier printed-rulebook source said "tutor from your deck" for this same leader; the project treats the catalog as the local authority and the deck-tutor wording is superseded. The cCp19 implementation phase did not implement this leader; tracking is in `docs/leader-ability-matrix.md` §C-2. |
 | **Eredin Breacc Glas: The Treacherous** | The catalog ability `double_spies` is a **whole-match passive** (cCp20): every battlefield non-hero card whose source includes the `spy` ability receives a ×2 multiplier on every scoring tick, on both board sides and all rows, regardless of owner or controller. Hero Spies are unaffected (Hero immunity, §17.1). The leader emits no `use_leader` move and never sets `seat.leaderUsed`. See §17.12e. |
 
@@ -925,6 +925,62 @@ Mutation and event contract on success:
 The cEp8 leader-choice menu renders the tied-row options through the
 existing `metadata.targetLabel` fallback chain, so no new UI layout is
 needed.
+
+### 17.12g Restore Discard To Hand Active Leader (cCp22)
+
+`monsters.eredin-bringer-of-death` (Eredin: Bringer of Death) carries the
+`restore_discard_to_hand` leader ability. cCp22 promotes the metadata from
+`placeholder` to `implemented` as an **active one-shot** leader resolved
+through a single-step `choose_card` prompt over the acting seat's own
+discard pile.
+
+Effect contract:
+
+- **Eligible cards:** every card currently in the acting seat's own
+  discard pile whose catalog source can be resolved. Card kind does not
+  matter — units, heroes, specials, weather, and side-deck-only /
+  generated cards that physically reach the acting discard are all
+  eligible. Heroes are included because the leader text says "card" and
+  does not carry Medic's non-hero unit restriction.
+- **Not eligible:** cards in the opponent discard pile, in either hand
+  or deck, on the board (units, row horns), in the weather zone, in the
+  removed-from-game zone, or with a missing card instance / catalog
+  source.
+- **Empty discard:** emits no legal `use_leader` move; a manual
+  `UseLeader` attempt rejects with `EngineRuleError` and never sets
+  `seat.leaderUsed`.
+- **Prompt-open transaction:** clones state, emits `ability_triggered`
+  for the leader, sets `state.pendingPrompt` (`kind === "choose_card"`,
+  `abilityId === "restore_discard_to_hand"`, one option per eligible
+  discard card in discard order), emits `prompt_opened`, leaves
+  `seat.leaderUsed === false`, emits no `leader_used`, does not move
+  any discard card yet, does not emit `card_played`, does not resolve
+  any restored card abilities, and keeps `currentTurn` on the acting
+  seat while the prompt is pending.
+- **Prompt resolution:** `ChoosePromptOption` validates seat ownership
+  and option legality, validates the chosen card is still in the acting
+  seat's discard pile (rejects with `EngineRuleError` and does not
+  consume the leader if not), clones state, moves the chosen card from
+  discard to the acting seat's hand with
+  `card_moved.reason === "leader_restore_discard_to_hand"`, sets the
+  restored card's `controller` to the acting seat (leaving `owner`
+  unchanged), emits `prompt_resolved`,
+  `ability_resolved.restored_card`, sets `seat.leaderUsed = true`,
+  emits `leader_used`, clears `state.pendingPrompt`, and hands off the
+  turn through the existing `handoffTurn` helper.
+- **Restored cards do not trigger their abilities.** A restored Medic,
+  Spy, Muster, Scorch, weather, or hero behaves normally only if the
+  player later plays the card from hand. The leader is consumed only
+  after a legal prompt option resolves, so cancelling the prompt
+  (where supported) leaves the leader unused.
+
+The existing generic `PromptPanel` renders the `choose_card` options as
+plain labelled buttons (`"Restore <card name> to hand"`) without any new
+modal or card-tile UI. AI-owned restore prompts remain hidden from the
+human UI because `getPromptMoves` returns `[]` for any seat that does
+not own the prompt and `summarizeEvents` exposes only
+`prompt.seatId` / `prompt.abilityId` for `prompt_opened`, never the
+option labels or card identities.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 

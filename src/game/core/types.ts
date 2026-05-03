@@ -133,7 +133,13 @@ export interface PendingPromptOption {
     kind: "card_instance";
     cardId: CardInstanceId;
     sourceId: string;
-    row: CatalogRow;
+    /**
+     * Optional board row hint. Required for Medic (`medic_revive`) prompts
+     * because the resolver places the revived unit onto a specific row.
+     * cCp22 `choose_card` / `restore_discard_to_hand` prompts return the
+     * chosen card to the acting seat's hand, so they omit this field.
+     */
+    row?: CatalogRow;
   };
 }
 
@@ -196,7 +202,8 @@ export type GameEvent =
         | "avenger_summon"
         | "summon_replacement"
         | "leader_weather"
-        | "leader_optimize_agile";
+        | "leader_optimize_agile"
+        | "leader_restore_discard_to_hand";
     }
   | {
       type: "initial_hand_drawn";

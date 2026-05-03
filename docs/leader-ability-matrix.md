@@ -1,7 +1,7 @@
 # Leader Ability Matrix
 
 This document is the durable cCp18 audit output, refreshed by cCp19,
-cCp20, and cCp21. It enumerates every official leader source record,
+cCp20, cCp21, and cCp22. It enumerates every official leader source record,
 classifies the placeholder leaders by implementation pattern, lists
 local-source conflicts, and records engine, legal-move, prompt / UI,
 hidden-info, AI, and simulation implications. cCp19+ implementation
@@ -9,10 +9,12 @@ specs should pull from this matrix rather than re-running the audit.
 
 The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
 horn-like passives), cCp20 implemented `double_spies` as a full-game
-passive (Tranche 2 first leader), and cCp21 implemented
+passive (Tranche 2 first leader), cCp21 implemented
 `optimize_agile_rows` as the second Tranche 2 leader (active one-shot
-auto-place with tied-row player choice). This file is updated to reflect
-all three landings.
+auto-place with tied-row player choice), and cCp22 implemented
+`restore_discard_to_hand` as the third Tranche 2 leader (active one-shot
+prompt-based restore over own discard). This file is updated to reflect
+all four landings.
 
 ## Status
 
@@ -24,27 +26,27 @@ all three landings.
   record (Eredin: Commander of the Red Riders and Francesca: Queen of Dol
   Blathanna). `clear_weather` is both a card and leader ability ID, but only
   Foltest: Lord Commander of The North uses it as a leader.
-- Implemented executable leaders: **8** after cCp21 (each emits a legal
+- Implemented executable leaders: **9** after cCp22 (each emits a legal
   `use_leader` move): `clear_weather`, `play_frost`, `play_fog`,
   `play_rain`, `play_any_weather`, `scorch_range`, `scorch_siege`,
-  `optimize_agile_rows`.
+  `optimize_agile_rows`, `restore_discard_to_hand`.
 - Implemented passive leaders: **6** after cCp20 — `weather_half_penalty`
   on King Bran (cCp15), the four cCp19 row-wide horn-like passives
   (`double_siege` on Foltest: The Siegemaster, `double_close` on Eredin:
   Commander of the Red Riders and Francesca: Queen of Dol Blathanna, and
   `double_ranged` on Francesca: The Beautiful), and `double_spies` on
   Eredin Breacc Glas: The Treacherous (cCp20).
-- Placeholder leader records: **8** spanning **8** distinct ability IDs
-  after cCp21. (cCp21 promoted 1 leader record — Francesca: Hope of
-  the Aen Seidhe — and 1 ability ID — `optimize_agile_rows` — out of
+- Placeholder leader records: **7** spanning **7** distinct ability IDs
+  after cCp22. (cCp22 promoted 1 leader record — Eredin: Bringer of
+  Death — and 1 ability ID — `restore_discard_to_hand` — out of
   placeholder.)
 - `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp21 — it lists every leader ability whose
+  **exhaustive** after cCp22 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
   `cancel_leader`, `discard_two_draw_one_from_deck`, `draw_extra_card`,
   `draw_opponent_discard`, `look_three_cards`, `random_medic`,
-  `restore_discard_to_hand`, `shuffle_discards_into_decks`. (See Source
-  Conflicts §C-7 for the cCp18 audit finding that prompted this fix.)
+  `shuffle_discards_into_decks`. (See Source Conflicts §C-7 for the
+  cCp18 audit finding that prompted this fix.)
 
 ## Implemented Baseline
 
@@ -62,6 +64,7 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | `northern-realms.foltest-son-of-medell` | Foltest: Son of Medell | Northern Realms | `scorch_range` | `none` | cCp16. Emits a legal move only when destruction is possible (row total ≥ 10 and at least one tied highest non-hero target). |
 | `northern-realms.foltest-the-steel-forged` | Foltest: The Steel-Forged | Northern Realms | `scorch_siege` | `none` | cCp16. Same shape as Son of Medell but on the siege row. |
 | `scoiatael.francesca-findabair-hope-of-the-aen-seidhe` | Francesca Findabair: Hope of the Aen Seidhe | Scoia'tael | `optimize_agile_rows` | `none` (auto) **or** `board_row` (tied row choice) | cCp21. Auto-places when one movable common row ties the highest score across all candidate rows; emits one `board_row` move per tied best movable row otherwise. Pure no-op rows are not executable, and worse movable rows are not offered when the current no-op row is uniquely best. |
+| `monsters.eredin-bringer-of-death` | Eredin: Bringer of Death | Monsters | `restore_discard_to_hand` | `none` (opens a `choose_card` prompt over own discard) | cCp22. Active one-shot. Emits one no-target `use_leader` move when the acting seat's own discard has at least one eligible card; opens a `choose_card` prompt without consuming the leader. The leader is consumed only after a legal prompt option resolves; restored cards return to hand without resolving their abilities. Any card kind in own discard is eligible (units, heroes, specials, weather, side-deck-only / generated). |
 
 ### Implemented passive leaders (no `use_leader` move)
 
@@ -194,18 +197,18 @@ Marker conventions:
 |---|---|
 | Source ID | `monsters.eredin-bringer-of-death` |
 | Faction | Monsters |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp22) |
 | Catalog description | "Restore a card from your discard pile to your hand." |
-| Local rule / source text | Catalog text + `docs/gwent-rules.md` §16 conflict — see Source Conflicts §C-1. |
-| Likely official behavior | *Derived*: active leader; player chooses one card from their own discard pile and returns it to hand. Per §17.1 / §16 rulebook FAQ, heroes are eligible (no hero exclusion in the leader text — Golden Rule). |
+| Local rule / source text | Catalog text + `docs/gwent-rules.md` §16 — see also Source Conflicts §C-1. |
+| Implemented behavior (cCp22) | Active one-shot. The pure helper `getRestoreDiscardCandidates({ state, seatId, catalogCards })` collects every card currently in the acting seat's own discard pile whose catalog source resolves, in discard order. `getLeaderMove` emits exactly one no-target `use_leader` move when at least one candidate exists, with `target.kind === "none"`, `metadata.targetRequirement === "future_prompt"`, `metadata.targetCount === candidates.length`, and `metadata.targetLabel === "own discard"`. `executeLeader` rejects any non-`none` target, rejects if the candidate set is empty, then clones state, emits `ability_triggered`, builds a `pendingPrompt` (`kind === "choose_card"`, `abilityId === "restore_discard_to_hand"`, one option per candidate keyed `restore:<cardId>` with `label === "Restore <card name> to hand"`, `target.kind === "card_instance"` with no `row` field), sets `state.pendingPrompt`, and emits `prompt_opened` — without setting `seat.leaderUsed`, without emitting `leader_used`, without moving any discard card, and without handing off the turn. `ChoosePromptOption` validates seat ownership and option legality, validates the chosen card is still in the acting seat's discard pile (rejects with `EngineRuleError` and never consumes the leader if not), then clones state, moves the chosen card from discard to the acting seat's hand with `card_moved.reason === "leader_restore_discard_to_hand"`, sets the restored card's `controller` to the acting seat (leaving `owner` unchanged), emits `prompt_resolved`, `ability_resolved.restored_card`, sets `seat.leaderUsed = true`, emits `leader_used`, clears `state.pendingPrompt`, and hands off the turn through the existing `handoffTurn` helper. Restored cards do **not** resolve their abilities (no `card_played`, no Medic chain, no Scorch, no on-play weather effect) — they return to hand and behave normally only if played later. |
 | Active vs passive vs setup | Active one-shot. |
-| Expected legal move shape | `use_leader` plus a discard-card target. Either: (a) emit one `use_leader` move per discard candidate with `target.kind === "discard_card"` (new shape), or (b) emit a single `use_leader` that opens a `choose_card` prompt over discard candidates. Path (b) reuses existing prompt machinery and is recommended. |
-| Expected command transaction shape | `UseLeader` opens `choose_card` prompt over the acting seat's discard pile; `ChoosePromptOption` moves the chosen card from discard to hand and consumes the leader. |
-| Prompt / choice UI need | New product prompt: discard-pile card selection. The cEp3 discard browser already renders discard piles; reuse those visuals. |
-| Hidden-info risk | Low. Acting seat's own discard is already public per §13 / §17.5 ("discard piles are face-up"). |
-| Implementation difficulty | medium |
-| Recommended tranche | Tranche 2. |
-| Unresolved questions | (1) Heroes eligible? Spec answer: yes per §17.1 — the leader text says "a card from your discard pile" without exclusion. (2) Does it grab Special / weather cards as well as units? Spec answer: yes, the catalog text says "card", not "unit", aligning with the Eredin: Destroyer of Worlds FAQ entry in §16. (3) If the discard is empty, does the leader produce no legal move? Recommended: yes, emit no `use_leader` move so the once-per-game leader cannot no-op. |
+| Implemented legal move shape | One no-target `use_leader` move (`target.kind === "none"`, `metadata.targetRequirement === "future_prompt"`). Prompt resolution emits one `choose_prompt_option` move per candidate (`target.kind === "card_instance"`, `side === "own"`, no `row` field). |
+| Implemented command transaction shape | `UseLeader` opens the `choose_card` prompt without consuming the leader; `ChoosePromptOption` resolves the prompt, moves the chosen card from discard to hand, sets `seat.leaderUsed = true`, emits `leader_used`, and hands off the turn. |
+| Prompt / choice UI need | The existing generic `PromptPanel` renders the `choose_card` options as plain labelled buttons (`"Restore <card name> to hand"`) with no new modal or card-tile UI. Richer discard-card prompt tiles are deferred to a later Cluster E polish phase. |
+| Hidden-info risk | Low. Acting seat's own discard is already public per §13 / §17.5 ("discard piles are face-up"). AI-owned restore prompts remain hidden from the human UI because `getPromptMoves` returns `[]` for the non-acting seat and `summarizeEvents` only exposes `prompt.seatId` / `prompt.abilityId` for `prompt_opened`, never option labels or card identities. |
+| Implementation difficulty | medium (delivered in cCp22). |
+| Recommended tranche | Tranche 2 (implemented in cCp22). |
+| Settled questions | (1) Heroes eligible? **Yes** — the leader text says "a card from your discard pile" without Medic's non-hero unit restriction. (2) Specials / weather eligible? **Yes** — the catalog text says "card", not "unit". (3) Empty discard? **No legal move** — `getLeaderMove` emits no `use_leader` move when the helper returns zero candidates, so the once-per-game leader cannot no-op. (4) Leader consumption? **Only after a legal prompt option resolves** — `UseLeader` opens the prompt without setting `seat.leaderUsed`; `ChoosePromptOption` consumes the leader. (5) Restored card abilities? **Do not resolve on restore** — the card returns to hand and resolves abilities normally only if played later. |
 
 ### Emhyr var Emreis: The Relentless — `draw_opponent_discard`
 
@@ -478,28 +481,72 @@ decision §9 — `double_spies` is passive for the entire game.
   stable.
 - Effect classification: one-shot active with prompt chain.
 
-### Pattern 4 — Discard Restore (single-step prompt)
+### Pattern 4 — Discard Restore (single-step prompt) — `restore_discard_to_hand` IMPLEMENTED in cCp22
 
-| Members | Ability IDs |
-|---|---|
-| Eredin: Bringer of Death, (Emhyr: The Relentless under catalog interpretation §C-2) | `restore_discard_to_hand`, possibly `draw_opponent_discard` |
+| Members | Ability IDs | Status |
+|---|---|---|
+| Eredin: Bringer of Death | `restore_discard_to_hand` | **IMPLEMENTED in cCp22** |
+| Emhyr: The Relentless (under catalog interpretation §C-2) | `draw_opponent_discard` | placeholder |
+
+**Status:** `restore_discard_to_hand` implemented in cCp22 (see
+`audit/reports/2026-05-02-cCp22-report.md`). The companion
+`draw_opponent_discard` member (Emhyr: The Relentless) remains placeholder
+pending the §C-2 product decision (catalog interpretation vs rulebook
+interpretation).
 
 - Trigger: active one-shot.
-- Effect: choose one card from a discard pile (own or opponent), move it
-  back to the acting seat's hand.
+- Effect: choose one card from the acting seat's own discard pile and
+  move it back to the acting seat's hand. Restored cards do not trigger
+  their abilities — they return to hand and behave normally only if
+  played later.
 - Engine surfaces:
-  - `pendingPrompt.kind === "choose_card"` over discard candidates.
-  - `executeLeader` opens the prompt; `ChoosePromptOption` resolves move.
-- Legal-move shape: `use_leader` opens prompt only when the relevant
-  discard pile has at least one eligible card.
-- Command shape: `UseLeader` → `ChoosePromptOption` → card moves discard
-  → hand → consume leader.
-- Prompt / UI: cEp3 already renders both discard piles publicly; reuse.
-- Hidden-info risk: low (own discard public; opponent discard public).
-- AI: `legal-heuristic-v0` would need an "evaluate discard candidate"
-  scoring heuristic; not free, but tractable.
-- Simulation export: prompt step shape already exists.
-- Effect classification: one-shot active with single-step prompt.
+  - new pure helper
+    `getRestoreDiscardCandidates({ state, seatId, catalogCards })` in
+    `src/game/core/leaderDiscardRestore.ts`. Pure, deterministic,
+    discard-order output, own discard only, skips missing instances /
+    missing catalog sources, no hidden-info reads.
+  - `pendingPrompt.kind === "choose_card"` over own-discard candidates.
+  - `PendingPromptOption.target.row` is now optional. Medic
+    (`medic_revive`) prompts continue to set `row`; Restore Discard
+    (`choose_card` / `restore_discard_to_hand`) options omit `row`.
+  - new `card_moved.reason === "leader_restore_discard_to_hand"`.
+  - `executeLeader` opens the prompt without consuming the leader;
+    `ChoosePromptOption` resolves the move and consumes the leader.
+- Legal-move shape: one no-target `use_leader` move
+  (`target.kind === "none"`,
+  `metadata.targetRequirement === "future_prompt"`,
+  `metadata.targetCount === candidates.length`,
+  `metadata.targetLabel === "own discard"`) only when the acting seat's
+  own discard has at least one eligible card. Empty discard emits no
+  legal `use_leader` move.
+- Command shape: `UseLeader` (no target) → `pendingPrompt.choose_card`
+  → `ChoosePromptOption` → card moves discard → hand → consume leader →
+  hand off turn. Rejection (non-`none` target on `UseLeader`, empty
+  discard, wrong seat on `ChoosePromptOption`, invalid option ID, stale
+  target no longer in own discard, missing prompt) raises
+  `EngineRuleError` and never consumes the leader.
+- Prompt / UI: existing generic `PromptPanel` renders the `choose_card`
+  options as plain labelled buttons (`"Restore <card name> to hand"`).
+  No new modal or card-tile UI. cEp3 discard browser already renders
+  discard piles publicly; reuse for inspection.
+- Hidden-info risk: low. Acting seat's own discard is already public per
+  §13 / §17.5. AI-owned restore prompts remain hidden from the human UI
+  because `getPromptMoves` returns `[]` for the non-acting seat and
+  `summarizeEvents` only exposes `prompt.seatId` / `prompt.abilityId`
+  for `prompt_opened`, never option labels or card identities.
+- AI: `legal-heuristic-v0` ranks `choose_prompt_option` moves by
+  `option.targetStrength ?? 0` and falls back to deterministic moveId
+  order. `seatObservation` derives `targetStrength` from the catalog
+  source (`catalogCardsBySourceId.get(option.target.sourceId)?.strength`),
+  which is defined for all card kinds (specials/weather have strength 0
+  by catalog convention). The existing nullish-fallback handles the
+  zero / undefined cases without crashing.
+- Simulation export: prompt step shape already exists; no new export
+  fields. The new `card_moved.reason === "leader_restore_discard_to_hand"`
+  joins the engine event union and is inherited by JSONL replay
+  infrastructure.
+- Effect classification: one-shot active with single-step prompt
+  (delivered in cCp22).
 
 ### Pattern 5 — Opponent Hand Information Disclosure
 
@@ -882,7 +929,7 @@ This table compares catalog leader descriptions, leader ability metadata,
 | 1. Row-Horn Passives | none (passive) | none | n/a | none | none | yes | none (passive) | ongoing row modifier |
 | 2. Double Spies (whole-match passive) | none (passive) | none | n/a | none | none | yes | none (passive) | ongoing whole-match scoring modifier |
 | 3. Discard Two / Draw One | `target.kind === "none"` opens prompt | new `leader_multi_step` (or extended `choose_card`) | no | yes (multi-stage hand select) | medium (deck-draw choice) | needs multi-stage policy update | new prompt-stage rows | one-shot active w/ prompt chain |
-| 4. Discard Restore | `target.kind === "none"` opens prompt | `choose_card` over discard | yes (cEp3 discard browser already exists) | minor enhancement | low (discard already public) | needs discard-evaluation heuristic | none beyond standard prompt rows | one-shot active w/ single-step prompt |
+| 4. Discard Restore (`restore_discard_to_hand` IMPLEMENTED in cCp22) | `target.kind === "none"` opens prompt | `choose_card` over own discard (PendingPromptOption.target.row now optional) | yes (existing generic PromptPanel renders labelled buttons) | none — generic `PromptPanel` handles it | low (own discard already public) | yes — `legal-heuristic-v0` ranks by `targetStrength ?? 0`, deterministic moveId fallback | new `card_moved.reason "leader_restore_discard_to_hand"` joins event union; standard prompt rows | one-shot active w/ single-step prompt |
 | 5. Look Three Cards | `target.kind === "none"` | none | n/a | UI overlay on opponent-hand backs | HIGH (first persistent reveal) | acting-seat only; redaction logic must be seat-aware | new reveal sets in observations | one-shot active w/ persistent observation surface |
 | 6. Leader Cancel | `target.kind === "none"` | none | n/a | leader display update | none directly; cross-cuts every passive | yes | new `seat.leaderCancelled` flag | one-shot active w/ persistent suppression flag |
 | 7. Setup Draw Extra | none | none | n/a | none | none | yes | none beyond standard hand size | setup-time event |
@@ -951,17 +998,19 @@ Heroes remain immune as receivers.
 ### Tranche 2 — Active Score Modifier and Single-Step Prompt Leaders
 
 **Members:** `double_spies` (IMPLEMENTED in cCp20),
-`optimize_agile_rows` (IMPLEMENTED in cCp21), `restore_discard_to_hand`,
+`optimize_agile_rows` (IMPLEMENTED in cCp21),
+`restore_discard_to_hand` (IMPLEMENTED in cCp22),
 `shuffle_discards_into_decks`, `random_medic`. Plus, contingent on §C-2
 resolution, `draw_opponent_discard` (under catalog interpretation).
 
-**Status:** First two members (`double_spies` in cCp20,
-`optimize_agile_rows` in cCp21) are implemented; the rest are still
-placeholder. After cCp21, six implemented passive leader records exist
-(King Bran + four cCp19 row-horn + cCp20 Treacherous), eight implemented
-active executable leader records exist (cCp14 weather + cCp16 row-Scorch
-× 2 + cCp7 clear-weather + cCp21 Hope of the Aen Seidhe), and eight
-leader records remain placeholder.
+**Status:** First three members (`double_spies` in cCp20,
+`optimize_agile_rows` in cCp21, `restore_discard_to_hand` in cCp22) are
+implemented; the rest are still placeholder. After cCp22, six
+implemented passive leader records exist (King Bran + four cCp19
+row-horn + cCp20 Treacherous), nine implemented active executable
+leader records exist (cCp14 weather + cCp16 row-Scorch × 2 + cCp7
+clear-weather + cCp21 Hope of the Aen Seidhe + cCp22 Bringer of
+Death), and seven leader records remain placeholder.
 
 **Why second (retained for context):**
 
@@ -975,12 +1024,13 @@ leader records remain placeholder.
   pattern).
 - Testability is good: each leader has a deterministic test seed.
 
-**Updated ordering inside Tranche 2 (post-cCp21):**
+**Updated ordering inside Tranche 2 (post-cCp22):**
 
 1. `double_spies` — IMPLEMENTED in cCp20 (whole-match passive).
 2. `optimize_agile_rows` — IMPLEMENTED in cCp21 (active one-shot
    auto-place with tied-row choice).
-3. `restore_discard_to_hand` — single-step prompt.
+3. `restore_discard_to_hand` — IMPLEMENTED in cCp22 (active one-shot
+   single-step prompt over own discard).
 4. `shuffle_discards_into_decks` — bulk move, requires deterministic
    shuffle.
 5. `draw_opponent_discard` — single-step prompt over opponent discard
@@ -1055,6 +1105,10 @@ decisions are tracked here for the relevant later tranche.
    while the product-owner tie-break decision converts ties into a
    small set of legal `use_leader` moves. **Implemented in cCp21** as
    an active one-shot leader; see `docs/gwent-rules.md` §17.12f.
+   **Note:** The companion §C-1 question (which Eredin owns the discard-restore effect)
+   is reaffirmed by cCp22's `restore_discard_to_hand` implementation:
+   *Eredin: Bringer of Death* owns it; *Eredin: Destroyer of Worlds*
+   carries `discard_two_draw_one_from_deck`. See §17.12g.
 4. **`discard_two_draw_one_from_deck` flow.** **Settled: discard up to two
    cards from hand, then show all remaining deck cards, choose any one
    card to draw, then shuffle the remaining deck.** Implementable with at
@@ -1160,3 +1214,40 @@ cCp19+ implementation:
   the tied best rows as legal player choices." After cCp21, eight
   leader records remain placeholder. See
   `audit/reports/2026-05-02-cCp21-report.md` for details.
+- 2026-05-02 (cCp22): `restore_discard_to_hand` (Eredin: Bringer of
+  Death) promoted from `placeholder` to `implemented` as an **active
+  one-shot leader** (Pattern 4). New pure helper
+  `getRestoreDiscardCandidates({ state, seatId, catalogCards })` in
+  `src/game/core/leaderDiscardRestore.ts` collects the acting seat's
+  own-discard cards in discard order, skipping missing instances /
+  missing catalog sources. Any card kind in own discard is eligible —
+  units, heroes, specials, weather, and side-deck-only / generated
+  cards that physically reach discard. `getLeaderMove` emits exactly
+  one no-target `use_leader` move (`targetRequirement ===
+  "future_prompt"`, `targetCount === candidates.length`,
+  `targetLabel === "own discard"`) when the discard is non-empty;
+  empty discard emits no legal move. `executeLeader` opens a
+  `pendingPrompt` (`kind === "choose_card"`,
+  `abilityId === "restore_discard_to_hand"`, one option per candidate)
+  without consuming the leader; `currentTurn` stays on the acting seat
+  while the prompt is pending. `ChoosePromptOption` validates the
+  chosen card is still in the acting seat's discard pile, moves it
+  from discard to hand with the new `card_moved.reason ===
+  "leader_restore_discard_to_hand"`, sets the restored card's
+  `controller` to the acting seat (leaving `owner` unchanged), emits
+  `prompt_resolved`, `ability_resolved.restored_card`,
+  sets `seat.leaderUsed = true`, emits `leader_used`, clears the
+  pending prompt, and hands off the turn. Restored cards do **not**
+  resolve their abilities — they return to hand and behave normally
+  only if played later. `PendingPromptOption.target.row` is now
+  optional; Medic continues to set `row`, the new restore prompt
+  omits it. The existing generic `PromptPanel` renders the
+  `choose_card` options as plain labelled buttons; no new UI layout
+  was needed. The official promotion manifest adds
+  `monsters.eredin-bringer-of-death` to `executableLeaderSourceIds`
+  (now 9) and removes `restore_discard_to_hand` from
+  `placeholderLeaderAbilityIds` (now 7). Settled product decision §C-1
+  is reaffirmed: Eredin: Bringer of Death owns the discard-restore
+  effect (catalog wins the §16 conflict). After cCp22, seven leader
+  records remain placeholder. See
+  `audit/reports/2026-05-02-cCp22-report.md` for details.

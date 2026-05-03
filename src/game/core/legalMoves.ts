@@ -16,6 +16,7 @@ import {
   leaderRowScorchRowForAbility,
 } from "./leaderRowScorch";
 import { planOptimizeAgileRows, type OptimizeAgileRowsCandidate } from "./leaderOptimizeAgile";
+import { getRestoreDiscardCandidates } from "./leaderDiscardRestore";
 import { calculateScores, findUnitScorchRowTargets } from "./scoring";
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
@@ -552,6 +553,37 @@ const getLeaderMove = (
     }));
   }
 
+  if (leader.ability === "restore_discard_to_hand") {
+    const candidates = getRestoreDiscardCandidates({
+      state,
+      seatId,
+      catalogCards,
+    });
+    if (candidates.length === 0) {
+      return [];
+    }
+
+    return [
+      {
+        kind: "use_leader",
+        moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+        seatId,
+        leaderCardId,
+        sourceId: leader.sourceId,
+        target: { kind: "none" },
+        label: `Use ${leader.name}`,
+        metadata: {
+          leaderName: leader.name,
+          ability: leader.ability,
+          abilityStatus: abilityMetadata.status,
+          targetRequirement: "future_prompt",
+          targetCount: candidates.length,
+          targetLabel: "own discard",
+        },
+      },
+    ];
+  }
+
   // Implemented passive leaders (cCp15 King Bran's `weather_half_penalty`,
   // cCp19 row-wide horn-like passives, cCp20 `double_spies`) do not produce a
   // `use_leader` legal move. Their effect is wired into scoring through
@@ -594,20 +626,37 @@ const getPromptMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
     return [];
   }
 
-  return prompt.options.map((option) => ({
-    kind: "choose_prompt_option",
-    moveId: `prompt:${prompt.promptId}:${option.optionId}`,
-    seatId,
-    promptId: prompt.promptId,
-    optionId: option.optionId,
-    target: { kind: "card_instance", side: "own", seatId, cardId: option.target.cardId, row: option.target.row },
-    label: option.label,
-    metadata: {
-      promptKind: prompt.kind,
-      abilityId: prompt.abilityId,
-      sourceCardId: prompt.sourceCardId,
-    },
-  }));
+  return prompt.options.map((option) => {
+    const target: LegalMoveTarget =
+      option.target.row === undefined
+        ? {
+            kind: "card_instance",
+            side: "own",
+            seatId,
+            cardId: option.target.cardId,
+          }
+        : {
+            kind: "card_instance",
+            side: "own",
+            seatId,
+            cardId: option.target.cardId,
+            row: option.target.row,
+          };
+    return {
+      kind: "choose_prompt_option",
+      moveId: `prompt:${prompt.promptId}:${option.optionId}`,
+      seatId,
+      promptId: prompt.promptId,
+      optionId: option.optionId,
+      target,
+      label: option.label,
+      metadata: {
+        promptKind: prompt.kind,
+        abilityId: prompt.abilityId,
+        sourceCardId: prompt.sourceCardId,
+      },
+    };
+  });
 };
 
 const getRoundEndMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {

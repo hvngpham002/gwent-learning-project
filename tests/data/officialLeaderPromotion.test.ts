@@ -60,7 +60,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp21", () => {
+  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp22", () => {
     [
       "cancel_leader",
       "discard_two_draw_one_from_deck",
@@ -68,7 +68,6 @@ describe("official leader promotion (cBp5)", () => {
       "draw_opponent_discard",
       "look_three_cards",
       "random_medic",
-      "restore_discard_to_hand",
       "shuffle_discards_into_decks",
     ].forEach((ability) => {
       const metadata =
@@ -80,7 +79,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, and cCp21 optimize_agile_rows", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, and cCp22 restore_discard_to_hand", () => {
     [
       "clear_weather",
       "play_frost",
@@ -95,6 +94,7 @@ describe("official leader promotion (cBp5)", () => {
       "double_ranged",
       "double_spies",
       "optimize_agile_rows",
+      "restore_discard_to_hand",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -110,6 +110,7 @@ describe("official leader promotion (cBp5)", () => {
     expect(implementedLeaders.map((leader) => leader.sourceId).sort()).toEqual(
       [
         "monsters.eredin-breacc-glas-the-treacherous",
+        "monsters.eredin-bringer-of-death",
         "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
@@ -142,6 +143,7 @@ describe("official leader promotion (cBp5)", () => {
     });
     expect([...officialLeaderPromotionManifest.executableLeaderSourceIds].sort()).toEqual(
       [
+        "monsters.eredin-bringer-of-death",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
         "northern-realms.foltest-king-of-temeria",
@@ -164,6 +166,9 @@ describe("official leader promotion (cBp5)", () => {
     expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
       "scoiatael.francesca-findabair-hope-of-the-aen-seidhe",
     );
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
+      "monsters.eredin-bringer-of-death",
+    );
     expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
       "monsters.eredin-breacc-glas-the-treacherous",
       "monsters.eredin-commander-of-the-red-riders",
@@ -175,6 +180,7 @@ describe("official leader promotion (cBp5)", () => {
     expect([...officialLeaderPromotionManifest.implementedLeaderSourceIds].sort()).toEqual(
       [
         "monsters.eredin-breacc-glas-the-treacherous",
+        "monsters.eredin-bringer-of-death",
         "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
@@ -198,7 +204,6 @@ describe("official leader promotion (cBp5)", () => {
         "draw_opponent_discard",
         "look_three_cards",
         "random_medic",
-        "restore_discard_to_hand",
         "shuffle_discards_into_decks",
       ].sort(),
     );
@@ -214,6 +219,9 @@ describe("official leader promotion (cBp5)", () => {
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("double_spies");
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
       "optimize_agile_rows",
+    );
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
+      "restore_discard_to_hand",
     );
   });
 

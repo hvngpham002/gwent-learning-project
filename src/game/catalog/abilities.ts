@@ -261,8 +261,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   restore_discard_to_hand: {
     id: "restore_discard_to_hand",
     name: "Restore Discard To Hand",
-    status: "placeholder",
-    description: "Returns a card from the discard pile to the hand.",
+    status: "implemented",
+    description: "Active one-shot: opens a single-step prompt over the acting seat's own discard pile and returns the chosen card to hand. Any card kind in the own discard is eligible (units, heroes, specials, weather, generated / side-deck-only cards that physically reached discard); heroes are included because the leader text says \"card\" without Medic's non-hero restriction. Empty own discard emits no legal `use_leader` move. The leader is consumed only after a legal prompt option resolves; restored cards do not trigger their abilities — they return to hand and behave normally only if played later.",
   },
   double_spies: {
     id: "double_spies",
