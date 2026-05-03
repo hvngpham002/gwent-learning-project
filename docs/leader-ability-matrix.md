@@ -1,8 +1,8 @@
 # Leader Ability Matrix
 
 This document is the durable cCp18 audit output, refreshed by cCp19,
-cCp20, cCp21, cCp22, cCp23, and cCp24. It enumerates every official
-leader source record, classifies the placeholder leaders by
+cCp20, cCp21, cCp22, cCp23, cCp24, and cCp25. It enumerates every
+official leader source record, classifies the placeholder leaders by
 implementation pattern, lists local-source conflicts, and records
 engine, legal-move, prompt / UI, hidden-info, AI, and simulation
 implications. cCp19+ implementation specs should pull from this matrix
@@ -17,10 +17,14 @@ auto-place with tied-row player choice), cCp22 implemented
 prompt-based restore over own discard), cCp23 implemented
 `shuffle_discards_into_decks` as the fourth Tranche 2 leader (active
 one-shot bulk discard-to-deck recycle with deterministic per-seat
-shuffle), and cCp24 implemented `draw_opponent_discard` as the fifth
+shuffle), cCp24 implemented `draw_opponent_discard` as the fifth
 Tranche 2 leader (active one-shot prompt-based draw over the opponent's
-discard pile, settling the cCp18 §C-2 conflict in favor of the catalog).
-This file is updated to reflect all six landings.
+discard pile, settling the cCp18 §C-2 conflict in favor of the catalog),
+and cCp25 implemented `random_medic` as the sixth and final Tranche 2
+leader (whole-match passive Medic mutation that randomizes non-hero
+Medic targets from own discard, settling the cCp18 §C-3 conflict in
+favor of the Medic-mutation reading). **Tranche 2 is complete after
+cCp25.** This file is updated to reflect all seven landings.
 
 ## Status
 
@@ -32,27 +36,29 @@ This file is updated to reflect all six landings.
   record (Eredin: Commander of the Red Riders and Francesca: Queen of Dol
   Blathanna). `clear_weather` is both a card and leader ability ID, but only
   Foltest: Lord Commander of The North uses it as a leader.
-- Implemented executable leaders: **11** after cCp24 (each emits a legal
+- Implemented executable leaders: **11** after cCp25 (each emits a legal
   `use_leader` move): `clear_weather`, `play_frost`, `play_fog`,
   `play_rain`, `play_any_weather`, `scorch_range`, `scorch_siege`,
   `optimize_agile_rows`, `restore_discard_to_hand`,
-  `shuffle_discards_into_decks`, `draw_opponent_discard`.
-- Implemented passive leaders: **6** after cCp20 — `weather_half_penalty`
+  `shuffle_discards_into_decks`, `draw_opponent_discard`. (cCp25 added
+  no executable leader; `random_medic` is implemented as a passive.)
+- Implemented passive leaders: **7** after cCp25 — `weather_half_penalty`
   on King Bran (cCp15), the four cCp19 row-wide horn-like passives
   (`double_siege` on Foltest: The Siegemaster, `double_close` on Eredin:
   Commander of the Red Riders and Francesca: Queen of Dol Blathanna, and
-  `double_ranged` on Francesca: The Beautiful), and `double_spies` on
-  Eredin Breacc Glas: The Treacherous (cCp20).
-- Placeholder leader records: **5** spanning **5** distinct ability IDs
-  after cCp24. (cCp24 promoted 1 leader record — Emhyr var Emreis: The
-  Relentless — and 1 ability ID — `draw_opponent_discard` — out of
-  placeholder.)
+  `double_ranged` on Francesca: The Beautiful), `double_spies` on Eredin
+  Breacc Glas: The Treacherous (cCp20), and `random_medic` on Emhyr var
+  Emreis: Invader of the North (cCp25).
+- Placeholder leader records: **4** spanning **4** distinct ability IDs
+  after cCp25. (cCp25 promoted 1 leader record — Emhyr var Emreis:
+  Invader of the North — and 1 ability ID — `random_medic` — out of
+  placeholder, completing Tranche 2.)
 - `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp24 — it lists every leader ability whose
+  **exhaustive** after cCp25 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
   `cancel_leader`, `discard_two_draw_one_from_deck`, `draw_extra_card`,
-  `look_three_cards`, `random_medic`. (See Source Conflicts §C-7 for the
-  cCp18 audit finding that prompted this fix.)
+  `look_three_cards`. (See Source Conflicts §C-7 for the cCp18 audit
+  finding that prompted this fix.)
 
 ## Implemented Baseline
 
@@ -84,6 +90,7 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | `scoiatael.francesca-findabair-queen-of-dol-blathanna` | Francesca Findabair: Queen of Dol Blathanna | Scoia'tael | `double_close` | scoring pipeline | cCp19. Shares the `double_close` policy with Eredin: Commander of the Red Riders. Selection is by leader identity, not faction. |
 | `scoiatael.francesca-findabair-the-beautiful` | Francesca Findabair: The Beautiful | Scoia'tael | `double_ranged` | scoring pipeline | cCp19. Same shape as `double_siege` but on the friendly ranged row. |
 | `monsters.eredin-breacc-glas-the-treacherous` | Eredin Breacc Glas: The Treacherous | Monsters | `double_spies` | scoring pipeline | cCp20. Derived from leader identity through `getDoubleSpiesPolicyBySeat`; whole-match passive that applies a ×2 multiplier to every battlefield non-hero Spy unit, on both board sides and all rows, regardless of owner or controller. Heroes remain immune. The multiplier does not stack ×4 if both seats somehow have the policy. The score breakdown's `modifiers` list carries `"leader_double_spies"` when the multiplier applies. Never sets `seat.leaderUsed` and never emits `leader_used`. |
+| `nilfgaard.emhyr-var-emreis-invader-of-the-north` | Emhyr var Emreis: Invader of the North | Nilfgaard | `random_medic` | Medic resolution path | cCp25. Whole-match passive Medic mutation derived from leader identity through `hasRandomMedicPolicyForSeat`. While this leader is the seat's leader, every non-hero Medic source controlled by that seat revives a **random eligible non-hero Unit** from the seat's own discard (uniform over candidate cards through the engine's seeded RNG; deterministic row fallback `close → ranged → siege` for multi-row targets) instead of opening a player-choice Medic prompt. Spy placement still flips to the opponent board side and resolves Spy draw; `controller` becomes the acting seat with `owner` preserved. **Hero Medic sources are unaffected** and continue to use the normal Medic prompt. The leader emits no `use_leader` move and never sets `seat.leaderUsed`. Settles the cCp18 §C-3 conflict in favor of the Medic-mutation reading. |
 
 ## Placeholder Leader Matrix
 
@@ -280,18 +287,18 @@ Marker conventions:
 |---|---|
 | Source ID | `nilfgaard.emhyr-var-emreis-invader-of-the-north` |
 | Faction | Nilfgaard |
-| Ability metadata status | `placeholder` |
-| Catalog description | (none on the leader source; catalog ability description is "Plays a random medic effect.") |
-| Local rule / source text | Classic Witcher 3 text: "Pick a random Special Card from your discard pile and play it instantly." This is a discard-pile *Special-card* random replay, not a Medic chain. The catalog ID `random_medic` is misleading. |
-| Likely official behavior | *Derived*: active leader; engine selects one random Special card from the acting seat's discard using the seeded RNG, plays it as if cast (resolving its abilities), and consumes the leader. The Witcher 3 wording "Special Card" — not "Medic" — means this is a Special-card replay, not a Medic Unit revival. The catalog ID is a misnomer. |
-| Active vs passive vs setup | Active one-shot. |
-| Expected legal move shape | `use_leader` with `target.kind === "none"`, but only when the acting seat's discard has at least one Special card. |
-| Expected command transaction shape | `UseLeader` → seeded random pick over `seat.discard` filtered to Special-kind sources → execute the same play path as a normal special card (with engine ability resolution) → emit `card_played` and `leader_used`. |
-| Prompt / choice UI need | None at choice (random). Discard browser already renders discard cards. |
-| Hidden-info risk | Low — own discard is public. AI safe-mode unaffected. |
-| Implementation difficulty | medium. The replay must reuse the existing Special-card play path including Scorch resolution, weather placement, etc. |
-| Recommended tranche | Tranche 2. |
-| Unresolved questions | (1) Catalog ability ID `random_medic` is a documentation conflict — see §C-3. The implementation will not be a Medic clone. (2) If the discard has no Special cards, the leader emits no legal move. (3) Does the random pick have to skip Decoy because a Decoy needs a target? Yes — engine should filter Specials to those whose play is *legal at that moment* (no targets needed, or auto-selectable target). Or: just exclude Decoy entirely as a documentation rule. Product decision needed. |
+| Ability metadata status | `implemented` (cCp25, passive) |
+| Catalog description | (none on the leader source; catalog ability description rewritten in cCp25 to describe the Medic-mutation contract.) |
+| Local rule / source text | Classic Witcher 3 text says "Pick a random Special Card from your discard pile and play it instantly." Settled product decision §5: the catalog ID `random_medic` is **kept**, but the *behavior* is a passive Medic mutation, **not** a random Special replay. The printed Witcher 3 wording is superseded. |
+| Implemented behavior (cCp25) | **Whole-match passive Medic mutation.** While this leader is the seat's leader, every non-hero Medic source controlled by that seat (`source.abilities.includes("medic") && source.kind !== "hero"`) revives a **random eligible non-hero Unit** from the seat's own discard pile (uniform over candidate cards through the engine's seeded RNG; deterministic row fallback `close → ranged → siege` for multi-row targets) instead of opening a player-choice `medic_revive` prompt. The candidate set is built from `state.seats[seatId].discard`: catalog source must resolve, `kind === "unit"`, `kind !== "hero"`, with at least one playable row. Specials, weather, hero cards, opponent discard, hands, decks, side decks, removed-from-game, board rows, row horns, weather zone, and stale missing-instance / missing-catalog-source entries are excluded. Side-deck-only / generated non-hero units and off-owner non-hero units physically in own discard are eligible (with `owner` preserved on placement and `controller` reset to the acting seat). Spy placement still flips to the opponent board side and resolves Spy draw. The chain recurses: a random-revived non-hero Medic re-runs the random policy until candidates are empty. **Hero Medic sources are unaffected** and continue to use the normal `medic_revive` prompt. The leader emits no `use_leader` legal move, never sets `seat.leaderUsed`, and never emits `leader_used`. RNG advances only on a real multi-candidate roll (zero or single candidate paths leave `state.rng.state` unchanged). New `ability_resolved` outcome `"random_revived_card"` distinguishes the random path from prompt-based `"revived_card"`; no `prompt_opened` / `prompt_resolved` events are emitted for the random path. |
+| Active vs passive vs setup | **Passive whole-match Medic mutation** (settled product decision §5). |
+| Implemented legal move shape | None. The leader emits no `use_leader` move. |
+| Implemented command transaction shape | None. The mutation is wired into `resolveMedic` through the new `leaderRandomMedic` helper. |
+| Prompt / choice UI need | None for the random path; hero Medic sources still open the existing `medic_revive` prompt. |
+| Hidden-info risk | None. Own discard is public; the engine does not expose unchosen candidate IDs through the event log. |
+| Implementation difficulty (delivered) | low-medium. Reuses the existing Medic placement helper and seeded RNG. |
+| Recommended tranche (implemented in cCp25) | Tranche 2. |
+| Settled questions | (1) §C-3: catalog ID retained; behavior is Medic mutation per settled product decision §5, not random Special replay. (2) Empty own discard is a no-op — Medic emits `no_targets` and does not advance RNG. (3) Decoy and Special replay are out of scope; only non-hero Unit cards are eligible. (4) Hero Medic sources are unaffected by the policy (Hero immunity, §17.1). |
 
 ### Eredin Breacc Glas: The Treacherous — `double_spies`
 
@@ -662,33 +669,61 @@ prompt-target side (`own` vs `opponent`).
   hand entry is invisible to the schema.
 - Effect classification: setup-time event.
 
-### Pattern 8 — Random Special Replay From Discard
+### Pattern 8 — Passive Random Medic Mutation (IMPLEMENTED in cCp25)
 
 | Members | Ability IDs |
 |---|---|
-| Emhyr: Invader of the North | `random_medic` |
+| Emhyr: Invader of the North | **IMPLEMENTED in cCp25** — `random_medic` |
 
-- Trigger: active one-shot.
-- Effect: random Special card from the acting seat's discard is played.
+**Status:** `random_medic` implemented in cCp25 (see
+`audit/reports/2026-05-03-cCp25-report.md`) as a **whole-match passive
+Medic mutation**, settling cCp18 §C-3 and cCp18 settled product decision
+§5 in favor of the Medic-mutation reading. The earlier "random Special
+replay from discard" reading is historical context only.
+
+- Trigger: passive ongoing modifier; derived from leader source identity
+  through `hasRandomMedicPolicyForSeat` (mirrors the cCp15 King Bran /
+  cCp19 row-horn / cCp20 `double_spies` passive pattern).
+- Effect: while this leader is the seat's leader, every non-hero Medic
+  source controlled by that seat revives a random eligible non-hero
+  Unit from the seat's own discard, uniform over candidate cards
+  through the engine's seeded RNG. Hero Medic sources are unaffected
+  and keep the normal player-choice prompt. The chain recurses for
+  random-revived non-hero Medics until the candidate set is empty.
 - Engine surfaces:
-  - `executeLeader` filters `seat.discard` to Special-kind cards →
-    `state.rng.fork("random_medic").pickIndex(...)` → execute the same
-    play path as a normal special card cast.
-- Legal-move shape: `use_leader` with `target.kind === "none"`. Emit only
-  if the acting seat's discard has at least one Special.
-- Command shape: `UseLeader` → seeded pick → cast as if played → consume
+  - new pure helper module `src/game/core/leaderRandomMedic.ts`
+    exporting `hasRandomMedicPolicyForSeat`, `getRandomMedicCandidates`,
+    and `chooseRandomMedicCandidate`. Helpers read only state, seat,
+    and catalog data; they have no side effects beyond the explicit
+    chooser writeback.
+  - `resolveMedic` (in `src/game/core/abilities.ts`) checks
+    `hasRandomMedicPolicyForSeat` for non-hero Medic sources and, when
+    the policy applies, builds the candidate set, picks a candidate
+    (advancing `state.rng.state` only on a multi-candidate roll), and
+    routes through a shared internal `placeMedicRevival` helper that
+    handles Spy placement, controller reset, `card_played`, the Medic
+    `ability_resolved` event, child ability resolution via
+    `resolveCardAbilities`, and `settleMardroemeRow`. The same
+    `placeMedicRevival` helper is reused by the prompt-based
+    `medic_revive` resolution path so the two flows cannot diverge.
+- Legal-move shape: none. The leader emits no `use_leader` move.
+- Command shape: none. The mutation lives in the Medic resolution
+  path; manual `UseLeader` rejects through the existing
+  unsupported-leader path without state mutation.
+- Prompt / UI: random Medic emits no `prompt_opened` /
+  `prompt_resolved`. Hero Medic sources still open the existing
+  `medic_revive` prompt.
+- Hidden-info risk: none. Own discard is already public, and the event
+  log only reveals the actually revived public card.
+- AI: heuristic policy does not need to choose; the engine picks.
+  Heuristic still values firing the Medic source itself (no change to
+  `legal-heuristic-v0`).
+- Simulation export: new `ability_resolved` outcome
+  `"random_revived_card"` distinguishes the random path from
+  `"revived_card"` (prompt). No new event types.
+- Effect classification: ongoing whole-match passive that mutates the
+  Medic ability for non-hero sources controlled by the seat with this
   leader.
-- Prompt / UI: none at choice time. The replay's downstream effects
-  (Scorch, weather, etc.) follow normal paths.
-- Hidden-info risk: low (own discard public).
-- AI: heuristic does not need to choose; the engine picks. Heuristic only
-  needs to value firing the leader — which is information already on the
-  table.
-- Simulation export: per-special replay event. Consider whether the leader
-  should be allowed to replay Decoy (target needed); recommendation: skip
-  Decoy at filter step.
-- Effect classification: one-shot active; downstream effects are normal
-  Special-card resolution.
 
 ### Pattern 9 — Bulk Move Friendly Agile Units (IMPLEMENTED in cCp21)
 
@@ -853,24 +888,33 @@ This table compares catalog leader descriptions, leader ability metadata,
   was overridden by the product-owner call; this entry is preserved
   as historical context only.
 
-### §C-3 — `random_medic` ID is a misnomer
+### §C-3 — `random_medic` ID is a misnomer (SETTLED & IMPLEMENTED in cCp25)
 
 - The catalog ability ID `random_medic` lives on
-  `nilfgaard.emhyr-var-emreis-invader-of-the-north`, with description
-  "Plays a random medic effect."
+  `nilfgaard.emhyr-var-emreis-invader-of-the-north`. Before cCp25 the
+  catalog description was "Plays a random medic effect."
 - The classic Witcher 3 / Gwent text is "Pick a random Special Card from
-  your discard pile and play it instantly." This is a Special-card
-  random replay, not a Medic Unit revival.
+  your discard pile and play it instantly." That printed wording reads
+  as a Special-card random replay, not a Medic Unit revival.
 - Game8 staging: ID is `random_medic` (matches catalog).
 - Witcher Fandom snapshot: no contradicting evidence.
-- **Classification: confirmed catalog bug (description-level only).**
-  The ability ID and human-readable description are misleading. The
-  effect is "random Special replay from discard", not Medic.
-- **Recommendation:** keep the ability ID `random_medic` for backward
-  catalog stability, but rewrite the catalog ability description in
-  `src/game/catalog/abilities.ts` to "Plays a random Special card from
-  your discard pile" when cCp19 implements it. Defer the description
-  change to cCp19 per spec scope.
+- **Classification (historical): catalog ID and printed-rulebook text
+  disagreed.** The cCp18 audit recorded this as a documentation
+  conflict; the product owner's settled decision §5 chose the
+  Medic-mutation reading, keeping the catalog ID `random_medic`.
+- **Settled by product owner: Medic-mutation wins (Option A).** The
+  catalog ID `random_medic` is **kept** for backward catalog stability,
+  but the *behavior* is a passive Medic mutation, **not** a random
+  Special replay. The Witcher 3 "Special Card" wording is superseded.
+- **IMPLEMENTED in cCp25** as a whole-match passive that derives from
+  leader identity. While Invader of the North is the seat's leader,
+  every non-hero Medic source controlled by that seat revives a random
+  eligible non-hero Unit from own discard instead of opening a
+  player-choice Medic prompt. Hero Medic sources are unaffected. See
+  `audit/reports/2026-05-03-cCp25-report.md` and §17.12j. The catalog
+  ability description in `src/game/catalog/abilities.ts` is rewritten
+  in cCp25 to describe the Medic-mutation contract; the older
+  "random medic effect" description is replaced.
 
 ### §C-4 — `optimize_agile_rows` text "yields most strength" vs "row of your choice"
 
@@ -982,7 +1026,7 @@ This table compares catalog leader descriptions, leader ability metadata,
 | 5. Look Three Cards | `target.kind === "none"` | none | n/a | UI overlay on opponent-hand backs | HIGH (first persistent reveal) | acting-seat only; redaction logic must be seat-aware | new reveal sets in observations | one-shot active w/ persistent observation surface |
 | 6. Leader Cancel | `target.kind === "none"` | none | n/a | leader display update | none directly; cross-cuts every passive | yes | new `seat.leaderCancelled` flag | one-shot active w/ persistent suppression flag |
 | 7. Setup Draw Extra | none | none | n/a | none | none | yes | none beyond standard hand size | setup-time event |
-| 8. Random Special Replay | `target.kind === "none"` | none (engine selects) | yes | none | low (own discard public) | yes | per-special replay rows | one-shot active w/ replay |
+| 8. Passive Random Medic Mutation (IMPLEMENTED in cCp25) | none (passive) | none | n/a | none | none (own discard public; only the chosen card is revealed) | yes | new `ability_resolved.outcome "random_revived_card"`; otherwise no new events | ongoing whole-match Medic mutation |
 | 9. Optimize Agile Rows (IMPLEMENTED in cCp21) | `none` (auto) OR `board_row` (per tied row) | none | yes (cEp8 menu fits 1-3 rows) | none — `metadata.targetLabel` carries row name | none | yes | per-card move rows | one-shot active w/ instantaneous board mutation |
 | 10. Shuffle Discards Into Decks (IMPLEMENTED in cCp23) | `target.kind === "none"` | none | yes | none | low (deck order hidden post-shuffle, but contents previously public) | yes — `legal-heuristic-v0` does not currently rank discard recycle, but the no-target move is unambiguous | new `card_moved.reason "leader_shuffle_into_deck"` and `deck_shuffled.reason "leader_shuffle_into_deck"` join event union; per-affected-seat moves + one `deck_shuffled` per affected seat | one-shot active w/ bulk state mutation; affected-decks-only |
 
@@ -1044,25 +1088,25 @@ Heroes remain immune as receivers.
 **Out of scope (deferred to later tranches):** Suppression interaction with
 `cancel_leader` (Tranche 4) is documented but not exercised in Tranche 1.
 
-### Tranche 2 — Active Score Modifier and Single-Step Prompt Leaders
+### Tranche 2 — Active Score Modifier and Single-Step Prompt Leaders (COMPLETE in cCp25)
 
 **Members:** `double_spies` (IMPLEMENTED in cCp20),
 `optimize_agile_rows` (IMPLEMENTED in cCp21),
 `restore_discard_to_hand` (IMPLEMENTED in cCp22),
 `shuffle_discards_into_decks` (IMPLEMENTED in cCp23),
 `draw_opponent_discard` (IMPLEMENTED in cCp24),
-`random_medic`.
+`random_medic` (IMPLEMENTED in cCp25).
 
-**Status:** Five members (`double_spies` in cCp20,
-`optimize_agile_rows` in cCp21, `restore_discard_to_hand` in cCp22,
-`shuffle_discards_into_decks` in cCp23, `draw_opponent_discard` in
-cCp24) are implemented; only `random_medic` remains. After cCp24, six
-implemented passive leader records exist (King Bran + four cCp19
-row-horn + cCp20 Treacherous), eleven implemented active executable
-leader records exist (cCp14 weather + cCp16 row-Scorch × 2 + cCp7
+**Status:** All six members are implemented; **Tranche 2 is complete
+after cCp25.** After cCp25, seven implemented passive leader records
+exist (King Bran + four cCp19 row-horn + cCp20 Treacherous + cCp25
+Invader of the North), eleven implemented active executable leader
+records exist (cCp14 weather + cCp16 row-Scorch × 2 + cCp7
 clear-weather + cCp21 Hope of the Aen Seidhe + cCp22 Bringer of Death
-+ cCp23 Crach an Craite + cCp24 The Relentless), and five leader
-records remain placeholder.
++ cCp23 Crach an Craite + cCp24 The Relentless), and four leader
+records remain placeholder. The next phase should start Tranche 3 with
+either `draw_extra_card` (Pattern 7, setup-time hand-size modifier) or
+`discard_two_draw_one_from_deck` (Pattern 3, multi-step prompt).
 
 **Why second (retained for context):**
 
@@ -1076,7 +1120,7 @@ records remain placeholder.
   pattern).
 - Testability is good: each leader has a deterministic test seed.
 
-**Updated ordering inside Tranche 2 (post-cCp24):**
+**Final ordering inside Tranche 2 (post-cCp25, complete):**
 
 1. `double_spies` — IMPLEMENTED in cCp20 (whole-match passive).
 2. `optimize_agile_rows` — IMPLEMENTED in cCp21 (active one-shot
@@ -1089,7 +1133,8 @@ records remain placeholder.
 5. `draw_opponent_discard` — IMPLEMENTED in cCp24 (active one-shot
    single-step prompt over opponent discard, per settled §C-2 catalog
    wins).
-6. `random_medic` — passive Medic mutation per settled §5.
+6. `random_medic` — IMPLEMENTED in cCp25 (whole-match passive Medic
+   mutation, per settled §5; settles §C-3).
 
 ### Tranche 3 — Setup-Time Event and Multi-Step Prompt
 
@@ -1220,6 +1265,51 @@ cCp19+ implementation:
 
 ## Change Log
 
+- 2026-05-03 (cCp25): `random_medic` (Emhyr var Emreis: Invader of the
+  North) promoted from `placeholder` to `implemented` as a **whole-match
+  passive Medic mutation** (Pattern 8, rewritten from "Random Special
+  Replay From Discard" to "Passive Random Medic Mutation"). New pure
+  helper module `src/game/core/leaderRandomMedic.ts` exporting
+  `hasRandomMedicPolicyForSeat`, `getRandomMedicCandidates`, and
+  `chooseRandomMedicCandidate`. While Invader of the North is the
+  seat's leader, every non-hero Medic source controlled by that seat
+  (`source.abilities.includes("medic") && source.kind !== "hero"`)
+  revives a random eligible non-hero Unit from the seat's own discard
+  pile (uniform over candidate cards through `createSeededRngFromState`;
+  deterministic row fallback `close → ranged → siege` for multi-row
+  targets) instead of opening a player-choice `medic_revive` prompt.
+  Hero Medic sources are unaffected and continue to use the normal
+  Medic prompt (Hero immunity, §17.1). The candidate filter excludes
+  specials, weather, hero cards, opponent discard, hands, decks, side
+  decks, removed-from-game, board rows, row horns, weather zone, and
+  stale missing-instance / missing-catalog-source entries; side-deck-
+  only / generated and off-owner non-hero units physically in own
+  discard are eligible. The chain recurses for random-revived non-hero
+  Medics until the candidate set is empty. RNG advances only on a real
+  multi-candidate roll; zero or single candidate paths leave
+  `state.rng.state` unchanged. The policy reuses a shared internal
+  `placeMedicRevival` helper in `src/game/core/abilities.ts` so the
+  prompt-based and random-based Medic flows share Spy placement,
+  controller reset, `card_played`, child ability resolution, and
+  Mardroeme settlement. The new `ability_resolved` outcome
+  `"random_revived_card"` distinguishes the random path from the
+  prompt-based `"revived_card"`; no `prompt_opened` or
+  `prompt_resolved` events are emitted for the random path. The
+  leader emits no `use_leader` legal move, never sets
+  `seat.leaderUsed`, and never emits `leader_used`. Manual `UseLeader`
+  rejects through the existing unsupported-leader path without state
+  mutation. The official promotion manifest adds
+  `nilfgaard.emhyr-var-emreis-invader-of-the-north` to
+  `implementedPassiveLeaderSourceIds` (now 7) and removes
+  `random_medic` from `placeholderLeaderAbilityIds` (now 4). Settled
+  product decision §5 reaffirmed: Medic-mutation wins; the Witcher 3
+  "random Special card" wording is superseded. Settled §C-3 conflict
+  marked settled-and-implemented. Pattern 8 marked IMPLEMENTED.
+  **Tranche 2 is complete after cCp25** — Tranche 3 should start with
+  either `draw_extra_card` (Pattern 7) or
+  `discard_two_draw_one_from_deck` (Pattern 3). After cCp25, four
+  leader records remain placeholder. See
+  `audit/reports/2026-05-03-cCp25-report.md` for details.
 - 2026-05-02 (cCp18): initial matrix per `docs/spec/2026-05-02-cCp18-specs.md`.
 - 2026-05-02 (cCp19): Tranche 1 implemented. `double_siege`, `double_close`
   (×2), and `double_ranged` promoted from `placeholder` to `implemented`

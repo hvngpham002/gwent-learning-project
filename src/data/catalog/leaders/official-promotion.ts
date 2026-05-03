@@ -97,10 +97,12 @@ const executableLeaderSourceIds: readonly string[] = [
 // cCp15 added King Bran (`weather_half_penalty`) here. cCp19 adds the four
 // row-wide horn-like passive leaders (`double_siege`, `double_close` ×2,
 // `double_ranged`). cCp20 adds Eredin Breacc Glas: The Treacherous
-// (`double_spies`).
+// (`double_spies`). cCp25 adds Emhyr var Emreis: Invader of the North
+// (`random_medic`) as a passive Medic mutation, completing Tranche 2.
 const implementedPassiveLeaderSourceIds: readonly string[] = [
   "monsters.eredin-breacc-glas-the-treacherous",
   "monsters.eredin-commander-of-the-red-riders",
+  "nilfgaard.emhyr-var-emreis-invader-of-the-north",
   "northern-realms.foltest-the-siegemaster",
   "scoiatael.francesca-findabair-queen-of-dol-blathanna",
   "scoiatael.francesca-findabair-the-beautiful",
@@ -115,7 +117,7 @@ const implementedLeaderSourceIds: readonly string[] = [
 ].slice().sort();
 
 // Leader ability IDs whose `CATALOG_LEADER_ABILITY_METADATA.status` is still
-// `placeholder` after cCp24. cCp14 promoted `play_any_weather` to implemented;
+// `placeholder` after cCp25. cCp14 promoted `play_any_weather` to implemented;
 // cCp15 promoted `weather_half_penalty` (passive); cCp16 promoted `scorch_range`
 // and `scorch_siege`; cCp19 promotes `double_siege`, `double_close`, and
 // `double_ranged`; cCp20 promotes `double_spies` (passive); cCp21 promotes
@@ -123,19 +125,20 @@ const implementedLeaderSourceIds: readonly string[] = [
 // `restore_discard_to_hand` (active executable, prompt-based); cCp23 promotes
 // `shuffle_discards_into_decks` (active executable, no prompt); cCp24 promotes
 // `draw_opponent_discard` (active executable, prompt-based over opponent
-// discard, settling the cCp18 §C-2 conflict in favor of the catalog). The
-// cCp18 audit (§C-7) flagged that this array previously listed only the
+// discard, settling the cCp18 §C-2 conflict in favor of the catalog); cCp25
+// promotes `random_medic` (passive Medic mutation, settling the cCp18 §C-3
+// conflict in favor of the Medic-mutation reading) and completes Tranche 2.
+// The cCp18 audit (§C-7) flagged that this array previously listed only the
 // cBp5-introduced placeholders; cCp19 backfilled the pre-cBp5 placeholders
 // so the manifest now exhaustively reflects every placeholder leader ability
-// ID, and cCp20/cCp21/cCp22/cCp23/cCp24 keep it exhaustive after removing
-// `double_spies`, `optimize_agile_rows`, `restore_discard_to_hand`,
-// `shuffle_discards_into_decks`, and `draw_opponent_discard`.
+// ID, and cCp20/cCp21/cCp22/cCp23/cCp24/cCp25 keep it exhaustive after
+// removing `double_spies`, `optimize_agile_rows`, `restore_discard_to_hand`,
+// `shuffle_discards_into_decks`, `draw_opponent_discard`, and `random_medic`.
 const placeholderLeaderAbilityIds: readonly string[] = [
   "cancel_leader",
   "discard_two_draw_one_from_deck",
   "draw_extra_card",
   "look_three_cards",
-  "random_medic",
 ];
 
 export const officialLeaderPromotionManifest: OfficialLeaderPromotionManifest = {

@@ -60,13 +60,12 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp24", () => {
+  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp25", () => {
     [
       "cancel_leader",
       "discard_two_draw_one_from_deck",
       "draw_extra_card",
       "look_three_cards",
-      "random_medic",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -77,7 +76,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, cCp22 restore_discard_to_hand, cCp23 shuffle_discards_into_decks, and cCp24 draw_opponent_discard", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, cCp22 restore_discard_to_hand, cCp23 shuffle_discards_into_decks, cCp24 draw_opponent_discard, and cCp25 random_medic", () => {
     [
       "clear_weather",
       "play_frost",
@@ -95,6 +94,7 @@ describe("official leader promotion (cBp5)", () => {
       "restore_discard_to_hand",
       "shuffle_discards_into_decks",
       "draw_opponent_discard",
+      "random_medic",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -114,6 +114,7 @@ describe("official leader promotion (cBp5)", () => {
         "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+        "nilfgaard.emhyr-var-emreis-invader-of-the-north",
         "nilfgaard.emhyr-var-emreis-the-relentless",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
@@ -182,6 +183,7 @@ describe("official leader promotion (cBp5)", () => {
     expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
       "monsters.eredin-breacc-glas-the-treacherous",
       "monsters.eredin-commander-of-the-red-riders",
+      "nilfgaard.emhyr-var-emreis-invader-of-the-north",
       "northern-realms.foltest-the-siegemaster",
       "scoiatael.francesca-findabair-queen-of-dol-blathanna",
       "scoiatael.francesca-findabair-the-beautiful",
@@ -194,6 +196,7 @@ describe("official leader promotion (cBp5)", () => {
         "monsters.eredin-commander-of-the-red-riders",
         "monsters.eredin-king-of-the-wild-hunt",
         "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
+        "nilfgaard.emhyr-var-emreis-invader-of-the-north",
         "nilfgaard.emhyr-var-emreis-the-relentless",
         "northern-realms.foltest-king-of-temeria",
         "northern-realms.foltest-lord-commander-of-the-north",
@@ -214,7 +217,6 @@ describe("official leader promotion (cBp5)", () => {
         "discard_two_draw_one_from_deck",
         "draw_extra_card",
         "look_three_cards",
-        "random_medic",
       ].sort(),
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("play_any_weather");
@@ -238,6 +240,9 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
       "draw_opponent_discard",
+    );
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
+      "random_medic",
     );
   });
 

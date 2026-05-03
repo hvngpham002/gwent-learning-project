@@ -237,8 +237,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   random_medic: {
     id: "random_medic",
     name: "Random Medic",
-    status: "placeholder",
-    description: "Plays a random medic effect.",
+    status: "implemented",
+    description: "Passive whole-match Medic mutation. While this leader is the seat's leader, every non-hero Medic source controlled by that seat revives a random eligible non-hero Unit from that seat's own discard pile (uniform over candidate cards through the engine's seeded RNG; deterministic row fallback `close → ranged → siege` for multi-row targets) instead of opening a Medic prompt. Spy placement still flips to the opponent board side and resolves Spy draw. Hero Medic sources are unaffected and continue to use the normal player-choice Medic prompt. Emits no legal `use_leader` move and never sets `seat.leaderUsed`. Settles the cCp18 §C-3 conflict in favor of the Medic-mutation reading; the older random Special replay text is superseded.",
   },
   play_any_weather: {
     id: "play_any_weather",

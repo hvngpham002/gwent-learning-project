@@ -11,3 +11,4 @@ export * from "./leaderOptimizeAgile";
 export * from "./leaderDiscardRestore";
 export * from "./leaderDiscardRecycle";
 export * from "./leaderOpponentDiscardDraw";
+export * from "./leaderRandomMedic";

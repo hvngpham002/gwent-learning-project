@@ -342,6 +342,7 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 | **Emhyr var Emreis, The Relentless** | The catalog assigns this leader the ability `draw_opponent_discard`: **draw a card from your opponent's discard pile** (not your own deck). cCp24 implements this as an **active one-shot leader** resolved through a single-step `choose_card` prompt over the **opponent's** discard pile. Any card kind physically in opponent discard is eligible — units, heroes, specials, weather, and side-deck-only / generated cards. The chosen card moves to the acting seat's hand, with `controller` reset to the acting seat and `owner` preserved. Drawn cards do **not** trigger their abilities. Empty opponent discard emits no legal `use_leader` move. The cCp18 audit recorded that an earlier printed-rulebook source said "tutor from your deck" for this same leader; the project treats the catalog as the local authority and the deck-tutor wording is superseded. The cCp18 §C-2 conflict is now settled and implemented. See §17.12i. |
 | **Eredin Breacc Glas: The Treacherous** | The catalog ability `double_spies` is a **whole-match passive** (cCp20): every battlefield non-hero card whose source includes the `spy` ability receives a ×2 multiplier on every scoring tick, on both board sides and all rows, regardless of owner or controller. Hero Spies are unaffected (Hero immunity, §17.1). The leader emits no `use_leader` move and never sets `seat.leaderUsed`. See §17.12e. |
 | **Crach an Craite** | The catalog ability `shuffle_discards_into_decks` is an **active one-shot leader** (cCp23). When fired, every non-empty discard pile is moved into the same seat's deck and that seat's deck is shuffled deterministically through the engine's seeded RNG; an empty-discard seat is **not** shuffled. A card moves to the deck of the seat whose discard it currently occupies — Spies and other off-owner cards recycle into the discard-pile seat's deck, with `owner` preserved and `controller` reset to the destination seat. Hand, deck, side deck, removed-from-game, board, row horns, weather zone, and leader zone are not touched. The leader emits no legal `use_leader` move when **both** discard piles are empty; a single non-empty discard is enough to enable it. Recycled cards do not resolve their abilities (no `card_played`); they behave normally only if drawn and played later. Skellige's round-three return §17.18 still operates on whatever is in discard at future round-end. See §17.12h. |
+| **Emhyr var Emreis, Invader of the North** | The catalog ability `random_medic` is a **whole-match passive Medic mutation** (cCp25). While this leader is the seat's leader, every **non-hero** Medic source controlled by that seat revives a **random eligible non-hero Unit** from that seat's own discard pile (uniform over candidate cards through the engine's seeded RNG; deterministic row fallback `close → ranged → siege` for multi-row targets) instead of opening a player-choice Medic prompt. Spy placement still flips the revived card to the opponent board side and resolves Spy draw; `controller` becomes the acting seat with `owner` preserved. **Hero Medic sources are unaffected** and continue to use the normal Medic prompt. The leader emits no `use_leader` move and never sets `seat.leaderUsed`. The cCp18 §C-3 conflict is settled in favor of the Medic-mutation reading; the older "random Special replay from discard" wording is superseded. See §17.12j. |
 
 ---
 
@@ -1147,6 +1148,98 @@ not own the prompt). `summarizeEvents` exposes only
 labels or card identities. Acting hand identities are public to the
 acting seat through `seatObservation` after the draw, just like any
 other card-to-hand event.
+
+### 17.12j Random Medic Passive Leader (cCp25)
+
+`nilfgaard.emhyr-var-emreis-invader-of-the-north` (Emhyr var Emreis:
+Invader of the North) carries the `random_medic` leader ability. cCp25
+promotes the metadata from `placeholder` to `implemented` as a
+**whole-match passive Medic mutation**, finishing Tranche 2.
+
+The cCp18 §C-3 conflict (catalog `random_medic` ID vs printed-rulebook
+"random Special replay from discard" wording) is **settled in favor of
+the Medic-mutation reading**: while this leader is the seat's leader,
+the Medic ability changes shape for non-hero sources controlled by
+that seat. The older random-Special-replay text is superseded.
+
+Effect contract:
+
+- **Whole-match passive classification.** The leader emits no
+  `use_leader` legal move, never sets `seat.leaderUsed`, and never
+  emits `leader_used`. The policy is derived from leader source
+  identity, mirroring the cCp15 King Bran / cCp19 row-horn / cCp20
+  `double_spies` passive pattern. A manual `UseLeader` attempt
+  rejects through the existing unsupported-leader path (no state
+  mutation, leader untouched).
+- **Non-hero Medic source scope.** The mutation applies when a Medic
+  ability resolves for a card whose catalog source has
+  `kind !== "hero"` (`source.abilities.includes("medic") && source.kind !== "hero"`).
+  Hero Medic sources are not affected and keep the normal player-choice
+  `medic_revive` prompt (§17.2). The mutation chains: a non-hero
+  Medic revived through random Medic also resolves under the same
+  random policy and can chain until no eligible non-hero units remain
+  in own discard.
+- **Own-discard non-hero unit candidate filter.** The candidate set is
+  built from the acting seat's own discard pile and includes only
+  entries whose catalog source resolves, has `kind === "unit"`,
+  has `kind !== "hero"` (units only — heroes excluded), and has at
+  least one playable row. Specials, weather, and hero cards are
+  excluded even when they reach own discard. Side-deck-only and
+  generated non-hero units are eligible if they physically reach own
+  discard. Off-owner non-hero units physically sitting in own discard
+  are eligible with `owner` preserved on placement and `controller`
+  reset to the acting seat. Stale missing-instance / missing-catalog-
+  source entries are skipped. The opponent discard, hands, decks,
+  side decks, removed-from-game, board rows, row horns, and weather
+  zone are not consulted.
+- **Random candidate selection.** Selection is uniform over candidate
+  **cards** (not over row-expanded prompt options). The engine uses
+  `createSeededRngFromState(state.rng.seed, state.rng.state)` and
+  writes the new RNG state back **only** when the random pick happens.
+  Zero candidates: emit `ability_resolved` for `medic` with
+  `outcome === "no_targets"` and do **not** advance RNG. One
+  candidate: choose deterministically and do **not** advance RNG.
+  Multiple candidates: roll once, advance RNG state. Identical seed
+  and pre-command state produce the same chosen card and post-state.
+- **Deterministic row fallback for multi-row targets.** After the
+  random card is chosen, the engine picks the first playable row from
+  the canonical row order `close → ranged → siege` (filtered against
+  `source.rows`). Multi-row units appear once as a card candidate, not
+  once per row. There is no row prompt and no score-optimization at
+  the row stage; future product passes can change this policy
+  explicitly.
+- **Spy placement / draw behavior.** If the revived source has the
+  `spy` ability, placement flips to the opponent board side and Spy
+  resolves the standard 2-card draw for the acting seat. Otherwise
+  placement is on the acting board side. In both cases `controller`
+  becomes the acting seat and `owner` is preserved.
+- **Resolution event sequence.** For each non-hero Medic source under
+  the policy, the engine emits (in order): `ability_triggered` for
+  `medic`; on success, `card_moved` for the revived card with
+  `reason === "medic_revive"`, `card_played` for the revived card,
+  `ability_resolved` for the Medic source with
+  `outcome === "random_revived_card"`; subsequent revived-card
+  abilities resolve normally through `resolveCardAbilities`; finally
+  `settleMardroemeRow` runs on the placement row. Empty candidate set:
+  `ability_triggered` then `ability_resolved` with
+  `outcome === "no_targets"`. **No `prompt_opened` and no
+  `prompt_resolved` events are emitted for random Medic.**
+- **Medic chain behavior.** A revived non-hero Medic recurses through
+  the same random policy. The chain is finite because every revived
+  card leaves discard before its own Medic resolves; once the
+  candidate set goes empty, the final Medic emits `no_targets` and
+  the chain ends without leaving a pending prompt.
+- **Hero Medic source exception (§17.1).** Hero immunity prevents the
+  random policy from rewriting hero Medic effects. A hero source with
+  `medic` opens the existing `medic_revive` prompt (or emits
+  `no_targets` when discard has no eligible non-hero unit). Random
+  selection does not occur and RNG state does not advance.
+
+Hidden-info safety: own discard contents were already public, so
+random selection over own discard does not leak hidden information.
+Random Medic emits no prompt events, so AI-owned and human-owned
+random Medic resolutions look identical from the spectator side.
+`summarizeEvents` does not gain new fields.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 

@@ -1,5 +1,10 @@
 import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
 
+import {
+  chooseRandomMedicCandidate,
+  getRandomMedicCandidates,
+  hasRandomMedicPolicyForSeat,
+} from "./leaderRandomMedic";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
 import {
   calculateScores,
@@ -458,15 +463,126 @@ const resolveSpy = (state: MatchState, events: GameEvent[], source: CatalogCardS
   emitResolved(events, source, cardId, "spy");
 };
 
+interface PlaceMedicRevivalInput {
+  state: MatchState;
+  events: GameEvent[];
+  catalogCards: readonly CatalogCardSource[];
+  catalogLeaders?: readonly CatalogLeaderSource[];
+  catalogLookup: ReadonlyMap<string, CatalogCardSource>;
+  actingSeatId: SeatId;
+  revivedCardId: CardInstanceId;
+  boardSeat: SeatId;
+  row: CatalogRow;
+  medicSourceId: string;
+  medicSourceCardId: CardInstanceId;
+  abilityId: string;
+  outcome: string;
+}
+
+const placeMedicRevival = ({
+  state,
+  events,
+  catalogCards,
+  catalogLeaders,
+  catalogLookup,
+  actingSeatId,
+  revivedCardId,
+  boardSeat,
+  row,
+  medicSourceId,
+  medicSourceCardId,
+  abilityId,
+  outcome,
+}: PlaceMedicRevivalInput) => {
+  const revived = state.cardsById[revivedCardId];
+  revived.controller = actingSeatId;
+  moveCard(state, events, revivedCardId, { kind: "board_row", seat: boardSeat, row }, "medic_revive");
+  events.push({ type: "card_played", seatId: actingSeatId, cardId: revivedCardId, target: revived.zone });
+  events.push({
+    type: "ability_resolved",
+    sourceId: medicSourceId,
+    cardId: medicSourceCardId,
+    abilityId,
+    outcome,
+  });
+
+  resolveCardAbilities({
+    state,
+    events,
+    catalogCards,
+    catalogLeaders,
+    seatId: actingSeatId,
+    cardId: revivedCardId,
+  });
+
+  if (revived.zone.kind === "board_row") {
+    settleMardroemeRow({
+      state,
+      events,
+      catalogLookup,
+      boardSeat: revived.zone.seat,
+      row: revived.zone.row,
+      triggerCardId: revivedCardId,
+    });
+  }
+};
+
 const resolveMedic = (
   state: MatchState,
   events: GameEvent[],
+  catalogCards: readonly CatalogCardSource[],
+  catalogLeaders: readonly CatalogLeaderSource[] | undefined,
   catalogLookup: ReadonlyMap<string, CatalogCardSource>,
   source: CatalogCardSource,
   seatId: SeatId,
   cardId: CardInstanceId,
 ) => {
   emitTriggered(events, source, cardId, "medic");
+
+  const useRandomPolicy =
+    source.kind !== "hero" &&
+    hasRandomMedicPolicyForSeat({ state, seatId, catalogLeaders });
+
+  if (useRandomPolicy) {
+    const candidates = getRandomMedicCandidates({
+      state,
+      seatId,
+      catalogCards,
+    });
+    if (candidates.length === 0) {
+      emitResolved(events, source, cardId, "medic", "no_targets");
+      return;
+    }
+    const choice = chooseRandomMedicCandidate({
+      candidates,
+      rngSeed: state.rng.seed,
+      rngState: state.rng.state,
+    });
+    if (!choice.candidate) {
+      emitResolved(events, source, cardId, "medic", "no_targets");
+      return;
+    }
+    if (choice.advanced) {
+      state.rng.state = choice.nextRngState;
+    }
+    placeMedicRevival({
+      state,
+      events,
+      catalogCards,
+      catalogLeaders,
+      catalogLookup,
+      actingSeatId: seatId,
+      revivedCardId: choice.candidate.cardId,
+      boardSeat: choice.candidate.boardSeat,
+      row: choice.candidate.row,
+      medicSourceId: source.sourceId,
+      medicSourceCardId: cardId,
+      abilityId: "medic",
+      outcome: "random_revived_card",
+    });
+    return;
+  }
+
   const options = buildMedicOptions(state, catalogLookup, seatId);
   if (options.length === 0) {
     emitResolved(events, source, cardId, "medic", "no_targets");
@@ -904,7 +1020,7 @@ export const resolveCardAbilities = ({
     if (abilityId === "spy") {
       resolveSpy(state, events, source, seatId, cardId);
     } else if (abilityId === "medic") {
-      resolveMedic(state, events, catalogLookup, source, seatId, cardId);
+      resolveMedic(state, events, catalogCards, catalogLeaders, catalogLookup, source, seatId, cardId);
     } else if (abilityId === "muster") {
       resolveMusterLike(state, events, catalogLookup, source, seatId, cardId, "muster");
     } else if (abilityId === "muster_roach") {
@@ -966,35 +1082,25 @@ export const resolvePromptOption = ({
     if (option.target.row === undefined) {
       return;
     }
-    revived.controller = seatId;
-    moveCard(state, events, revivedId, { kind: "board_row", seat: boardSeat, row: option.target.row }, "medic_revive");
+    const medicSource = catalogLookup.get(prompt.sourceId ?? "");
     events.push({ type: "prompt_resolved", promptId: prompt.promptId, seatId, optionId });
-    events.push({ type: "card_played", seatId, cardId: revivedId, target: revived.zone });
     state.pendingPrompt = null;
 
-    const source = catalogLookup.get(prompt.sourceId ?? "");
-    if (source) {
-      events.push({
-        type: "ability_resolved",
-        sourceId: source.sourceId,
-        cardId: prompt.sourceCardId ?? revivedId,
-        abilityId: prompt.abilityId,
-        outcome: "revived_card",
-      });
-    }
-
-    resolveCardAbilities({ state, events, catalogCards, catalogLeaders, seatId, cardId: revivedId });
-
-    if (revived.zone.kind === "board_row") {
-      settleMardroemeRow({
-        state,
-        events,
-        catalogLookup,
-        boardSeat: revived.zone.seat,
-        row: revived.zone.row,
-        triggerCardId: revivedId,
-      });
-    }
+    placeMedicRevival({
+      state,
+      events,
+      catalogCards,
+      catalogLeaders,
+      catalogLookup,
+      actingSeatId: seatId,
+      revivedCardId: revivedId,
+      boardSeat,
+      row: option.target.row,
+      medicSourceId: medicSource?.sourceId ?? prompt.sourceId ?? "",
+      medicSourceCardId: prompt.sourceCardId ?? revivedId,
+      abilityId: prompt.abilityId,
+      outcome: "revived_card",
+    });
     return;
   }
 
