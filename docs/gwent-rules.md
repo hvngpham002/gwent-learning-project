@@ -341,6 +341,7 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 | **Eredin, Bringer of Death** | Restore a card of the player's choice from their own discard pile (catalog ability `restore_discard_to_hand`). cCp22 implements this as an active one-shot leader resolved through a single-step `choose_card` prompt over the acting seat's own discard pile; **any card kind in own discard is eligible — units, heroes, specials, weather, and side-deck-only / generated cards that physically reach discard.** Heroes are included because the leader text says "card" without Medic's non-hero unit restriction. The cCp18 audit confirmed that the original printed-rulebook table mis-attributed this row to *Eredin, Destroyer of Worlds*; the correct attribution is *Eredin, Bringer of Death*. *Eredin, Destroyer of Worlds* is the discard-cost / deck-draw leader (catalog ability `discard_two_draw_one_from_deck`). See §17.12g. |
 | **Emhyr var Emreis, The Relentless** | The catalog assigns this leader the ability `draw_opponent_discard`: **draw a card from your opponent's discard pile** (not your own deck). The cCp18 audit recorded that an earlier printed-rulebook source said "tutor from your deck" for this same leader; the project treats the catalog as the local authority and the deck-tutor wording is superseded. The cCp19 implementation phase did not implement this leader; tracking is in `docs/leader-ability-matrix.md` §C-2. |
 | **Eredin Breacc Glas: The Treacherous** | The catalog ability `double_spies` is a **whole-match passive** (cCp20): every battlefield non-hero card whose source includes the `spy` ability receives a ×2 multiplier on every scoring tick, on both board sides and all rows, regardless of owner or controller. Hero Spies are unaffected (Hero immunity, §17.1). The leader emits no `use_leader` move and never sets `seat.leaderUsed`. See §17.12e. |
+| **Crach an Craite** | The catalog ability `shuffle_discards_into_decks` is an **active one-shot leader** (cCp23). When fired, every non-empty discard pile is moved into the same seat's deck and that seat's deck is shuffled deterministically through the engine's seeded RNG; an empty-discard seat is **not** shuffled. A card moves to the deck of the seat whose discard it currently occupies — Spies and other off-owner cards recycle into the discard-pile seat's deck, with `owner` preserved and `controller` reset to the destination seat. Hand, deck, side deck, removed-from-game, board, row horns, weather zone, and leader zone are not touched. The leader emits no legal `use_leader` move when **both** discard piles are empty; a single non-empty discard is enough to enable it. Recycled cards do not resolve their abilities (no `card_played`); they behave normally only if drawn and played later. Skellige's round-three return §17.18 still operates on whatever is in discard at future round-end. See §17.12h. |
 
 ---
 
@@ -981,6 +982,80 @@ human UI because `getPromptMoves` returns `[]` for any seat that does
 not own the prompt and `summarizeEvents` exposes only
 `prompt.seatId` / `prompt.abilityId` for `prompt_opened`, never the
 option labels or card identities.
+
+### 17.12h Shuffle Discards Into Decks Active Leader (cCp23)
+
+`skellige.crach-an-craite` (Crach an Craite) carries the
+`shuffle_discards_into_decks` leader ability. cCp23 promotes the
+metadata from `placeholder` to `implemented` as an **active one-shot**
+leader resolved without any prompt or UI choice.
+
+Effect contract:
+
+- **Owner:** Crach an Craite owns this effect — Skellige's only active
+  executable leader.
+- **Active one-shot.** The leader is consumed exactly once per game
+  through a single `UseLeader` command. There is no prompt, no choice
+  menu, and no UI selection.
+- **Empty discards rule.** When **both** seats' discard piles are
+  empty, the leader emits no legal `use_leader` move and a manual
+  `UseLeader` rejects with `EngineRuleError` without setting
+  `seat.leaderUsed`. A **single** non-empty discard pile is enough to
+  enable the leader.
+- **What moves.** Only cards currently in `state.seats[seat].discard`
+  are recycled. Hand, deck, side deck, removed-from-game, board rows,
+  row horns, weather zone, and the leader zone are not touched. Stale
+  discard entries whose card instance is missing are skipped silently.
+- **Where they go.** A card moves to the deck of the seat whose discard
+  it currently occupies, **not** necessarily back to its original
+  owner's deck. This matters for Spies and other off-owner cards — the
+  engine already places row discards on the side they occupied, and
+  cCp23 preserves that zone model. After the move, each recycled card's
+  `controller` is set to the destination deck seat; `owner` is
+  unchanged.
+- **Affected-decks-only shuffle.** After moving a non-empty discard
+  pile into its deck, that seat's full deck is shuffled with the engine's
+  deterministic seeded RNG (`createSeededRngFromState` +
+  `shuffleWithRng`). Seats whose discard was empty are not shuffled —
+  their hidden deck order is preserved (no hidden no-op mutation).
+  Affected seats with a non-empty discard whose resulting deck has
+  length 0 or 1 still emit `deck_shuffled`, even though the swap loop
+  consumes no random values.
+- **RNG.** A single `SeededRng` instance is created from the existing
+  `state.rng.seed` / `state.rng.state` and reused across the whole
+  command. After all affected shuffles, `state.rng.state` is set to the
+  RNG's final `getState()`. Identical pre-command states with the same
+  seed produce identical post-command deck orders and RNG state.
+- **Stable seat order.** Affected seats are processed in
+  `["seat_a", "seat_b"]` order so the event sequence and RNG draws are
+  deterministic regardless of which seat acts.
+- **Recycled cards do not resolve their abilities.** A recycled Medic,
+  Spy, Muster, Scorch, weather, hero, Avenger, Berserker, or Summon
+  behaves normally only if it is later drawn and played from hand. The
+  engine emits no `card_played` for recycled cards.
+- **Event sequence.** `ability_triggered` (Crach's leader card) →
+  one `card_moved` per recycled card with
+  `reason === "leader_shuffle_into_deck"` (in stable seat / discard
+  order, before each seat's shuffle) → one `deck_shuffled` per
+  affected seat with `reason === "leader_shuffle_into_deck"` →
+  `ability_resolved` with `outcome === "shuffled_discards"` →
+  `leader_used` → turn handoff through the existing `handoffTurn`
+  helper.
+- **Skellige round-three return §17.18 still works.** Crach does not
+  create a permanent return pool. Skellige's round-three return reads
+  whatever is in the discard pile at future round-end; if Crach has
+  already shuffled past round discards back into the deck, the round-
+  three return finds whatever has since refilled the discard.
+- **Removed-from-game cards are not touched.** Mardroeme-transformed
+  Berserkers and any other `removed_from_game` cards stay where they
+  are.
+
+Hidden-info safety: discard contents were already public, but post-
+shuffle deck order is hidden. The engine does not expose post-shuffle
+deck order through legal-move metadata, AI observation, simulation
+export rows, or any new event payload. The new `card_moved` and
+`deck_shuffled` events do not carry deck order; only the seat ID and
+the affected card ID are published.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 

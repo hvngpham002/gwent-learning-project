@@ -539,11 +539,12 @@ describe("match leader inspection view model", () => {
 
   it("marks used leaders as used regardless of ability status", () => {
     const inspection = buildMatchLeaderInspection({
-      sourceId: "skellige.crach-an-craite",
-      name: "Crach an Craite",
-      faction: "skellige",
-      abilityId: "shuffle_discards_into_decks",
-      image: "/images/skellige/leaders/Crach_an_Craite.png",
+      sourceId: "nilfgaard.emhyr-var-emreis-emperor-of-nilfgaard",
+      name: "Emhyr var Emreis: Emperor of Nilfgaard",
+      faction: "nilfgaard",
+      abilityId: "look_three_cards",
+      image:
+        "/images/nilfgaard/leaders/Emhyr_var_Emreis_Emperor_of_Nilfgaard.png",
       used: true,
       ownerLabel: "AI",
     });

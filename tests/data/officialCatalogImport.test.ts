@@ -161,6 +161,7 @@ describe("official Game8 catalog staging import", () => {
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.double_spies).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.optimize_agile_rows).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.restore_discard_to_hand).toBeUndefined();
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.shuffle_discards_into_decks).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.discard_two_draw_one_from_deck).toBeGreaterThan(0);
   });
 

@@ -17,6 +17,7 @@ import {
 } from "./leaderRowScorch";
 import { planOptimizeAgileRows, type OptimizeAgileRowsCandidate } from "./leaderOptimizeAgile";
 import { getRestoreDiscardCandidates } from "./leaderDiscardRestore";
+import { getDiscardRecyclePlan } from "./leaderDiscardRecycle";
 import { calculateScores, findUnitScorchRowTargets } from "./scoring";
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
@@ -579,6 +580,33 @@ const getLeaderMove = (
           targetRequirement: "future_prompt",
           targetCount: candidates.length,
           targetLabel: "own discard",
+        },
+      },
+    ];
+  }
+
+  if (leader.ability === "shuffle_discards_into_decks") {
+    const plan = getDiscardRecyclePlan({ state });
+    if (plan.totalCardCount === 0) {
+      return [];
+    }
+
+    return [
+      {
+        kind: "use_leader",
+        moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+        seatId,
+        leaderCardId,
+        sourceId: leader.sourceId,
+        target: { kind: "none" },
+        label: `Use ${leader.name}`,
+        metadata: {
+          leaderName: leader.name,
+          ability: leader.ability,
+          abilityStatus: abilityMetadata.status,
+          targetRequirement: "none",
+          targetCount: plan.totalCardCount,
+          targetLabel: "discard piles",
         },
       },
     ];

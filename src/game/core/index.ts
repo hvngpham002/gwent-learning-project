@@ -9,3 +9,4 @@ export * from "./leaderWeather";
 export * from "./leaderRowScorch";
 export * from "./leaderOptimizeAgile";
 export * from "./leaderDiscardRestore";
+export * from "./leaderDiscardRecycle";

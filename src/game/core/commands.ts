@@ -13,6 +13,7 @@ import {
 } from "./leaderRowScorch";
 import { planOptimizeAgileRows } from "./leaderOptimizeAgile";
 import { getRestoreDiscardCandidates } from "./leaderDiscardRestore";
+import { getDiscardRecyclePlan } from "./leaderDiscardRecycle";
 import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
@@ -1236,6 +1237,82 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
     events.push({ type: "prompt_opened", prompt });
 
     return { state, events, prompt };
+  }
+
+  if (leader.ability === "shuffle_discards_into_decks") {
+    const target = command.target as LegalMoveTarget | undefined;
+    if (target && target.kind !== "none") {
+      throw new EngineRuleError("invalid_target", "Shuffle Discards Into Decks leader does not accept a target.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        target,
+      });
+    }
+
+    const plan = getDiscardRecyclePlan({ state: input.state });
+    if (plan.totalCardCount === 0) {
+      throw new EngineRuleError("invalid_target", "Shuffle Discards Into Decks has no recyclable discard cards.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+      });
+    }
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const leaderCardId = seat.leader as CardInstanceId;
+
+    events.push({
+      type: "ability_triggered",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+    });
+
+    const rng = createSeededRngFromState(state.rng.seed, state.rng.state);
+
+    plan.seats.forEach((seatPlan) => {
+      seatPlan.cardIds.forEach((cardId) => {
+        const card = state.cardsById[cardId];
+        if (!card) {
+          return;
+        }
+        card.controller = seatPlan.seatId;
+        moveCard(
+          state,
+          events,
+          cardId,
+          { kind: "deck", seat: seatPlan.seatId },
+          "leader_shuffle_into_deck",
+        );
+      });
+      state.seats[seatPlan.seatId].deck = shuffleWithRng(state.seats[seatPlan.seatId].deck, rng);
+      events.push({
+        type: "deck_shuffled",
+        seatId: seatPlan.seatId,
+        reason: "leader_shuffle_into_deck",
+      });
+    });
+
+    state.rng.state = rng.getState();
+
+    events.push({
+      type: "ability_resolved",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+      outcome: "shuffled_discards",
+    });
+
+    seat.leaderUsed = true;
+    events.push({
+      type: "leader_used",
+      seatId,
+      leaderCardId,
+      abilityId: leader.ability,
+    });
+    handoffTurn(state, events, seatId);
+    return { state, events };
   }
 
   throw new EngineRuleError("unsupported_command", "Leader ability is not yet executable.", {

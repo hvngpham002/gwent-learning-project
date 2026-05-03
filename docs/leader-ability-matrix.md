@@ -1,20 +1,23 @@
 # Leader Ability Matrix
 
 This document is the durable cCp18 audit output, refreshed by cCp19,
-cCp20, cCp21, and cCp22. It enumerates every official leader source record,
-classifies the placeholder leaders by implementation pattern, lists
-local-source conflicts, and records engine, legal-move, prompt / UI,
-hidden-info, AI, and simulation implications. cCp19+ implementation
-specs should pull from this matrix rather than re-running the audit.
+cCp20, cCp21, cCp22, and cCp23. It enumerates every official leader
+source record, classifies the placeholder leaders by implementation
+pattern, lists local-source conflicts, and records engine, legal-move,
+prompt / UI, hidden-info, AI, and simulation implications. cCp19+
+implementation specs should pull from this matrix rather than re-running
+the audit.
 
 The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
 horn-like passives), cCp20 implemented `double_spies` as a full-game
 passive (Tranche 2 first leader), cCp21 implemented
 `optimize_agile_rows` as the second Tranche 2 leader (active one-shot
-auto-place with tied-row player choice), and cCp22 implemented
+auto-place with tied-row player choice), cCp22 implemented
 `restore_discard_to_hand` as the third Tranche 2 leader (active one-shot
-prompt-based restore over own discard). This file is updated to reflect
-all four landings.
+prompt-based restore over own discard), and cCp23 implemented
+`shuffle_discards_into_decks` as the fourth Tranche 2 leader (active
+one-shot bulk discard-to-deck recycle with deterministic per-seat
+shuffle). This file is updated to reflect all five landings.
 
 ## Status
 
@@ -26,27 +29,27 @@ all four landings.
   record (Eredin: Commander of the Red Riders and Francesca: Queen of Dol
   Blathanna). `clear_weather` is both a card and leader ability ID, but only
   Foltest: Lord Commander of The North uses it as a leader.
-- Implemented executable leaders: **9** after cCp22 (each emits a legal
+- Implemented executable leaders: **10** after cCp23 (each emits a legal
   `use_leader` move): `clear_weather`, `play_frost`, `play_fog`,
   `play_rain`, `play_any_weather`, `scorch_range`, `scorch_siege`,
-  `optimize_agile_rows`, `restore_discard_to_hand`.
+  `optimize_agile_rows`, `restore_discard_to_hand`,
+  `shuffle_discards_into_decks`.
 - Implemented passive leaders: **6** after cCp20 — `weather_half_penalty`
   on King Bran (cCp15), the four cCp19 row-wide horn-like passives
   (`double_siege` on Foltest: The Siegemaster, `double_close` on Eredin:
   Commander of the Red Riders and Francesca: Queen of Dol Blathanna, and
   `double_ranged` on Francesca: The Beautiful), and `double_spies` on
   Eredin Breacc Glas: The Treacherous (cCp20).
-- Placeholder leader records: **7** spanning **7** distinct ability IDs
-  after cCp22. (cCp22 promoted 1 leader record — Eredin: Bringer of
-  Death — and 1 ability ID — `restore_discard_to_hand` — out of
-  placeholder.)
+- Placeholder leader records: **6** spanning **6** distinct ability IDs
+  after cCp23. (cCp23 promoted 1 leader record — Crach an Craite — and 1
+  ability ID — `shuffle_discards_into_decks` — out of placeholder.)
 - `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp22 — it lists every leader ability whose
+  **exhaustive** after cCp23 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
   `cancel_leader`, `discard_two_draw_one_from_deck`, `draw_extra_card`,
-  `draw_opponent_discard`, `look_three_cards`, `random_medic`,
-  `shuffle_discards_into_decks`. (See Source Conflicts §C-7 for the
-  cCp18 audit finding that prompted this fix.)
+  `draw_opponent_discard`, `look_three_cards`, `random_medic`. (See
+  Source Conflicts §C-7 for the cCp18 audit finding that prompted this
+  fix.)
 
 ## Implemented Baseline
 
@@ -65,6 +68,7 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | `northern-realms.foltest-the-steel-forged` | Foltest: The Steel-Forged | Northern Realms | `scorch_siege` | `none` | cCp16. Same shape as Son of Medell but on the siege row. |
 | `scoiatael.francesca-findabair-hope-of-the-aen-seidhe` | Francesca Findabair: Hope of the Aen Seidhe | Scoia'tael | `optimize_agile_rows` | `none` (auto) **or** `board_row` (tied row choice) | cCp21. Auto-places when one movable common row ties the highest score across all candidate rows; emits one `board_row` move per tied best movable row otherwise. Pure no-op rows are not executable, and worse movable rows are not offered when the current no-op row is uniquely best. |
 | `monsters.eredin-bringer-of-death` | Eredin: Bringer of Death | Monsters | `restore_discard_to_hand` | `none` (opens a `choose_card` prompt over own discard) | cCp22. Active one-shot. Emits one no-target `use_leader` move when the acting seat's own discard has at least one eligible card; opens a `choose_card` prompt without consuming the leader. The leader is consumed only after a legal prompt option resolves; restored cards return to hand without resolving their abilities. Any card kind in own discard is eligible (units, heroes, specials, weather, side-deck-only / generated). |
+| `skellige.crach-an-craite` | Crach an Craite | Skellige | `shuffle_discards_into_decks` | `none` | cCp23. Active one-shot. Emits one no-target `use_leader` move when at least one seat has a non-empty discard pile; both-empty discards emit no legal move. Recycles each non-empty discard into the same seat's deck (off-owner cards follow the discard pile, not the original owner), shuffles only affected decks deterministically through the seeded RNG, leaves empty-discard seats untouched (no hidden no-op shuffle), and consumes the leader. Recycled cards do not resolve their abilities. |
 
 ### Implemented passive leaders (no `use_leader` move)
 
@@ -353,18 +357,17 @@ Marker conventions:
 |---|---|
 | Source ID | `skellige.crach-an-craite` |
 | Faction | Skellige |
-| Ability metadata status | `placeholder` |
+| Ability metadata status | `implemented` (cCp23) |
 | Catalog description | "Shuffles both discard piles back into their respective decks." |
 | Local rule / source text | Gwent classic text: "Shuffle both Discard piles into their respective decks." Active leader, fires once per game and recycles both seats' discards back into their decks. |
-| Likely official behavior | *Derived*: active leader; both seats' discard piles become empty, and their cards are appended to their respective decks, then each deck is shuffled with the seeded RNG. |
-| Active vs passive vs setup | Active one-shot. |
-| Expected legal move shape | `use_leader` with `target.kind === "none"`. Engine emits the move while leader is unused (regardless of whether a discard pile is empty — even single-pile recycling is useful). |
-| Expected command transaction shape | `UseLeader` → for each seat: pop every card in `seat.discard` → push into `seat.deck` → shuffle `seat.deck` using a derived sub-seed of `state.rng` → emit per-card `card_moved` events with reason `"leader_shuffle_into_deck"` (new) and a `deck_shuffled` event per seat (new). Consume leader. |
-| Prompt / choice UI need | None. |
-| Hidden-info risk | Low. The contents of both discard piles are already public; once shuffled into the deck, they become hidden again, but the *count* in each deck is public and no individual card identity is exposed beyond what was already public. |
-| Implementation difficulty | medium. Engine has not previously needed to mutate decks at runtime, so this is the first runtime deck shuffle (the Game8 staging draw / weather-pull leaders only *remove* from deck, never refill it). The seeded RNG must produce a deterministic shuffle. |
-| Recommended tranche | Tranche 2. |
-| Unresolved questions | (1) If both discard piles are empty, is the leader still legal (no-op)? Recommendation: emit no `use_leader` move — once-per-game leaders should not no-op (matches `play_*` weather and `scorch_*` row policies). (2) Does the Skellige round-three return §17.18 still trigger after Crach has shuffled discards back into the deck? Yes — round-three return triggers on round-end discard, post-shuffle discards re-fill normally. (3) Does Crach affect "removed from game" cards (e.g. transformed Berserkers)? No — only `seat.discard`, not `seat.removedFromGame`. |
+| Implemented behavior (cCp23) | Active one-shot. The pure helper `getDiscardRecyclePlan({ state })` collects every non-empty discard pile in stable seat order (`seat_a` then `seat_b`), preserves discard-insertion order inside each seat plan, and skips stale missing-card entries. `getLeaderMove` emits exactly one no-target `use_leader` move when `plan.totalCardCount > 0`, with `target.kind === "none"`, `metadata.targetRequirement === "none"`, `metadata.targetCount === plan.totalCardCount`, and `metadata.targetLabel === "discard piles"`; both-empty discards emit no legal move. `executeLeader` rejects any non-`none` target, rejects when the plan is empty, then clones state, emits `ability_triggered`, processes affected seats in stable order through a single `SeededRng` instance built from `state.rng.seed` / `state.rng.state`. For each affected seat: every planned card is moved from discard to that seat's deck with `card_moved.reason === "leader_shuffle_into_deck"`, the moved card's `controller` is reset to the destination deck seat (with `owner` unchanged), then the seat's full deck is shuffled with `shuffleWithRng`, and `deck_shuffled.reason === "leader_shuffle_into_deck"` is emitted for that seat. After all affected shuffles, `state.rng.state` is updated to the RNG's final state. The transaction emits `ability_resolved` with `outcome === "shuffled_discards"`, `leader_used`, sets `seat.leaderUsed = true`, and hands off the turn through `handoffTurn`. Empty-discard seats are not shuffled and emit no `deck_shuffled` event — their hidden deck order is preserved. Recycled cards do **not** resolve their abilities (no `card_played`, no Medic chain, no Scorch, no on-play weather effect). |
+| Implemented legal move shape | `use_leader` with `target.kind === "none"`, `metadata.targetRequirement === "none"`, `metadata.targetCount === plan.totalCardCount` (sum of recyclable cards across both discard piles), and `metadata.targetLabel === "discard piles"`. Hidden deck order, deck instance IDs, and shuffled order are not exposed in legal-move metadata. |
+| Implemented command transaction shape | `UseLeader { target: { kind: "none" } }` → reject if either non-`none` target or empty plan → clone state → emit `ability_triggered` → for each affected seat in `[seat_a, seat_b]` order: per-card `moveCard(..., { kind: "deck", seat: seatId }, "leader_shuffle_into_deck")` (preserving discard order, resetting `controller`, leaving `owner`) then `shuffleWithRng` on the full deck and `deck_shuffled.reason === "leader_shuffle_into_deck"` → update `state.rng.state` → emit `ability_resolved.shuffled_discards`, `leader_used`, set `seat.leaderUsed = true`, hand off turn. |
+| Prompt / choice UI need | None. The existing leader action button renders the no-target leader move as `use leader`. |
+| Hidden-info risk | Low. Discard contents were already public; post-shuffle deck order is hidden. The engine does not expose post-shuffle deck order through legal-move metadata, AI observation, simulation export rows, or any new event payload. The new `deck_shuffled.reason "leader_shuffle_into_deck"` event carries only the seat ID and the new movement reason. |
+| Implementation difficulty (delivered) | medium. Engine had not previously needed to mutate decks at runtime; cCp23 introduces the first runtime deck shuffle. The seeded RNG produces a deterministic shuffle through the existing `createSeededRngFromState` + `shuffleWithRng` helpers. |
+| Recommended tranche (implemented in cCp23) | Tranche 2. |
+| Settled questions | (1) Both-discards-empty is unusable per settled product decision §10. (2) Skellige round-three return §17.18 still triggers on whatever is in discard at future round-end — Crach does not create a permanent return pool. (3) Crach does **not** affect `removed_from_game`, `side_deck`, hand, board, row horns, weather zone, or leader zone — only `seat.discard`. (4) Affected-decks-only shuffle: empty-discard seats are not shuffled (no hidden no-op mutation). (5) Off-owner discard cards (Spies discarded after round cleanup on the opposite board side) recycle into the discard-pile seat's deck, not the original owner's deck — `controller` is reset to the destination seat, `owner` is preserved. |
 
 ## Shared Implementation Patterns
 
@@ -714,29 +717,51 @@ row; if tied, expose only the tied best rows as legal player choices."
   and do not emit events).
 - Effect classification: one-shot active; instantaneous board mutation.
 
-### Pattern 10 — Both-Discard Recycle
+### Pattern 10 — Both-Discard Recycle (`shuffle_discards_into_decks` IMPLEMENTED in cCp23)
 
 | Members | Ability IDs |
 |---|---|
-| Crach an Craite | `shuffle_discards_into_decks` |
+| Crach an Craite | **IMPLEMENTED in cCp23** |
+
+**Status:** `shuffle_discards_into_decks` implemented in cCp23 (see
+`audit/reports/2026-05-03-cCp23-report.md`). The pattern is now an
+**affected-decks-only** active one-shot — empty-discard seats are not
+shuffled.
 
 - Trigger: active one-shot.
-- Effect: empty both seats' discard piles into their respective decks and
-  shuffle.
+- Effect: each non-empty discard pile is moved into the same seat's deck
+  and that seat's deck is shuffled deterministically; empty-discard seats
+  are not touched.
 - Engine surfaces:
-  - `executeLeader` for both seats: append discard to deck, then shuffle
-    using a deterministic sub-seed of `state.rng`.
-  - new `deck_shuffled` event per seat.
-- Legal-move shape: `use_leader` with `target.kind === "none"`. Emit only
-  if at least one seat's discard is non-empty (avoid pure no-op).
-- Command shape: `UseLeader` → recycle both → consume leader.
-- Prompt / UI: none.
+  - new pure helper `getDiscardRecyclePlan({ state })` returns the
+    deterministic seat-ordered recycle plan.
+  - `executeLeader` for affected seats only: append discard to deck,
+    then shuffle using a single `SeededRng` instance from
+    `state.rng.seed` / `state.rng.state`.
+  - new `card_moved.reason "leader_shuffle_into_deck"` and new
+    `deck_shuffled.reason "leader_shuffle_into_deck"` event variants.
+- Legal-move shape: `use_leader` with `target.kind === "none"`,
+  `metadata.targetRequirement === "none"`,
+  `metadata.targetCount === plan.totalCardCount`,
+  `metadata.targetLabel === "discard piles"`. Emit only if at least one
+  seat's discard is non-empty (per settled product decision §10).
+- Command shape: `UseLeader { target: { kind: "none" } }` → reject empty
+  plan / non-none target → clone state → emit `ability_triggered` →
+  per-affected-seat: `card_moved` per recycled card → `shuffleWithRng` →
+  `deck_shuffled` → after all affected seats, update `state.rng.state` →
+  emit `ability_resolved.shuffled_discards` → `leader_used` → handoff.
+- Prompt / UI: none. Existing leader action button renders the no-target
+  move as "use leader".
 - Hidden-info risk: low (discard contents already public; deck order
-  hidden, but shuffle uses seeded RNG so replay is deterministic).
+  hidden, but shuffle uses seeded RNG so replay is deterministic). The
+  engine does not expose post-shuffle deck order through legal-move
+  metadata, AI observation, or event payloads.
 - AI: heuristic should value recycling Spies and big units, but
-  `legal-heuristic-v0` does not currently score deck composition; that's
-  policy concern, not correctness.
-- Simulation export: emits per-card moves; size could be large.
+  `legal-heuristic-v0` does not currently score deck composition. That's
+  a policy concern, not correctness — the cCp23 implementation does not
+  tune AI strategy.
+- Simulation export: emits per-card `card_moved` rows plus one
+  `deck_shuffled` per affected seat; size could be large.
 - Effect classification: one-shot active with bulk state mutation.
 
 ## Source Conflicts
@@ -935,7 +960,7 @@ This table compares catalog leader descriptions, leader ability metadata,
 | 7. Setup Draw Extra | none | none | n/a | none | none | yes | none beyond standard hand size | setup-time event |
 | 8. Random Special Replay | `target.kind === "none"` | none (engine selects) | yes | none | low (own discard public) | yes | per-special replay rows | one-shot active w/ replay |
 | 9. Optimize Agile Rows (IMPLEMENTED in cCp21) | `none` (auto) OR `board_row` (per tied row) | none | yes (cEp8 menu fits 1-3 rows) | none — `metadata.targetLabel` carries row name | none | yes | per-card move rows | one-shot active w/ instantaneous board mutation |
-| 10. Shuffle Discards Into Decks | `target.kind === "none"` | none | yes | none | low (deck order hidden post-shuffle, but contents previously public) | yes | per-card move + deck_shuffled event | one-shot active w/ bulk state mutation |
+| 10. Shuffle Discards Into Decks (IMPLEMENTED in cCp23) | `target.kind === "none"` | none | yes | none | low (deck order hidden post-shuffle, but contents previously public) | yes — `legal-heuristic-v0` does not currently rank discard recycle, but the no-target move is unambiguous | new `card_moved.reason "leader_shuffle_into_deck"` and `deck_shuffled.reason "leader_shuffle_into_deck"` join event union; per-affected-seat moves + one `deck_shuffled` per affected seat | one-shot active w/ bulk state mutation; affected-decks-only |
 
 Notes:
 
@@ -1000,17 +1025,19 @@ Heroes remain immune as receivers.
 **Members:** `double_spies` (IMPLEMENTED in cCp20),
 `optimize_agile_rows` (IMPLEMENTED in cCp21),
 `restore_discard_to_hand` (IMPLEMENTED in cCp22),
-`shuffle_discards_into_decks`, `random_medic`. Plus, contingent on §C-2
+`shuffle_discards_into_decks` (IMPLEMENTED in cCp23),
+`random_medic`. Plus, contingent on §C-2
 resolution, `draw_opponent_discard` (under catalog interpretation).
 
-**Status:** First three members (`double_spies` in cCp20,
-`optimize_agile_rows` in cCp21, `restore_discard_to_hand` in cCp22) are
-implemented; the rest are still placeholder. After cCp22, six
-implemented passive leader records exist (King Bran + four cCp19
-row-horn + cCp20 Treacherous), nine implemented active executable
-leader records exist (cCp14 weather + cCp16 row-Scorch × 2 + cCp7
-clear-weather + cCp21 Hope of the Aen Seidhe + cCp22 Bringer of
-Death), and seven leader records remain placeholder.
+**Status:** Four members (`double_spies` in cCp20,
+`optimize_agile_rows` in cCp21, `restore_discard_to_hand` in cCp22,
+`shuffle_discards_into_decks` in cCp23) are implemented; the rest are
+still placeholder. After cCp23, six implemented passive leader records
+exist (King Bran + four cCp19 row-horn + cCp20 Treacherous), ten
+implemented active executable leader records exist (cCp14 weather +
+cCp16 row-Scorch × 2 + cCp7 clear-weather + cCp21 Hope of the Aen Seidhe
++ cCp22 Bringer of Death + cCp23 Crach an Craite), and six leader
+records remain placeholder.
 
 **Why second (retained for context):**
 
@@ -1024,15 +1051,16 @@ Death), and seven leader records remain placeholder.
   pattern).
 - Testability is good: each leader has a deterministic test seed.
 
-**Updated ordering inside Tranche 2 (post-cCp22):**
+**Updated ordering inside Tranche 2 (post-cCp23):**
 
 1. `double_spies` — IMPLEMENTED in cCp20 (whole-match passive).
 2. `optimize_agile_rows` — IMPLEMENTED in cCp21 (active one-shot
    auto-place with tied-row choice).
 3. `restore_discard_to_hand` — IMPLEMENTED in cCp22 (active one-shot
    single-step prompt over own discard).
-4. `shuffle_discards_into_decks` — bulk move, requires deterministic
-   shuffle.
+4. `shuffle_discards_into_decks` — IMPLEMENTED in cCp23 (active
+   one-shot bulk discard-to-deck recycle with affected-decks-only
+   deterministic shuffle).
 5. `draw_opponent_discard` — single-step prompt over opponent discard
    per settled §C-2 (catalog wins).
 6. `random_medic` — passive Medic mutation per settled §5.
@@ -1214,6 +1242,44 @@ cCp19+ implementation:
   the tied best rows as legal player choices." After cCp21, eight
   leader records remain placeholder. See
   `audit/reports/2026-05-02-cCp21-report.md` for details.
+- 2026-05-03 (cCp23): `shuffle_discards_into_decks` (Crach an Craite)
+  promoted from `placeholder` to `implemented` as an **active one-shot
+  leader** (Pattern 10). New pure helper
+  `getDiscardRecyclePlan({ state })` in
+  `src/game/core/leaderDiscardRecycle.ts` collects every non-empty
+  discard pile in stable seat order (`seat_a` then `seat_b`), preserves
+  discard-insertion order inside each seat plan, and skips stale
+  missing-card entries. `getLeaderMove` emits exactly one no-target
+  `use_leader` move (`targetRequirement === "none"`,
+  `targetCount === plan.totalCardCount`,
+  `targetLabel === "discard piles"`) when at least one discard pile is
+  non-empty; both-empty discards emit no legal move (per settled
+  product decision §10). `executeLeader` rejects any non-`none` target,
+  rejects empty plans, and processes affected seats through a single
+  `SeededRng` instance from `state.rng.seed` / `state.rng.state`. For
+  each affected seat: every recycled card moves from discard to deck
+  with `card_moved.reason === "leader_shuffle_into_deck"`, the moved
+  card's `controller` is reset to the destination deck seat (with
+  `owner` unchanged), then `shuffleWithRng` shuffles the seat's full
+  deck and `deck_shuffled.reason === "leader_shuffle_into_deck"` is
+  emitted. Empty-discard seats are not shuffled (no hidden no-op
+  mutation) and emit no `deck_shuffled`. After all affected shuffles,
+  `state.rng.state` is updated to the RNG's final state. The transaction
+  emits `ability_resolved` with `outcome === "shuffled_discards"`,
+  `leader_used`, sets `seat.leaderUsed = true`, and hands off the turn.
+  Recycled cards do **not** resolve their abilities — they behave
+  normally only if drawn and played later. Off-owner discard cards
+  (Spies discarded after round cleanup on the opposite board side)
+  recycle into the discard-pile seat's deck, not the original owner's
+  deck. Removed-from-game, side deck, hand, board, row horn, weather
+  zone, and leader zone are not touched. The `card_moved.reason` and
+  `deck_shuffled.reason` event unions grow to include
+  `"leader_shuffle_into_deck"`. The official promotion manifest adds
+  `skellige.crach-an-craite` to `executableLeaderSourceIds` (now 10)
+  and removes `shuffle_discards_into_decks` from
+  `placeholderLeaderAbilityIds` (now 6). Pattern 10 marked IMPLEMENTED.
+  After cCp23, six leader records remain placeholder. See
+  `audit/reports/2026-05-03-cCp23-report.md` for details.
 - 2026-05-02 (cCp22): `restore_discard_to_hand` (Eredin: Bringer of
   Death) promoted from `placeholder` to `implemented` as an **active
   one-shot leader** (Pattern 4). New pure helper

@@ -297,8 +297,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   shuffle_discards_into_decks: {
     id: "shuffle_discards_into_decks",
     name: "Shuffle Discards Into Decks",
-    status: "placeholder",
-    description: "Shuffles both discard piles back into their respective decks.",
+    status: "implemented",
+    description: "Active one-shot: each non-empty discard pile is moved into the same seat's deck and that seat's deck is shuffled with the engine's deterministic seeded RNG. A card moves to the deck belonging to the discard pile it currently occupies, not necessarily to its original owner. Empty discard piles are not touched and their decks are not shuffled (no hidden-order no-op mutation). Hand, deck, side deck, removed-from-game, board rows, row horns, weather zone, and leader zone are untouched. Recycled cards do not resolve their abilities; they behave normally only if drawn and played later. Emits no legal `use_leader` move when both discard piles are empty.",
   },
 };
 

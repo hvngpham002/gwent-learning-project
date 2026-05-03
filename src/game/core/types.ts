@@ -203,7 +203,8 @@ export type GameEvent =
         | "summon_replacement"
         | "leader_weather"
         | "leader_optimize_agile"
-        | "leader_restore_discard_to_hand";
+        | "leader_restore_discard_to_hand"
+        | "leader_shuffle_into_deck";
     }
   | {
       type: "initial_hand_drawn";
@@ -246,7 +247,7 @@ export type GameEvent =
   | { type: "card_drawn"; seatId: SeatId; cardId: CardInstanceId; sourceId: string }
   | { type: "prompt_opened"; prompt: PendingPrompt }
   | { type: "prompt_resolved"; promptId: string; seatId: SeatId; optionId: string }
-  | { type: "deck_shuffled"; seatId: SeatId; reason: "muster" | "mulligan" }
+  | { type: "deck_shuffled"; seatId: SeatId; reason: "muster" | "mulligan" | "leader_shuffle_into_deck" }
   | {
       type: "round_resolved";
       round: number;

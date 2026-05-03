@@ -60,7 +60,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp22", () => {
+  it("registers placeholder metadata for leader ability IDs that remain placeholder after cCp23", () => {
     [
       "cancel_leader",
       "discard_two_draw_one_from_deck",
@@ -68,7 +68,6 @@ describe("official leader promotion (cBp5)", () => {
       "draw_opponent_discard",
       "look_three_cards",
       "random_medic",
-      "shuffle_discards_into_decks",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -79,7 +78,7 @@ describe("official leader promotion (cBp5)", () => {
     });
   });
 
-  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, and cCp22 restore_discard_to_hand", () => {
+  it("registers implemented metadata for clear_weather, the cCp14 weather-pulling abilities, cCp15 weather_half_penalty, cCp16 row-Scorch abilities, cCp19 row-horn passives, cCp20 double_spies, cCp21 optimize_agile_rows, cCp22 restore_discard_to_hand, and cCp23 shuffle_discards_into_decks", () => {
     [
       "clear_weather",
       "play_frost",
@@ -95,6 +94,7 @@ describe("official leader promotion (cBp5)", () => {
       "double_spies",
       "optimize_agile_rows",
       "restore_discard_to_hand",
+      "shuffle_discards_into_decks",
     ].forEach((ability) => {
       const metadata =
         CATALOG_LEADER_ABILITY_METADATA[ability as keyof typeof CATALOG_LEADER_ABILITY_METADATA];
@@ -123,6 +123,7 @@ describe("official leader promotion (cBp5)", () => {
         "scoiatael.francesca-findabair-pureblood-elf",
         "scoiatael.francesca-findabair-queen-of-dol-blathanna",
         "scoiatael.francesca-findabair-the-beautiful",
+        "skellige.crach-an-craite",
         "skellige.king-bran",
       ].sort(),
     );
@@ -152,6 +153,7 @@ describe("official leader promotion (cBp5)", () => {
         "northern-realms.foltest-the-steel-forged",
         "scoiatael.francesca-findabair-hope-of-the-aen-seidhe",
         "scoiatael.francesca-findabair-pureblood-elf",
+        "skellige.crach-an-craite",
       ].sort(),
     );
     expect(officialLeaderPromotionManifest.executableLeaderSourceIds).not.toContain(
@@ -168,6 +170,9 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
       "monsters.eredin-bringer-of-death",
+    );
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toContain(
+      "skellige.crach-an-craite",
     );
     expect([...officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds].sort()).toEqual([
       "monsters.eredin-breacc-glas-the-treacherous",
@@ -193,6 +198,7 @@ describe("official leader promotion (cBp5)", () => {
         "scoiatael.francesca-findabair-pureblood-elf",
         "scoiatael.francesca-findabair-queen-of-dol-blathanna",
         "scoiatael.francesca-findabair-the-beautiful",
+        "skellige.crach-an-craite",
         "skellige.king-bran",
       ].sort(),
     );
@@ -204,7 +210,6 @@ describe("official leader promotion (cBp5)", () => {
         "draw_opponent_discard",
         "look_three_cards",
         "random_medic",
-        "shuffle_discards_into_decks",
       ].sort(),
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("play_any_weather");
@@ -222,6 +227,9 @@ describe("official leader promotion (cBp5)", () => {
     );
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
       "restore_discard_to_hand",
+    );
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain(
+      "shuffle_discards_into_decks",
     );
   });
 
