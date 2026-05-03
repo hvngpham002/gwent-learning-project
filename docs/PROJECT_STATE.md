@@ -310,17 +310,20 @@ Latest Engine Rule implementation:
 
 ## Next Recommended Step
 
-cCp25 has landed at `audit/reports/2026-05-03-cCp25-report.md` and
-**Tranche 2 of `docs/leader-ability-matrix.md` is complete**. The next
-phase starts Tranche 3 with one of:
+cCp26 is ready for coding at
+`docs/spec/2026-05-03-cCp26-specs.md`. Implement that spec next and
+report to `audit/reports/2026-05-03-cCp26-report.md`.
 
-- `draw_extra_card` (Pattern 7, setup-time event; no `use_leader` move
-  emitted; the seat draws 11 cards instead of 10 before mulligan opens
-  for the Daisy of the Valley leader).
-- `discard_two_draw_one_from_deck` (Pattern 3, multi-stage prompt —
-  discard up to two cards from hand, then choose one card to draw from
-  deck, then shuffle the remaining deck; this is the engine's first
-  multi-stage prompt and is a precondition for some Tranche 4 work).
+cCp26 starts Tranche 3 with `draw_extra_card` (Pattern 7), a setup-time
+hand-size modifier for Francesca Findabair: Daisy of the Valley. It should
+draw 11 initial cards instead of 10 before mulligan opens, emit no
+`use_leader` move, and introduce a distinct setup-time implemented leader
+manifest bucket instead of classifying Daisy as passive.
+
+After cCp26 lands, the remaining Tranche 3 member is
+`discard_two_draw_one_from_deck` (Pattern 3), a multi-stage prompt: discard
+up to two cards from hand, choose one card from deck to draw, then shuffle
+the remaining deck.
 
 Tranche 4 then covers `look_three_cards` (one-time hidden-info
 disclosure of three random opponent hand cards) and `cancel_leader`
@@ -332,9 +335,13 @@ candidate: Decoy + replay regression, Decoy + Mardroeme regression,
 ranged-row Berserker round-3 return, and Monsters keep with no
 eligible units.
 
-## Active Risks (cCp25 implemented status)
+## Active Risks (cCp26 handoff status)
 
-- Tranche 2 is **complete**. The next phase should start Tranche 3 with either `draw_extra_card` (Pattern 7, setup-time hand-size modifier) or `discard_two_draw_one_from_deck` (Pattern 3, multi-step prompt). Tranche 4 (`look_three_cards`, `cancel_leader`) covers hidden-info disclosure and leader cancel.
+- Tranche 2 is **complete**. cCp26 starts Tranche 3 with the smallest setup-time leader before the larger multi-stage deck tutor.
+- `draw_extra_card` is setup-time, not passive and not active. It should not enter `executableLeaderSourceIds` or `implementedPassiveLeaderSourceIds`; the cCp26 spec asks for a distinct `implementedSetupLeaderSourceIds` manifest bucket.
+- The initial draw should use the already-shuffled deck top. Do not add prompts, choices, extra shuffles, or `Math.random()`.
+- Mulligan remains a two-redraw flow. The 11-card opening hand creates more legal one-card mulligan options, but does not increase total redraw budget.
+- The top-of-file latest handoff remains the last landed implementation report until cCp26 is implemented; the actionable next handoff is the cCp26 spec linked above.
 - `docs/leader-ability-matrix.md` Pattern 8 has been renamed and marked IMPLEMENTED; the Invader of the North placeholder body has been replaced with the Medic-mutation contract; §C-3 is marked SETTLED & IMPLEMENTED with historical context preserved. Future tranches should treat `random_medic` as a non-blocking precedent for passive-pattern leaders.
 - AI heuristic policy is unchanged. `legal-heuristic-v0` continues to value the Medic source itself; the random pick is deterministic from engine RNG, so AI plays are reproducible from seed.
 - Hero immunity (§17.1) is the only invariant that pivots between random and prompt-based Medic. A hypothetical future hero source with the `medic` ability must keep the prompt path; this is enforced by a test-local hero Medic fixture in `tests/game/coreRandomMedicLeader.test.ts`.
