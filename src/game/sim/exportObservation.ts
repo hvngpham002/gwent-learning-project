@@ -146,10 +146,7 @@ export const buildSafeSimulationObservation = (
           // cCp27 stage 2: deck-card disclosure to the acting seat only.
           // The deck zone has no public card index, so we mint a
           // prompt-local own-deck ref keyed by option index.
-          const visibleDeckCard = safeCardRefForId(state, perspectiveSeatId, target.cardId);
-          const ownDeckCard = visibleDeckCard
-            ? { ...visibleDeckCard, cardRef: `own_deck_option_${index}` }
-            : null;
+          const ownDeckCard = toVisibleCardRef(state, target.cardId, `own_deck_option_${index}`);
           return {
             optionRef: `prompt_option_${index}`,
             label: option.label,
