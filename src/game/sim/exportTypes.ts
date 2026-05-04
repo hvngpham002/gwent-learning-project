@@ -35,6 +35,9 @@ export interface SafeSeatPrivatePublicState {
   leader: {
     sourceId: string;
     used: boolean;
+    // cCp29 public suppression status. True when this seat's leader is
+    // suppressed for the current round by an opponent `cancel_leader`.
+    cancelledThisRound: boolean;
   };
   deckCount: number;
   discardCount: number;
@@ -48,6 +51,8 @@ export interface SafeOpponentPublicState {
   leader: {
     sourceId: string;
     used: boolean;
+    // cCp29 public suppression status for the opponent's leader.
+    cancelledThisRound: boolean;
   };
   deckCount: number;
   discardCount: number;

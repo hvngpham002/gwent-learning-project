@@ -24,6 +24,20 @@ const choosePromptMove = (input: EnginePolicyInput) => {
     return null;
   }
 
+  // cCp29: when the AI owns a `cancel_leader` reaction prompt, choose the
+  // cancel option deterministically. This makes the AI a useful White
+  // Flame opponent without an open-ended strategic rewrite. The decline
+  // option is still legal but the heuristic prefers cancel.
+  const reactionCancel = promptMoves.find(
+    (move) =>
+      move.kind === "choose_prompt_option" &&
+      move.metadata.abilityId === "cancel_leader" &&
+      move.optionId === "cancel-leader:cancel",
+  );
+  if (reactionCancel) {
+    return reactionCancel;
+  }
+
   const optionStrength = new Map(
     input.observation.pendingPrompt?.options.map((option) => [option.optionId, option.targetStrength ?? 0]) ?? [],
   );

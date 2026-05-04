@@ -182,42 +182,67 @@ const ScoreCard: React.FC<{
   leaderImage: string;
   leaderAbility: string;
   leaderUsed: boolean;
+  leaderCancelledThisRound: boolean;
   active: boolean;
   onLeaderContextMenu: (event: React.MouseEvent) => void;
-}> = ({ seat, leaderName, leaderImage, leaderAbility, leaderUsed, active, onLeaderContextMenu }) => (
-  <article className={`authentic-score-card${active ? " is-active" : ""}`} data-testid={`authentic-seat-${seat.role}`}>
-    <div
-      className="authentic-score-card__leader"
-      data-seat={seat.seatId}
-      onContextMenu={onLeaderContextMenu}
+}> = ({
+  seat,
+  leaderName,
+  leaderImage,
+  leaderAbility,
+  leaderUsed,
+  leaderCancelledThisRound,
+  active,
+  onLeaderContextMenu,
+}) => {
+  // cCp29: prefer the suppression label when the leader is cancelled this
+  // round, even if it is also marked used (the reaction cancel path sets
+  // both). Suppression clears at round transition so this label disappears
+  // automatically on the next round.
+  const leaderStatusLabel = leaderCancelledThisRound
+    ? "cancelled this round"
+    : leaderUsed
+      ? "used"
+      : "ready";
+  return (
+    <article
+      className={`authentic-score-card${active ? " is-active" : ""}`}
+      data-testid={`authentic-seat-${seat.role}`}
+      data-leader-cancelled-this-round={leaderCancelledThisRound ? "true" : undefined}
     >
-      <AuthenticLeaderCard
-        leader={{
-          sourceId: `${seat.faction}:${leaderName}`,
-          name: leaderName,
-          faction: seat.faction,
-          abilityName: leaderAbility,
-          image: leaderImage,
-        }}
-        size="match"
-      />
-    </div>
-    <div className="authentic-score-card__body">
-      <div>
-        <h2>{seat.label}</h2>
-        <p>{seat.factionName}</p>
+      <div
+        className="authentic-score-card__leader"
+        data-seat={seat.seatId}
+        onContextMenu={onLeaderContextMenu}
+      >
+        <AuthenticLeaderCard
+          leader={{
+            sourceId: `${seat.faction}:${leaderName}`,
+            name: leaderName,
+            faction: seat.faction,
+            abilityName: leaderAbility,
+            image: leaderImage,
+          }}
+          size="match"
+        />
       </div>
-      <strong>{seat.score}</strong>
-    </div>
-    <p className="authentic-score-card__leader-text">
-      {leaderName} · {leaderAbility} · {leaderUsed ? "used" : "ready"}
-    </p>
-    <p className="authentic-score-card__meta">
-      gems {seat.gems} · hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
-      {seat.passed ? "passed" : "active"}
-    </p>
-  </article>
-);
+      <div className="authentic-score-card__body">
+        <div>
+          <h2>{seat.label}</h2>
+          <p>{seat.factionName}</p>
+        </div>
+        <strong>{seat.score}</strong>
+      </div>
+      <p className="authentic-score-card__leader-text">
+        {leaderName} · {leaderAbility} · {leaderStatusLabel}
+      </p>
+      <p className="authentic-score-card__meta">
+        gems {seat.gems} · hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
+        {seat.passed ? "passed" : "active"}
+      </p>
+    </article>
+  );
+};
 
 const PilePair: React.FC<{
   seat: AuthenticSeatSummaryViewModel;
@@ -2029,6 +2054,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                   leaderImage={leaders[aiSeat].image}
                   leaderAbility={getLeaderAbilityDisplay(leaders[aiSeat].ability).name}
                   leaderUsed={leaders[aiSeat].used}
+                  leaderCancelledThisRound={leaders[aiSeat].cancelledThisRound}
                   active={match?.currentTurn === aiSeat}
                   onLeaderContextMenu={(event) => handleLeaderContextMenu(event, aiSeat)}
                 />
@@ -2049,6 +2075,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                   leaderImage={leaders[humanSeat].image}
                   leaderAbility={getLeaderAbilityDisplay(leaders[humanSeat].ability).name}
                   leaderUsed={leaders[humanSeat].used}
+                  leaderCancelledThisRound={leaders[humanSeat].cancelledThisRound}
                   active={match?.currentTurn === humanSeat}
                   onLeaderContextMenu={(event) => handleLeaderContextMenu(event, humanSeat)}
                 />

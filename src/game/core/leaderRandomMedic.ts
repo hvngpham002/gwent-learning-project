@@ -1,5 +1,6 @@
 import type { CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
 
+import { isLeaderSuppressedThisRound } from "./leaderCancel";
 import { createSeededRngFromState, type SeededRng } from "./rng";
 import type { CardInstanceId, MatchState, SeatId } from "./types";
 
@@ -34,6 +35,12 @@ export const hasRandomMedicPolicyForSeat = ({
     return false;
   }
   if (seat.leaderSourceId !== RANDOM_MEDIC_LEADER_SOURCE_ID) {
+    return false;
+  }
+  // cCp29: leader suppression locks out the random_medic policy for the
+  // current round; the suppressed seat falls back to the prompt-based
+  // Medic flow until the round transition clears the suppression.
+  if (isLeaderSuppressedThisRound({ state, seatId })) {
     return false;
   }
   if (!catalogLeaders) {

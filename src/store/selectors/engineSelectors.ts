@@ -311,6 +311,9 @@ const toLeaderStatus = (
     abilityName: abilityMetadata?.name ?? "Unknown",
     abilityStatus: abilityMetadata?.status ?? "placeholder",
     used: seat.leaderUsed,
+    // cCp29: public current-round suppression flag. True when this seat's
+    // leader is suppressed for `match.round` by an opponent `cancel_leader`.
+    cancelledThisRound: seat.leaderCancelledRound === match.round,
   };
 };
 

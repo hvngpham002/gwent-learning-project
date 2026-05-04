@@ -158,12 +158,12 @@ describe("look_three_cards metadata and manifest (cCp28)", () => {
     );
   });
 
-  it("manifest counts: 13 executable, 7 passive, 1 setup, 21 implemented union, 1 placeholder", () => {
-    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(13);
+  it("manifest counts after cCp29: 14 executable, 7 passive, 1 setup, 22 implemented union, 0 placeholder", () => {
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(14);
     expect(officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds).toHaveLength(7);
     expect(officialLeaderPromotionManifest.implementedSetupLeaderSourceIds).toHaveLength(1);
-    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(21);
-    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toEqual(["cancel_leader"]);
+    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(22);
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toEqual([]);
   });
 
   it("LOOK_THREE_CARDS_REVEAL_COUNT is 3", () => {

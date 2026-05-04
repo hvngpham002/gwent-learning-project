@@ -219,8 +219,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   cancel_leader: {
     id: "cancel_leader",
     name: "Cancel Leader",
-    status: "placeholder",
-    description: "Cancels the opponent leader ability.",
+    status: "implemented",
+    description: "Active one-shot reaction/current-round suppression. The acting seat owns Emhyr var Emreis: The White Flame and may either (1) use it proactively on its own normal turn to lock out an opponent leader (active or passive) for the current round, or (2) react before an opponent active leader resolves to consume that leader without effect (no-refund). Suppression is current-round-scoped via `seat.leaderCancelledRound = state.round` and clears at round transition. Suppressed seats emit no `use_leader` legal move; passive scoring/ability policies (`weather_half_penalty`, `double_close`, `double_ranged`, `double_siege`, `double_spies`, `random_medic`) recalculate immediately for the current round when suppressed. Setup-time `draw_extra_card` already happened and is not retroactively undone. The reaction prompt is `kind === \"choose_option\"`, `stage === \"leader_cancel_reaction\"`; `cancel_leader` cannot be used to cancel another `cancel_leader` (no recursive reaction window). The acting seat's leader is consumed in both modes; in proactive mode the opponent leader is *not* consumed, just locked out for the current round.",
   },
   look_three_cards: {
     id: "look_three_cards",

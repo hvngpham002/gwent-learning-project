@@ -60,6 +60,12 @@ export interface SeatState {
   board: BoardSide;
   gems: number;
   passed: boolean;
+  // cCp29 current-round leader suppression. Set to `state.round` when this
+  // seat's leader is suppressed (active or passive) for the current round
+  // by an opponent `cancel_leader`. Cleared to `null` at round transition.
+  // The helper `isLeaderSuppressedThisRound` compares this field to the
+  // current round so stale prior-round values are ignored defensively.
+  leaderCancelledRound: number | null;
 }
 
 export interface RngState {
@@ -119,7 +125,27 @@ export interface MatchConfig {
 export type PendingPromptStage =
   | "discard_selection"
   | "deck_draw_selection"
-  | "opponent_hand_reveal";
+  | "opponent_hand_reveal"
+  | "leader_cancel_reaction";
+
+// cCp29 reaction-prompt context for `cancel_leader`. The reaction prompt
+// is opened on top of an attempted opponent active leader (still legal).
+// The cancel option resolves the cancellation; the decline option resolves
+// the originally attempted leader exactly once. The context carries the
+// attempted leader's identity and original target so the resolver can
+// replay it when the prompt owner declines.
+export interface LeaderCancelReactionContext {
+  readonly mode: "reaction";
+  readonly targetSeatId: SeatId;
+  readonly targetLeaderCardId: CardInstanceId;
+  readonly targetLeaderSourceId: string;
+  readonly targetAbilityId: string;
+  // Carries the originally attempted `UseLeader.target` so the decline
+  // path can replay the leader exactly once. The shape is `unknown` to
+  // avoid a type cycle with `LegalMoveTarget`; the resolver validates the
+  // shape before replay.
+  readonly target?: unknown;
+}
 
 export type PendingPromptTarget =
   | {
@@ -167,6 +193,10 @@ export interface PendingPromptContext {
   // prompt. After acknowledgement the prompt (and this snapshot) is cleared
   // and cannot be reopened from product UI or hidden-info-safe surfaces.
   revealedCardIds?: readonly CardInstanceId[];
+  // cCp29 reaction prompt context for `cancel_leader`. Present only on the
+  // White Flame reaction prompt; carries the attempted leader's identity
+  // and original target so the decline path can replay the leader.
+  leaderCancel?: LeaderCancelReactionContext;
 }
 
 export interface PendingPrompt {
@@ -364,4 +394,21 @@ export type GameEvent =
       cardIds: readonly CardInstanceId[];
       sourceIds: readonly string[];
       reason: "look_three_cards";
+    }
+  | {
+      // cCp29 leader cancel/suppression event for `cancel_leader`. Public
+      // event covering both the proactive use (on the White Flame seat's
+      // own normal turn) and the reaction-prompt cancel resolution. The
+      // payload carries the suppressed seat, the suppression round, and
+      // the cancelled leader identity so observers can render
+      // "<actor> cancelled <target> leader for round N" without exposing
+      // hidden info (leader identity is public).
+      type: "leader_cancelled";
+      mode: "proactive" | "reaction";
+      round: number;
+      seatId: SeatId; // White Flame acting seat
+      targetSeatId: SeatId; // suppressed opponent seat
+      targetLeaderCardId: CardInstanceId | null;
+      targetLeaderSourceId: string;
+      targetAbilityId: string;
     };

@@ -1,5 +1,6 @@
 import type { CatalogAbilityId, CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
 
+import { isLeaderSuppressedThisRound } from "./leaderCancel";
 import type { CardInstanceId, MatchState, SeatId } from "./types";
 
 export type WeatherPolicy = "normal" | "king_bran";
@@ -233,6 +234,9 @@ export const getWeatherPolicyBySeat = (
     if (!leaderSourceId) {
       return;
     }
+    if (isLeaderSuppressedThisRound({ state, seatId })) {
+      return;
+    }
     const leader = lookup.get(leaderSourceId);
     if (leader?.ability === "weather_half_penalty") {
       policy[seatId] = "king_bran";
@@ -258,6 +262,9 @@ export const getRowHornPolicyBySeat = (
     if (!leaderSourceId) {
       return;
     }
+    if (isLeaderSuppressedThisRound({ state, seatId })) {
+      return;
+    }
     const leader = lookup.get(leaderSourceId);
     if (!leader) {
       return;
@@ -280,6 +287,9 @@ export const getDoubleSpiesPolicyBySeat = (
   SEATS.forEach((seatId) => {
     const leaderSourceId = state.seats[seatId]?.leaderSourceId;
     if (!leaderSourceId) {
+      return;
+    }
+    if (isLeaderSuppressedThisRound({ state, seatId })) {
       return;
     }
     const leader = lookup.get(leaderSourceId);

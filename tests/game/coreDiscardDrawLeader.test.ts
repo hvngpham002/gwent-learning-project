@@ -192,18 +192,16 @@ describe("discard_two_draw_one_from_deck metadata and manifest (cCp27)", () => {
     );
   });
 
-  it("placeholder list contains exactly cancel_leader after cCp28", () => {
-    expect([...officialLeaderPromotionManifest.placeholderLeaderAbilityIds].sort()).toEqual([
-      "cancel_leader",
-    ]);
+  it("placeholder list is empty after cCp29", () => {
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toEqual([]);
   });
 
-  it("manifest counts after cCp28: 13 executable + 7 passive + 1 setup = 21 implemented, 1 placeholder", () => {
-    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(13);
+  it("manifest counts after cCp29: 14 executable + 7 passive + 1 setup = 22 implemented, 0 placeholder", () => {
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(14);
     expect(officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds).toHaveLength(7);
     expect(officialLeaderPromotionManifest.implementedSetupLeaderSourceIds).toHaveLength(1);
-    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(21);
-    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toHaveLength(1);
+    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(22);
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toHaveLength(0);
   });
 });
 

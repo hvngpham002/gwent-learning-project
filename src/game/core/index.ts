@@ -15,3 +15,4 @@ export * from "./leaderRandomMedic";
 export * from "./leaderSetup";
 export * from "./leaderDiscardDraw";
 export * from "./leaderLookThreeCards";
+export * from "./leaderCancel";

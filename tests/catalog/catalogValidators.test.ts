@@ -122,7 +122,10 @@ describe("catalog validation", () => {
     expect(CATALOG_ABILITY_METADATA.skellige_storm.status).toBe("implemented");
     expect(CATALOG_ABILITY_METADATA.mardroeme.status).toBe("implemented");
     expect(CATALOG_ABILITY_METADATA.berserker.status).toBe("implemented");
-    expect(CATALOG_LEADER_ABILITY_METADATA.cancel_leader.status).toBe("placeholder");
+    // cCp29 promoted the final placeholder leader ability `cancel_leader`
+    // to implemented; every official leader ability now has implemented
+    // engine semantics.
+    expect(CATALOG_LEADER_ABILITY_METADATA.cancel_leader.status).toBe("implemented");
   });
 
   it("reports duplicate card source IDs", () => {

@@ -1,39 +1,21 @@
 # Leader Ability Matrix
 
-This document is the durable cCp18 audit output, refreshed by cCp19,
-cCp20, cCp21, cCp22, cCp23, cCp24, cCp25, cCp26, cCp27, and cCp28. It
-enumerates every official leader source record, classifies the
-placeholder leaders by implementation pattern, lists local-source
-conflicts, and records engine, legal-move, prompt / UI, hidden-info,
-AI, and simulation implications. cCp19+ implementation specs should
-pull from this matrix rather than re-running the audit.
+This document is the durable cCp18 audit output, refreshed by cCp19
+through cCp29. It enumerates every official leader source record,
+classifies the (now zero) placeholder leaders by implementation pattern,
+lists local-source conflicts, and records engine, legal-move, prompt /
+UI, hidden-info, AI, and simulation implications. cCp19+ implementation
+specs should pull from this matrix rather than re-running the audit.
 
-The matrix is mostly documentation; cCp19 implemented Tranche 1 (row-wide
-horn-like passives), cCp20 implemented `double_spies` as a full-game
-passive (Tranche 2 first leader), cCp21 implemented
-`optimize_agile_rows` as the second Tranche 2 leader (active one-shot
-auto-place with tied-row player choice), cCp22 implemented
-`restore_discard_to_hand` as the third Tranche 2 leader (active one-shot
-prompt-based restore over own discard), cCp23 implemented
-`shuffle_discards_into_decks` as the fourth Tranche 2 leader (active
-one-shot bulk discard-to-deck recycle with deterministic per-seat
-shuffle), cCp24 implemented `draw_opponent_discard` as the fifth
-Tranche 2 leader (active one-shot prompt-based draw over the opponent's
-discard pile, settling the cCp18 §C-2 conflict in favor of the catalog),
-and cCp25 implemented `random_medic` as the sixth and final Tranche 2
-leader (whole-match passive Medic mutation that randomizes non-hero
-Medic targets from own discard, settling the cCp18 §C-3 conflict in
-favor of the Medic-mutation reading). **Tranche 2 is complete after
-cCp25.** cCp26 opens Tranche 3 with `draw_extra_card` (Pattern 7)
-implemented as a setup-time hand-size modifier on Francesca Findabair:
-Daisy of the Valley. **cCp27 closes Tranche 3** with
-`discard_two_draw_one_from_deck` (Pattern 3) implemented as the
-engine's first true active multi-stage prompt leader on Eredin:
-Destroyer of Worlds. **cCp28 opens Tranche 4** with
-`look_three_cards` (Pattern 5) implemented as the engine's first
-hidden-info disclosure leader on Emhyr var Emreis: Emperor of
-Nilfgaard, settling Settled Product Decisions §6 and §7. This file is
-updated to reflect all ten landings.
+**Matrix complete: as of cCp29 every official leader ability has
+implemented engine semantics.** cCp19 implemented Tranche 1 (row-wide
+horn-like passives), cCp20-cCp25 closed Tranche 2 (mixed active +
+passive leaders), cCp26-cCp27 closed Tranche 3 (setup-time event +
+multi-stage prompt), and cCp28-cCp29 closed Tranche 4 (hidden-info
+disclosure + reaction/current-round suppression). cCp29 implements
+`cancel_leader` (Pattern 6) on Emhyr var Emreis: The White Flame as a
+**reaction / current-round suppression** leader (Settled Product
+Decision §8), completing the official leader matrix.
 
 ## Status
 
@@ -45,37 +27,36 @@ updated to reflect all ten landings.
   record (Eredin: Commander of the Red Riders and Francesca: Queen of Dol
   Blathanna). `clear_weather` is both a card and leader ability ID, but only
   Foltest: Lord Commander of The North uses it as a leader.
-- Implemented executable leaders: **13** after cCp28 (each emits a legal
+- Implemented executable leaders: **14** after cCp29 (each emits a legal
   `use_leader` move): `clear_weather`, `play_frost`, `play_fog`,
   `play_rain`, `play_any_weather`, `scorch_range`, `scorch_siege`,
   `optimize_agile_rows`, `restore_discard_to_hand`,
   `shuffle_discards_into_decks`, `draw_opponent_discard`,
-  `discard_two_draw_one_from_deck`, `look_three_cards`. (cCp28 added
-  Emhyr var Emreis: Emperor of Nilfgaard with the engine's first
-  hidden-info disclosure leader.)
-- Implemented passive leaders: **7** after cCp25 (unchanged in cCp26 /
-  cCp27 / cCp28) — `weather_half_penalty` on King Bran (cCp15), the
-  four cCp19 row-wide horn-like passives (`double_siege` on Foltest:
-  The Siegemaster, `double_close` on Eredin: Commander of the Red
-  Riders and Francesca: Queen of Dol Blathanna, and `double_ranged`
-  on Francesca: The Beautiful), `double_spies` on Eredin Breacc Glas:
-  The Treacherous (cCp20), and `random_medic` on Emhyr var Emreis:
-  Invader of the North (cCp25).
-- Implemented setup-time leaders: **1** after cCp26 (unchanged in
-  cCp27 / cCp28) — `draw_extra_card` on Francesca Findabair: Daisy of
-  the Valley (cCp26). This is a new manifest bucket distinct from
-  passive scoring policies; the leader's effect fires during
-  `startMatch` initial draw rather than during play.
-- Placeholder leader records: **1** spanning **1** distinct ability ID
-  after cCp28. (cCp28 promoted 1 leader record — Emhyr var Emreis:
-  Emperor of Nilfgaard — and 1 ability ID — `look_three_cards` — out
-  of placeholder, opening Tranche 4. Only `cancel_leader` (Pattern 6)
-  remains placeholder.)
-- `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp28 — it lists every leader ability whose
-  `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
-  `cancel_leader`. (See Source Conflicts §C-7 for the cCp18 audit
-  finding that prompted this fix.)
+  `discard_two_draw_one_from_deck`, `look_three_cards`,
+  `cancel_leader`. (cCp29 added Emhyr var Emreis: The White Flame
+  with reaction / current-round suppression.)
+- Implemented passive leaders: **7** after cCp25 (unchanged through
+  cCp29) — `weather_half_penalty` on King Bran (cCp15), the four cCp19
+  row-wide horn-like passives (`double_siege` on Foltest: The
+  Siegemaster, `double_close` on Eredin: Commander of the Red Riders
+  and Francesca: Queen of Dol Blathanna, and `double_ranged` on
+  Francesca: The Beautiful), `double_spies` on Eredin Breacc Glas: The
+  Treacherous (cCp20), and `random_medic` on Emhyr var Emreis: Invader
+  of the North (cCp25).
+- Implemented setup-time leaders: **1** after cCp26 (unchanged through
+  cCp29) — `draw_extra_card` on Francesca Findabair: Daisy of the
+  Valley (cCp26). This is a manifest bucket distinct from passive
+  scoring policies; the leader's effect fires during `startMatch`
+  initial draw rather than during play.
+- Placeholder leader records: **0** after cCp29. (cCp29 promoted the
+  final placeholder leader record — Emhyr var Emreis: The White Flame
+  — and the final placeholder ability ID — `cancel_leader` — out of
+  placeholder, completing Tranche 4 and the entire official leader
+  matrix.)
+- `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` is now
+  the empty list after cCp29 — every official leader ability has
+  implemented engine semantics. (See Source Conflicts §C-7 for the
+  cCp18 audit finding that originally tracked this set.)
 
 ## Implemented Baseline
 
@@ -96,6 +77,7 @@ Treat these as comparators only; cCp18 does not change their behavior.
 | `monsters.eredin-bringer-of-death` | Eredin: Bringer of Death | Monsters | `restore_discard_to_hand` | `none` (opens a `choose_card` prompt over own discard) | cCp22. Active one-shot. Emits one no-target `use_leader` move when the acting seat's own discard has at least one eligible card; opens a `choose_card` prompt without consuming the leader. The leader is consumed only after a legal prompt option resolves; restored cards return to hand without resolving their abilities. Any card kind in own discard is eligible (units, heroes, specials, weather, side-deck-only / generated). |
 | `skellige.crach-an-craite` | Crach an Craite | Skellige | `shuffle_discards_into_decks` | `none` | cCp23. Active one-shot. Emits one no-target `use_leader` move when at least one seat has a non-empty discard pile; both-empty discards emit no legal move. Recycles each non-empty discard into the same seat's deck (off-owner cards follow the discard pile, not the original owner), shuffles only affected decks deterministically through the seeded RNG, leaves empty-discard seats untouched (no hidden no-op shuffle), and consumes the leader. Recycled cards do not resolve their abilities. |
 | `nilfgaard.emhyr-var-emreis-the-relentless` | Emhyr var Emreis: The Relentless | Nilfgaard | `draw_opponent_discard` | `none` (opens a `choose_card` prompt over opponent discard) | cCp24. Active one-shot. Emits one no-target `use_leader` move when the opponent discard has at least one eligible card; opens a `choose_card` prompt without consuming the leader. The leader is consumed only after a legal prompt option resolves; drawn cards return to the acting hand without resolving their abilities. Any card kind in opponent discard is eligible (units, heroes, specials, weather, side-deck-only / generated, off-owner). Settles cCp18 §C-2 (catalog wins). |
+| `nilfgaard.emhyr-var-emreis-the-white-flame` | Emhyr var Emreis: The White Flame | Nilfgaard | `cancel_leader` | `none` (proactive) **or** opens a `choose_option` reaction prompt before an opponent active leader resolves | cCp29. Active one-shot reaction / current-round suppression. Proactive: emits one no-target `use_leader` move on the seat's own turn when the opponent has a cancellable current-round leader effect (active unused or implemented passive); sets the opponent's `seat.leaderCancelledRound = state.round`, consumes White Flame, does not consume the opponent leader. Reactive: when the opponent attempts a non-`cancel_leader` active leader, the engine opens a White Flame reaction prompt before the attempted leader resolves; cancel option consumes both leaders and applies suppression (no refund), decline option resolves the attempted leader exactly once and leaves White Flame available. Suppression is current-round only and clears at round transition. White Flame cannot be used to cancel another White Flame (no recursive reaction window). Settles cCp18 Settled Product Decision §8. |
 
 ### Implemented passive leaders (no `use_leader` move)
 
@@ -291,18 +273,18 @@ Marker conventions:
 |---|---|
 | Source ID | `nilfgaard.emhyr-var-emreis-the-white-flame` |
 | Faction | Nilfgaard |
-| Ability metadata status | `placeholder` |
-| Catalog description | (none on the leader source; catalog ability description is "Cancels the opponent leader ability.") |
-| Local rule / source text | The classic Witcher 3 / Gwent text reads "Cancel your opponent's Leader ability." If the opponent is using a passive (e.g. King Bran, `weather_half_penalty`), it disables the passive. If the opponent's leader is active, it locks them out of using it. |
-| Likely official behavior | *Derived*: active leader; flips a per-seat "leader-cancelled" flag on the opponent. The opponent's leader produces no legal `use_leader` move from then on; passive effects (e.g. `weather_half_penalty`, the future `double_*` row horns) stop applying. |
-| Active vs passive vs setup | Active one-shot. |
-| Expected legal move shape | `use_leader` with `target.kind === "none"`. |
-| Expected command transaction shape | `UseLeader` → set opponent's `seat.leaderCancelled = true` (new `MatchSeat` field) → emit a new `leader_cancelled` event → consume acting leader. Subsequent `getLeaderMove` returns `[]` for the cancelled seat regardless of ability. Passive scoring derivations check `seat.leaderCancelled` before applying. |
-| Prompt / choice UI need | None at choice time. UI must indicate cancelled state on the opponent score-card leader. |
-| Hidden-info risk | None directly, but it touches every other leader implementation: every passive leader effect must check the flag. |
-| Implementation difficulty | high (cross-cutting). Implementation must come *after* every other passive leader is implemented, otherwise we cannot test the cancel. |
-| Recommended tranche | Tranche 4 (Hidden-info / suppression). |
-| Unresolved questions | (1) If the opponent has already used their active leader before being cancelled, is the cancel a no-op? (2) If the opponent is King Bran, does retroactive un-application of `weather_half_penalty` apply mid-round, or only on the next scoring tick? Recommendation: scoring is a pure function of state; the next tick already reads `seat.leaderCancelled`. (3) Does cancelling a leader before its active ability has fired still consume the cancel acting leader? Yes — active leaders are once-per-game regardless of whether the target had ability charge left. |
+| Ability metadata status | `implemented` (cCp29) |
+| Catalog description | (none on the leader source; catalog ability description rewritten in cCp29 to capture the reaction / current-round suppression contract.) |
+| Local rule / source text | The classic Witcher 3 / Gwent text reads "Cancel your opponent's Leader ability." Settled Product Decision §8: cancellation is **current-round only**, **reaction or proactive**, and **does not refund** an attempted active leader. |
+| Implemented behavior (cCp29) | **Active one-shot reaction / current-round suppression.** The acting seat owns Emhyr: The White Flame and may either (1) use it proactively on its own normal turn to lock out an opponent leader (active or passive) for the current round, or (2) react before an opponent active leader resolves to consume that leader without effect. Suppression is current-round-scoped via `seat.leaderCancelledRound = state.round` and clears at round transition. Suppressed seats emit no `use_leader` legal move; passive scoring/ability policies (`weather_half_penalty`, `double_close`, `double_ranged`, `double_siege`, `double_spies`, `random_medic`) recalculate immediately for the current round when suppressed. Setup-time `draw_extra_card` already happened and is not retroactively undone. The reaction prompt is `kind === "choose_option"`, `stage === "leader_cancel_reaction"`. White Flame cannot be used to cancel another White Flame (no recursive reaction window). The acting seat's leader is consumed in both modes; in proactive mode the opponent leader is *not* consumed, just locked out for the current round. |
+| Active vs passive vs setup | **Active one-shot, with both proactive and reaction-prompt entry points.** |
+| Implemented legal move shape | Proactive: `use_leader` with `target.kind === "none"`, `metadata.targetRequirement === "none"`, `metadata.targetSeatId === opponentSeat`, `metadata.targetSourceId === opponentLeaderSourceId`, `metadata.targetLabel === "opponent leader"`. Reactive: no `use_leader` move; the reaction prompt opens automatically when the opposing seat owns an unused, unsuppressed `cancel_leader` and a non-`cancel_leader` active leader is attempted. |
+| Implemented command transaction shape | Proactive: `UseLeader { target: { kind: "none" } }` → reject if the gate fails → `ability_triggered` → set `state.seats[opponent].leaderCancelledRound = state.round` → `leader_cancelled { mode: "proactive", round, seatId, targetSeatId, targetLeaderCardId, targetLeaderSourceId, targetAbilityId }` → `ability_resolved { outcome: "leader_cancelled" }` → `leader_used` → `turn_set` (handoff). Reactive: opponent attempts a non-`cancel_leader` active `UseLeader` → engine clones state, opens `pendingPrompt` (`choose_option`, `stage: "leader_cancel_reaction"`, `seatId: whiteFlameSeat`, two options `cancel-leader:cancel` / `cancel-leader:decline` with `target.kind === "none"`, `context.leaderCancel: { mode: "reaction", targetSeatId, targetLeaderCardId, targetLeaderSourceId, targetAbilityId, target }`) → `prompt_opened` → no leader consumed, no handoff. Cancel option resolution: `prompt_resolved` → `ability_triggered` → set target `leaderCancelledRound = state.round` → `leader_cancelled { mode: "reaction", ... }` → `ability_resolved.leader_cancelled` → `leader_used` (White Flame) → `leader_used` (cancelled target) → `turn_set` (handoff from attempted leader seat). Decline option resolution: `prompt_resolved` → clear prompt → re-execute the attempted leader exactly once with the reaction gate bypassed (preserving the original target). |
+| Prompt / choice UI need | Reaction prompt: rendered through the existing generic `PromptPanel` with two no-target options (`Cancel leader` / `Let it stand`); no new modal required. Score-card leader display: shows `cancelled this round` when `seat.leaderCancelledRound === match.round` (clears at round transition). Recent activity: count-only summary `<actor> cancelled <target> leader for round N`. |
+| Hidden-info risk | None. Leader identity, leader-used status, and current-round suppression are all public. The reaction prompt's `context.leaderCancel.target` is replayed only inside the engine on decline; the safe export and AI observation surfaces expose only the `cancelledThisRound: boolean` flag, not the captured target. |
+| Implementation difficulty (delivered) | medium-high (cross-cutting). Reuses existing prompt machinery; passive scoring helpers gain a single suppression check; `executeLeader` adds a reaction-prompt gate before per-leader branches and an internal `bypassCancelReaction` flag for the decline-replay path. |
+| Recommended tranche (implemented in cCp29) | Tranche 4 (Hidden-info / suppression). |
+| Settled questions | (1) Settled Product Decision §8: **reaction / current-round suppression**, with no refund on reaction cancel. (2) Setup-time `draw_extra_card` is not retroactively undone — the extra card already entered hand at `startMatch`. (3) Proactive use against an already-used active leader with no passive policy emits no legal move (nothing to suppress). (4) Cancel of cancel is forbidden — `cancel_leader` cannot open a nested reaction prompt against another `cancel_leader`. (5) AI heuristic chooses the cancel option when it owns the reaction prompt (deterministic). |
 
 ### Emhyr var Emreis: Invader of the North — `random_medic`
 
@@ -729,36 +711,80 @@ dismissal) and §7 (play-phase only) are now both satisfied.
 - Effect classification: one-shot active with one-time acknowledgement
   modal; no persistent observation state.
 
-### Pattern 6 — Leader Cancel / Suppression
+### Pattern 6 — Leader Cancel / Suppression (IMPLEMENTED in cCp29)
 
 | Members | Ability IDs |
 |---|---|
-| Emhyr: The White Flame | `cancel_leader` |
+| Emhyr: The White Flame | **IMPLEMENTED in cCp29** — `cancel_leader` |
 
-- Trigger: active one-shot.
-- Effect: disables the opponent's leader (active or passive) for the rest
-  of the match.
+**Status:** `cancel_leader` implemented in cCp29 (see
+`audit/reports/2026-05-04-cCp29-report.md`) as the engine's first
+**reaction / current-round suppression** leader. cCp29 closes
+Tranche 4. Settled Product Decision §8 (reaction / current-round
+suppression, no refund) is now satisfied.
+
+- Trigger: active one-shot, both proactive (own turn) and reactive
+  (before an opponent active leader resolves).
+- Effect: suppresses the opponent's leader (active or passive) for the
+  current round only. Suppression clears at round transition. The
+  cancel acting leader is consumed in both modes; in proactive mode the
+  opponent leader is **not** consumed (just locked out for the current
+  round); in reaction mode the opponent leader **is** consumed with no
+  refund.
 - Engine surfaces:
-  - new `seat.leaderCancelled: boolean` field.
-  - `getLeaderMove` returns `[]` for the cancelled seat regardless of
-    ability.
-  - every passive scoring derivation (`getWeatherPolicyBySeat`,
-    `getRowHornPolicyBySeat` from Pattern 1, `doubleSpies` snapshot from
-    Pattern 2) checks `seat.leaderCancelled` before applying.
-  - new `leader_cancelled` event.
-- Legal-move shape: `use_leader` with `target.kind === "none"`.
-- Command shape: `UseLeader` → set `seat.leaderCancelled = true` on
-  opponent → consume acting leader.
-- Prompt / UI: none at choice time. Score-card leader display shows
-  cancelled state.
-- Hidden-info risk: none directly; cross-cuts every other leader.
-- AI: heuristic must learn "opponent leader will not fire any more". Not a
-  blocker — `legal-heuristic-v0` already only reasons over current legal
-  moves.
-- Simulation export: new state field; existing observers add it to the
-  acting seat / opponent seat observation manifests as appropriate.
-- Effect classification: one-shot active that flips a persistent
-  suppression flag.
+  - new `seat.leaderCancelledRound: number | null` field — set to
+    `state.round` when the seat's leader is suppressed, cleared at round
+    transition.
+  - new pure helper module `src/game/core/leaderCancel.ts` exporting
+    `CANCEL_LEADER_SOURCE_ID`, `isLeaderSuppressedThisRound`,
+    `getLeaderCancelStatus`, `canUseCancelLeaderProactively`, and
+    `canOpenCancelLeaderReaction`.
+  - `getLeaderMove` returns `[]` for the suppressed seat regardless of
+    ability (active leaders).
+  - passive scoring derivations (`getWeatherPolicyBySeat`,
+    `getRowHornPolicyBySeat`, `getDoubleSpiesPolicyBySeat`) and the
+    Medic-mutation policy (`hasRandomMedicPolicyForSeat`) check
+    `isLeaderSuppressedThisRound` before applying.
+  - new `leader_cancelled { mode: "proactive" | "reaction", round,
+    seatId, targetSeatId, targetLeaderCardId, targetLeaderSourceId,
+    targetAbilityId }` event covering both proactive and reaction
+    paths.
+  - new `PendingPromptStage` value `"leader_cancel_reaction"` and new
+    `PendingPromptContext.leaderCancel` field carrying the attempted
+    leader's identity + original target for the decline-replay path.
+- Legal-move shape: proactive `use_leader` with `target.kind === "none"`,
+  emitted only when the seat owns an unused, unsuppressed
+  `cancel_leader` and the opponent has a cancellable current-round
+  leader effect. Reactive prompt opens automatically through the
+  engine's reaction gate inside `executeLeader`.
+- Command shape: proactive `UseLeader` → set
+  `state.seats[opponent].leaderCancelledRound = state.round` →
+  consume White Flame → emit events → handoff. Reactive opens a
+  `choose_option` prompt with two no-target options
+  (`cancel-leader:cancel`, `cancel-leader:decline`); cancel resolves
+  through the same suppression path plus consuming both leaders;
+  decline replays the attempted leader exactly once with the reaction
+  gate bypassed.
+- Prompt / UI: reaction prompt renders through the existing generic
+  `PromptPanel` with two no-target options. Score-card leader display
+  shows `cancelled this round` when `seat.leaderCancelledRound ===
+  match.round`. Recent activity renders count-only summary:
+  `<actor> cancelled <target> leader for round N`.
+- Hidden-info risk: none. Leader identity and leader-used status are
+  public; the cancel suppression flag (`cancelledThisRound: boolean`)
+  is added to AI seat observation and safe simulation export.
+- AI: `legal-heuristic-v0` chooses the cancel option deterministically
+  when it owns a `cancel_leader` reaction prompt. Proactive AI use is
+  bounded — the existing heuristic (`isUsefulLeaderMove`) only fires on
+  `clear_weather`, so the AI does not call `cancel_leader` proactively
+  in practice; the reaction-prompt path is the primary AI surface.
+- Simulation export: `cancelledThisRound: boolean` added to
+  `SafeSeatPrivatePublicState.leader` and `SafeOpponentPublicState.leader`.
+  Action encoding for the no-target reaction options falls through the
+  existing `none` branch.
+- Effect classification: one-shot active with both proactive and
+  reaction-prompt entry, flipping a current-round-scoped suppression
+  flag that clears at round transition.
 
 ### Pattern 7 — Setup-Time Hand-Size Modifier (IMPLEMENTED in cCp26)
 
@@ -1163,8 +1189,8 @@ This table compares catalog leader descriptions, leader ability metadata,
 | 2. Double Spies (whole-match passive) | none (passive) | none | n/a | none | none | yes | none (passive) | ongoing whole-match scoring modifier |
 | 3. Discard Two / Draw One | `target.kind === "none"` opens prompt | new `leader_multi_step` (or extended `choose_card`) | no | yes (multi-stage hand select) | medium (deck-draw choice) | needs multi-stage policy update | new prompt-stage rows | one-shot active w/ prompt chain |
 | 4. Discard Restore / Draw (`restore_discard_to_hand` IMPLEMENTED in cCp22, `draw_opponent_discard` IMPLEMENTED in cCp24) | `target.kind === "none"` opens prompt | `choose_card` over own discard (cCp22) or opponent discard (cCp24); PendingPromptOption.target.row optional; `getPromptMoves` selects target side by abilityId | yes (existing generic PromptPanel renders labelled buttons) | none — generic `PromptPanel` handles it | low (both discard piles already public) | yes — `legal-heuristic-v0` ranks by `targetStrength ?? 0`, deterministic moveId fallback | new `card_moved.reason "leader_restore_discard_to_hand"` (cCp22) and `card_moved.reason "leader_draw_opponent_discard_to_hand"` (cCp24) join event union; standard prompt rows | one-shot active w/ single-step prompt |
-| 5. Look Three Cards | `target.kind === "none"` | none | n/a | UI overlay on opponent-hand backs | HIGH (first persistent reveal) | acting-seat only; redaction logic must be seat-aware | new reveal sets in observations | one-shot active w/ persistent observation surface |
-| 6. Leader Cancel | `target.kind === "none"` | none | n/a | leader display update | none directly; cross-cuts every passive | yes | new `seat.leaderCancelled` flag | one-shot active w/ persistent suppression flag |
+| 5. Look Three Cards (IMPLEMENTED in cCp28) | `target.kind === "none"` | `choose_option` acknowledgement prompt with `stage === "opponent_hand_reveal"` | n/a | one-time reveal modal | HIGH while prompt is open; no persistent reveal after acknowledgement | acting-seat only; redaction logic is seat-aware | prompt-local `revealed_opponent_hand_<index>` safe refs for acting perspective only | one-shot active w/ one-time acknowledgement modal |
+| 6. Leader Cancel (IMPLEMENTED in cCp29) | `target.kind === "none"` proactively; reaction prompt options use `target.kind === "none"` | `choose_option` reaction prompt with `stage === "leader_cancel_reaction"` | yes for proactive/no-target; generic PromptPanel for reaction | score-card leader status update | none directly; cross-cuts every passive | yes for reaction prompt; proactive AI tuning deferred | public `cancelledThisRound` leader flag in observations/export | one-shot active w/ current-round suppression (`leaderCancelledRound`) |
 | 7. Setup Draw Extra | none | none | n/a | none | none | yes | none beyond standard hand size | setup-time event |
 | 8. Passive Random Medic Mutation (IMPLEMENTED in cCp25) | none (passive) | none | n/a | none | none (own discard public; only the chosen card is revealed) | yes | new `ability_resolved.outcome "random_revived_card"`; otherwise no new events | ongoing whole-match Medic mutation |
 | 9. Optimize Agile Rows (IMPLEMENTED in cCp21) | `none` (auto) OR `board_row` (per tied row) | none | yes (cEp8 menu fits 1-3 rows) | none — `metadata.targetLabel` carries row name | none | yes | per-card move rows | one-shot active w/ instantaneous board mutation |
@@ -1299,29 +1325,34 @@ the only remaining tranche.
   here keeps the first hidden-info-disclosure leaders (Tranche 4) free
   of prompt-stage churn. **Delivered in cCp27.**
 
-### Tranche 4 — Hidden-Info Disclosure and Suppression
+### Tranche 4 — Hidden-Info Disclosure and Suppression (COMPLETE)
 
 **Members:** `look_three_cards` (Pattern 5, **DELIVERED in cCp28**),
-`cancel_leader` (Pattern 6, remaining). cCp28 opens Tranche 4 with the
-engine's first hidden-info disclosure leader; only `cancel_leader`
-remains.
+`cancel_leader` (Pattern 6, **DELIVERED in cCp29**). **Tranche 4 and
+the entire official leader matrix are complete after cCp29.**
 
-**Why last:**
+**Outcomes:**
 
-- `look_three_cards` is the engine's first explicit hidden-info
-  disclosure, requiring an observation-manifest update and broad test
-  coverage. **Delivered in cCp28** as a one-time acknowledgement modal
-  (per Settled Product Decision §6) rather than a persistent
-  observation state, so the engine still avoids a long-lived
+- `look_three_cards` (cCp28) is the engine's first explicit hidden-info
+  disclosure, delivered as a one-time acknowledgement modal (per
+  Settled Product Decision §6) rather than a persistent observation
+  state, so the engine still avoids a long-lived
   `seat.revealedOpponentHand` field.
-- `cancel_leader` cross-cuts every passive leader implemented in
-  Tranches 1-3 and must come after they exist or the test fixtures
-  cannot demonstrate suppression.
-- Hidden-info testing is the highest-risk bucket; doing it last lets
-  Tranches 1-3 land first as a smaller integration set. cCp28
-  validates the hidden-info contracts (`getPromptMoves`,
+- `cancel_leader` (cCp29) cross-cuts every passive leader implemented
+  in Tranches 1-3 (must check the suppression flag on every scoring
+  tick) plus active leaders (must be locked out of `getLeaderMove`
+  while suppression is in effect). Settled Product Decision §8 picks
+  reaction / current-round suppression with no refund. The reaction
+  prompt is the AI's primary entry point; the proactive heuristic is
+  intentionally kept narrow (`legal-heuristic-v0` does not call
+  `cancel_leader` proactively in practice but resolves owned reaction
+  prompts deterministically).
+- Hidden-info testing is the highest-risk bucket; doing it last let
+  Tranches 1-3 land first as a smaller integration set. cCp28-cCp29
+  validate the hidden-info contracts (`getPromptMoves`,
   `seatObservation`, `buildSafeSimulationObservation`,
-  `summarizeEvents`) under a real disclosure event.
+  `summarizeEvents`) under both a real disclosure event and a real
+  suppression flag.
 
 ### Optional follow-ups after Tranche 4
 
@@ -1392,12 +1423,18 @@ decisions are tracked here for the relevant later tranche.
    move outside `playing` phase for `look_three_cards`, including
    `mulligan`, `round_end`, `game_end`, and `setup`.
 8. **`cancel_leader` semantics.** **Settled: reaction / current-round
-   suppression.** `cancel_leader` can be played as a reaction; it
-   suppresses the opponent's leader effect for the current round only.
-   If it cancels an active leader, that leader is still consumed (no
-   refund). If it suppresses a passive, scoring recalculates immediately
-   for the current round through the existing pure-function pipeline.
-   Reaction window timing is part of the implementation tranche.
+   suppression.** **Implemented in cCp29.** `cancel_leader` can be
+   played as a reaction or proactively on the acting seat's own turn;
+   it suppresses the opponent's leader effect for the current round
+   only. If it cancels an active leader through the reaction prompt,
+   that leader is still consumed (no refund). If it suppresses a
+   passive, scoring/ability policies recalculate immediately for the
+   current round through the existing pure-function pipeline. The
+   reaction window opens before the attempted opponent active leader
+   resolves; the decline option resolves the attempted leader exactly
+   once. White Flame cannot be used to cancel another White Flame (no
+   recursive reaction window). Suppression clears at round transition.
+   Setup-time `draw_extra_card` is not retroactively undone.
 9. **`double_spies` duration.** **Settled: passive for the entire game.**
    The leader's effect is on for the rest of the match while the leader is
    on the seat; it doubles every battlefield non-hero Spy currently on the
@@ -1428,6 +1465,107 @@ cCp19+ implementation:
 - Witcher Fandom scrape: [audit/scrapes/2026-04-30-witcher-fandom/](../audit/scrapes/2026-04-30-witcher-fandom/).
 
 ## Change Log
+
+- 2026-05-04 (cCp29): `cancel_leader` (Emhyr var Emreis: The White
+  Flame) promoted from `placeholder` to `implemented` as the engine's
+  first **reaction / current-round suppression leader** (Pattern 6
+  marked IMPLEMENTED). cCp29 closes Tranche 4 and the entire official
+  leader matrix. New pure helper module
+  `src/game/core/leaderCancel.ts` exporting
+  `CANCEL_LEADER_SOURCE_ID`, `isLeaderSuppressedThisRound`,
+  `getLeaderCancelStatus`, `canUseCancelLeaderProactively`, and
+  `canOpenCancelLeaderReaction`. New `seat.leaderCancelledRound:
+  number | null` field on `SeatState` (initialized to `null` in
+  `startMatch`, set to `state.round` on cancel, cleared at round
+  transition). New `PendingPromptStage` value
+  `"leader_cancel_reaction"` and new
+  `PendingPromptContext.leaderCancel: LeaderCancelReactionContext`
+  field carrying the attempted leader's identity (and original
+  `target`, `unknown`-typed to avoid a cycle with `LegalMoveTarget`)
+  for the decline-replay path. New `GameEvent` variant
+  `leader_cancelled { mode: "proactive" | "reaction", round, seatId,
+  targetSeatId, targetLeaderCardId, targetLeaderSourceId,
+  targetAbilityId }`. **Proactive flow:** `getLeaderMove` emits one
+  no-target `use_leader` move on the White Flame seat's own turn when
+  the opponent has a cancellable current-round leader effect (active
+  unused or implemented passive); setup-only `draw_extra_card` and
+  already-used active leaders with no passive policy are excluded;
+  proactive cancel of cancel is forbidden. `executeLeader` rejects
+  non-`none` targets, sets opponent
+  `leaderCancelledRound = state.round`, consumes White Flame, emits
+  `ability_triggered` → `leader_cancelled (proactive)` → `ability_resolved
+  (leader_cancelled)` → `leader_used` → `turn_set` (handoff). The
+  opponent leader is **not** consumed in proactive mode. **Reaction
+  flow:** `executeLeader` adds a reaction-prompt gate before per-leader
+  branches: when a non-`cancel_leader` active leader fires and the
+  opposing seat owns an unused, unsuppressed `cancel_leader` and has
+  not passed and is not itself suppressed, the engine clones state,
+  opens `pendingPrompt` (`choose_option`,
+  `stage: "leader_cancel_reaction"`, `seatId: whiteFlameSeat`, two
+  no-target options `cancel-leader:cancel` / `cancel-leader:decline`,
+  `context.leaderCancel`), emits `prompt_opened`, and returns without
+  consuming any leader and without handing off the turn. Cancel option
+  resolution (in `commands.choosePromptOption`): emits
+  `prompt_resolved` → clears prompt → `ability_triggered` → sets
+  target `leaderCancelledRound = state.round` → emits `leader_cancelled
+  (reaction)` → `ability_resolved (leader_cancelled)` → `leader_used`
+  (White Flame) → `leader_used` (cancelled target) → `turn_set`
+  (handoff from attempted leader seat). Decline option resolution:
+  emits `prompt_resolved` → clears prompt → re-executes
+  `executeLeader` on a clone with `bypassCancelReaction: true` and
+  `skipLegalCheck: true` so the attempted leader fires exactly once
+  through its existing per-leader branch (no recursive reaction
+  prompt). **Suppression:** every implemented active leader category is
+  blocked by `getLeaderMove`'s suppression check (clear weather,
+  weather-pulling, row Scorch, optimize agile, restore discard,
+  shuffle discards, draw opponent discard, discard/draw, look three
+  cards). Manual `UseLeader` against a suppressed seat rejects through
+  the existing legal-move assertion without mutating state. Passive
+  scoring/ability helpers (`getWeatherPolicyBySeat`,
+  `getRowHornPolicyBySeat`, `getDoubleSpiesPolicyBySeat`,
+  `hasRandomMedicPolicyForSeat`) check
+  `isLeaderSuppressedThisRound` and act as if the seat has no leader
+  policy for the suppressed round. `resolveRoundEnd` clears both
+  seats' `leaderCancelledRound` to `null` before the next round
+  starts. Promotes `cancel_leader` metadata from `placeholder` to
+  `implemented` in `src/game/catalog/abilities.ts`. Updates
+  `OfficialLeaderPromotionManifest`: `executableLeaderSourceIds`
+  grows from 13 to 14 (adds The White Flame); `implementedLeaderSourceIds`
+  grows from 21 to 22; `placeholderLeaderAbilityIds` shrinks from 1 to
+  0 (removes `cancel_leader` — the list is now empty). AI: extends
+  `legal-heuristic-v0`'s `choosePromptMove` so AI deterministically
+  picks the cancel option from a `cancel_leader` reaction prompt.
+  Observation/export: extends `SeatObservation.ownLeader` /
+  `opponentLeader` and `SafeSeatPrivatePublicState.leader` /
+  `SafeOpponentPublicState.leader` with `cancelledThisRound: boolean`.
+  UI: existing generic `PromptPanel` renders the two no-target reaction
+  options without a new modal; `ScoreCard` shows `cancelled this
+  round` when the leader is suppressed (clears at round transition);
+  `summarizeEvents` renders `leader_cancelled` as a count-only label
+  (`<actor> cancelled <target> leader for round N`). Adds 66 focused
+  tests in `tests/game/coreCancelLeader.test.ts`. Updates
+  `tests/data/officialLeaderPromotion.test.ts`,
+  `tests/data/officialCatalogImport.test.ts`,
+  `tests/catalog/catalogValidators.test.ts`,
+  `tests/components/gwent/cardStudioHelpers.test.ts`,
+  `tests/components/gwent/authenticDeckBuilderViewModel.test.ts`,
+  `tests/components/gwent/authenticMatchViewModel.test.ts`,
+  `tests/game/coreDiscardDrawLeader.test.ts`,
+  `tests/game/coreDrawExtraCardLeader.test.ts`,
+  `tests/game/coreLookThreeCardsLeader.test.ts`, and
+  `tests/game/coreRandomMedicLeader.test.ts` to reflect the new
+  totals (14 executable + 7 passive + 1 setup = 22 implemented, 0
+  placeholder) and to drop placeholder-leader fixtures (only
+  `unknown_leader_ability` remains as a placeholder validator path).
+  Living docs updated: this file marks Pattern 6 IMPLEMENTED; flips
+  the White Flame row to `implemented (cCp29)`; refreshes Status
+  counts; marks Tranche 4 COMPLETE; refines Settled Product Decision
+  §8 to mark it implemented. `docs/gwent-rules.md` adds §17.12n for
+  the reaction / current-round suppression contract and a §16 row for
+  Emhyr: The White Flame. `docs/PROJECT_STATE.md` flips the active
+  spec handoff to cCp29 implemented. No deck-builder, Card Studio,
+  official porting, asset, broad AI rewrite, route promotion, or
+  legacy UI migration changes.
 
 - 2026-05-04 (cCp28): `look_three_cards` (Emhyr var Emreis: Emperor of
   Nilfgaard) promoted from `placeholder` to `implemented` as the

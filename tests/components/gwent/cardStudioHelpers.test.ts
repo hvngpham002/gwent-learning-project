@@ -123,17 +123,25 @@ describe("Card Studio helpers", () => {
     expect(result.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: "ability_not_implemented" })]));
   });
 
-  it("validates custom leaders and blocks neutral or placeholder leaders from playability", () => {
+  it("validates custom leaders and blocks neutral or unknown-ability leaders from playability", () => {
     const store = emptyStore();
     expect(validateCustomLeaderRecord(playableLeader(), context(store)).playable).toBe(true);
     expect(validateCustomLeaderRecord(playableLeader({ faction: "neutral" as "northern_realms" }), context(store)).issues.map((issue) => issue.code)).toContain(
       "invalid_faction",
     );
-    const placeholder = playableLeader({ ability: "cancel_leader" }, true);
-    const result = validateCustomLeaderRecord(placeholder, context({ ...store, leaders: [placeholder] }, placeholder.recordId));
-    expect(result.structurallyValid).toBe(true);
+    // cCp29 promoted the final placeholder leader ability `cancel_leader`
+    // to implemented. Every official leader ability is now implemented, so
+    // exercise the placeholder-block path through the `unknown_leader_ability`
+    // validator branch instead.
+    const unknownAbility = playableLeader(
+      { ability: "this_ability_does_not_exist" as "cancel_leader" },
+      true,
+    );
+    const result = validateCustomLeaderRecord(unknownAbility, context({ ...store, leaders: [unknownAbility] }, unknownAbility.recordId));
     expect(result.playable).toBe(false);
-    expect(result.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: "leader_ability_not_implemented" })]));
+    expect(result.issues).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "unknown_leader_ability" })]),
+    );
   });
 
   it("round-trips storage and falls back from corrupt localStorage", () => {

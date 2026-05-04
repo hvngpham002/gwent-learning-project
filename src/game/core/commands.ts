@@ -25,6 +25,11 @@ import {
   getLookThreeCardsEligibility,
   planLookThreeCardsReveal,
 } from "./leaderLookThreeCards";
+import {
+  canOpenCancelLeaderReaction,
+  canUseCancelLeaderProactively,
+  getLeaderCancelStatus,
+} from "./leaderCancel";
 import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
@@ -907,6 +912,12 @@ const resolveRoundEnd = (input: StatefulCommandInput): EngineTransaction => {
   state.pendingPrompt = null;
   state.seats.seat_a.passed = false;
   state.seats.seat_b.passed = false;
+  // cCp29: clear current-round leader suppression at round transition.
+  // Suppression is current-round-scoped; both seats reset before the next
+  // round starts so passive helpers resume normally and active leaders
+  // suppressed proactively (but not consumed) become legal again.
+  state.seats.seat_a.leaderCancelledRound = null;
+  state.seats.seat_b.leaderCancelledRound = null;
   const from = state.phase;
   state.phase = "playing";
   events.push({ type: "phase_changed", from, to: state.phase, reason: "round_resolved" });
@@ -917,14 +928,32 @@ const resolveRoundEnd = (input: StatefulCommandInput): EngineTransaction => {
   return { state, events };
 };
 
-const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
-  if (input.state.pendingPrompt) {
+interface ExecuteLeaderOptions {
+  // When true, the cCp29 reaction-prompt gate is skipped. Used by the
+  // decline path of the `cancel_leader` reaction prompt to replay the
+  // originally attempted leader without re-opening the same reaction
+  // prompt. Default false.
+  readonly bypassCancelReaction?: boolean;
+  // When true, skip `assertLegal`. The decline path replays the
+  // attempted leader on a state where the prompt has just been cleared,
+  // and the same legality conditions held when the prompt opened. The
+  // reaction-cancel path uses this same hook indirectly.
+  readonly skipLegalCheck?: boolean;
+}
+
+const executeLeader = (
+  input: StatefulCommandInput,
+  options: ExecuteLeaderOptions = {},
+): EngineTransaction => {
+  if (input.state.pendingPrompt && !options.skipLegalCheck) {
     throw new EngineRuleError("prompt_pending", "Leader commands cannot execute while a prompt is pending.", {
       promptId: input.state.pendingPrompt.promptId,
     });
   }
 
-  assertLegal(input);
+  if (!options.skipLegalCheck) {
+    assertLegal(input);
+  }
   const command = input.command as Extract<EngineCommand, { type: "UseLeader" }>;
   const { seatId } = command;
   const leaderLookup = createLeaderLookup(input.catalogLeaders);
@@ -936,6 +965,65 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
     throw new EngineRuleError("missing_catalog_source", "Missing leader source for leader command.", {
       leaderSourceId: inputSeat.leaderSourceId,
     });
+  }
+
+  // cCp29: before resolving any non-`cancel_leader` active leader, check
+  // whether the opposing seat owns an unused, unsuppressed `cancel_leader`.
+  // If so, open the White Flame reaction prompt instead of resolving the
+  // attempted leader. The attempted leader is **not** consumed and the turn
+  // does **not** hand off while the reaction prompt is pending. The decline
+  // path of the reaction prompt sets `bypassCancelReaction = true` to
+  // replay the leader without re-opening the same prompt.
+  if (
+    !options.bypassCancelReaction &&
+    leader.ability !== "cancel_leader" &&
+    canOpenCancelLeaderReaction({
+      state: input.state,
+      attemptedSeatId: seatId,
+      attemptedAbilityId: leader.ability,
+      catalogLeaders: input.catalogLeaders,
+    })
+  ) {
+    const opposingSeatId = opponentOf(seatId);
+    const opposing = input.state.seats[opposingSeatId];
+    const opposingLeaderSourceId = opposing.leaderSourceId;
+    const opposingLeaderCardId = opposing.leader as CardInstanceId;
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const prompt = {
+      promptId: `prompt:${state.round}:${opposingSeatId}:${opposingLeaderCardId}:cancel-leader-reaction`,
+      seatId: opposingSeatId,
+      kind: "choose_option" as const,
+      sourceCardId: opposingLeaderCardId,
+      sourceId: opposingLeaderSourceId,
+      abilityId: "cancel_leader",
+      stage: "leader_cancel_reaction" as const,
+      context: {
+        leaderCancel: {
+          mode: "reaction" as const,
+          targetSeatId: seatId,
+          targetLeaderCardId: inputSeat.leader as CardInstanceId,
+          targetLeaderSourceId: inputSeat.leaderSourceId,
+          targetAbilityId: leader.ability,
+          target: command.target,
+        },
+      },
+      options: [
+        {
+          optionId: "cancel-leader:cancel",
+          label: "Cancel leader",
+          target: { kind: "none" as const },
+        },
+        {
+          optionId: "cancel-leader:decline",
+          label: "Let it stand",
+          target: { kind: "none" as const },
+        },
+      ],
+    };
+    state.pendingPrompt = prompt;
+    events.push({ type: "prompt_opened", prompt });
+    return { state, events, prompt };
   }
 
   if (leader.ability === "clear_weather") {
@@ -1556,6 +1644,82 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
     return { state, events, prompt };
   }
 
+  if (leader.ability === "cancel_leader") {
+    const target = command.target as LegalMoveTarget | undefined;
+    if (target && target.kind !== "none") {
+      throw new EngineRuleError("invalid_target", "Cancel Leader does not accept a target.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        target,
+      });
+    }
+    if (
+      !canUseCancelLeaderProactively({
+        state: input.state,
+        seatId,
+        catalogLeaders: input.catalogLeaders,
+      })
+    ) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Cancel Leader cannot be used proactively in the current state.",
+        {
+          leaderSourceId: leader.sourceId,
+          ability: leader.ability,
+        },
+      );
+    }
+    const opponentSeatId = opponentOf(seatId);
+    const opponentStatus = getLeaderCancelStatus({
+      state: input.state,
+      seatId: opponentSeatId,
+      catalogLeaders: input.catalogLeaders,
+    });
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const leaderCardId = seat.leader as CardInstanceId;
+    const opponentSeat = state.seats[opponentSeatId];
+
+    events.push({
+      type: "ability_triggered",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+    });
+
+    opponentSeat.leaderCancelledRound = state.round;
+
+    events.push({
+      type: "leader_cancelled",
+      mode: "proactive",
+      round: state.round,
+      seatId,
+      targetSeatId: opponentSeatId,
+      targetLeaderCardId: opponentSeat.leader,
+      targetLeaderSourceId: opponentStatus.leaderSourceId,
+      targetAbilityId: opponentStatus.abilityId ?? "",
+    });
+    events.push({
+      type: "ability_resolved",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+      outcome: "leader_cancelled",
+    });
+
+    seat.leaderUsed = true;
+    events.push({
+      type: "leader_used",
+      seatId,
+      leaderCardId,
+      abilityId: leader.ability,
+    });
+    handoffTurn(state, events, seatId);
+    return { state, events };
+  }
+
   throw new EngineRuleError("unsupported_command", "Leader ability is not yet executable.", {
     leaderSourceId: leader.sourceId,
     ability: leader.ability,
@@ -1677,6 +1841,31 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
   }
 
   if (
+    prompt.kind === "choose_option" &&
+    prompt.abilityId === "cancel_leader" &&
+    prompt.stage === "leader_cancel_reaction"
+  ) {
+    const option = prompt.options.find((entry) => entry.optionId === command.optionId);
+    if (!option || option.target.kind !== "none") {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Cancel Leader reaction prompt option has an unexpected target shape.",
+        { command, promptId: prompt.promptId },
+      );
+    }
+    if (
+      option.optionId !== "cancel-leader:cancel" &&
+      option.optionId !== "cancel-leader:decline"
+    ) {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Cancel Leader reaction prompt only accepts cancel/decline options.",
+        { command, promptId: prompt.promptId, optionId: option.optionId },
+      );
+    }
+  }
+
+  if (
     prompt.kind === "choose_card" &&
     prompt.abilityId === "discard_two_draw_one_from_deck" &&
     prompt.stage === "deck_draw_selection"
@@ -1697,6 +1886,148 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
   }
 
   assertLegal(input);
+
+  // cCp29 reaction prompt resolution: handle entirely in commands so the
+  // decline path can replay the originally attempted leader through
+  // `executeLeader`. The cancel path consumes both leaders and applies
+  // current-round suppression; the decline path replays the attempted
+  // leader exactly once with the reaction-prompt gate bypassed.
+  if (
+    prompt.kind === "choose_option" &&
+    prompt.abilityId === "cancel_leader" &&
+    prompt.stage === "leader_cancel_reaction"
+  ) {
+    const reactionContext = prompt.context?.leaderCancel;
+    if (!reactionContext || reactionContext.mode !== "reaction") {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Cancel Leader reaction prompt is missing reaction context.",
+        { command, promptId: prompt.promptId },
+      );
+    }
+    const targetSeatId = reactionContext.targetSeatId;
+    const whiteFlameSeatId = command.seatId;
+    const inputTargetSeat = input.state.seats[targetSeatId];
+    if (
+      !inputTargetSeat ||
+      inputTargetSeat.leader !== reactionContext.targetLeaderCardId ||
+      inputTargetSeat.leaderSourceId !== reactionContext.targetLeaderSourceId
+    ) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Cancel Leader reaction target leader has changed since the prompt opened.",
+        { command, promptId: prompt.promptId },
+      );
+    }
+    const inputWhiteFlameSeat = input.state.seats[whiteFlameSeatId];
+    if (!inputWhiteFlameSeat?.leader || inputWhiteFlameSeat.leaderUsed) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Cancel Leader reaction acting seat no longer owns an unused White Flame leader.",
+        { command, promptId: prompt.promptId },
+      );
+    }
+
+    if (command.optionId === "cancel-leader:cancel") {
+      const state = cloneState(input.state);
+      const events: GameEvent[] = [];
+      const whiteFlameSeat = state.seats[whiteFlameSeatId];
+      const targetSeat = state.seats[targetSeatId];
+      const whiteFlameLeaderCardId = whiteFlameSeat.leader as CardInstanceId;
+      const targetLeaderCardId = targetSeat.leader as CardInstanceId;
+
+      events.push({
+        type: "prompt_resolved",
+        promptId: prompt.promptId,
+        seatId: whiteFlameSeatId,
+        optionId: command.optionId,
+      });
+      state.pendingPrompt = null;
+
+      events.push({
+        type: "ability_triggered",
+        sourceId: prompt.sourceId ?? whiteFlameSeat.leaderSourceId,
+        cardId: whiteFlameLeaderCardId,
+        abilityId: "cancel_leader",
+      });
+
+      targetSeat.leaderCancelledRound = state.round;
+
+      events.push({
+        type: "leader_cancelled",
+        mode: "reaction",
+        round: state.round,
+        seatId: whiteFlameSeatId,
+        targetSeatId,
+        targetLeaderCardId,
+        targetLeaderSourceId: reactionContext.targetLeaderSourceId,
+        targetAbilityId: reactionContext.targetAbilityId,
+      });
+      events.push({
+        type: "ability_resolved",
+        sourceId: prompt.sourceId ?? whiteFlameSeat.leaderSourceId,
+        cardId: whiteFlameLeaderCardId,
+        abilityId: "cancel_leader",
+        outcome: "leader_cancelled",
+      });
+
+      whiteFlameSeat.leaderUsed = true;
+      events.push({
+        type: "leader_used",
+        seatId: whiteFlameSeatId,
+        leaderCardId: whiteFlameLeaderCardId,
+        abilityId: "cancel_leader",
+      });
+
+      targetSeat.leaderUsed = true;
+      events.push({
+        type: "leader_used",
+        seatId: targetSeatId,
+        leaderCardId: targetLeaderCardId,
+        abilityId: reactionContext.targetAbilityId,
+      });
+
+      handoffTurn(state, events, targetSeatId);
+      return { state, events, prompt: state.pendingPrompt ?? undefined };
+    }
+
+    if (command.optionId === "cancel-leader:decline") {
+      // Clear the prompt from a clone, then replay the originally attempted
+      // leader on the cleared state with the reaction gate bypassed. The
+      // replay reuses the existing per-leader branches and fires the
+      // attempted leader effect exactly once.
+      const declineState = cloneState(input.state);
+      const declineEvents: GameEvent[] = [];
+      declineState.pendingPrompt = null;
+      declineEvents.push({
+        type: "prompt_resolved",
+        promptId: prompt.promptId,
+        seatId: whiteFlameSeatId,
+        optionId: command.optionId,
+      });
+
+      const replayInput: StatefulCommandInput = {
+        state: declineState,
+        catalogCards: input.catalogCards,
+        catalogLeaders: input.catalogLeaders,
+        command: {
+          type: "UseLeader",
+          seatId: targetSeatId,
+          target: reactionContext.target,
+        },
+      };
+      const replay = executeLeader(replayInput, {
+        bypassCancelReaction: true,
+        skipLegalCheck: true,
+      });
+      return {
+        state: replay.state,
+        events: [...declineEvents, ...replay.events],
+        prompt: replay.prompt ?? replay.state.pendingPrompt ?? undefined,
+      };
+    }
+  }
+
   const state = cloneState(input.state);
   const events: GameEvent[] = [];
   resolvePromptOption({

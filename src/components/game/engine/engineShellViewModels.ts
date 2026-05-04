@@ -335,6 +335,11 @@ export const summarizeEvents = ({
       // them for the engine event log.
       const count = event.cardIds.length;
       label = `${seatLabels[event.seatId]} looked at ${count} opponent hand card${count === 1 ? "" : "s"}`;
+    } else if (event.type === "leader_cancelled") {
+      // cCp29 cancel-leader summary. Public — leader identity is public, and
+      // the suppression scope is the current round only. Render in the same
+      // style as the look-three-cards count-only summary.
+      label = `${seatLabels[event.seatId]} cancelled ${seatLabels[event.targetSeatId]} leader for round ${event.round}`;
     } else if (event.type === "round_resolved") {
       label = `Round ${event.round} resolved: ${seatLabel(event.winner, seatLabels)}`;
     } else if (event.type === "game_ended") {

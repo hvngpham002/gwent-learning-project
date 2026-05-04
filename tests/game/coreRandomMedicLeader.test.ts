@@ -230,18 +230,16 @@ describe("random_medic metadata and manifest (cCp25)", () => {
     expect(officialLeaderPromotionManifest.executableLeaderSourceIds).not.toContain(INVADER);
   });
 
-  it("removes random_medic from placeholderLeaderAbilityIds and keeps the remaining one after cCp28", () => {
+  it("removes random_medic from placeholderLeaderAbilityIds; placeholder list is empty after cCp29", () => {
     expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).not.toContain("random_medic");
-    expect([...officialLeaderPromotionManifest.placeholderLeaderAbilityIds].sort()).toEqual([
-      "cancel_leader",
-    ]);
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toEqual([]);
   });
 
-  it("retains Tranche 2 totals through cCp28: 13 executable + 7 passive + 1 setup = 21 implemented leaders", () => {
-    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(13);
+  it("totals after cCp29: 14 executable + 7 passive + 1 setup = 22 implemented leaders", () => {
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(14);
     expect(officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds).toHaveLength(7);
     expect(officialLeaderPromotionManifest.implementedSetupLeaderSourceIds).toHaveLength(1);
-    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(21);
+    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(22);
   });
 });
 

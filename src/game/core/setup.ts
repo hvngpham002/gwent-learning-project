@@ -198,6 +198,7 @@ const instantiateSeat = (
     board: createBoard(),
     gems: 2,
     passed: false,
+    leaderCancelledRound: null,
   };
 };
 

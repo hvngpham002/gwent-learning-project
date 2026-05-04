@@ -86,8 +86,10 @@ const countsByFaction: Readonly<Record<string, number>> = {
 // prompt leader) bringing the active executable set to twelve. cCp28 adds
 // Emhyr var Emreis: Emperor of Nilfgaard (`look_three_cards`, the engine's
 // first hidden-info disclosure leader) bringing the active executable set
-// to thirteen. King Bran (cCp15) is implemented passive and does NOT belong
-// here.
+// to thirteen. cCp29 adds Emhyr var Emreis: The White Flame (`cancel_leader`,
+// reaction / current-round suppression) bringing the active executable set
+// to fourteen and completing the official leader matrix. King Bran (cCp15)
+// is implemented passive and does NOT belong here.
 const executableLeaderSourceIds: readonly string[] = [
   "monsters.eredin-bringer-of-death",
   "monsters.eredin-destroyer-of-worlds",
@@ -95,6 +97,7 @@ const executableLeaderSourceIds: readonly string[] = [
   "nilfgaard.emhyr-var-emreis-emperor-of-nilfgaard",
   "nilfgaard.emhyr-var-emreis-his-imperial-majesty",
   "nilfgaard.emhyr-var-emreis-the-relentless",
+  "nilfgaard.emhyr-var-emreis-the-white-flame",
   "northern-realms.foltest-king-of-temeria",
   "northern-realms.foltest-lord-commander-of-the-north",
   "northern-realms.foltest-son-of-medell",
@@ -140,7 +143,7 @@ const implementedLeaderSourceIds: readonly string[] = [
 ].slice().sort();
 
 // Leader ability IDs whose `CATALOG_LEADER_ABILITY_METADATA.status` is still
-// `placeholder` after cCp28. cCp14 promoted `play_any_weather` to implemented;
+// `placeholder` after cCp29. cCp14 promoted `play_any_weather` to implemented;
 // cCp15 promoted `weather_half_penalty` (passive); cCp16 promoted `scorch_range`
 // and `scorch_siege`; cCp19 promotes `double_siege`, `double_close`, and
 // `double_ranged`; cCp20 promotes `double_spies` (passive); cCp21 promotes
@@ -155,19 +158,11 @@ const implementedLeaderSourceIds: readonly string[] = [
 // Tranche 3; cCp27 promotes `discard_two_draw_one_from_deck` (active
 // executable, the engine's first true multi-stage prompt leader) and completes
 // Tranche 3; cCp28 promotes `look_three_cards` (active executable, the
-// engine's first hidden-info disclosure leader, opens Tranche 4). The cCp18
-// audit (§C-7) flagged that this array previously listed only the
-// cBp5-introduced placeholders; cCp19 backfilled the pre-cBp5 placeholders
-// so the manifest now exhaustively reflects every placeholder leader
-// ability ID, and cCp20/cCp21/cCp22/cCp23/cCp24/cCp25/cCp26/cCp27/cCp28
-// keep it exhaustive after removing `double_spies`, `optimize_agile_rows`,
-// `restore_discard_to_hand`, `shuffle_discards_into_decks`,
-// `draw_opponent_discard`, `random_medic`, `draw_extra_card`,
-// `discard_two_draw_one_from_deck`, and `look_three_cards`. After cCp28,
-// only `cancel_leader` (Pattern 6, current-round suppression) remains.
-const placeholderLeaderAbilityIds: readonly string[] = [
-  "cancel_leader",
-];
+// engine's first hidden-info disclosure leader, opens Tranche 4); cCp29
+// promotes `cancel_leader` (active executable, reaction / current-round
+// suppression) and completes Tranche 4 — every official leader ability now
+// has implemented engine semantics, so this list is empty.
+const placeholderLeaderAbilityIds: readonly string[] = [];
 
 export const officialLeaderPromotionManifest: OfficialLeaderPromotionManifest = {
   officialLeaderCandidateCount: 22,

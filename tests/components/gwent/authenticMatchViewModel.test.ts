@@ -538,9 +538,11 @@ describe("match leader inspection view model", () => {
     expect(inspection.facts.find((fact) => fact.key === "ability-status")?.value).toBe("implemented");
   });
 
-  it("marks used leaders as used regardless of ability status", () => {
-    // After cCp28, only `cancel_leader` (Emhyr: The White Flame) remains
-    // placeholder. Use it as the placeholder-status fixture.
+  it("marks used leaders as used even when the underlying ability is implemented", () => {
+    // After cCp29 every official leader ability is implemented, so the
+    // "used overrides ability status" check uses an implemented leader
+    // (Emhyr: The White Flame, `cancel_leader`). The status label still
+    // reads "used" because the seat's leader has been consumed.
     const inspection = buildMatchLeaderInspection({
       sourceId: "nilfgaard.emhyr-var-emreis-the-white-flame",
       name: "Emhyr var Emreis: The White Flame",
@@ -552,7 +554,7 @@ describe("match leader inspection view model", () => {
       ownerLabel: "AI",
     });
     expect(inspection.statusLabel).toBe("used");
-    expect(inspection.ability.status).toBe("placeholder");
+    expect(inspection.ability.status).toBe("implemented");
   });
 });
 

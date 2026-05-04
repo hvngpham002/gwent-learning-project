@@ -166,9 +166,9 @@ describe("official Game8 catalog staging import", () => {
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.draw_extra_card).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.discard_two_draw_one_from_deck).toBeUndefined();
     expect(officialPortingSummary.unsupportedLeaderAbilityCounts.look_three_cards).toBeUndefined();
-    // Sentinel: at least one placeholder leader ability still appears as
-    // unsupported. After cCp28, only `cancel_leader` remains placeholder.
-    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.cancel_leader).toBeGreaterThan(0);
+    // After cCp29 every official leader ability has implemented engine
+    // semantics, including `cancel_leader`.
+    expect(officialPortingSummary.unsupportedLeaderAbilityCounts.cancel_leader).toBeUndefined();
   });
 
   it("assigns every official candidate a porting status", () => {

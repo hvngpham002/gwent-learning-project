@@ -1,5 +1,12 @@
 import type { CatalogCardSource, CatalogLeaderSource, CatalogRow } from "@/game/catalog";
-import { calculateScores, type CardInstance, type CardInstanceId, type MatchState, type SeatId } from "@/game/core";
+import {
+  calculateScores,
+  isLeaderSuppressedThisRound,
+  type CardInstance,
+  type CardInstanceId,
+  type MatchState,
+  type SeatId,
+} from "@/game/core";
 
 import type { PendingPromptSummary, SeatCardSummary, SeatObservation } from "./types";
 
@@ -134,6 +141,7 @@ export const buildSeatObservation = ({
       leaderCardId: seat.leader,
       sourceId: seat.leaderSourceId,
       used: seat.leaderUsed,
+      cancelledThisRound: isLeaderSuppressedThisRound({ state, seatId }),
     },
     ownDeckCount: seat.deck.length,
     ownDiscardCount: seat.discard.length,
@@ -144,6 +152,7 @@ export const buildSeatObservation = ({
       leaderCardId: opponent.leader,
       sourceId: opponent.leaderSourceId,
       used: opponent.leaderUsed,
+      cancelledThisRound: isLeaderSuppressedThisRound({ state, seatId: opponentSeatId }),
     },
     opponentDeckCount: opponent.deck.length,
     opponentDiscardCount: opponent.discard.length,

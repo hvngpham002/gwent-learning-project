@@ -247,48 +247,37 @@ describe("authentic deck builder view model", () => {
     );
   });
 
-  it("reports non-implemented card and leader abilities as warnings", () => {
+  it("reports non-implemented card abilities as warnings (cCp29: every official leader ability is implemented)", () => {
     const plannedCard = currentCatalogCards.find((card) => card.abilities.includes("muster_roach"));
-    // Pick any placeholder Nilfgaard leader (no Northern Realms leader is still
-    // placeholder after cCp19). After cCp28, Emhyr: The White Flame
-    // (`cancel_leader`) is the only remaining placeholder Nilfgaard leader.
-    const placeholderLeader = currentCatalogLeaders.find(
-      (leader) => leader.faction === "nilfgaard" && leader.ability === "cancel_leader",
-    );
     expect(plannedCard).toBeDefined();
-    expect(placeholderLeader).toBeDefined();
 
-    const stats = validateDeckPreset({
-      ...currentNilfgaardDeckPreset,
-      leaderSourceId: placeholderLeader!.sourceId,
-    });
+    // After cCp29, every official leader ability is implemented, so there
+    // are no leader-ability warnings left for any of the 22 official leaders.
+    // Only `muster_roach` remains as a planned card ability — exercise that.
+    const stats = validateDeckPreset(currentNilfgaardDeckPreset);
 
     expect(stats.issues.filter((issue) => issue.severity === "error")).toHaveLength(0);
     expect(stats.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(["card_ability_not_implemented", "leader_ability_not_implemented"]),
+      expect.arrayContaining(["card_ability_not_implemented"]),
+    );
+    // No leader-ability warnings remain after cCp29.
+    expect(stats.issues.map((issue) => issue.code)).not.toContain(
+      "leader_ability_not_implemented",
     );
   });
 
-  it("keeps current Nilfgaard playable even with placeholder leader warning", () => {
-    // The current Nilfgaard preset now uses Emhyr: The Relentless, which was
-    // promoted to `implemented` in cCp24. To exercise the placeholder-leader
-    // warning path, override the preset's leader to the only still-placeholder
-    // Nilfgaard leader after cCp28: Emhyr: The White Flame (`cancel_leader`).
-    const placeholderLeader = currentCatalogLeaders.find(
-      (leader) => leader.faction === "nilfgaard" && leader.ability === "cancel_leader",
-    );
-    expect(placeholderLeader).toBeDefined();
-
-    const stats = validateDeckPreset({
-      ...currentNilfgaardDeckPreset,
-      leaderSourceId: placeholderLeader!.sourceId,
-    });
+  it("keeps current Nilfgaard playable with no leader-ability warning after cCp29", () => {
+    // The current Nilfgaard preset uses Emhyr: The Relentless. After cCp29
+    // every official leader ability is implemented, including the previously
+    // placeholder `cancel_leader` (Emhyr: The White Flame). No leader
+    // ability is still placeholder/planned, so `validateDeckPreset` no
+    // longer raises a `leader_ability_not_implemented` warning for any
+    // official preset.
+    const stats = validateDeckPreset(currentNilfgaardDeckPreset);
 
     expect(stats.playable).toBe(true);
-    expect(stats.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ severity: "warning", code: "leader_ability_not_implemented" }),
-      ]),
+    expect(stats.issues.map((issue) => issue.code)).not.toContain(
+      "leader_ability_not_implemented",
     );
   });
 

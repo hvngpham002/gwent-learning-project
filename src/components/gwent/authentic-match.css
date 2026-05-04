@@ -233,6 +233,17 @@
   grid-column: 1 / -1;
 }
 
+/* cCp29: visual flag when the seat's leader is suppressed for the current
+ * round. The label inside `.authentic-score-card__leader-text` already says
+ * `cancelled this round`; this rule colors the score-card border so the
+ * suppression is visible at a glance. The flag clears at round transition
+ * because `data-leader-cancelled-this-round` is undefined for non-suppressed
+ * seats. */
+.authentic-score-card[data-leader-cancelled-this-round="true"] {
+  outline: 1px dashed var(--ink-2);
+  outline-offset: -2px;
+}
+
 .authentic-piles {
   padding: 8px;
   display: grid;

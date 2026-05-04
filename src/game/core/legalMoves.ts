@@ -21,6 +21,11 @@ import { getDiscardRecyclePlan } from "./leaderDiscardRecycle";
 import { getOpponentDiscardDrawCandidates } from "./leaderOpponentDiscardDraw";
 import { getDiscardDrawEligibility } from "./leaderDiscardDraw";
 import { getLookThreeCardsEligibility } from "./leaderLookThreeCards";
+import {
+  canUseCancelLeaderProactively,
+  getLeaderCancelStatus,
+  isLeaderSuppressedThisRound,
+} from "./leaderCancel";
 import { calculateScores, findUnitScorchRowTargets } from "./scoring";
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
@@ -429,6 +434,12 @@ const getLeaderMove = (
     return [];
   }
 
+  // cCp29: a seat whose leader is suppressed this round emits no
+  // `use_leader` legal move regardless of ability.
+  if (isLeaderSuppressedThisRound({ state, seatId })) {
+    return [];
+  }
+
   if (leader.ability === "clear_weather") {
     return [
       {
@@ -728,6 +739,38 @@ const getLeaderMove = (
           discardMax: eligibility.maxDiscardCount,
           handCount: eligibility.handCount,
           deckCount: eligibility.deckCount,
+        },
+      },
+    ];
+  }
+
+  if (leader.ability === "cancel_leader") {
+    if (!canUseCancelLeaderProactively({ state, seatId, catalogLeaders })) {
+      return [];
+    }
+    const opponentSeatId = opposingSeatOf(seatId);
+    const opponentStatus = getLeaderCancelStatus({
+      state,
+      seatId: opponentSeatId,
+      catalogLeaders,
+    });
+    return [
+      {
+        kind: "use_leader",
+        moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+        seatId,
+        leaderCardId,
+        sourceId: leader.sourceId,
+        target: { kind: "none" },
+        label: `Use ${leader.name}`,
+        metadata: {
+          leaderName: leader.name,
+          ability: leader.ability,
+          abilityStatus: abilityMetadata.status,
+          targetRequirement: "none",
+          targetSeatId: opponentSeatId,
+          targetSourceId: opponentStatus.leaderSourceId,
+          targetLabel: "opponent leader",
         },
       },
     ];

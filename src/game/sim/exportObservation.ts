@@ -1,6 +1,12 @@
 import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
 import type { CatalogCardSource, CatalogRow } from "@/game/catalog";
-import { calculateScores, type CardInstanceId, type MatchState, type SeatId } from "@/game/core";
+import {
+  calculateScores,
+  isLeaderSuppressedThisRound,
+  type CardInstanceId,
+  type MatchState,
+  type SeatId,
+} from "@/game/core";
 
 import {
   SAFE_OBSERVATION_SCHEMA_VERSION,
@@ -184,6 +190,7 @@ export const buildSafeSimulationObservation = (
       leader: {
         sourceId: own.leaderSourceId,
         used: own.leaderUsed,
+        cancelledThisRound: isLeaderSuppressedThisRound({ state, seatId: perspectiveSeatId }),
       },
       deckCount: own.deck.length,
       discardCount: own.discard.length,
@@ -196,6 +203,7 @@ export const buildSafeSimulationObservation = (
       leader: {
         sourceId: opponent.leaderSourceId,
         used: opponent.leaderUsed,
+        cancelledThisRound: isLeaderSuppressedThisRound({ state, seatId: opponentSeatId }),
       },
       deckCount: opponent.deck.length,
       discardCount: opponent.discard.length,
