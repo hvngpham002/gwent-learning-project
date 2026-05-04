@@ -48,7 +48,7 @@ The default local `npm run ci` gate remains the fast deterministic unit/lint/bui
 
 ## Current Committed Coverage
 
-The committed smoke spec currently runs 15 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, and match entry flows.
+The committed smoke spec currently runs 24 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, and match-end ledger flows.
 
 ## dp6-smoke Engine Shell Coverage
 
@@ -94,10 +94,12 @@ The same smoke spec verifies:
 - Returning to setup from a completed mulligan review/start-modal state or in-progress match clears old engine adapter state, so starting the same setup/seed again begins at a fresh mulligan instead of stale prior history.
 - Shared button color/hover behavior is checked on normal and debug authentic routes.
 - Mobile width `390px` avoids horizontal overflow across pre-game, deck builder, mulligan, direct match, and post-confirm match entry.
+- cEp11.1 adds a deterministic selected hand-weather-card smoke using a browser-local `gwent_authentic_decks_v1` fixture deck. The fixture contains 22 battlefield cards plus 10 legal weather specials; the test searches four fixed seeds (`cep111-weather-1` through `cep111-weather-4`) until a public `data-source-id` weather card is in the human hand, selects it, asserts `authentic-weather-target` and `target the weather panel` copy, clicks the Weather panel affordance rather than the right-rail fallback, and verifies the selected public weather source appears in the Weather panel.
+- cEp11.1 adds a match-end ledger smoke through normal product controls. It starts a direct authentic match, keeps mulligans, confirms `Start the match?`, repeatedly uses visible `pass`, `resolve round`, and `next round` controls with a hard four-round limit, and asserts the real `data-ledger-kind="match_end"` overlay, round history, standing rows, placeholder-free copy, Escape persistence, and rematch route back through mulligan/start-match.
 
 ## Current Limits
 
-The smoke suite is intentionally bounded. It does not cover a full game, drag/drop, multi-browser behavior, screenshot approval, AI-vs-AI simulation, every deck-builder editing branch, full match-end click-through, or polished mobile board UX.
+The smoke suite is intentionally bounded. It does not cover drag/drop, multi-browser behavior, screenshot approval, AI-vs-AI simulation, every deck-builder editing branch, the match-end setup/change-deck branch, long strategic full-game scripts beyond the pass-only match-end tripwire, or polished mobile board UX.
 
 Some selectors are `data-testid` attributes on user-visible regions and controls. They are more stable than class names, but they still depend on the current shell/product structure and should be revisited when final spatial board interactions replace this smoke surface.
 

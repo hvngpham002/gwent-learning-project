@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const engineUrl = "/?engine=1&seed=dp6-smoke";
 const authenticPregameUrl = "/?engine=1&ui=authentic&seed=ep4-smoke";
@@ -10,11 +10,140 @@ const authenticDirectUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-direct";
 const authenticMulliganDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-debug&debugAiMulligan=1&debugAiMulliganCount=2";
 const authenticMulliganOneDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-one&debugAiMulligan=1&debugAiMulliganCount=1";
 const authenticMulliganKeepDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-keep&debugAiMulligan=1&debugAiMulliganCount=0";
+const authenticMatchEndBackfillUrl = "/?engine=1&ui=authentic&view=match&seed=cep111-match-end";
 const authenticHarnessUrl = "/?engine=1&ui=authentic&view=harness";
 const authenticComponentFoundationUrl = "/?engine=1&ui=authentic&view=ui-component-foundation";
 
+type LocalDeckFixture = {
+  readonly presetId: string;
+  readonly name: string;
+  readonly faction: string;
+  readonly leaderSourceId: string;
+  readonly mainDeck: readonly { readonly sourceId: string; readonly count: number }[];
+  readonly sideDeck: readonly { readonly sourceId: string; readonly count: number }[];
+};
+
+const weatherBackfillDeck = {
+  presetId: "local-cep111-weather",
+  name: "cEp11.1 Weather Target Smoke",
+  faction: "northern_realms",
+  leaderSourceId: "northern-realms.foltest-lord-commander-of-the-north",
+  mainDeck: [
+    { sourceId: "northern-realms.philippa-eilhart", count: 1 },
+    { sourceId: "northern-realms.vernon-roche", count: 1 },
+    { sourceId: "northern-realms.john-natalis", count: 1 },
+    { sourceId: "northern-realms.esterad-thyssen", count: 1 },
+    { sourceId: "northern-realms.catapult", count: 3 },
+    { sourceId: "northern-realms.crinfrid-reavers-dragon-hunter", count: 3 },
+    { sourceId: "northern-realms.blue-stripes-commando", count: 3 },
+    { sourceId: "northern-realms.redanian-foot-soldier", count: 3 },
+    { sourceId: "northern-realms.poor-fucking-infantry", count: 3 },
+    { sourceId: "northern-realms.kaedweni-siege-expert", count: 3 },
+    { sourceId: "neutral.biting-frost", count: 3 },
+    { sourceId: "neutral.impenetrable-fog", count: 3 },
+    { sourceId: "neutral.torrential-rain", count: 3 },
+    { sourceId: "neutral.skellige-storm", count: 1 },
+  ],
+  sideDeck: [],
+} as const satisfies LocalDeckFixture;
+
+const weatherFixtureSourceNames: Record<string, string> = {
+  "neutral.biting-frost": "Biting Frost",
+  "neutral.impenetrable-fog": "Impenetrable Fog",
+  "neutral.torrential-rain": "Torrential Rain",
+  "neutral.skellige-storm": "Skellige Storm",
+};
+
+const weatherFixtureSourceIds = Object.keys(weatherFixtureSourceNames);
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const visiblePageText = async (page: import("@playwright/test").Page) =>
   (await page.locator("body").innerText()).replace(/\s+/g, " ");
+
+const seedLocalDecks = async (
+  page: Page,
+  activePresetId: string,
+  decks: readonly LocalDeckFixture[],
+) => {
+  await page.addInitScript(
+    ({ activePresetId: presetId, decks: deckFixtures }) => {
+      window.localStorage.setItem(
+        "gwent_authentic_decks_v1",
+        JSON.stringify({
+          schemaVersion: "authentic-decks-v1",
+          activePresetId: presetId,
+          decks: deckFixtures,
+        }),
+      );
+    },
+    { activePresetId, decks },
+  );
+};
+
+const confirmAuthenticMulliganAndStartMatch = async (page: Page) => {
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 10000 });
+  await page.getByTestId("authentic-start-match-confirm").click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+};
+
+const enterAuthenticMatchFromPreGame = async (
+  page: Page,
+  {
+    seed,
+    deckName,
+  }: {
+    readonly seed: string;
+    readonly deckName: string;
+  },
+) => {
+  await page.goto(`/?engine=1&ui=authentic&seed=${seed}`);
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+
+  const deckOption = page.getByTestId("authentic-pregame-deck-option").filter({ hasText: deckName });
+  await expect(deckOption).toBeVisible();
+  await deckOption.click();
+
+  await page.getByTestId("authentic-pregame-begin").click();
+  await confirmAuthenticMulliganAndStartMatch(page);
+  await expect(page.getByTestId("authentic-pass")).toBeEnabled({ timeout: 15000 });
+};
+
+const shortVisibleStatus = async (page: Page) => {
+  const text = await visiblePageText(page);
+  return text.length > 700 ? `${text.slice(0, 700)}...` : text;
+};
+
+const passAndResolveRoundsUntilMatchEnd = async (page: Page, maxRounds = 4) => {
+  for (let roundAttempt = 0; roundAttempt < maxRounds; roundAttempt += 1) {
+    await expect(
+      page.getByTestId("authentic-pass"),
+      `human pass did not become enabled before round attempt ${roundAttempt + 1}: ${await shortVisibleStatus(page)}`,
+    ).toBeEnabled({ timeout: 20000 });
+    await page.getByTestId("authentic-pass").click();
+
+    await expect(
+      page.getByTestId("authentic-resolve-round"),
+      `resolve round did not become enabled after pass on attempt ${roundAttempt + 1}: ${await shortVisibleStatus(page)}`,
+    ).toBeEnabled({ timeout: 20000 });
+    await page.getByTestId("authentic-resolve-round").click();
+
+    const overlay = page.getByTestId("authentic-round-overlay");
+    await expect(overlay).toBeVisible({ timeout: 10000 });
+    const ledgerKind = await overlay.getAttribute("data-ledger-kind");
+    if (ledgerKind === "match_end") {
+      return;
+    }
+
+    await expect(overlay).toHaveAttribute("data-ledger-kind", "round");
+    await page.getByTestId("authentic-round-overlay-dismiss").click();
+    await expect(overlay).toHaveCount(0);
+  }
+
+  throw new Error(`match did not reach game end after ${maxRounds} resolved rounds: ${await shortVisibleStatus(page)}`);
+};
 
 const expectNoHorizontalOverflow = async (page: import("@playwright/test").Page) => {
   const overflow = await page.evaluate(
@@ -1100,6 +1229,83 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
   expect(pageErrors).toEqual([]);
 });
 
+test("authentic match targets the Weather panel for a selected hand weather card (cEp11.1)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await seedLocalDecks(page, weatherBackfillDeck.presetId, [weatherBackfillDeck]);
+
+  // The fixture has 22 battlefield cards plus the maximum 10 legal weather
+  // specials. This short deterministic list keeps production shuffle semantics
+  // untouched while making a hand-weather card very likely within a bounded
+  // search.
+  const candidateSeeds = ["cep111-weather-1", "cep111-weather-2", "cep111-weather-3", "cep111-weather-4"];
+  let coveredWeatherTarget = false;
+
+  for (const seed of candidateSeeds) {
+    await enterAuthenticMatchFromPreGame(page, {
+      seed,
+      deckName: weatherBackfillDeck.name,
+    });
+
+    const fixtureWeatherCard = page
+      .locator(
+        weatherFixtureSourceIds
+          .map(
+            (sourceId) =>
+              `[data-testid="authentic-human-hand"] .authentic-hand__card.is-playable[data-source-id="${sourceId}"]`,
+          )
+          .join(", "),
+      )
+      .first();
+
+    if ((await fixtureWeatherCard.count()) === 0) {
+      continue;
+    }
+
+    const selectedSourceId = await fixtureWeatherCard.getAttribute("data-source-id");
+    if (!selectedSourceId) {
+      throw new Error("fixture weather card was missing its public data-source-id");
+    }
+    const selectedWeatherName = weatherFixtureSourceNames[selectedSourceId];
+    if (!selectedWeatherName) {
+      throw new Error(`unexpected fixture weather source id: ${selectedSourceId}`);
+    }
+
+    const weatherZoneCard = page.locator(`.authentic-weather__card[data-source-id="${selectedSourceId}"]`);
+    const weatherZoneCountBefore = await weatherZoneCard.count();
+
+    await fixtureWeatherCard.getByTestId("authentic-hand-card").click();
+
+    await expect(page.getByTestId("authentic-target-groups")).toHaveAttribute("data-target-state", "has-targets");
+    await expect(page.getByTestId("authentic-target-hint")).toContainText("target the weather panel");
+    await expect(page.getByTestId("authentic-target-action")).toHaveCount(0);
+
+    const weatherTarget = page.getByTestId("authentic-weather-target");
+    await expect(weatherTarget).toBeVisible();
+    await expect(weatherTarget).toHaveAttribute(
+      "aria-label",
+      new RegExp(`^Play ${escapeRegExp(selectedWeatherName)} on the weather panel$`),
+    );
+
+    await weatherTarget.click();
+
+    await expect(weatherZoneCard).toHaveCount(weatherZoneCountBefore + 1);
+    await expect(page.getByTestId("authentic-recent-activity")).toContainText(/Human played/);
+    await expect(page.getByTestId("authentic-weather-target")).toHaveCount(0);
+    await expect(page.getByTestId("authentic-target-groups")).toHaveAttribute("data-target-state", "no-selection");
+    await expect(page.getByTestId("authentic-target-hint")).toContainText("no card selected");
+
+    const matchPageText = await visiblePageText(page);
+    expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_a:\d{3}:|seat_b:\d{3}:/);
+
+    coveredWeatherTarget = true;
+    break;
+  }
+
+  expect(coveredWeatherTarget, "no candidate seed produced a visible hand weather card").toBe(true);
+  expect(pageErrors).toEqual([]);
+});
+
 test("authentic match highlights spatial board-row targets and dispatches the exact PlayCard move (cEp11)", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
@@ -1162,6 +1368,60 @@ test("authentic match highlights spatial board-row targets and dispatches the ex
   await page.keyboard.press("Escape");
   await expect(cardMenu).toHaveCount(0);
 
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic match-end ledger is reachable through product controls (cEp11.1)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto(authenticMatchEndBackfillUrl);
+  await confirmAuthenticMulliganAndStartMatch(page);
+
+  // A pass-only product path is enough to finish two real rounds with the
+  // existing AI policy: after the human passes, legal-heuristic-v0 plays or
+  // passes from legal moves until both seats have passed.
+  await passAndResolveRoundsUntilMatchEnd(page);
+
+  const overlay = page.getByTestId("authentic-round-overlay");
+  await expect(overlay).toBeVisible();
+  await expect(overlay).toHaveAttribute("data-ledger-kind", "match_end");
+  await expect(overlay).toHaveAttribute("role", "dialog");
+  await expect(overlay).toHaveAttribute("aria-modal", "true");
+
+  const alert = page.getByTestId("authentic-round-overlay-alert");
+  await expect(alert).toBeVisible();
+  await expect(alert.getByRole("heading", { level: 2 })).toHaveText(/^(Victory over .+\.|Defeat against .+\.|Draw\.)$/);
+  await expect(alert).toContainText(/match concluded/i);
+
+  await expect(page.getByTestId("authentic-round-ledger-history")).toBeVisible();
+  expect(await page.getByTestId("authentic-round-ledger-history-row").count()).toBeGreaterThanOrEqual(2);
+  await expect(page.getByTestId("authentic-round-ledger-standing-result")).toBeVisible();
+  await expect(page.getByTestId("authentic-round-ledger-standing-rounds")).toBeVisible();
+  await expect(page.getByTestId("authentic-round-ledger-standing-gems")).toBeVisible();
+
+  const ledgerText = await overlay.innerText();
+  expect(ledgerText).not.toMatch(/\b(mmr|rank|streak|xp|reward|elo)\b/i);
+
+  await page.keyboard.press("Escape");
+  await expect(overlay).toBeVisible();
+
+  const matchEndText = await visiblePageText(page);
+  expect(matchEndText).not.toMatch(/instanceId|sourceId|seat_a:\d{3}:|seat_b:\d{3}:/);
+
+  const rematch = page.getByTestId("authentic-game-end-rematch");
+  await expect(rematch).toBeVisible();
+  await rematch.click();
+
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-round-overlay")).toHaveCount(0);
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 10000 });
+  await page.getByTestId("authentic-start-match-confirm").click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-round-overlay")).toHaveCount(0);
+
+  const rematchText = await visiblePageText(page);
+  expect(rematchText).not.toMatch(/instanceId|sourceId|seat_a:\d{3}:|seat_b:\d{3}:/);
   expect(pageErrors).toEqual([]);
 });
 
