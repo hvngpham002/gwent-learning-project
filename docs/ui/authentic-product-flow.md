@@ -1,6 +1,6 @@
 # Authentic Product Flow
 
-This document tracks the current opt-in authentic product loop after cEp7.
+This document tracks the current opt-in authentic product loop after cEp9.
 
 ## Routes
 
@@ -68,6 +68,17 @@ Hidden-information rules are preserved:
 - The debug-only `debugAiMulligan=1` route continues to reveal AI mulligan choices for animation inspection. cEp5.3 does not extend that surface and does not add inspect entry points to AI hand backs.
 
 Inspect modal styling reuses the deck-builder inspect-modal vocabulary (`authentic-match__inspect-modal`, `authentic-match__inspect-box`, `authentic-match__inspect-art`, `authentic-match__inspect-facts`, `authentic-match__inspect-section`) without sharing component code; this keeps deck-builder add/remove semantics out of the match surface.
+
+## In-Match Leader And Prompt Presentation
+
+cEp9 makes the completed official leader system legible without changing rule ownership:
+
+- Score-card leaders show a compact status line with category and state. Categories are `active`, `passive`, `setup`, or `unknown/custom`; states include `ready`, `used`, `passive active`, `setup resolved`, `cancelled this round`, `unavailable`, and `no target`.
+- Current-round White Flame suppression is displayed as `cancelled this round` from the engine-derived `leader.cancelledThisRound` selector flag, which corresponds to `seat.leaderCancelledRound === state.round`. The visual state clears when the engine clears suppression at round transition.
+- The leader action panel remains legal-move-driven. Single active leaders use ability-specific labels such as `clear weather`, `restore card`, `discard and draw`, `look at hand`, and `cancel leader`; multi-move `play_any_weather` keeps the cEp8 menu and row hints. Every action still dispatches the exact selected `UseLeader` legal move target.
+- Disabled leader copy comes from the leader status view model. If an active leader is otherwise in an acting state but has no legal move, the UI shows the generic `no target` state rather than computing rule-specific availability.
+- Prompt panels use ability-specific titles and body copy for `cancel_leader`, `restore_discard_to_hand`, `draw_opponent_discard`, owner-visible `discard_two_draw_one_from_deck` stage 1 and stage 2, owner-visible `look_three_cards`, and `medic_revive`. Unknown prompt kinds keep the generic fallback.
+- Prompt option buttons are generated only from visible legal `choose_prompt_option` moves. Non-owner prompts render no option details; AI-owned stage-2 deck choices and non-owner look-three acknowledgement states use generic pending copy. The look-three-card reveal remains the one-time modal surface; surrounding prompt copy tells the owning player the shown cards close after acknowledgement.
 
 ## Hidden Information
 

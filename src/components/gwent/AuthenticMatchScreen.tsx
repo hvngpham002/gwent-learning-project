@@ -7,6 +7,7 @@ import {
   selectEngineAiHandCount,
   selectEngineAiSeat,
   selectEngineBoardRows,
+  selectEngineCanAiAct,
   selectEngineCanHumanAct,
   selectEngineDeckCounts,
   selectEngineDiscardCards,
@@ -34,13 +35,10 @@ import { engineMatchCleared, engineSelectedCardSet, engineSelectionCleared, type
 import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 
 import {
-  buildPromptViewModel,
-  describeLeaderMove,
   getPlayableCardIds,
   getPlayMovesForCard,
   getPromptOptionMoves,
   getUseLeaderMoves,
-  shouldDisableLeaderAction,
 } from "../game/engine/playMoveHelpers";
 import {
   buildMatchStatusBanner,
@@ -64,10 +62,12 @@ import {
   buildAuthenticSeatSummary,
   buildGameEndNavigationActions,
   buildLeaderActionViewModel,
+  buildLeaderStatusViewModel,
   buildLookThreeCardsRevealViewModel,
   buildMatchCardInspection,
   buildMatchLeaderInspection,
   buildMedicPromptOptions,
+  buildPromptPresentationViewModel,
   buildRoundOverlayViewModel,
   buildVisibleCardLookup,
   chooseDebugAiMulliganMove,
@@ -82,8 +82,10 @@ import {
   type AuthenticRuntimeCardViewModel,
   type AuthenticSeatSummaryViewModel,
   type LeaderActionViewModel,
+  type LeaderStatusViewModel,
   type LookThreeCardsRevealViewModel,
   type MatchCardInspectionOrigin,
+  type PromptPresentationViewModel,
 } from "./matchViewModel";
 import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 import { getAbilityDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
@@ -178,37 +180,23 @@ const TopBar: React.FC<{
 
 const ScoreCard: React.FC<{
   seat: AuthenticSeatSummaryViewModel;
-  leaderName: string;
+  leaderStatus: LeaderStatusViewModel;
   leaderImage: string;
-  leaderAbility: string;
-  leaderUsed: boolean;
-  leaderCancelledThisRound: boolean;
   active: boolean;
   onLeaderContextMenu: (event: React.MouseEvent) => void;
 }> = ({
   seat,
-  leaderName,
+  leaderStatus,
   leaderImage,
-  leaderAbility,
-  leaderUsed,
-  leaderCancelledThisRound,
   active,
   onLeaderContextMenu,
 }) => {
-  // cCp29: prefer the suppression label when the leader is cancelled this
-  // round, even if it is also marked used (the reaction cancel path sets
-  // both). Suppression clears at round transition so this label disappears
-  // automatically on the next round.
-  const leaderStatusLabel = leaderCancelledThisRound
-    ? "cancelled this round"
-    : leaderUsed
-      ? "used"
-      : "ready";
   return (
     <article
       className={`authentic-score-card${active ? " is-active" : ""}`}
       data-testid={`authentic-seat-${seat.role}`}
-      data-leader-cancelled-this-round={leaderCancelledThisRound ? "true" : undefined}
+      data-leader-cancelled-this-round={leaderStatus.showSuppressionBadge ? "true" : undefined}
+      data-leader-state={leaderStatus.stateLabel}
     >
       <div
         className="authentic-score-card__leader"
@@ -217,10 +205,10 @@ const ScoreCard: React.FC<{
       >
         <AuthenticLeaderCard
           leader={{
-            sourceId: `${seat.faction}:${leaderName}`,
-            name: leaderName,
+            sourceId: leaderStatus.sourceId,
+            name: leaderStatus.leaderName,
             faction: seat.faction,
-            abilityName: leaderAbility,
+            abilityName: leaderStatus.abilityName,
             image: leaderImage,
           }}
           size="match"
@@ -234,8 +222,15 @@ const ScoreCard: React.FC<{
         <strong>{seat.score}</strong>
       </div>
       <p className="authentic-score-card__leader-text">
-        {leaderName} · {leaderAbility} · {leaderStatusLabel}
+        {leaderStatus.leaderName} · {leaderStatus.abilityName}
       </p>
+      <div
+        className="authentic-score-card__leader-status"
+        data-testid={`authentic-leader-status-${seat.role}`}
+      >
+        <span className="authentic-score-card__leader-chip">{leaderStatus.stateLabel}</span>
+        <span>{leaderStatus.categoryLabel} · {leaderStatus.reason}</span>
+      </div>
       <p className="authentic-score-card__meta">
         gems {seat.gems} · hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
         {seat.passed ? "passed" : "active"}
@@ -507,7 +502,7 @@ const InspectorPanel: React.FC<{
 const LEADER_CHOICE_MENU_ID = "authentic-leader-choice-menu";
 
 interface ActionPanelLeaderProps {
-  readonly label: string;
+  readonly status: LeaderStatusViewModel | null;
   readonly disabled: boolean;
   readonly action: LeaderActionViewModel;
   readonly choiceMenuOpen: boolean;
@@ -536,14 +531,20 @@ const ActionPanel: React.FC<{
   onResolveRound,
 }) => {
   const isChoice = leader.action.kind === "choice";
-  const triggerLabel = isChoice ? "choose weather" : "use leader";
+  const triggerLabel = leader.action.triggerLabel;
   const ariaExpanded = isChoice ? leader.choiceMenuOpen : undefined;
   const ariaControls = isChoice ? LEADER_CHOICE_MENU_ID : undefined;
+  const statusLabel = leader.status
+    ? `${leader.status.leaderName} · ${leader.status.reason}`
+    : "leader unavailable";
   return (
     <section className="authentic-panel authentic-actions">
       <h2>Actions</h2>
       <div className="authentic-actions__block authentic-leader-action" ref={leader.containerRef}>
-        <p>{leader.label}</p>
+        <p>
+          <span>{statusLabel}</span>
+          {leader.status ? <em>{leader.status.categoryLabel} · {leader.status.stateLabel}</em> : null}
+        </p>
         <button
           type="button"
           className="authentic-button authentic-button--secondary"
@@ -561,7 +562,7 @@ const ActionPanel: React.FC<{
             id={LEADER_CHOICE_MENU_ID}
             className="authentic-leader-choice-menu"
             role="menu"
-            aria-label="Choose a weather card"
+            aria-label={leader.action.menuLabel}
             data-testid="authentic-leader-choice-menu"
           >
             {leader.action.options.map((option) => (
@@ -684,25 +685,24 @@ const LookThreeCardsRevealDialog: React.FC<{
 };
 
 const PromptPanel: React.FC<{
-  promptTitle: string | null;
+  prompt: PromptPresentationViewModel;
   ownerLabel: string | null;
-  sourceLabel: string | null;
   isAiPrompt: boolean;
-  options: readonly { moveId: string; label: string }[];
   medicOptions: readonly ReturnType<typeof buildMedicPromptOptions>[number][];
   onChoose: (moveId: string) => void;
   onCardContextMenu: (event: React.MouseEvent, cardId: CardInstanceId) => void;
-}> = ({ promptTitle, ownerLabel, sourceLabel, isAiPrompt, options, medicOptions, onChoose, onCardContextMenu }) => (
+}> = ({ prompt, ownerLabel, isAiPrompt, medicOptions, onChoose, onCardContextMenu }) => (
   <section
     className={`authentic-panel authentic-prompt${medicOptions.length > 0 ? " authentic-prompt--medic" : ""}`}
     data-testid="authentic-prompt"
-    data-prompt-kind={medicOptions.length > 0 ? "medic" : isAiPrompt ? "ai" : "generic"}
+    data-prompt-kind={isAiPrompt ? "ai" : prompt.kind}
   >
-    <h2>{promptTitle ?? "Prompt"}</h2>
+    <h2>{prompt.title}</h2>
     {ownerLabel ? <p>Owner: {ownerLabel}</p> : null}
-    {sourceLabel ? <p>{sourceLabel}</p> : null}
+    {prompt.sourceLabel ? <p>{prompt.sourceLabel}</p> : null}
+    {prompt.body ? <p>{prompt.body}</p> : null}
     {isAiPrompt ? <p data-testid="authentic-ai-prompt-pending">AI resolving prompt from legal moves.</p> : null}
-    {!isAiPrompt && options.length === 0 ? <p>No legal prompt options for your seat.</p> : null}
+    {!isAiPrompt && prompt.options.length === 0 ? <p>No legal prompt options for your seat.</p> : null}
     {medicOptions.length > 0
       ? (
           <div className="authentic-medic-options" data-testid="authentic-medic-prompt">
@@ -729,7 +729,7 @@ const PromptPanel: React.FC<{
             ))}
           </div>
         )
-      : options.map((option) => (
+      : prompt.options.map((option) => (
           <button
             key={option.moveId}
             type="button"
@@ -1118,6 +1118,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const humanSeat = useAppSelector(selectEngineHumanSeat);
   const aiSeat = useAppSelector(selectEngineAiSeat);
   const canHumanAct = useAppSelector(selectEngineCanHumanAct);
+  const canAiAct = useAppSelector(selectEngineCanAiAct);
   const seed = useAppSelector(selectEngineSeed);
   const humanHand = useAppSelector(selectEngineHumanHand);
   const selectedCardId = useAppSelector(selectEngineSelectedCardId);
@@ -1549,16 +1550,39 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const selectedCard = useMemo(() => humanHand.find((card) => card.instanceId === selectedCardId) ?? null, [humanHand, selectedCardId]);
   const selectedAuthenticCard = useMemo(() => (selectedCard ? toRuntimeCard(selectedCard) : null), [selectedCard]);
   const leaderMoves = useMemo(() => getUseLeaderMoves(humanMoves), [humanMoves]);
+  const aiLeaderMoves = useMemo(() => getUseLeaderMoves(aiMoves), [aiMoves]);
   const leaderActionViewModel = useMemo<LeaderActionViewModel>(
     () => buildLeaderActionViewModel(leaderMoves),
     [leaderMoves],
   );
-  const leaderMove =
-    leaderActionViewModel.kind === "single"
-      ? leaderActionViewModel.option.move
-      : leaderActionViewModel.kind === "choice"
-        ? leaderActionViewModel.options[0]?.move ?? null
-        : null;
+  const humanLeaderStatusView = useMemo(
+    () =>
+      leaders
+        ? buildLeaderStatusViewModel({
+            leader: leaders[humanSeat],
+            legalLeaderMoveCount: leaderMoves.length,
+            phase: match?.phase,
+            canAct: canHumanAct,
+            promptOpen: Boolean(prompt),
+            passed: match?.seats[humanSeat].passed ?? false,
+          })
+        : null,
+    [canHumanAct, humanSeat, leaderMoves.length, leaders, match?.phase, match?.seats, prompt],
+  );
+  const aiLeaderStatusView = useMemo(
+    () =>
+      leaders
+        ? buildLeaderStatusViewModel({
+            leader: leaders[aiSeat],
+            legalLeaderMoveCount: aiLeaderMoves.length,
+            phase: match?.phase,
+            canAct: canAiAct,
+            promptOpen: Boolean(prompt),
+            passed: match?.seats[aiSeat].passed ?? false,
+          })
+        : null,
+    [aiLeaderMoves.length, aiSeat, canAiAct, leaders, match?.phase, match?.seats, prompt],
+  );
   const promptMoves = useMemo(() => getPromptOptionMoves(humanMoves), [humanMoves]);
 
   useEffect(() => {
@@ -1601,20 +1625,42 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   );
   const visibleCardsById = useMemo(() => buildVisibleCardLookup(publicCards), [publicCards]);
   const engineCardsById = useMemo(() => new Map(publicCards.map((card) => [card.instanceId, card])), [publicCards]);
+  const leaderLookupBySourceId = useMemo(
+    () =>
+      new Map(
+        leaders
+          ? (SEAT_IDS.map((seatId) => {
+              const leader = leaders[seatId];
+              return [
+                leader.sourceId,
+                {
+                  sourceId: leader.sourceId,
+                  name: leader.name,
+                  ability: leader.ability,
+                  abilityName: getLeaderAbilityDisplay(leader.ability).name,
+                },
+              ] as const;
+            }))
+          : [],
+      ),
+    [leaders],
+  );
   const targetGroups = useMemo(() => groupTargetActions(selectedPlayMoves, visibleCardsById), [selectedPlayMoves, visibleCardsById]);
   const rowTargets = useMemo(() => getBoardRowTargetsByKey(selectedPlayMoves), [selectedPlayMoves]);
   const cardTargets = useMemo(() => getBoardCardTargetsById(selectedPlayMoves), [selectedPlayMoves]);
-  const promptView = useMemo(
+  const promptPresentation = useMemo(
     () =>
       prompt
-        ? buildPromptViewModel({
+        ? buildPromptPresentationViewModel({
+            prompt,
             promptMoves,
-            promptKind: prompt.kind,
-            sourceCardId: prompt.sourceCardId,
             cardLookup: visibleCardsById,
+            leaderLookupBySourceId,
+            seatLabels: SEAT_LABELS,
+            isPromptOwner: prompt.seatId === humanSeat,
           })
         : null,
-    [prompt, promptMoves, visibleCardsById],
+    [humanSeat, leaderLookupBySourceId, prompt, promptMoves, visibleCardsById],
   );
   const medicOptions = useMemo(
     () =>
@@ -1812,20 +1858,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
 
   const canPass = humanMoves.some((move) => move.kind === "pass");
   const canResolveRound = humanMoves.some((move) => move.kind === "resolve_round_end");
-  const humanLeaderUsed = leaders?.[humanSeat].used ?? true;
-  const humanLeaderStatus = leaders?.[humanSeat] ?? null;
-  const leaderAbilityDisplay = getLeaderAbilityDisplay(humanLeaderStatus?.ability);
-  const leaderActionLabel =
-    leaderMove || !humanLeaderStatus
-      ? describeLeaderMove(leaderMove)
-      : `${humanLeaderStatus.name}: ${leaderAbilityDisplay.name} (${humanLeaderStatus.used ? "used" : humanLeaderStatus.abilityStatus})`;
-  const disableLeaderAction = shouldDisableLeaderAction({
-    phase: match?.phase,
-    canHumanAct,
-    promptOpen: Boolean(prompt),
-    leaderUsed: humanLeaderUsed,
-    leaderMove,
-  });
+  const disableLeaderAction = !(humanLeaderStatusView?.actionEnabled ?? false);
 
   const pass = useCallback(() => {
     dispatch(dispatchEngineCommand({ type: "Pass", seatId: humanSeat }));
@@ -2046,15 +2079,12 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
 
         <div className="authentic-match__layout">
           <aside className="authentic-match__left-rail">
-            {seatSummaries && leaders ? (
+            {seatSummaries && leaders && humanLeaderStatusView && aiLeaderStatusView ? (
               <>
                 <ScoreCard
                   seat={seatSummaries.ai}
-                  leaderName={leaders[aiSeat].name}
+                  leaderStatus={aiLeaderStatusView}
                   leaderImage={leaders[aiSeat].image}
-                  leaderAbility={getLeaderAbilityDisplay(leaders[aiSeat].ability).name}
-                  leaderUsed={leaders[aiSeat].used}
-                  leaderCancelledThisRound={leaders[aiSeat].cancelledThisRound}
                   active={match?.currentTurn === aiSeat}
                   onLeaderContextMenu={(event) => handleLeaderContextMenu(event, aiSeat)}
                 />
@@ -2071,11 +2101,8 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                 />
                 <ScoreCard
                   seat={seatSummaries.human}
-                  leaderName={leaders[humanSeat].name}
+                  leaderStatus={humanLeaderStatusView}
                   leaderImage={leaders[humanSeat].image}
-                  leaderAbility={getLeaderAbilityDisplay(leaders[humanSeat].ability).name}
-                  leaderUsed={leaders[humanSeat].used}
-                  leaderCancelledThisRound={leaders[humanSeat].cancelledThisRound}
                   active={match?.currentTurn === humanSeat}
                   onLeaderContextMenu={(event) => handleLeaderContextMenu(event, humanSeat)}
                 />
@@ -2113,7 +2140,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               canPass={canPass}
               onPass={pass}
               leader={{
-                label: leaderActionLabel,
+                status: humanLeaderStatusView,
                 disabled: disableLeaderAction,
                 action: leaderActionViewModel,
                 choiceMenuOpen: leaderChoiceMenuOpen && !disableLeaderAction,
@@ -2126,16 +2153,16 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               onResolveRound={resolveRound}
             />
             {prompt ? (
-              <PromptPanel
-                promptTitle={promptView?.title ?? prompt.kind}
-                ownerLabel={SEAT_LABELS[prompt.seatId]}
-                sourceLabel={promptView?.sourceLabel ?? null}
-                isAiPrompt={prompt.seatId === aiSeat}
-                options={prompt.seatId === humanSeat ? (promptView?.options ?? []) : []}
-                medicOptions={medicOptions}
-                onChoose={choosePromptOption}
-                onCardContextMenu={handlePromptContextMenu}
-              />
+              promptPresentation ? (
+                <PromptPanel
+                  prompt={promptPresentation}
+                  ownerLabel={SEAT_LABELS[prompt.seatId]}
+                  isAiPrompt={prompt.seatId === aiSeat}
+                  medicOptions={medicOptions}
+                  onChoose={choosePromptOption}
+                  onCardContextMenu={handlePromptContextMenu}
+                />
+              ) : null
             ) : null}
             {roundEndSummary && match?.phase === "round_end" ? (
               <section className="authentic-panel authentic-round-end">

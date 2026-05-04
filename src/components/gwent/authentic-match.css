@@ -229,19 +229,44 @@
 }
 
 .authentic-score-card__leader-text,
+.authentic-score-card__leader-status,
 .authentic-score-card__meta {
   grid-column: 1 / -1;
 }
 
-/* cCp29: visual flag when the seat's leader is suppressed for the current
- * round. The label inside `.authentic-score-card__leader-text` already says
- * `cancelled this round`; this rule colors the score-card border so the
- * suppression is visible at a glance. The flag clears at round transition
- * because `data-leader-cancelled-this-round` is undefined for non-suppressed
- * seats. */
+.authentic-score-card__leader-status {
+  min-width: 0;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--ink-3);
+  font-size: 12px;
+}
+
+.authentic-score-card__leader-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 7px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  background: rgba(31, 26, 18, 0.05);
+  color: var(--ink-2);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: normal;
+}
+
 .authentic-score-card[data-leader-cancelled-this-round="true"] {
   outline: 1px dashed var(--ink-2);
   outline-offset: -2px;
+}
+
+.authentic-score-card[data-leader-cancelled-this-round="true"] .authentic-score-card__leader-chip {
+  border-color: var(--accent);
+  background: rgba(138, 58, 31, 0.12);
+  color: var(--accent);
 }
 
 .authentic-piles {
@@ -455,6 +480,24 @@ button.authentic-board-card {
 
 .authentic-leader-action {
   position: relative;
+}
+
+.authentic-leader-action p {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.authentic-leader-action p span,
+.authentic-leader-action p em {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.authentic-leader-action p em {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-style: normal;
 }
 
 .authentic-leader-choice-menu {

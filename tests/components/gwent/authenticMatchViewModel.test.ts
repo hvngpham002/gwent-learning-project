@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { LegalMove, PlayCardMove, UseLeaderMove } from "@/game/core";
+import type { ChoosePromptOptionMove, LegalMove, PendingPrompt, PlayCardMove, UseLeaderMove } from "@/game/core";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 import {
   buildLeaderActionViewModel,
@@ -17,6 +17,8 @@ import {
   getBoardCardTargetsById,
   getBoardRowTargetsByKey,
   groupDiscardCards,
+  buildLeaderStatusViewModel,
+  buildPromptPresentationViewModel,
   orderBoardRowsForAuthenticTable,
   toggleMulliganSelection,
   toRuntimeCard,
@@ -606,7 +608,7 @@ describe("leader action view model", () => {
   });
 
   it("returns kind 'none' when no leader moves are available", () => {
-    expect(buildLeaderActionViewModel([])).toEqual({ kind: "none" });
+    expect(buildLeaderActionViewModel([])).toEqual({ kind: "none", triggerLabel: "use leader" });
   });
 
   it("returns kind 'single' for a single no-target leader move", () => {
@@ -619,6 +621,8 @@ describe("leader action view model", () => {
     expect(result.option.move).toBe(move);
     expect(result.option.moveId).toBe(move.moveId);
     expect(result.option.ability).toBe("clear_weather");
+    expect(result.triggerLabel).toBe("clear weather");
+    expect(result.option.actionLabel).toBe("clear weather");
     expect(result.option.affectedRows).toEqual([]);
     expect(result.option.affectedRowsLabel).toBeNull();
   });
@@ -637,6 +641,7 @@ describe("leader action view model", () => {
     }
     expect(result.option.move).toBe(move);
     expect(result.option.label).toBe("Biting Frost");
+    expect(result.triggerLabel).toBe("choose weather");
     expect(result.option.sourceId).toBe("neutral.biting-frost");
     expect(result.option.affectedRows).toEqual(["close"]);
     expect(result.option.affectedRowsLabel).toBe("Close Combat");
@@ -655,6 +660,8 @@ describe("leader action view model", () => {
       throw new Error("expected choice");
     }
     expect(result.options.map((option) => option.moveId)).toEqual(["m:1", "m:2", "m:3", "m:4"]);
+    expect(result.triggerLabel).toBe("choose weather");
+    expect(result.menuLabel).toBe("Choose a weather card");
     expect(result.options.map((option) => option.label)).toEqual([
       "Biting Frost",
       "Impenetrable Fog",
@@ -730,6 +737,320 @@ describe("leader action view model", () => {
     if (!fog) throw new Error("missing fog");
     expect(fog.move.target).toEqual({ kind: "deck_card_source", seatId: "seat_a", sourceId: "neutral.impenetrable-fog" });
     expect(fog.move).toBe(moves[1]);
+  });
+});
+
+describe("leader status view model (cEp9)", () => {
+  const leader = (overrides: Partial<Parameters<typeof buildLeaderStatusViewModel>[0]["leader"]> = {}) => ({
+    sourceId: "northern-realms.foltest-lord-commander-of-the-north",
+    name: "Foltest: Lord Commander of The North",
+    ability: "clear_weather",
+    abilityName: "Clear Weather",
+    abilityStatus: "implemented",
+    used: false,
+    cancelledThisRound: false,
+    ...overrides,
+  });
+
+  const status = (
+    overrides: Partial<Parameters<typeof buildLeaderStatusViewModel>[0]> = {},
+  ) =>
+    buildLeaderStatusViewModel({
+      leader: leader(),
+      legalLeaderMoveCount: 1,
+      phase: "playing",
+      canAct: true,
+      promptOpen: false,
+      passed: false,
+      ...overrides,
+    });
+
+  it("classifies active leaders as ready when a legal leader move exists", () => {
+    const result = status();
+
+    expect(result.categoryLabel).toBe("active");
+    expect(result.stateLabel).toBe("ready");
+    expect(result.reason).toBe("legal leader move available");
+    expect(result.actionEnabled).toBe(true);
+  });
+
+  it("uses a generic no-target state when the active leader otherwise could act but has no legal move", () => {
+    const result = status({ legalLeaderMoveCount: 0 });
+
+    expect(result.stateLabel).toBe("no target");
+    expect(result.reason).toBe("no legal target");
+    expect(result.actionEnabled).toBe(false);
+  });
+
+  it("shows passive leaders as active passives instead of broken unused leaders", () => {
+    const result = status({
+      leader: leader({
+        sourceId: "skellige.king-bran",
+        name: "King Bran",
+        ability: "weather_half_penalty",
+        abilityName: "Weather Half Penalty",
+      }),
+      legalLeaderMoveCount: 0,
+      canAct: false,
+    });
+
+    expect(result.categoryLabel).toBe("passive");
+    expect(result.stateLabel).toBe("passive active");
+    expect(result.actionEnabled).toBe(false);
+  });
+
+  it("shows setup-time leaders as setup resolved", () => {
+    const result = status({
+      leader: leader({
+        sourceId: "scoiatael.francesca-findabair-daisy-of-the-valley",
+        name: "Francesca Findabair: Daisy of the Valley",
+        ability: "draw_extra_card",
+        abilityName: "Draw Extra Card",
+      }),
+      legalLeaderMoveCount: 0,
+    });
+
+    expect(result.categoryLabel).toBe("setup");
+    expect(result.stateLabel).toBe("setup resolved");
+    expect(result.reason).toBe("resolved during match setup");
+  });
+
+  it("lets current-round suppression override used/ready display", () => {
+    const result = status({
+      leader: leader({
+        used: true,
+        cancelledThisRound: true,
+      }),
+      legalLeaderMoveCount: 0,
+    });
+
+    expect(result.stateLabel).toBe("cancelled this round");
+    expect(result.reason).toBe("suppressed until the next round");
+    expect(result.showSuppressionBadge).toBe(true);
+    expect(result.actionEnabled).toBe(false);
+  });
+
+  it("falls back for custom or unknown leader sources without rendering the source ID as the display name", () => {
+    const result = status({
+      leader: leader({
+        sourceId: "custom_leader_smoke",
+        name: "custom_leader_smoke",
+        ability: "clear_weather",
+      }),
+      legalLeaderMoveCount: 0,
+    });
+
+    expect(result.categoryLabel).toBe("unknown/custom");
+    expect(result.stateLabel).toBe("no target");
+    expect(result.leaderName).toBe("Unknown leader");
+  });
+
+  it("keeps custom implemented leaders legal-move-driven when the engine offers a move", () => {
+    const result = status({
+      leader: leader({
+        sourceId: "custom_leader_clear_weather",
+        name: "Custom Clear Weather",
+        ability: "clear_weather",
+      }),
+      legalLeaderMoveCount: 1,
+    });
+
+    expect(result.categoryLabel).toBe("unknown/custom");
+    expect(result.stateLabel).toBe("ready");
+    expect(result.actionEnabled).toBe(true);
+  });
+});
+
+describe("prompt presentation view model (cEp9)", () => {
+  const seatLabels = { seat_a: "Human", seat_b: "AI" } as const;
+  const leaderLookup = new Map([
+    [
+      "northern-realms.foltest-lord-commander-of-the-north",
+      {
+        sourceId: "northern-realms.foltest-lord-commander-of-the-north",
+        name: "Foltest: Lord Commander of The North",
+        ability: "clear_weather",
+        abilityName: "Clear Weather",
+      },
+    ],
+  ]);
+
+  const prompt = (overrides: Partial<PendingPrompt> = {}): PendingPrompt => ({
+    promptId: "prompt:1",
+    seatId: "seat_a",
+    kind: "choose_card",
+    abilityId: "restore_discard_to_hand",
+    options: [],
+    ...overrides,
+  });
+
+  const promptMove = (overrides: Partial<ChoosePromptOptionMove> = {}): ChoosePromptOptionMove => ({
+    kind: "choose_prompt_option",
+    moveId: "prompt:1:option",
+    seatId: "seat_a",
+    promptId: "prompt:1",
+    optionId: "option:1",
+    target: { kind: "none" },
+    label: "Choose option",
+    metadata: {
+      promptKind: "choose_card",
+      abilityId: "restore_discard_to_hand",
+    },
+    ...overrides,
+  });
+
+  it("labels cancel_leader reaction options as player choices and names the attempted public leader", () => {
+    const result = buildPromptPresentationViewModel({
+      prompt: prompt({
+        kind: "choose_option",
+        abilityId: "cancel_leader",
+        stage: "leader_cancel_reaction",
+        context: {
+          leaderCancel: {
+            mode: "reaction",
+            targetSeatId: "seat_b",
+            targetLeaderCardId: "seat_b:leader:foltest",
+            targetLeaderSourceId: "northern-realms.foltest-lord-commander-of-the-north",
+            targetAbilityId: "clear_weather",
+            target: { kind: "none" },
+          },
+        },
+      }),
+      promptMoves: [
+        promptMove({ optionId: "cancel-leader:cancel", label: "cancel-leader:cancel", metadata: { promptKind: "choose_option", abilityId: "cancel_leader" } }),
+        promptMove({ optionId: "cancel-leader:decline", label: "cancel-leader:decline", metadata: { promptKind: "choose_option", abilityId: "cancel_leader" } }),
+      ],
+      leaderLookupBySourceId: leaderLookup,
+      seatLabels,
+      isPromptOwner: true,
+    });
+
+    expect(result.title).toBe("Cancel leader ability?");
+    expect(result.body).toContain("AI");
+    expect(result.body).toContain("Foltest: Lord Commander");
+    expect(result.body).toContain("Clear Weather");
+    expect(result.options.map((option) => option.label)).toEqual(["cancel", "let it resolve"]);
+  });
+
+  it("clarifies restore and opponent-discard prompt sources", () => {
+    const restore = buildPromptPresentationViewModel({
+      prompt: prompt({ abilityId: "restore_discard_to_hand" }),
+      promptMoves: [promptMove({ label: "Restore Blue Stripes to hand" })],
+      seatLabels,
+      isPromptOwner: true,
+    });
+    const opponentDiscard = buildPromptPresentationViewModel({
+      prompt: prompt({ abilityId: "draw_opponent_discard" }),
+      promptMoves: [promptMove({ label: "Draw Albrich from opponent discard", metadata: { promptKind: "choose_card", abilityId: "draw_opponent_discard" } })],
+      seatLabels,
+      isPromptOwner: true,
+    });
+
+    expect(restore.title).toBe("Restore from your discard");
+    expect(restore.body).toContain("your discard pile");
+    expect(opponentDiscard.title).toBe("Draw from opponent discard");
+    expect(opponentDiscard.body).toContain("opponent discard pile");
+  });
+
+  it("uses stage-specific copy for discard_two_draw_one_from_deck owner prompts", () => {
+    const drawPrompt = buildPromptPresentationViewModel({
+      prompt: prompt({
+        kind: "choose_card",
+        abilityId: "discard_two_draw_one_from_deck",
+        stage: "deck_draw_selection",
+      }),
+      promptMoves: [
+        promptMove({
+          label: "Draw Blue Stripes from deck",
+          metadata: { promptKind: "choose_card", abilityId: "discard_two_draw_one_from_deck" },
+        }),
+      ],
+      seatLabels,
+      isPromptOwner: true,
+    });
+
+    expect(drawPrompt.title).toBe("Draw from your deck");
+    expect(drawPrompt.body).toContain("then shuffle");
+    expect(drawPrompt.options.map((option) => option.label)).toEqual(["Draw Blue Stripes from deck"]);
+  });
+
+  it("does not expose discard_two_draw_one_from_deck stage-two deck prompt details to non-owners", () => {
+    const hiddenDeckPrompt = buildPromptPresentationViewModel({
+      prompt: prompt({
+        seatId: "seat_b",
+        kind: "choose_card",
+        abilityId: "discard_two_draw_one_from_deck",
+        stage: "deck_draw_selection",
+        options: [
+          {
+            optionId: "discard-draw:draw:seat_b:000:hidden",
+            label: "Draw Hidden Deck Card from deck",
+            target: { kind: "deck_card_instance", cardId: "seat_b:000:hidden", sourceId: "nilfgaard.hidden-card" },
+          },
+        ],
+      }),
+      promptMoves: [],
+      seatLabels,
+      isPromptOwner: false,
+    });
+
+    expect(hiddenDeckPrompt.title).toBe("Prompt pending");
+    expect(hiddenDeckPrompt.body).toBeNull();
+    expect(hiddenDeckPrompt.options).toEqual([]);
+    expect(JSON.stringify(hiddenDeckPrompt)).not.toContain("Hidden Deck Card");
+    expect(JSON.stringify(hiddenDeckPrompt)).not.toContain("nilfgaard.hidden-card");
+  });
+
+  it("identifies Medic and look_three_cards prompts without implying the reveal can be reopened", () => {
+    const medic = buildPromptPresentationViewModel({
+      prompt: prompt({ kind: "medic_revive", abilityId: "medic" }),
+      promptMoves: [promptMove({ metadata: { promptKind: "medic_revive", abilityId: "medic" } })],
+      seatLabels,
+      isPromptOwner: true,
+    });
+    const reveal = buildPromptPresentationViewModel({
+      prompt: prompt({ kind: "choose_option", abilityId: "look_three_cards", stage: "opponent_hand_reveal" }),
+      promptMoves: [promptMove({ optionId: "look-three-cards:acknowledge", label: "Continue", metadata: { promptKind: "choose_option", abilityId: "look_three_cards" } })],
+      seatLabels,
+      isPromptOwner: true,
+    });
+
+    expect(medic.title).toBe("Medic revive");
+    expect(medic.body).toContain("discard pile");
+    expect(reveal.title).toBe("Look at hand");
+    expect(reveal.body).toContain("shown once");
+    expect(reveal.options.map((option) => option.label)).toEqual(["continue"]);
+  });
+
+  it("keeps non-owner look_three_cards prompt presentation generic", () => {
+    const reveal = buildPromptPresentationViewModel({
+      prompt: prompt({ seatId: "seat_b", kind: "choose_option", abilityId: "look_three_cards", stage: "opponent_hand_reveal" }),
+      promptMoves: [],
+      seatLabels,
+      isPromptOwner: false,
+    });
+
+    expect(reveal.title).toBe("Prompt pending");
+    expect(reveal.body).toBeNull();
+    expect(reveal.options).toEqual([]);
+  });
+
+  it("redacts raw runtime IDs from fallback prompt option labels", () => {
+    const result = buildPromptPresentationViewModel({
+      prompt: prompt({ abilityId: "discard_two_draw_one_from_deck", kind: "choose_card", stage: "deck_draw_selection" }),
+      promptMoves: [
+        promptMove({
+          label: "Draw seat_a:000:hidden from deck",
+          target: { kind: "deck_card_instance", side: "own", seatId: "seat_a", cardId: "seat_a:000:hidden" },
+          metadata: { promptKind: "choose_card", abilityId: "discard_two_draw_one_from_deck" },
+        }),
+      ],
+      seatLabels,
+      isPromptOwner: true,
+    });
+
+    expect(result.options[0].label).toBe("Draw card from deck");
+    expect(result.options[0].label).not.toMatch(/seat_[ab]:\d{3}:/);
   });
 });
 

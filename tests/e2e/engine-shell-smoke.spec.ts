@@ -990,6 +990,8 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
     if (await trigger.isDisabled()) {
       continue;
     }
+    await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready/i);
+    await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/active/i);
 
     await trigger.click();
     const menu = page.getByTestId("authentic-leader-choice-menu");
@@ -1056,6 +1058,7 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
 
   // Leader action becomes used/disabled afterward.
   await expect(page.getByTestId("authentic-leader-action")).toBeDisabled();
+  await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/used/i);
 
   // Recent activity confirms the human used the leader.
   const activity = page.getByTestId("authentic-recent-activity");
@@ -1140,6 +1143,8 @@ test("authentic match opens a one-time look_three_cards reveal modal (cCp28)", a
 
   const trigger = page.getByTestId("authentic-leader-action");
   await expect(trigger).toBeVisible();
+  await expect(trigger).toContainText("look at hand");
+  await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready/i);
   // The look_three_cards leader emits exactly one no-target legal `use_leader`
   // move; the trigger should be enabled because the AI opponent has cards in
   // hand after mulligan.
@@ -1150,6 +1155,8 @@ test("authentic match opens a one-time look_three_cards reveal modal (cCp28)", a
   // The one-time reveal modal opens.
   const dialog = page.getByTestId("authentic-look-three-cards-dialog");
   await expect(dialog).toBeVisible();
+  await expect(page.getByTestId("authentic-prompt")).toContainText(/Look at hand/i);
+  await expect(page.getByTestId("authentic-prompt")).toContainText(/shown once/i);
 
   // The dialog shows 1-3 revealed card faces.
   const revealedCards = page.getByTestId("authentic-look-three-cards-card");
@@ -1167,6 +1174,7 @@ test("authentic match opens a one-time look_three_cards reveal modal (cCp28)", a
 
   // The dialog cannot be reopened: the leader is now used.
   await expect(page.getByTestId("authentic-leader-action")).toBeDisabled();
+  await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/used/i);
 
   // Recent activity confirms the human used the leader. The activity entry
   // does not leak revealed card names or source IDs (count-only summary).

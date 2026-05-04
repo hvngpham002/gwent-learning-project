@@ -1,14 +1,18 @@
 import type {
   CardInstanceId,
+  ChoosePromptOptionMove,
   ChooseMulliganMove,
   LegalMove,
   MatchScoreBreakdown,
+  MatchPhase,
+  PendingPrompt,
   PlayCardMove,
   RoundResult,
   SeatId,
   UseLeaderMove,
 } from "@/game/core";
 import type { CatalogLeaderAbilityId, CatalogRow } from "@/game/catalog";
+import { officialLeaderPromotionManifest } from "@/data/catalog/leaders/official-promotion";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 
 import type { AuthenticCardViewModel } from "./cardViewModel";
@@ -111,12 +115,277 @@ export interface GameEndNavigationActionViewModel {
   readonly kind: "ghost" | "primary";
 }
 
+export type LeaderCategoryLabel = "active" | "passive" | "setup" | "unknown/custom";
+export type LeaderStateLabel =
+  | "ready"
+  | "used"
+  | "passive active"
+  | "setup resolved"
+  | "cancelled this round"
+  | "unavailable"
+  | "no target";
+
+export interface LeaderStatusInput {
+  readonly sourceId: string;
+  readonly name: string;
+  readonly ability: string | null | undefined;
+  readonly abilityName?: string | null;
+  readonly abilityStatus?: "implemented" | "planned" | "placeholder" | string | null;
+  readonly used: boolean;
+  readonly cancelledThisRound: boolean;
+}
+
+export interface LeaderStatusViewModel {
+  readonly sourceId: string;
+  readonly leaderName: string;
+  readonly ability: LeaderAbilityDisplay;
+  readonly abilityName: string;
+  readonly abilityStatus: string;
+  readonly category: LeaderCategoryLabel;
+  readonly categoryLabel: LeaderCategoryLabel;
+  readonly stateLabel: LeaderStateLabel;
+  readonly reason: string;
+  readonly actionEnabled: boolean;
+  readonly showSuppressionBadge: boolean;
+}
+
+export interface PromptPresentationOptionViewModel {
+  readonly moveId: string;
+  readonly label: string;
+}
+
+export interface PromptPresentationLeaderLookupEntry {
+  readonly sourceId: string;
+  readonly name: string;
+  readonly ability: string | null | undefined;
+  readonly abilityName?: string | null;
+}
+
+export interface PromptPresentationViewModel {
+  readonly title: string;
+  readonly body: string | null;
+  readonly sourceLabel: string | null;
+  readonly options: readonly PromptPresentationOptionViewModel[];
+  readonly kind:
+    | "cancel_leader"
+    | "restore_discard_to_hand"
+    | "draw_opponent_discard"
+    | "discard_two_draw_one_from_deck"
+    | "look_three_cards"
+    | "medic_revive"
+    | "generic";
+}
+
 const HUMAN_LABEL = "You";
 const AI_LABEL = "AI";
 
 const BOARD_ROW_ORDER: readonly CatalogRow[] = ["siege", "ranged", "close", "close", "ranged", "siege"];
 const DISCARD_GROUP_ORDER = ["hero", "close", "ranged", "siege", "special", "other"] as const;
 export const MULLIGAN_MAX_SELECTION = 1;
+
+const OFFICIAL_ACTIVE_LEADER_IDS = new Set(officialLeaderPromotionManifest.executableLeaderSourceIds);
+const OFFICIAL_PASSIVE_LEADER_IDS = new Set(officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds);
+const OFFICIAL_SETUP_LEADER_IDS = new Set(officialLeaderPromotionManifest.implementedSetupLeaderSourceIds);
+
+const titleCaseFromIdentifier = (id: string) =>
+  id
+    .split("_")
+    .filter(Boolean)
+    .map((part) => `${part[0]?.toUpperCase() ?? ""}${part.slice(1)}`)
+    .join(" ");
+
+export const classifyLeaderCategory = (sourceId: string): LeaderCategoryLabel => {
+  if (OFFICIAL_ACTIVE_LEADER_IDS.has(sourceId)) {
+    return "active";
+  }
+  if (OFFICIAL_PASSIVE_LEADER_IDS.has(sourceId)) {
+    return "passive";
+  }
+  if (OFFICIAL_SETUP_LEADER_IDS.has(sourceId)) {
+    return "setup";
+  }
+  return "unknown/custom";
+};
+
+const leaderUnavailableReason = ({
+  phase,
+  canAct,
+  promptOpen,
+  passed,
+}: {
+  readonly phase: MatchPhase | null | undefined;
+  readonly canAct: boolean;
+  readonly promptOpen: boolean;
+  readonly passed: boolean;
+}) => {
+  if (phase !== "playing") {
+    return "available during play";
+  }
+  if (promptOpen) {
+    return "prompt pending";
+  }
+  if (passed) {
+    return "passed this round";
+  }
+  if (!canAct) {
+    return "waiting for turn";
+  }
+  return "unavailable";
+};
+
+export const buildLeaderStatusViewModel = ({
+  leader,
+  legalLeaderMoveCount,
+  phase,
+  canAct,
+  promptOpen,
+  passed,
+}: {
+  readonly leader: LeaderStatusInput;
+  readonly legalLeaderMoveCount: number;
+  readonly phase: MatchPhase | null | undefined;
+  readonly canAct: boolean;
+  readonly promptOpen: boolean;
+  readonly passed: boolean;
+}): LeaderStatusViewModel => {
+  const ability = getLeaderAbilityDisplay(leader.ability);
+  const category = classifyLeaderCategory(leader.sourceId);
+  const canTryLeader =
+    leader.abilityStatus === "implemented" &&
+    !leader.used &&
+    !leader.cancelledThisRound &&
+    phase === "playing" &&
+    canAct &&
+    !promptOpen &&
+    !passed;
+  const leaderName = leader.name === leader.sourceId ? "Unknown leader" : leader.name;
+
+  if (leader.cancelledThisRound) {
+    return {
+      sourceId: leader.sourceId,
+      leaderName,
+      ability,
+      abilityName: leader.abilityName ?? ability.name,
+      abilityStatus: leader.abilityStatus ?? ability.status,
+      category,
+      categoryLabel: category,
+      stateLabel: "cancelled this round",
+      reason: "suppressed until the next round",
+      actionEnabled: false,
+      showSuppressionBadge: true,
+    };
+  }
+
+  if (category === "passive") {
+    return {
+      sourceId: leader.sourceId,
+      leaderName,
+      ability,
+      abilityName: leader.abilityName ?? ability.name,
+      abilityStatus: leader.abilityStatus ?? ability.status,
+      category,
+      categoryLabel: category,
+      stateLabel: "passive active",
+      reason: "passive leader effect is active",
+      actionEnabled: false,
+      showSuppressionBadge: false,
+    };
+  }
+
+  if (category === "setup") {
+    return {
+      sourceId: leader.sourceId,
+      leaderName,
+      ability,
+      abilityName: leader.abilityName ?? ability.name,
+      abilityStatus: leader.abilityStatus ?? ability.status,
+      category,
+      categoryLabel: category,
+      stateLabel: "setup resolved",
+      reason: "resolved during match setup",
+      actionEnabled: false,
+      showSuppressionBadge: false,
+    };
+  }
+
+  if (leader.used) {
+    return {
+      sourceId: leader.sourceId,
+      leaderName,
+      ability,
+      abilityName: leader.abilityName ?? ability.name,
+      abilityStatus: leader.abilityStatus ?? ability.status,
+      category,
+      categoryLabel: category,
+      stateLabel: "used",
+      reason: "leader already used",
+      actionEnabled: false,
+      showSuppressionBadge: false,
+    };
+  }
+
+  if (leader.abilityStatus !== "implemented") {
+    return {
+      sourceId: leader.sourceId,
+      leaderName,
+      ability,
+      abilityName: leader.abilityName ?? ability.name,
+      abilityStatus: leader.abilityStatus ?? ability.status,
+      category,
+      categoryLabel: category,
+      stateLabel: "unavailable",
+      reason: `${leader.abilityStatus ?? ability.status} leader ability`,
+      actionEnabled: false,
+      showSuppressionBadge: false,
+    };
+  }
+
+  if (legalLeaderMoveCount > 0) {
+    return {
+      sourceId: leader.sourceId,
+      leaderName,
+      ability,
+      abilityName: leader.abilityName ?? ability.name,
+      abilityStatus: leader.abilityStatus ?? ability.status,
+      category,
+      categoryLabel: category,
+      stateLabel: "ready",
+      reason: "legal leader move available",
+      actionEnabled: canTryLeader,
+      showSuppressionBadge: false,
+    };
+  }
+
+  if (canTryLeader) {
+    return {
+      sourceId: leader.sourceId,
+      leaderName,
+      ability,
+      abilityName: leader.abilityName ?? ability.name,
+      abilityStatus: leader.abilityStatus ?? ability.status,
+      category,
+      categoryLabel: category,
+      stateLabel: "no target",
+      reason: "no legal target",
+      actionEnabled: false,
+      showSuppressionBadge: false,
+    };
+  }
+
+  return {
+    sourceId: leader.sourceId,
+    leaderName,
+    ability,
+    abilityName: leader.abilityName ?? ability.name,
+    abilityStatus: leader.abilityStatus ?? ability.status,
+    category,
+    categoryLabel: category,
+    stateLabel: "unavailable",
+    reason: leaderUnavailableReason({ phase, canAct, promptOpen, passed }),
+    actionEnabled: false,
+    showSuppressionBadge: false,
+  };
+};
 
 export const sameCardSelection = (left: readonly CardInstanceId[], right: readonly CardInstanceId[]) => {
   if (left.length !== right.length) {
@@ -481,6 +750,184 @@ export const buildMedicPromptOptions = ({
     };
   });
 
+const redactRuntimeCardIds = (label: string): string =>
+  label.replace(/seat_[ab]:\d{3}:[A-Za-z0-9_.:-]+/g, "card");
+
+const labelForPromptOption = (move: ChoosePromptOptionMove): string => {
+  if (move.metadata.abilityId === "cancel_leader") {
+    if (move.optionId === "cancel-leader:cancel") {
+      return "cancel";
+    }
+    if (move.optionId === "cancel-leader:decline") {
+      return "let it resolve";
+    }
+  }
+  if (move.metadata.abilityId === "look_three_cards" && move.optionId === "look-three-cards:acknowledge") {
+    return "continue";
+  }
+  return redactRuntimeCardIds(move.label);
+};
+
+const sourceLabelForPrompt = ({
+  prompt,
+  cardLookup,
+  leaderLookupBySourceId,
+}: {
+  readonly prompt: PendingPrompt;
+  readonly cardLookup: ReadonlyMap<CardInstanceId, { name: string }>;
+  readonly leaderLookupBySourceId: ReadonlyMap<string, PromptPresentationLeaderLookupEntry>;
+}): string | null => {
+  const cardName = prompt.sourceCardId ? cardLookup.get(prompt.sourceCardId)?.name : undefined;
+  if (cardName) {
+    return `source: ${cardName}`;
+  }
+
+  const leaderName = prompt.sourceId ? leaderLookupBySourceId.get(prompt.sourceId)?.name : undefined;
+  return leaderName ? `source: ${leaderName}` : null;
+};
+
+const promptAbilityName = (abilityId: string): string => {
+  const cardAbility = getAbilityDisplay(abilityId);
+  if (cardAbility.id === abilityId && cardAbility.name !== "No ability") {
+    return cardAbility.name;
+  }
+  const leaderAbility = getLeaderAbilityDisplay(abilityId);
+  if (leaderAbility.id === abilityId) {
+    return leaderAbility.name;
+  }
+  return titleCaseFromIdentifier(abilityId);
+};
+
+export const buildPromptPresentationViewModel = ({
+  prompt,
+  promptMoves,
+  cardLookup,
+  leaderLookupBySourceId = new Map(),
+  seatLabels,
+  isPromptOwner,
+}: {
+  readonly prompt: PendingPrompt;
+  readonly promptMoves: readonly ChoosePromptOptionMove[];
+  readonly cardLookup?: ReadonlyMap<CardInstanceId, { name: string }>;
+  readonly leaderLookupBySourceId?: ReadonlyMap<string, PromptPresentationLeaderLookupEntry>;
+  readonly seatLabels: Record<SeatId, string>;
+  readonly isPromptOwner: boolean;
+}): PromptPresentationViewModel => {
+  const safeCardLookup = cardLookup ?? new Map();
+  const sourceLabel = sourceLabelForPrompt({
+    prompt,
+    cardLookup: safeCardLookup,
+    leaderLookupBySourceId,
+  });
+  const options = isPromptOwner
+    ? promptMoves.map((move) => ({
+        moveId: move.moveId,
+        label: labelForPromptOption(move),
+      }))
+    : [];
+
+  const ownerOnlyHiddenPrompt =
+    (prompt.abilityId === "discard_two_draw_one_from_deck" && prompt.stage === "deck_draw_selection") ||
+    prompt.abilityId === "look_three_cards";
+  if (!isPromptOwner && ownerOnlyHiddenPrompt) {
+    return {
+      title: "Prompt pending",
+      body: null,
+      sourceLabel: null,
+      options,
+      kind: "generic",
+    };
+  }
+
+  if (prompt.abilityId === "cancel_leader") {
+    const context = prompt.context?.leaderCancel;
+    const attemptedLeader = context ? leaderLookupBySourceId.get(context.targetLeaderSourceId) : null;
+    const attemptedLeaderName = attemptedLeader?.name ?? null;
+    const attemptedAbilityName =
+      attemptedLeader?.abilityName ??
+      (context ? getLeaderAbilityDisplay(context.targetAbilityId).name : null);
+    const attemptedSeatLabel = context ? seatLabels[context.targetSeatId] : null;
+    const attemptedText = [attemptedSeatLabel, attemptedLeaderName, attemptedAbilityName]
+      .filter(Boolean)
+      .join(" · ");
+
+    return {
+      title: "Cancel leader ability?",
+      body: attemptedText ? `react to ${attemptedText}` : "choose whether to cancel the attempted leader ability.",
+      sourceLabel,
+      options,
+      kind: "cancel_leader",
+    };
+  }
+
+  if (prompt.abilityId === "restore_discard_to_hand") {
+    return {
+      title: "Restore from your discard",
+      body: "choose a card from your discard pile to return to your hand.",
+      sourceLabel,
+      options,
+      kind: "restore_discard_to_hand",
+    };
+  }
+
+  if (prompt.abilityId === "draw_opponent_discard") {
+    return {
+      title: "Draw from opponent discard",
+      body: "choose a card from the opponent discard pile to add to your hand.",
+      sourceLabel,
+      options,
+      kind: "draw_opponent_discard",
+    };
+  }
+
+  if (prompt.abilityId === "discard_two_draw_one_from_deck") {
+    if (prompt.stage === "deck_draw_selection") {
+      return {
+        title: "Draw from your deck",
+        body: "choose one card from your deck, then shuffle.",
+        sourceLabel,
+        options,
+        kind: "discard_two_draw_one_from_deck",
+      };
+    }
+    return {
+      title: "Discard for leader",
+      body: "select one or two cards from your hand to discard.",
+      sourceLabel,
+      options,
+      kind: "discard_two_draw_one_from_deck",
+    };
+  }
+
+  if (prompt.abilityId === "look_three_cards") {
+    return {
+      title: "Look at hand",
+      body: "revealed cards are shown once in the modal; continuing closes that view.",
+      sourceLabel,
+      options,
+      kind: "look_three_cards",
+    };
+  }
+
+  if (prompt.kind === "medic_revive" || prompt.abilityId === "medic") {
+    return {
+      title: "Medic revive",
+      body: "choose a unit from your discard pile to revive.",
+      sourceLabel,
+      options,
+      kind: "medic_revive",
+    };
+  }
+
+  return {
+    title: `${prompt.kind.replace(/_/g, " ")} · ${promptAbilityName(prompt.abilityId)}`,
+    body: null,
+    sourceLabel,
+    options,
+    kind: "generic",
+  };
+};
+
 const seatLabel = (seatId: SeatId | "draw" | undefined, seatLabels: Record<SeatId, string>) => {
   if (!seatId) return "None";
   return seatId === "draw" ? "Draw" : seatLabels[seatId];
@@ -739,6 +1186,7 @@ export interface LeaderActionChoiceOption {
   readonly moveId: string;
   readonly move: UseLeaderMove;
   readonly label: string;
+  readonly actionLabel: string;
   readonly sourceId?: string;
   readonly targetCardName?: string;
   readonly ability: CatalogLeaderAbilityId;
@@ -747,9 +1195,9 @@ export interface LeaderActionChoiceOption {
 }
 
 export type LeaderActionViewModel =
-  | { readonly kind: "none" }
-  | { readonly kind: "single"; readonly option: LeaderActionChoiceOption }
-  | { readonly kind: "choice"; readonly options: readonly LeaderActionChoiceOption[] };
+  | { readonly kind: "none"; readonly triggerLabel: string }
+  | { readonly kind: "single"; readonly option: LeaderActionChoiceOption; readonly triggerLabel: string }
+  | { readonly kind: "choice"; readonly options: readonly LeaderActionChoiceOption[]; readonly triggerLabel: string; readonly menuLabel: string };
 
 const WEATHER_SOURCE_TO_ROWS: Record<string, readonly CatalogRow[]> = {
   "neutral.biting-frost": ["close"],
@@ -763,6 +1211,38 @@ const formatAffectedRowsLabel = (rows: readonly CatalogRow[]): string | null => 
     return null;
   }
   return rows.map((row) => getRowDisplay(row).name).join(" + ");
+};
+
+const leaderActionLabelForMove = (move: UseLeaderMove): string => {
+  switch (move.metadata.ability) {
+    case "clear_weather":
+      return "clear weather";
+    case "play_frost":
+    case "play_fog":
+    case "play_rain":
+    case "play_any_weather":
+      return "choose weather";
+    case "scorch_range":
+      return "scorch ranged";
+    case "scorch_siege":
+      return "scorch siege";
+    case "restore_discard_to_hand":
+      return "restore card";
+    case "draw_opponent_discard":
+      return "draw from opponent discard";
+    case "discard_two_draw_one_from_deck":
+      return "discard and draw";
+    case "look_three_cards":
+      return "look at hand";
+    case "cancel_leader":
+      return "cancel leader";
+    case "shuffle_discards_into_decks":
+      return "shuffle discards";
+    case "optimize_agile_rows":
+      return move.target.kind === "board_row" ? `move agile to ${getRowDisplay(move.target.row).name.toLocaleLowerCase()}` : "optimize agile";
+    default:
+      return "use leader";
+  }
 };
 
 const buildLeaderActionOption = (move: UseLeaderMove): LeaderActionChoiceOption => {
@@ -779,6 +1259,7 @@ const buildLeaderActionOption = (move: UseLeaderMove): LeaderActionChoiceOption 
     moveId: move.moveId,
     move,
     label: fallbackLabel,
+    actionLabel: leaderActionLabelForMove(move),
     sourceId,
     targetCardName,
     ability: move.metadata.ability,
@@ -791,13 +1272,18 @@ export const buildLeaderActionViewModel = (
   moves: readonly UseLeaderMove[],
 ): LeaderActionViewModel => {
   if (moves.length === 0) {
-    return { kind: "none" };
+    return { kind: "none", triggerLabel: "use leader" };
   }
   if (moves.length === 1) {
-    return { kind: "single", option: buildLeaderActionOption(moves[0]) };
+    const option = buildLeaderActionOption(moves[0]);
+    return { kind: "single", option, triggerLabel: option.actionLabel };
   }
+  const options = moves.map(buildLeaderActionOption);
+  const firstAbility = options[0]?.ability;
   return {
     kind: "choice",
-    options: moves.map(buildLeaderActionOption),
+    options,
+    triggerLabel: firstAbility === "play_any_weather" ? "choose weather" : "choose leader option",
+    menuLabel: firstAbility === "play_any_weather" ? "Choose a weather card" : "Choose a leader option",
   };
 };
