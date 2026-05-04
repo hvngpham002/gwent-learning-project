@@ -115,6 +115,63 @@ export interface GameEndNavigationActionViewModel {
   readonly kind: "ghost" | "primary";
 }
 
+export type MatchLedgerKind = "round" | "match_end";
+
+export type MatchLedgerResultMarker = "win" | "loss" | "draw";
+
+export interface MatchLedgerSummaryRow {
+  readonly key: string;
+  readonly label: string;
+  readonly value: string;
+  readonly emphasis?: MatchLedgerResultMarker;
+}
+
+export interface MatchLedgerHistoryRow {
+  readonly key: string;
+  readonly round: number;
+  readonly humanScore: number;
+  readonly aiScore: number;
+  readonly humanWon: boolean;
+  readonly aiWon: boolean;
+  readonly result: MatchLedgerResultMarker;
+  readonly resultMarker: string;
+}
+
+export type MatchLedgerStandingKey = "result" | "rounds" | "gems";
+
+export interface MatchLedgerStandingRow {
+  readonly key: MatchLedgerStandingKey;
+  readonly label: string;
+  readonly value: string;
+}
+
+export type MatchLedgerActionKey = "next-round" | "rematch" | "setup" | "close";
+
+export interface MatchLedgerActionViewModel {
+  readonly key: MatchLedgerActionKey;
+  readonly label: string;
+  readonly kind: "primary" | "ghost";
+  readonly testId: string;
+}
+
+export interface MatchLedgerViewModel {
+  readonly key: string;
+  readonly round: number;
+  readonly kind: MatchLedgerKind;
+  readonly eyebrow: string;
+  readonly title: string;
+  readonly titleId: string;
+  readonly summaryRows: readonly MatchLedgerSummaryRow[];
+  readonly nextStarterLabel: string | null;
+  readonly historyRows: readonly MatchLedgerHistoryRow[];
+  readonly standingRows: readonly MatchLedgerStandingRow[];
+  readonly actions: readonly MatchLedgerActionViewModel[];
+  readonly escapeDismisses: boolean;
+  readonly humanRoundWins: number;
+  readonly aiRoundWins: number;
+  readonly matchResult: MatchLedgerResultMarker | "finished";
+}
+
 export type LeaderCategoryLabel = "active" | "passive" | "setup" | "unknown/custom";
 export type LeaderStateLabel =
   | "ready"
@@ -970,6 +1027,290 @@ export const buildGameEndNavigationActions = (canReturnToSetup: boolean): GameEn
     : { key: "close", label: "close", kind: "ghost" },
   { key: "rematch", label: "rematch", kind: "primary" },
 ];
+
+const ledgerSeatRoleResultMarker = (
+  outcome: "seat_a_win" | "seat_b_win" | "draw",
+  humanSeat: SeatId,
+): MatchLedgerResultMarker => {
+  if (outcome === "draw") return "draw";
+  const humanWon = (outcome === "seat_a_win" && humanSeat === "seat_a") || (outcome === "seat_b_win" && humanSeat === "seat_b");
+  return humanWon ? "win" : "loss";
+};
+
+const matchOutcomeFromWinner = (
+  winner: SeatId | "draw" | null,
+  humanSeat: SeatId,
+): MatchLedgerResultMarker | "finished" => {
+  if (winner === null) return "finished";
+  if (winner === "draw") return "draw";
+  return winner === humanSeat ? "win" : "loss";
+};
+
+const formatGemValue = (loss: number, after: number | null): string => {
+  if (loss <= 0) return "0";
+  if (after === null) return `-${loss}`;
+  return `◆ ${after + loss} → ${after}`;
+};
+
+const formatStandingRoundsValue = (humanWins: number, aiWins: number) =>
+  `${humanWins} - ${aiWins}`;
+
+const formatStandingGemsValue = (
+  gemsBySeat: Partial<Record<SeatId, number>> | null | undefined,
+  humanSeat: SeatId,
+  aiSeat: SeatId,
+) => {
+  const human = gemsBySeat?.[humanSeat];
+  const ai = gemsBySeat?.[aiSeat];
+  if (typeof human !== "number" || typeof ai !== "number") {
+    return "unknown";
+  }
+  return `${human} - ${ai}`;
+};
+
+const formatMatchResultValue = (result: MatchLedgerResultMarker | "finished"): string => {
+  if (result === "win") return "victory";
+  if (result === "loss") return "defeat";
+  if (result === "draw") return "draw";
+  return "finished";
+};
+
+const formatMatchTitle = (
+  result: MatchLedgerResultMarker | "finished",
+  opponentLabel: string,
+): string => {
+  if (result === "win") return `Victory over ${opponentLabel}.`;
+  if (result === "loss") return `Defeat against ${opponentLabel}.`;
+  if (result === "draw") return "Draw.";
+  return "Match concluded.";
+};
+
+const formatRoundTitle = (
+  result: MatchLedgerResultMarker,
+  opponentLabel: string,
+): string => {
+  if (result === "win") return "You hold the field.";
+  if (result === "loss") return `${opponentLabel} holds the field.`;
+  return "Neither side yields.";
+};
+
+export const buildMatchLedgerViewModel = ({
+  rounds,
+  round,
+  humanSeat,
+  aiSeat,
+  seatLabels,
+  winner,
+  gemsBySeat,
+  canReturnToSetup,
+  matchRunKey,
+}: {
+  readonly rounds: readonly RoundResult[];
+  readonly round?: RoundResult | null;
+  readonly humanSeat: SeatId;
+  readonly aiSeat: SeatId;
+  readonly seatLabels: Record<SeatId, string>;
+  readonly winner?: SeatId | "draw" | null;
+  readonly gemsBySeat?: Partial<Record<SeatId, number>> | null;
+  readonly canReturnToSetup: boolean;
+  readonly matchRunKey?: string | number | null;
+}): MatchLedgerViewModel | null => {
+  const latestRound = round ?? rounds.at(-1) ?? null;
+  if (!latestRound) {
+    return null;
+  }
+
+  const opponentLabel = seatLabels[aiSeat];
+  const isMatchEnd = winner !== null && winner !== undefined;
+  const kind: MatchLedgerKind = isMatchEnd ? "match_end" : "round";
+
+  const humanRoundWins = rounds.filter((entry) => entry.winner === humanSeat).length;
+  const aiRoundWins = rounds.filter((entry) => entry.winner === aiSeat).length;
+  const matchResult = matchOutcomeFromWinner(winner ?? null, humanSeat);
+
+  const baseKey = `round-${latestRound.round}`;
+  const runSuffix =
+    matchRunKey !== undefined && matchRunKey !== null && matchRunKey !== ""
+      ? `|${String(matchRunKey)}`
+      : "";
+  const key = `${kind === "match_end" ? "match-end" : "round"}|${baseKey}${runSuffix}`;
+  const titleId = `authentic-round-ledger-title-${baseKey.replace(/[^a-z0-9-]/gi, "-")}`;
+
+  const roundResultMarker = ledgerSeatRoleResultMarker(latestRound.outcome, humanSeat);
+  const roundTitle = formatRoundTitle(roundResultMarker, opponentLabel);
+  const matchTitle = formatMatchTitle(matchResult, opponentLabel);
+
+  const summaryRows: MatchLedgerSummaryRow[] = [];
+  if (kind === "round") {
+    summaryRows.push({
+      key: "your-score",
+      label: "your score",
+      value: String(latestRound.scoreBySeat[humanSeat]),
+      emphasis: roundResultMarker === "win" ? "win" : undefined,
+    });
+    summaryRows.push({
+      key: "opponent-score",
+      label: "opponent",
+      value: String(latestRound.scoreBySeat[aiSeat]),
+      emphasis: roundResultMarker === "loss" ? "win" : undefined,
+    });
+
+    const humanLoss = latestRound.loserGemLoss[humanSeat] ?? 0;
+    const aiLoss = latestRound.loserGemLoss[aiSeat] ?? 0;
+    const totalLoss = humanLoss + aiLoss;
+    if (totalLoss <= 0) {
+      summaryRows.push({ key: "gem-loss-none", label: "gem loss", value: "none" });
+    } else {
+      if (humanLoss > 0) {
+        summaryRows.push({
+          key: "gem-loss-human",
+          label: "your gem",
+          value: formatGemValue(humanLoss, gemsBySeat?.[humanSeat] ?? null),
+        });
+      }
+      if (aiLoss > 0) {
+        summaryRows.push({
+          key: "gem-loss-ai",
+          label: "opponent gem",
+          value: formatGemValue(aiLoss, gemsBySeat?.[aiSeat] ?? null),
+        });
+      }
+    }
+  }
+
+  const historyRows: MatchLedgerHistoryRow[] =
+    kind === "match_end"
+      ? rounds.map((entry) => {
+          const humanScore = entry.scoreBySeat[humanSeat];
+          const aiScore = entry.scoreBySeat[aiSeat];
+          const result =
+            entry.winner === "draw"
+              ? "draw"
+              : entry.winner === humanSeat
+                ? "win"
+                : "loss";
+          const resultMarker = result === "draw" ? "draw" : result === "win" ? "✓" : "·";
+          return {
+            key: `round-${entry.round}`,
+            round: entry.round,
+            humanScore,
+            aiScore,
+            humanWon: entry.winner === humanSeat,
+            aiWon: entry.winner === aiSeat,
+            result,
+            resultMarker,
+          };
+        })
+      : [];
+
+  const standingRows: MatchLedgerStandingRow[] =
+    kind === "match_end"
+      ? [
+          { key: "result", label: "result", value: formatMatchResultValue(matchResult) },
+          { key: "rounds", label: "rounds", value: formatStandingRoundsValue(humanRoundWins, aiRoundWins) },
+          { key: "gems", label: "gems", value: formatStandingGemsValue(gemsBySeat ?? null, humanSeat, aiSeat) },
+        ]
+      : [];
+
+  const actions: MatchLedgerActionViewModel[] = [];
+  if (kind === "round") {
+    actions.push({
+      key: "next-round",
+      label: "next round →",
+      kind: "primary",
+      testId: "authentic-round-overlay-dismiss",
+    });
+  } else if (canReturnToSetup) {
+    actions.push({
+      key: "setup",
+      label: "change deck",
+      kind: "ghost",
+      testId: "authentic-game-end-setup",
+    });
+    actions.push({
+      key: "rematch",
+      label: "rematch",
+      kind: "primary",
+      testId: "authentic-game-end-rematch",
+    });
+  } else {
+    actions.push({
+      key: "close",
+      label: "close",
+      kind: "ghost",
+      testId: "authentic-round-overlay-dismiss",
+    });
+    actions.push({
+      key: "rematch",
+      label: "rematch",
+      kind: "primary",
+      testId: "authentic-game-end-rematch",
+    });
+  }
+
+  const eyebrow =
+    kind === "match_end"
+      ? `match concluded · ${humanRoundWins} to ${aiRoundWins}`
+      : `round ${latestRound.round} resolved`;
+
+  const nextStarterLabel =
+    kind === "round" && latestRound.nextStarter
+      ? `next to lead: ${seatLabels[latestRound.nextStarter]}`
+      : null;
+
+  return {
+    key,
+    round: latestRound.round,
+    kind,
+    eyebrow,
+    title: kind === "match_end" ? matchTitle : roundTitle,
+    titleId,
+    summaryRows,
+    nextStarterLabel,
+    historyRows,
+    standingRows,
+    actions,
+    escapeDismisses: kind === "round",
+    humanRoundWins,
+    aiRoundWins,
+    matchResult,
+  };
+};
+
+export const RESOLVE_ROUND_ACTION_LABEL = "resolve round";
+
+export interface ResolveRoundActionViewModel {
+  readonly visible: boolean;
+  readonly enabled: boolean;
+  readonly label: string;
+  readonly disabledReason: string | null;
+}
+
+export const buildResolveRoundActionViewModel = ({
+  phase,
+  canResolveRound,
+  promptOpen,
+  canHumanAct,
+}: {
+  readonly phase: MatchPhase | null | undefined;
+  readonly canResolveRound: boolean;
+  readonly promptOpen: boolean;
+  readonly canHumanAct: boolean;
+}): ResolveRoundActionViewModel => {
+  if (phase !== "round_end") {
+    return { visible: false, enabled: false, label: RESOLVE_ROUND_ACTION_LABEL, disabledReason: null };
+  }
+  if (canResolveRound) {
+    return { visible: true, enabled: true, label: RESOLVE_ROUND_ACTION_LABEL, disabledReason: null };
+  }
+  let disabledReason = "waiting for round resolution";
+  if (promptOpen) {
+    disabledReason = "prompt pending";
+  } else if (!canHumanAct) {
+    disabledReason = "waiting for opponent";
+  }
+  return { visible: true, enabled: false, label: RESOLVE_ROUND_ACTION_LABEL, disabledReason };
+};
 
 export type MatchCardInspectionOrigin =
   | "hand"

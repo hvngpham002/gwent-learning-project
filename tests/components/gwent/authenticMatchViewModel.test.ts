@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { ChoosePromptOptionMove, LegalMove, PendingPrompt, PlayCardMove, UseLeaderMove } from "@/game/core";
+import type { ChoosePromptOptionMove, LegalMove, PendingPrompt, PlayCardMove, RoundResult, UseLeaderMove } from "@/game/core";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 import {
   buildLeaderActionViewModel,
   buildLookThreeCardsRevealViewModel,
+  buildMatchLedgerViewModel,
+  buildResolveRoundActionViewModel,
   buildRoundOverlayViewModel,
   buildAuthenticSeatSummary,
   buildMatchCardInspection,
@@ -1199,5 +1201,288 @@ describe("match inspection hidden information safety", () => {
     // raw card backs do not have an EngineCardViewModel exposed.
     expect(inspection.sourceId).toBe("monsters.kayran");
     expect(inspection.ownerLabel).toBe("AI");
+  });
+});
+
+describe("buildMatchLedgerViewModel (cEp10)", () => {
+  const SEAT_LABELS = { seat_a: "Human", seat_b: "AI" } as const;
+
+  const buildRound = (overrides: Partial<RoundResult> = {}): RoundResult => ({
+    round: 1,
+    scoreBySeat: { seat_a: 12, seat_b: 8 },
+    outcome: "seat_a_win",
+    winner: "seat_a",
+    loserGemLoss: { seat_b: 1 },
+    nextStarter: "seat_b",
+    ...overrides,
+  });
+
+  it("returns null when there is no resolved round to display", () => {
+    expect(
+      buildMatchLedgerViewModel({
+        rounds: [],
+        humanSeat: "seat_a",
+        aiSeat: "seat_b",
+        seatLabels: SEAT_LABELS,
+        winner: null,
+        gemsBySeat: { seat_a: 2, seat_b: 2 },
+        canReturnToSetup: true,
+      }),
+    ).toBeNull();
+  });
+
+  it("renders a non-game-end round ledger with score, gem-loss arrow, next starter, and one primary action", () => {
+    const ledger = buildMatchLedgerViewModel({
+      rounds: [buildRound()],
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: null,
+      gemsBySeat: { seat_a: 2, seat_b: 1 },
+      canReturnToSetup: true,
+      matchRunKey: "run-1",
+    });
+
+    expect(ledger?.kind).toBe("round");
+    expect(ledger?.title).toBe("You hold the field.");
+    expect(ledger?.eyebrow).toBe("round 1 resolved");
+    expect(ledger?.summaryRows.map((row) => row.key)).toEqual([
+      "your-score",
+      "opponent-score",
+      "gem-loss-ai",
+    ]);
+    const opponentGem = ledger?.summaryRows.find((row) => row.key === "gem-loss-ai");
+    expect(opponentGem?.value).toBe("◆ 2 → 1");
+    expect(ledger?.summaryRows.find((row) => row.key === "your-score")?.value).toBe("12");
+    expect(ledger?.nextStarterLabel).toBe("next to lead: AI");
+    expect(ledger?.actions).toEqual([
+      { key: "next-round", label: "next round →", kind: "primary", testId: "authentic-round-overlay-dismiss" },
+    ]);
+    expect(ledger?.escapeDismisses).toBe(true);
+    expect(ledger?.historyRows).toEqual([]);
+    expect(ledger?.standingRows).toEqual([]);
+    expect(ledger?.key).toBe("round|round-1|run-1");
+  });
+
+  it("uses opponent perspective copy and fallback gem-loss when before/after data is missing", () => {
+    const ledger = buildMatchLedgerViewModel({
+      rounds: [
+        buildRound({ outcome: "seat_b_win", winner: "seat_b", scoreBySeat: { seat_a: 6, seat_b: 9 }, loserGemLoss: { seat_a: 1 } }),
+      ],
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: null,
+      gemsBySeat: null,
+      canReturnToSetup: false,
+    });
+
+    expect(ledger?.title).toBe("AI holds the field.");
+    const humanGemRow = ledger?.summaryRows.find((row) => row.key === "gem-loss-human");
+    expect(humanGemRow?.value).toBe("-1");
+  });
+
+  it("shows draw copy and gem-loss-none when neither side loses a gem", () => {
+    const ledger = buildMatchLedgerViewModel({
+      rounds: [buildRound({ outcome: "draw", winner: "draw", loserGemLoss: {} })],
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: null,
+      gemsBySeat: { seat_a: 2, seat_b: 2 },
+      canReturnToSetup: true,
+    });
+
+    expect(ledger?.title).toBe("Neither side yields.");
+    expect(ledger?.summaryRows.some((row) => row.key === "gem-loss-none" && row.value === "none")).toBe(true);
+  });
+
+  it("renders the match-end ledger with real round history and standing rows from engine state", () => {
+    const rounds: RoundResult[] = [
+      buildRound({ round: 1, outcome: "seat_a_win", winner: "seat_a", scoreBySeat: { seat_a: 14, seat_b: 9 }, loserGemLoss: { seat_b: 1 } }),
+      buildRound({ round: 2, outcome: "seat_b_win", winner: "seat_b", scoreBySeat: { seat_a: 7, seat_b: 11 }, loserGemLoss: { seat_a: 1 } }),
+      buildRound({ round: 3, outcome: "seat_a_win", winner: "seat_a", scoreBySeat: { seat_a: 12, seat_b: 8 }, loserGemLoss: { seat_b: 1 } }),
+    ];
+    const ledger = buildMatchLedgerViewModel({
+      rounds,
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: "seat_a",
+      gemsBySeat: { seat_a: 1, seat_b: 0 },
+      canReturnToSetup: true,
+    });
+
+    expect(ledger?.kind).toBe("match_end");
+    expect(ledger?.title).toBe("Victory over AI.");
+    expect(ledger?.eyebrow).toBe("match concluded · 2 to 1");
+    expect(ledger?.historyRows.map((row) => row.round)).toEqual([1, 2, 3]);
+    expect(ledger?.historyRows.map((row) => row.resultMarker)).toEqual(["✓", "·", "✓"]);
+    expect(ledger?.standingRows).toEqual([
+      { key: "result", label: "result", value: "victory" },
+      { key: "rounds", label: "rounds", value: "2 - 1" },
+      { key: "gems", label: "gems", value: "1 - 0" },
+    ]);
+    expect(ledger?.actions).toEqual([
+      { key: "setup", label: "change deck", kind: "ghost", testId: "authentic-game-end-setup" },
+      { key: "rematch", label: "rematch", kind: "primary", testId: "authentic-game-end-rematch" },
+    ]);
+    expect(ledger?.escapeDismisses).toBe(false);
+    expect(ledger?.summaryRows).toEqual([]);
+  });
+
+  it("uses defeat copy and unknown gem standing when gems data is unavailable", () => {
+    const rounds: RoundResult[] = [
+      buildRound({ round: 1, outcome: "seat_b_win", winner: "seat_b", scoreBySeat: { seat_a: 4, seat_b: 9 }, loserGemLoss: { seat_a: 1 } }),
+      buildRound({ round: 2, outcome: "seat_b_win", winner: "seat_b", scoreBySeat: { seat_a: 3, seat_b: 7 }, loserGemLoss: { seat_a: 1 } }),
+    ];
+    const ledger = buildMatchLedgerViewModel({
+      rounds,
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: "seat_b",
+      gemsBySeat: null,
+      canReturnToSetup: false,
+    });
+
+    expect(ledger?.title).toBe("Defeat against AI.");
+    expect(ledger?.standingRows.find((row) => row.key === "gems")?.value).toBe("unknown");
+    expect(ledger?.actions.map((action) => action.key)).toEqual(["close", "rematch"]);
+  });
+
+  it("uses draw copy on the match-end title when the engine reports draw winner", () => {
+    const rounds: RoundResult[] = [
+      buildRound({ round: 1, outcome: "draw", winner: "draw", scoreBySeat: { seat_a: 4, seat_b: 4 }, loserGemLoss: {} }),
+      buildRound({ round: 2, outcome: "draw", winner: "draw", scoreBySeat: { seat_a: 4, seat_b: 4 }, loserGemLoss: {} }),
+      buildRound({ round: 3, outcome: "draw", winner: "draw", scoreBySeat: { seat_a: 4, seat_b: 4 }, loserGemLoss: {} }),
+    ];
+    const ledger = buildMatchLedgerViewModel({
+      rounds,
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: "draw",
+      gemsBySeat: { seat_a: 0, seat_b: 0 },
+      canReturnToSetup: true,
+    });
+
+    expect(ledger?.title).toBe("Draw.");
+    expect(ledger?.standingRows.find((row) => row.key === "result")?.value).toBe("draw");
+  });
+
+  it("does not include MMR/rank/streak/reward placeholders in any ledger output field", () => {
+    const rounds: RoundResult[] = [
+      buildRound({ round: 1, outcome: "seat_a_win", winner: "seat_a" }),
+      buildRound({ round: 2, outcome: "seat_a_win", winner: "seat_a" }),
+    ];
+    const ledger = buildMatchLedgerViewModel({
+      rounds,
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: "seat_a",
+      gemsBySeat: { seat_a: 1, seat_b: 0 },
+      canReturnToSetup: true,
+    });
+    const serialised = JSON.stringify(ledger);
+    for (const banned of ["mmr", "rank", "ladder", "streak", "reward", "xp", "elo"]) {
+      expect(serialised.toLowerCase()).not.toContain(banned);
+    }
+  });
+
+  it("does not echo card source IDs, instance IDs, or hidden hand identities into ledger fields", () => {
+    const rounds: RoundResult[] = [
+      buildRound({ round: 1, outcome: "seat_a_win", winner: "seat_a", scoreBySeat: { seat_a: 14, seat_b: 9 } }),
+    ];
+    const ledger = buildMatchLedgerViewModel({
+      rounds,
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: "seat_a",
+      gemsBySeat: { seat_a: 1, seat_b: 0 },
+      canReturnToSetup: true,
+    });
+    const serialised = JSON.stringify(ledger);
+    expect(serialised).not.toMatch(/seat_b:\d{3}:/);
+    expect(serialised).not.toContain("monsters.");
+    expect(serialised).not.toContain("nilfgaard.");
+  });
+
+  it("changes the dismissal key when matchRunKey changes so rematch reopens the overlay", () => {
+    const rounds: RoundResult[] = [buildRound({ round: 2, outcome: "seat_a_win", winner: "seat_a" })];
+    const first = buildMatchLedgerViewModel({
+      rounds,
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: null,
+      gemsBySeat: null,
+      canReturnToSetup: true,
+      matchRunKey: "run-1",
+    });
+    const second = buildMatchLedgerViewModel({
+      rounds,
+      humanSeat: "seat_a",
+      aiSeat: "seat_b",
+      seatLabels: SEAT_LABELS,
+      winner: null,
+      gemsBySeat: null,
+      canReturnToSetup: true,
+      matchRunKey: "run-2",
+    });
+    expect(first?.key).not.toBe(second?.key);
+  });
+});
+
+describe("buildResolveRoundActionViewModel (cEp10)", () => {
+  it("hides the resolve-round action when the match is not in round_end", () => {
+    const view = buildResolveRoundActionViewModel({
+      phase: "playing",
+      canResolveRound: false,
+      promptOpen: false,
+      canHumanAct: true,
+    });
+    expect(view).toEqual({ visible: false, enabled: false, label: "resolve round", disabledReason: null });
+  });
+
+  it("shows an enabled resolve-round action when the engine exposes the legal move", () => {
+    const view = buildResolveRoundActionViewModel({
+      phase: "round_end",
+      canResolveRound: true,
+      promptOpen: false,
+      canHumanAct: true,
+    });
+    expect(view).toEqual({ visible: true, enabled: true, label: "resolve round", disabledReason: null });
+  });
+
+  it("explains the disabled reason without inventing a second action panel", () => {
+    expect(
+      buildResolveRoundActionViewModel({
+        phase: "round_end",
+        canResolveRound: false,
+        promptOpen: true,
+        canHumanAct: false,
+      }),
+    ).toMatchObject({ visible: true, enabled: false, disabledReason: "prompt pending" });
+
+    expect(
+      buildResolveRoundActionViewModel({
+        phase: "round_end",
+        canResolveRound: false,
+        promptOpen: false,
+        canHumanAct: false,
+      }),
+    ).toMatchObject({ visible: true, enabled: false, disabledReason: "waiting for opponent" });
+
+    expect(
+      buildResolveRoundActionViewModel({
+        phase: "round_end",
+        canResolveRound: false,
+        promptOpen: false,
+        canHumanAct: true,
+      }),
+    ).toMatchObject({ visible: true, enabled: false, disabledReason: "waiting for round resolution" });
   });
 });

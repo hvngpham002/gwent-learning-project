@@ -1,6 +1,6 @@
 # Authentic Product Flow
 
-This document tracks the current opt-in authentic product loop after cEp9.
+This document tracks the current opt-in authentic product loop after cEp10.
 
 ## Routes
 
@@ -24,8 +24,8 @@ Runtime engine state is not encoded into the URL. In-app transitions are coordin
 4. Deck-builder `play →` saves the selected local deck, starts an engine match with that inline `CatalogDeckPreset`, and lands on `AuthenticMulliganScreen`.
 5. Mulligan confirms only an engine-legal `choose_mulligan` move. Zero selected cards is the keep-hand path when that legal move is present. One selected card redraws that card immediately; if fewer than two redraws have been used, the replacement remains in hand and may be selected for the next redraw.
 6. Human one-card redraws briefly animate the selected card sliding out and its replacement sliding in. After the AI's legal mulligan command applies, the mulligan screen presents the opponent choice with hidden card backs only, waits for the AI presentation to finish, then opens the wax-seal `Start the match?` modal before `AuthenticMatchScreen` renders the match table. `review hand` dismisses the modal and leaves the mulligan screen available; the footer `start match` action reopens the same modal rather than entering the match directly.
-7. Round-resolved ledger actions dismiss the overlay only. Rule resolution remains engine-owned.
-8. Match-concluded ledger actions either rematch with the same documented setup/seed behavior or return to setup.
+7. Round-resolved ledger actions dismiss the overlay only. Rule resolution remains engine-owned. cEp10: the non-game-end ledger reads `You hold the field.` / `<opponent> holds the field.` / `Neither side yields.`, lists score, gem-loss `◆ before → after` rows (or `gem loss: none`), and the engine-supplied next-starter label, then offers exactly one primary `next round →` action. The action only updates local dismissed-overlay state — it does not dispatch any engine command, does not advance any timer, and does not re-resolve the round. The overlay key embeds `activeMatchKey` so dismissed-state cannot survive into a fresh match.
+8. Match-concluded ledger actions either rematch with the same documented setup/seed behavior or return to setup. cEp10: the match-end ledger reads `Victory over <opponent>.` / `Defeat against <opponent>.` / `Draw.` with eyebrow `match concluded · X to Y`, renders real `roundHistory` rows, and renders standing rows (`result`, `rounds humanWins - aiWins`, `gems humanGems - aiGems`, or `gems unknown` when data is unavailable) from engine state only — no MMR, rank, ladder, streak, reward, or XP placeholders. When `onReturnToPreGame` is wired, navigation is `change deck` ghost + `rematch` primary; direct match (`view=match`) shows `close` ghost + `rematch` primary. The match-end ledger does not ship `Escape` dismissal because the same outcome is only reachable through visible navigation; non-game-end ledgers do dismiss on `Escape`.
 
 ## Navigation
 
@@ -68,6 +68,20 @@ Hidden-information rules are preserved:
 - The debug-only `debugAiMulligan=1` route continues to reveal AI mulligan choices for animation inspection. cEp5.3 does not extend that surface and does not add inspect entry points to AI hand backs.
 
 Inspect modal styling reuses the deck-builder inspect-modal vocabulary (`authentic-match__inspect-modal`, `authentic-match__inspect-box`, `authentic-match__inspect-art`, `authentic-match__inspect-facts`, `authentic-match__inspect-section`) without sharing component code; this keeps deck-builder add/remove semantics out of the match surface.
+
+## Round And Match Flow (cEp10)
+
+cEp10 makes round resolution, match-end, and post-match navigation feel like a coherent product flow without changing engine rules. The round/match ledger and the right-rail resolve-round action are now driven by pure view-model helpers in `src/components/gwent/matchViewModel.ts`:
+
+- `buildResolveRoundActionViewModel({ phase, canResolveRound, promptOpen, canHumanAct })` returns `{ visible, enabled, label, disabledReason }`. The right-rail action panel renders the `resolve round` primary button only when `phase === "round_end"`, dispatches `resolveEngineRoundEnd(humanSeat)` exactly when enabled, and shows a single compact reason line (`prompt pending`, `waiting for opponent`, `waiting for round resolution`) when visible-but-disabled. No second action panel is introduced; the existing right-rail `Round End` and `Game End` informational panels stay display-only.
+- `buildMatchLedgerViewModel({ rounds, humanSeat, aiSeat, seatLabels, winner, gemsBySeat, canReturnToSetup, matchRunKey })` returns a `MatchLedgerViewModel` with `kind: "round" | "match_end"`, eyebrow, title, score / gem-loss / next-starter rows for the round kind, real round-history and standing rows for the match-end kind, and route-aware action buttons. The model also carries `escapeDismisses` (true only for round ledgers) and a stable `key` that incorporates `activeMatchKey` so rematch and setup transitions invalidate any stale dismissed-overlay cache.
+
+The `RoundOverlay` React component now consumes the ledger view-model directly: it renders the eyebrow, title, summary table, history table, standing rows, and action buttons exactly as the helper dictates and never derives win/loss/score/gem state from board cards or events. The dialog wrapper keeps `role="dialog"` / `aria-modal="true"` and ties its accessible name to the rendered Alert title id (`authentic-round-overlay-alert-title`).
+
+Hidden-info contract:
+
+- The ledger view-model only reads `RoundResult[]`, the engine `winner`, public seat gem counts, and seat labels. It never receives card source IDs, instance IDs, or hidden hand identities, and unit tests assert no such strings appear in the serialised view-model.
+- The right-rail Battle Log, recent activity, and round-history section continue to use existing hidden-info-safe summaries; cEp10 does not change their behavior.
 
 ## In-Match Leader And Prompt Presentation
 
