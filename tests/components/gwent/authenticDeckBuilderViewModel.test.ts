@@ -247,20 +247,13 @@ describe("authentic deck builder view model", () => {
     );
   });
 
-  it("reports non-implemented card abilities as warnings (cCp29: every official leader ability is implemented)", () => {
-    const plannedCard = currentCatalogCards.find((card) => card.abilities.includes("muster_roach"));
-    expect(plannedCard).toBeDefined();
-
-    // After cCp29, every official leader ability is implemented, so there
-    // are no leader-ability warnings left for any of the 22 official leaders.
-    // Only `muster_roach` remains as a planned card ability — exercise that.
+  it("does not warn for current implemented card or leader abilities after cCp31", () => {
     const stats = validateDeckPreset(currentNilfgaardDeckPreset);
 
     expect(stats.issues.filter((issue) => issue.severity === "error")).toHaveLength(0);
-    expect(stats.issues.map((issue) => issue.code)).toEqual(
-      expect.arrayContaining(["card_ability_not_implemented"]),
+    expect(stats.issues.map((issue) => issue.code)).not.toContain(
+      "card_ability_not_implemented",
     );
-    // No leader-ability warnings remain after cCp29.
     expect(stats.issues.map((issue) => issue.code)).not.toContain(
       "leader_ability_not_implemented",
     );

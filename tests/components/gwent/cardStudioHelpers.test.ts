@@ -106,7 +106,7 @@ describe("Card Studio helpers", () => {
     ).toEqual([]);
   });
 
-  it("blocks structural card errors and unimplemented abilities from playability", () => {
+  it("blocks structural card errors and unknown abilities from playability", () => {
     const store = emptyStore();
 
     expect(validateCustomCardRecord(playableCard({ kind: "special", strength: 3, rows: ["close"] }), context(store)).issues.map((issue) => issue.code)).toEqual(
@@ -116,11 +116,14 @@ describe("Card Studio helpers", () => {
       "multi_row_requires_agile",
     );
     expect(validateCustomCardRecord(playableCard({ abilities: ["none", "medic"] }), context(store)).issues.map((issue) => issue.code)).toContain("none_mixed");
-    const draft = playableCard({ abilities: ["muster_roach"] }, true);
+    const draft = playableCard(
+      { abilities: ["custom_unknown_ability" as "muster_roach"] },
+      true,
+    );
     const result = validateCustomCardRecord(draft, context({ ...store, cards: [draft] }, draft.recordId));
-    expect(result.structurallyValid).toBe(true);
+    expect(result.structurallyValid).toBe(false);
     expect(result.playable).toBe(false);
-    expect(result.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: "ability_not_implemented" })]));
+    expect(result.issues).toEqual(expect.arrayContaining([expect.objectContaining({ code: "unknown_ability" })]));
   });
 
   it("validates custom leaders and blocks neutral or unknown-ability leaders from playability", () => {

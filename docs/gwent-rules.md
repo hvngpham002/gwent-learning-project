@@ -590,6 +590,7 @@ The catalog distinguishes four Muster categories. The production engine resolves
 - **Symmetric family Muster.** Multiple distinct source IDs share a printed family title (e.g. `Crone:` / `Vampire:`) and pull each other from hand and deck. The family is title-like, but the engine must use the explicit `linkedSourceIds` arrays on each catalog source rather than a runtime prefix scan. Members: Crones (`monsters.crone-brewess`, `monsters.crone-weavess`, `monsters.crone-whispess`); Vampires (`monsters.vampire-bruxa`, `monsters.vampire-ekimmara`, `monsters.vampire-fleder`, `monsters.vampire-garkain`, `monsters.vampire-katakan`).
 - **One-way linked Muster.** A named source pulls a different group; the targets do not reciprocally summon the source. Members: Cerys → Clan Drummond Shield Maidens; Arachas Behemoth → regular Arachas; Gaunter O'Dimm → Gaunter O'Dimm: Darkness; Geralt of Rivia → Roach; Cirilla Fiona Elen Riannon → Roach.
 - **Non-reciprocal exceptions.** The reverse direction of a one-way Muster intentionally does **not** trigger a pull: Darkness does not pull base Gaunter; regular Arachas does not pull Arachas Behemoth; Roach does not pull Geralt or Ciri; Shield Maidens do not pull Cerys.
+- **Muster Roach metadata closure (cCp31).** `muster_roach` is implemented through the same explicit-link resolver as other one-way linked Muster sources. Geralt and Cirilla pull `neutral.roach` from hand and deck; Roach does not pull either hero.
 
 ### 17.12 Weather Interactions
 

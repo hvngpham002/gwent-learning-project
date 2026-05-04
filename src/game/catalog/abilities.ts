@@ -45,9 +45,9 @@ export const CATALOG_ABILITY_METADATA: Record<CatalogAbilityId, CatalogAbilityMe
   muster_roach: {
     id: "muster_roach",
     name: "Muster Roach",
-    status: "planned",
+    status: "implemented",
     appliesTo: ["unit"],
-    description: "Summons Roach from deck when an eligible hero is played.",
+    description: "Summons linked Roach copies from hand and deck when an eligible hero is played.",
   },
   agile: {
     id: "agile",

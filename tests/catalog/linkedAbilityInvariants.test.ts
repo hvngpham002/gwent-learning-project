@@ -181,6 +181,10 @@ describe("Linked ability invariants (cCp12)", () => {
       card.abilities.includes("muster_roach"),
     );
 
+    it("muster_roach metadata is implemented", () => {
+      expect(CATALOG_ABILITY_METADATA.muster_roach.status).toBe("implemented");
+    });
+
     it("muster_roach sources are Geralt and Cirilla", () => {
       const ids = roachCallers.map((card) => card.sourceId).sort();
       expect(ids).toEqual([
