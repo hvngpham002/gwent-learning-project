@@ -285,10 +285,17 @@ the authentic match loop is cleaner.
 - `cEp9`: Leader status and prompt polish. Made active/passive/setup/used/
   suppressed leader state and prompt-specific copy legible without changing
   engine rules.
-- `cEp10`: Round and match flow polish. Current active handoff. Refine
-  resolve-round actions, round-resolved ledgers, match-end ledgers, and
-  rematch/change-deck/close navigation while keeping round/game resolution
-  engine-owned.
+- `cEp10`: Round and match flow polish. Refined resolve-round actions, round
+  ledgers, match-end ledgers, and rematch/change-deck/close navigation while
+  keeping round/game resolution engine-owned.
+- `cEp11`: Board targeting polish. Current active handoff. Adds a pure
+  selected-card target view-model so board rows, visible board cards, horn
+  slots, and the Weather panel are clear spatial targets. Compact right-rail
+  fallback actions remain for global/no-target plays. Avoids nested
+  interactive board rows by demoting the row container to a non-interactive
+  `<div>` and rendering the row target as a dedicated overlay button.
+  Preserves right-click inspection and hidden-info safety; engine legality
+  and command execution stay engine-owned.
 
 ## Relationship To ML Work
 

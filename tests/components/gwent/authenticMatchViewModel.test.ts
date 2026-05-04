@@ -8,6 +8,7 @@ import {
   buildMatchLedgerViewModel,
   buildResolveRoundActionViewModel,
   buildRoundOverlayViewModel,
+  buildSelectedCardTargetViewModel,
   buildAuthenticSeatSummary,
   buildMatchCardInspection,
   buildMatchLeaderInspection,
@@ -1484,5 +1485,363 @@ describe("buildResolveRoundActionViewModel (cEp10)", () => {
         canHumanAct: true,
       }),
     ).toMatchObject({ visible: true, enabled: false, disabledReason: "waiting for round resolution" });
+  });
+});
+
+describe("buildSelectedCardTargetViewModel (cEp11)", () => {
+  const playCardMove = (overrides: Partial<PlayCardMove>): PlayCardMove => ({
+    kind: "play_card",
+    moveId: overrides.moveId ?? "play:row",
+    seatId: overrides.seatId ?? "seat_a",
+    sourceCardId: overrides.sourceCardId ?? "seat_a:000:source",
+    sourceId: overrides.sourceId ?? "northern_realms.test-card",
+    target: overrides.target ?? { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+    label: overrides.label ?? "Play move",
+    metadata: overrides.metadata ?? {
+      cardName: "Test Card",
+      cardKind: "unit",
+      abilities: ["none"],
+      targetLabel: "own close",
+    },
+  });
+
+  it("returns the no-selection state with neutral instruction copy when no card is selected", () => {
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: null,
+      selectedPlayMoves: [],
+      cardLookup: new Map(),
+    });
+    expect(view.state).toBe("no-selection");
+    expect(view.selectedCardLabel).toBeNull();
+    expect(view.rowTargets.size).toBe(0);
+    expect(view.cardTargets.size).toBe(0);
+    expect(view.rowHornTargets.size).toBe(0);
+    expect(view.weatherTarget).toBeNull();
+    expect(view.fallbackActions).toEqual([]);
+    expect(view.rightRailLabel).toBe("no card selected.");
+    expect(view.instructionLabel).toContain("playable card");
+  });
+
+  it("returns the no-targets state when a selected card has no legal play moves", () => {
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:source", name: "Foltest Brigade" },
+      selectedPlayMoves: [],
+      cardLookup: new Map(),
+    });
+    expect(view.state).toBe("no-targets");
+    expect(view.selectedCardLabel).toBe("Foltest Brigade");
+    expect(view.rowTargets.size).toBe(0);
+    expect(view.cardTargets.size).toBe(0);
+    expect(view.rowHornTargets.size).toBe(0);
+    expect(view.weatherTarget).toBeNull();
+    expect(view.fallbackActions).toEqual([]);
+    expect(view.rightRailLabel).toBe("no legal targets.");
+  });
+
+  it("emits row targets keyed by seat:row with safe labels and exact engine move ids", () => {
+    const moves: PlayCardMove[] = [
+      playCardMove({
+        moveId: "play:row:close",
+        target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+        label: "Play to close",
+      }),
+      playCardMove({
+        moveId: "play:row:siege",
+        target: { kind: "board_row", side: "own", seatId: "seat_a", row: "siege" },
+        label: "Play to siege",
+      }),
+    ];
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:source", name: "Foltest Brigade" },
+      selectedPlayMoves: moves,
+      cardLookup: new Map(),
+    });
+
+    expect(view.state).toBe("has-targets");
+    expect(view.rowTargets.get("seat_a:close")).toMatchObject({
+      moveId: "play:row:close",
+      seatId: "seat_a",
+      row: "close",
+      side: "own",
+      sideLabel: "your",
+      rowLabel: "Close Combat",
+      badgeLabel: "play here",
+    });
+    expect(view.rowTargets.get("seat_a:close")?.ariaLabel).toBe(
+      "Play Foltest Brigade on your close combat row",
+    );
+    expect(view.rowTargets.get("seat_a:siege")?.moveId).toBe("play:row:siege");
+    expect(view.rowTargets.get("seat_a:siege")?.ariaLabel).toBe(
+      "Play Foltest Brigade on your siege row",
+    );
+    expect(view.cardTargets.size).toBe(0);
+    expect(view.rowHornTargets.size).toBe(0);
+    expect(view.weatherTarget).toBeNull();
+    expect(view.rightRailLabel).toBe("choose a highlighted row.");
+  });
+
+  it("emits board card targets keyed by visible cardId with safe public labels", () => {
+    const moves: PlayCardMove[] = [
+      playCardMove({
+        moveId: "play:decoy",
+        sourceId: "neutral.decoy",
+        target: { kind: "card_instance", side: "own", seatId: "seat_a", cardId: "seat_a:001:target", row: "close" },
+        label: "Play Decoy on Foltest Brigade",
+      }),
+    ];
+    const cardLookup = new Map([
+      ["seat_a:001:target" as const, { name: "Foltest Brigade" }],
+    ]);
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:source", name: "Decoy" },
+      selectedPlayMoves: moves,
+      cardLookup,
+    });
+
+    expect(view.state).toBe("has-targets");
+    expect(view.cardTargets.get("seat_a:001:target")).toMatchObject({
+      moveId: "play:decoy",
+      cardLabel: "Foltest Brigade",
+      badgeLabel: "choose",
+    });
+    expect(view.cardTargets.get("seat_a:001:target")?.ariaLabel).toBe(
+      "Choose Foltest Brigade for Decoy",
+    );
+    expect(view.rowTargets.size).toBe(0);
+    expect(view.rightRailLabel).toBe("choose a highlighted card.");
+  });
+
+  it("emits row-horn targets when the selected card supports row_horn placement", () => {
+    const moves: PlayCardMove[] = [
+      playCardMove({
+        moveId: "play:horn:close",
+        target: { kind: "row_horn", side: "own", seatId: "seat_a", row: "close" },
+        label: "Place Horn on Close",
+      }),
+      playCardMove({
+        moveId: "play:horn:ranged",
+        target: { kind: "row_horn", side: "own", seatId: "seat_a", row: "ranged" },
+        label: "Place Horn on Ranged",
+      }),
+    ];
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:horn", name: "Commander's Horn" },
+      selectedPlayMoves: moves,
+      cardLookup: new Map(),
+    });
+
+    expect(view.rowHornTargets.size).toBe(2);
+    expect(view.rowHornTargets.get("seat_a:close")).toMatchObject({
+      moveId: "play:horn:close",
+      row: "close",
+      seatId: "seat_a",
+      rowLabel: "Close Combat",
+      badgeLabel: "horn slot",
+    });
+    expect(view.rowHornTargets.get("seat_a:close")?.ariaLabel).toBe(
+      "Place Commander's Horn on your close combat horn slot",
+    );
+    expect(view.rowTargets.size).toBe(0);
+    expect(view.cardTargets.size).toBe(0);
+    expect(view.weatherTarget).toBeNull();
+    expect(view.rightRailLabel).toBe("choose a highlighted horn slot.");
+  });
+
+  it("emits a weather target when the selected card supports the weather panel", () => {
+    const moves: PlayCardMove[] = [
+      playCardMove({
+        moveId: "play:weather",
+        sourceId: "neutral.biting-frost",
+        target: { kind: "weather" },
+        label: "Play Biting Frost",
+      }),
+    ];
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:weather", name: "Biting Frost" },
+      selectedPlayMoves: moves,
+      cardLookup: new Map(),
+    });
+
+    expect(view.weatherTarget).toMatchObject({
+      moveId: "play:weather",
+      badgeLabel: "play weather",
+    });
+    expect(view.weatherTarget?.ariaLabel).toBe("Play Biting Frost on the weather panel");
+    expect(view.rowTargets.size).toBe(0);
+    expect(view.cardTargets.size).toBe(0);
+    expect(view.rowHornTargets.size).toBe(0);
+    expect(view.rightRailLabel).toBe("target the weather panel.");
+  });
+
+  it("falls back to a compact right-rail action for global/no-target plays", () => {
+    const moves: PlayCardMove[] = [
+      playCardMove({
+        moveId: "play:scorch",
+        sourceId: "neutral.scorch",
+        target: { kind: "none" },
+        label: "Scorch the highest unit",
+      }),
+    ];
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:scorch", name: "Scorch" },
+      selectedPlayMoves: moves,
+      cardLookup: new Map(),
+    });
+
+    expect(view.rowTargets.size).toBe(0);
+    expect(view.cardTargets.size).toBe(0);
+    expect(view.rowHornTargets.size).toBe(0);
+    expect(view.weatherTarget).toBeNull();
+    expect(view.fallbackActions).toEqual([
+      {
+        moveId: "play:scorch",
+        label: "play scorch",
+        title: "play scorch",
+        ariaLabel: "play scorch (global effect)",
+      },
+    ]);
+    expect(view.rightRailLabel).toBe("use the action button below.");
+  });
+
+  it("does not surface raw runtime instance IDs or hidden opponent source IDs in any user-facing label", () => {
+    const moves: PlayCardMove[] = [
+      playCardMove({
+        moveId: "play:row:close",
+        sourceCardId: "seat_a:000:secret-source",
+        target: { kind: "board_row", side: "opponent", seatId: "seat_b", row: "ranged" },
+        label: "Play across",
+      }),
+      playCardMove({
+        moveId: "play:decoy",
+        sourceId: "neutral.decoy",
+        target: { kind: "card_instance", side: "opponent", seatId: "seat_b", cardId: "seat_b:042:opponent-target" },
+        label: "Decoy opponent",
+      }),
+      playCardMove({
+        moveId: "play:weather",
+        target: { kind: "weather" },
+        label: "Weather everywhere",
+      }),
+      playCardMove({
+        moveId: "play:horn:siege",
+        target: { kind: "row_horn", side: "own", seatId: "seat_a", row: "siege" },
+        label: "Horn siege",
+      }),
+    ];
+    const cardLookup = new Map([
+      ["seat_b:042:opponent-target" as const, { name: "Visible Opponent Card" }],
+    ]);
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:source", name: "Tactical Hand Card" },
+      selectedPlayMoves: moves,
+      cardLookup,
+    });
+
+    // The user-facing strings are: badgeLabel, ariaLabel, sideLabel, rowLabel,
+    // cardLabel, instructionLabel, rightRailLabel, selectedCardLabel, and
+    // fallbackAction.label/title/ariaLabel. None of those should contain raw
+    // instance IDs or hidden source IDs. Structural identifier fields (key,
+    // moveId, seatId, cardId-keys in the card target map) are required for
+    // dispatch and excluded from this assertion.
+    const userFacingStrings = [
+      view.instructionLabel,
+      view.rightRailLabel,
+      view.selectedCardLabel ?? "",
+      ...[...view.rowTargets.values()].flatMap((entry) => [entry.sideLabel, entry.rowLabel, entry.badgeLabel, entry.ariaLabel]),
+      ...[...view.cardTargets.values()].flatMap((entry) => [entry.cardLabel, entry.badgeLabel, entry.ariaLabel]),
+      ...[...view.rowHornTargets.values()].flatMap((entry) => [entry.rowLabel, entry.badgeLabel, entry.ariaLabel]),
+      view.weatherTarget?.badgeLabel ?? "",
+      view.weatherTarget?.ariaLabel ?? "",
+      ...view.fallbackActions.flatMap((entry) => [entry.label, entry.title, entry.ariaLabel]),
+    ];
+    for (const value of userFacingStrings) {
+      expect(value, value).not.toMatch(/seat_[ab]:\d{3}:/);
+      expect(value, value).not.toContain("secret-source");
+      expect(value, value).not.toContain("neutral.decoy");
+    }
+    expect(view.cardTargets.get("seat_b:042:opponent-target")?.cardLabel).toBe(
+      "Visible Opponent Card",
+    );
+  });
+
+  it("uses a generic public 'card' label when a card target is missing from the public lookup", () => {
+    const moves: PlayCardMove[] = [
+      playCardMove({
+        moveId: "play:decoy",
+        target: { kind: "card_instance", side: "opponent", seatId: "seat_b", cardId: "seat_b:099:hidden" },
+        label: "Decoy hidden",
+      }),
+    ];
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:source", name: "Decoy" },
+      selectedPlayMoves: moves,
+      cardLookup: new Map(),
+    });
+
+    expect(view.cardTargets.get("seat_b:099:hidden")?.cardLabel).toBe("card");
+    expect(view.cardTargets.get("seat_b:099:hidden")?.ariaLabel).toBe("Choose card for Decoy");
+  });
+
+  it("recomputes targets when a different card's legal moves are supplied", () => {
+    const horneSelectedFirst = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:horn", name: "Commander's Horn" },
+      selectedPlayMoves: [
+        playCardMove({
+          moveId: "play:horn:close",
+          target: { kind: "row_horn", side: "own", seatId: "seat_a", row: "close" },
+          label: "Place horn",
+        }),
+      ],
+      cardLookup: new Map(),
+    });
+
+    const unitSelectedNext = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:001:unit", name: "Foltest Brigade" },
+      selectedPlayMoves: [
+        playCardMove({
+          moveId: "play:row:close",
+          sourceCardId: "seat_a:001:unit",
+          target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+          label: "Play to close",
+        }),
+      ],
+      cardLookup: new Map(),
+    });
+
+    expect(horneSelectedFirst.rowHornTargets.size).toBe(1);
+    expect(horneSelectedFirst.rowTargets.size).toBe(0);
+    expect(unitSelectedNext.rowHornTargets.size).toBe(0);
+    expect(unitSelectedNext.rowTargets.get("seat_a:close")?.moveId).toBe("play:row:close");
+    expect(unitSelectedNext.selectedCardLabel).toBe("Foltest Brigade");
+    expect(horneSelectedFirst.selectedCardLabel).toBe("Commander's Horn");
+  });
+
+  it("combines multiple target kinds and emits a generic right-rail hint when both spatial board and other targets exist", () => {
+    const moves: PlayCardMove[] = [
+      playCardMove({
+        moveId: "play:row:close",
+        target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+        label: "Play to close",
+      }),
+      playCardMove({
+        moveId: "play:row:ranged",
+        target: { kind: "board_row", side: "own", seatId: "seat_a", row: "ranged" },
+        label: "Play to ranged",
+      }),
+      playCardMove({
+        moveId: "play:decoy",
+        target: { kind: "card_instance", side: "own", seatId: "seat_a", cardId: "seat_a:002:friend", row: "close" },
+        label: "Decoy",
+      }),
+    ];
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:agile", name: "Agile Unit" },
+      selectedPlayMoves: moves,
+      cardLookup: new Map([["seat_a:002:friend" as const, { name: "Friendly Unit" }]]),
+    });
+
+    expect(view.rowTargets.size).toBe(2);
+    expect(view.cardTargets.size).toBe(1);
+    expect(view.rightRailLabel).toBe("choose a highlighted row or card.");
   });
 });

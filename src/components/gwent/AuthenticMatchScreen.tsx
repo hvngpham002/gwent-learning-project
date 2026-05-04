@@ -44,7 +44,6 @@ import {
   buildMatchStatusBanner,
   ENGINE_AI_POLICY_ID,
   getHandCardState,
-  groupTargetActions,
   summarizeCommandHistory,
   summarizeEvents,
   summarizeRoundEnd,
@@ -69,11 +68,10 @@ import {
   buildMedicPromptOptions,
   buildPromptPresentationViewModel,
   buildResolveRoundActionViewModel,
+  buildSelectedCardTargetViewModel,
   buildVisibleCardLookup,
   chooseDebugAiMulliganMove,
   getBoardCardState,
-  getBoardCardTargetsById,
-  getBoardRowTargetsByKey,
   groupDiscardCards,
   orderBoardRowsForAuthenticTable,
   toRuntimeCard,
@@ -88,6 +86,11 @@ import {
   type MatchLedgerViewModel,
   type PromptPresentationViewModel,
   type ResolveRoundActionViewModel,
+  type SelectedCardCardTargetViewModel,
+  type SelectedCardRowHornTargetViewModel,
+  type SelectedCardRowTargetViewModel,
+  type SelectedCardTargetViewModel,
+  type SelectedCardWeatherTargetViewModel,
 } from "./matchViewModel";
 import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 import { getAbilityDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
@@ -268,9 +271,14 @@ const PilePair: React.FC<{
 
 const WeatherSummary: React.FC<{
   cards: readonly AuthenticRuntimeCardViewModel[];
+  weatherTarget: SelectedCardWeatherTargetViewModel | null;
+  onTargetClick: (moveId: string) => void;
   onCardContextMenu: (event: React.MouseEvent, cardId: CardInstanceId) => void;
-}> = ({ cards, onCardContextMenu }) => (
-  <section className="authentic-panel authentic-weather">
+}> = ({ cards, weatherTarget, onTargetClick, onCardContextMenu }) => (
+  <section
+    className={`authentic-panel authentic-weather${weatherTarget ? " is-legal-target" : ""}`}
+    data-weather-target={weatherTarget ? "true" : undefined}
+  >
     <h2>Weather</h2>
     <div className="authentic-weather__cards">
       {cards.length === 0 ? <span>Clear skies</span> : null}
@@ -286,17 +294,29 @@ const WeatherSummary: React.FC<{
         </div>
       ))}
     </div>
+    {weatherTarget ? (
+      <button
+        type="button"
+        className="authentic-weather__target"
+        data-testid="authentic-weather-target"
+        aria-label={weatherTarget.ariaLabel}
+        onClick={() => onTargetClick(weatherTarget.moveId)}
+      >
+        <span className="authentic-weather__target-badge">{weatherTarget.badgeLabel}</span>
+      </button>
+    ) : null}
   </section>
 );
 
 const BoardRow: React.FC<{
   row: AuthenticBoardRowViewModel;
-  legalTargetMoveId?: string;
-  legalCardTargets: ReadonlyMap<CardInstanceId, { moveId: string }>;
+  rowTarget: SelectedCardRowTargetViewModel | undefined;
+  hornTarget: SelectedCardRowHornTargetViewModel | undefined;
+  legalCardTargets: ReadonlyMap<CardInstanceId, SelectedCardCardTargetViewModel>;
   motionByCardId: ReadonlyMap<CardInstanceId, string>;
   onTargetClick: (moveId: string) => void;
   onCardContextMenu: (event: React.MouseEvent, target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow }) => void;
-}> = ({ row, legalTargetMoveId, legalCardTargets, motionByCardId, onTargetClick, onCardContextMenu }) => {
+}> = ({ row, rowTarget, hornTarget, legalCardTargets, motionByCardId, onTargetClick, onCardContextMenu }) => {
   const renderBoardCard = (unit: AuthenticBoardRuntimeCardViewModel) => {
     const cardTarget = legalCardTargets.get(unit.key);
     const motion = motionByCardId.get(unit.key);
@@ -341,6 +361,7 @@ const BoardRow: React.FC<{
         data-source-id={unit.card.sourceId}
         data-instance-id={unit.key}
         title={strengthTitle}
+        aria-label={cardTarget.ariaLabel}
         onClick={(event) => {
           event.stopPropagation();
           onTargetClick(cardTarget.moveId);
@@ -348,6 +369,9 @@ const BoardRow: React.FC<{
         onContextMenu={handleContextMenu}
       >
         {content}
+        <span className="authentic-board-card__target-badge" aria-hidden="true">
+          {cardTarget.badgeLabel}
+        </span>
       </button>
     );
   };
@@ -361,8 +385,15 @@ const BoardRow: React.FC<{
       }
     : undefined;
 
-  const content = (
-    <>
+  const rowClassName = `authentic-board-row authentic-board-row--${row.side}${rowTarget ? " is-legal-target" : ""}`;
+
+  return (
+    <div
+      className={rowClassName}
+      data-testid="authentic-board-row"
+      data-row-target={rowTarget ? "true" : undefined}
+      data-row-key={row.key}
+    >
       <div className="authentic-board-row__label">
         <span>{row.rowGlyph}</span>
         <strong>{row.rowName}</strong>
@@ -379,47 +410,59 @@ const BoardRow: React.FC<{
             <AuthenticCard card={horn.card} size="xs" />
           </div>
         ) : null}
+        {hornTarget ? (
+          <button
+            type="button"
+            className="authentic-board-row__horn-target"
+            data-testid="authentic-board-row-horn-target"
+            data-row-key={row.key}
+            aria-label={hornTarget.ariaLabel}
+            onClick={() => onTargetClick(hornTarget.moveId)}
+          >
+            <span className="authentic-board-row__horn-target-icon" aria-hidden="true">◊</span>
+            <span className="authentic-board-row__horn-target-label">{hornTarget.badgeLabel}</span>
+          </button>
+        ) : null}
         {row.units.length === 0 && !horn ? <span className="authentic-board-row__empty">empty</span> : null}
         {row.units.map(renderBoardCard)}
       </div>
       <div className="authentic-board-row__score">{row.score}</div>
-    </>
+      {rowTarget ? (
+        <button
+          type="button"
+          className="authentic-board-row__target"
+          data-testid="authentic-board-row-target"
+          data-row-key={row.key}
+          aria-label={rowTarget.ariaLabel}
+          onClick={() => onTargetClick(rowTarget.moveId)}
+        >
+          <span className="authentic-board-row__target-badge">{rowTarget.badgeLabel}</span>
+        </button>
+      ) : null}
+    </div>
   );
-
-  if (legalTargetMoveId) {
-    return (
-      <button
-        type="button"
-        className={`authentic-board-row authentic-board-row--${row.side} is-legal-target`}
-        data-testid="authentic-board-row-target"
-        onClick={() => onTargetClick(legalTargetMoveId)}
-      >
-        {content}
-      </button>
-    );
-  }
-
-  return <div className={`authentic-board-row authentic-board-row--${row.side}`}>{content}</div>;
 };
 
 const BoardTable: React.FC<{
   rows: readonly AuthenticBoardRowViewModel[];
-  legalTargets: ReadonlyMap<string, { moveId: string }>;
-  legalCardTargets: ReadonlyMap<CardInstanceId, { moveId: string }>;
+  rowTargets: ReadonlyMap<string, SelectedCardRowTargetViewModel>;
+  rowHornTargets: ReadonlyMap<string, SelectedCardRowHornTargetViewModel>;
+  legalCardTargets: ReadonlyMap<CardInstanceId, SelectedCardCardTargetViewModel>;
   motionByCardId: ReadonlyMap<CardInstanceId, string>;
   onTargetClick: (moveId: string) => void;
   onCardContextMenu: (
     event: React.MouseEvent,
     target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow },
   ) => void;
-}> = ({ rows, legalTargets, legalCardTargets, motionByCardId, onTargetClick, onCardContextMenu }) => (
+}> = ({ rows, rowTargets, rowHornTargets, legalCardTargets, motionByCardId, onTargetClick, onCardContextMenu }) => (
   <section className="authentic-board-table" aria-label="Authentic board">
     {rows.map((row, index) => (
       <React.Fragment key={row.key}>
         {index === 3 ? <div className="authentic-board-table__divider" aria-hidden="true" /> : null}
         <BoardRow
           row={row}
-          legalTargetMoveId={legalTargets.get(row.key)?.moveId}
+          rowTarget={rowTargets.get(row.key)}
+          hornTarget={rowHornTargets.get(row.key)}
           legalCardTargets={legalCardTargets}
           motionByCardId={motionByCardId}
           onTargetClick={onTargetClick}
@@ -514,7 +557,7 @@ interface ActionPanelLeaderProps {
 }
 
 const ActionPanel: React.FC<{
-  targetGroups: ReturnType<typeof groupTargetActions>;
+  selectedTargets: SelectedCardTargetViewModel;
   onPlayMove: (moveId: string) => void;
   canPass: boolean;
   onPass: () => void;
@@ -522,7 +565,7 @@ const ActionPanel: React.FC<{
   resolveRoundAction: ResolveRoundActionViewModel;
   onResolveRound: () => void;
 }> = ({
-  targetGroups,
+  selectedTargets,
   onPlayMove,
   canPass,
   onPass,
@@ -620,25 +663,34 @@ const ActionPanel: React.FC<{
           ) : null}
         </div>
       ) : null}
-      <div className="authentic-target-groups" data-testid="authentic-target-groups">
-        {targetGroups.length === 0 ? <p>No selected-card target actions.</p> : null}
-        {targetGroups.map((group) => (
-          <div key={group.key} className="authentic-target-group">
-            <h3>{group.label}</h3>
-            {group.actions.map((action) => (
+      <div
+        className="authentic-target-groups"
+        data-testid="authentic-target-groups"
+        data-target-state={selectedTargets.state}
+      >
+        <p
+          className="authentic-target-groups__hint"
+          data-testid="authentic-target-hint"
+        >
+          {selectedTargets.rightRailLabel}
+        </p>
+        {selectedTargets.fallbackActions.length > 0 ? (
+          <div className="authentic-target-group" data-testid="authentic-target-fallback">
+            {selectedTargets.fallbackActions.map((action) => (
               <button
                 key={action.moveId}
                 type="button"
-                className="authentic-button authentic-button--secondary"
+                className="authentic-button authentic-button--secondary authentic-button--compact"
                 data-testid="authentic-target-action"
-                title={action.title.toLocaleLowerCase()}
+                title={action.title}
+                aria-label={action.ariaLabel}
                 onClick={() => onPlayMove(action.moveId)}
               >
-                {action.label.toLocaleLowerCase()}
+                {action.label}
               </button>
             ))}
           </div>
-        ))}
+        ) : null}
       </div>
     </section>
   );
@@ -1644,9 +1696,17 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       ),
     [leaders],
   );
-  const targetGroups = useMemo(() => groupTargetActions(selectedPlayMoves, visibleCardsById), [selectedPlayMoves, visibleCardsById]);
-  const rowTargets = useMemo(() => getBoardRowTargetsByKey(selectedPlayMoves), [selectedPlayMoves]);
-  const cardTargets = useMemo(() => getBoardCardTargetsById(selectedPlayMoves), [selectedPlayMoves]);
+  const selectedTargetView = useMemo(
+    () =>
+      buildSelectedCardTargetViewModel({
+        selectedCard: selectedCard
+          ? { instanceId: selectedCard.instanceId, name: selectedCard.name }
+          : null,
+        selectedPlayMoves,
+        cardLookup: visibleCardsById,
+      }),
+    [selectedCard, selectedPlayMoves, visibleCardsById],
+  );
   const promptPresentation = useMemo(
     () =>
       prompt
@@ -2114,7 +2174,12 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                   topDiscard={topAiDiscard ? toRuntimeCard(topAiDiscard) : null}
                   onDiscardOpen={() => setDiscardOpenSeat(aiSeat)}
                 />
-                <WeatherSummary cards={weatherRuntimeCards} onCardContextMenu={handleWeatherContextMenu} />
+                <WeatherSummary
+                  cards={weatherRuntimeCards}
+                  weatherTarget={selectedTargetView.weatherTarget}
+                  onTargetClick={playCard}
+                  onCardContextMenu={handleWeatherContextMenu}
+                />
                 <PilePair
                   seat={seatSummaries.human}
                   topDiscard={topHumanDiscard ? toRuntimeCard(topHumanDiscard) : null}
@@ -2134,8 +2199,9 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
           <section className="authentic-match__center">
             <BoardTable
               rows={orderedRows}
-              legalTargets={rowTargets}
-              legalCardTargets={cardTargets}
+              rowTargets={selectedTargetView.rowTargets}
+              rowHornTargets={selectedTargetView.rowHornTargets}
+              legalCardTargets={selectedTargetView.cardTargets}
               motionByCardId={motionByCardId}
               onTargetClick={playCard}
               onCardContextMenu={handleBoardContextMenu}
@@ -2156,7 +2222,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               onInspectSelected={selectedAuthenticCard ? inspectSelectedHandCard : undefined}
             />
             <ActionPanel
-              targetGroups={targetGroups}
+              selectedTargets={selectedTargetView}
               onPlayMove={playCard}
               canPass={canPass}
               onPass={pass}

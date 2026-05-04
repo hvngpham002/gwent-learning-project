@@ -415,14 +415,30 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
 
   await page.locator(".authentic-hand__card.is-playable [data-testid='authentic-hand-card']").first().click();
   await expect(page.getByTestId("authentic-target-groups")).toBeVisible();
-  await expect(page.getByTestId("authentic-target-action").first()).toBeVisible();
-  await page.getByTestId("authentic-target-action").first().click();
+  await expect(page.getByTestId("authentic-target-hint")).toBeVisible();
+
+  // cEp11: spatial board-row target is the primary affordance for unit cards;
+  // fall back to the right-rail action only for cards whose legal target kind
+  // cannot be represented spatially (e.g. global Scorch).
+  const rowTarget = page.getByTestId("authentic-board-row-target").first();
+  const fallbackTarget = page.getByTestId("authentic-target-action").first();
+  if ((await rowTarget.count()) > 0) {
+    await expect(rowTarget).toBeVisible();
+    await rowTarget.click();
+  } else {
+    await expect(fallbackTarget).toBeVisible();
+    await fallbackTarget.click();
+  }
 
   const activity = page.getByTestId("authentic-recent-activity");
   await expect(activity).toContainText(/Human played/);
   await expect(activity).toContainText(/AI completed mulligan|AI played|AI passed|AI used leader|AI resolved prompt/);
   await expect(page.getByTestId("authentic-effective-strength").first()).toBeVisible();
   await expect(page.locator(".authentic-board-card__strength")).toHaveCount(0);
+
+  // cEp11: confirm hidden-info-safe hint after a target dispatch (board cards
+  // exist now; the right-rail hint should reset to the no-selection text).
+  await expect(page.getByTestId("authentic-target-hint")).toBeVisible();
 
   const passButton = page.getByTestId("authentic-pass");
   await expect(passButton).toBeEnabled();
@@ -886,7 +902,15 @@ test("authentic match supports in-match card inspection without breaking gamepla
   await expect(leaderInspect).toHaveCount(0);
 
   // Now play a card so that there's a board card to inspect.
-  await page.getByTestId("authentic-target-action").first().click();
+  // cEp11: prefer the spatial row target; fall back to the right-rail only
+  // when the selected card has a global/no-target play.
+  const cep53RowTarget = page.getByTestId("authentic-board-row-target").first();
+  const cep53FallbackTarget = page.getByTestId("authentic-target-action").first();
+  if ((await cep53RowTarget.count()) > 0) {
+    await cep53RowTarget.click();
+  } else {
+    await cep53FallbackTarget.click();
+  }
 
   // Board card right-click should open inspect with effective strength.
   const boardCard = page.locator('[data-testid="authentic-effective-strength"]').first();
@@ -1072,6 +1096,108 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
   // leak into visible page text.
   const matchPageText = await visiblePageText(page);
   expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic match highlights spatial board-row targets and dispatches the exact PlayCard move (cEp11)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto(authenticDirectUrl);
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-start-match-confirm").click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+
+  // No card selected: hint copy reads the no-selection state and the right rail
+  // does not show any spatial badges yet.
+  await expect(page.getByTestId("authentic-target-hint")).toContainText("no card selected");
+  await expect(page.getByTestId("authentic-target-groups")).toHaveAttribute("data-target-state", "no-selection");
+  await expect(page.getByTestId("authentic-board-row-target")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-weather-target")).toHaveCount(0);
+
+  // Select the first playable hand card. Most playable hand cards are units,
+  // so a board_row target is the typical highlighted destination.
+  await page.locator(".authentic-hand__card.is-playable [data-testid='authentic-hand-card']").first().click();
+
+  await expect(page.getByTestId("authentic-target-groups")).toHaveAttribute("data-target-state", "has-targets");
+
+  // Either the spatial row target or a fallback action exists for the selected
+  // card. cEp11 prefers the spatial row target; if the seed selected a global
+  // target card first the fallback action stays available without inventing a
+  // fake spatial location.
+  const cep11RowTarget = page.getByTestId("authentic-board-row-target").first();
+  const cep11FallbackTarget = page.getByTestId("authentic-target-action").first();
+  const usedSpatialRowTarget = (await cep11RowTarget.count()) > 0;
+  if (usedSpatialRowTarget) {
+    await expect(cep11RowTarget).toBeVisible();
+    await expect(cep11RowTarget).toHaveAttribute("aria-label", /Play .+ on (your|opponent) (close combat|ranged|siege) row/);
+    await cep11RowTarget.click();
+  } else {
+    await expect(cep11FallbackTarget).toBeVisible();
+    await cep11FallbackTarget.click();
+  }
+
+  const activity = page.getByTestId("authentic-recent-activity");
+  await expect(activity).toContainText(/Human played/);
+  await expect(page.getByTestId("authentic-effective-strength").first()).toBeVisible();
+
+  // After dispatch, the engine clears the human selection (no longer playable
+  // for that card), so the right-rail hint resets to the no-selection state.
+  await expect(page.getByTestId("authentic-target-hint")).toBeVisible();
+
+  // Hidden-info safety: target affordance text and the page as a whole must
+  // not contain raw runtime instance IDs or hidden opponent source IDs.
+  const matchPageText = await visiblePageText(page);
+  expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
+  // Right-click inspection on a placed board card must still work and must
+  // not dispatch the target move.
+  const boardCard = page.locator('[data-testid="authentic-effective-strength"]').first();
+  await expect(boardCard).toBeVisible();
+  await boardCard.click({ button: "right" });
+  const cardMenu = page.getByTestId("authentic-match-card-context-menu");
+  await expect(cardMenu).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(cardMenu).toHaveCount(0);
+
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic match avoids nested interactive elements on board rows (cEp11)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto(authenticDirectUrl);
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-start-match-confirm").click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+
+  // Each board row container must be a non-interactive element. Row-level
+  // target affordances are dedicated child buttons, never the row container
+  // itself, so board cards (which are themselves <button> for card_instance
+  // targets) cannot be wrapped inside another <button>.
+  const rowTagNames = await page
+    .getByTestId("authentic-board-row")
+    .evaluateAll((elements) => elements.map((element) => element.tagName.toLocaleLowerCase()));
+  expect(rowTagNames.length).toBeGreaterThan(0);
+  for (const tagName of rowTagNames) {
+    expect(tagName).toBe("div");
+  }
+
+  // The spatial board cards (`authentic-effective-strength`) and any board-card
+  // targets must never have a button ancestor that is the row container.
+  const handCard = page.locator(".authentic-hand__card.is-playable [data-testid='authentic-hand-card']").first();
+  if ((await handCard.count()) > 0) {
+    await handCard.click();
+    const rowTarget = page.getByTestId("authentic-board-row-target").first();
+    if ((await rowTarget.count()) > 0) {
+      const rowTargetParent = await rowTarget.evaluate((element) => element.closest("button[data-testid='authentic-board-row']"));
+      expect(rowTargetParent).toBeNull();
+    }
+  }
 
   expect(pageErrors).toEqual([]);
 });

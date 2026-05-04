@@ -1628,3 +1628,266 @@ export const buildLeaderActionViewModel = (
     menuLabel: firstAbility === "play_any_weather" ? "Choose a weather card" : "Choose a leader option",
   };
 };
+
+/**
+ * cEp11 selected-card target presentation (product UI).
+ *
+ * The pure helper consumes the currently selected human hand card, the legal
+ * `PlayCardMove[]` for that selection, and a public visible-card lookup, then
+ * groups them into spatial affordances (row / horn / weather / board card)
+ * plus right-rail fallback actions for non-spatial targets.
+ *
+ * Labels never include raw runtime instance IDs or hidden opponent source
+ * IDs. Only the selected human hand card name and public visible-card names
+ * may appear.
+ */
+
+export type SelectedCardTargetState = "no-selection" | "no-targets" | "has-targets";
+
+export interface SelectedCardRowTargetViewModel {
+  readonly key: string;
+  readonly moveId: string;
+  readonly seatId: SeatId;
+  readonly row: CatalogRow;
+  readonly side: "own" | "opponent";
+  readonly sideLabel: string;
+  readonly rowLabel: string;
+  readonly badgeLabel: string;
+  readonly ariaLabel: string;
+}
+
+export interface SelectedCardCardTargetViewModel {
+  readonly key: CardInstanceId;
+  readonly moveId: string;
+  readonly cardLabel: string;
+  readonly badgeLabel: string;
+  readonly ariaLabel: string;
+}
+
+export interface SelectedCardRowHornTargetViewModel {
+  readonly key: string;
+  readonly moveId: string;
+  readonly seatId: SeatId;
+  readonly row: CatalogRow;
+  readonly rowLabel: string;
+  readonly badgeLabel: string;
+  readonly ariaLabel: string;
+}
+
+export interface SelectedCardWeatherTargetViewModel {
+  readonly moveId: string;
+  readonly badgeLabel: string;
+  readonly ariaLabel: string;
+}
+
+export interface SelectedCardFallbackActionViewModel {
+  readonly moveId: string;
+  readonly label: string;
+  readonly title: string;
+  readonly ariaLabel: string;
+}
+
+export interface SelectedCardTargetViewModel {
+  readonly state: SelectedCardTargetState;
+  readonly selectedCardLabel: string | null;
+  readonly instructionLabel: string;
+  readonly rowTargets: ReadonlyMap<string, SelectedCardRowTargetViewModel>;
+  readonly cardTargets: ReadonlyMap<CardInstanceId, SelectedCardCardTargetViewModel>;
+  readonly rowHornTargets: ReadonlyMap<string, SelectedCardRowHornTargetViewModel>;
+  readonly weatherTarget: SelectedCardWeatherTargetViewModel | null;
+  readonly fallbackActions: readonly SelectedCardFallbackActionViewModel[];
+  readonly rightRailLabel: string;
+}
+
+const TARGET_BADGE = {
+  ROW_PLAY: "play here",
+  ROW_HORN: "horn slot",
+  WEATHER: "play weather",
+  CARD: "choose",
+} as const;
+
+const sideLabelFor = (side: "own" | "opponent") => (side === "own" ? "your" : "opponent");
+
+const rowDisplayName = (row: CatalogRow) => getRowDisplay(row).name;
+
+const safeCardLabelFor = (
+  cardId: CardInstanceId,
+  cardLookup: ReadonlyMap<CardInstanceId, { readonly name: string }>,
+): string => cardLookup.get(cardId)?.name ?? "card";
+
+export const buildSelectedCardTargetViewModel = ({
+  selectedCard,
+  selectedPlayMoves,
+  cardLookup,
+}: {
+  readonly selectedCard: { readonly instanceId: CardInstanceId; readonly name: string } | null;
+  readonly selectedPlayMoves: readonly PlayCardMove[];
+  readonly cardLookup: ReadonlyMap<CardInstanceId, { readonly name: string }>;
+}): SelectedCardTargetViewModel => {
+  if (!selectedCard) {
+    return {
+      state: "no-selection",
+      selectedCardLabel: null,
+      instructionLabel: "select a playable card to choose where it goes.",
+      rowTargets: new Map(),
+      cardTargets: new Map(),
+      rowHornTargets: new Map(),
+      weatherTarget: null,
+      fallbackActions: [],
+      rightRailLabel: "no card selected.",
+    };
+  }
+
+  const cardLabel = selectedCard.name;
+
+  if (selectedPlayMoves.length === 0) {
+    return {
+      state: "no-targets",
+      selectedCardLabel: cardLabel,
+      instructionLabel: `${cardLabel.toLocaleLowerCase()} has no legal play targets right now.`,
+      rowTargets: new Map(),
+      cardTargets: new Map(),
+      rowHornTargets: new Map(),
+      weatherTarget: null,
+      fallbackActions: [],
+      rightRailLabel: "no legal targets.",
+    };
+  }
+
+  const rowTargets = new Map<string, SelectedCardRowTargetViewModel>();
+  const cardTargets = new Map<CardInstanceId, SelectedCardCardTargetViewModel>();
+  const rowHornTargets = new Map<string, SelectedCardRowHornTargetViewModel>();
+  let weatherTarget: SelectedCardWeatherTargetViewModel | null = null;
+  const fallbackActions: SelectedCardFallbackActionViewModel[] = [];
+
+  for (const move of selectedPlayMoves) {
+    const target = move.target;
+
+    if (target.kind === "board_row") {
+      const key = `${target.seatId}:${target.row}`;
+      const sideLabel = sideLabelFor(target.side);
+      const rowLabel = rowDisplayName(target.row);
+      const ariaLabel = `Play ${cardLabel} on ${sideLabel} ${rowLabel.toLocaleLowerCase()} row`;
+      rowTargets.set(key, {
+        key,
+        moveId: move.moveId,
+        seatId: target.seatId,
+        row: target.row,
+        side: target.side,
+        sideLabel,
+        rowLabel,
+        badgeLabel: TARGET_BADGE.ROW_PLAY,
+        ariaLabel,
+      });
+      continue;
+    }
+
+    if (target.kind === "card_instance") {
+      const targetCardLabel = safeCardLabelFor(target.cardId, cardLookup);
+      const ariaLabel = `Choose ${targetCardLabel} for ${cardLabel}`;
+      cardTargets.set(target.cardId, {
+        key: target.cardId,
+        moveId: move.moveId,
+        cardLabel: targetCardLabel,
+        badgeLabel: TARGET_BADGE.CARD,
+        ariaLabel,
+      });
+      continue;
+    }
+
+    if (target.kind === "row_horn") {
+      const key = `${target.seatId}:${target.row}`;
+      const rowLabel = rowDisplayName(target.row);
+      const ariaLabel = `Place ${cardLabel} on your ${rowLabel.toLocaleLowerCase()} horn slot`;
+      rowHornTargets.set(key, {
+        key,
+        moveId: move.moveId,
+        seatId: target.seatId,
+        row: target.row,
+        rowLabel,
+        badgeLabel: TARGET_BADGE.ROW_HORN,
+        ariaLabel,
+      });
+      continue;
+    }
+
+    if (target.kind === "weather") {
+      const ariaLabel = `Play ${cardLabel} on the weather panel`;
+      weatherTarget = {
+        moveId: move.moveId,
+        badgeLabel: TARGET_BADGE.WEATHER,
+        ariaLabel,
+      };
+      continue;
+    }
+
+    if (target.kind === "none") {
+      const fallbackLabel = `play ${cardLabel.toLocaleLowerCase()}`;
+      fallbackActions.push({
+        moveId: move.moveId,
+        label: fallbackLabel,
+        title: fallbackLabel,
+        ariaLabel: `${fallbackLabel} (global effect)`,
+      });
+      continue;
+    }
+
+    // Any non-spatial target kind (deck_card_instance, deck_card_source,
+    // card_instance_set) falls back to a compact right-rail action with a
+    // hidden-info-safe label. PlayCard moves do not currently use these
+    // shapes, but the fallback keeps the UI safe if the engine adds them.
+    const fallbackLabel = `play ${cardLabel.toLocaleLowerCase()}`;
+    fallbackActions.push({
+      moveId: move.moveId,
+      label: fallbackLabel,
+      title: fallbackLabel,
+      ariaLabel: fallbackLabel,
+    });
+  }
+
+  const hasSpatialBoardTargets = rowTargets.size > 0 || cardTargets.size > 0;
+  const hasHornTargets = rowHornTargets.size > 0;
+  const hasWeather = weatherTarget !== null;
+  const hasOnlyFallback =
+    !hasSpatialBoardTargets && !hasHornTargets && !hasWeather && fallbackActions.length > 0;
+
+  let instructionLabel: string;
+  let rightRailLabel: string;
+  if (hasSpatialBoardTargets && cardTargets.size > 0 && rowTargets.size === 0) {
+    instructionLabel = `choose a highlighted card for ${cardLabel.toLocaleLowerCase()}.`;
+    rightRailLabel = "choose a highlighted card.";
+  } else if (hasSpatialBoardTargets && rowTargets.size > 0 && cardTargets.size === 0) {
+    instructionLabel = `choose a highlighted row for ${cardLabel.toLocaleLowerCase()}.`;
+    rightRailLabel = "choose a highlighted row.";
+  } else if (hasSpatialBoardTargets) {
+    instructionLabel = `choose a highlighted row or card for ${cardLabel.toLocaleLowerCase()}.`;
+    rightRailLabel = "choose a highlighted row or card.";
+  } else if (hasHornTargets && !hasWeather) {
+    instructionLabel = `choose a highlighted horn slot for ${cardLabel.toLocaleLowerCase()}.`;
+    rightRailLabel = "choose a highlighted horn slot.";
+  } else if (hasWeather && !hasHornTargets) {
+    instructionLabel = `target the weather panel to play ${cardLabel.toLocaleLowerCase()}.`;
+    rightRailLabel = "target the weather panel.";
+  } else if (hasWeather || hasHornTargets) {
+    instructionLabel = `choose a highlighted target for ${cardLabel.toLocaleLowerCase()}.`;
+    rightRailLabel = "choose a highlighted target.";
+  } else if (hasOnlyFallback) {
+    instructionLabel = `play ${cardLabel.toLocaleLowerCase()} from the right rail.`;
+    rightRailLabel = "use the action button below.";
+  } else {
+    instructionLabel = `${cardLabel.toLocaleLowerCase()} has no legal play targets right now.`;
+    rightRailLabel = "no legal targets.";
+  }
+
+  return {
+    state: "has-targets",
+    selectedCardLabel: cardLabel,
+    instructionLabel,
+    rowTargets,
+    cardTargets,
+    rowHornTargets,
+    weatherTarget,
+    fallbackActions,
+    rightRailLabel,
+  };
+};

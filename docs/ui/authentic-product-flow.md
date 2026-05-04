@@ -1,6 +1,6 @@
 # Authentic Product Flow
 
-This document tracks the current opt-in authentic product loop after cEp10.
+This document tracks the current opt-in authentic product loop after cEp11.
 
 ## Routes
 
@@ -68,6 +68,24 @@ Hidden-information rules are preserved:
 - The debug-only `debugAiMulligan=1` route continues to reveal AI mulligan choices for animation inspection. cEp5.3 does not extend that surface and does not add inspect entry points to AI hand backs.
 
 Inspect modal styling reuses the deck-builder inspect-modal vocabulary (`authentic-match__inspect-modal`, `authentic-match__inspect-box`, `authentic-match__inspect-art`, `authentic-match__inspect-facts`, `authentic-match__inspect-section`) without sharing component code; this keeps deck-builder add/remove semantics out of the match surface.
+
+## Selected-Card Targeting (cEp11)
+
+cEp11 makes selected-card targeting in the authentic match UI spatial and legible without changing engine legality or command execution. A pure helper in `src/components/gwent/matchViewModel.ts` drives every product target affordance:
+
+- `buildSelectedCardTargetViewModel({ selectedCard, selectedPlayMoves, cardLookup })` returns one of three states (`"no-selection"`, `"no-targets"`, `"has-targets"`) with `selectedCardLabel`, `instructionLabel`, `rowTargets` (keyed by `seatId:row`), `cardTargets` (keyed by visible `cardId`), `rowHornTargets` (keyed by own `seatId:row`), an optional `weatherTarget`, an optional `fallbackActions` list for `target.kind === "none"` (and any non-spatial PlayCard target shape that may be added later), and a compact `rightRailLabel` such as `choose a highlighted row.`, `choose a highlighted card.`, `choose a highlighted row or card.`, `choose a highlighted horn slot.`, `target the weather panel.`, or `use the action button below.` Right-rail copy reads `no card selected.` when no hand card is active and `no legal targets.` when the engine exposes no PlayCard moves for the selection.
+- The helper consumes only the selected human hand card, the legal `PlayCardMove[]` for that selection, and a public visible-card `{ name }` lookup. It never receives card source IDs, instance IDs, or hidden hand identities, and the focused unit tests assert that no user-facing label contains raw `seat_a:...` / `seat_b:...` instance IDs or hidden opponent source IDs. `cardLabel` falls back to a public `card` literal when a card target is missing from the visible-card lookup.
+
+`AuthenticMatchScreen.tsx` consumes the view model directly and no longer relies on `groupTargetActions` from the diagnostic engine-shell helper for selected-card target presentation:
+
+- **Board rows.** Each row container renders as a `<div data-testid="authentic-board-row">` and is decorated with a single `<button data-testid="authentic-board-row-target">` overlay (`play here`) when the selected card has a legal `board_row` move on that row. Clicking the overlay dispatches the exact existing `PlayCard` move id; the button's aria reads `Play <card> on your close combat row` (or `opponent` for cross-board plays). Row score, weather tint, horn display, empty-row label, and right-click inspection on existing board cards are unchanged.
+- **Board cards.** Visible legal `card_instance` targets stay rendered as `<button data-testid="authentic-board-card-target">` with a small `choose` badge anchored to the card surface and an aria like `Choose <card> for <selected card>`. Right-click inspection still works on these target buttons and never dispatches the move. Non-target board cards remain inspectable but do not look actionable.
+- **Horn slots.** Selecting Commander's Horn shows an explicit `<button data-testid="authentic-board-row-horn-target">` placeholder per legal own row inside the row's card strip; the aria reads `Place Commander's Horn on your <row> horn slot` and the click dispatches the exact `row_horn` PlayCard move.
+- **Weather panel.** Selecting a weather card highlights the Weather panel and renders a `<button data-testid="authentic-weather-target">` whose click dispatches the exact `weather` PlayCard move whether the panel is empty or already populated. Existing weather card right-click inspection is unchanged.
+- **Right-rail fallback.** Global/no-target plays (e.g. Special Scorch represented as `target.kind === "none"`) remain compact right-rail buttons (`<button data-testid="authentic-target-action">`) with safe lowercase labels like `play scorch` and aria `play scorch (global effect)`. The right-rail `Actions` block always renders a single `<p data-testid="authentic-target-hint">` that mirrors the helper's `rightRailLabel` so the right rail tells the player what to do without inventing a fake spatial location for global effects. The `data-target-state="no-selection|no-targets|has-targets"` attribute lets tests and styling react without re-deriving state.
+- **Selection lifecycle.** The cEp10 selection-clear effect already covers stale selection on phase / prompt / turn / hand changes; cEp11 keeps the same dispatch path. Selecting a different hand card recomputes the spatial targets immediately because the helper is a pure function of selection + legal moves.
+
+The cEp11 polish reuses the existing accent / ink / rule / parchment tokens — no one-off color system. Focus-visible styling on every spatial target keeps keyboard navigation clear, and badge sizes shrink at the 390px mobile breakpoint to avoid overlapping card strength medallions, row labels, or the row score column. Hidden-info safety is reverified: visible board / weather / discard / leader card names may appear because they are already public; AI hand and AI deck identities never reach the target view-model because they are not in the visible-card lookup the helper receives. The leader weather choice menu added in cEp8 is unchanged — cEp11 covers selected hand-card targeting, not leader targeting.
 
 ## Round And Match Flow (cEp10)
 
