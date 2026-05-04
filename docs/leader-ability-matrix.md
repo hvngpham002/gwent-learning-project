@@ -1,7 +1,7 @@
 # Leader Ability Matrix
 
 This document is the durable cCp18 audit output, refreshed by cCp19,
-cCp20, cCp21, cCp22, cCp23, cCp24, cCp25, cCp26, and cCp27. It
+cCp20, cCp21, cCp22, cCp23, cCp24, cCp25, cCp26, cCp27, and cCp28. It
 enumerates every official leader source record, classifies the
 placeholder leaders by implementation pattern, lists local-source
 conflicts, and records engine, legal-move, prompt / UI, hidden-info,
@@ -29,8 +29,11 @@ implemented as a setup-time hand-size modifier on Francesca Findabair:
 Daisy of the Valley. **cCp27 closes Tranche 3** with
 `discard_two_draw_one_from_deck` (Pattern 3) implemented as the
 engine's first true active multi-stage prompt leader on Eredin:
-Destroyer of Worlds. This file is updated to reflect all nine
-landings.
+Destroyer of Worlds. **cCp28 opens Tranche 4** with
+`look_three_cards` (Pattern 5) implemented as the engine's first
+hidden-info disclosure leader on Emhyr var Emreis: Emperor of
+Nilfgaard, settling Settled Product Decisions §6 and §7. This file is
+updated to reflect all ten landings.
 
 ## Status
 
@@ -42,35 +45,37 @@ landings.
   record (Eredin: Commander of the Red Riders and Francesca: Queen of Dol
   Blathanna). `clear_weather` is both a card and leader ability ID, but only
   Foltest: Lord Commander of The North uses it as a leader.
-- Implemented executable leaders: **12** after cCp27 (each emits a legal
+- Implemented executable leaders: **13** after cCp28 (each emits a legal
   `use_leader` move): `clear_weather`, `play_frost`, `play_fog`,
   `play_rain`, `play_any_weather`, `scorch_range`, `scorch_siege`,
   `optimize_agile_rows`, `restore_discard_to_hand`,
   `shuffle_discards_into_decks`, `draw_opponent_discard`,
-  `discard_two_draw_one_from_deck`. (cCp27 added Eredin: Destroyer of
-  Worlds with the engine's first true two-stage prompt leader.)
+  `discard_two_draw_one_from_deck`, `look_three_cards`. (cCp28 added
+  Emhyr var Emreis: Emperor of Nilfgaard with the engine's first
+  hidden-info disclosure leader.)
 - Implemented passive leaders: **7** after cCp25 (unchanged in cCp26 /
-  cCp27) — `weather_half_penalty` on King Bran (cCp15), the four cCp19
-  row-wide horn-like passives (`double_siege` on Foltest: The
-  Siegemaster, `double_close` on Eredin: Commander of the Red Riders
-  and Francesca: Queen of Dol Blathanna, and `double_ranged` on
-  Francesca: The Beautiful), `double_spies` on Eredin Breacc Glas: The
-  Treacherous (cCp20), and `random_medic` on Emhyr var Emreis: Invader
-  of the North (cCp25).
-- Implemented setup-time leaders: **1** after cCp26 (unchanged in cCp27)
-  — `draw_extra_card` on Francesca Findabair: Daisy of the Valley
-  (cCp26). This is a new manifest bucket distinct from passive scoring
-  policies; the leader's effect fires during `startMatch` initial draw
-  rather than during play.
-- Placeholder leader records: **2** spanning **2** distinct ability IDs
-  after cCp27. (cCp27 promoted 1 leader record — Eredin: Destroyer of
-  Worlds — and 1 ability ID — `discard_two_draw_one_from_deck` — out
-  of placeholder, completing Tranche 3.)
+  cCp27 / cCp28) — `weather_half_penalty` on King Bran (cCp15), the
+  four cCp19 row-wide horn-like passives (`double_siege` on Foltest:
+  The Siegemaster, `double_close` on Eredin: Commander of the Red
+  Riders and Francesca: Queen of Dol Blathanna, and `double_ranged`
+  on Francesca: The Beautiful), `double_spies` on Eredin Breacc Glas:
+  The Treacherous (cCp20), and `random_medic` on Emhyr var Emreis:
+  Invader of the North (cCp25).
+- Implemented setup-time leaders: **1** after cCp26 (unchanged in
+  cCp27 / cCp28) — `draw_extra_card` on Francesca Findabair: Daisy of
+  the Valley (cCp26). This is a new manifest bucket distinct from
+  passive scoring policies; the leader's effect fires during
+  `startMatch` initial draw rather than during play.
+- Placeholder leader records: **1** spanning **1** distinct ability ID
+  after cCp28. (cCp28 promoted 1 leader record — Emhyr var Emreis:
+  Emperor of Nilfgaard — and 1 ability ID — `look_three_cards` — out
+  of placeholder, opening Tranche 4. Only `cancel_leader` (Pattern 6)
+  remains placeholder.)
 - `OfficialLeaderPromotionManifest.placeholderLeaderAbilityIds` remains
-  **exhaustive** after cCp27 — it lists every leader ability whose
+  **exhaustive** after cCp28 — it lists every leader ability whose
   `CATALOG_LEADER_ABILITY_METADATA.status` is still `placeholder`:
-  `cancel_leader`, `look_three_cards`. (See Source Conflicts §C-7 for
-  the cCp18 audit finding that prompted this fix.)
+  `cancel_leader`. (See Source Conflicts §C-7 for the cCp18 audit
+  finding that prompted this fix.)
 
 ## Implemented Baseline
 
@@ -267,18 +272,18 @@ Marker conventions:
 |---|---|
 | Source ID | `nilfgaard.emhyr-var-emreis-emperor-of-nilfgaard` |
 | Faction | Nilfgaard |
-| Ability metadata status | `placeholder` |
-| Catalog description | (none — leader has no `description` field; catalog ability description is "Looks at random cards in the opponent hand.") |
-| Local rule / source text | The Emperor's classic Witcher 3 leader text reads "Look at 3 random cards from your opponent's hand." This is opponent-hand information disclosure, not card movement. |
-| Likely official behavior | *Derived*: active leader; reveals 3 random opponent hand cards to the acting player only. The opponent hand is otherwise hidden from both seats; this leader temporarily lifts that veil for the acting seat for some bounded duration (typically the rest of the game in Witcher 3 / Gwent rules). |
-| Active vs passive vs setup | Active one-shot, but with a persistent observation effect on `MatchState`. |
-| Expected legal move shape | `use_leader` with `target.kind === "none"`. Engine selects 3 random opponent hand instances using the seeded RNG and stores them on the acting seat's observation manifest (a new state field). |
-| Expected command transaction shape | `UseLeader` → mark leader used → record three opponent card instance IDs into a new `seat.revealedOpponentHand` (or similar) tracker. New `card_revealed` event for each disclosed card. |
-| Prompt / choice UI need | None at choice time (no decision). UI must surface the revealed cards inside the acting seat's view of the opponent hand from then on. |
-| Hidden-info risk | HIGH. This leader is the engine's first explicit hidden-info disclosure. The simulation export contract must continue to redact the same identities for the *opponent* observer. The AI policy `legal-heuristic-v0` only sees its own hand; the new disclosure must extend its observation only when it is the acting seat. |
-| Implementation difficulty | high |
-| Recommended tranche | Tranche 4 (Hidden-info / suppression). |
-| Unresolved questions | (1) Is the disclosure permanent for the rest of the match, or only for the current round? (2) Does redrawing during the ongoing round (e.g. Foltest: King of Temeria pulling from deck via `play_fog`, no — that doesn't draw to hand; but Skellige round-three return *does* move cards into discard, not hand) affect the disclosure list? (3) Does mulligan invalidate the disclosure? Recommendation: leader is once-per-game and used after mulligan, so this is moot; if used at game start, simply pick from the current hand snapshot. (4) Are heroes eligible? Yes — the leader picks "cards" from hand without exclusion. |
+| Ability metadata status | `implemented` (cCp28) |
+| Catalog description | (none on the leader source; catalog ability description rewritten in cCp28 to describe the one-time-modal contract.) |
+| Local rule / source text | The Emperor's classic Witcher 3 leader text reads "Look at 3 random cards from your opponent's hand." This is opponent-hand information disclosure, not card movement. Settled product decision §6 (one-time modal, dismissal cannot be reopened) is the chosen interpretation. |
+| Implemented behavior (cCp28) | **Active one-shot hidden-info disclosure leader.** Eligible only when the opponent has at least one card in hand (empty opponent hand emits no legal `use_leader` move). On `UseLeader` with `target.kind === "none"`, the engine selects up to three opponent hand cards (`min(3, opponent hand length)`) using the deterministic seeded RNG (advances RNG only when opponent hand length > 3; for hand length 1-3, the full hand is revealed without invoking RNG and `state.rng.state` is preserved). The transaction emits `ability_triggered`, `opponent_hand_revealed { seatId, opponentSeatId, cardIds, sourceIds, reason: "look_three_cards" }`, `ability_resolved` (`outcome === "revealed_opponent_hand"`), `leader_used`, and `prompt_opened`. The leader is consumed at `UseLeader` (`seat.leaderUsed = true`). The pending acknowledgement prompt blocks the turn until the acting seat dismisses it (`kind === "choose_option"`, `stage === "opponent_hand_reveal"`, single option `look-three-cards:acknowledge` with `target.kind === "none"`, `context.revealedCardIds` carries the chosen opponent hand card IDs). On acknowledgement, the resolver emits `prompt_resolved`, clears `state.pendingPrompt` (the only place the reveal snapshot lived), and the outer command path hands off the turn. **No MatchState field retains the reveal after acknowledgement.** Revealed cards are not moved out of the opponent's hand and do not trigger their abilities. All card kinds in opponent hand are eligible — units, heroes, specials, weather, side-deck-only / generated cards if they somehow reached hand, and off-owner cards. |
+| Active vs passive vs setup | Active one-shot with one-time acknowledgement modal. |
+| Implemented legal move shape | `target.kind === "none"`. Metadata: `targetRequirement === "none"`, `targetCount === revealCount`, `targetLabel === "opponent hand"`, plus diagnostic `opponentHandCount` and `revealCount`. |
+| Implemented command transaction shape | `UseLeader { target: { kind: "none" } }` → recompute reveal plan from public state → advance RNG only if subset selection happened → emit `ability_triggered` → `opponent_hand_revealed` → `ability_resolved.revealed_opponent_hand` → set `seat.leaderUsed = true` → emit `leader_used` → open acknowledgement prompt (no turn handoff while prompt is pending). Acknowledgement: `ChoosePromptOption { promptId, optionId: "look-three-cards:acknowledge" }` → emit `prompt_resolved` → clear `state.pendingPrompt` → outer command hands off the turn. |
+| Prompt / choice UI need | One-time acknowledgement modal for human-owned reveal prompts (`authentic-look-three-cards-dialog`). Shows the revealed cards once; after dismissal, the modal disappears and cannot be reopened. AI-owned reveal prompts must not show the human hand card faces; the existing AI prompt-pending copy applies. The normal opponent hand strip stays backs/count-only — no card becomes persistently face-up. |
+| Hidden-info risk | HIGH. The acting seat sees the revealed cards inside the pending prompt's `context.revealedCardIds` snapshot only. The non-acting seat must keep `pendingPrompt: null` (covered by `getPromptMoves`, `seatObservation.buildSeatObservation`, and `buildSafeSimulationObservation`) and must not receive revealed names, source IDs, or instance IDs through UI, AI observation, recent activity, or simulation export. Simulation export uses prompt-local safe refs `revealed_opponent_hand_<index>` for the acting perspective only. Recent activity renders count-only summaries ("Human looked at 3 opponent hand cards"). |
+| Implementation difficulty (delivered) | medium-high (hidden-info disclosure plus one-time modal UI). |
+| Recommended tranche (implemented in cCp28) | Tranche 4 (Hidden-info / suppression). |
+| Settled questions | (1) §C-9 / §C-5: The catalog ability ID `look_three_cards` is preserved; the catalog metadata description is rewritten to capture the one-time-modal contract. (2) Settled Product Decision §6: **one-time modal**, no persistent face-up opponent hand state after dismissal. (3) Settled Product Decision §7: **leaders fire in the play phase only**; `getLeaderMove` returns no move during mulligan. (4) Heroes eligible? **Yes** — the rule selects "cards" from the opponent hand without exclusion. (5) RNG advancement? **Only when opponent hand length > 3.** Hand length 1, 2, or 3 reveals every card in opponent hand order without invoking RNG. (6) After acknowledgement, can the reveal be reopened? **No** — the snapshot lives only in `pendingPrompt.context.revealedCardIds` and is cleared on resolution. |
 
 ### Emhyr var Emreis: The White Flame — `cancel_leader`
 
@@ -643,40 +648,86 @@ prompt-target side (`own` vs `opponent`).
 - Effect classification: one-shot active with single-step prompt
   (cCp22 own-discard variant; cCp24 opponent-discard variant).
 
-### Pattern 5 — Opponent Hand Information Disclosure
+### Pattern 5 — Opponent Hand Information Disclosure (IMPLEMENTED in cCp28)
 
 | Members | Ability IDs |
 |---|---|
-| Emhyr: Emperor of Nilfgaard | `look_three_cards` |
+| Emhyr: Emperor of Nilfgaard | **IMPLEMENTED in cCp28** — `look_three_cards` |
+
+**Status:** `look_three_cards` implemented in cCp28 (see
+`audit/reports/2026-05-04-cCp28-report.md`) as the engine's first
+**hidden-info disclosure leader**. cCp28 opens Tranche 4. Settled
+Product Decisions §6 (one-time modal; cannot be reopened after
+dismissal) and §7 (play-phase only) are now both satisfied.
 
 - Trigger: active one-shot.
-- Effect: reveals 3 random opponent hand cards to the acting seat.
+- Effect: reveals up to 3 random opponent hand cards
+  (`min(3, opponent hand length)`) to the acting seat once. After
+  acknowledgement the reveal cannot be reopened — the engine does
+  **not** persist the reveal in `MatchState` after the prompt clears.
 - Engine surfaces:
-  - new `seat.revealedOpponentHand: Set<CardInstanceId>` field.
-  - `executeLeader` selects 3 random opponent hand instance IDs using
-    `state.rng.fork("look_three_cards")` and adds them to the acting
-    seat's reveal set.
-  - new `card_revealed` event with the disclosed instance IDs and the
-    reveal seat.
-  - all hidden-info-safe observers (legal moves selector, simulation
-    export, AI policy) must learn about reveal sets and lift the redaction
-    only for the acting seat.
-- Legal-move shape: `use_leader` with `target.kind === "none"`. Emit only
-  if opponent hand has at least 1 card.
-- Command shape: `UseLeader` → seeded random pick → record reveals →
-  consume leader.
-- Prompt / UI: none at choice time. UI must surface reveals on the
-  acting seat's view of opponent hand backs (replacing back with face for
-  revealed instances).
-- Hidden-info risk: HIGH. This is the engine's first persistent hidden-info
-  disclosure. Test coverage must verify the opponent perspective stays
-  redacted.
-- AI: only the *acting* seat's `legal-heuristic-v0` observation manifest
-  changes. Redaction logic must remain seat-symmetric.
-- Simulation export: every export observer (acting seat, opponent seat,
-  global) must apply reveal sets independently. New export fields needed.
-- Effect classification: one-shot active with persistent observation
-  surface change.
+  - new pure helper module `src/game/core/leaderLookThreeCards.ts`
+    exporting `LOOK_THREE_CARDS_LEADER_SOURCE_ID`,
+    `LOOK_THREE_CARDS_REVEAL_COUNT`,
+    `getLookThreeCardsEligibility`, and `planLookThreeCardsReveal`.
+  - `getLeaderMove` emits exactly one no-target `use_leader` move
+    when opponent hand length ≥ 1 (`targetRequirement: "none"`,
+    `targetCount: revealCount`, `targetLabel: "opponent hand"`,
+    diagnostic `opponentHandCount` / `revealCount`).
+  - `executeLeader` selects up to 3 opponent hand cards through
+    `createSeededRngFromState(state.rng.seed, state.rng.state)` plus
+    `shuffleWithRng`, advancing `state.rng.state` only when the
+    opponent has more than 3 cards. The transaction emits
+    `ability_triggered`, `opponent_hand_revealed { reason:
+    "look_three_cards" }`, `ability_resolved.revealed_opponent_hand`,
+    `leader_used`, and `prompt_opened`.
+  - `pendingPrompt` carries the reveal snapshot in
+    `context.revealedCardIds` while the acknowledgement is open.
+    `kind === "choose_option"`, `stage === "opponent_hand_reveal"`,
+    one option `look-three-cards:acknowledge` with
+    `target.kind === "none"`.
+  - acknowledgement (`ChoosePromptOption`) emits `prompt_resolved`,
+    clears `state.pendingPrompt`, and lets `handoffTurn` transfer
+    the turn. The leader was already consumed at `UseLeader`.
+  - new `GameEvent` variant `opponent_hand_revealed` (internal/raw
+    event log only — hidden-info-safe summaries render counts only).
+  - new `PendingPromptTarget` variant `{ kind: "none" }` for the
+    acknowledgement option.
+  - new `PendingPromptStage` value `"opponent_hand_reveal"`.
+  - new `PendingPromptContext.revealedCardIds` field.
+- Legal-move shape: `use_leader` with `target.kind === "none"`. Emit
+  only if opponent hand length ≥ 1.
+- Command shape: `UseLeader { target: { kind: "none" } }` → seeded
+  random pick (RNG advances only for hand length > 3) → emit reveal
+  events → consume leader → open acknowledgement prompt. No turn
+  handoff while prompt is pending.
+- Prompt / UI: one-time modal (`authentic-look-three-cards-dialog`)
+  for human-owned reveal prompts. Shows the revealed cards via
+  existing `AuthenticCard` components, single primary `Continue`
+  button. After dismissal the modal disappears and cannot be
+  reopened from any visible control. AI-owned reveal prompts use the
+  existing AI prompt-pending copy and never expose the human hand
+  faces. The normal opponent hand strip stays backs/count-only.
+- Hidden-info risk: addressed. The acting seat sees the revealed
+  cards through `pendingPrompt.context.revealedCardIds` only while
+  the prompt is open. The non-acting seat receives `pendingPrompt:
+  null` from `seatObservation.buildSeatObservation` and
+  `buildSafeSimulationObservation`, so revealed names, source IDs,
+  and instance IDs cannot leak. Recent activity / event summaries
+  render counts only.
+- AI: `legal-heuristic-v0` is unchanged. The acting seat's
+  observation gains `revealedCards` on the prompt summary so a
+  future heuristic can value the disclosure; the heuristic chooses
+  the only acknowledgement option through the existing prompt-move
+  selection path.
+- Simulation export: `SafePromptState.revealedCards` exposes
+  `revealed_opponent_hand_<index>` safe refs for the acting
+  perspective only. Action encoding falls back to `none` for the
+  acknowledgement target. Validation/redaction scanning continues to
+  block raw `seat_a:*` / `seat_b:*` instance IDs and hidden opponent
+  hand identities outside the acting-seat reveal.
+- Effect classification: one-shot active with one-time acknowledgement
+  modal; no persistent observation state.
 
 ### Pattern 6 — Leader Cancel / Suppression
 
@@ -1250,20 +1301,27 @@ the only remaining tranche.
 
 ### Tranche 4 — Hidden-Info Disclosure and Suppression
 
-**Members:** `look_three_cards` (Pattern 5), `cancel_leader` (Pattern 6).
-Plus `draw_opponent_discard` if §C-2 is resolved by Rulebook Wins (own-
-deck tutor with hidden-info ramifications).
+**Members:** `look_three_cards` (Pattern 5, **DELIVERED in cCp28**),
+`cancel_leader` (Pattern 6, remaining). cCp28 opens Tranche 4 with the
+engine's first hidden-info disclosure leader; only `cancel_leader`
+remains.
 
 **Why last:**
 
-- `look_three_cards` is the engine's first persistent hidden-info
+- `look_three_cards` is the engine's first explicit hidden-info
   disclosure, requiring an observation-manifest update and broad test
-  coverage.
+  coverage. **Delivered in cCp28** as a one-time acknowledgement modal
+  (per Settled Product Decision §6) rather than a persistent
+  observation state, so the engine still avoids a long-lived
+  `seat.revealedOpponentHand` field.
 - `cancel_leader` cross-cuts every passive leader implemented in
   Tranches 1-3 and must come after they exist or the test fixtures
   cannot demonstrate suppression.
 - Hidden-info testing is the highest-risk bucket; doing it last lets
-  Tranches 1-3 land first as a smaller integration set.
+  Tranches 1-3 land first as a smaller integration set. cCp28
+  validates the hidden-info contracts (`getPromptMoves`,
+  `seatObservation`, `buildSafeSimulationObservation`,
+  `summarizeEvents`) under a real disclosure event.
 
 ### Optional follow-ups after Tranche 4
 
@@ -1319,13 +1377,20 @@ decisions are tracked here for the relevant later tranche.
    from the discard pile rather than letting the player choose. It does
    not affect hero sources that have Medic.
 6. **`look_three_cards` reveal duration / dismissal.** **Settled: one-time
-   modal.** The acting seat sees the three random opponent hand cards
-   in a single modal disclosure; if dismissed it cannot be reopened.
-   Implementation-time UI work captures the snapshot once and discards it.
+   modal.** The acting seat sees the (up to) three random opponent hand
+   cards in a single modal disclosure; if dismissed it cannot be
+   reopened. Implementation-time UI work captures the snapshot once and
+   discards it. **Implemented in cCp28** as a `choose_option` /
+   `opponent_hand_reveal` acknowledgement prompt with `target.kind ===
+   "none"`. The reveal lives only in `pendingPrompt.context.revealedCardIds`
+   and is cleared on acknowledgement; no `MatchState` field retains it.
+   See `docs/gwent-rules.md` §17.12m.
 7. **`look_three_cards` and mulligan / setup-time use.** **Settled:
    leaders fire in the play phase only.** Same gate as today's
    implemented leaders (`getLeaderMove` returns no move during
-   mulligan).
+   mulligan). **Implemented in cCp28** — `getLeaderMove` returns no
+   move outside `playing` phase for `look_three_cards`, including
+   `mulligan`, `round_end`, `game_end`, and `setup`.
 8. **`cancel_leader` semantics.** **Settled: reaction / current-round
    suppression.** `cancel_leader` can be played as a reaction; it
    suppresses the opponent's leader effect for the current round only.
@@ -1364,6 +1429,142 @@ cCp19+ implementation:
 
 ## Change Log
 
+- 2026-05-04 (cCp28): `look_three_cards` (Emhyr var Emreis: Emperor of
+  Nilfgaard) promoted from `placeholder` to `implemented` as the
+  engine's first **hidden-info disclosure leader** (Pattern 5 marked
+  IMPLEMENTED). cCp28 opens Tranche 4. New pure helper module
+  `src/game/core/leaderLookThreeCards.ts` exporting
+  `LOOK_THREE_CARDS_LEADER_SOURCE_ID`,
+  `LOOK_THREE_CARDS_REVEAL_COUNT`,
+  `getLookThreeCardsEligibility`, and `planLookThreeCardsReveal`. The
+  helper inspects opponent hand length, selects up to three opponent
+  hand cards via `createSeededRngFromState` + `shuffleWithRng`, and
+  returns the chosen card IDs in the opponent's natural hand order.
+  RNG advances only when opponent hand length > 3; for hand length 1,
+  2, or 3 the full hand is revealed without invoking RNG and
+  `state.rng.state` is preserved. `getLeaderMove` emits exactly one
+  no-target `use_leader` move when opponent hand length ≥ 1
+  (`target.kind === "none"`, `metadata.targetRequirement === "none"`,
+  `metadata.targetCount === revealCount`,
+  `metadata.targetLabel === "opponent hand"`, plus diagnostic
+  `opponentHandCount` / `revealCount`). Empty opponent hand emits no
+  legal `use_leader` move. `executeLeader` clones state, advances
+  RNG only if a real subset selection happens, emits
+  `ability_triggered`, `opponent_hand_revealed { reason:
+  "look_three_cards", seatId, opponentSeatId, cardIds, sourceIds }`,
+  `ability_resolved.revealed_opponent_hand`, sets `seat.leaderUsed =
+  true` (the leader is consumed at `UseLeader`), emits `leader_used`,
+  and opens an acknowledgement prompt: `kind === "choose_option"`,
+  `stage === "opponent_hand_reveal"`, single option
+  `look-three-cards:acknowledge` with `target.kind === "none"`,
+  `context.revealedCardIds` carries the chosen opponent hand card
+  IDs. `currentTurn` stays on the acting seat while the prompt is
+  pending. Acknowledgement (`ChoosePromptOption { optionId:
+  "look-three-cards:acknowledge" }`) emits `prompt_resolved`, clears
+  `state.pendingPrompt`, and the outer command path hands off the
+  turn through the existing `handoffTurn` helper. After
+  acknowledgement, **no `MatchState` field retains the reveal** — the
+  snapshot lived only in `pendingPrompt.context.revealedCardIds` and
+  the prompt is gone. Revealed cards are **not** moved out of the
+  opponent's hand and do **not** trigger their abilities. Adds the
+  new `GameEvent` variant `opponent_hand_revealed` (internal/raw event
+  log only), the new `PendingPromptTarget` variant `{ kind: "none" }`,
+  the new `PendingPromptStage` value `"opponent_hand_reveal"`, the
+  new `PendingPromptContext.revealedCardIds` field, and new
+  `UseLeaderMove.metadata` diagnostic fields `opponentHandCount` /
+  `revealCount`. `getPromptMoves` returns `[]` to the non-acting seat
+  for the acknowledgement prompt; the acting seat's prompt move
+  carries `target.kind === "none"`. AI seat observation extended
+  with `PendingPromptSummary.revealedCards` (acting seat only). Safe
+  simulation export extended with `SafePromptState.revealedCards`
+  using prompt-local refs `revealed_opponent_hand_<index>` (acting
+  perspective only). Recent activity / event summaries render
+  count-only labels ("Human looked at 3 opponent hand cards") and
+  never the revealed names or source IDs. Updates
+  `OfficialLeaderPromotionManifest`: `executableLeaderSourceIds`
+  grows from 12 to 13 (adds Emperor of Nilfgaard);
+  `implementedLeaderSourceIds` grows from 20 to 21;
+  `placeholderLeaderAbilityIds` shrinks from 2 to 1 (removes
+  `look_three_cards`, leaving only `cancel_leader`). Adds 43 focused
+  tests in `tests/game/coreLookThreeCardsLeader.test.ts` covering
+  metadata promotion, manifest accounting, helper outcomes
+  (eligibility gates, hand-size 0/1/2/3/4+ reveal selection, no-RNG
+  for ≤3 hand sizes, RNG advance for >3, opponent-hand-order
+  preservation, determinism, missing instance / missing source
+  defensive behavior), legal-move integration (one no-target move
+  with correct metadata, no move on empty / used / wrong phase /
+  wrong turn / passed / prompt pending), command execution (rejects
+  non-`none` target without mutation, rejects empty opponent hand
+  without consuming leader, full event sequence, leaderUsed=true at
+  UseLeader, no turn handoff while prompt pending, prompt shape with
+  context.revealedCardIds, repeated UseLeader is illegal, no card
+  movement, no card abilities triggered, off-owner cards in opponent
+  hand are eligible), acknowledgement (clears prompt and hands off,
+  no reopenable snapshot retained, second UseLeader is illegal post-
+  acknowledgement, wrong seat / invalid option ID rejection),
+  hidden-info contract (`getPromptMoves` only emits to acting seat,
+  `buildSeatObservation` includes revealed cards only for prompt
+  owner and `pendingPrompt: null` for opponent,
+  `buildSafeSimulationObservation` exposes
+  `revealed_opponent_hand_<n>` refs only to acting perspective and
+  no revealed instance IDs in opponent perspective), AI-owned
+  prompts (human seat sees no prompt moves and `pendingPrompt: null`
+  in observation while AI seat sees its own revealed cards), and a
+  regression that other implemented leaders still emit their
+  `use_leader` moves. Adds 6 focused UI tests in
+  `tests/components/gwent/authenticMatchViewModel.test.ts` covering
+  the new `buildLookThreeCardsRevealViewModel` helper (returns null
+  for non-look_three_cards prompts, returns null without an
+  acknowledgement move, returns null for null prompt, builds 1/2/3
+  card view models from prompt context preserving order, emits a
+  placeholder entry when a revealed instance is missing from the
+  lookup). Updates `tests/data/officialLeaderPromotion.test.ts`
+  (placeholder list shrinks to 1 entry — `cancel_leader` —
+  executable list grows to 13 with Emperor of Nilfgaard, implemented
+  union grows to 21, ability metadata block adds
+  `look_three_cards`); updates
+  `tests/data/officialCatalogImport.test.ts`
+  (`unsupportedLeaderAbilityCounts.look_three_cards` is now
+  `undefined`; new sentinel
+  `unsupportedLeaderAbilityCounts.cancel_leader > 0`); updates
+  `tests/game/coreDiscardDrawLeader.test.ts`,
+  `tests/game/coreDrawExtraCardLeader.test.ts`, and
+  `tests/game/coreRandomMedicLeader.test.ts` placeholder-list and
+  manifest-count assertions to reflect the cCp28 totals (13 / 7 /
+  1 / 21 / 1); updates
+  `tests/components/gwent/authenticDeckBuilderViewModel.test.ts`
+  placeholder-leader fixtures to point at `cancel_leader` (the
+  only remaining placeholder Nilfgaard leader is now Emhyr: The
+  White Flame); updates
+  `tests/components/gwent/authenticMatchViewModel.test.ts`
+  placeholder-status fixture to point at Emhyr: The White Flame
+  (`cancel_leader`). Updates living docs: `docs/gwent-rules.md`
+  adds §17.12m documenting the hidden-info disclosure contract,
+  RNG policy, one-time modal contract, no-trigger contract for
+  revealed cards, and the hidden-info safety boundaries; plus a
+  §16 row for *Emhyr var Emreis, Emperor of Nilfgaard* pointing at
+  §17.12m. `docs/leader-ability-matrix.md` flips the Emperor of
+  Nilfgaard row to `implemented (cCp28)` with the full implemented
+  contract, marks Pattern 5 IMPLEMENTED with the one-time-modal
+  details replacing the older persistent-observation guidance,
+  marks Tranche 4 with `look_three_cards` delivered (only
+  `cancel_leader` remaining), refines Settled Product Decision §6
+  and §7 to mark them as implemented, refreshes status counts
+  (executable 13, passive 7 unchanged, setup 1 unchanged,
+  placeholder 1), and appends this change-log entry. Pattern 5
+  marked IMPLEMENTED. Tranche 4 opened with `look_three_cards`
+  delivered. After cCp28, only `cancel_leader` (Pattern 6) remains
+  placeholder. UI ships a one-time `authentic-look-three-cards-dialog`
+  modal for human-owned reveal prompts (with new
+  `authentic-look-three-cards-card` and
+  `authentic-look-three-cards-ack` test IDs) and CSS hooks under
+  the existing `authentic-match` namespace; AI-owned reveal
+  prompts continue to surface "AI resolving prompt from legal
+  moves" without exposing card faces. The normal opponent hand
+  strip stays backs/count-only — no card becomes persistently
+  face-up. Browser smoke (`npm run ci:browser`) coverage passes through
+  the existing `tests/e2e/engine-shell-smoke.spec.ts` shell. See
+  `audit/reports/2026-05-04-cCp28-report.md` for full details.
 - 2026-05-03 (cCp27): `discard_two_draw_one_from_deck` (Eredin: Destroyer
   of Worlds) promoted from `placeholder` to `implemented` as the engine's
   first **active one-shot multi-stage prompt** leader (Pattern 3 marked

@@ -20,6 +20,7 @@ import { getRestoreDiscardCandidates } from "./leaderDiscardRestore";
 import { getDiscardRecyclePlan } from "./leaderDiscardRecycle";
 import { getOpponentDiscardDrawCandidates } from "./leaderOpponentDiscardDraw";
 import { getDiscardDrawEligibility } from "./leaderDiscardDraw";
+import { getLookThreeCardsEligibility } from "./leaderLookThreeCards";
 import { calculateScores, findUnitScorchRowTargets } from "./scoring";
 import type { CardInstance, CardInstanceId, MatchState, PendingPrompt, SeatId } from "./types";
 
@@ -122,6 +123,11 @@ export interface UseLeaderMove extends LegalMoveBase {
     discardMax?: number;
     handCount?: number;
     deckCount?: number;
+    // cCp28 `look_three_cards` reveal diagnostics. Counts only — the
+    // selected opponent hand identities live in the acknowledgement
+    // prompt context and are gated by `getPromptMoves` to the acting seat.
+    opponentHandCount?: number;
+    revealCount?: number;
   };
 }
 
@@ -667,6 +673,35 @@ const getLeaderMove = (
     ];
   }
 
+  if (leader.ability === "look_three_cards") {
+    const eligibility = getLookThreeCardsEligibility({ state, seatId });
+    if (!eligibility.canUse) {
+      return [];
+    }
+
+    return [
+      {
+        kind: "use_leader",
+        moveId: `leader:${seatId}:${leaderCardId}:${leader.ability}`,
+        seatId,
+        leaderCardId,
+        sourceId: leader.sourceId,
+        target: { kind: "none" },
+        label: `Use ${leader.name}`,
+        metadata: {
+          leaderName: leader.name,
+          ability: leader.ability,
+          abilityStatus: abilityMetadata.status,
+          targetRequirement: "none",
+          targetCount: eligibility.revealCount,
+          targetLabel: "opponent hand",
+          opponentHandCount: eligibility.opponentHandCount,
+          revealCount: eligibility.revealCount,
+        },
+      },
+    ];
+  }
+
   if (leader.ability === "discard_two_draw_one_from_deck") {
     const eligibility = getDiscardDrawEligibility({ state, seatId });
     if (!eligibility.canUse) {
@@ -748,7 +783,11 @@ const getPromptMoves = (state: MatchState, seatId: SeatId): LegalMove[] => {
   return prompt.options.map((option) => {
     let target: LegalMoveTarget;
     const promptOptionTarget = option.target;
-    if (promptOptionTarget.kind === "card_instance_set") {
+    if (promptOptionTarget.kind === "none") {
+      // cCp28 one-time acknowledgement prompt (e.g. `look_three_cards`).
+      // The acknowledgement carries no card identity by design.
+      target = { kind: "none" };
+    } else if (promptOptionTarget.kind === "card_instance_set") {
       target = {
         kind: "card_instance_set",
         side: "own",

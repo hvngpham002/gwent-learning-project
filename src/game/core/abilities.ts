@@ -1108,6 +1108,23 @@ export const resolvePromptOption = ({
     return;
   }
 
+  if (
+    prompt.kind === "choose_option" &&
+    prompt.abilityId === "look_three_cards" &&
+    prompt.stage === "opponent_hand_reveal"
+  ) {
+    if (option.target.kind !== "none") {
+      return;
+    }
+    // The leader and `opponent_hand_revealed` event were already emitted at
+    // `UseLeader` time; acknowledgement only clears the prompt and lets the
+    // outer command path hand off the turn. After clearing, no state field
+    // retains the reveal snapshot.
+    events.push({ type: "prompt_resolved", promptId: prompt.promptId, seatId, optionId });
+    state.pendingPrompt = null;
+    return;
+  }
+
   if (prompt.kind === "choose_card" && prompt.abilityId === "restore_discard_to_hand") {
     if (option.target.kind !== "card_instance") {
       return;

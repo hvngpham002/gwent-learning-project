@@ -192,19 +192,18 @@ describe("discard_two_draw_one_from_deck metadata and manifest (cCp27)", () => {
     );
   });
 
-  it("placeholder list contains exactly cancel_leader and look_three_cards after cCp27", () => {
+  it("placeholder list contains exactly cancel_leader after cCp28", () => {
     expect([...officialLeaderPromotionManifest.placeholderLeaderAbilityIds].sort()).toEqual([
       "cancel_leader",
-      "look_three_cards",
     ]);
   });
 
-  it("manifest counts after cCp27: 12 executable + 7 passive + 1 setup = 20 implemented, 2 placeholder", () => {
-    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(12);
+  it("manifest counts after cCp28: 13 executable + 7 passive + 1 setup = 21 implemented, 1 placeholder", () => {
+    expect(officialLeaderPromotionManifest.executableLeaderSourceIds).toHaveLength(13);
     expect(officialLeaderPromotionManifest.implementedPassiveLeaderSourceIds).toHaveLength(7);
     expect(officialLeaderPromotionManifest.implementedSetupLeaderSourceIds).toHaveLength(1);
-    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(20);
-    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toHaveLength(2);
+    expect(officialLeaderPromotionManifest.implementedLeaderSourceIds).toHaveLength(21);
+    expect(officialLeaderPromotionManifest.placeholderLeaderAbilityIds).toHaveLength(1);
   });
 });
 

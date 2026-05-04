@@ -86,6 +86,11 @@ export interface SafePromptState {
   abilityId: string;
   source?: SafeVisibleCardRef;
   options: SafePromptOption[];
+  // cCp28 hidden-info disclosure for `look_three_cards`. Each entry uses a
+  // prompt-local own-deck-style safe ref (`revealed_opponent_hand_<index>`)
+  // so raw opponent hand instance IDs never leak. Present only on the prompt
+  // owner's perspective; non-acting perspectives have no pending prompt.
+  revealedCards?: readonly SafeVisibleCardRef[];
 }
 
 export interface SafeSimulationObservation {

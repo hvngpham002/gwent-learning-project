@@ -539,6 +539,63 @@ button.authentic-board-card {
   background: rgba(31, 26, 18, 0.72);
 }
 
+.authentic-look-three-cards-dialog__panel {
+  width: min(720px, 100%);
+  max-height: min(720px, 90vh);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background: var(--bg-paper);
+  box-shadow: 0 18px 70px rgba(31, 26, 18, 0.32);
+}
+
+.authentic-look-three-cards-dialog__header h2 {
+  margin: 0 0 4px 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+
+.authentic-look-three-cards-dialog__header p {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.authentic-look-three-cards-dialog__cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
+.authentic-look-three-cards-dialog__card {
+  flex: 0 0 auto;
+}
+
+.authentic-look-three-cards-dialog__placeholder {
+  width: 86.5px;
+  height: 147px;
+  display: grid;
+  place-items: center;
+  border: 1px dashed var(--rule);
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--ink-muted);
+  background: var(--bg-paper-deep);
+  text-align: center;
+  padding: 6px;
+}
+
+.authentic-look-three-cards-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .authentic-discard-browser,
 .authentic-round-overlay {
   width: min(1080px, 100%);

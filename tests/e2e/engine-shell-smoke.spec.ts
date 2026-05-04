@@ -1072,3 +1072,112 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
 
   expect(pageErrors).toEqual([]);
 });
+
+test("authentic match opens a one-time look_three_cards reveal modal (cCp28)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  // Seed a custom Nilfgaard deck with Emhyr: Emperor of Nilfgaard so the human
+  // leader can fire `look_three_cards` after mulligan. The deck is intentionally
+  // bulked with units so the AI opponent retains hidden hand cards (the leader
+  // requires opponent hand length >= 1 to be legal). The modal opens for the
+  // human seat with the chosen opponent hand cards visible only to the prompt
+  // owner.
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "gwent_authentic_decks_v1",
+      JSON.stringify({
+        schemaVersion: "authentic-decks-v1",
+        activePresetId: "local-emperor-ccp28",
+        decks: [
+          {
+            presetId: "local-emperor-ccp28",
+            name: "Emperor Look Three Smoke",
+            faction: "nilfgaard",
+            leaderSourceId: "nilfgaard.emhyr-var-emreis-emperor-of-nilfgaard",
+            mainDeck: [
+              { sourceId: "nilfgaard.menno-coehoorn", count: 1 },
+              { sourceId: "nilfgaard.morvran-voorhis", count: 1 },
+              { sourceId: "nilfgaard.tibor-eggebracht", count: 1 },
+              { sourceId: "nilfgaard.albrich", count: 1 },
+              { sourceId: "nilfgaard.assire-var-anahid", count: 1 },
+              { sourceId: "nilfgaard.cynthia", count: 1 },
+              { sourceId: "nilfgaard.fringilla-vigo", count: 1 },
+              { sourceId: "nilfgaard.rainfarn", count: 1 },
+              { sourceId: "nilfgaard.renuald-aep-matsen", count: 1 },
+              { sourceId: "nilfgaard.shilard-fitz-oesterlen", count: 1 },
+              { sourceId: "nilfgaard.sweers", count: 1 },
+              { sourceId: "nilfgaard.vanhemar", count: 1 },
+              { sourceId: "nilfgaard.vattier-de-rideaux", count: 1 },
+              { sourceId: "nilfgaard.black-infantry-archer", count: 2 },
+              { sourceId: "nilfgaard.etolian-auxiliary-archers", count: 2 },
+              { sourceId: "nilfgaard.heavy-zerrikanian-fire-scorpion", count: 1 },
+              { sourceId: "nilfgaard.nausicaa-cavalry-rider", count: 3 },
+              { sourceId: "nilfgaard.siege-technician", count: 1 },
+              { sourceId: "nilfgaard.young-emissary", count: 2 },
+            ],
+            sideDeck: [],
+          },
+        ],
+      }),
+    );
+  });
+
+  await page.goto("/?engine=1&ui=authentic&seed=ccp28-emperor-1");
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+
+  const emperorDeck = page
+    .getByTestId("authentic-pregame-deck-option")
+    .filter({ hasText: "Emperor Look Three Smoke" });
+  await expect(emperorDeck).toBeVisible();
+  await emperorDeck.click();
+
+  await page.getByTestId("authentic-pregame-begin").click();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
+  await page.getByTestId("authentic-start-match-confirm").click();
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+
+  const trigger = page.getByTestId("authentic-leader-action");
+  await expect(trigger).toBeVisible();
+  // The look_three_cards leader emits exactly one no-target legal `use_leader`
+  // move; the trigger should be enabled because the AI opponent has cards in
+  // hand after mulligan.
+  await expect(trigger).toBeEnabled();
+
+  await trigger.click();
+
+  // The one-time reveal modal opens.
+  const dialog = page.getByTestId("authentic-look-three-cards-dialog");
+  await expect(dialog).toBeVisible();
+
+  // The dialog shows 1-3 revealed card faces.
+  const revealedCards = page.getByTestId("authentic-look-three-cards-card");
+  const revealedCount = await revealedCards.count();
+  expect(revealedCount).toBeGreaterThanOrEqual(1);
+  expect(revealedCount).toBeLessThanOrEqual(3);
+
+  // No raw deck instance IDs leak into the dialog text.
+  const dialogText = (await dialog.textContent()) ?? "";
+  expect(dialogText).not.toMatch(/seat_[ab]:\d{3}:/);
+
+  // Acknowledgement closes the dialog.
+  await page.getByTestId("authentic-look-three-cards-ack").click();
+  await expect(dialog).toHaveCount(0);
+
+  // The dialog cannot be reopened: the leader is now used.
+  await expect(page.getByTestId("authentic-leader-action")).toBeDisabled();
+
+  // Recent activity confirms the human used the leader. The activity entry
+  // does not leak revealed card names or source IDs (count-only summary).
+  const activity = page.getByTestId("authentic-recent-activity");
+  await expect(activity).toContainText(/Human used leader/);
+  const activityText = (await activity.textContent()) ?? "";
+  expect(activityText).not.toMatch(/seat_[ab]:\d{3}:/);
+
+  // The opponent hand strip stays backs/count-only.
+  const matchPageText = await visiblePageText(page);
+  expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
+  expect(pageErrors).toEqual([]);
+});

@@ -54,6 +54,15 @@ const buildPromptSummary = (
     return null;
   }
 
+  // cCp28: surface the revealed opponent hand cards to the prompt owner so the
+  // AI heuristic and any downstream observer can render the disclosure. The
+  // non-acting seat receives `pendingPrompt: null` above, so this never leaks.
+  const revealedCardIds = prompt.context?.revealedCardIds ?? null;
+  const revealedCards =
+    revealedCardIds && revealedCardIds.length > 0
+      ? summarizeCards(state, revealedCardIds, cardsBySourceId)
+      : undefined;
+
   return {
     promptId: prompt.promptId,
     seatId: prompt.seatId,
@@ -62,6 +71,13 @@ const buildPromptSummary = (
     sourceCardId: prompt.sourceCardId,
     options: prompt.options.map((option) => {
       const target = option.target;
+      if (target.kind === "none") {
+        // cCp28 acknowledgement: no card identity attached to the target.
+        return {
+          optionId: option.optionId,
+          label: option.label,
+        };
+      }
       if (target.kind === "card_instance_set") {
         // cCp27 stage 1: a hand-card combination. Expose target strengths
         // as the sum of the selected cards' strengths so the heuristic
@@ -85,6 +101,7 @@ const buildPromptSummary = (
         targetStrength: cardsBySourceId.get(target.sourceId)?.strength,
       };
     }),
+    ...(revealedCards ? { revealedCards } : {}),
   };
 };
 

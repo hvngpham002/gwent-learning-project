@@ -18,6 +18,7 @@ import {
   selectEngineLeaderStatus,
   selectEngineLegalMovesForAi,
   selectEngineLegalMovesForHuman,
+  selectEngineLookThreeCardsReveal,
   selectEngineLock,
   selectEngineMatch,
   selectEnginePrompt,
@@ -63,6 +64,7 @@ import {
   buildAuthenticSeatSummary,
   buildGameEndNavigationActions,
   buildLeaderActionViewModel,
+  buildLookThreeCardsRevealViewModel,
   buildMatchCardInspection,
   buildMatchLeaderInspection,
   buildMedicPromptOptions,
@@ -80,6 +82,7 @@ import {
   type AuthenticRuntimeCardViewModel,
   type AuthenticSeatSummaryViewModel,
   type LeaderActionViewModel,
+  type LookThreeCardsRevealViewModel,
   type MatchCardInspectionOrigin,
 } from "./matchViewModel";
 import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
@@ -596,6 +599,65 @@ const ActionPanel: React.FC<{
   );
 };
 
+const LookThreeCardsRevealDialog: React.FC<{
+  view: LookThreeCardsRevealViewModel;
+  onAcknowledge: (moveId: string) => void;
+}> = ({ view, onAcknowledge }) => {
+  const cardCount = view.cards.length;
+  const titleId = "authentic-look-three-cards-dialog-title";
+  return (
+    <div
+      className="authentic-modal authentic-look-three-cards-dialog"
+      data-testid="authentic-look-three-cards-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+    >
+      <section className="authentic-look-three-cards-dialog__panel">
+        <header className="authentic-look-three-cards-dialog__header">
+          <h2 id={titleId}>
+            {view.leaderName ? `${view.leaderName.toLocaleLowerCase()} · ` : ""}
+            looking at {view.opponentLabel.toLocaleLowerCase()} hand
+          </h2>
+          <p>
+            you may see {cardCount === 1 ? "1 card" : `${cardCount} cards`} once. dismissing closes the
+            view permanently.
+          </p>
+        </header>
+        <div className="authentic-look-three-cards-dialog__cards">
+          {view.cards.map((entry) => (
+            <div
+              key={entry.key}
+              className="authentic-look-three-cards-dialog__card"
+              data-testid="authentic-look-three-cards-card"
+              data-source-id={entry.card?.card.sourceId}
+              data-instance-id={entry.card?.key}
+            >
+              {entry.card ? (
+                <AuthenticCard card={entry.card.card} size="md" />
+              ) : (
+                <div className="authentic-look-three-cards-dialog__placeholder">
+                  {entry.placeholderLabel ?? "Unknown card"}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        <footer className="authentic-look-three-cards-dialog__footer">
+          <button
+            type="button"
+            className="authentic-button authentic-button--primary"
+            data-testid="authentic-look-three-cards-ack"
+            onClick={() => onAcknowledge(view.acknowledgeMoveId)}
+          >
+            {view.acknowledgeLabel.toLocaleLowerCase()}
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+};
+
 const PromptPanel: React.FC<{
   promptTitle: string | null;
   ownerLabel: string | null;
@@ -1048,6 +1110,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const lastError = useAppSelector(selectEngineLastError);
   const humanMoves = useAppSelector(selectEngineLegalMovesForHuman);
   const aiMoves = useAppSelector(selectEngineLegalMovesForAi);
+  const lookThreeCardsRevealCards = useAppSelector(selectEngineLookThreeCardsReveal);
 
   const startSeed = useMemo(() => getEngineSeedFromSearch(window.location.search), []);
   const debugRevealAiMulligan = useMemo(() => isDebugAiMulliganEnabled(), []);
@@ -1534,6 +1597,23 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
         ? buildMedicPromptOptions({ promptMoves, cardLookup: engineCardsById })
         : [],
     [engineCardsById, humanSeat, prompt?.kind, prompt?.seatId, promptMoves],
+  );
+  const lookThreeCardsRevealCardLookup = useMemo(
+    () => new Map(lookThreeCardsRevealCards.map((card) => [card.instanceId, card])),
+    [lookThreeCardsRevealCards],
+  );
+  const lookThreeCardsRevealView = useMemo<LookThreeCardsRevealViewModel | null>(
+    () =>
+      prompt && prompt.seatId === humanSeat
+        ? buildLookThreeCardsRevealViewModel({
+            prompt,
+            promptMoves,
+            cardLookup: lookThreeCardsRevealCardLookup,
+            leaderName: leaders ? leaders[humanSeat]?.name ?? null : null,
+            opponentLabel: SEAT_LABELS[aiSeat],
+          })
+        : null,
+    [aiSeat, humanSeat, leaders, lookThreeCardsRevealCardLookup, prompt, promptMoves],
   );
   const statusBanner = useMemo(
     () =>
@@ -2373,6 +2453,12 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               );
             })()
           : null}
+        {lookThreeCardsRevealView ? (
+          <LookThreeCardsRevealDialog
+            view={lookThreeCardsRevealView}
+            onAcknowledge={choosePromptOption}
+          />
+        ) : null}
         {showRoundOverlay && latestRoundOverlay && latestRound ? (
           <RoundOverlay
             overlay={latestRoundOverlay}

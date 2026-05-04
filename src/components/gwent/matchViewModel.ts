@@ -369,6 +369,88 @@ export const groupDiscardCards = (cards: readonly EngineCardViewModel[]): Discar
   });
 };
 
+export interface LookThreeCardsRevealCardViewModel {
+  readonly key: string;
+  readonly card: AuthenticRuntimeCardViewModel | null;
+  readonly placeholderLabel: string | null;
+}
+
+export interface LookThreeCardsRevealViewModel {
+  readonly promptId: string;
+  readonly leaderName: string | null;
+  readonly opponentLabel: string;
+  readonly cards: readonly LookThreeCardsRevealCardViewModel[];
+  readonly acknowledgeMoveId: string;
+  readonly acknowledgeLabel: string;
+}
+
+export const buildLookThreeCardsRevealViewModel = ({
+  prompt,
+  promptMoves,
+  cardLookup,
+  leaderName,
+  opponentLabel,
+}: {
+  readonly prompt: {
+    readonly promptId: string;
+    readonly seatId: SeatId;
+    readonly kind: string;
+    readonly abilityId: string;
+    readonly stage?: string;
+    readonly context?: { readonly revealedCardIds?: readonly CardInstanceId[] };
+  } | null;
+  readonly promptMoves: readonly {
+    readonly moveId: string;
+    readonly optionId: string;
+    readonly label: string;
+  }[];
+  readonly cardLookup: ReadonlyMap<CardInstanceId, EngineCardViewModel>;
+  readonly leaderName?: string | null;
+  readonly opponentLabel: string;
+}): LookThreeCardsRevealViewModel | null => {
+  if (
+    !prompt ||
+    prompt.kind !== "choose_option" ||
+    prompt.abilityId !== "look_three_cards" ||
+    prompt.stage !== "opponent_hand_reveal"
+  ) {
+    return null;
+  }
+
+  const ackMove = promptMoves.find(
+    (move) => move.optionId === "look-three-cards:acknowledge",
+  );
+  if (!ackMove) {
+    return null;
+  }
+
+  const revealedCardIds = prompt.context?.revealedCardIds ?? [];
+  const cards = revealedCardIds.map((cardId, index): LookThreeCardsRevealCardViewModel => {
+    const engineCard = cardLookup.get(cardId);
+    if (engineCard) {
+      return {
+        key: `${cardId}:${index}`,
+        card: toRuntimeCard(engineCard),
+        placeholderLabel: null,
+      };
+    }
+    return {
+      key: `revealed-placeholder:${index}`,
+      card: null,
+      placeholderLabel: "Revealed card",
+    };
+  });
+
+  return {
+    promptId: prompt.promptId,
+    leaderName: leaderName ?? null,
+    opponentLabel,
+    cards,
+    acknowledgeMoveId: ackMove.moveId,
+    acknowledgeLabel: ackMove.label,
+  };
+};
+
 export const buildMedicPromptOptions = ({
   promptMoves,
   cardLookup,

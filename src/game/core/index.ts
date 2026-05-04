@@ -14,3 +14,4 @@ export * from "./leaderOpponentDiscardDraw";
 export * from "./leaderRandomMedic";
 export * from "./leaderSetup";
 export * from "./leaderDiscardDraw";
+export * from "./leaderLookThreeCards";

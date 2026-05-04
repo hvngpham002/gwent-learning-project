@@ -345,6 +345,7 @@ One-shot effects include: Medic (plays one card), Spy (draw on play), Muster (pl
 | **Crach an Craite** | The catalog ability `shuffle_discards_into_decks` is an **active one-shot leader** (cCp23). When fired, every non-empty discard pile is moved into the same seat's deck and that seat's deck is shuffled deterministically through the engine's seeded RNG; an empty-discard seat is **not** shuffled. A card moves to the deck of the seat whose discard it currently occupies — Spies and other off-owner cards recycle into the discard-pile seat's deck, with `owner` preserved and `controller` reset to the destination seat. Hand, deck, side deck, removed-from-game, board, row horns, weather zone, and leader zone are not touched. The leader emits no legal `use_leader` move when **both** discard piles are empty; a single non-empty discard is enough to enable it. Recycled cards do not resolve their abilities (no `card_played`); they behave normally only if drawn and played later. Skellige's round-three return §17.18 still operates on whatever is in discard at future round-end. See §17.12h. |
 | **Emhyr var Emreis, Invader of the North** | The catalog ability `random_medic` is a **whole-match passive Medic mutation** (cCp25). While this leader is the seat's leader, every **non-hero** Medic source controlled by that seat revives a **random eligible non-hero Unit** from that seat's own discard pile (uniform over candidate cards through the engine's seeded RNG; deterministic row fallback `close → ranged → siege` for multi-row targets) instead of opening a player-choice Medic prompt. Spy placement still flips the revived card to the opponent board side and resolves Spy draw; `controller` becomes the acting seat with `owner` preserved. **Hero Medic sources are unaffected** and continue to use the normal Medic prompt. The leader emits no `use_leader` move and never sets `seat.leaderUsed`. The cCp18 §C-3 conflict is settled in favor of the Medic-mutation reading; the older "random Special replay from discard" wording is superseded. See §17.12j. |
 | **Francesca Findabair, Daisy of the Valley** | The catalog ability `draw_extra_card` is a **setup-time initial hand-size modifier** (cCp26). While this leader is the seat's leader, the seat draws **11 cards** (not 10) from the top of the already-shuffled deck during `startMatch` initial draw, before mulligan opens. The extra card is the next deterministic card off the seeded-RNG-shuffled deck top — there is no prompt, no card-by-card choice, and no faction/strength/row filtering. The mulligan budget is unchanged at two redraws. The leader emits no `use_leader` legal move, never sets `seat.leaderUsed`, and never emits `leader_used`. See §17.12k. |
+| **Emhyr var Emreis, Emperor of Nilfgaard** | The catalog ability `look_three_cards` is an **active one-shot hidden-info disclosure leader** (cCp28). When eligible (the opponent has at least one card in hand), the leader opens a one-time acknowledgement modal that reveals **up to three** random opponent hand cards (`min(3, opponent hand length)`) to the acting seat only. RNG advances only when the opponent has more than three hand cards (length 1-3 is a deterministic full-hand reveal that leaves `state.rng.state` unchanged). The leader is consumed at `UseLeader`; the acknowledgement prompt blocks the turn until the acting seat dismisses it. After dismissal, the reveal snapshot is cleared from `pendingPrompt` and **cannot be reopened** from product UI or hidden-info-safe surfaces. Revealed cards are not moved out of the opponent's hand and do not trigger their abilities. The non-acting seat sees `pendingPrompt: null` in observation/export and never receives the revealed names, source IDs, or instance IDs. See §17.12m. |
 
 ---
 
@@ -1461,6 +1462,118 @@ Hidden-info safety:
 
 The §16 Specific Card FAQ row for *Eredin, Destroyer of Worlds* points
 at this section.
+
+### 17.12m Look Three Cards Leader (cCp28)
+
+`nilfgaard.emhyr-var-emreis-emperor-of-nilfgaard` (Emhyr var Emreis:
+Emperor of Nilfgaard) carries the `look_three_cards` leader ability.
+cCp28 promotes the metadata from `placeholder` to `implemented` as an
+**active one-shot hidden-info disclosure leader**. This is the engine's
+first explicit hidden-info disclosure rule. cCp28 opens Tranche 4 of
+`docs/leader-ability-matrix.md` (Pattern 5 IMPLEMENTED).
+
+Effect contract:
+
+- **Legal-use gates.** Standard active-leader gates (phase = `playing`,
+  current turn is the acting seat, acting seat has not passed, leader
+  is not used, no `pendingPrompt`) plus a new gate: the opponent must
+  have at least **one** card in hand. The leader emits no `use_leader`
+  legal move when opponent hand length is 0. A manual `UseLeader`
+  attempt with empty opponent hand rejects with `EngineRuleError` and
+  never sets `seat.leaderUsed`.
+- **Reveal count.** `min(3, opponent hand length)`. Hand length 1
+  reveals one card. Hand length 2 reveals both cards. Hand length 3
+  reveals all three cards. Hand length greater than 3 selects exactly
+  three cards uniformly without replacement using the engine's
+  deterministic seeded RNG.
+- **Randomness and ordering.** The selection uses
+  `createSeededRngFromState(state.rng.seed, state.rng.state)` plus
+  `shuffleWithRng`, then takes the first three cards of the shuffled
+  list as a set. The revealed list returned to display is the
+  intersection of the opponent's natural hand order with that set, so
+  the visible reveal order is deterministic and matches opponent hand
+  order. **RNG advances only when the opponent has more than three
+  cards.** For hand length 1, 2, or 3, the full hand is revealed
+  without invoking RNG and `state.rng.state` is preserved.
+- **One-time disclosure.** `UseLeader` clones state, advances RNG only
+  if a real subset selection happened, and emits this event sequence:
+  `ability_triggered`, `opponent_hand_revealed`, `ability_resolved`
+  (`outcome === "revealed_opponent_hand"`), `leader_used`, and
+  `prompt_opened`. The leader is consumed at `UseLeader` —
+  `seat.leaderUsed = true` is set at this point, **not** at
+  acknowledgement. The transaction also opens a `pendingPrompt` with
+  `kind === "choose_option"`,
+  `abilityId === "look_three_cards"`,
+  `stage === "opponent_hand_reveal"`, exactly one option (`optionId
+  === "look-three-cards:acknowledge"`, label `Continue`,
+  `target.kind === "none"`), and a `context.revealedCardIds` snapshot
+  of the chosen opponent hand card IDs. `currentTurn` stays on the
+  acting seat while the prompt is pending.
+- **Acknowledgement.** `ChoosePromptOption` validates seat ownership,
+  prompt kind/ability/stage, the single acknowledgement option ID, and
+  the `none` target shape. On success, the resolver emits
+  `prompt_resolved`, clears `state.pendingPrompt`, and the outer
+  command path hands off the turn through `handoffTurn`. After
+  acknowledgement, **no MatchState field retains the reveal snapshot**
+  — the only place the revealed identities ever lived was inside the
+  pending prompt's context, and that prompt is now cleared.
+- **No card movement.** Revealed cards are not moved out of the
+  opponent's hand. They keep their original zone, owner, and
+  controller. No `card_moved` event fires for revealed cards.
+- **No ability trigger.** Revealing cards does not invoke
+  `resolveCardAbilities` on any of them. Specials (e.g. Scorch),
+  weather, Medic, Spy, and other on-play abilities do not fire on
+  reveal.
+- **Card eligibility.** Every card physically in the opponent's hand
+  is eligible: units, heroes, specials, weather, side-deck-only /
+  generated cards if they somehow reached hand, and off-owner cards
+  if they physically sit there. Missing card instances are skipped
+  defensively. Missing catalog sources are skipped from the
+  `revealedSourceIds` display list (the card is still selectable; the
+  display list just omits the unresolvable source).
+
+The legal-move target shape for the acknowledgement prompt:
+
+```ts
+target: { kind: "none" }
+```
+
+`getPromptMoves` only emits the acknowledgement to the acting seat.
+The non-acting seat sees an empty `legalMoves` array while the prompt
+is open.
+
+Hidden-info safety:
+
+- The acting seat sees the revealed cards through the
+  `pendingPrompt.context.revealedCardIds` snapshot only while the
+  acknowledgement prompt is open. After acknowledgement, the snapshot
+  is gone.
+- The non-acting seat must not see the revealed identities anywhere.
+  `getPromptMoves` returns `[]` for the non-acting seat; AI seat
+  observations from `seatObservation.buildSeatObservation` return
+  `pendingPrompt: null` to the wrong seat. The acting seat's
+  observation surfaces the revealed cards via a new
+  `PendingPromptSummary.revealedCards` field; the non-acting
+  observation never reaches that branch.
+- Simulation export observations expose the revealed opponent hand
+  cards to the prompt-owner perspective only, through prompt-local
+  safe refs `revealed_opponent_hand_<index>` so raw opponent hand
+  instance IDs never appear in the safe export. The non-acting
+  perspective has `pendingPrompt: null` and exposes no revealed names,
+  source IDs, or instance IDs.
+- Recent-activity / event summaries render the disclosure as a
+  count-only message ("Human looked at 3 opponent hand cards" /
+  "AI looked at 3 opponent hand cards") and never the revealed names
+  or source IDs, even if the underlying engine event payload carries
+  them for the internal event log.
+- Product UI shows a one-time modal (`authentic-look-three-cards-dialog`)
+  for human-owned reveal prompts only. After acknowledgement, the
+  modal disappears and cannot be reopened from any visible control.
+  The normal opponent hand strip stays backs/count-only — no card
+  becomes persistently face-up after dismissal.
+
+The §16 Specific Card FAQ row for *Emhyr var Emreis, Emperor of
+Nilfgaard* points at this section.
 
 ### 17.13 Draws, Ties, and Nilfgaard
 

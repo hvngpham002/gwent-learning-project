@@ -116,7 +116,10 @@ export interface MatchConfig {
   };
 }
 
-export type PendingPromptStage = "discard_selection" | "deck_draw_selection";
+export type PendingPromptStage =
+  | "discard_selection"
+  | "deck_draw_selection"
+  | "opponent_hand_reveal";
 
 export type PendingPromptTarget =
   | {
@@ -145,6 +148,12 @@ export type PendingPromptTarget =
       kind: "deck_card_instance";
       cardId: CardInstanceId;
       sourceId: string;
+    }
+  | {
+      // cCp28 acknowledgement target. The acknowledgement carries no card
+      // identity so it cannot be misused to peek at hidden state. Used for
+      // the one-time `look_three_cards` opponent-hand reveal modal.
+      kind: "none";
     };
 
 export interface PendingPromptContext {
@@ -153,6 +162,11 @@ export interface PendingPromptContext {
   discardedCardIds?: readonly CardInstanceId[];
   minDiscardCount?: number;
   maxDiscardCount?: number;
+  // cCp28 one-time opponent-hand reveal: the chosen opponent hand card IDs
+  // visible to the acting seat for the duration of the acknowledgement
+  // prompt. After acknowledgement the prompt (and this snapshot) is cleared
+  // and cannot be reopened from product UI or hidden-info-safe surfaces.
+  revealedCardIds?: readonly CardInstanceId[];
 }
 
 export interface PendingPrompt {
@@ -162,8 +176,8 @@ export interface PendingPrompt {
   sourceCardId?: CardInstanceId;
   sourceId?: string;
   abilityId: string;
-  // cCp27 multi-stage prompts use this to disambiguate stage 1 (discard
-  // selection) from stage 2 (deck draw). Single-stage prompts omit it.
+  // cCp27 multi-stage prompts and cCp28 one-time reveal prompts use this to
+  // disambiguate prompt stages. Single-stage prompts omit it.
   stage?: PendingPromptStage;
   context?: PendingPromptContext;
   options: readonly PendingPromptOption[];
@@ -339,4 +353,15 @@ export type GameEvent =
       seatId: SeatId;
       row: CatalogRow;
       abilityId: "avenger" | "summon";
+    }
+  | {
+      // cCp28 hidden-info disclosure event for `look_three_cards`.
+      // The event log is internal/raw; hidden-info-safe summaries must not
+      // render the revealed card names or IDs to the non-acting seat.
+      type: "opponent_hand_revealed";
+      seatId: SeatId; // seat that used the leader and may see the cards
+      opponentSeatId: SeatId; // seat whose hand was sampled
+      cardIds: readonly CardInstanceId[];
+      sourceIds: readonly string[];
+      reason: "look_three_cards";
     };

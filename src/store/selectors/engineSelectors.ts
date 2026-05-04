@@ -209,6 +209,34 @@ export const selectEngineHumanHand = createSelector(selectEngineMatch, selectEng
   match ? cardIdsToViewModels(match, match.seats[humanSeat].hand, cardById, leaderById) : [],
 );
 
+// cCp28 hidden-info disclosure for `look_three_cards`. Returns the revealed
+// opponent hand cards as engine view models only when the human seat owns the
+// pending acknowledgement prompt. Any other seat (or no prompt) returns [].
+// This selector is the only product UI surface that learns the revealed
+// opponent hand identities; it is gated by `pendingPrompt.seatId === humanSeat`
+// so an AI-owned reveal prompt cannot leak through.
+export const selectEngineLookThreeCardsReveal = createSelector(
+  selectEngineMatch,
+  selectEngineHumanSeat,
+  selectCardSourceById,
+  selectLeaderSourceById,
+  (match, humanSeat, cardById, leaderById) => {
+    if (!match) return [] as EngineCardViewModel[];
+    const prompt = match.pendingPrompt;
+    if (
+      !prompt ||
+      prompt.seatId !== humanSeat ||
+      prompt.kind !== "choose_option" ||
+      prompt.abilityId !== "look_three_cards" ||
+      prompt.stage !== "opponent_hand_reveal"
+    ) {
+      return [];
+    }
+    const revealedCardIds = prompt.context?.revealedCardIds ?? [];
+    return cardIdsToViewModels(match, revealedCardIds, cardById, leaderById);
+  },
+);
+
 export const selectEngineAiHandCount = createSelector(selectEngineMatch, selectEngineAiSeat, (match, aiSeat) =>
   match ? match.seats[aiSeat].hand.length : 0,
 );

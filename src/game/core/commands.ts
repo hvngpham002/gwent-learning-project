@@ -21,6 +21,10 @@ import {
   MAX_DISCARD_COUNT,
   MIN_DISCARD_COUNT,
 } from "./leaderDiscardDraw";
+import {
+  getLookThreeCardsEligibility,
+  planLookThreeCardsReveal,
+} from "./leaderLookThreeCards";
 import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./leaderWeather";
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
@@ -1379,6 +1383,109 @@ const executeLeader = (input: StatefulCommandInput): EngineTransaction => {
     return { state, events };
   }
 
+  if (leader.ability === "look_three_cards") {
+    const target = command.target as LegalMoveTarget | undefined;
+    if (target && target.kind !== "none") {
+      throw new EngineRuleError("invalid_target", "Look Three Cards leader does not accept a target.", {
+        leaderSourceId: leader.sourceId,
+        ability: leader.ability,
+        target,
+      });
+    }
+
+    const eligibility = getLookThreeCardsEligibility({ state: input.state, seatId });
+    if (!eligibility.canUse) {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Look Three Cards leader requires the opponent to have at least one card in hand.",
+        {
+          leaderSourceId: leader.sourceId,
+          ability: leader.ability,
+          opponentHandCount: eligibility.opponentHandCount,
+        },
+      );
+    }
+
+    const plan = planLookThreeCardsReveal({
+      state: input.state,
+      seatId,
+      catalogCards: input.catalogCards,
+    });
+    if (plan.outcome === "no_opponent_hand") {
+      throw new EngineRuleError(
+        "invalid_target",
+        "Look Three Cards leader requires the opponent to have at least one card in hand.",
+        {
+          leaderSourceId: leader.sourceId,
+          ability: leader.ability,
+        },
+      );
+    }
+
+    const state = cloneState(input.state);
+    const events: GameEvent[] = [];
+    const seat = state.seats[seatId];
+    const leaderCardId = seat.leader as CardInstanceId;
+
+    if (plan.rngAdvanced) {
+      state.rng.state = plan.nextRngState;
+    }
+
+    events.push({
+      type: "ability_triggered",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+    });
+    events.push({
+      type: "opponent_hand_revealed",
+      seatId,
+      opponentSeatId: plan.opponentSeatId,
+      cardIds: [...plan.revealedCardIds],
+      sourceIds: [...plan.revealedSourceIds],
+      reason: "look_three_cards",
+    });
+    events.push({
+      type: "ability_resolved",
+      sourceId: leader.sourceId,
+      cardId: leaderCardId,
+      abilityId: leader.ability,
+      outcome: "revealed_opponent_hand",
+    });
+
+    seat.leaderUsed = true;
+    events.push({
+      type: "leader_used",
+      seatId,
+      leaderCardId,
+      abilityId: leader.ability,
+    });
+
+    const prompt = {
+      promptId: `prompt:${state.round}:${seatId}:${leaderCardId}:look-three-cards`,
+      seatId,
+      kind: "choose_option" as const,
+      sourceCardId: leaderCardId,
+      sourceId: leader.sourceId,
+      abilityId: leader.ability,
+      stage: "opponent_hand_reveal" as const,
+      context: {
+        revealedCardIds: [...plan.revealedCardIds],
+      },
+      options: [
+        {
+          optionId: "look-three-cards:acknowledge",
+          label: "Continue",
+          target: { kind: "none" as const },
+        },
+      ],
+    };
+    state.pendingPrompt = prompt;
+    events.push({ type: "prompt_opened", prompt });
+
+    return { state, events, prompt };
+  }
+
   if (leader.ability === "discard_two_draw_one_from_deck") {
     const target = command.target as LegalMoveTarget | undefined;
     if (target && target.kind !== "none") {
@@ -1545,6 +1652,28 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
         );
       }
     });
+  }
+
+  if (
+    prompt.kind === "choose_option" &&
+    prompt.abilityId === "look_three_cards" &&
+    prompt.stage === "opponent_hand_reveal"
+  ) {
+    const option = prompt.options.find((entry) => entry.optionId === command.optionId);
+    if (!option || option.target.kind !== "none") {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Look Three Cards acknowledgement prompt option has an unexpected target shape.",
+        { command, promptId: prompt.promptId },
+      );
+    }
+    if (option.optionId !== "look-three-cards:acknowledge") {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Look Three Cards acknowledgement option must be the single acknowledgement option.",
+        { command, promptId: prompt.promptId, optionId: option.optionId },
+      );
+    }
   }
 
   if (

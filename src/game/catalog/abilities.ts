@@ -225,8 +225,8 @@ export const CATALOG_LEADER_ABILITY_METADATA: Record<
   look_three_cards: {
     id: "look_three_cards",
     name: "Look Three Cards",
-    status: "placeholder",
-    description: "Looks at random cards in the opponent hand.",
+    status: "implemented",
+    description: "Active one-shot hidden-info disclosure leader. When eligible (opponent hand has at least one card), opens a one-time acknowledgement prompt (`choose_option`, `opponent_hand_reveal`) that reveals up to three random opponent hand cards (`min(3, opponent hand length)`) to the acting seat through the prompt context. RNG advances only when the opponent hand has more than three cards (length 1-3 is a deterministic full-hand reveal that leaves `state.rng.state` unchanged). The leader is consumed at `UseLeader`; the acknowledgement prompt blocks the turn until the acting seat dismisses it. After dismissal, the reveal snapshot is cleared from `pendingPrompt` and cannot be reopened from product UI or hidden-info-safe surfaces. Revealed identities are visible only to the prompt owner; the non-acting seat sees `pendingPrompt: null` in observation/export and never receives the revealed names, source IDs, or instance IDs.",
   },
   draw_opponent_discard: {
     id: "draw_opponent_discard",

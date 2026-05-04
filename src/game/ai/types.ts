@@ -49,6 +49,10 @@ export interface PendingPromptSummary {
   abilityId: string;
   sourceCardId?: CardInstanceId;
   options: PromptOptionSummary[];
+  // cCp28 hidden-info disclosure for `look_three_cards`. Present only on the
+  // acting seat's prompt summary so the non-acting seat (which receives
+  // `pendingPrompt: null`) cannot learn the revealed identities.
+  revealedCards?: readonly SeatCardSummary[];
 }
 
 export interface SeatObservation {

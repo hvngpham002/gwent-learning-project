@@ -4,6 +4,7 @@ import type { LegalMove, PlayCardMove, UseLeaderMove } from "@/game/core";
 import type { EngineBoardRowViewModel, EngineCardViewModel } from "@/store/selectors/engineSelectors";
 import {
   buildLeaderActionViewModel,
+  buildLookThreeCardsRevealViewModel,
   buildRoundOverlayViewModel,
   buildAuthenticSeatSummary,
   buildMatchCardInspection,
@@ -538,13 +539,15 @@ describe("match leader inspection view model", () => {
   });
 
   it("marks used leaders as used regardless of ability status", () => {
+    // After cCp28, only `cancel_leader` (Emhyr: The White Flame) remains
+    // placeholder. Use it as the placeholder-status fixture.
     const inspection = buildMatchLeaderInspection({
-      sourceId: "nilfgaard.emhyr-var-emreis-emperor-of-nilfgaard",
-      name: "Emhyr var Emreis: Emperor of Nilfgaard",
+      sourceId: "nilfgaard.emhyr-var-emreis-the-white-flame",
+      name: "Emhyr var Emreis: The White Flame",
       faction: "nilfgaard",
-      abilityId: "look_three_cards",
+      abilityId: "cancel_leader",
       image:
-        "/images/nilfgaard/leaders/Emhyr_var_Emreis_Emperor_of_Nilfgaard.png",
+        "/images/nilfgaard/leaders/Emhyr_var_Emreis_the_White_Flame.png",
       used: true,
       ownerLabel: "AI",
     });
@@ -725,6 +728,125 @@ describe("leader action view model", () => {
     if (!fog) throw new Error("missing fog");
     expect(fog.move.target).toEqual({ kind: "deck_card_source", seatId: "seat_a", sourceId: "neutral.impenetrable-fog" });
     expect(fog.move).toBe(moves[1]);
+  });
+});
+
+describe("buildLookThreeCardsRevealViewModel (cCp28)", () => {
+  const ackMove = {
+    moveId: "prompt:1:seat_a:leader:look-three-cards:look-three-cards:acknowledge",
+    optionId: "look-three-cards:acknowledge",
+    label: "Continue",
+  };
+  const revealedCards = [
+    card({ instanceId: "seat_b:000:reveal-1", sourceId: "monsters.fiend", name: "Fiend" }),
+    card({ instanceId: "seat_b:001:reveal-2", sourceId: "neutral.geralt-of-rivia", name: "Geralt of Rivia" }),
+    card({ instanceId: "seat_b:002:reveal-3", sourceId: "neutral.scorch", name: "Scorch" }),
+  ];
+  const lookup = new Map(revealedCards.map((c) => [c.instanceId, c]));
+  const promptShape = (revealedCardIds: readonly string[]) => ({
+    promptId: "prompt:1:seat_a:leader:look-three-cards",
+    seatId: "seat_a" as const,
+    kind: "choose_option",
+    abilityId: "look_three_cards",
+    stage: "opponent_hand_reveal",
+    context: { revealedCardIds },
+  });
+
+  it("returns null for non-look_three_cards prompts", () => {
+    const result = buildLookThreeCardsRevealViewModel({
+      prompt: { ...promptShape([]), abilityId: "restore_discard_to_hand" },
+      promptMoves: [ackMove],
+      cardLookup: lookup,
+      leaderName: "Emperor",
+      opponentLabel: "AI",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null when no acknowledgement move is present", () => {
+    const result = buildLookThreeCardsRevealViewModel({
+      prompt: promptShape(["seat_b:000:reveal-1"]),
+      promptMoves: [],
+      cardLookup: lookup,
+      leaderName: "Emperor",
+      opponentLabel: "AI",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("returns null when prompt is null (e.g. AI-owned prompt for the human seat)", () => {
+    const result = buildLookThreeCardsRevealViewModel({
+      prompt: null,
+      promptMoves: [ackMove],
+      cardLookup: lookup,
+      leaderName: "Emperor",
+      opponentLabel: "AI",
+    });
+    expect(result).toBeNull();
+  });
+
+  it("builds 1 card when revealedCardIds has 1 entry", () => {
+    const result = buildLookThreeCardsRevealViewModel({
+      prompt: promptShape(["seat_b:000:reveal-1"]),
+      promptMoves: [ackMove],
+      cardLookup: lookup,
+      leaderName: "Emperor",
+      opponentLabel: "AI",
+    });
+    expect(result).not.toBeNull();
+    expect(result?.cards).toHaveLength(1);
+    expect(result?.cards[0].card?.card.sourceId).toBe("monsters.fiend");
+    expect(result?.acknowledgeMoveId).toBe(ackMove.moveId);
+    expect(result?.acknowledgeLabel).toBe("Continue");
+  });
+
+  it("preserves prompt order across 3 entries", () => {
+    const result = buildLookThreeCardsRevealViewModel({
+      prompt: promptShape([
+        "seat_b:002:reveal-3",
+        "seat_b:000:reveal-1",
+        "seat_b:001:reveal-2",
+      ]),
+      promptMoves: [ackMove],
+      cardLookup: lookup,
+      leaderName: "Emperor",
+      opponentLabel: "AI",
+    });
+    expect(result?.cards.map((entry) => entry.card?.card.sourceId)).toEqual([
+      "neutral.scorch",
+      "monsters.fiend",
+      "neutral.geralt-of-rivia",
+    ]);
+  });
+
+  it("emits a placeholder entry when a revealed instance is missing from the lookup", () => {
+    const result = buildLookThreeCardsRevealViewModel({
+      prompt: promptShape(["seat_b:000:reveal-1", "seat_b:999:missing"]),
+      promptMoves: [ackMove],
+      cardLookup: lookup,
+      leaderName: "Emperor",
+      opponentLabel: "AI",
+    });
+    expect(result?.cards).toHaveLength(2);
+    expect(result?.cards[0].card).not.toBeNull();
+    expect(result?.cards[1].card).toBeNull();
+    expect(result?.cards[1].placeholderLabel).toBe("Revealed card");
+  });
+
+  it("returns null for an AI-owned prompt: the AuthenticMatchScreen guards on humanSeat", () => {
+    // The helper itself does not enforce seat ownership; AuthenticMatchScreen
+    // wraps it with `prompt && prompt.seatId === humanSeat`. We pin the
+    // contract that callers gating on seat ownership get null when they pass
+    // null prompt for the wrong seat.
+    expect(
+      buildLookThreeCardsRevealViewModel({
+        prompt: null,
+        promptMoves: [],
+        cardLookup: lookup,
+        leaderName: "Emperor",
+        opponentLabel: "AI",
+      }),
+    ).toBeNull();
   });
 });
 

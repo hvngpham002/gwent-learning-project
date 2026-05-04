@@ -329,6 +329,12 @@ export const summarizeEvents = ({
       label = `${seatLabels[event.prompt.seatId]} prompt opened (${formatKind(event.prompt.abilityId)})`;
     } else if (event.type === "prompt_resolved") {
       label = `${seatLabels[event.seatId]} prompt resolved`;
+    } else if (event.type === "opponent_hand_revealed") {
+      // cCp28 hidden-info safe summary. Counts only — never the revealed
+      // names or source IDs, even if the underlying event payload carries
+      // them for the engine event log.
+      const count = event.cardIds.length;
+      label = `${seatLabels[event.seatId]} looked at ${count} opponent hand card${count === 1 ? "" : "s"}`;
     } else if (event.type === "round_resolved") {
       label = `Round ${event.round} resolved: ${seatLabel(event.winner, seatLabels)}`;
     } else if (event.type === "game_ended") {
