@@ -273,6 +273,23 @@ Acceptance:
 - local PvP or AI-vs-AI UI entry points do not leak hidden information beyond intentional same-device constraints;
 - final browser smoke covers default route, setup, match, mobile width, and hidden-info safety.
 
+### Actual Post-cEp7 Polish Slices
+
+The live sequence after cEp7 intentionally split the old cEp8 promotion idea
+into smaller product-polish phases. Product promotion remains future work until
+the authentic match loop is cleaner.
+
+- `cEp8`: Weather leader choice UI. Closed the multi-legal-leader-move gap for
+  `play_any_weather` by rendering an exact legal-move choice menu with row
+  hints.
+- `cEp9`: Leader status and prompt polish. Made active/passive/setup/used/
+  suppressed leader state and prompt-specific copy legible without changing
+  engine rules.
+- `cEp10`: Round and match flow polish. Current active handoff. Refine
+  resolve-round actions, round-resolved ledgers, match-end ledgers, and
+  rematch/change-deck/close navigation while keeping round/game resolution
+  engine-owned.
+
 ## Relationship To ML Work
 
 The existing simulation and safe export work remains valuable and should not be discarded. However, Cluster E should now prioritize making the engine visible and playable through the selected UI. ML work should resume after the product UI has a stable engine-backed match surface, unless a small export/tensorization decision is needed to unblock future training design.
