@@ -120,6 +120,10 @@ cEp10 makes round resolution, match-end, and post-match navigation feel like a c
 
 The `RoundOverlay` React component now consumes the ledger view-model directly: it renders the eyebrow, title, summary table, history table, standing rows, and action buttons exactly as the helper dictates and never derives win/loss/score/gem state from board cards or events. The dialog wrapper keeps `role="dialog"` / `aria-modal="true"` and ties its accessible name to the rendered Alert title id (`authentic-round-overlay-alert-title`).
 
+### Life Gem Presentation (cEp13)
+
+The authentic match score cards render two image-backed life indicators per seat instead of plain `gems N` copy. Remaining lives use `/images/ui/life-gem.png`; spent lives use `/images/ui/life-gem-broken.png`. Both files are cropped alpha PNGs derived from the approved Imagegen sheet, so only the gem artwork appears over the parchment UI. The wrapper exposes `authentic-life-gems-human` / `authentic-life-gems-ai` test IDs and an accessible `N of 2 gems remaining` label; hidden-info boundaries are unchanged because gem counts are public engine state.
+
 Hidden-info contract:
 
 - The ledger view-model only reads `RoundResult[]`, the engine `winner`, public seat gem counts, and seat labels. It never receives card source IDs, instance IDs, or hidden hand identities, and unit tests assert no such strings appear in the serialised view-model.

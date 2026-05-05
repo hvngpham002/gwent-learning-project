@@ -230,6 +230,7 @@
 
 .authentic-score-card__leader-text,
 .authentic-score-card__leader-status,
+.authentic-score-card__life,
 .authentic-score-card__meta {
   grid-column: 1 / -1;
 }
@@ -261,6 +262,25 @@
 
 .authentic-score-card[data-leader-cancelled-this-round="true"] .authentic-score-card__leader-chip {
   color: var(--accent);
+}
+
+.authentic-score-card__life {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-top: 1px;
+}
+
+.authentic-score-card__life-gem {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+  user-select: none;
+  filter: drop-shadow(0 1px 1px rgba(36, 24, 12, 0.45));
+}
+
+.authentic-score-card__life-gem[data-gem-state="broken"] {
+  opacity: 0.88;
 }
 
 .authentic-piles {

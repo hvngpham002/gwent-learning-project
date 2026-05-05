@@ -346,6 +346,8 @@ const ScoreCard: React.FC<{
   active,
   onLeaderContextMenu,
 }) => {
+  const visibleGems = Math.max(0, Math.min(2, seat.gems));
+
   return (
     <article
       className={`authentic-score-card${active ? " is-active" : ""}`}
@@ -386,8 +388,28 @@ const ScoreCard: React.FC<{
         <span className="authentic-score-card__leader-chip">{leaderStatus.stateLabel}</span>
         <span> · {leaderStatus.categoryLabel} · {leaderStatus.reason}</span>
       </div>
+      <div
+        className="authentic-score-card__life"
+        data-testid={`authentic-life-gems-${seat.role}`}
+        aria-label={`${visibleGems} of 2 gems remaining`}
+      >
+        {[0, 1].map((gemIndex) => {
+          const intact = gemIndex < visibleGems;
+          return (
+            <img
+              key={gemIndex}
+              className="authentic-score-card__life-gem"
+              src={intact ? "/images/ui/life-gem.png" : "/images/ui/life-gem-broken.png"}
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              data-gem-state={intact ? "intact" : "broken"}
+            />
+          );
+        })}
+      </div>
       <p className="authentic-score-card__meta">
-        gems {seat.gems} · hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
+        hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
         {seat.passed ? "passed" : "active"}
       </p>
     </article>

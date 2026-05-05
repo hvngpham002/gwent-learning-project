@@ -1234,6 +1234,13 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/active/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready\s*·\s*active/i);
+    await expect(page.getByTestId("authentic-life-gems-human")).toHaveAttribute(
+      "aria-label",
+      "2 of 2 gems remaining",
+    );
+    await expect(page.getByTestId("authentic-life-gems-human").locator("img")).toHaveCount(2);
+    await expect(page.getByTestId("authentic-life-gems-human").locator('[data-gem-state="intact"]')).toHaveCount(2);
+    await expect(page.getByTestId("authentic-seat-human")).not.toContainText(/gems 2/i);
     const leaderStatusChip = page.getByTestId("authentic-leader-status-human").locator(".authentic-score-card__leader-chip");
     await expect(leaderStatusChip).toHaveCSS("border-top-style", "none");
     await expect(leaderStatusChip).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
