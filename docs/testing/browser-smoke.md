@@ -48,7 +48,7 @@ The default local `npm run ci` gate remains the fast deterministic unit/lint/bui
 
 ## Current Committed Coverage
 
-The committed smoke spec currently runs 26 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, drag/drop, card-flight, and match-end ledger flows.
+The committed smoke spec currently runs 28 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, and match-end ledger flows.
 
 ## dp6-smoke Engine Shell Coverage
 

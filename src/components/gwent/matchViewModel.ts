@@ -39,6 +39,7 @@ export interface AuthenticBoardCardState {
   readonly effectiveStrength: number;
   readonly printedStrength: number;
   readonly strengthState: AuthenticStrengthState;
+  readonly weatherAffected: boolean;
   readonly modifiers: readonly string[];
   readonly usedScoreFallback: boolean;
 }
@@ -533,12 +534,15 @@ export const getBoardCardState = (
   const effectiveStrength = score?.finalStrength ?? card.printedStrength;
   const strengthState =
     effectiveStrength > card.printedStrength ? "boosted" : effectiveStrength < card.printedStrength ? "reduced" : "normal";
+  const modifiers = score?.modifiers ?? [];
+  const weatherAffected = modifiers.some((modifier) => modifier.startsWith("weather"));
 
   return {
     effectiveStrength,
     printedStrength: card.printedStrength,
     strengthState,
-    modifiers: score?.modifiers ?? [],
+    weatherAffected,
+    modifiers,
     usedScoreFallback: !score,
   };
 };

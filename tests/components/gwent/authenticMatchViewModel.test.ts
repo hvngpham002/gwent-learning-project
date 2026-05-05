@@ -349,8 +349,47 @@ describe("authentic match view models", () => {
       effectiveStrength: 8,
       printedStrength: 4,
       strengthState: "boosted",
+      weatherAffected: false,
       modifiers: ["tight_bond"],
       usedScoreFallback: false,
+    });
+  });
+
+  it("marks board strength as weather affected even when the final value is unchanged", () => {
+    const state = getBoardCardState(
+      card({ instanceId: "seat_a:001:weathered", printedStrength: 1 }),
+      new Map([
+        [
+          "seat_a:001:weathered",
+          {
+            cardId: "seat_a:001:weathered",
+            sourceId: "nr_test_card",
+            seatId: "seat_a",
+            row: "close",
+            cardKind: "unit",
+            isUnit: true,
+            isHero: false,
+            printedStrength: 1,
+            afterWeather: 1,
+            tightBondMultiplier: 1,
+            afterTightBond: 1,
+            moraleBonus: 0,
+            afterMorale: 1,
+            hornMultiplier: 1,
+            finalStrength: 1,
+            eligibleForScorch: true,
+            modifiers: ["weather"],
+          },
+        ],
+      ]),
+    );
+
+    expect(state).toMatchObject({
+      effectiveStrength: 1,
+      printedStrength: 1,
+      strengthState: "normal",
+      weatherAffected: true,
+      modifiers: ["weather"],
     });
   });
 
@@ -365,6 +404,7 @@ describe("authentic match view models", () => {
 
     expect(state.effectiveStrength).toBe(5);
     expect(state.strengthState).toBe("normal");
+    expect(state.weatherAffected).toBe(false);
     expect(state.usedScoreFallback).toBe(true);
   });
 

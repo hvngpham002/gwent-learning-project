@@ -47,6 +47,27 @@ const weatherBackfillDeck = {
   sideDeck: [],
 } as const satisfies LocalDeckFixture;
 
+const hornBackfillDeck = {
+  presetId: "local-cep13-horn",
+  name: "cEp13 Horn Slot Smoke",
+  faction: "northern_realms",
+  leaderSourceId: "northern-realms.foltest-lord-commander-of-the-north",
+  mainDeck: [
+    { sourceId: "northern-realms.philippa-eilhart", count: 1 },
+    { sourceId: "northern-realms.vernon-roche", count: 1 },
+    { sourceId: "northern-realms.john-natalis", count: 1 },
+    { sourceId: "northern-realms.esterad-thyssen", count: 1 },
+    { sourceId: "northern-realms.catapult", count: 3 },
+    { sourceId: "northern-realms.crinfrid-reavers-dragon-hunter", count: 3 },
+    { sourceId: "northern-realms.blue-stripes-commando", count: 3 },
+    { sourceId: "northern-realms.redanian-foot-soldier", count: 3 },
+    { sourceId: "northern-realms.poor-fucking-infantry", count: 3 },
+    { sourceId: "northern-realms.kaedweni-siege-expert", count: 3 },
+    { sourceId: "neutral.commanders-horn", count: 3 },
+  ],
+  sideDeck: [],
+} as const satisfies LocalDeckFixture;
+
 const weatherFixtureSourceNames: Record<string, string> = {
   "neutral.biting-frost": "Biting Frost",
   "neutral.impenetrable-fog": "Impenetrable Fog",
@@ -1436,6 +1457,65 @@ test("authentic match highlights spatial board-row targets and dispatches the ex
   expect(pageErrors).toEqual([]);
 });
 
+test("authentic match uses reserved icon-only row horn slots for Commander's Horn targets (cEp13)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await seedLocalDecks(page, hornBackfillDeck.presetId, [hornBackfillDeck]);
+
+  let coveredHornSlot = false;
+  for (const seed of ["cep13-horn-1", "cep13-horn-2", "cep13-horn-3", "cep13-horn-4"]) {
+    await enterAuthenticMatchFromPreGame(page, {
+      seed,
+      deckName: hornBackfillDeck.name,
+    });
+
+    const hornCard = page.locator(
+      '[data-testid="authentic-human-hand"] .authentic-hand__card.is-playable[data-source-id="neutral.commanders-horn"]',
+    ).first();
+
+    if ((await hornCard.count()) === 0) {
+      continue;
+    }
+
+    await hornCard.getByTestId("authentic-hand-card").click();
+    await expect(page.getByTestId("authentic-target-hint")).toContainText(/highlighted horn slot/i);
+
+    const hornSlot = page.getByTestId("authentic-board-row-horn-target").first();
+    await expect(hornSlot).toBeVisible();
+    expect(await hornSlot.evaluate((element) => element.tagName)).toBe("DIV");
+    await expect(hornSlot.locator(".authentic-board-row__horn-slot-icon")).toBeVisible();
+    await expect(hornSlot).not.toContainText(/horn slot|choose|play here/i);
+    await expect(page.locator('button[data-testid="authentic-board-row-horn-target"]')).toHaveCount(0);
+
+    const hornCardCountBefore = await page.locator(".authentic-board-row__horn[data-source-id='neutral.commanders-horn']").count();
+    await startMouseDrag(page, hornCard);
+    await expect(page.getByTestId("authentic-target-hint")).toContainText(/drag to a highlighted horn slot/i);
+    const hornSlotCenter = await locatorCenter(hornSlot);
+    const hornSlotBox = await hornSlot.boundingBox();
+    expect(hornSlotBox, "horn slot should stay visible for flight target").not.toBeNull();
+    await page.mouse.move(hornSlotCenter.x, hornSlotCenter.y, { steps: 8 });
+    await expect(hornSlot).toHaveAttribute("data-drop-state", "active");
+    await page.mouse.up();
+
+    await expect(page.locator(".authentic-board-row__horn[data-source-id='neutral.commanders-horn']")).toHaveCount(hornCardCountBefore + 1);
+    const hornFlight = page.getByTestId("authentic-card-flight").first();
+    await expect(hornFlight).toBeVisible();
+    const hornFlightDestination = await cardFlightDestination(hornFlight);
+    if (hornSlotBox) {
+      expect(hornFlightDestination.x).toBeGreaterThanOrEqual(hornSlotBox.x);
+      expect(hornFlightDestination.x).toBeLessThanOrEqual(hornSlotBox.x + hornSlotBox.width);
+      expect(hornFlightDestination.y).toBeGreaterThanOrEqual(hornSlotBox.y);
+      expect(hornFlightDestination.y).toBeLessThanOrEqual(hornSlotBox.y + hornSlotBox.height);
+    }
+
+    coveredHornSlot = true;
+    break;
+  }
+
+  expect(coveredHornSlot, "no candidate seed produced a visible Commander's Horn card").toBe(true);
+  expect(pageErrors).toEqual([]);
+});
+
 test("authentic match drags a hand card to a legal board row with invalid-drop no-op (cEp12)", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
@@ -1644,6 +1724,12 @@ test("authentic match renders generated row weather overlays after weather play 
     await expect(affectedRows.first().locator(".authentic-board-row__label span")).toHaveCSS("color", "rgb(232, 223, 196)");
     await expect(affectedRows.first().locator(".authentic-board-row__label strong")).toHaveCSS("color", "rgb(232, 223, 196)");
     await expect(affectedRows.locator(".authentic-board-row__empty").first()).toHaveCSS("color", "rgb(232, 223, 196)");
+    const weatheredStrength = affectedRows.locator(
+      '[data-testid="authentic-effective-strength"][data-weather-affected="true"] .authentic-card__strength',
+    );
+    if ((await weatheredStrength.count()) > 0) {
+      await expect(weatheredStrength.first()).toHaveCSS("color", "rgb(255, 75, 62)");
+    }
 
     if (selectedSourceId === "neutral.skellige-storm") {
       await expect(page.locator('[data-testid="authentic-board-row"][data-weather-overlay~="skellige-storm"]')).toHaveCount(4);

@@ -253,7 +253,7 @@ const getPlayCardFlightTargetRect = (
       ? buildInsertionRect(
           cardStrip,
           sourceRect,
-          '.authentic-board-row__horn, [data-testid="authentic-effective-strength"], [data-testid="authentic-board-card-target"]',
+          '.authentic-board-row__horn-slot, [data-testid="authentic-effective-strength"], [data-testid="authentic-board-card-target"]',
         )
       : rectFromDomRect(targetElement.getBoundingClientRect());
   }
@@ -487,6 +487,7 @@ const BoardRow: React.FC<{
           className={className}
           data-testid="authentic-effective-strength"
           data-strength-state={unit.boardState.strengthState}
+          data-weather-affected={unit.boardState.weatherAffected ? "true" : undefined}
           data-card-motion={motion}
           data-source-id={unit.card.sourceId}
           data-instance-id={unit.key}
@@ -505,6 +506,7 @@ const BoardRow: React.FC<{
         className={className}
         data-testid="authentic-board-card-target"
         data-strength-state={unit.boardState.strengthState}
+        data-weather-affected={unit.boardState.weatherAffected ? "true" : undefined}
         data-card-motion={motion}
         data-source-id={unit.card.sourceId}
         data-instance-id={unit.key}
@@ -531,6 +533,13 @@ const BoardRow: React.FC<{
         onCardContextMenu(event, { cardId: horn.key, origin: "board", seatId: row.seatId, row: row.row });
       }
     : undefined;
+  const handleHornSlotClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!hornTarget) {
+      return;
+    }
+    event.stopPropagation();
+    onTargetClick(hornTarget.moveId, { targetElement: event.currentTarget });
+  };
 
   const rowDropActive = Boolean(rowTarget && activeDropMoveId === rowTarget.moveId);
   const hornDropActive = Boolean(hornTarget && activeDropMoveId === hornTarget.moveId);
@@ -578,35 +587,37 @@ const BoardRow: React.FC<{
         <strong>{row.rowName}</strong>
       </div>
       <div className="authentic-board-row__cards">
-        {horn ? (
-          <div
-            key={horn.key}
-            className="authentic-board-row__horn"
-            data-source-id={horn.card.sourceId}
-            data-instance-id={horn.key}
-            onContextMenu={handleHornContextMenu}
-          >
-            <AuthenticCard card={horn.card} size="xs" />
-          </div>
-        ) : null}
-        {hornTarget ? (
-          <button
-            type="button"
-            className="authentic-board-row__horn-target"
-            data-testid="authentic-board-row-horn-target"
-            data-row-key={row.key}
-            data-drop-move-id={hornTarget.moveId}
-            data-drop-state={activeDropMoveId === hornTarget.moveId ? "active" : "idle"}
-            aria-label={hornTarget.ariaLabel}
-            onClick={(event) => {
-              event.stopPropagation();
-              onTargetClick(hornTarget.moveId, { targetElement: event.currentTarget });
-            }}
-          >
-            <span className="authentic-board-row__horn-target-icon" aria-hidden="true">◊</span>
-            <span className="authentic-board-row__horn-target-label">{hornTarget.badgeLabel}</span>
-          </button>
-        ) : null}
+        <div
+          className={`authentic-board-row__horn-slot${horn ? " has-card" : ""}${hornTarget ? " is-legal-target" : ""}${
+            hornDropActive ? " is-drop-active" : ""
+          }`}
+          data-testid={hornTarget ? "authentic-board-row-horn-target" : "authentic-board-row-horn-slot"}
+          data-row-key={row.key}
+          data-drop-move-id={hornTarget?.moveId}
+          data-drop-state={hornDropActive ? "active" : hornTarget ? "idle" : undefined}
+          aria-label={hornTarget?.ariaLabel ?? `${row.rowName} horn slot`}
+          onClick={handleHornSlotClick}
+          onContextMenu={handleHornContextMenu}
+        >
+          {horn ? (
+            <div
+              key={horn.key}
+              className="authentic-board-row__horn"
+              data-source-id={horn.card.sourceId}
+              data-instance-id={horn.key}
+            >
+              <AuthenticCard card={horn.card} size="xs" />
+            </div>
+          ) : (
+            <img
+              className="authentic-board-row__horn-slot-icon"
+              src="/images/avatars/horn.png"
+              alt=""
+              draggable={false}
+              aria-hidden="true"
+            />
+          )}
+        </div>
         {row.units.length === 0 && !horn ? <span className="authentic-board-row__empty">empty</span> : null}
         {row.units.map(renderBoardCard)}
       </div>

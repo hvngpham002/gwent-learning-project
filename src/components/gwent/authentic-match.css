@@ -423,44 +423,56 @@ button.authentic-pile:hover {
   filter: saturate(1.22) brightness(1.08);
 }
 
-.authentic-board-row__horn-target {
+.authentic-board-row__horn-slot {
   flex: 0 0 auto;
   display: inline-flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  min-width: 44px;
+  width: 44px;
   min-height: 56px;
-  padding: 4px 8px;
-  border: 1px dashed var(--accent);
+  padding: 3px;
+  border: 1px solid rgba(122, 93, 53, 0.34);
   border-radius: 3px;
-  background: rgba(184, 134, 42, 0.12);
-  color: var(--accent);
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
+  background: rgba(31, 26, 18, 0.05);
+  opacity: 0.72;
+}
+
+.authentic-board-row__horn-slot.has-card {
+  width: auto;
+  min-width: 48px;
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  opacity: 1;
+}
+
+.authentic-board-row__horn-slot.is-legal-target {
+  border-color: var(--accent);
+  background: rgba(184, 134, 42, 0.16);
+  box-shadow: 0 0 0 1px rgba(138, 58, 31, 0.26) inset;
   cursor: pointer;
+  opacity: 1;
 }
 
-.authentic-board-row__horn-target:hover,
-.authentic-board-row__horn-target:focus-visible,
-.authentic-board-row__horn-target[data-drop-state="active"] {
-  outline: none;
-  background: var(--accent);
-  color: var(--bg-paper);
+.authentic-board-row__horn-slot.is-drop-active {
+  background: rgba(184, 134, 42, 0.24);
+  box-shadow: 0 0 0 2px rgba(138, 58, 31, 0.42) inset;
 }
 
-.authentic-board-row__horn-target:focus-visible {
-  box-shadow: 0 0 0 2px rgba(138, 58, 31, 0.32);
+.authentic-board-row__horn-slot-icon {
+  display: block;
+  width: 23px;
+  height: 23px;
+  object-fit: contain;
+  opacity: 0.72;
+  filter: sepia(0.24) saturate(0.9) contrast(0.94);
+  pointer-events: none;
 }
 
-.authentic-board-row__horn-target-icon {
-  font-size: 14px;
-  line-height: 1;
+.authentic-board-row__horn-slot.is-legal-target .authentic-board-row__horn-slot-icon {
+  opacity: 1;
+  filter: sepia(0.42) saturate(1.14) contrast(1.08);
 }
 
 .authentic-board-row__label {
@@ -525,6 +537,13 @@ button.authentic-board-card {
 .authentic-board-card--reduced {
   border-color: var(--w-frost);
   box-shadow: 0 0 0 1px rgba(106, 154, 196, 0.24);
+}
+
+.authentic-board-card[data-weather-affected="true"] .authentic-card__strength {
+  color: #ff4b3e;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.76),
+    0 0 6px rgba(255, 75, 62, 0.36);
 }
 
 .authentic-board-card.is-card-target {
@@ -1116,11 +1135,19 @@ button.authentic-board-card.is-card-target:focus-visible,
     height: min(147px, 48vw) !important;
   }
 
-  .authentic-board-row__horn-target {
-    min-width: 36px;
+  .authentic-board-row__horn-slot {
+    width: 36px;
     min-height: 44px;
-    padding: 2px 4px;
-    font-size: 9px;
+    padding: 2px;
+  }
+
+  .authentic-board-row__horn-slot.has-card {
+    width: auto;
+  }
+
+  .authentic-board-row__horn-slot-icon {
+    width: 19px;
+    height: 19px;
   }
 
   .authentic-board-row {
