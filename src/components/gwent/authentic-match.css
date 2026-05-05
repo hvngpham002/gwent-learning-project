@@ -236,10 +236,7 @@
 
 .authentic-score-card__leader-status {
   min-width: 0;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
+  display: block;
   color: var(--ink-3);
   font-size: 12px;
 }
@@ -255,10 +252,6 @@
   font-size: inherit;
   line-height: inherit;
   white-space: normal;
-}
-
-.authentic-score-card__leader-status-separator {
-  color: inherit;
 }
 
 .authentic-score-card[data-leader-cancelled-this-round="true"] {
