@@ -129,7 +129,7 @@ Hidden-info contract:
 
 cEp9 makes the completed official leader system legible without changing rule ownership:
 
-- Score-card leaders show a compact status line with category and state. Categories are `active`, `passive`, `setup`, or `unknown/custom`; states include `ready`, `used`, `passive active`, `setup resolved`, `cancelled this round`, `unavailable`, and `no target`.
+- Score-card leaders show a compact inline status line with category and state. Categories are `active`, `passive`, `setup`, or `unknown/custom`; states include `ready`, `used`, `passive active`, `setup resolved`, `cancelled this round`, `unavailable`, and `no target`. The state label is plain inline text, not a bordered tag.
 - Current-round White Flame suppression is displayed as `cancelled this round` from the engine-derived `leader.cancelledThisRound` selector flag, which corresponds to `seat.leaderCancelledRound === state.round`. The visual state clears when the engine clears suppression at round transition.
 - The leader action panel remains legal-move-driven. Single active leaders use ability-specific labels such as `clear weather`, `restore card`, `discard and draw`, `look at hand`, and `cancel leader`; multi-move `play_any_weather` keeps the cEp8 menu and row hints. Every action still dispatches the exact selected `UseLeader` legal move target.
 - Disabled leader copy comes from the leader status view model. If an active leader is otherwise in an acting state but has no legal move, the UI shows the generic `no target` state rather than computing rule-specific availability.

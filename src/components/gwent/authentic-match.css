@@ -245,16 +245,15 @@
 }
 
 .authentic-score-card__leader-chip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 22px;
-  padding: 2px 7px;
-  border: 1px solid var(--rule-strong);
-  border-radius: 3px;
-  background: rgba(31, 26, 18, 0.05);
-  color: var(--ink-2);
-  font-size: 12px;
-  line-height: 1.2;
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
   white-space: normal;
 }
 
@@ -264,8 +263,6 @@
 }
 
 .authentic-score-card[data-leader-cancelled-this-round="true"] .authentic-score-card__leader-chip {
-  border-color: var(--accent);
-  background: rgba(138, 58, 31, 0.12);
   color: var(--accent);
 }
 
