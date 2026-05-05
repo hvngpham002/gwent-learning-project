@@ -372,56 +372,58 @@ const ScoreCard: React.FC<{
         />
       </div>
       <div className="authentic-score-card__body">
-        <div>
+        <div className="authentic-score-card__identity">
           <h2>{seat.label}</h2>
           <p>{seat.factionName}</p>
-          <div
-            className="authentic-score-card__life"
-            data-testid={`authentic-life-gems-${seat.role}`}
-            aria-label={`${visibleGems} of 2 gems remaining`}
-          >
-            {[0, 1].map((gemIndex) => {
-              const intact = gemIndex < visibleGems;
-              return (
-                <img
-                  key={gemIndex}
-                  className="authentic-score-card__life-gem"
-                  src={intact ? "/images/ui/life-gem.png" : "/images/ui/life-gem-broken.png"}
-                  alt=""
+          <div className="authentic-score-card__resource-stack">
+            <div
+              className="authentic-score-card__life"
+              data-testid={`authentic-life-gems-${seat.role}`}
+              aria-label={`${visibleGems} of 2 gems remaining`}
+            >
+              {[0, 1].map((gemIndex) => {
+                const intact = gemIndex < visibleGems;
+                return (
+                  <img
+                    key={gemIndex}
+                    className="authentic-score-card__life-gem"
+                    src={intact ? "/images/ui/life-gem.png" : "/images/ui/life-gem-broken.png"}
+                    alt=""
+                    aria-hidden="true"
+                    draggable={false}
+                    data-gem-state={intact ? "intact" : "broken"}
+                  />
+                );
+              })}
+            </div>
+            <div
+              className="authentic-score-card__resources"
+              data-testid={`authentic-seat-resources-${seat.role}`}
+              aria-label={`hand ${seat.handCount}, deck ${seat.deckCount}`}
+            >
+              <span className="authentic-score-card__resource" aria-label={`${seat.handCount} cards in hand`}>
+                <span
+                  className="authentic-score-card__resource-icon authentic-score-card__resource-icon--hand"
                   aria-hidden="true"
-                  draggable={false}
-                  data-gem-state={intact ? "intact" : "broken"}
-                />
-              );
-            })}
-          </div>
-          <div
-            className="authentic-score-card__resources"
-            data-testid={`authentic-seat-resources-${seat.role}`}
-            aria-label={`hand ${seat.handCount}, deck ${seat.deckCount}`}
-          >
-            <span className="authentic-score-card__resource" aria-label={`${seat.handCount} cards in hand`}>
-              <span
-                className="authentic-score-card__resource-icon authentic-score-card__resource-icon--hand"
-                aria-hidden="true"
-              >
-                <span />
-                <span />
-                <span />
+                >
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                <span>{seat.handCount}</span>
               </span>
-              <span>{seat.handCount}</span>
-            </span>
-            <span className="authentic-score-card__resource" aria-label={`${seat.deckCount} cards in deck`}>
-              <span
-                className="authentic-score-card__resource-icon authentic-score-card__resource-icon--deck"
-                aria-hidden="true"
-              >
-                <span />
-                <span />
-                <span />
+              <span className="authentic-score-card__resource" aria-label={`${seat.deckCount} cards in deck`}>
+                <span
+                  className="authentic-score-card__resource-icon authentic-score-card__resource-icon--deck"
+                  aria-hidden="true"
+                >
+                  <span />
+                  <span />
+                  <span />
+                </span>
+                <span>{seat.deckCount}</span>
               </span>
-              <span>{seat.deckCount}</span>
-            </span>
+            </div>
           </div>
         </div>
         <strong>{seat.score}</strong>

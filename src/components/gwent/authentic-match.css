@@ -226,6 +226,10 @@
   color: var(--accent);
 }
 
+.authentic-score-card__identity {
+  min-width: 0;
+}
+
 .authentic-score-card__leader-text,
 .authentic-score-card__leader-status {
   grid-column: 1 / -1;
@@ -265,6 +269,7 @@
   display: flex;
   gap: 6px;
   align-items: center;
+  justify-content: center;
   margin-top: 5px;
 }
 
@@ -280,14 +285,19 @@
   opacity: 0.88;
 }
 
+.authentic-score-card__resource-stack {
+  width: max-content;
+}
+
 .authentic-score-card__resources {
   display: flex;
-  gap: 11px;
+  gap: 13px;
   align-items: center;
-  margin-top: 3px;
-  color: var(--ink-3);
+  justify-content: center;
+  margin-top: 4px;
+  color: var(--ink-2);
   font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1;
 }
@@ -295,42 +305,42 @@
 .authentic-score-card__resource {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .authentic-score-card__resource-icon {
   position: relative;
   display: inline-block;
-  width: 15px;
-  height: 14px;
-  color: var(--ink-2);
+  width: 19px;
+  height: 18px;
+  color: color-mix(in srgb, var(--ink) 84%, var(--accent) 16%);
 }
 
 .authentic-score-card__resource-icon span {
   position: absolute;
   display: block;
-  width: 8px;
-  height: 11px;
+  width: 10px;
+  height: 14px;
   border: 1px solid currentColor;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--bg-paper) 70%, var(--rule) 30%);
-  box-shadow: 0 1px 0 rgba(36, 24, 12, 0.18);
+  background: color-mix(in srgb, var(--ink) 20%, var(--bg-paper) 80%);
+  box-shadow: 0 1px 0 rgba(36, 24, 12, 0.26);
 }
 
 .authentic-score-card__resource-icon--hand span:nth-child(1) {
   left: 1px;
-  top: 2px;
+  top: 3px;
   transform: rotate(-18deg);
 }
 
 .authentic-score-card__resource-icon--hand span:nth-child(2) {
-  left: 4px;
-  top: 1px;
+  left: 5px;
+  top: 2px;
 }
 
 .authentic-score-card__resource-icon--hand span:nth-child(3) {
-  left: 7px;
-  top: 2px;
+  left: 9px;
+  top: 3px;
   transform: rotate(18deg);
 }
 
@@ -340,16 +350,16 @@
 
 .authentic-score-card__resource-icon--deck span:nth-child(1) {
   left: 1px;
-  top: 4px;
+  top: 5px;
 }
 
 .authentic-score-card__resource-icon--deck span:nth-child(2) {
-  left: 4px;
-  top: 2px;
+  left: 5px;
+  top: 3px;
 }
 
 .authentic-score-card__resource-icon--deck span:nth-child(3) {
-  left: 7px;
+  left: 9px;
   top: 0;
 }
 
