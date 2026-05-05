@@ -52,7 +52,6 @@
 .authentic-match__next-action,
 .authentic-panel h2,
 .authentic-hand__label,
-.authentic-score-card__meta,
 .authentic-pile strong,
 .authentic-pile > span,
 .authentic-board-row__label strong {
@@ -65,7 +64,6 @@
 
 .authentic-match__title-block p,
 .authentic-match__seed,
-.authentic-score-card__meta,
 .authentic-pile strong,
 .authentic-board-row__label strong {
   color: var(--ink-3);
@@ -229,8 +227,7 @@
 }
 
 .authentic-score-card__leader-text,
-.authentic-score-card__leader-status,
-.authentic-score-card__meta {
+.authentic-score-card__leader-status {
   grid-column: 1 / -1;
 }
 
@@ -239,6 +236,7 @@
   display: block;
   color: var(--ink-3);
   font-size: 12px;
+  line-height: 1.35;
 }
 
 .authentic-score-card__leader-chip {

@@ -1234,6 +1234,8 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/active/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready\s*·\s*active/i);
+    await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/hand \d+ · deck \d+ · discard \d+/i);
+    await expect(page.getByTestId("authentic-seat-human").locator(".authentic-score-card__meta")).toHaveCount(0);
     await expect(page.getByTestId("authentic-life-gems-human")).toHaveAttribute(
       "aria-label",
       "2 of 2 gems remaining",

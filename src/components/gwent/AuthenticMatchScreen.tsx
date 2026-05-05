@@ -407,11 +407,12 @@ const ScoreCard: React.FC<{
       >
         <span className="authentic-score-card__leader-chip">{leaderStatus.stateLabel}</span>
         <span> · {leaderStatus.categoryLabel} · {leaderStatus.reason}</span>
+        <span className="authentic-score-card__leader-status-meta">
+          {" "}
+          · hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
+          {seat.passed ? "passed" : "active"}
+        </span>
       </div>
-      <p className="authentic-score-card__meta">
-        hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
-        {seat.passed ? "passed" : "active"}
-      </p>
     </article>
   );
 };
