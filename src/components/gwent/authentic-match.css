@@ -280,6 +280,79 @@
   opacity: 0.88;
 }
 
+.authentic-score-card__resources {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  margin-top: 3px;
+  color: var(--ink-3);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.authentic-score-card__resource {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.authentic-score-card__resource-icon {
+  position: relative;
+  display: inline-block;
+  width: 15px;
+  height: 14px;
+  color: var(--ink-2);
+}
+
+.authentic-score-card__resource-icon span {
+  position: absolute;
+  display: block;
+  width: 8px;
+  height: 11px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--bg-paper) 70%, var(--rule) 30%);
+  box-shadow: 0 1px 0 rgba(36, 24, 12, 0.18);
+}
+
+.authentic-score-card__resource-icon--hand span:nth-child(1) {
+  left: 1px;
+  top: 2px;
+  transform: rotate(-18deg);
+}
+
+.authentic-score-card__resource-icon--hand span:nth-child(2) {
+  left: 4px;
+  top: 1px;
+}
+
+.authentic-score-card__resource-icon--hand span:nth-child(3) {
+  left: 7px;
+  top: 2px;
+  transform: rotate(18deg);
+}
+
+.authentic-score-card__resource-icon--deck span {
+  transform: none;
+}
+
+.authentic-score-card__resource-icon--deck span:nth-child(1) {
+  left: 1px;
+  top: 4px;
+}
+
+.authentic-score-card__resource-icon--deck span:nth-child(2) {
+  left: 4px;
+  top: 2px;
+}
+
+.authentic-score-card__resource-icon--deck span:nth-child(3) {
+  left: 7px;
+  top: 0;
+}
+
 .authentic-piles {
   padding: 8px;
   display: grid;

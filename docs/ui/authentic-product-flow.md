@@ -124,7 +124,7 @@ The `RoundOverlay` React component now consumes the ledger view-model directly: 
 
 The authentic match score cards render two image-backed life indicators per seat instead of plain `gems N` copy. Remaining lives use `/images/ui/life-gem.png`; spent lives use `/images/ui/life-gem-broken.png`. Both files are cropped alpha PNGs derived from the approved Imagegen sheet, so only the gem artwork appears over the parchment UI. The indicators sit directly underneath the faction name in the score-card header and render at 30px. The wrapper exposes `authentic-life-gems-human` / `authentic-life-gems-ai` test IDs and an accessible `N of 2 gems remaining` label; hidden-info boundaries are unchanged because gem counts are public engine state.
 
-The score-card status copy is one inline row: leader state, leader category, reason, public hand count, public deck count, public discard count, and active/pass state. The separate `gems N` and separate hand/deck/discard meta rows are intentionally removed now that lives are represented by gem icons.
+The score-card status copy is one inline row for leader state, leader category, reason, and active/pass state. Hand and deck counts sit under the life gems with compact code-native card icons. The score card intentionally does not duplicate discard count because the discard pile already shows that public count.
 
 Hidden-info contract:
 

@@ -395,6 +395,34 @@ const ScoreCard: React.FC<{
               );
             })}
           </div>
+          <div
+            className="authentic-score-card__resources"
+            data-testid={`authentic-seat-resources-${seat.role}`}
+            aria-label={`hand ${seat.handCount}, deck ${seat.deckCount}`}
+          >
+            <span className="authentic-score-card__resource" aria-label={`${seat.handCount} cards in hand`}>
+              <span
+                className="authentic-score-card__resource-icon authentic-score-card__resource-icon--hand"
+                aria-hidden="true"
+              >
+                <span />
+                <span />
+                <span />
+              </span>
+              <span>{seat.handCount}</span>
+            </span>
+            <span className="authentic-score-card__resource" aria-label={`${seat.deckCount} cards in deck`}>
+              <span
+                className="authentic-score-card__resource-icon authentic-score-card__resource-icon--deck"
+                aria-hidden="true"
+              >
+                <span />
+                <span />
+                <span />
+              </span>
+              <span>{seat.deckCount}</span>
+            </span>
+          </div>
         </div>
         <strong>{seat.score}</strong>
       </div>
@@ -407,11 +435,7 @@ const ScoreCard: React.FC<{
       >
         <span className="authentic-score-card__leader-chip">{leaderStatus.stateLabel}</span>
         <span> · {leaderStatus.categoryLabel} · {leaderStatus.reason}</span>
-        <span className="authentic-score-card__leader-status-meta">
-          {" "}
-          · hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
-          {seat.passed ? "passed" : "active"}
-        </span>
+        <span> · {seat.passed ? "passed" : "active"}</span>
       </div>
     </article>
   );

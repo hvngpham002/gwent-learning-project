@@ -610,7 +610,10 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   expect(matchLeaderBox?.height ?? 0).toBeGreaterThanOrEqual(140);
   expect(matchLeaderBox?.height ?? 0).toBeLessThan(160);
   await expect(page.getByTestId("authentic-leader-card-image").first()).toHaveCSS("object-fit", "contain");
-  await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
+  await expect(page.getByTestId("authentic-seat-resources-ai")).toHaveAttribute(
+    "aria-label",
+    /hand \d+, deck \d+/i,
+  );
   await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
   await page.getByRole("button", { name: "setup" }).click();
   await expect(page.getByTestId("authentic-abandon-confirmation")).toBeVisible();
@@ -776,7 +779,10 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible();
   await page.getByTestId("authentic-start-match-confirm").click();
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
-  await expect(page.getByTestId("authentic-seat-ai")).toContainText(/hand \d+/i);
+  await expect(page.getByTestId("authentic-seat-resources-ai")).toHaveAttribute(
+    "aria-label",
+    /hand \d+, deck \d+/i,
+  );
   await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
 
   const pageText = await visiblePageText(page);
@@ -1234,7 +1240,13 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/active/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready\s*·\s*active/i);
-    await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/hand \d+ · deck \d+ · discard \d+/i);
+    await expect(page.getByTestId("authentic-leader-status-human")).not.toContainText(/discard/i);
+    await expect(page.getByTestId("authentic-seat-resources-human")).toHaveAttribute(
+      "aria-label",
+      /hand \d+, deck \d+/i,
+    );
+    await expect(page.getByTestId("authentic-seat-resources-human").locator(".authentic-score-card__resource")).toHaveCount(2);
+    await expect(page.getByTestId("authentic-seat-resources-human")).not.toContainText(/discard/i);
     await expect(page.getByTestId("authentic-seat-human").locator(".authentic-score-card__meta")).toHaveCount(0);
     await expect(page.getByTestId("authentic-life-gems-human")).toHaveAttribute(
       "aria-label",
