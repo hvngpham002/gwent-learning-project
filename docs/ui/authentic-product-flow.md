@@ -1,6 +1,6 @@
 # Authentic Product Flow
 
-This document tracks the current opt-in authentic product loop after cEp11.
+This document tracks the current opt-in authentic product loop after cEp12.
 
 ## Routes
 
@@ -86,6 +86,20 @@ cEp11 makes selected-card targeting in the authentic match UI spatial and legibl
 - **Selection lifecycle.** The cEp10 selection-clear effect already covers stale selection on phase / prompt / turn / hand changes; cEp11 keeps the same dispatch path. Selecting a different hand card recomputes the spatial targets immediately because the helper is a pure function of selection + legal moves.
 
 The cEp11 polish reuses the existing accent / ink / rule / parchment tokens — no one-off color system. Focus-visible styling on every spatial target keeps keyboard navigation clear, and badge sizes shrink at the 390px mobile breakpoint to avoid overlapping card strength medallions, row labels, or the row score column. Hidden-info safety is reverified: visible board / weather / discard / leader card names may appear because they are already public; AI hand and AI deck identities never reach the target view-model because they are not in the visible-card lookup the helper receives. The leader weather choice menu added in cEp8 is unchanged — cEp11 covers selected hand-card targeting, not leader targeting.
+
+## Drag And Card Flight (cEp12)
+
+cEp12 layers native pointer drag/drop and restrained card-flight presentation on top of the cEp11 legal target surface. It is a product UI polish phase only: engine legal moves, command execution, scoring, AI policy, catalog data, route defaults, deck builder, Card Studio, and the Redux engine adapter behavior are unchanged.
+
+- Drag sources are only visible playable human hand cards in the default authentic match route. AI hand backs, AI deck cards, hidden identities, board cards, weather cards, discard cards, prompt cards, leaders, and fallback/global action buttons are not draggable.
+- Pointer dragging uses a small movement threshold so normal click selection remains intact. Right-click inspection still opens the cEp5.3 inspect menu and never starts a drag. Touch dragging is deferred; touch users keep the existing tap/click controls.
+- A drag may dispatch only when the pointer is released on an existing cEp11 spatial target button that carries a legal `PlayCard` move id: board-row target, board-card target, row-horn slot, or Weather panel target. Invalid drops cancel locally and dispatch no engine command.
+- The right rail now uses `buildSelectedCardDragTargetViewModel(...)` for drag-specific hint copy such as `drag to a highlighted row.` or `drag to the weather panel.` Global/no-target cards such as Scorch remain compact right-rail fallback actions and do not receive fake spatial drag targets.
+- Drop targets expose presentation-only `data-drop-move-id` and `data-drop-state="idle|active"` attributes. Hand cards expose `data-drag-state` so smoke tests can verify ready, dragging, disabled, and idle states without re-deriving legality.
+- While dragging, the UI renders a pointer-following preview of the visible human hand card only. The preview is not an engine object and has `pointer-events: none`; it exists solely to make the interaction legible.
+- Successful human hand plays capture the visible source hand-card rectangle and the legal target button rectangle, then render a transient card-flight overlay while dispatching the exact existing `PlayCard` command immediately. The overlay never delays rules, prompts, AI, round resolution, or game end. If the source or target rectangle is unavailable, the existing public event pulse remains the fallback.
+- AI plays and other hidden-origin movement do not animate from hidden locations. Public activity and board/weather/discard state remain hidden-info-safe.
+- Reduced-motion users get a near-static opacity transition rather than transform-heavy motion.
 
 ## Round And Match Flow (cEp10)
 

@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const engineUrl = "/?engine=1&seed=dp6-smoke";
 const authenticPregameUrl = "/?engine=1&ui=authentic&seed=ep4-smoke";
@@ -60,6 +60,41 @@ const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\
 
 const visiblePageText = async (page: import("@playwright/test").Page) =>
   (await page.locator("body").innerText()).replace(/\s+/g, " ");
+
+const locatorCenter = async (locator: Locator) => {
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) {
+    throw new Error("locator had no bounding box");
+  }
+  return {
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  };
+};
+
+const startMouseDrag = async (page: Page, source: Locator) => {
+  const center = await locatorCenter(source);
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.waitForTimeout(50);
+  await page.mouse.move(center.x + 10, center.y + 2, { steps: 2 });
+  await expect(page.getByTestId("authentic-drag-preview")).toBeVisible();
+  return center;
+};
+
+const findFirstRowTargetHandCard = async (page: Page): Promise<Locator | null> => {
+  const playableCards = page.locator(".authentic-hand__card.is-playable");
+  const playableCount = await playableCards.count();
+  for (let index = 0; index < playableCount; index += 1) {
+    const candidate = playableCards.nth(index);
+    await candidate.getByTestId("authentic-hand-card").click();
+    if ((await page.getByTestId("authentic-board-row-target").count()) > 0) {
+      return candidate;
+    }
+  }
+  return null;
+};
 
 const seedLocalDecks = async (
   page: Page,
@@ -1368,6 +1403,135 @@ test("authentic match highlights spatial board-row targets and dispatches the ex
   await page.keyboard.press("Escape");
   await expect(cardMenu).toHaveCount(0);
 
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic match drags a hand card to a legal board row with invalid-drop no-op (cEp12)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  let rowPlayableCard: Locator | null = null;
+  await seedLocalDecks(page, weatherBackfillDeck.presetId, [weatherBackfillDeck]);
+  for (const seed of ["cep12-row-1", "cep12-row-2", "cep12-row-3", "cep12-row-4"]) {
+    await enterAuthenticMatchFromPreGame(page, {
+      seed,
+      deckName: weatherBackfillDeck.name,
+    });
+    rowPlayableCard = await findFirstRowTargetHandCard(page);
+    if (rowPlayableCard) {
+      break;
+    }
+  }
+
+  expect(rowPlayableCard, "no playable hand card exposed a board-row target").not.toBeNull();
+  if (!rowPlayableCard) {
+    throw new Error("no row-target playable card found");
+  }
+
+  const handCardCountBefore = await page.getByTestId("authentic-hand-card").count();
+  await rowPlayableCard.click({ button: "right" });
+  await expect(page.getByTestId("authentic-match-card-context-menu")).toBeVisible();
+  await expect(page.getByTestId("authentic-drag-preview")).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("authentic-match-card-context-menu")).toHaveCount(0);
+
+  await startMouseDrag(page, rowPlayableCard);
+  await expect(rowPlayableCard).toHaveAttribute("data-drag-state", "dragging");
+  await page.mouse.move(8, 8, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.getByTestId("authentic-drag-preview")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-recent-activity")).not.toContainText(/Human played/);
+  await expect(page.getByTestId("authentic-hand-card")).toHaveCount(handCardCountBefore);
+
+  const rowTarget = page.getByTestId("authentic-board-row-target").first();
+  await expect(rowTarget).toBeVisible();
+  await startMouseDrag(page, rowPlayableCard);
+  await expect(page.getByTestId("authentic-target-hint")).toContainText(/drag to a highlighted row/i);
+  const rowTargetCenter = await locatorCenter(rowTarget);
+  await page.mouse.move(rowTargetCenter.x, rowTargetCenter.y, { steps: 8 });
+  await expect(rowTarget).toHaveAttribute("data-drop-state", "active");
+  await page.mouse.up();
+
+  await expect(page.getByTestId("authentic-drag-preview")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-card-flight").first()).toBeVisible();
+  await expect(page.getByTestId("authentic-card-flight").first()).toHaveAttribute("data-move-id", /^play:/);
+  await expect(page.getByTestId("authentic-recent-activity")).toContainText(/Human played/);
+
+  const matchPageText = await visiblePageText(page);
+  expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_a:\d{3}:|seat_b:\d{3}:/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic match drags a selected weather card to the Weather panel target (cEp12)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await seedLocalDecks(page, weatherBackfillDeck.presetId, [weatherBackfillDeck]);
+
+  const candidateSeeds = ["cep12-weather-1", "cep12-weather-2", "cep12-weather-3", "cep12-weather-4"];
+  let coveredWeatherDrag = false;
+
+  for (const seed of candidateSeeds) {
+    await enterAuthenticMatchFromPreGame(page, {
+      seed,
+      deckName: weatherBackfillDeck.name,
+    });
+
+    const fixtureWeatherCard = page
+      .locator(
+        weatherFixtureSourceIds
+          .map(
+            (sourceId) =>
+              `[data-testid="authentic-human-hand"] .authentic-hand__card.is-playable[data-source-id="${sourceId}"]`,
+          )
+          .join(", "),
+      )
+      .first();
+
+    if ((await fixtureWeatherCard.count()) === 0) {
+      continue;
+    }
+
+    const selectedSourceId = await fixtureWeatherCard.getAttribute("data-source-id");
+    if (!selectedSourceId) {
+      throw new Error("fixture weather card was missing its public data-source-id");
+    }
+    const selectedWeatherName = weatherFixtureSourceNames[selectedSourceId];
+    if (!selectedWeatherName) {
+      throw new Error(`unexpected fixture weather source id: ${selectedSourceId}`);
+    }
+    const weatherZoneCard = page.locator(`.authentic-weather__card[data-source-id="${selectedSourceId}"]`);
+    const weatherZoneCountBefore = await weatherZoneCard.count();
+
+    await fixtureWeatherCard.getByTestId("authentic-hand-card").click();
+    await expect(page.getByTestId("authentic-target-hint")).toContainText("target the weather panel");
+    await startMouseDrag(page, fixtureWeatherCard);
+    await expect(fixtureWeatherCard).toHaveAttribute("data-drag-state", "dragging");
+    await expect(page.getByTestId("authentic-target-groups")).toHaveAttribute("data-target-state", "has-targets");
+    await expect(page.getByTestId("authentic-target-hint")).toContainText("drag to the weather panel");
+
+    const weatherTarget = page.getByTestId("authentic-weather-target");
+    await expect(weatherTarget).toBeVisible();
+    await expect(weatherTarget).toHaveAttribute(
+      "aria-label",
+      new RegExp(`^Play ${escapeRegExp(selectedWeatherName)} on the weather panel$`),
+    );
+
+    const weatherTargetCenter = await locatorCenter(weatherTarget);
+    await page.mouse.move(weatherTargetCenter.x, weatherTargetCenter.y, { steps: 8 });
+    await expect(weatherTarget).toHaveAttribute("data-drop-state", "active");
+    await page.mouse.up();
+
+    await expect(weatherZoneCard).toHaveCount(weatherZoneCountBefore + 1);
+    await expect(page.getByTestId("authentic-card-flight").first()).toBeVisible();
+    await expect(page.getByTestId("authentic-recent-activity")).toContainText(/Human played/);
+    await expect(page.getByTestId("authentic-drag-preview")).toHaveCount(0);
+
+    const matchPageText = await visiblePageText(page);
+    expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_a:\d{3}:|seat_b:\d{3}:/);
+    coveredWeatherDrag = true;
+    break;
+  }
+
+  expect(coveredWeatherDrag, "no candidate seed produced a visible hand weather card").toBe(true);
   expect(pageErrors).toEqual([]);
 });
 

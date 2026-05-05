@@ -48,7 +48,7 @@ The default local `npm run ci` gate remains the fast deterministic unit/lint/bui
 
 ## Current Committed Coverage
 
-The committed smoke spec currently runs 24 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, and match-end ledger flows.
+The committed smoke spec currently runs 26 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, drag/drop, card-flight, and match-end ledger flows.
 
 ## dp6-smoke Engine Shell Coverage
 
@@ -96,12 +96,14 @@ The same smoke spec verifies:
 - Mobile width `390px` avoids horizontal overflow across pre-game, deck builder, mulligan, direct match, and post-confirm match entry.
 - cEp11.1 adds a deterministic selected hand-weather-card smoke using a browser-local `gwent_authentic_decks_v1` fixture deck. The fixture contains 22 battlefield cards plus 10 legal weather specials; the test searches four fixed seeds (`cep111-weather-1` through `cep111-weather-4`) until a public `data-source-id` weather card is in the human hand, selects it, asserts `authentic-weather-target` and `target the weather panel` copy, clicks the Weather panel affordance rather than the right-rail fallback, and verifies the selected public weather source appears in the Weather panel.
 - cEp11.1 adds a match-end ledger smoke through normal product controls. It starts a direct authentic match, keeps mulligans, confirms `Start the match?`, repeatedly uses visible `pass`, `resolve round`, and `next round` controls with a hard four-round limit, and asserts the real `data-ledger-kind="match_end"` overlay, round history, standing rows, placeholder-free copy, Escape persistence, and rematch route back through mulligan/start-match.
+- cEp12 adds a row drag/drop smoke using the same browser-local fixture-deck pattern. It finds a playable human hand card with a legal board-row target, verifies right-click inspection does not start a drag, verifies an invalid drop leaves the hand count and activity unchanged, then drops on the highlighted row target and asserts active drop state, card-flight overlay, `Human played` activity, and hidden-info-safe page text.
+- cEp12 adds a selected-weather drag/drop smoke with the local weather fixture. It selects a visible playable weather card, drags it to the Weather panel target, and asserts active drop state, card-flight overlay, Weather panel count increase, `Human played` activity, drag preview cleanup, and hidden-info-safe page text.
 
 ## Current Limits
 
-The smoke suite is intentionally bounded. It does not cover drag/drop, multi-browser behavior, screenshot approval, AI-vs-AI simulation, every deck-builder editing branch, the match-end setup/change-deck branch, long strategic full-game scripts beyond the pass-only match-end tripwire, or polished mobile board UX.
+The smoke suite is intentionally bounded. It does not cover touch dragging, full `card_instance` / row-horn / Decoy choreography in browser, multi-browser behavior, screenshot approval, AI-vs-AI simulation, every deck-builder editing branch, the match-end setup/change-deck branch, long strategic full-game scripts beyond the pass-only match-end tripwire, or polished mobile board UX.
 
-Some selectors are `data-testid` attributes on user-visible regions and controls. They are more stable than class names, but they still depend on the current shell/product structure and should be revisited when final spatial board interactions replace this smoke surface.
+Some selectors are `data-testid` and presentation-state attributes on user-visible regions and controls. They are more stable than class names, but they still depend on the current shell/product structure and should be revisited when final spatial board interactions evolve beyond this smoke surface.
 
 ## Failure Artifacts
 

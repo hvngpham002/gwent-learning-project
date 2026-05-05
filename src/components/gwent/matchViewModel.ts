@@ -1699,6 +1699,12 @@ export interface SelectedCardTargetViewModel {
   readonly rightRailLabel: string;
 }
 
+export interface SelectedCardDragTargetViewModel {
+  readonly moveIds: ReadonlySet<string>;
+  readonly rightRailLabel: string | null;
+  readonly hasSpatialDropTargets: boolean;
+}
+
 const TARGET_BADGE = {
   ROW_PLAY: "play here",
   ROW_HORN: "horn slot",
@@ -1889,5 +1895,49 @@ export const buildSelectedCardTargetViewModel = ({
     weatherTarget,
     fallbackActions,
     rightRailLabel,
+  };
+};
+
+export const buildSelectedCardDragTargetViewModel = (
+  selectedTargets: SelectedCardTargetViewModel,
+): SelectedCardDragTargetViewModel => {
+  const moveIds = new Set<string>();
+  selectedTargets.rowTargets.forEach((target) => moveIds.add(target.moveId));
+  selectedTargets.cardTargets.forEach((target) => moveIds.add(target.moveId));
+  selectedTargets.rowHornTargets.forEach((target) => moveIds.add(target.moveId));
+  if (selectedTargets.weatherTarget) {
+    moveIds.add(selectedTargets.weatherTarget.moveId);
+  }
+
+  if (selectedTargets.state !== "has-targets" || moveIds.size === 0) {
+    return {
+      moveIds,
+      rightRailLabel: null,
+      hasSpatialDropTargets: false,
+    };
+  }
+
+  const hasRowTargets = selectedTargets.rowTargets.size > 0;
+  const hasCardTargets = selectedTargets.cardTargets.size > 0;
+  const hasHornTargets = selectedTargets.rowHornTargets.size > 0;
+  const hasWeatherTarget = selectedTargets.weatherTarget !== null;
+  let rightRailLabel = "drag to a highlighted target.";
+
+  if (hasWeatherTarget && !hasRowTargets && !hasCardTargets && !hasHornTargets) {
+    rightRailLabel = "drag to the weather panel.";
+  } else if (hasHornTargets && !hasRowTargets && !hasCardTargets && !hasWeatherTarget) {
+    rightRailLabel = "drag to a highlighted horn slot.";
+  } else if (hasCardTargets && !hasRowTargets && !hasHornTargets && !hasWeatherTarget) {
+    rightRailLabel = "drag to a highlighted card.";
+  } else if (hasRowTargets && !hasCardTargets && !hasHornTargets && !hasWeatherTarget) {
+    rightRailLabel = "drag to a highlighted row.";
+  } else if (hasRowTargets && hasCardTargets && !hasHornTargets && !hasWeatherTarget) {
+    rightRailLabel = "drag to a highlighted row or card.";
+  }
+
+  return {
+    moveIds,
+    rightRailLabel,
+    hasSpatialDropTargets: true,
   };
 };

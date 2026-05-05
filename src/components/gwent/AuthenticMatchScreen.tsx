@@ -68,6 +68,7 @@ import {
   buildMedicPromptOptions,
   buildPromptPresentationViewModel,
   buildResolveRoundActionViewModel,
+  buildSelectedCardDragTargetViewModel,
   buildSelectedCardTargetViewModel,
   buildVisibleCardLookup,
   chooseDebugAiMulliganMove,
@@ -98,6 +99,8 @@ import "./authentic-match.css";
 
 const MATCH_CONTEXT_MENU_WIDTH = 200;
 const MATCH_CONTEXT_MENU_HEIGHT = 92;
+const HAND_DRAG_THRESHOLD_PX = 7;
+const CARD_FLIGHT_CLEANUP_MS = 950;
 
 const clampMatchMenuPosition = (x: number, y: number) => {
   if (typeof window === "undefined") {
@@ -143,6 +146,80 @@ const SEAT_LABELS: Record<SeatId, string> = {
 const SEAT_IDS = ["seat_a", "seat_b"] as const;
 
 type CardMotion = "played" | "discarded" | "prompt-revived" | "scorched";
+
+interface MatchRect {
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+type HandDragState =
+  | {
+      readonly kind: "pending";
+      readonly pointerId: number;
+      readonly cardId: CardInstanceId;
+      readonly card: AuthenticRuntimeCardViewModel;
+      readonly startX: number;
+      readonly startY: number;
+      readonly currentX: number;
+      readonly currentY: number;
+      readonly offsetX: number;
+      readonly offsetY: number;
+      readonly sourceRect: MatchRect;
+    }
+  | {
+      readonly kind: "dragging";
+      readonly pointerId: number;
+      readonly cardId: CardInstanceId;
+      readonly card: AuthenticRuntimeCardViewModel;
+      readonly startX: number;
+      readonly startY: number;
+      readonly currentX: number;
+      readonly currentY: number;
+      readonly offsetX: number;
+      readonly offsetY: number;
+      readonly sourceRect: MatchRect;
+      readonly activeDropMoveId: string | null;
+    };
+
+interface CardFlightPresentation {
+  readonly key: string;
+  readonly moveId: string;
+  readonly card: AuthenticRuntimeCardViewModel["card"];
+  readonly from: MatchRect;
+  readonly to: MatchRect;
+}
+
+interface PlayCardPresentationOptions {
+  readonly sourceRect?: MatchRect | null;
+  readonly targetRect?: MatchRect | null;
+  readonly targetElement?: Element | null;
+}
+
+const rectFromDomRect = (rect: DOMRect): MatchRect => ({
+  left: rect.left,
+  top: rect.top,
+  width: rect.width,
+  height: rect.height,
+});
+
+const getDropMoveIdAtPoint = (x: number, y: number, allowedMoveIds: ReadonlySet<string>): string | null => {
+  if (typeof document === "undefined") {
+    return null;
+  }
+  const element = document.elementFromPoint(x, y);
+  const target = element?.closest<HTMLElement>("[data-drop-move-id]");
+  const moveId = target?.dataset.dropMoveId ?? null;
+  return moveId && allowedMoveIds.has(moveId) ? moveId : null;
+};
+
+const getDropElementForMoveId = (moveId: string | null): HTMLElement | null => {
+  if (!moveId || typeof document === "undefined") {
+    return null;
+  }
+  return document.querySelector<HTMLElement>(`[data-drop-move-id="${CSS.escape(moveId)}"]`);
+};
 
 const abilitySummary = (card: AuthenticRuntimeCardViewModel | null) => {
   const primaryAbility = card?.card.abilities.find((ability) => ability !== "none");
@@ -272,12 +349,16 @@ const PilePair: React.FC<{
 const WeatherSummary: React.FC<{
   cards: readonly AuthenticRuntimeCardViewModel[];
   weatherTarget: SelectedCardWeatherTargetViewModel | null;
-  onTargetClick: (moveId: string) => void;
+  activeDropMoveId: string | null;
+  onTargetClick: (moveId: string, options?: PlayCardPresentationOptions) => void;
   onCardContextMenu: (event: React.MouseEvent, cardId: CardInstanceId) => void;
-}> = ({ cards, weatherTarget, onTargetClick, onCardContextMenu }) => (
+}> = ({ cards, weatherTarget, activeDropMoveId, onTargetClick, onCardContextMenu }) => (
   <section
-    className={`authentic-panel authentic-weather${weatherTarget ? " is-legal-target" : ""}`}
+    className={`authentic-panel authentic-weather${weatherTarget ? " is-legal-target" : ""}${
+      weatherTarget && activeDropMoveId === weatherTarget.moveId ? " is-drop-active" : ""
+    }`}
     data-weather-target={weatherTarget ? "true" : undefined}
+    data-drop-state={weatherTarget && activeDropMoveId === weatherTarget.moveId ? "active" : weatherTarget ? "idle" : undefined}
   >
     <h2>Weather</h2>
     <div className="authentic-weather__cards">
@@ -299,8 +380,10 @@ const WeatherSummary: React.FC<{
         type="button"
         className="authentic-weather__target"
         data-testid="authentic-weather-target"
+        data-drop-move-id={weatherTarget.moveId}
+        data-drop-state={activeDropMoveId === weatherTarget.moveId ? "active" : "idle"}
         aria-label={weatherTarget.ariaLabel}
-        onClick={() => onTargetClick(weatherTarget.moveId)}
+        onClick={(event) => onTargetClick(weatherTarget.moveId, { targetElement: event.currentTarget })}
       >
         <span className="authentic-weather__target-badge">{weatherTarget.badgeLabel}</span>
       </button>
@@ -314,14 +397,17 @@ const BoardRow: React.FC<{
   hornTarget: SelectedCardRowHornTargetViewModel | undefined;
   legalCardTargets: ReadonlyMap<CardInstanceId, SelectedCardCardTargetViewModel>;
   motionByCardId: ReadonlyMap<CardInstanceId, string>;
-  onTargetClick: (moveId: string) => void;
+  activeDropMoveId: string | null;
+  onTargetClick: (moveId: string, options?: PlayCardPresentationOptions) => void;
   onCardContextMenu: (event: React.MouseEvent, target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow }) => void;
-}> = ({ row, rowTarget, hornTarget, legalCardTargets, motionByCardId, onTargetClick, onCardContextMenu }) => {
+}> = ({ row, rowTarget, hornTarget, legalCardTargets, motionByCardId, activeDropMoveId, onTargetClick, onCardContextMenu }) => {
   const renderBoardCard = (unit: AuthenticBoardRuntimeCardViewModel) => {
     const cardTarget = legalCardTargets.get(unit.key);
     const motion = motionByCardId.get(unit.key);
     const className = `authentic-board-card authentic-board-card--${unit.boardState.strengthState}${
       cardTarget ? " is-card-target" : ""
+    }${
+      cardTarget && activeDropMoveId === cardTarget.moveId ? " is-drop-active" : ""
     }`;
     const strengthTitle = unit.boardState.modifiers.join(", ") || "No active modifier";
     const content = <AuthenticCard card={unit.card} size="xs" />;
@@ -360,11 +446,13 @@ const BoardRow: React.FC<{
         data-card-motion={motion}
         data-source-id={unit.card.sourceId}
         data-instance-id={unit.key}
+        data-drop-move-id={cardTarget.moveId}
+        data-drop-state={activeDropMoveId === cardTarget.moveId ? "active" : "idle"}
         title={strengthTitle}
         aria-label={cardTarget.ariaLabel}
         onClick={(event) => {
           event.stopPropagation();
-          onTargetClick(cardTarget.moveId);
+          onTargetClick(cardTarget.moveId, { targetElement: event.currentTarget });
         }}
         onContextMenu={handleContextMenu}
       >
@@ -385,7 +473,11 @@ const BoardRow: React.FC<{
       }
     : undefined;
 
-  const rowClassName = `authentic-board-row authentic-board-row--${row.side}${rowTarget ? " is-legal-target" : ""}`;
+  const rowDropActive = Boolean(rowTarget && activeDropMoveId === rowTarget.moveId);
+  const hornDropActive = Boolean(hornTarget && activeDropMoveId === hornTarget.moveId);
+  const rowClassName = `authentic-board-row authentic-board-row--${row.side}${rowTarget ? " is-legal-target" : ""}${
+    rowDropActive || hornDropActive ? " is-drop-active" : ""
+  }`;
 
   return (
     <div
@@ -393,6 +485,7 @@ const BoardRow: React.FC<{
       data-testid="authentic-board-row"
       data-row-target={rowTarget ? "true" : undefined}
       data-row-key={row.key}
+      data-drop-state={rowDropActive || hornDropActive ? "active" : rowTarget || hornTarget ? "idle" : undefined}
     >
       <div className="authentic-board-row__label">
         <span>{row.rowGlyph}</span>
@@ -416,8 +509,10 @@ const BoardRow: React.FC<{
             className="authentic-board-row__horn-target"
             data-testid="authentic-board-row-horn-target"
             data-row-key={row.key}
+            data-drop-move-id={hornTarget.moveId}
+            data-drop-state={activeDropMoveId === hornTarget.moveId ? "active" : "idle"}
             aria-label={hornTarget.ariaLabel}
-            onClick={() => onTargetClick(hornTarget.moveId)}
+            onClick={(event) => onTargetClick(hornTarget.moveId, { targetElement: event.currentTarget })}
           >
             <span className="authentic-board-row__horn-target-icon" aria-hidden="true">◊</span>
             <span className="authentic-board-row__horn-target-label">{hornTarget.badgeLabel}</span>
@@ -433,8 +528,10 @@ const BoardRow: React.FC<{
           className="authentic-board-row__target"
           data-testid="authentic-board-row-target"
           data-row-key={row.key}
+          data-drop-move-id={rowTarget.moveId}
+          data-drop-state={activeDropMoveId === rowTarget.moveId ? "active" : "idle"}
           aria-label={rowTarget.ariaLabel}
-          onClick={() => onTargetClick(rowTarget.moveId)}
+          onClick={(event) => onTargetClick(rowTarget.moveId, { targetElement: event.currentTarget })}
         >
           <span className="authentic-board-row__target-badge">{rowTarget.badgeLabel}</span>
         </button>
@@ -449,12 +546,13 @@ const BoardTable: React.FC<{
   rowHornTargets: ReadonlyMap<string, SelectedCardRowHornTargetViewModel>;
   legalCardTargets: ReadonlyMap<CardInstanceId, SelectedCardCardTargetViewModel>;
   motionByCardId: ReadonlyMap<CardInstanceId, string>;
-  onTargetClick: (moveId: string) => void;
+  activeDropMoveId: string | null;
+  onTargetClick: (moveId: string, options?: PlayCardPresentationOptions) => void;
   onCardContextMenu: (
     event: React.MouseEvent,
     target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow },
   ) => void;
-}> = ({ rows, rowTargets, rowHornTargets, legalCardTargets, motionByCardId, onTargetClick, onCardContextMenu }) => (
+}> = ({ rows, rowTargets, rowHornTargets, legalCardTargets, motionByCardId, activeDropMoveId, onTargetClick, onCardContextMenu }) => (
   <section className="authentic-board-table" aria-label="Authentic board">
     {rows.map((row, index) => (
       <React.Fragment key={row.key}>
@@ -465,6 +563,7 @@ const BoardTable: React.FC<{
           hornTarget={rowHornTargets.get(row.key)}
           legalCardTargets={legalCardTargets}
           motionByCardId={motionByCardId}
+          activeDropMoveId={activeDropMoveId}
           onTargetClick={onTargetClick}
           onCardContextMenu={onCardContextMenu}
         />
@@ -478,24 +577,52 @@ const HandStrip: React.FC<{
   selectedCardId: CardInstanceId | null;
   playableCardIds: ReadonlySet<CardInstanceId>;
   disabledByCardId: ReadonlyMap<CardInstanceId, string | null>;
+  draggingCardId: CardInstanceId | null;
+  onCardPointerDown: (event: React.PointerEvent<HTMLDivElement>, card: AuthenticRuntimeCardViewModel, draggable: boolean) => void;
+  onCardPointerMove: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onCardPointerUp: (event: React.PointerEvent<HTMLDivElement>) => void;
+  onCardPointerCancel: (event: React.PointerEvent<HTMLDivElement>) => void;
   onCardClick: (cardId: CardInstanceId) => void;
   onCardContextMenu: (event: React.MouseEvent, cardId: CardInstanceId) => void;
-}> = ({ cards, selectedCardId, playableCardIds, disabledByCardId, onCardClick, onCardContextMenu }) => (
+  setCardElement: (cardId: CardInstanceId, element: HTMLDivElement | null) => void;
+}> = ({
+  cards,
+  selectedCardId,
+  playableCardIds,
+  disabledByCardId,
+  draggingCardId,
+  onCardPointerDown,
+  onCardPointerMove,
+  onCardPointerUp,
+  onCardPointerCancel,
+  onCardClick,
+  onCardContextMenu,
+  setCardElement,
+}) => (
   <section className="authentic-hand" data-testid="authentic-human-hand">
     <div className="authentic-hand__label">hand · {cards.length}</div>
     <div className="authentic-hand__cards">
       {cards.map((entry) => {
         const selected = selectedCardId === entry.key;
         const disabledReason = disabledByCardId.get(entry.key);
+        const draggable = playableCardIds.has(entry.key) && !disabledReason;
+        const dragging = draggingCardId === entry.key;
         return (
           <div
             key={entry.key}
-            className={`authentic-hand__card${playableCardIds.has(entry.key) && !disabledReason ? " is-playable" : ""}${
+            ref={(element) => setCardElement(entry.key, element)}
+            className={`authentic-hand__card${draggable ? " is-playable" : ""}${
               disabledReason ? " is-disabled" : ""
-            }`}
+            }${dragging ? " is-dragging" : ""}`}
+            data-drag-state={dragging ? "dragging" : draggable ? "ready" : disabledReason ? "disabled" : "idle"}
+            data-draggable-card={draggable ? "true" : undefined}
             title={disabledReason ?? entry.card.name}
             data-source-id={entry.card.sourceId}
             data-instance-id={entry.key}
+            onPointerDown={(event) => onCardPointerDown(event, entry, draggable)}
+            onPointerMove={onCardPointerMove}
+            onPointerUp={onCardPointerUp}
+            onPointerCancel={onCardPointerCancel}
             onContextMenu={(event) => onCardContextMenu(event, entry.key)}
           >
             <AuthenticCard
@@ -558,6 +685,7 @@ interface ActionPanelLeaderProps {
 
 const ActionPanel: React.FC<{
   selectedTargets: SelectedCardTargetViewModel;
+  dragHintLabel: string | null;
   onPlayMove: (moveId: string) => void;
   canPass: boolean;
   onPass: () => void;
@@ -566,6 +694,7 @@ const ActionPanel: React.FC<{
   onResolveRound: () => void;
 }> = ({
   selectedTargets,
+  dragHintLabel,
   onPlayMove,
   canPass,
   onPass,
@@ -671,8 +800,9 @@ const ActionPanel: React.FC<{
         <p
           className="authentic-target-groups__hint"
           data-testid="authentic-target-hint"
+          aria-live="polite"
         >
-          {selectedTargets.rightRailLabel}
+          {dragHintLabel ?? selectedTargets.rightRailLabel}
         </p>
         {selectedTargets.fallbackActions.length > 0 ? (
           <div className="authentic-target-group" data-testid="authentic-target-fallback">
@@ -1009,6 +1139,47 @@ const BattleLog: React.FC<{ lines: readonly string[] }> = ({ lines }) => (
   </section>
 );
 
+const CardFlightLayer: React.FC<{
+  flights: readonly CardFlightPresentation[];
+  onFlightDone: (key: string) => void;
+}> = ({ flights, onFlightDone }) => {
+  if (flights.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="authentic-card-flight-layer" aria-hidden="true">
+      {flights.map((flight) => {
+        const fromCenterX = flight.from.left + flight.from.width / 2;
+        const fromCenterY = flight.from.top + flight.from.height / 2;
+        const toCenterX = flight.to.left + flight.to.width / 2;
+        const toCenterY = flight.to.top + flight.to.height / 2;
+        return (
+          <div
+            key={flight.key}
+            className="authentic-card-flight"
+            data-testid="authentic-card-flight"
+            data-move-id={flight.moveId}
+            style={{
+              left: flight.from.left,
+              top: flight.from.top,
+              width: flight.from.width,
+              height: flight.from.height,
+              "--flight-x": `${toCenterX - fromCenterX}px`,
+              "--flight-y": `${toCenterY - fromCenterY}px`,
+              "--flight-mid-x": `${(toCenterX - fromCenterX) * 0.52}px`,
+              "--flight-mid-y": `${(toCenterY - fromCenterY) * 0.52 - 34}px`,
+            } as React.CSSProperties}
+            onAnimationEnd={() => onFlightDone(flight.key)}
+          >
+            <AuthenticCard card={flight.card} size="sm" />
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 interface AuthenticMatchScreenProps {
   readonly setupConfig?: AuthenticMatchSetupConfig;
   readonly onReturnToPreGame?: () => void;
@@ -1152,6 +1323,15 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const [leaderInspectSeat, setLeaderInspectSeat] = useState<SeatId | null>(null);
   const [leaderChoiceMenuOpen, setLeaderChoiceMenuOpen] = useState(false);
   const leaderActionRef = useRef<HTMLDivElement | null>(null);
+  const handCardElementsRef = useRef(new Map<CardInstanceId, HTMLDivElement>());
+  const suppressNextHandClickRef = useRef<CardInstanceId | null>(null);
+  const dragStateRef = useRef<HandDragState | null>(null);
+  const dragLegalMoveSignatureRef = useRef<string | null>(null);
+  const updateHandDragFromPointerRef = useRef<(event: PointerEvent) => void>(() => undefined);
+  const completeHandDragFromPointerRef = useRef<(event: PointerEvent) => void>(() => undefined);
+  const cancelHandDragFromPointerRef = useRef<(event: PointerEvent) => void>(() => undefined);
+  const [handDragState, setHandDragState] = useState<HandDragState | null>(null);
+  const [cardFlights, setCardFlights] = useState<CardFlightPresentation[]>([]);
   const [mulliganExitAnimation, setMulliganExitAnimation] = useState<MulliganExitAnimation | null>(null);
   const [completedMulliganAnimationKey, setCompletedMulliganAnimationKey] = useState<string | null>(null);
   const [readyMulliganAnimationKey, setReadyMulliganAnimationKey] = useState<string | null>(null);
@@ -1193,6 +1373,26 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const debugAiMulliganCount = useMemo(() => getDebugAiMulliganCount(), []);
   const activeSetupKey = setupKey(setupConfig, startSeed);
   const activeMatchKey = `${activeSetupKey}|run:${matchPresentationRun}`;
+  const setSyncedHandDragState = useCallback((next: HandDragState | null) => {
+    dragStateRef.current = next;
+    if (!next) {
+      dragLegalMoveSignatureRef.current = null;
+    }
+    setHandDragState(next);
+  }, []);
+  const cancelHandDrag = useCallback(() => {
+    setSyncedHandDragState(null);
+  }, [setSyncedHandDragState]);
+  const setHandCardElement = useCallback((cardId: CardInstanceId, element: HTMLDivElement | null) => {
+    if (element) {
+      handCardElementsRef.current.set(cardId, element);
+      return;
+    }
+    handCardElementsRef.current.delete(cardId);
+  }, []);
+  const finishCardFlight = useCallback((key: string) => {
+    setCardFlights((current) => current.filter((flight) => flight.key !== key));
+  }, []);
 
   useEffect(() => {
     setMulliganExitAnimation(null);
@@ -1204,6 +1404,8 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setAiMulliganBaseHand(null);
     setStartMatchModalDismissed(false);
     setDismissedRoundOverlayKey(null);
+    setSyncedHandDragState(null);
+    setCardFlights([]);
     setMatchPresentationRun((current) => current + 1);
     if (setupConfig) {
       dispatch(startEngineMatch(setupConfigToStartEngineOptions(setupConfig)));
@@ -1214,7 +1416,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     }
     // activeSetupKey is included so local pre-game transitions always start the chosen setup.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, activeSetupKey]);
+  }, [dispatch, activeSetupKey, setSyncedHandDragState]);
 
   const latestAiMulliganRecord = useMemo(
     () => latestAppliedMulligan(engine.commandHistory, aiSeat, { preferRedraw: true }),
@@ -1462,9 +1664,11 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setLeaderContextMenu(null);
     setCardInspectTarget(null);
     setLeaderInspectSeat(null);
+    setSyncedHandDragState(null);
+    setCardFlights([]);
     setMatchPresentationRun((current) => current + 1);
     dispatch(startEngineMatch(setupConfig ? setupConfigToStartEngineOptions(setupConfig) : { seed: startSeed }));
-  }, [dispatch, setupConfig, startSeed]);
+  }, [dispatch, setupConfig, setSyncedHandDragState, startSeed]);
 
   const confirmMulliganReview = useCallback(() => {
     if (!visibleMulliganExitAnimationKey || !isMulliganReviewReady) {
@@ -1491,6 +1695,16 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const closeLeaderContextMenu = useCallback(() => setLeaderContextMenu(null), []);
   const closeCardInspect = useCallback(() => setCardInspectTarget(null), []);
   const closeLeaderInspect = useCallback(() => setLeaderInspectSeat(null), []);
+
+  useEffect(() => {
+    if (cardFlights.length === 0) {
+      return;
+    }
+    const timeoutIds = cardFlights.map((flight) =>
+      window.setTimeout(() => finishCardFlight(flight.key), CARD_FLIGHT_CLEANUP_MS),
+    );
+    return () => timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+  }, [cardFlights, finishCardFlight]);
 
   const openCardContextMenuAt = useCallback(
     (event: React.MouseEvent, target: MatchCardContextTarget) => {
@@ -1581,9 +1795,11 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setLeaderContextMenu(null);
     setCardInspectTarget(null);
     setLeaderInspectSeat(null);
+    setSyncedHandDragState(null);
+    setCardFlights([]);
     dispatch(engineMatchCleared());
     onReturnToPreGame();
-  }, [dispatch, onReturnToPreGame]);
+  }, [dispatch, onReturnToPreGame, setSyncedHandDragState]);
 
   const requestReturnToPreGame = useCallback(() => {
     if (!onReturnToPreGame) {
@@ -1707,6 +1923,14 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       }),
     [selectedCard, selectedPlayMoves, visibleCardsById],
   );
+  const selectedDragTargetView = useMemo(
+    () => buildSelectedCardDragTargetViewModel(selectedTargetView),
+    [selectedTargetView],
+  );
+  const selectedDropMoveIdsSignature = useMemo(
+    () => [...selectedDragTargetView.moveIds].sort().join("|"),
+    [selectedDragTargetView],
+  );
   const promptPresentation = useMemo(
     () =>
       prompt
@@ -1828,6 +2052,10 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
 
   const selectHandCard = useCallback(
     (cardId: CardInstanceId) => {
+      if (suppressNextHandClickRef.current === cardId) {
+        suppressNextHandClickRef.current = null;
+        return;
+      }
       if (match?.phase === "playing" && playableCardIds.has(cardId) && canHumanAct && !prompt) {
         dispatch(engineSelectedCardSet(selectedCardId === cardId ? null : cardId));
       }
@@ -1979,15 +2207,248 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   );
 
   const playCard = useCallback(
-    (moveId: string) => {
+    (moveId: string, presentation: PlayCardPresentationOptions = {}) => {
       const move = selectedPlayMoves.find((candidate) => candidate.moveId === moveId);
       if (!move) {
         return;
       }
+      const sourceCard = humanHand.find((card) => card.instanceId === move.sourceCardId);
+      const sourceElement = handCardElementsRef.current.get(move.sourceCardId);
+      const sourceRect =
+        presentation.sourceRect ??
+        (sourceElement ? rectFromDomRect(sourceElement.getBoundingClientRect()) : null);
+      const targetRect =
+        presentation.targetRect ??
+        (presentation.targetElement ? rectFromDomRect(presentation.targetElement.getBoundingClientRect()) : null);
+      if (sourceCard && sourceRect && targetRect) {
+        setCardFlights((current) => [
+          ...current,
+          {
+            key: `${move.moveId}|${sourceCard.instanceId}|${Date.now()}|${current.length}`,
+            moveId: move.moveId,
+            card: toRuntimeCard(sourceCard).card,
+            from: sourceRect,
+            to: targetRect,
+          },
+        ]);
+      }
       dispatch(dispatchEngineCommand({ type: "PlayCard", seatId: humanSeat, cardId: move.sourceCardId, target: move.target }));
     },
-    [dispatch, humanSeat, selectedPlayMoves],
+    [dispatch, humanHand, humanSeat, selectedPlayMoves],
   );
+
+  const handleHandPointerDown = useCallback(
+    (event: React.PointerEvent<HTMLDivElement>, card: AuthenticRuntimeCardViewModel, draggable: boolean) => {
+      if (!draggable || event.button !== 0 || event.pointerType === "touch") {
+        return;
+      }
+      const rect = rectFromDomRect(event.currentTarget.getBoundingClientRect());
+      setSyncedHandDragState({
+        kind: "pending",
+        pointerId: event.pointerId,
+        cardId: card.key,
+        card,
+        startX: event.clientX,
+        startY: event.clientY,
+        currentX: event.clientX,
+        currentY: event.clientY,
+        offsetX: event.clientX - rect.left,
+        offsetY: event.clientY - rect.top,
+        sourceRect: rect,
+      });
+      let cleanup = () => undefined;
+      const handlePointerMove = (nativeEvent: PointerEvent) => updateHandDragFromPointerRef.current(nativeEvent);
+      const handlePointerUp = (nativeEvent: PointerEvent) => {
+        completeHandDragFromPointerRef.current(nativeEvent);
+        cleanup();
+      };
+      const handlePointerCancel = (nativeEvent: PointerEvent) => {
+        cancelHandDragFromPointerRef.current(nativeEvent);
+        cleanup();
+      };
+      cleanup = () => {
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+        window.removeEventListener("pointercancel", handlePointerCancel);
+      };
+      window.addEventListener("pointermove", handlePointerMove, { passive: false });
+      window.addEventListener("pointerup", handlePointerUp, { passive: false });
+      window.addEventListener("pointercancel", handlePointerCancel);
+    },
+    [setSyncedHandDragState],
+  );
+
+  const updateHandDragFromPointer = useCallback(
+    (event: { pointerId: number; clientX: number; clientY: number; preventDefault: () => void }) => {
+      const current = dragStateRef.current;
+      if (!current || event.pointerId !== current.pointerId) {
+        return;
+      }
+      const nextBase = {
+        ...current,
+        currentX: event.clientX,
+        currentY: event.clientY,
+      };
+      if (current.kind === "pending") {
+        const distance = Math.hypot(event.clientX - current.startX, event.clientY - current.startY);
+        if (distance < HAND_DRAG_THRESHOLD_PX) {
+          setSyncedHandDragState(nextBase);
+          return;
+        }
+
+        event.preventDefault();
+        try {
+          handCardElementsRef.current.get(current.cardId)?.setPointerCapture(current.pointerId);
+        } catch {
+          // Pointer capture is best-effort; window listeners still handle cleanup.
+        }
+        if (selectedCardId !== current.cardId) {
+          dispatch(engineSelectedCardSet(current.cardId));
+        }
+        setCardContextMenu(null);
+        setLeaderContextMenu(null);
+        setLeaderChoiceMenuOpen(false);
+        setSyncedHandDragState({
+          ...nextBase,
+          kind: "dragging",
+          activeDropMoveId: getDropMoveIdAtPoint(event.clientX, event.clientY, selectedDragTargetView.moveIds),
+        });
+        return;
+      }
+
+      event.preventDefault();
+      setSyncedHandDragState({
+        ...nextBase,
+        kind: "dragging",
+        activeDropMoveId: getDropMoveIdAtPoint(event.clientX, event.clientY, selectedDragTargetView.moveIds),
+      });
+    },
+    [dispatch, selectedCardId, selectedDragTargetView.moveIds, setSyncedHandDragState],
+  );
+
+  const completeHandDragFromPointer = useCallback(
+    (event: { pointerId: number; clientX: number; clientY: number; preventDefault: () => void }) => {
+      const current = dragStateRef.current;
+      if (!current || event.pointerId !== current.pointerId) {
+        return;
+      }
+      if (current.kind === "dragging") {
+        event.preventDefault();
+        suppressNextHandClickRef.current = current.cardId;
+        const moveId =
+          getDropMoveIdAtPoint(event.clientX, event.clientY, selectedDragTargetView.moveIds) ??
+          current.activeDropMoveId;
+        const targetElement = getDropElementForMoveId(moveId);
+        setSyncedHandDragState(null);
+        if (moveId && targetElement) {
+          playCard(moveId, {
+            sourceRect: current.sourceRect,
+            targetElement,
+          });
+        }
+        return;
+      }
+      setSyncedHandDragState(null);
+    },
+    [playCard, selectedDragTargetView.moveIds, setSyncedHandDragState],
+  );
+
+  const cancelHandDragFromPointer = useCallback(
+    (event: { pointerId: number }) => {
+      const current = dragStateRef.current;
+      if (!current || event.pointerId !== current.pointerId) {
+        return;
+      }
+      setSyncedHandDragState(null);
+    },
+    [setSyncedHandDragState],
+  );
+
+  useEffect(() => {
+    updateHandDragFromPointerRef.current = updateHandDragFromPointer;
+    completeHandDragFromPointerRef.current = completeHandDragFromPointer;
+    cancelHandDragFromPointerRef.current = cancelHandDragFromPointer;
+  }, [cancelHandDragFromPointer, completeHandDragFromPointer, updateHandDragFromPointer]);
+
+  useEffect(() => {
+    if (!handDragState) {
+      return;
+    }
+
+    const handlePointerMove = (event: PointerEvent) => updateHandDragFromPointer(event);
+    const handlePointerUp = (event: PointerEvent) => completeHandDragFromPointer(event);
+    const handlePointerCancel = (event: PointerEvent) => cancelHandDragFromPointer(event);
+
+    window.addEventListener("pointermove", handlePointerMove, { passive: false });
+    window.addEventListener("pointerup", handlePointerUp, { passive: false });
+    window.addEventListener("pointercancel", handlePointerCancel);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerCancel);
+    };
+  }, [
+    cancelHandDragFromPointer,
+    completeHandDragFromPointer,
+    handDragState,
+    updateHandDragFromPointer,
+  ]);
+
+  useEffect(() => {
+    if (!handDragState) {
+      return;
+    }
+    const selectedChanged =
+      handDragState.kind === "dragging" && selectedCardId !== null && selectedCardId !== handDragState.cardId;
+    const staleLegality =
+      handDragState.kind === "dragging" &&
+      selectedCardId === handDragState.cardId &&
+      dragLegalMoveSignatureRef.current !== null &&
+      dragLegalMoveSignatureRef.current !== selectedDropMoveIdsSignature;
+
+    if (
+      match?.phase !== "playing" ||
+      prompt ||
+      !canHumanAct ||
+      !playableCardIds.has(handDragState.cardId) ||
+      selectedChanged ||
+      staleLegality
+    ) {
+      cancelHandDrag();
+      return;
+    }
+
+    if (
+      handDragState.kind === "dragging" &&
+      selectedCardId === handDragState.cardId &&
+      dragLegalMoveSignatureRef.current === null
+    ) {
+      dragLegalMoveSignatureRef.current = selectedDropMoveIdsSignature;
+    }
+  }, [
+    canHumanAct,
+    cancelHandDrag,
+    handDragState,
+    match?.phase,
+    playableCardIds,
+    prompt,
+    selectedCardId,
+    selectedDropMoveIdsSignature,
+  ]);
+
+  useEffect(() => {
+    if (!handDragState) {
+      return;
+    }
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancelHandDrag();
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [cancelHandDrag, handDragState]);
 
   const handCards = useMemo(() => humanHand.map(toRuntimeCard), [humanHand]);
   const disabledByCardId = useMemo(
@@ -2093,6 +2554,9 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     [canHumanAct, canResolveRound, match?.phase, prompt],
   );
   const seedLabel = `Seed ${String(seed ?? startSeed ?? "default")}`;
+  const activeDropMoveId = handDragState?.kind === "dragging" ? handDragState.activeDropMoveId : null;
+  const draggingCardId = handDragState?.kind === "dragging" ? handDragState.cardId : null;
+  const dragHintLabel = handDragState?.kind === "dragging" ? selectedDragTargetView.rightRailLabel : null;
 
   if (match?.phase === "mulligan" || visibleMulliganExitAnimation) {
     return (
@@ -2177,6 +2641,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                 <WeatherSummary
                   cards={weatherRuntimeCards}
                   weatherTarget={selectedTargetView.weatherTarget}
+                  activeDropMoveId={activeDropMoveId}
                   onTargetClick={playCard}
                   onCardContextMenu={handleWeatherContextMenu}
                 />
@@ -2203,6 +2668,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               rowHornTargets={selectedTargetView.rowHornTargets}
               legalCardTargets={selectedTargetView.cardTargets}
               motionByCardId={motionByCardId}
+              activeDropMoveId={activeDropMoveId}
               onTargetClick={playCard}
               onCardContextMenu={handleBoardContextMenu}
             />
@@ -2211,8 +2677,14 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               selectedCardId={selectedCardId}
               playableCardIds={playableCardIds}
               disabledByCardId={disabledByCardId}
+              draggingCardId={draggingCardId}
+              onCardPointerDown={handleHandPointerDown}
+              onCardPointerMove={updateHandDragFromPointer}
+              onCardPointerUp={completeHandDragFromPointer}
+              onCardPointerCancel={cancelHandDragFromPointer}
               onCardClick={selectHandCard}
               onCardContextMenu={handleHandContextMenu}
+              setCardElement={setHandCardElement}
             />
           </section>
 
@@ -2223,6 +2695,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
             />
             <ActionPanel
               selectedTargets={selectedTargetView}
+              dragHintLabel={dragHintLabel}
               onPlayMove={playCard}
               canPass={canPass}
               onPass={pass}
@@ -2277,6 +2750,23 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
             <BattleLog lines={logLines} />
           </aside>
         </div>
+        <CardFlightLayer flights={cardFlights} onFlightDone={finishCardFlight} />
+        {handDragState?.kind === "dragging" ? (
+          <div
+            className="authentic-drag-preview"
+            data-testid="authentic-drag-preview"
+            data-drag-state="dragging"
+            aria-hidden="true"
+            style={{
+              left: handDragState.currentX - handDragState.offsetX,
+              top: handDragState.currentY - handDragState.offsetY,
+              width: handDragState.sourceRect.width,
+              height: handDragState.sourceRect.height,
+            }}
+          >
+            <AuthenticCard card={handDragState.card.card} size="sm" selected />
+          </div>
+        ) : null}
         {discardBrowserSeat ? (
           <DiscardBrowser
             ownerLabel={discardBrowserSeat.label}

@@ -23,6 +23,7 @@ import {
   buildLeaderStatusViewModel,
   buildPromptPresentationViewModel,
   orderBoardRowsForAuthenticTable,
+  buildSelectedCardDragTargetViewModel,
   toggleMulliganSelection,
   toRuntimeCard,
 } from "@/components/gwent/matchViewModel";
@@ -1843,5 +1844,78 @@ describe("buildSelectedCardTargetViewModel (cEp11)", () => {
     expect(view.rowTargets.size).toBe(2);
     expect(view.cardTargets.size).toBe(1);
     expect(view.rightRailLabel).toBe("choose a highlighted row or card.");
+  });
+
+  it("builds drag/drop move ids only from spatial selected-card targets", () => {
+    const view = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:hybrid", name: "Hybrid Card" },
+      selectedPlayMoves: [
+        playCardMove({
+          moveId: "play:row",
+          target: { kind: "board_row", side: "own", seatId: "seat_a", row: "close" },
+        }),
+        playCardMove({
+          moveId: "play:card",
+          target: { kind: "card_instance", side: "own", seatId: "seat_a", cardId: "seat_a:001:target", row: "close" },
+        }),
+        playCardMove({
+          moveId: "play:horn",
+          target: { kind: "row_horn", side: "own", seatId: "seat_a", row: "ranged" },
+        }),
+        playCardMove({
+          moveId: "play:weather",
+          target: { kind: "weather" },
+        }),
+        playCardMove({
+          moveId: "play:global",
+          target: { kind: "none" },
+        }),
+      ],
+      cardLookup: new Map([["seat_a:001:target" as const, { name: "Friendly Unit" }]]),
+    });
+
+    const dragTargets = buildSelectedCardDragTargetViewModel(view);
+
+    expect(dragTargets.hasSpatialDropTargets).toBe(true);
+    expect([...dragTargets.moveIds].sort()).toEqual([
+      "play:card",
+      "play:horn",
+      "play:row",
+      "play:weather",
+    ]);
+    expect(dragTargets.moveIds.has("play:global")).toBe(false);
+    expect(dragTargets.rightRailLabel).toBe("drag to a highlighted target.");
+  });
+
+  it("uses precise drag hints for single target families and disables drag hints for fallback-only plays", () => {
+    const weatherView = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:weather", name: "Biting Frost" },
+      selectedPlayMoves: [
+        playCardMove({
+          moveId: "play:weather",
+          target: { kind: "weather" },
+        }),
+      ],
+      cardLookup: new Map(),
+    });
+    expect(buildSelectedCardDragTargetViewModel(weatherView)).toMatchObject({
+      hasSpatialDropTargets: true,
+      rightRailLabel: "drag to the weather panel.",
+    });
+
+    const fallbackView = buildSelectedCardTargetViewModel({
+      selectedCard: { instanceId: "seat_a:000:scorch", name: "Scorch" },
+      selectedPlayMoves: [
+        playCardMove({
+          moveId: "play:scorch",
+          target: { kind: "none" },
+        }),
+      ],
+      cardLookup: new Map(),
+    });
+    expect(buildSelectedCardDragTargetViewModel(fallbackView)).toMatchObject({
+      hasSpatialDropTargets: false,
+      rightRailLabel: null,
+    });
   });
 });
