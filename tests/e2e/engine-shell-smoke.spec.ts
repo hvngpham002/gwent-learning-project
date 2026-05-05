@@ -126,6 +126,14 @@ const cardFlightDestination = async (flight: Locator) =>
     };
   });
 
+const expectBoxDifference = (
+  actual: number,
+  expected: number,
+  message: string,
+) => {
+  expect(Math.abs(actual - expected), message).toBeLessThanOrEqual(0.2);
+};
+
 const findFirstRowTargetHandCard = async (page: Page): Promise<Locator | null> => {
   const playableCards = page.locator(".authentic-hand__card.is-playable");
   const playableCount = await playableCards.count();
@@ -1498,6 +1506,19 @@ test("authentic match uses reserved icon-only row horn slots for Commander's Hor
     await page.mouse.up();
 
     await expect(page.locator(".authentic-board-row__horn[data-source-id='neutral.commanders-horn']")).toHaveCount(hornCardCountBefore + 1);
+    const placedHornSlot = page.locator(
+      ".authentic-board-row__horn-slot.has-card:has(.authentic-board-row__horn[data-source-id='neutral.commanders-horn'])",
+    ).first();
+    await expect(placedHornSlot).toBeVisible();
+    const placedHornCard = placedHornSlot.getByTestId("authentic-card").first();
+    const placedHornSlotBox = await placedHornSlot.boundingBox();
+    const placedHornCardBox = await placedHornCard.boundingBox();
+    expect(placedHornSlotBox, "placed horn slot should have a bounding box").not.toBeNull();
+    expect(placedHornCardBox, "placed horn card should have a bounding box").not.toBeNull();
+    if (placedHornSlotBox && placedHornCardBox) {
+      expectBoxDifference(placedHornSlotBox.width - placedHornCardBox.width, 8, "horn slot should be 8px wider than placed card");
+      expectBoxDifference(placedHornSlotBox.height - placedHornCardBox.height, 8, "horn slot should be 8px taller than placed card");
+    }
     const hornFlight = page.getByTestId("authentic-card-flight").first();
     await expect(hornFlight).toBeVisible();
     const hornFlightDestination = await cardFlightDestination(hornFlight);

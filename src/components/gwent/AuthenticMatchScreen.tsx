@@ -97,12 +97,20 @@ import {
 } from "./matchViewModel";
 import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 import { getAbilityDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
+import { dimensionsForSize } from "./cardViewModel";
 import "./authentic-match.css";
 
 const MATCH_CONTEXT_MENU_WIDTH = 200;
 const MATCH_CONTEXT_MENU_HEIGHT = 92;
 const HAND_DRAG_THRESHOLD_PX = 7;
 const CARD_FLIGHT_CLEANUP_MS = 950;
+const BOARD_CARD_SIZE = "xs" as const;
+const BOARD_CARD_DIMENSIONS = dimensionsForSize(BOARD_CARD_SIZE);
+const BOARD_HORN_SLOT_CARD_INSET_PX = 8;
+const BOARD_HORN_SLOT_DIMENSIONS = {
+  width: BOARD_CARD_DIMENSIONS.width + BOARD_HORN_SLOT_CARD_INSET_PX,
+  height: BOARD_CARD_DIMENSIONS.height + BOARD_HORN_SLOT_CARD_INSET_PX,
+};
 
 const clampMatchMenuPosition = (x: number, y: number) => {
   if (typeof window === "undefined") {
@@ -596,6 +604,10 @@ const BoardRow: React.FC<{
           data-drop-move-id={hornTarget?.moveId}
           data-drop-state={hornDropActive ? "active" : hornTarget ? "idle" : undefined}
           aria-label={hornTarget?.ariaLabel ?? `${row.rowName} horn slot`}
+          style={{
+            "--authentic-board-row-horn-slot-width": `${BOARD_HORN_SLOT_DIMENSIONS.width}px`,
+            "--authentic-board-row-horn-slot-height": `${BOARD_HORN_SLOT_DIMENSIONS.height}px`,
+          } as React.CSSProperties}
           onClick={handleHornSlotClick}
           onContextMenu={handleHornContextMenu}
         >
@@ -606,7 +618,7 @@ const BoardRow: React.FC<{
               data-source-id={horn.card.sourceId}
               data-instance-id={horn.key}
             >
-              <AuthenticCard card={horn.card} size="xs" />
+              <AuthenticCard card={horn.card} size={BOARD_CARD_SIZE} />
             </div>
           ) : (
             <img
