@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getEngineSeedFromSearch } from "@/appMode";
-import type { CardInstanceId, GameEvent, SeatId } from "@/game/core";
+import type { CardInstanceId, GameEvent, PlayCardMove, SeatId } from "@/game/core";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectEngineAiHandCount,
@@ -206,6 +206,69 @@ const rectFromDomRect = (rect: DOMRect): MatchRect => ({
   height: rect.height,
 });
 
+const clampNumber = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const buildInsertionRect = (
+  strip: HTMLElement,
+  sourceRect: MatchRect,
+  itemSelector: string,
+): MatchRect => {
+  const stripRect = strip.getBoundingClientRect();
+  const targetWidth = Math.min(sourceRect.width * 0.72, 64);
+  const targetHeight = Math.min(sourceRect.height * 0.72, Math.max(48, stripRect.height - 6));
+  const itemRects = [...strip.querySelectorAll<HTMLElement>(itemSelector)]
+    .map((element) => element.getBoundingClientRect())
+    .filter((rect) => rect.width > 0 && rect.height > 0);
+  const lastRect = itemRects.at(-1);
+  const leftBound = stripRect.left + targetWidth / 2 + 2;
+  const rightBound = stripRect.right - targetWidth / 2 - 2;
+  const defaultCenterX = stripRect.left + targetWidth / 2 + 4;
+  const nextCenterX = lastRect
+    ? lastRect.right + 6 + targetWidth / 2
+    : defaultCenterX;
+  const centerX = clampNumber(nextCenterX, leftBound, Math.max(leftBound, rightBound));
+  const centerY = stripRect.top + stripRect.height / 2;
+  return {
+    left: centerX - targetWidth / 2,
+    top: centerY - targetHeight / 2,
+    width: targetWidth,
+    height: targetHeight,
+  };
+};
+
+const getPlayCardFlightTargetRect = (
+  move: PlayCardMove,
+  sourceRect: MatchRect,
+  targetElement?: Element | null,
+): MatchRect | null => {
+  if (!targetElement) {
+    return null;
+  }
+  if (move.target.kind === "board_row") {
+    const rowElement =
+      targetElement.closest<HTMLElement>('[data-testid="authentic-board-row"]') ??
+      (targetElement instanceof HTMLElement ? targetElement : null);
+    const cardStrip = rowElement?.querySelector<HTMLElement>(".authentic-board-row__cards");
+    return cardStrip
+      ? buildInsertionRect(
+          cardStrip,
+          sourceRect,
+          '.authentic-board-row__horn, [data-testid="authentic-effective-strength"], [data-testid="authentic-board-card-target"]',
+        )
+      : rectFromDomRect(targetElement.getBoundingClientRect());
+  }
+  if (move.target.kind === "weather") {
+    const weatherElement =
+      targetElement.closest<HTMLElement>(".authentic-weather") ??
+      (targetElement instanceof HTMLElement ? targetElement : null);
+    const weatherStrip = weatherElement?.querySelector<HTMLElement>(".authentic-weather__cards");
+    return weatherStrip
+      ? buildInsertionRect(weatherStrip, sourceRect, ".authentic-weather__card")
+      : rectFromDomRect(targetElement.getBoundingClientRect());
+  }
+  return rectFromDomRect(targetElement.getBoundingClientRect());
+};
+
 const getDropMoveIdAtPoint = (x: number, y: number, allowedMoveIds: ReadonlySet<string>): string | null => {
   if (typeof document === "undefined") {
     return null;
@@ -359,8 +422,16 @@ const WeatherSummary: React.FC<{
     className={`authentic-panel authentic-weather${weatherTarget ? " is-legal-target" : ""}${
       weatherTarget && activeDropMoveId === weatherTarget.moveId ? " is-drop-active" : ""
     }`}
+    data-testid={weatherTarget ? "authentic-weather-target" : undefined}
     data-weather-target={weatherTarget ? "true" : undefined}
+    data-drop-move-id={weatherTarget?.moveId}
     data-drop-state={weatherTarget && activeDropMoveId === weatherTarget.moveId ? "active" : weatherTarget ? "idle" : undefined}
+    aria-label={weatherTarget?.ariaLabel}
+    onClick={(event) => {
+      if (weatherTarget) {
+        onTargetClick(weatherTarget.moveId, { targetElement: event.currentTarget });
+      }
+    }}
   >
     <h2>Weather</h2>
     <div className="authentic-weather__cards">
@@ -371,25 +442,13 @@ const WeatherSummary: React.FC<{
           className="authentic-weather__card"
           data-source-id={card.card.sourceId}
           data-instance-id={card.key}
+          onClick={(event) => event.stopPropagation()}
           onContextMenu={(event) => onCardContextMenu(event, card.key)}
         >
           <AuthenticCard card={card.card} size="xs" />
         </div>
       ))}
     </div>
-    {weatherTarget ? (
-      <button
-        type="button"
-        className="authentic-weather__target"
-        data-testid="authentic-weather-target"
-        data-drop-move-id={weatherTarget.moveId}
-        data-drop-state={activeDropMoveId === weatherTarget.moveId ? "active" : "idle"}
-        aria-label={weatherTarget.ariaLabel}
-        onClick={(event) => onTargetClick(weatherTarget.moveId, { targetElement: event.currentTarget })}
-      >
-        <span className="authentic-weather__target-badge">{weatherTarget.badgeLabel}</span>
-      </button>
-    ) : null}
   </section>
 );
 
@@ -460,9 +519,6 @@ const BoardRow: React.FC<{
         onContextMenu={handleContextMenu}
       >
         {content}
-        <span className="authentic-board-card__target-badge" aria-hidden="true">
-          {cardTarget.badgeLabel}
-        </span>
       </button>
     );
   };
@@ -2243,7 +2299,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
         (sourceElement ? rectFromDomRect(sourceElement.getBoundingClientRect()) : null);
       const targetRect =
         presentation.targetRect ??
-        (presentation.targetElement ? rectFromDomRect(presentation.targetElement.getBoundingClientRect()) : null);
+        (sourceRect ? getPlayCardFlightTargetRect(move, sourceRect, presentation.targetElement) : null);
       if (sourceCard && sourceRect && targetRect) {
         setCardFlights((current) => [
           ...current,

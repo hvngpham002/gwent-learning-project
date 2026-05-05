@@ -320,48 +320,13 @@ button.authentic-pile:hover {
   border: 1px solid var(--accent);
   box-shadow: 0 0 0 1px rgba(138, 58, 31, 0.35) inset;
   background: rgba(138, 58, 31, 0.06);
+  cursor: pointer;
 }
 
 .authentic-weather.is-drop-active {
   box-shadow:
     0 0 0 2px rgba(138, 58, 31, 0.42) inset,
     0 10px 28px rgba(31, 26, 18, 0.14);
-}
-
-.authentic-weather__target {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 8px;
-  padding: 4px 10px;
-  border: 1px solid var(--accent);
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--bg-paper);
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-style: normal;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  cursor: pointer;
-  align-self: flex-start;
-}
-
-.authentic-weather__target:hover,
-.authentic-weather__target:focus-visible,
-.authentic-weather__target[data-drop-state="active"] {
-  outline: none;
-  background: var(--bg-paper);
-  color: var(--accent);
-}
-
-.authentic-weather__target:focus-visible {
-  box-shadow: 0 0 0 2px rgba(138, 58, 31, 0.32);
-}
-
-.authentic-weather__target-badge {
-  pointer-events: none;
 }
 
 .authentic-weather__cards {
@@ -573,27 +538,6 @@ button.authentic-board-card.is-card-target:focus-visible,
 .authentic-board-card.is-card-target.is-drop-active {
   outline: none;
   box-shadow: 0 0 0 2px rgba(138, 58, 31, 0.45);
-}
-
-.authentic-board-card__target-badge {
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  transform: translate(-50%, 50%);
-  padding: 1px 6px;
-  border: 1px solid var(--accent);
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--bg-paper);
-  font-family: var(--font-display);
-  font-size: 9px;
-  font-style: normal;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  pointer-events: none;
-  z-index: 1;
-  white-space: nowrap;
 }
 
 .authentic-board-row__score {
@@ -1177,16 +1121,6 @@ button.authentic-board-card.is-card-target:focus-visible,
     min-height: 44px;
     padding: 2px 4px;
     font-size: 9px;
-  }
-
-  .authentic-board-card__target-badge {
-    font-size: 8px;
-    padding: 1px 4px;
-  }
-
-  .authentic-weather__target {
-    font-size: 10px;
-    padding: 3px 8px;
   }
 
   .authentic-board-row {

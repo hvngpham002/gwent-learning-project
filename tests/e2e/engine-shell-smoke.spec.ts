@@ -92,6 +92,19 @@ const startMouseDrag = async (page: Page, source: Locator) => {
 
 const boardRowTargets = (page: Page) => page.locator('[data-testid="authentic-board-row"][data-row-target="true"]');
 
+const cardFlightDestination = async (flight: Locator) =>
+  flight.evaluate((element) => {
+    const style = window.getComputedStyle(element);
+    const left = Number.parseFloat((element as HTMLElement).style.left);
+    const top = Number.parseFloat((element as HTMLElement).style.top);
+    const width = Number.parseFloat((element as HTMLElement).style.width);
+    const height = Number.parseFloat((element as HTMLElement).style.height);
+    return {
+      x: left + width / 2 + Number.parseFloat(style.getPropertyValue("--flight-x")),
+      y: top + height / 2 + Number.parseFloat(style.getPropertyValue("--flight-y")),
+    };
+  });
+
 const findFirstRowTargetHandCard = async (page: Page): Promise<Locator | null> => {
   const playableCards = page.locator(".authentic-hand__card.is-playable");
   const playableCount = await playableCards.count();
@@ -1328,6 +1341,8 @@ test("authentic match targets the Weather panel for a selected hand weather card
 
     const weatherTarget = page.getByTestId("authentic-weather-target");
     await expect(weatherTarget).toBeVisible();
+    expect(await weatherTarget.evaluate((element) => element.tagName)).toBe("SECTION");
+    await expect(page.locator('button[data-testid="authentic-weather-target"]')).toHaveCount(0);
     await expect(weatherTarget).toHaveAttribute(
       "aria-label",
       new RegExp(`^Play ${escapeRegExp(selectedWeatherName)} on the weather panel$`),
@@ -1388,6 +1403,7 @@ test("authentic match highlights spatial board-row targets and dispatches the ex
     await expect(cep11RowTarget).toHaveAttribute("aria-label", /Play .+ on (your|opponent) (close combat|ranged|siege) row/);
     await expect(cep11RowTarget).toHaveAttribute("data-drop-move-id", /^play:/);
     await expect(page.getByTestId("authentic-board-row-target")).toHaveCount(0);
+    await expect(page.locator(".authentic-board-card__target-badge")).toHaveCount(0);
     await cep11RowTarget.click();
   } else {
     await expect(cep11FallbackTarget).toBeVisible();
@@ -1461,14 +1477,24 @@ test("authentic match drags a hand card to a legal board row with invalid-drop n
   await startMouseDrag(page, rowPlayableCard);
   await expect(page.getByTestId("authentic-target-hint")).toContainText(/drag to a highlighted row/i);
   const rowTargetCenter = await locatorCenter(rowTarget);
+  const rowCardStripBox = await rowTarget.locator(".authentic-board-row__cards").boundingBox();
+  expect(rowCardStripBox, "row card strip should be visible for flight target").not.toBeNull();
   await page.mouse.move(rowTargetCenter.x, rowTargetCenter.y, { steps: 8 });
   await expect(rowTarget).toHaveAttribute("data-drop-state", "active");
   await expect(page.getByTestId("authentic-board-row-target")).toHaveCount(0);
   await page.mouse.up();
 
   await expect(page.getByTestId("authentic-drag-preview")).toHaveCount(0);
-  await expect(page.getByTestId("authentic-card-flight").first()).toBeVisible();
-  await expect(page.getByTestId("authentic-card-flight").first()).toHaveAttribute("data-move-id", /^play:/);
+  const rowFlight = page.getByTestId("authentic-card-flight").first();
+  await expect(rowFlight).toBeVisible();
+  await expect(rowFlight).toHaveAttribute("data-move-id", /^play:/);
+  const rowFlightDestination = await cardFlightDestination(rowFlight);
+  if (rowCardStripBox) {
+    expect(rowFlightDestination.x).toBeGreaterThanOrEqual(rowCardStripBox.x);
+    expect(rowFlightDestination.x).toBeLessThanOrEqual(rowCardStripBox.x + rowCardStripBox.width);
+    expect(rowFlightDestination.y).toBeGreaterThanOrEqual(rowCardStripBox.y);
+    expect(rowFlightDestination.y).toBeLessThanOrEqual(rowCardStripBox.y + rowCardStripBox.height);
+  }
   await expect(page.getByTestId("authentic-recent-activity")).toContainText(/Human played/);
 
   const matchPageText = await visiblePageText(page);
@@ -1525,6 +1551,8 @@ test("authentic match drags a selected weather card to the Weather panel target 
 
     const weatherTarget = page.getByTestId("authentic-weather-target");
     await expect(weatherTarget).toBeVisible();
+    expect(await weatherTarget.evaluate((element) => element.tagName)).toBe("SECTION");
+    await expect(page.locator('button[data-testid="authentic-weather-target"]')).toHaveCount(0);
     await expect(weatherTarget).toHaveAttribute(
       "aria-label",
       new RegExp(`^Play ${escapeRegExp(selectedWeatherName)} on the weather panel$`),
@@ -1536,7 +1564,18 @@ test("authentic match drags a selected weather card to the Weather panel target 
     await page.mouse.up();
 
     await expect(weatherZoneCard).toHaveCount(weatherZoneCountBefore + 1);
-    await expect(page.getByTestId("authentic-card-flight").first()).toBeVisible();
+    const weatherFlight = page.getByTestId("authentic-card-flight").first();
+    await expect(weatherFlight).toBeVisible();
+    const weatherFlightDestination = await cardFlightDestination(weatherFlight);
+    const weatherCardStrip = page.locator(".authentic-weather__cards");
+    const weatherCardStripBox = await weatherCardStrip.boundingBox();
+    expect(weatherCardStripBox, "weather card strip should be visible for flight target").not.toBeNull();
+    if (weatherCardStripBox) {
+      expect(weatherFlightDestination.x).toBeGreaterThanOrEqual(weatherCardStripBox.x);
+      expect(weatherFlightDestination.x).toBeLessThanOrEqual(weatherCardStripBox.x + weatherCardStripBox.width);
+      expect(weatherFlightDestination.y).toBeGreaterThanOrEqual(weatherCardStripBox.y);
+      expect(weatherFlightDestination.y).toBeLessThanOrEqual(weatherCardStripBox.y + weatherCardStripBox.height);
+    }
     await expect(page.getByTestId("authentic-recent-activity")).toContainText(/Human played/);
     await expect(page.getByTestId("authentic-drag-preview")).toHaveCount(0);
 
@@ -1589,7 +1628,11 @@ test("authentic match renders generated row weather overlays after weather play 
     }
 
     await fixtureWeatherCard.getByTestId("authentic-hand-card").click();
-    await page.getByTestId("authentic-weather-target").click();
+    const weatherTarget = page.getByTestId("authentic-weather-target");
+    await expect(weatherTarget).toBeVisible();
+    expect(await weatherTarget.evaluate((element) => element.tagName)).toBe("SECTION");
+    await expect(page.locator('button[data-testid="authentic-weather-target"]')).toHaveCount(0);
+    await weatherTarget.click();
 
     const overlay = page.locator(
       `[data-testid="authentic-row-weather-overlay"][data-weather-effect="${expectation.effect}"]`,
