@@ -410,7 +410,7 @@ const ScoreCard: React.FC<{
                   <span />
                   <span />
                 </span>
-                <span>{seat.handCount}</span>
+                <span className="authentic-score-card__resource-count">{seat.handCount}</span>
               </span>
               <span className="authentic-score-card__resource" aria-label={`${seat.deckCount} cards in deck`}>
                 <span
@@ -421,7 +421,7 @@ const ScoreCard: React.FC<{
                   <span />
                   <span />
                 </span>
-                <span>{seat.deckCount}</span>
+                <span className="authentic-score-card__resource-count">{seat.deckCount}</span>
               </span>
             </div>
           </div>

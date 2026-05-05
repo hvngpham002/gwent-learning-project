@@ -1246,10 +1246,16 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
       /hand \d+, deck \d+/i,
     );
     await expect(page.getByTestId("authentic-seat-resources-human").locator(".authentic-score-card__resource")).toHaveCount(2);
-    await expect(page.getByTestId("authentic-seat-resources-human")).toHaveCSS("font-size", "14px");
+    await expect(page.getByTestId("authentic-seat-resources-human")).toHaveCSS("justify-content", "flex-start");
     await expect(
       page.getByTestId("authentic-seat-resources-human").locator(".authentic-score-card__resource-icon").first(),
     ).toHaveCSS("width", "19px");
+    await expect(
+      page.getByTestId("authentic-seat-resources-human").locator(".authentic-score-card__resource-count").first(),
+    ).toHaveCSS("font-size", "16px");
+    await expect(
+      page.getByTestId("authentic-seat-resources-human").locator(".authentic-score-card__resource-count").first(),
+    ).toHaveCSS("font-weight", "700");
     await expect(page.getByTestId("authentic-seat-resources-human")).not.toContainText(/discard/i);
     await expect(page.getByTestId("authentic-seat-human").locator(".authentic-score-card__meta")).toHaveCount(0);
     await expect(page.getByTestId("authentic-life-gems-human")).toHaveAttribute(
