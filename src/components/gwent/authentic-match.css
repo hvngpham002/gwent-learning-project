@@ -434,30 +434,26 @@ button.authentic-pile:hover {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
-  opacity: 0.58;
+  opacity: 0.8;
 }
 
 .authentic-board-row__weather-overlay--frost {
-  background-image: url("/images/weather-overlays/biting-frost-row.png");
-  opacity: 0.68;
+  background-image: url("/images/weather-overlays/biting-frost-row.svg");
   filter: saturate(1.16) brightness(1.1);
 }
 
 .authentic-board-row__weather-overlay--fog {
-  background-image: url("/images/weather-overlays/impenetrable-fog-row.png");
-  opacity: 0.6;
+  background-image: url("/images/weather-overlays/impenetrable-fog-row.svg");
   filter: saturate(0.78) brightness(1.08);
 }
 
 .authentic-board-row__weather-overlay--rain {
-  background-image: url("/images/weather-overlays/torrential-rain-row.png");
-  opacity: 0.66;
+  background-image: url("/images/weather-overlays/torrential-rain-row.svg");
   filter: saturate(1.08) brightness(0.96);
 }
 
 .authentic-board-row__weather-overlay--skellige-storm {
-  background-image: url("/images/weather-overlays/skellige-storm-row.png");
-  opacity: 0.78;
+  background-image: url("/images/weather-overlays/skellige-storm-row.svg");
   filter: saturate(1.22) brightness(1.08);
 }
 
