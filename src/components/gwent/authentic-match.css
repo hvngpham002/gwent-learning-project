@@ -270,6 +270,7 @@
   gap: 6px;
   align-items: center;
   justify-content: flex-start;
+  width: 100%;
   margin-top: 5px;
 }
 
@@ -286,14 +287,14 @@
 }
 
 .authentic-score-card__resource-stack {
-  width: max-content;
+  width: 66px;
 }
 
 .authentic-score-card__resources {
   display: flex;
-  gap: 15px;
   align-items: flex-start;
-  justify-content: flex-start;
+  justify-content: space-around;
+  width: 100%;
   margin-top: 5px;
   color: var(--ink-2);
   font-family: var(--font-body);

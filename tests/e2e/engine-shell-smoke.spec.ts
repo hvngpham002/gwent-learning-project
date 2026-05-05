@@ -1240,13 +1240,16 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/active/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready\s*·\s*active/i);
+    await expect(page.getByTestId("authentic-leader-status-human")).not.toContainText(
+      /active\s*·\s*waiting for turn\s*·\s*active/i,
+    );
     await expect(page.getByTestId("authentic-leader-status-human")).not.toContainText(/discard/i);
     await expect(page.getByTestId("authentic-seat-resources-human")).toHaveAttribute(
       "aria-label",
       /hand \d+, deck \d+/i,
     );
     await expect(page.getByTestId("authentic-seat-resources-human").locator(".authentic-score-card__resource")).toHaveCount(2);
-    await expect(page.getByTestId("authentic-seat-resources-human")).toHaveCSS("justify-content", "flex-start");
+    await expect(page.getByTestId("authentic-seat-resources-human")).toHaveCSS("justify-content", "space-around");
     await expect(
       page.getByTestId("authentic-seat-resources-human").locator(".authentic-score-card__resource-icon").first(),
     ).toHaveCSS("width", "19px");

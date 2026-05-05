@@ -437,7 +437,7 @@ const ScoreCard: React.FC<{
       >
         <span className="authentic-score-card__leader-chip">{leaderStatus.stateLabel}</span>
         <span> · {leaderStatus.categoryLabel} · {leaderStatus.reason}</span>
-        <span> · {seat.passed ? "passed" : "active"}</span>
+        {seat.passed ? <span> · passed</span> : null}
       </div>
     </article>
   );
