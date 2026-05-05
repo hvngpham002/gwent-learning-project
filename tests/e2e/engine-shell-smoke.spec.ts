@@ -1588,9 +1588,11 @@ test("authentic match renders generated row weather overlays after weather play 
     );
     await expect(overlay.first()).toBeVisible();
     await expect(overlay).toHaveCount(expectation.rowCount);
-    await expect(
-      page.locator(`[data-testid="authentic-board-row"][data-weather-overlay~="${expectation.effect}"]`).first(),
-    ).toBeVisible();
+    const affectedRows = page.locator(`[data-testid="authentic-board-row"][data-weather-overlay~="${expectation.effect}"]`);
+    await expect(affectedRows.first()).toBeVisible();
+    await expect(affectedRows.first().locator(".authentic-board-row__label span")).toHaveCSS("color", "rgb(232, 223, 196)");
+    await expect(affectedRows.first().locator(".authentic-board-row__label strong")).toHaveCSS("color", "rgb(232, 223, 196)");
+    await expect(affectedRows.locator(".authentic-board-row__empty").first()).toHaveCSS("color", "rgb(232, 223, 196)");
 
     if (selectedSourceId === "neutral.skellige-storm") {
       await expect(page.locator('[data-testid="authentic-board-row"][data-weather-overlay~="skellige-storm"]')).toHaveCount(4);
