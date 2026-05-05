@@ -257,6 +257,10 @@
   white-space: normal;
 }
 
+.authentic-score-card__leader-status-separator {
+  color: inherit;
+}
+
 .authentic-score-card[data-leader-cancelled-this-round="true"] {
   outline: 1px dashed var(--ink-2);
   outline-offset: -2px;

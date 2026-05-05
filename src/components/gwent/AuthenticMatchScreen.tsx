@@ -384,6 +384,9 @@ const ScoreCard: React.FC<{
         data-testid={`authentic-leader-status-${seat.role}`}
       >
         <span className="authentic-score-card__leader-chip">{leaderStatus.stateLabel}</span>
+        <span className="authentic-score-card__leader-status-separator" aria-hidden="true">
+          ·
+        </span>
         <span>{leaderStatus.categoryLabel} · {leaderStatus.reason}</span>
       </div>
       <p className="authentic-score-card__meta">

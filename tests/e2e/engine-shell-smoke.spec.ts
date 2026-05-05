@@ -1233,6 +1233,7 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
     }
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready/i);
     await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/active/i);
+    await expect(page.getByTestId("authentic-leader-status-human")).toContainText(/ready\s*·\s*active/i);
     const leaderStatusChip = page.getByTestId("authentic-leader-status-human").locator(".authentic-score-card__leader-chip");
     await expect(leaderStatusChip).toHaveCSS("border-top-style", "none");
     await expect(leaderStatusChip).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
