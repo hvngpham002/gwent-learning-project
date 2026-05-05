@@ -122,7 +122,7 @@ The `RoundOverlay` React component now consumes the ledger view-model directly: 
 
 ### Life Gem Presentation (cEp13)
 
-The authentic match score cards render two image-backed life indicators per seat instead of plain `gems N` copy. Remaining lives use `/images/ui/life-gem.png`; spent lives use `/images/ui/life-gem-broken.png`. Both files are cropped alpha PNGs derived from the approved Imagegen sheet, so only the gem artwork appears over the parchment UI. The wrapper exposes `authentic-life-gems-human` / `authentic-life-gems-ai` test IDs and an accessible `N of 2 gems remaining` label; hidden-info boundaries are unchanged because gem counts are public engine state.
+The authentic match score cards render two image-backed life indicators per seat instead of plain `gems N` copy. Remaining lives use `/images/ui/life-gem.png`; spent lives use `/images/ui/life-gem-broken.png`. Both files are cropped alpha PNGs derived from the approved Imagegen sheet, so only the gem artwork appears over the parchment UI. The indicators sit directly underneath the faction name in the score-card header and render at 30px. The wrapper exposes `authentic-life-gems-human` / `authentic-life-gems-ai` test IDs and an accessible `N of 2 gems remaining` label; hidden-info boundaries are unchanged because gem counts are public engine state.
 
 Hidden-info contract:
 

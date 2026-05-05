@@ -230,7 +230,6 @@
 
 .authentic-score-card__leader-text,
 .authentic-score-card__leader-status,
-.authentic-score-card__life,
 .authentic-score-card__meta {
   grid-column: 1 / -1;
 }
@@ -266,14 +265,14 @@
 
 .authentic-score-card__life {
   display: flex;
-  gap: 5px;
+  gap: 6px;
   align-items: center;
-  margin-top: 1px;
+  margin-top: 5px;
 }
 
 .authentic-score-card__life-gem {
-  width: 25px;
-  height: 25px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
   user-select: none;
   filter: drop-shadow(0 1px 1px rgba(36, 24, 12, 0.45));

@@ -375,6 +375,26 @@ const ScoreCard: React.FC<{
         <div>
           <h2>{seat.label}</h2>
           <p>{seat.factionName}</p>
+          <div
+            className="authentic-score-card__life"
+            data-testid={`authentic-life-gems-${seat.role}`}
+            aria-label={`${visibleGems} of 2 gems remaining`}
+          >
+            {[0, 1].map((gemIndex) => {
+              const intact = gemIndex < visibleGems;
+              return (
+                <img
+                  key={gemIndex}
+                  className="authentic-score-card__life-gem"
+                  src={intact ? "/images/ui/life-gem.png" : "/images/ui/life-gem-broken.png"}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                  data-gem-state={intact ? "intact" : "broken"}
+                />
+              );
+            })}
+          </div>
         </div>
         <strong>{seat.score}</strong>
       </div>
@@ -387,26 +407,6 @@ const ScoreCard: React.FC<{
       >
         <span className="authentic-score-card__leader-chip">{leaderStatus.stateLabel}</span>
         <span> · {leaderStatus.categoryLabel} · {leaderStatus.reason}</span>
-      </div>
-      <div
-        className="authentic-score-card__life"
-        data-testid={`authentic-life-gems-${seat.role}`}
-        aria-label={`${visibleGems} of 2 gems remaining`}
-      >
-        {[0, 1].map((gemIndex) => {
-          const intact = gemIndex < visibleGems;
-          return (
-            <img
-              key={gemIndex}
-              className="authentic-score-card__life-gem"
-              src={intact ? "/images/ui/life-gem.png" : "/images/ui/life-gem-broken.png"}
-              alt=""
-              aria-hidden="true"
-              draggable={false}
-              data-gem-state={intact ? "intact" : "broken"}
-            />
-          );
-        })}
       </div>
       <p className="authentic-score-card__meta">
         hand {seat.handCount} · deck {seat.deckCount} · discard {seat.discardCount} ·{" "}
