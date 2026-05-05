@@ -410,6 +410,7 @@ button.authentic-pile:hover {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(138, 58, 31, 0.35) inset;
   background: rgba(138, 58, 31, 0.08);
+  cursor: pointer;
 }
 
 .authentic-board-row.is-drop-active {
@@ -455,44 +456,6 @@ button.authentic-pile:hover {
 .authentic-board-row__weather-overlay--skellige-storm {
   background-image: url("/images/weather-overlays/skellige-storm-row.svg");
   filter: saturate(1.22) brightness(1.08);
-}
-
-.authentic-board-row__target {
-  position: absolute;
-  top: 4px;
-  right: 52px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border: 1px solid var(--accent);
-  border-radius: 999px;
-  background: var(--accent);
-  color: var(--bg-paper);
-  font-family: var(--font-display);
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  cursor: pointer;
-  z-index: 3;
-}
-
-.authentic-board-row__target:hover,
-.authentic-board-row__target:focus-visible,
-.authentic-board-row__target[data-drop-state="active"] {
-  outline: none;
-  background: var(--bg-paper);
-  color: var(--accent);
-}
-
-.authentic-board-row__target:focus-visible {
-  box-shadow: 0 0 0 2px rgba(138, 58, 31, 0.32);
-}
-
-.authentic-board-row__target-badge {
-  pointer-events: none;
 }
 
 .authentic-board-row__horn-target {
@@ -1207,13 +1170,6 @@ button.authentic-board-card.is-card-target:focus-visible,
 
   .authentic-score-card .authentic-leader-card--match .authentic-leader-card__frame {
     height: min(147px, 48vw) !important;
-  }
-
-  .authentic-board-row__target {
-    top: 2px;
-    right: 40px;
-    padding: 1px 6px;
-    font-size: 9px;
   }
 
   .authentic-board-row__horn-target {

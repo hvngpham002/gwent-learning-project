@@ -90,13 +90,15 @@ const startMouseDrag = async (page: Page, source: Locator) => {
   return center;
 };
 
+const boardRowTargets = (page: Page) => page.locator('[data-testid="authentic-board-row"][data-row-target="true"]');
+
 const findFirstRowTargetHandCard = async (page: Page): Promise<Locator | null> => {
   const playableCards = page.locator(".authentic-hand__card.is-playable");
   const playableCount = await playableCards.count();
   for (let index = 0; index < playableCount; index += 1) {
     const candidate = playableCards.nth(index);
     await candidate.getByTestId("authentic-hand-card").click();
-    if ((await page.getByTestId("authentic-board-row-target").count()) > 0) {
+    if ((await boardRowTargets(page).count()) > 0) {
       return candidate;
     }
   }
@@ -591,10 +593,11 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   // cEp11: spatial board-row target is the primary affordance for unit cards;
   // fall back to the right-rail action only for cards whose legal target kind
   // cannot be represented spatially (e.g. global Scorch).
-  const rowTarget = page.getByTestId("authentic-board-row-target").first();
+  const rowTarget = boardRowTargets(page).first();
   const fallbackTarget = page.getByTestId("authentic-target-action").first();
   if ((await rowTarget.count()) > 0) {
     await expect(rowTarget).toBeVisible();
+    await expect(rowTarget).toHaveAttribute("data-drop-move-id", /^play:/);
     await rowTarget.click();
   } else {
     await expect(fallbackTarget).toBeVisible();
@@ -1075,9 +1078,10 @@ test("authentic match supports in-match card inspection without breaking gamepla
   // Now play a card so that there's a board card to inspect.
   // cEp11: prefer the spatial row target; fall back to the right-rail only
   // when the selected card has a global/no-target play.
-  const cep53RowTarget = page.getByTestId("authentic-board-row-target").first();
+  const cep53RowTarget = boardRowTargets(page).first();
   const cep53FallbackTarget = page.getByTestId("authentic-target-action").first();
   if ((await cep53RowTarget.count()) > 0) {
+    await expect(cep53RowTarget).toHaveAttribute("data-drop-move-id", /^play:/);
     await cep53RowTarget.click();
   } else {
     await cep53FallbackTarget.click();
@@ -1363,6 +1367,7 @@ test("authentic match highlights spatial board-row targets and dispatches the ex
   await expect(page.getByTestId("authentic-target-hint")).toContainText("no card selected");
   await expect(page.getByTestId("authentic-target-groups")).toHaveAttribute("data-target-state", "no-selection");
   await expect(page.getByTestId("authentic-board-row-target")).toHaveCount(0);
+  await expect(boardRowTargets(page)).toHaveCount(0);
   await expect(page.getByTestId("authentic-weather-target")).toHaveCount(0);
 
   // Select the first playable hand card. Most playable hand cards are units,
@@ -1375,12 +1380,14 @@ test("authentic match highlights spatial board-row targets and dispatches the ex
   // card. cEp11 prefers the spatial row target; if the seed selected a global
   // target card first the fallback action stays available without inventing a
   // fake spatial location.
-  const cep11RowTarget = page.getByTestId("authentic-board-row-target").first();
+  const cep11RowTarget = boardRowTargets(page).first();
   const cep11FallbackTarget = page.getByTestId("authentic-target-action").first();
   const usedSpatialRowTarget = (await cep11RowTarget.count()) > 0;
   if (usedSpatialRowTarget) {
     await expect(cep11RowTarget).toBeVisible();
     await expect(cep11RowTarget).toHaveAttribute("aria-label", /Play .+ on (your|opponent) (close combat|ranged|siege) row/);
+    await expect(cep11RowTarget).toHaveAttribute("data-drop-move-id", /^play:/);
+    await expect(page.getByTestId("authentic-board-row-target")).toHaveCount(0);
     await cep11RowTarget.click();
   } else {
     await expect(cep11FallbackTarget).toBeVisible();
@@ -1449,13 +1456,14 @@ test("authentic match drags a hand card to a legal board row with invalid-drop n
   await expect(page.getByTestId("authentic-recent-activity")).not.toContainText(/Human played/);
   await expect(page.getByTestId("authentic-hand-card")).toHaveCount(handCardCountBefore);
 
-  const rowTarget = page.getByTestId("authentic-board-row-target").first();
+  const rowTarget = boardRowTargets(page).first();
   await expect(rowTarget).toBeVisible();
   await startMouseDrag(page, rowPlayableCard);
   await expect(page.getByTestId("authentic-target-hint")).toContainText(/drag to a highlighted row/i);
   const rowTargetCenter = await locatorCenter(rowTarget);
   await page.mouse.move(rowTargetCenter.x, rowTargetCenter.y, { steps: 8 });
   await expect(rowTarget).toHaveAttribute("data-drop-state", "active");
+  await expect(page.getByTestId("authentic-board-row-target")).toHaveCount(0);
   await page.mouse.up();
 
   await expect(page.getByTestId("authentic-drag-preview")).toHaveCount(0);
@@ -1689,10 +1697,11 @@ test("authentic match avoids nested interactive elements on board rows (cEp11)",
   const handCard = page.locator(".authentic-hand__card.is-playable [data-testid='authentic-hand-card']").first();
   if ((await handCard.count()) > 0) {
     await handCard.click();
-    const rowTarget = page.getByTestId("authentic-board-row-target").first();
+    const rowTarget = boardRowTargets(page).first();
     if ((await rowTarget.count()) > 0) {
-      const rowTargetParent = await rowTarget.evaluate((element) => element.closest("button[data-testid='authentic-board-row']"));
-      expect(rowTargetParent).toBeNull();
+      await expect(page.getByTestId("authentic-board-row-target")).toHaveCount(0);
+      const rowTargetTag = await rowTarget.evaluate((element) => element.tagName);
+      expect(rowTargetTag).toBe("DIV");
     }
   }
 

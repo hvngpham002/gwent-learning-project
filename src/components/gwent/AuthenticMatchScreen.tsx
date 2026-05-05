@@ -482,6 +482,12 @@ const BoardRow: React.FC<{
   const rowClassName = `authentic-board-row authentic-board-row--${row.side}${hasWeatherOverlay ? " has-weather-overlay" : ""}${rowTarget ? " is-legal-target" : ""}${
     rowDropActive || hornDropActive ? " is-drop-active" : ""
   }`;
+  const handleRowClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!rowTarget) {
+      return;
+    }
+    onTargetClick(rowTarget.moveId, { targetElement: event.currentTarget });
+  };
 
   return (
     <div
@@ -490,7 +496,10 @@ const BoardRow: React.FC<{
       data-row-target={rowTarget ? "true" : undefined}
       data-row-key={row.key}
       data-weather-overlay={hasWeatherOverlay ? weatherOverlay.effects.join(" ") : undefined}
+      data-drop-move-id={rowTarget?.moveId}
       data-drop-state={rowDropActive || hornDropActive ? "active" : rowTarget || hornTarget ? "idle" : undefined}
+      aria-label={rowTarget?.ariaLabel}
+      onClick={handleRowClick}
     >
       {hasWeatherOverlay ? (
         <div
@@ -533,7 +542,10 @@ const BoardRow: React.FC<{
             data-drop-move-id={hornTarget.moveId}
             data-drop-state={activeDropMoveId === hornTarget.moveId ? "active" : "idle"}
             aria-label={hornTarget.ariaLabel}
-            onClick={(event) => onTargetClick(hornTarget.moveId, { targetElement: event.currentTarget })}
+            onClick={(event) => {
+              event.stopPropagation();
+              onTargetClick(hornTarget.moveId, { targetElement: event.currentTarget });
+            }}
           >
             <span className="authentic-board-row__horn-target-icon" aria-hidden="true">◊</span>
             <span className="authentic-board-row__horn-target-label">{hornTarget.badgeLabel}</span>
@@ -543,20 +555,6 @@ const BoardRow: React.FC<{
         {row.units.map(renderBoardCard)}
       </div>
       <div className="authentic-board-row__score">{row.score}</div>
-      {rowTarget ? (
-        <button
-          type="button"
-          className="authentic-board-row__target"
-          data-testid="authentic-board-row-target"
-          data-row-key={row.key}
-          data-drop-move-id={rowTarget.moveId}
-          data-drop-state={activeDropMoveId === rowTarget.moveId ? "active" : "idle"}
-          aria-label={rowTarget.ariaLabel}
-          onClick={(event) => onTargetClick(rowTarget.moveId, { targetElement: event.currentTarget })}
-        >
-          <span className="authentic-board-row__target-badge">{rowTarget.badgeLabel}</span>
-        </button>
-      ) : null}
     </div>
   );
 };
