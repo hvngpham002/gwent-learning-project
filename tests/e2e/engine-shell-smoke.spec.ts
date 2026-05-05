@@ -56,6 +56,13 @@ const weatherFixtureSourceNames: Record<string, string> = {
 
 const weatherFixtureSourceIds = Object.keys(weatherFixtureSourceNames);
 
+const weatherOverlayExpectations: Record<string, { effect: string; rowCount: number }> = {
+  "neutral.biting-frost": { effect: "frost", rowCount: 2 },
+  "neutral.impenetrable-fog": { effect: "fog", rowCount: 2 },
+  "neutral.torrential-rain": { effect: "rain", rowCount: 2 },
+  "neutral.skellige-storm": { effect: "skellige-storm", rowCount: 4 },
+};
+
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const visiblePageText = async (page: import("@playwright/test").Page) =>
@@ -1532,6 +1539,70 @@ test("authentic match drags a selected weather card to the Weather panel target 
   }
 
   expect(coveredWeatherDrag, "no candidate seed produced a visible hand weather card").toBe(true);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic match renders generated row weather overlays after weather play (cEp13)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await seedLocalDecks(page, weatherBackfillDeck.presetId, [weatherBackfillDeck]);
+
+  const candidateSeeds = ["cep13-weather-1", "cep13-weather-2", "cep13-weather-3", "cep13-weather-4"];
+  let coveredWeatherOverlay = false;
+
+  for (const seed of candidateSeeds) {
+    await enterAuthenticMatchFromPreGame(page, {
+      seed,
+      deckName: weatherBackfillDeck.name,
+    });
+
+    const fixtureWeatherCard = page
+      .locator(
+        weatherFixtureSourceIds
+          .map(
+            (sourceId) =>
+              `[data-testid="authentic-human-hand"] .authentic-hand__card.is-playable[data-source-id="${sourceId}"]`,
+          )
+          .join(", "),
+      )
+      .first();
+
+    if ((await fixtureWeatherCard.count()) === 0) {
+      continue;
+    }
+
+    const selectedSourceId = await fixtureWeatherCard.getAttribute("data-source-id");
+    if (!selectedSourceId) {
+      throw new Error("fixture weather card was missing its public data-source-id");
+    }
+    const expectation = weatherOverlayExpectations[selectedSourceId];
+    if (!expectation) {
+      throw new Error(`unexpected fixture weather source id: ${selectedSourceId}`);
+    }
+
+    await fixtureWeatherCard.getByTestId("authentic-hand-card").click();
+    await page.getByTestId("authentic-weather-target").click();
+
+    const overlay = page.locator(
+      `[data-testid="authentic-row-weather-overlay"][data-weather-effect="${expectation.effect}"]`,
+    );
+    await expect(overlay.first()).toBeVisible();
+    await expect(overlay).toHaveCount(expectation.rowCount);
+    await expect(
+      page.locator(`[data-testid="authentic-board-row"][data-weather-overlay~="${expectation.effect}"]`).first(),
+    ).toBeVisible();
+
+    if (selectedSourceId === "neutral.skellige-storm") {
+      await expect(page.locator('[data-testid="authentic-board-row"][data-weather-overlay~="skellige-storm"]')).toHaveCount(4);
+    }
+
+    const matchPageText = await visiblePageText(page);
+    expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_a:\d{3}:|seat_b:\d{3}:/);
+    coveredWeatherOverlay = true;
+    break;
+  }
+
+  expect(coveredWeatherOverlay, "no candidate seed produced a visible hand weather card").toBe(true);
   expect(pageErrors).toEqual([]);
 });
 

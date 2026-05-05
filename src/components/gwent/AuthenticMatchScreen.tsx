@@ -70,6 +70,7 @@ import {
   buildResolveRoundActionViewModel,
   buildSelectedCardDragTargetViewModel,
   buildSelectedCardTargetViewModel,
+  buildWeatherRowOverlayViewModel,
   buildVisibleCardLookup,
   chooseDebugAiMulliganMove,
   getBoardCardState,
@@ -92,6 +93,7 @@ import {
   type SelectedCardRowTargetViewModel,
   type SelectedCardTargetViewModel,
   type SelectedCardWeatherTargetViewModel,
+  type WeatherRowOverlayViewModel,
 } from "./matchViewModel";
 import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 import { getAbilityDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
@@ -393,6 +395,7 @@ const WeatherSummary: React.FC<{
 
 const BoardRow: React.FC<{
   row: AuthenticBoardRowViewModel;
+  weatherOverlay: WeatherRowOverlayViewModel;
   rowTarget: SelectedCardRowTargetViewModel | undefined;
   hornTarget: SelectedCardRowHornTargetViewModel | undefined;
   legalCardTargets: ReadonlyMap<CardInstanceId, SelectedCardCardTargetViewModel>;
@@ -400,7 +403,7 @@ const BoardRow: React.FC<{
   activeDropMoveId: string | null;
   onTargetClick: (moveId: string, options?: PlayCardPresentationOptions) => void;
   onCardContextMenu: (event: React.MouseEvent, target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow }) => void;
-}> = ({ row, rowTarget, hornTarget, legalCardTargets, motionByCardId, activeDropMoveId, onTargetClick, onCardContextMenu }) => {
+}> = ({ row, weatherOverlay, rowTarget, hornTarget, legalCardTargets, motionByCardId, activeDropMoveId, onTargetClick, onCardContextMenu }) => {
   const renderBoardCard = (unit: AuthenticBoardRuntimeCardViewModel) => {
     const cardTarget = legalCardTargets.get(unit.key);
     const motion = motionByCardId.get(unit.key);
@@ -475,7 +478,8 @@ const BoardRow: React.FC<{
 
   const rowDropActive = Boolean(rowTarget && activeDropMoveId === rowTarget.moveId);
   const hornDropActive = Boolean(hornTarget && activeDropMoveId === hornTarget.moveId);
-  const rowClassName = `authentic-board-row authentic-board-row--${row.side}${rowTarget ? " is-legal-target" : ""}${
+  const hasWeatherOverlay = weatherOverlay.effects.length > 0;
+  const rowClassName = `authentic-board-row authentic-board-row--${row.side}${hasWeatherOverlay ? " has-weather-overlay" : ""}${rowTarget ? " is-legal-target" : ""}${
     rowDropActive || hornDropActive ? " is-drop-active" : ""
   }`;
 
@@ -485,8 +489,25 @@ const BoardRow: React.FC<{
       data-testid="authentic-board-row"
       data-row-target={rowTarget ? "true" : undefined}
       data-row-key={row.key}
+      data-weather-overlay={hasWeatherOverlay ? weatherOverlay.effects.join(" ") : undefined}
       data-drop-state={rowDropActive || hornDropActive ? "active" : rowTarget || hornTarget ? "idle" : undefined}
     >
+      {hasWeatherOverlay ? (
+        <div
+          className="authentic-board-row__weather-overlays"
+          aria-hidden="true"
+          title={weatherOverlay.ariaLabel ?? undefined}
+        >
+          {weatherOverlay.effects.map((effect) => (
+            <span
+              key={effect}
+              className={`authentic-board-row__weather-overlay authentic-board-row__weather-overlay--${effect}`}
+              data-testid="authentic-row-weather-overlay"
+              data-weather-effect={effect}
+            />
+          ))}
+        </div>
+      ) : null}
       <div className="authentic-board-row__label">
         <span>{row.rowGlyph}</span>
         <strong>{row.rowName}</strong>
@@ -542,6 +563,7 @@ const BoardRow: React.FC<{
 
 const BoardTable: React.FC<{
   rows: readonly AuthenticBoardRowViewModel[];
+  weatherCards: readonly AuthenticRuntimeCardViewModel[];
   rowTargets: ReadonlyMap<string, SelectedCardRowTargetViewModel>;
   rowHornTargets: ReadonlyMap<string, SelectedCardRowHornTargetViewModel>;
   legalCardTargets: ReadonlyMap<CardInstanceId, SelectedCardCardTargetViewModel>;
@@ -552,23 +574,27 @@ const BoardTable: React.FC<{
     event: React.MouseEvent,
     target: { cardId: CardInstanceId; origin: MatchCardInspectionOrigin; seatId: SeatId; row: import("@/game/catalog").CatalogRow },
   ) => void;
-}> = ({ rows, rowTargets, rowHornTargets, legalCardTargets, motionByCardId, activeDropMoveId, onTargetClick, onCardContextMenu }) => (
+}> = ({ rows, weatherCards, rowTargets, rowHornTargets, legalCardTargets, motionByCardId, activeDropMoveId, onTargetClick, onCardContextMenu }) => (
   <section className="authentic-board-table" aria-label="Authentic board">
-    {rows.map((row, index) => (
-      <React.Fragment key={row.key}>
-        {index === 3 ? <div className="authentic-board-table__divider" aria-hidden="true" /> : null}
-        <BoardRow
-          row={row}
-          rowTarget={rowTargets.get(row.key)}
-          hornTarget={rowHornTargets.get(row.key)}
-          legalCardTargets={legalCardTargets}
-          motionByCardId={motionByCardId}
-          activeDropMoveId={activeDropMoveId}
-          onTargetClick={onTargetClick}
-          onCardContextMenu={onCardContextMenu}
-        />
-      </React.Fragment>
-    ))}
+    {rows.map((row, index) => {
+      const weatherOverlay = buildWeatherRowOverlayViewModel({ row: row.row, weatherCards });
+      return (
+        <React.Fragment key={row.key}>
+          {index === 3 ? <div className="authentic-board-table__divider" aria-hidden="true" /> : null}
+          <BoardRow
+            row={row}
+            weatherOverlay={weatherOverlay}
+            rowTarget={rowTargets.get(row.key)}
+            hornTarget={rowHornTargets.get(row.key)}
+            legalCardTargets={legalCardTargets}
+            motionByCardId={motionByCardId}
+            activeDropMoveId={activeDropMoveId}
+            onTargetClick={onTargetClick}
+            onCardContextMenu={onCardContextMenu}
+          />
+        </React.Fragment>
+      );
+    })}
   </section>
 );
 
@@ -2664,6 +2690,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
           <section className="authentic-match__center">
             <BoardTable
               rows={orderedRows}
+              weatherCards={weatherRuntimeCards}
               rowTargets={selectedTargetView.rowTargets}
               rowHornTargets={selectedTargetView.rowHornTargets}
               legalCardTargets={selectedTargetView.cardTargets}

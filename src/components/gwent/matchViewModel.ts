@@ -74,6 +74,14 @@ export interface AuthenticBoardRowViewModel {
   readonly horn: AuthenticRuntimeCardViewModel | null;
 }
 
+export type WeatherRowOverlayEffect = "frost" | "fog" | "rain" | "skellige-storm";
+
+export interface WeatherRowOverlayViewModel {
+  readonly row: CatalogRow;
+  readonly effects: readonly WeatherRowOverlayEffect[];
+  readonly ariaLabel: string | null;
+}
+
 export interface RowTargetViewModel {
   readonly key: string;
   readonly moveId: string;
@@ -506,7 +514,7 @@ export const engineCardToAuthenticCard = (card: EngineCardViewModel): AuthenticC
   strength: card.printedStrength,
   rows: card.rows,
   abilities: card.abilities,
-  tags: card.kind === "special" && card.abilities.some((ability) => ["frost", "fog", "rain", "clear_weather"].includes(ability))
+  tags: card.kind === "special" && card.abilities.some((ability) => ["frost", "fog", "rain", "skellige_storm", "clear_weather"].includes(ability))
     ? ["weather"]
     : [],
   image: card.image,
@@ -658,6 +666,59 @@ export const getBoardCardTargetsById = (moves: readonly PlayCardMove[]): Readonl
       return [[move.target.cardId, { key: move.target.cardId, moveId: move.moveId }]] as const;
     }),
   );
+
+const WEATHER_OVERLAY_ORDER: readonly WeatherRowOverlayEffect[] = ["frost", "fog", "rain", "skellige-storm"];
+
+const WEATHER_OVERLAY_LABELS: Record<WeatherRowOverlayEffect, string> = {
+  frost: "Biting Frost",
+  fog: "Impenetrable Fog",
+  rain: "Torrential Rain",
+  "skellige-storm": "Skellige Storm",
+};
+
+const effectAppliesToRow = (effect: WeatherRowOverlayEffect, row: CatalogRow): boolean => {
+  if (effect === "frost") return row === "close";
+  if (effect === "fog") return row === "ranged";
+  if (effect === "rain") return row === "siege";
+  return row === "ranged" || row === "siege";
+};
+
+const getWeatherOverlayEffectForCard = (card: AuthenticRuntimeCardViewModel): WeatherRowOverlayEffect | null => {
+  const abilities = new Set(card.card.abilities);
+  const normalizedName = card.card.name.toLocaleLowerCase();
+  if (abilities.has("frost") || card.card.sourceId === "neutral.biting-frost" || normalizedName === "biting frost") return "frost";
+  if (abilities.has("fog") || card.card.sourceId === "neutral.impenetrable-fog" || normalizedName === "impenetrable fog") return "fog";
+  if (abilities.has("rain") || card.card.sourceId === "neutral.torrential-rain" || normalizedName === "torrential rain") return "rain";
+  if (abilities.has("skellige_storm") || card.card.sourceId === "neutral.skellige-storm" || normalizedName === "skellige storm") return "skellige-storm";
+  return null;
+};
+
+export const buildWeatherRowOverlayViewModel = ({
+  row,
+  weatherCards,
+}: {
+  row: CatalogRow;
+  weatherCards: readonly AuthenticRuntimeCardViewModel[];
+}): WeatherRowOverlayViewModel => {
+  const activeEffects = new Set<WeatherRowOverlayEffect>();
+  weatherCards.forEach((card) => {
+    const effect = getWeatherOverlayEffectForCard(card);
+    if (effect && effectAppliesToRow(effect, row)) {
+      activeEffects.add(effect);
+    }
+  });
+
+  const effects = WEATHER_OVERLAY_ORDER.filter((effect) => activeEffects.has(effect));
+  const ariaLabel = effects.length > 0
+    ? `Active weather: ${effects.map((effect) => WEATHER_OVERLAY_LABELS[effect]).join(", ")}`
+    : null;
+
+  return {
+    row,
+    effects,
+    ariaLabel,
+  };
+};
 
 const discardGroupKey = (card: EngineCardViewModel): (typeof DISCARD_GROUP_ORDER)[number] => {
   if (card.kind === "hero") {

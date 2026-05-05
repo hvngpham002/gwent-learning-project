@@ -26,6 +26,7 @@ import {
   buildSelectedCardDragTargetViewModel,
   toggleMulliganSelection,
   toRuntimeCard,
+  buildWeatherRowOverlayViewModel,
 } from "@/components/gwent/matchViewModel";
 
 const card = (overrides: Partial<EngineCardViewModel> = {}): EngineCardViewModel => ({
@@ -88,6 +89,55 @@ describe("authentic match view models", () => {
       "seat_a:siege",
     ]);
     expect(ordered.map((entry) => entry.score)).toEqual([6, 5, 4, 1, 2, 3]);
+  });
+
+  it("maps weather cards to affected row overlay effects", () => {
+    const weatherCards = [
+      toRuntimeCard(card({ kind: "special", sourceId: "neutral.biting-frost", name: "Biting Frost", rows: [], abilities: ["frost"] })),
+      toRuntimeCard(card({ kind: "special", sourceId: "neutral.impenetrable-fog", name: "Impenetrable Fog", rows: [], abilities: ["fog"] })),
+      toRuntimeCard(card({ kind: "special", sourceId: "neutral.torrential-rain", name: "Torrential Rain", rows: [], abilities: ["rain"] })),
+    ];
+
+    expect(buildWeatherRowOverlayViewModel({ row: "close", weatherCards })).toMatchObject({
+      effects: ["frost"],
+      ariaLabel: "Active weather: Biting Frost",
+    });
+    expect(buildWeatherRowOverlayViewModel({ row: "ranged", weatherCards })).toMatchObject({
+      effects: ["fog"],
+      ariaLabel: "Active weather: Impenetrable Fog",
+    });
+    expect(buildWeatherRowOverlayViewModel({ row: "siege", weatherCards })).toMatchObject({
+      effects: ["rain"],
+      ariaLabel: "Active weather: Torrential Rain",
+    });
+  });
+
+  it("maps Skellige Storm distinctly to ranged and siege overlays", () => {
+    const weatherCards = [
+      toRuntimeCard(card({ kind: "special", sourceId: "neutral.skellige-storm", name: "Skellige Storm", rows: [], abilities: ["skellige_storm"] })),
+    ];
+
+    expect(buildWeatherRowOverlayViewModel({ row: "close", weatherCards }).effects).toEqual([]);
+    expect(buildWeatherRowOverlayViewModel({ row: "ranged", weatherCards })).toMatchObject({
+      effects: ["skellige-storm"],
+      ariaLabel: "Active weather: Skellige Storm",
+    });
+    expect(buildWeatherRowOverlayViewModel({ row: "siege", weatherCards }).effects).toEqual(["skellige-storm"]);
+  });
+
+  it("ignores Clear Weather and stacks ordinary weather below Skellige Storm", () => {
+    const weatherCards = [
+      toRuntimeCard(card({ kind: "special", sourceId: "neutral.clear-weather", name: "Clear Weather", rows: [], abilities: ["clear_weather"] })),
+      toRuntimeCard(card({ kind: "special", sourceId: "neutral.torrential-rain", name: "Torrential Rain", rows: [], abilities: ["rain"] })),
+      toRuntimeCard(card({ kind: "special", sourceId: "neutral.skellige-storm", name: "Skellige Storm", rows: [], abilities: ["skellige_storm"] })),
+    ];
+
+    expect(buildWeatherRowOverlayViewModel({ row: "close", weatherCards })).toMatchObject({
+      effects: [],
+      ariaLabel: null,
+    });
+    expect(buildWeatherRowOverlayViewModel({ row: "ranged", weatherCards }).effects).toEqual(["skellige-storm"]);
+    expect(buildWeatherRowOverlayViewModel({ row: "siege", weatherCards }).effects).toEqual(["rain", "skellige-storm"]);
   });
 
   it("keeps AI seat summary hidden by count and does not expose hand identities", () => {

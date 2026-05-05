@@ -1,6 +1,6 @@
 # Authentic Product Flow
 
-This document tracks the current opt-in authentic product loop after cEp12.
+This document tracks the current opt-in authentic product loop after cEp13.
 
 ## Routes
 
@@ -100,6 +100,16 @@ cEp12 layers native pointer drag/drop and restrained card-flight presentation on
 - Successful human hand plays capture the visible source hand-card rectangle and the legal target button rectangle, then render a transient card-flight overlay while dispatching the exact existing `PlayCard` command immediately. The overlay never delays rules, prompts, AI, round resolution, or game end. If the source or target rectangle is unavailable, the existing public event pulse remains the fallback.
 - AI plays and other hidden-origin movement do not animate from hidden locations. Public activity and board/weather/discard state remain hidden-info-safe.
 - Reduced-motion users get a near-static opacity transition rather than transform-heavy motion.
+
+## Weather Row Overlays (cEp13)
+
+cEp13 adds generated active-weather overlays to the authentic match board before the next AI phase. This is a product UI polish phase only: engine weather rules, scoring, legal moves, command execution, AI policy, catalog data, deck builder, Card Studio, route defaults, and legacy UI are unchanged.
+
+- Four committed row-strip assets live under `public/images/weather-overlays/`: `biting-frost-row.png`, `impenetrable-fog-row.png`, `torrential-rain-row.png`, and `skellige-storm-row.png`. They are derived from the approved Imagegen concept sheet, with Skellige Storm intentionally using a distinct teal-black/violet lightning sea-storm treatment rather than a rain variant.
+- `buildWeatherRowOverlayViewModel({ row, weatherCards })` maps public Weather-zone cards into presentation effects. Frost marks close-combat rows, Fog marks ranged rows, Rain marks siege rows, and Skellige Storm marks both ranged and siege rows. Clear Weather produces no overlay.
+- `AuthenticMatchScreen` renders the overlay stack behind each affected board row's contents. Cards, effective-strength badges, row labels, scores, legal target buttons, drag/drop targets, and right-click inspection remain above the overlay and keep their existing behavior.
+- Rows expose `data-weather-overlay` and child overlay spans expose `data-weather-effect` for browser smoke coverage. These attributes contain only public effect names, never card instance IDs or hidden card identities.
+- Multiple weather effects can stack when the engine allows more than one relevant Weather-zone card. Skellige Storm is rendered as its own effect and later in the stack so it remains visually distinct when paired with Fog or Rain.
 
 ## Round And Match Flow (cEp10)
 
