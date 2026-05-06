@@ -660,8 +660,10 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   const firstMoveEntry = activity.locator('[data-log-kind="move"]').first();
   const firstEventEntry = activity.locator('[data-log-kind="event"]').first();
   await expect(firstMoveEntry.locator(".authentic-log__entry-number")).toHaveText("1");
+  await expect(firstMoveEntry.locator(".authentic-log__entry-number")).toHaveCSS("font-size", "12px");
   await expect(firstMoveEntry.locator(".authentic-log__entry-kind")).toHaveText("move");
-  await expect(firstMoveEntry.locator(".authentic-log__entry-message")).toHaveCSS("font-size", "14px");
+  await expect(firstMoveEntry.locator(".authentic-log__entry-kind")).toHaveCSS("font-size", "12px");
+  await expect(firstMoveEntry.locator(".authentic-log__entry-message")).toHaveCSS("font-size", "12px");
   await expect(firstMoveEntry.locator(".authentic-log__entry-message")).toHaveCSS("color", "rgb(138, 58, 31)");
   await expect(firstEventEntry.locator(".authentic-log__entry-number")).toHaveText("");
   await expect(firstEventEntry.locator(".authentic-log__entry-kind")).toHaveText("event");

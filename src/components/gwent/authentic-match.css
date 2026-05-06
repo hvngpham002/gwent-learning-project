@@ -925,14 +925,10 @@ button.authentic-board-card.is-card-target:focus-visible,
   color: var(--ink-2);
 }
 
-.authentic-log__entry[data-log-kind="move"] {
-  font-size: 14px;
-}
-
 .authentic-log__entry-number {
   color: var(--ink-3);
   font-family: var(--font-data);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   text-align: right;
 }
@@ -940,7 +936,7 @@ button.authentic-board-card.is-card-target:focus-visible,
 .authentic-log__entry-kind {
   color: var(--accent);
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: lowercase;
 }
@@ -952,7 +948,6 @@ button.authentic-board-card.is-card-target:focus-visible,
 }
 
 .authentic-log__entry[data-log-kind="move"] .authentic-log__entry-message {
-  font-size: 14px;
   font-weight: 700;
 }
 
