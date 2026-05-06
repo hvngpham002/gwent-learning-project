@@ -887,7 +887,6 @@ button.authentic-board-card.is-card-target:focus-visible,
   height: 100% !important;
 }
 
-.authentic-log span,
 .authentic-round-history span {
   padding-bottom: 6px;
   border-bottom: 1px dotted var(--rule);
@@ -896,6 +895,59 @@ button.authentic-board-card.is-card-target:focus-visible,
   font-weight: 600;
   line-height: 1.35;
   color: var(--ink-2);
+}
+
+.authentic-log__scroller {
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-right: 2px;
+}
+
+.authentic-log__scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.authentic-log__entry {
+  display: grid;
+  grid-template-columns: 22px 42px minmax(0, 1fr);
+  gap: 6px;
+  align-items: baseline;
+  padding-bottom: 6px;
+  border-bottom: 1px dotted var(--rule);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+
+.authentic-log__entry-number {
+  color: var(--ink-3);
+  font-family: var(--font-data);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.authentic-log__entry-kind {
+  color: var(--accent);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
+.authentic-log__entry[data-log-kind="event"] .authentic-log__entry-kind {
+  color: var(--ink-3);
+}
+
+.authentic-log__entry-message {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .authentic-medic-option {

@@ -652,6 +652,21 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   const activity = page.getByTestId("authentic-recent-activity");
   await expect(activity).toContainText(/Human played/);
   await expect(activity).toContainText(/AI completed mulligan|AI played|AI passed|AI used leader|AI resolved prompt/);
+  const battleLogScroller = page.getByTestId("authentic-battle-log-scroller");
+  await expect(battleLogScroller).toHaveAttribute("role", "log");
+  await expect(battleLogScroller).toHaveCSS("overflow-y", "auto");
+  await expect(battleLogScroller).toHaveCSS("scrollbar-width", "none");
+  expect(await activity.locator('[data-log-kind="event"]').count()).toBeGreaterThan(0);
+  await expect(activity.locator(".authentic-log__entry-number").first()).toBeVisible();
+  await expect(activity.locator(".authentic-log__entry-kind").first()).toBeVisible();
+  const battleLogScrollState = await battleLogScroller.evaluate((element) => ({
+    scrollTop: element.scrollTop,
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }));
+  expect(battleLogScrollState.scrollTop + battleLogScrollState.clientHeight).toBeGreaterThanOrEqual(
+    battleLogScrollState.scrollHeight - 1,
+  );
   await expect(page.getByTestId("authentic-effective-strength").first()).toBeVisible();
   await expect(page.locator(".authentic-board-card__strength")).toHaveCount(0);
 

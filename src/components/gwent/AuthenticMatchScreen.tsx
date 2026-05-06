@@ -1279,17 +1279,58 @@ const RoundOverlay: React.FC<{
   );
 };
 
-const BattleLog: React.FC<{ lines: readonly string[] }> = ({ lines }) => (
-  <section className="authentic-panel authentic-log" data-testid="authentic-recent-activity">
-    <h2>Battle Log</h2>
-    {lines.length === 0 ? <p>No commands yet.</p> : null}
-    {lines.map((line, index) => (
-      <span key={`${line}-${index}`} data-testid="authentic-activity-line">
-        {line}
-      </span>
-    ))}
-  </section>
-);
+interface BattleLogEntry {
+  readonly key: string;
+  readonly numberLabel: string;
+  readonly kindLabel: "move" | "event";
+  readonly label: string;
+}
+
+const stripCommandSequencePrefix = (label: string, sequence: number): string => {
+  const prefix = `#${sequence} `;
+  return label.startsWith(prefix) ? label.slice(prefix.length) : label;
+};
+
+const BattleLog: React.FC<{ entries: readonly BattleLogEntry[] }> = ({ entries }) => {
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const lastEntryKey = entries.at(-1)?.key ?? null;
+
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller) return;
+    scroller.scrollTop = scroller.scrollHeight;
+  }, [entries.length, lastEntryKey]);
+
+  return (
+    <section className="authentic-panel authentic-log" data-testid="authentic-recent-activity">
+      <h2>Battle Log</h2>
+      {entries.length === 0 ? <p>No commands yet.</p> : null}
+      <div
+        ref={scrollerRef}
+        className="authentic-log__scroller"
+        role="log"
+        aria-live="polite"
+        aria-label="battle log"
+        data-testid="authentic-battle-log-scroller"
+      >
+        {entries.map((entry) => (
+          <span
+            key={entry.key}
+            className="authentic-log__entry"
+            data-testid="authentic-activity-line"
+            data-log-kind={entry.kindLabel}
+          >
+            <span className="authentic-log__entry-number" aria-hidden="true">
+              {entry.numberLabel}
+            </span>
+            <span className="authentic-log__entry-kind">{entry.kindLabel}</span>
+            <span className="authentic-log__entry-message">{entry.label}</span>
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+};
 
 const CardFlightLayer: React.FC<{
   flights: readonly CardFlightPresentation[];
@@ -2136,20 +2177,42 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       }),
     [aiSeat, canHumanAct, humanSeat, lastError, lock, match, status, winner],
   );
-  const recentCommands = useMemo(
-    () =>
-      summarizeCommandHistory({
-        records: engine.commandHistory.slice(-6),
-        aiSeat,
+  const battleLogEntries = useMemo<BattleLogEntry[]>(() => {
+    const commandSummaries = summarizeCommandHistory({
+      records: engine.commandHistory,
+      aiSeat,
+      seatLabels: SEAT_LABELS,
+      publicCardLookup: visibleCardsById,
+    });
+    const summaryBySequence = new Map(commandSummaries.map((summary) => [summary.key, summary]));
+    const entries: BattleLogEntry[] = [];
+
+    engine.commandHistory.forEach((record) => {
+      const summary = summaryBySequence.get(String(record.sequence));
+      entries.push({
+        key: `command-${record.sequence}`,
+        numberLabel: String(entries.length + 1),
+        kindLabel: "move",
+        label: stripCommandSequencePrefix(summary?.label ?? `Command ${record.sequence}`, record.sequence),
+      });
+
+      const eventSummaries = summarizeEvents({
+        events: commandEventsBySequence.get(record.sequence) ?? [],
         seatLabels: SEAT_LABELS,
         publicCardLookup: visibleCardsById,
-      }),
-    [aiSeat, engine.commandHistory, visibleCardsById],
-  );
-  const recentEvents = useMemo(
-    () => summarizeEvents({ events: engine.lastTransactionEvents.slice(-4), seatLabels: SEAT_LABELS, publicCardLookup: visibleCardsById }),
-    [engine.lastTransactionEvents, visibleCardsById],
-  );
+      });
+      eventSummaries.forEach((event) => {
+        entries.push({
+          key: `event-${record.sequence}-${event.key}`,
+          numberLabel: String(entries.length + 1),
+          kindLabel: "event",
+          label: event.label,
+        });
+      });
+    });
+
+    return entries;
+  }, [aiSeat, commandEventsBySequence, engine.commandHistory, visibleCardsById]);
   const motionByCardId = useMemo(() => {
     const entries: [CardInstanceId, CardMotion][] = [];
     engine.lastTransactionEvents.forEach((event) => {
@@ -2668,10 +2731,6 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const weatherRuntimeCards = useMemo(() => weatherCards.map(toRuntimeCard), [weatherCards]);
   const topHumanDiscard = useMemo(() => discardCards[humanSeat].at(-1) ?? null, [discardCards, humanSeat]);
   const topAiDiscard = useMemo(() => discardCards[aiSeat].at(-1) ?? null, [aiSeat, discardCards]);
-  const logLines = useMemo(
-    () => [...recentCommands.map((record) => record.label), ...recentEvents.map((event) => `event: ${event.label}`)],
-    [recentCommands, recentEvents],
-  );
   const winnerLabel =
     match?.phase === "game_end" ? (winner === "draw" ? "Draw" : winner ? `${SEAT_LABELS[winner]} wins` : "Finished") : null;
   const discardBrowserSeat = discardOpenSeat && seatSummaries ? (discardOpenSeat === humanSeat ? seatSummaries.human : seatSummaries.ai) : null;
@@ -2900,7 +2959,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
                 ))}
               </section>
             ) : null}
-            <BattleLog lines={logLines} />
+            <BattleLog entries={battleLogEntries} />
           </aside>
         </div>
         <CardFlightLayer flights={cardFlights} onFlightDone={finishCardFlight} />

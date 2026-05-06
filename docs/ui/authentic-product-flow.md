@@ -129,7 +129,7 @@ The score-card status copy is one inline row for leader state, leader category, 
 Hidden-info contract:
 
 - The ledger view-model only reads `RoundResult[]`, the engine `winner`, public seat gem counts, and seat labels. It never receives card source IDs, instance IDs, or hidden hand identities, and unit tests assert no such strings appear in the serialised view-model.
-- The right-rail Battle Log, recent activity, and round-history section continue to use existing hidden-info-safe summaries; cEp10 does not change their behavior.
+- The right-rail Battle Log uses hidden-info-safe command/event summaries for the full current-match progression. cEp13 renders it as a scrollbar-hidden scroll region that auto-sticks to the latest entry and separates line number, entry type (`move` / `event`), and message text into distinct columns.
 
 ## In-Match Leader And Prompt Presentation
 
