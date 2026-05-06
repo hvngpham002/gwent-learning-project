@@ -1783,6 +1783,11 @@ test("authentic match renders generated row weather overlays after weather play 
     await expect(affectedRows.first().locator(".authentic-board-row__label span")).toHaveCSS("color", "rgb(232, 223, 196)");
     await expect(affectedRows.first().locator(".authentic-board-row__label strong")).toHaveCSS("color", "rgb(232, 223, 196)");
     await expect(affectedRows.locator(".authentic-board-row__empty").first()).toHaveCSS("color", "rgb(232, 223, 196)");
+    await expect(affectedRows.first().locator(".authentic-board-row__horn-slot")).toHaveCSS(
+      "box-shadow",
+      /rgba\(232, 223, 196, 0\.(78|92)\)/,
+    );
+    await expect(affectedRows.first().locator(".authentic-board-row__horn-slot-icon")).toHaveCSS("filter", /invert\(1\)/);
     const weatheredStrength = affectedRows.locator(
       '[data-testid="authentic-effective-strength"][data-weather-affected="true"] .authentic-card__strength',
     );
