@@ -1,0 +1,1354 @@
+[
+  {
+    "viewport": "desktop",
+    "route": "legacy-default",
+    "path": "/",
+    "screenshot": "desktop-legacy-default.png",
+    "ok": true,
+    "consoleIssues": [
+      "error: Warning: validateDOMNesting(...): %s cannot appear as a descendant of <%s>.%s <ul> p \n    at ul\n    at p\n    at div\n    at O2 (http://127.0.0.1:5173/node_modules/.vite/deps/styled-components.js?v=bcc54934:1278:6)\n    at div\n    at O2 (http://127.0.0.1:5173/node_modules/.vite/deps/styled-compo"
+    ],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "Educational Project Disclaimer Welcome! This is a non-commercial fan project created for educational purposes and portfolio demonstration only. This project is inspired by CD Projekt Red's Gwent from The Witcher 3: Wild Hunt. All Witcher-related intellectual property belongs to CD Projekt Red. This project is: Not affiliated with CD Projekt Red Created for educational purposes only Not for commercial use A fan project intended for learning and portfolio demonstration With that being said, how ab",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 984,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 1371,
+          "right": 1575,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 1373,
+          "right": 1573,
+          "width": 200
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 1580,
+          "right": 1784,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 1582,
+          "right": 1782,
+          "width": 200
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 1789,
+          "right": 1993,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 1791,
+          "right": 1991,
+          "width": 200
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 1998,
+          "right": 2202,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 2000,
+          "right": 2200,
+          "width": 200
+        }
+      ],
+      "tinyText": [],
+      "buttonCount": 5,
+      "visibleButtonCount": 5
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "engine-shell",
+    "path": "/?engine=1&seed=visual-audit-shell",
+    "screenshot": "desktop-engine-shell.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "Engine Match Seed visual-audit-shell · AI legal-heuristic-v0 New Game Seed visual-audit-shell AI legal-heuristic-v0 Mulligan Round 1 Human Ready Mulligan: select up to 2 cards, then confirm. AI nilfgaard · Emhyr var Emreis: The Relentless · ready gems 2 · hand 10 · deck 24 · discard 0 · score 0 · active Human northern_realms · Foltest: Lord Commander of The North · ready gems 2 · hand 10 · deck 26 · discard 0 · score 0 · active Weather None AI Board Close 0 Empty Ranged 0 Empty Siege 0 Empty Hum",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 1241,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 12,
+      "visibleButtonCount": 12
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "authentic-pregame",
+    "path": "/?engine=1&ui=authentic&seed=visual-audit-pregame",
+    "screenshot": "desktop-authentic-pregame.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← menu Prepare for Battle open deck builder → card studio → Step 1 - choose deck Current Northern Realms Northern Realms 36 cards · local · ready ✓ Current Nilfgaard Nilfgaard 34 cards · local · ready Official Northern Realms Starter Northern Realms 34 cards · local · ready Official Nilfgaard Starter Nilfgaard 32 cards · local · ready Official Monsters Starter Monsters 33 cards · local · ready Official Scoia'tael Starter Scoia'tael 36 cards · local · ready Official Skellige Starter Skellige 36 c",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 936,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 24,
+      "visibleButtonCount": 24
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "authentic-match-mulligan",
+    "path": "/?engine=1&ui=authentic&view=match&seed=visual-audit-mulligan",
+    "screenshot": "desktop-authentic-match-mulligan.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← setup Mulligan Mulligan: select up to 2 cards, then confirm. Seed visual-audit-mulligan legal-heuristic-v0 Opponent AI · Nilfgaard hand 10 · deck 24 · discard 0 10 Your opening hand Northern Realms choose 1 at a time · redraws left 2 · deck 26 · discard 0 10 7 5 5 15 5 6 0/1 selected. keep hand",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 936,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 2,
+      "visibleButtonCount": 2
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "authentic-match-board",
+    "path": "/?engine=1&ui=authentic&view=match&seed=visual-audit-board",
+    "screenshot": "desktop-authentic-match-board.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "rematch setup Gwent Round 1 · Human · Playing Seed visual-audit-board legal-heuristic-v0 Your turn: choose a playable card, use leader, or pass. AI Nilfgaard 10 24 0 Emhyr var Emreis: The Relentless · Draw Opponent Discard unavailable · active · waiting for turn 24 Deck 0 Discard Weather Clear skies 26 Deck 0 Discard You Northern Realms 10 26 0 Foltest: Lord Commander of The North · Clear Weather ready · active · legal leader move available ⚒ Siege empty 0 ➶ Ranged empty 0 ⚔ Close Combat empty 0",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 1000,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 6
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 6
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "3",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "3",
+          "fontSize": 9.75,
+          "width": 6
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "2",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "2",
+          "fontSize": 9.75,
+          "width": 6
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "10",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "10",
+          "fontSize": 9.75,
+          "width": 12
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 6
+        }
+      ],
+      "buttonCount": 6,
+      "visibleButtonCount": 6
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "authentic-deck-builder",
+    "path": "/?engine=1&ui=authentic&view=deck-builder&seed=visual-audit-builder",
+    "screenshot": "desktop-authentic-deck-builder.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← back Deck Builder + new duplicate reset import export copy card studio → save play → your decks · 7 current northern realms northern realms · 36 cards ready current nilfgaard nilfgaard · 34 cards ready official northern realms starter northern realms · 34 cards ready official nilfgaard starter nilfgaard · 32 cards ready official monsters starter monsters · 33 cards ready official scoia'tael starter scoia'tael · 36 cards ready official skellige starter skellige · 36 cards ready delete current d",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 900,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": false,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 47,
+      "visibleButtonCount": 47
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "authentic-card-studio",
+    "path": "/?engine=1&ui=authentic&view=card-studio&seed=visual-audit-studio",
+    "screenshot": "desktop-authentic-card-studio.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← back Card Studio new card new leader import export export all copy copy all library · 0 cards · 0 leaders all cards leaders drafts playable No custom records yet. duplicate delete reset save draft save playable name source id faction northern realms kind unit strength deck limit rows close ranged siege Tight Bond · implemented Medic · implemented Morale Boost · implemented Spy · implemented Muster · implemented Muster Roach · implemented Agile · implemented Avenger · implemented Scorch Close ·",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 900,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": false,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 22,
+      "visibleButtonCount": 22
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "authentic-official-porting",
+    "path": "/?engine=1&ui=authentic&view=official-porting&seed=visual-audit-porting",
+    "screenshot": "desktop-authentic-official-porting.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← back Official Porting 181 candidates 0 approved 148 missing images 1 rule gaps import export copy faction all factions kind all kinds status all status missing image rule gap approved arachas monsters.arachas mn · unit · needs_image arachas behemoth monsters.arachas-behemoth mn · unit · needs_image botchling monsters.botchling mn · unit · needs_image celaeno harpy monsters.celaeno-harpy mn · unit · needs_image cockatrice monsters.cockatrice mn · unit · needs_image crone: brewess monsters.crone",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 12621,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 198,
+      "visibleButtonCount": 198
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "authentic-harness",
+    "path": "/?engine=1&ui=authentic&view=harness",
+    "screenshot": "desktop-authentic-harness.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "Authentic UI Foundation cEp1 · gallery harness · 163 cards · 22 leaders Factions Production palette for current catalog factions. NR · Northern Realms NG · Nilfgaard MN · Monsters ST · Scoia'tael SK · Skellige N · Neutral Rows ⚔ Close Combat ➶ Ranged ⚒ Siege Abilities ∞ Tight Bond ✚ Medic ↑ Morale Boost ◐ Spy ☷ Muster ☷ Muster Roach ↔ Agile ✜ Avenger ✦ Scorch Close ✦ Scorch Ranged ✦ Scorch Siege ✦ Scorch ❅ Skellige Storm ◊ Commander's Horn ⇄ Decoy ❄ Biting Frost ☁ Impenetrable Fog ☂ Torrential R",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 1480,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "10",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "10",
+          "fontSize": 6.5,
+          "width": 8
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "10",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "10",
+          "fontSize": 9.75,
+          "width": 12
+        }
+      ],
+      "buttonCount": 0,
+      "visibleButtonCount": 0
+    }
+  },
+  {
+    "viewport": "desktop",
+    "route": "authentic-component-foundation",
+    "path": "/?engine=1&ui=authentic&view=ui-component-foundation",
+    "screenshot": "desktop-authentic-component-foundation.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "UI Component Foundation Review the authentic platform primitives in one opt-in surface. normal + debug routes share these components Tokens Northern Realms Nilfgaard Monsters Scoia'tael Skellige Neutral ⚔ Close Combat ➶ Ranged ⚒ Siege ∞ Tight Bond ✚ Medic ↑ Morale Boost ◐ Spy ☷ Muster ☷ Muster Roach ↔ Agile ✜ Avenger ✦ Scorch Close ✦ Scorch Ranged ✦ Scorch Siege ✦ Scorch ❅ Skellige Storm ◊ Commander's Horn ⇄ Decoy ❄ Biting Frost ☁ Impenetrable Fog ☂ Torrential Rain ☼ Clear Weather ✿ Mardroeme ⚔ ",
+      "viewportWidth": 1440,
+      "viewportHeight": 900,
+      "scrollWidth": 1440,
+      "scrollHeight": 2463,
+      "clientWidth": 1440,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "1",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "1",
+          "fontSize": 6.5,
+          "width": 4
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "1",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "1",
+          "fontSize": 9.75,
+          "width": 6
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "1",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "1",
+          "fontSize": 6.5,
+          "width": 4
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "10",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "10",
+          "fontSize": 6.5,
+          "width": 8
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "15",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "15",
+          "fontSize": 6.5,
+          "width": 8
+        }
+      ],
+      "buttonCount": 23,
+      "visibleButtonCount": 23
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "legacy-default",
+    "path": "/",
+    "screenshot": "mobile-legacy-default.png",
+    "ok": true,
+    "consoleIssues": [
+      "error: Warning: validateDOMNesting(...): %s cannot appear as a descendant of <%s>.%s <ul> p \n    at ul\n    at p\n    at div\n    at O2 (http://127.0.0.1:5173/node_modules/.vite/deps/styled-components.js?v=bcc54934:1278:6)\n    at div\n    at O2 (http://127.0.0.1:5173/node_modules/.vite/deps/styled-compo"
+    ],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "Educational Project Disclaimer Welcome! This is a non-commercial fan project created for educational purposes and portfolio demonstration only. This project is inspired by CD Projekt Red's Gwent from The Witcher 3: Wild Hunt. All Witcher-related intellectual property belongs to CD Projekt Red. This project is: Not affiliated with CD Projekt Red Created for educational purposes only Not for commercial use A fan project intended for learning and portfolio demonstration With that being said, how ab",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 543,
+      "scrollHeight": 984,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": true,
+      "verticalOverflow": true,
+      "overflowRight": [
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 248,
+          "right": 452,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 250,
+          "right": 450,
+          "width": 200
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 457,
+          "right": 661,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 459,
+          "right": 659,
+          "width": 200
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 666,
+          "right": 870,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 668,
+          "right": 868,
+          "width": 200
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 875,
+          "right": 1079,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 877,
+          "right": 1077,
+          "width": 200
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 1084,
+          "right": 1288,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 1086,
+          "right": 1286,
+          "width": 200
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "card-selector-image ",
+          "text": "",
+          "left": 1293,
+          "right": 1497,
+          "width": 204
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "",
+          "text": "",
+          "left": 1295,
+          "right": 1495,
+          "width": 200
+        }
+      ],
+      "tinyText": [],
+      "buttonCount": 5,
+      "visibleButtonCount": 5
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "engine-shell",
+    "path": "/?engine=1&seed=visual-audit-shell",
+    "screenshot": "mobile-engine-shell.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "Engine Match Seed visual-audit-shell · AI legal-heuristic-v0 New Game Seed visual-audit-shell AI legal-heuristic-v0 Mulligan Round 1 Human Ready Mulligan: select up to 2 cards, then confirm. AI nilfgaard · Emhyr var Emreis: The Relentless · ready gems 2 · hand 10 · deck 24 · discard 0 · score 0 · active Human northern_realms · Foltest: Lord Commander of The North · ready gems 2 · hand 10 · deck 26 · discard 0 · score 0 · active Weather None AI Board Close 0 Empty Ranged 0 Empty Siege 0 Empty Hum",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 2251,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 12,
+      "visibleButtonCount": 12
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "authentic-pregame",
+    "path": "/?engine=1&ui=authentic&seed=visual-audit-pregame",
+    "screenshot": "mobile-authentic-pregame.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← menu Prepare for Battle open deck builder → card studio → Step 1 - choose deck Current Northern Realms Northern Realms 36 cards · local · ready Current Nilfgaard Nilfgaard 34 cards · local · ready Official Northern Realms Starter Northern Realms 34 cards · local · ready Official Nilfgaard Starter Nilfgaard 32 cards · local · ready Official Monsters Starter Monsters 33 cards · local · ready Official Scoia'tael Starter Scoia'tael 36 cards · local · ready Official Skellige Starter Skellige 36 car",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 920,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 24,
+      "visibleButtonCount": 24
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "authentic-match-mulligan",
+    "path": "/?engine=1&ui=authentic&view=match&seed=visual-audit-mulligan",
+    "screenshot": "mobile-authentic-match-mulligan.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← setup Mulligan Mulligan: select up to 2 cards, then confirm. Seed visual-audit-mulligan legal-heuristic-v0 Opponent AI · Nilfgaard hand 10 · deck 24 · discard 0 10 Your opening hand Northern Realms choose 1 at a time · redraws left 2 · deck 26 · discard 0 10 7 5 5 15 5 6 0/1 selected. keep hand",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 1030,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [
+        {
+          "tag": "span",
+          "testId": "authentic-ai-mulligan-back",
+          "className": "authentic-mulligan__hidden-card-slot",
+          "text": "",
+          "left": -279,
+          "right": -192,
+          "width": 87
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "authentic-mulligan__hidden-back authentic-mulligan__hidden-back--held",
+          "text": "",
+          "left": -279,
+          "right": -192,
+          "width": 87
+        },
+        {
+          "tag": "div",
+          "testId": "authentic-card-back",
+          "className": "authentic-card-back authentic-card-back--md has-image",
+          "text": "",
+          "left": -279,
+          "right": -192,
+          "width": 87
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "authentic-card-back__image",
+          "text": "",
+          "left": -278,
+          "right": -193,
+          "width": 85
+        },
+        {
+          "tag": "span",
+          "testId": "authentic-ai-mulligan-back",
+          "className": "authentic-mulligan__hidden-card-slot",
+          "text": "",
+          "left": -222,
+          "right": -136,
+          "width": 87
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "authentic-mulligan__hidden-back authentic-mulligan__hidden-back--held",
+          "text": "",
+          "left": -222,
+          "right": -136,
+          "width": 87
+        },
+        {
+          "tag": "div",
+          "testId": "authentic-card-back",
+          "className": "authentic-card-back authentic-card-back--md has-image",
+          "text": "",
+          "left": -222,
+          "right": -136,
+          "width": 87
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "authentic-card-back__image",
+          "text": "",
+          "left": -221,
+          "right": -137,
+          "width": 85
+        },
+        {
+          "tag": "span",
+          "testId": "authentic-ai-mulligan-back",
+          "className": "authentic-mulligan__hidden-card-slot",
+          "text": "",
+          "left": -166,
+          "right": -79,
+          "width": 87
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "authentic-mulligan__hidden-back authentic-mulligan__hidden-back--held",
+          "text": "",
+          "left": -166,
+          "right": -79,
+          "width": 87
+        },
+        {
+          "tag": "div",
+          "testId": "authentic-card-back",
+          "className": "authentic-card-back authentic-card-back--md has-image",
+          "text": "",
+          "left": -166,
+          "right": -79,
+          "width": 87
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "authentic-card-back__image",
+          "text": "",
+          "left": -165,
+          "right": -80,
+          "width": 85
+        }
+      ],
+      "tinyText": [],
+      "buttonCount": 2,
+      "visibleButtonCount": 2
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "authentic-match-board",
+    "path": "/?engine=1&ui=authentic&view=match&seed=visual-audit-board",
+    "screenshot": "mobile-authentic-match-board.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "rematch setup Gwent Round 1 · Human · Playing Seed visual-audit-board legal-heuristic-v0 Your turn: choose a playable card, use leader, or pass. AI Nilfgaard 10 24 0 Emhyr var Emreis: The Relentless · Draw Opponent Discard unavailable · active · waiting for turn 24 Deck 0 Discard Weather Clear skies 26 Deck 0 Discard You Northern Realms 10 26 0 Foltest: Lord Commander of The North · Clear Weather ready · active · legal leader move available ⚒ Siege empty 0 ➶ Ranged empty 0 ⚔ Close Combat empty 0",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 2400,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-hand__card is-playable",
+          "text": "10",
+          "left": 385,
+          "right": 450,
+          "width": 65
+        },
+        {
+          "tag": "div",
+          "testId": "authentic-hand-card",
+          "className": "authentic-card authentic-card--sm is-source-face is-interactive",
+          "text": "10",
+          "left": 385,
+          "right": 450,
+          "width": 65
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__art",
+          "text": "",
+          "left": 386,
+          "right": 449,
+          "width": 63
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "authentic-card__image",
+          "text": "",
+          "left": 385,
+          "right": 450,
+          "width": 65
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "10",
+          "left": 389,
+          "right": 405,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "10",
+          "left": 391,
+          "right": 403,
+          "width": 12
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-hand__card is-playable",
+          "text": "",
+          "left": 458,
+          "right": 523,
+          "width": 65
+        },
+        {
+          "tag": "div",
+          "testId": "authentic-hand-card",
+          "className": "authentic-card authentic-card--sm is-source-face is-interactive",
+          "text": "",
+          "left": 458,
+          "right": 523,
+          "width": 65
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__art",
+          "text": "",
+          "left": 459,
+          "right": 522,
+          "width": 63
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "authentic-card__image",
+          "text": "",
+          "left": 459,
+          "right": 523,
+          "width": 64
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-hand__card is-playable",
+          "text": "5",
+          "left": 531,
+          "right": 596,
+          "width": 65
+        },
+        {
+          "tag": "div",
+          "testId": "authentic-hand-card",
+          "className": "authentic-card authentic-card--sm is-source-face is-interactive",
+          "text": "5",
+          "left": 531,
+          "right": 596,
+          "width": 65
+        }
+      ],
+      "tinyText": [
+        {
+          "tag": "strong",
+          "testId": null,
+          "className": "",
+          "text": "Siege",
+          "fontSize": 8,
+          "width": 19
+        },
+        {
+          "tag": "strong",
+          "testId": null,
+          "className": "",
+          "text": "Ranged",
+          "fontSize": 8,
+          "width": 28
+        },
+        {
+          "tag": "strong",
+          "testId": null,
+          "className": "",
+          "text": "Close Combat",
+          "fontSize": 8,
+          "width": 49
+        },
+        {
+          "tag": "strong",
+          "testId": null,
+          "className": "",
+          "text": "Close Combat",
+          "fontSize": 8,
+          "width": 49
+        },
+        {
+          "tag": "strong",
+          "testId": null,
+          "className": "",
+          "text": "Ranged",
+          "fontSize": 8,
+          "width": 28
+        },
+        {
+          "tag": "strong",
+          "testId": null,
+          "className": "",
+          "text": "Siege",
+          "fontSize": 8,
+          "width": 19
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 6
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "5",
+          "fontSize": 9.75,
+          "width": 6
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "3",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "3",
+          "fontSize": 9.75,
+          "width": 6
+        }
+      ],
+      "buttonCount": 6,
+      "visibleButtonCount": 6
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "authentic-deck-builder",
+    "path": "/?engine=1&ui=authentic&view=deck-builder&seed=visual-audit-builder",
+    "screenshot": "mobile-authentic-deck-builder.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← back Deck Builder + new duplicate reset import export copy card studio → save play → your decks · 7 current northern realms northern realms · 36 cards ready current nilfgaard nilfgaard · 34 cards ready official northern realms starter northern realms · 34 cards ready official nilfgaard starter nilfgaard · 32 cards ready official monsters starter monsters · 33 cards ready official scoia'tael starter scoia'tael · 36 cards ready official skellige starter skellige · 36 cards ready delete current d",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 900,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": false,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 47,
+      "visibleButtonCount": 47
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "authentic-card-studio",
+    "path": "/?engine=1&ui=authentic&view=card-studio&seed=visual-audit-studio",
+    "screenshot": "mobile-authentic-card-studio.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← back Card Studio new card new leader import export export all copy copy all library · 0 cards · 0 leaders all cards leaders drafts playable No custom records yet. duplicate delete reset save draft save playable name source id faction northern realms kind unit strength deck limit rows close ranged siege Tight Bond · implemented Medic · implemented Morale Boost · implemented Spy · implemented Muster · implemented Muster Roach · implemented Agile · implemented Avenger · implemented Scorch Close ·",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 900,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": false,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 22,
+      "visibleButtonCount": 22
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "authentic-official-porting",
+    "path": "/?engine=1&ui=authentic&view=official-porting&seed=visual-audit-porting",
+    "screenshot": "mobile-authentic-official-porting.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "← back Official Porting 181 candidates 0 approved 148 missing images 1 rule gaps import export copy faction all factions kind all kinds status all status missing image rule gap approved arachas monsters.arachas mn · unit · needs_image arachas behemoth monsters.arachas-behemoth mn · unit · needs_image botchling monsters.botchling mn · unit · needs_image celaeno harpy monsters.celaeno-harpy mn · unit · needs_image cockatrice monsters.cockatrice mn · unit · needs_image crone: brewess monsters.crone",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 14900,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [],
+      "buttonCount": 198,
+      "visibleButtonCount": 198
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "authentic-harness",
+    "path": "/?engine=1&ui=authentic&view=harness",
+    "screenshot": "mobile-authentic-harness.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "Authentic UI Foundation cEp1 · gallery harness · 163 cards · 22 leaders Factions Production palette for current catalog factions. NR · Northern Realms NG · Nilfgaard MN · Monsters ST · Scoia'tael SK · Skellige N · Neutral Rows ⚔ Close Combat ➶ Ranged ⚒ Siege Abilities ∞ Tight Bond ✚ Medic ↑ Morale Boost ◐ Spy ☷ Muster ☷ Muster Roach ↔ Agile ✜ Avenger ✦ Scorch Close ✦ Scorch Ranged ✦ Scorch Siege ✦ Scorch ❅ Skellige Storm ◊ Commander's Horn ⇄ Decoy ❄ Biting Frost ☁ Impenetrable Fog ☂ Torrential R",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 2225,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [],
+      "tinyText": [
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "10",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "10",
+          "fontSize": 6.5,
+          "width": 8
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "10",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "10",
+          "fontSize": 9.75,
+          "width": 12
+        }
+      ],
+      "buttonCount": 0,
+      "visibleButtonCount": 0
+    }
+  },
+  {
+    "viewport": "mobile",
+    "route": "authentic-component-foundation",
+    "path": "/?engine=1&ui=authentic&view=ui-component-foundation",
+    "screenshot": "mobile-authentic-component-foundation.png",
+    "ok": true,
+    "consoleIssues": [],
+    "metrics": {
+      "title": "Gwent: A Witcher Card Game",
+      "bodyTextSample": "UI Component Foundation Review the authentic platform primitives in one opt-in surface. normal + debug routes share these components Tokens Northern Realms Nilfgaard Monsters Scoia'tael Skellige Neutral ⚔ Close Combat ➶ Ranged ⚒ Siege ∞ Tight Bond ✚ Medic ↑ Morale Boost ◐ Spy ☷ Muster ☷ Muster Roach ↔ Agile ✜ Avenger ✦ Scorch Close ✦ Scorch Ranged ✦ Scorch Siege ✦ Scorch ❅ Skellige Storm ◊ Commander's Horn ⇄ Decoy ❄ Biting Frost ☁ Impenetrable Fog ☂ Torrential Rain ☼ Clear Weather ✿ Mardroeme ⚔ ",
+      "viewportWidth": 390,
+      "viewportHeight": 900,
+      "scrollWidth": 390,
+      "scrollHeight": 4867,
+      "clientWidth": 390,
+      "clientHeight": 900,
+      "horizontalOverflow": false,
+      "verticalOverflow": true,
+      "overflowRight": [
+        {
+          "tag": "div",
+          "testId": "authentic-card-back",
+          "className": "authentic-card-back authentic-card-back--sm has-image",
+          "text": "",
+          "left": -48,
+          "right": 17,
+          "width": 65
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "authentic-card-back__image",
+          "text": "",
+          "left": -47,
+          "right": 16,
+          "width": 63
+        },
+        {
+          "tag": "div",
+          "testId": "authentic-card-back",
+          "className": "authentic-card-back authentic-card-back--sm has-image",
+          "text": "",
+          "left": 327,
+          "right": 392,
+          "width": 65
+        },
+        {
+          "tag": "div",
+          "testId": "authentic-card-back",
+          "className": "authentic-card-back authentic-card-back--sm has-image",
+          "text": "",
+          "left": 374,
+          "right": 438,
+          "width": 65
+        },
+        {
+          "tag": "img",
+          "testId": null,
+          "className": "authentic-card-back__image",
+          "text": "",
+          "left": 375,
+          "right": 437,
+          "width": 63
+        }
+      ],
+      "tinyText": [
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "1",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "1",
+          "fontSize": 6.5,
+          "width": 4
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "1",
+          "fontSize": 9.75,
+          "width": 16
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "1",
+          "fontSize": 9.75,
+          "width": 6
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength",
+          "text": "1",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "1",
+          "fontSize": 6.5,
+          "width": 4
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "10",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "10",
+          "fontSize": 6.5,
+          "width": 8
+        },
+        {
+          "tag": "div",
+          "testId": null,
+          "className": "authentic-card__strength authentic-card__strength--hero",
+          "text": "15",
+          "fontSize": 6.5,
+          "width": 11
+        },
+        {
+          "tag": "span",
+          "testId": null,
+          "className": "",
+          "text": "15",
+          "fontSize": 6.5,
+          "width": 8
+        }
+      ],
+      "buttonCount": 23,
+      "visibleButtonCount": 23
+    }
+  }
+]
