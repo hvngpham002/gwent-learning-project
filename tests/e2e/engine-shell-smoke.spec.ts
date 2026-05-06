@@ -657,8 +657,14 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
   await expect(battleLogScroller).toHaveCSS("overflow-y", "auto");
   await expect(battleLogScroller).toHaveCSS("scrollbar-width", "none");
   expect(await activity.locator('[data-log-kind="event"]').count()).toBeGreaterThan(0);
-  await expect(activity.locator(".authentic-log__entry-number").first()).toBeVisible();
-  await expect(activity.locator(".authentic-log__entry-kind").first()).toBeVisible();
+  const firstMoveEntry = activity.locator('[data-log-kind="move"]').first();
+  const firstEventEntry = activity.locator('[data-log-kind="event"]').first();
+  await expect(firstMoveEntry.locator(".authentic-log__entry-number")).toHaveText("1");
+  await expect(firstMoveEntry.locator(".authentic-log__entry-kind")).toHaveText("move");
+  await expect(firstMoveEntry.locator(".authentic-log__entry-message")).toHaveCSS("font-size", "14px");
+  await expect(firstMoveEntry.locator(".authentic-log__entry-message")).toHaveCSS("color", "rgb(138, 58, 31)");
+  await expect(firstEventEntry.locator(".authentic-log__entry-number")).toHaveText("");
+  await expect(firstEventEntry.locator(".authentic-log__entry-kind")).toHaveText("event");
   const battleLogScrollState = await battleLogScroller.evaluate((element) => ({
     scrollTop: element.scrollTop,
     clientHeight: element.clientHeight,

@@ -65,7 +65,7 @@ It verifies:
 - the status banner exposes seed, AI policy, phase, and next action context;
 - the AI seat shows a hand count, not AI hand card tiles;
 - human and AI zero-card mulligans complete;
-- the authentic battle log shows hidden-info-safe mulligan/action summaries in a scrollbar-hidden scroll region with separate number/type/message columns;
+- the authentic battle log shows hidden-info-safe mulligan/action summaries in a scrollbar-hidden scroll region with separate number/type/message columns, move-only numbering, larger red/accent move messages, and unnumbered event rows;
 - a human hand card can be selected and played through a legal target action;
 - mobile width `390x900` does not create horizontal document overflow before or after target actions wrap.
 

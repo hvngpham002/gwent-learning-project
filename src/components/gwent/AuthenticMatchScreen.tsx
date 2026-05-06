@@ -1281,7 +1281,7 @@ const RoundOverlay: React.FC<{
 
 interface BattleLogEntry {
   readonly key: string;
-  readonly numberLabel: string;
+  readonly numberLabel: string | null;
   readonly kindLabel: "move" | "event";
   readonly label: string;
 }
@@ -1321,7 +1321,7 @@ const BattleLog: React.FC<{ entries: readonly BattleLogEntry[] }> = ({ entries }
             data-log-kind={entry.kindLabel}
           >
             <span className="authentic-log__entry-number" aria-hidden="true">
-              {entry.numberLabel}
+              {entry.numberLabel ?? ""}
             </span>
             <span className="authentic-log__entry-kind">{entry.kindLabel}</span>
             <span className="authentic-log__entry-message">{entry.label}</span>
@@ -2186,12 +2186,14 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     });
     const summaryBySequence = new Map(commandSummaries.map((summary) => [summary.key, summary]));
     const entries: BattleLogEntry[] = [];
+    let moveNumber = 0;
 
     engine.commandHistory.forEach((record) => {
       const summary = summaryBySequence.get(String(record.sequence));
+      moveNumber += 1;
       entries.push({
         key: `command-${record.sequence}`,
-        numberLabel: String(entries.length + 1),
+        numberLabel: String(moveNumber),
         kindLabel: "move",
         label: stripCommandSequencePrefix(summary?.label ?? `Command ${record.sequence}`, record.sequence),
       });
@@ -2204,7 +2206,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       eventSummaries.forEach((event) => {
         entries.push({
           key: `event-${record.sequence}-${event.key}`,
-          numberLabel: String(entries.length + 1),
+          numberLabel: null,
           kindLabel: "event",
           label: event.label,
         });

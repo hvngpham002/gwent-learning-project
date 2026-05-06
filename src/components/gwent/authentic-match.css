@@ -913,8 +913,8 @@ button.authentic-board-card.is-card-target:focus-visible,
 
 .authentic-log__entry {
   display: grid;
-  grid-template-columns: 22px 42px minmax(0, 1fr);
-  gap: 6px;
+  grid-template-columns: 24px 44px minmax(0, 1fr);
+  gap: 7px;
   align-items: baseline;
   padding-bottom: 6px;
   border-bottom: 1px dotted var(--rule);
@@ -923,6 +923,10 @@ button.authentic-board-card.is-card-target:focus-visible,
   font-weight: 600;
   line-height: 1.35;
   color: var(--ink-2);
+}
+
+.authentic-log__entry[data-log-kind="move"] {
+  font-size: 14px;
 }
 
 .authentic-log__entry-number {
@@ -941,8 +945,24 @@ button.authentic-board-card.is-card-target:focus-visible,
   text-transform: lowercase;
 }
 
+.authentic-log__entry[data-log-kind="move"] .authentic-log__entry-number,
+.authentic-log__entry[data-log-kind="move"] .authentic-log__entry-kind,
+.authentic-log__entry[data-log-kind="move"] .authentic-log__entry-message {
+  color: var(--accent);
+}
+
+.authentic-log__entry[data-log-kind="move"] .authentic-log__entry-message {
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .authentic-log__entry[data-log-kind="event"] .authentic-log__entry-kind {
   color: var(--ink-3);
+}
+
+.authentic-log__entry[data-log-kind="event"] {
+  font-size: 12px;
+  opacity: 0.86;
 }
 
 .authentic-log__entry-message {
