@@ -169,9 +169,9 @@ const seedLocalDecks = async (
 
 const confirmAuthenticMulliganAndStartMatch = async (page: Page) => {
   await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
-  await page.getByTestId("authentic-confirm-mulligan").click();
+  await page.getByTestId("authentic-confirm-mulligan").click({ force: true });
   await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 10000 });
-  await page.getByTestId("authentic-start-match-confirm").click();
+  await page.getByTestId("authentic-start-match-confirm").click({ force: true });
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
 };
 
@@ -282,6 +282,36 @@ const collectPageErrors = (page: import("@playwright/test").Page): string[] => {
   return pageErrors;
 };
 
+const collectBrowserErrors = (page: import("@playwright/test").Page): string[] => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => {
+    errors.push(`pageerror: ${error.message}`);
+  });
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      errors.push(`console error: ${message.text()}`);
+    }
+  });
+  return errors;
+};
+
+const boundingBoxFor = async (locator: Locator) => {
+  const box = await locator.boundingBox();
+  expect(box).not.toBeNull();
+  if (!box) {
+    throw new Error("expected locator to have a bounding box");
+  }
+  return box;
+};
+
+const documentMetrics = async (page: Page) =>
+  page.evaluate(() => ({
+    clientHeight: document.documentElement.clientHeight,
+    scrollHeight: document.documentElement.scrollHeight,
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+
 const confirmMulliganAndWaitForHumanTurn = async (page: import("@playwright/test").Page) => {
   await page.getByTestId("engine-confirm-mulligan").click();
 
@@ -295,6 +325,19 @@ test("default route keeps the legacy app as the default", async ({ page }) => {
 
   await expect(page.getByTestId("engine-shell")).toHaveCount(0);
   await expect(page.locator("body")).toContainText(/Gwent/i);
+});
+
+test("legacy default route avoids mobile overflow and DOM nesting errors (cEp14)", async ({ page }) => {
+  test.setTimeout(60_000);
+  const browserErrors = collectBrowserErrors(page);
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.addInitScript(() => window.localStorage.removeItem("hasSeenDisclaimer"));
+  await page.goto("/");
+
+  await expect(page.locator("body")).toContainText(/Educational Project Disclaimer|Gwent/i);
+  await expectNoHorizontalOverflow(page);
+  expect(browserErrors).toEqual([]);
 });
 
 test("engine shell supports the dp6-smoke mulligan and first card play flow", async ({ page }) => {
@@ -929,6 +972,135 @@ test("authentic official porting route mounts without mobile overflow", async ({
   expect(pageErrors).toEqual([]);
 });
 
+test("authentic match keeps desktop board and hand in the first viewport (cEp14)", async ({ page }) => {
+  test.setTimeout(60_000);
+  const browserErrors = collectBrowserErrors(page);
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(authenticDirectUrl);
+  await confirmAuthenticMulliganAndStartMatch(page);
+
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+  await expect(page.getByTestId("authentic-seat-ai")).toBeVisible();
+  await expect(page.getByTestId("authentic-seat-human")).toBeVisible();
+  await expect(page.getByTestId("authentic-board-row")).toHaveCount(6);
+
+  const visibleRowCount = await page.getByTestId("authentic-board-row").evaluateAll((rows) =>
+    rows.filter((row) => {
+      const rect = row.getBoundingClientRect();
+      return rect.top < window.innerHeight && rect.bottom > 0;
+    }).length,
+  );
+  expect(visibleRowCount).toBe(6);
+
+  const handBox = await boundingBoxFor(page.getByTestId("authentic-human-hand"));
+  const firstHandCardBox = await boundingBoxFor(page.getByTestId("authentic-human-hand").getByTestId("authentic-hand-card").first());
+  expect(handBox.y).toBeLessThan(900);
+  expect(firstHandCardBox.y).toBeLessThan(900);
+  await expectNoHorizontalOverflow(page);
+  expect(browserErrors).toEqual([]);
+});
+
+test("authentic mobile match prioritizes board and hand before secondary panels (cEp14)", async ({ page }) => {
+  test.setTimeout(60_000);
+  const browserErrors = collectBrowserErrors(page);
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(authenticDirectUrl);
+  await confirmAuthenticMulliganAndStartMatch(page);
+
+  const board = page.locator(".authentic-match__center");
+  const publicPanels = page.locator(".authentic-match__left-rail");
+  const boardBox = await boundingBoxFor(board);
+  const publicPanelsBox = await boundingBoxFor(publicPanels);
+  const firstRowBox = await boundingBoxFor(page.getByTestId("authentic-board-row").first());
+  const handBox = await boundingBoxFor(page.getByTestId("authentic-human-hand"));
+
+  expect(firstRowBox.y).toBeLessThan(900);
+  expect(handBox.y).toBeLessThan(900);
+  expect(boardBox.y).toBeLessThan(publicPanelsBox.y);
+  await expectNoHorizontalOverflow(page);
+  await expect(page.getByTestId("authentic-seat-ai").getByTestId("authentic-hand-card")).toHaveCount(0);
+  const pageText = await visiblePageText(page);
+  expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  expect(browserErrors).toEqual([]);
+});
+
+test("authentic Official Porting uses bounded scroll regions on desktop and mobile (cEp14)", async ({ page }) => {
+  const browserErrors = collectBrowserErrors(page);
+
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto(authenticOfficialPortingUrl);
+
+    await expect(page.getByTestId("authentic-official-porting")).toBeVisible();
+    await expect(page.getByTestId("official-porting-counts")).toContainText("181 candidates");
+    await expectNoHorizontalOverflow(page);
+
+    const metrics = await documentMetrics(page);
+    expect(metrics.scrollHeight).toBeLessThanOrEqual(metrics.clientHeight + 2);
+
+    for (const selector of [
+      ".authentic-official-porting__list-panel",
+      ".authentic-official-porting__editor",
+      ".authentic-official-porting__preview",
+    ]) {
+      await expect(page.locator(selector)).toHaveCSS("overflow-y", "auto");
+      await expect(page.locator(selector)).toHaveCSS("scrollbar-width", "none");
+    }
+
+    const listRegion = await page.locator(".authentic-official-porting__list-panel").evaluate((element) => ({
+      clientHeight: element.clientHeight,
+      scrollHeight: element.scrollHeight,
+    }));
+    expect(listRegion.scrollHeight).toBeGreaterThan(listRegion.clientHeight);
+  }
+
+  expect(browserErrors).toEqual([]);
+});
+
+test("authentic mobile deck builder surfaces the card pool before secondary rails (cEp14)", async ({ page }) => {
+  const browserErrors = collectBrowserErrors(page);
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(authenticDeckBuilderUrl);
+
+  await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  const poolBox = await boundingBoxFor(page.getByTestId("authentic-deck-builder-card-pool"));
+  const deckListBox = await boundingBoxFor(page.getByTestId("authentic-deck-builder-deck-list"));
+  const firstPoolCardBox = await boundingBoxFor(page.locator(".authentic-deck-builder__pool-item").first());
+  expect(poolBox.y).toBeLessThan(deckListBox.y);
+  expect(poolBox.y).toBeLessThan(160);
+  expect(firstPoolCardBox.y).toBeLessThan(900);
+  await expect(page.locator(".authentic-deck-builder__actions")).toHaveCSS("overflow-x", "auto");
+  expect(browserErrors).toEqual([]);
+});
+
+test("authentic mobile Card Studio opens on the editor before library and preview rails (cEp14)", async ({ page }) => {
+  const browserErrors = collectBrowserErrors(page);
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(authenticCardStudioUrl);
+
+  await expect(page.getByTestId("authentic-card-studio")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+
+  const editorBox = await boundingBoxFor(page.locator(".authentic-card-studio__editor"));
+  const libraryBox = await boundingBoxFor(page.locator(".authentic-card-studio__library"));
+  const previewBox = await boundingBoxFor(page.locator(".authentic-card-studio__preview"));
+  const firstEditorInputBox = await boundingBoxFor(page.locator(".authentic-card-studio__editor input").first());
+  expect(editorBox.y).toBeLessThan(libraryBox.y);
+  expect(editorBox.y).toBeLessThan(previewBox.y);
+  expect(firstEditorInputBox.y).toBeLessThan(320);
+  await expect(page.locator(".authentic-card-studio__actions")).toHaveCSS("overflow-x", "auto");
+  expect(browserErrors).toEqual([]);
+});
+
 test("authentic deck builder disables special adds at the composition cap", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
@@ -1119,6 +1291,21 @@ test("authentic pre-game, deck builder, and direct match avoid horizontal overfl
 
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
   await expect(page.getByTestId("authentic-leader-card").first()).toBeVisible();
+  const modePanelContainment = await page
+    .locator(".authentic-pregame__panel")
+    .filter({ hasText: "Step 2 - game mode" })
+    .evaluate((panel) => {
+      const panelRect = panel.getBoundingClientRect();
+      const childBottom = Math.max(...Array.from(panel.children).map((child) => child.getBoundingClientRect().bottom));
+      return {
+        childBottom,
+        panelBottom: panelRect.bottom,
+        panelHeight: panelRect.height,
+        scrollHeight: panel.scrollHeight,
+      };
+    });
+  expect(modePanelContainment.childBottom).toBeLessThanOrEqual(modePanelContainment.panelBottom + 1);
+  expect(modePanelContainment.scrollHeight).toBeLessThanOrEqual(modePanelContainment.panelHeight + 2);
   await expectNoHorizontalOverflow(page);
   await page.getByTestId("authentic-pregame-edit-decks").click();
   await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();

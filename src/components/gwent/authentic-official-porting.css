@@ -5,20 +5,21 @@
   color: var(--ink);
   font-family: var(--font-body);
   display: grid;
-  place-items: center;
-  padding: 18px;
+  place-items: stretch;
+  padding: 0;
 }
 
 .authentic-official-porting {
-  width: min(1360px, 100%);
-  min-height: min(840px, calc(100vh - 36px));
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
   display: grid;
   grid-template-rows: auto 1fr;
   overflow: hidden;
-  border: 1px solid var(--rule-strong);
-  border-radius: 4px;
+  border: 0;
+  border-radius: 0;
   background: var(--bg-paper);
-  box-shadow: 0 18px 70px rgba(31, 26, 18, 0.16);
+  box-shadow: none;
 }
 
 .authentic-official-porting__topbar {
@@ -88,6 +89,7 @@
   min-height: 0;
   overflow: auto;
   padding: 14px;
+  scrollbar-width: none;
 }
 
 .authentic-official-porting__list-panel,
@@ -293,17 +295,22 @@ button.authentic-official-porting__record {
 
 @media (max-width: 980px) {
   .gwent-authentic.gwent-authentic--official-porting {
-    padding: 10px;
-    place-items: start center;
+    padding: 0;
+    place-items: stretch;
   }
 
   .authentic-official-porting {
-    min-height: calc(100vh - 20px);
+    height: 100vh;
+    min-height: 100vh;
   }
 
-  .authentic-official-porting__topbar,
-  .authentic-official-porting__body {
+  .authentic-official-porting__topbar {
     grid-template-columns: 1fr;
+  }
+
+  .authentic-official-porting__topbar {
+    gap: 9px;
+    padding: 10px 12px;
   }
 
   .authentic-official-porting__counts {
@@ -311,7 +318,9 @@ button.authentic-official-porting__record {
   }
 
   .authentic-official-porting__body {
-    overflow: auto;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(150px, 24vh) minmax(260px, 1fr) minmax(220px, 30vh);
+    overflow: hidden;
   }
 
   .authentic-official-porting__list-panel,
@@ -321,5 +330,37 @@ button.authentic-official-porting__record {
 
   .authentic-official-porting__field-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .authentic-official-porting__title,
+  .authentic-official-porting__actions,
+  .authentic-official-porting__counts {
+    gap: 6px;
+  }
+
+  .authentic-official-porting h1 {
+    font-size: 20px;
+  }
+
+  .authentic-official-porting__actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .authentic-official-porting__actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .authentic-official-porting__actions .authentic-button {
+    flex: 0 0 auto;
+  }
+
+  .authentic-official-porting__list-panel,
+  .authentic-official-porting__editor,
+  .authentic-official-porting__preview {
+    padding: 10px;
   }
 }

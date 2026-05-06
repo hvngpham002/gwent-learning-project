@@ -280,6 +280,21 @@ button.authentic-card-studio__record {
     overflow: auto;
   }
 
+  .authentic-card-studio__editor {
+    order: 1;
+    min-height: min(660px, calc(100vh - 92px));
+  }
+
+  .authentic-card-studio__library {
+    order: 2;
+    max-height: 260px;
+  }
+
+  .authentic-card-studio__preview {
+    order: 3;
+    max-height: 520px;
+  }
+
   .authentic-card-studio__library,
   .authentic-card-studio__preview {
     border: 0;
@@ -287,5 +302,42 @@ button.authentic-card-studio__record {
 
   .authentic-card-studio__field-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .authentic-card-studio__topbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    padding: 9px 10px;
+  }
+
+  .authentic-card-studio h1 {
+    font-size: 20px;
+  }
+
+  .authentic-card-studio__actions,
+  .authentic-card-studio__editor-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .authentic-card-studio__actions::-webkit-scrollbar,
+  .authentic-card-studio__editor-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .authentic-card-studio__actions .authentic-button,
+  .authentic-card-studio__editor-actions .authentic-button {
+    flex: 0 0 auto;
+  }
+
+  .authentic-card-studio__library,
+  .authentic-card-studio__editor,
+  .authentic-card-studio__preview {
+    padding: 10px;
   }
 }

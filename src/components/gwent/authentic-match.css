@@ -13,7 +13,7 @@
 .authentic-match {
   width: min(1440px, 100%);
   margin: 0 auto;
-  padding: 16px;
+  padding: 12px;
 }
 
 .authentic-match__topbar {
@@ -21,7 +21,7 @@
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 1px solid var(--rule-strong);
   border-radius: 4px;
   background: var(--bg-paper);
@@ -42,7 +42,7 @@
 .authentic-match__title-block h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   font-style: normal;
   font-weight: 600;
 }
@@ -88,7 +88,7 @@
 .authentic-match__next-action {
   grid-column: 1 / -1;
   margin: 0;
-  padding-top: 8px;
+  padding-top: 6px;
   border-top: 1px dotted var(--rule);
   color: var(--ink-2);
   text-align: center;
@@ -97,8 +97,8 @@
 .authentic-match__layout {
   display: grid;
   grid-template-columns: minmax(300px, 340px) minmax(0, 1fr) minmax(230px, 290px);
-  gap: 12px;
-  padding-top: 12px;
+  gap: 10px;
+  padding-top: 10px;
   align-items: start;
 }
 
@@ -455,13 +455,13 @@ button.authentic-pile:hover {
   position: relative;
   overflow: hidden;
   width: 100%;
-  min-height: 84px;
+  min-height: 78px;
   display: grid;
   grid-template-columns: 66px minmax(0, 1fr) 44px;
-  gap: 8px;
+  gap: 7px;
   align-items: stretch;
-  margin: 0 0 6px;
-  padding: 6px;
+  margin: 0 0 5px;
+  padding: 5px;
   border: 1px solid var(--rule);
   border-radius: 3px;
   background: rgba(251, 246, 232, 0.72);
@@ -695,7 +695,7 @@ button.authentic-board-card.is-card-target:focus-visible,
 
 .authentic-board-table__divider {
   height: 4px;
-  margin: 3px 0 9px;
+  margin: 2px 0 7px;
   background: linear-gradient(90deg, transparent, rgba(138, 58, 31, 0.76), transparent);
 }
 
@@ -714,7 +714,7 @@ button.authentic-board-card.is-card-target:focus-visible,
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 10px 2px 4px;
+  padding: 8px 2px 3px;
 }
 
 .authentic-hand__card {
@@ -1278,6 +1278,46 @@ button.authentic-board-card.is-card-target:focus-visible,
   }
 }
 
+@media (min-width: 981px) {
+  .gwent-authentic.gwent-authentic--match {
+    min-height: 100vh;
+  }
+
+  .authentic-match {
+    min-height: 100vh;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+
+  .authentic-match__layout {
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .authentic-match__left-rail,
+  .authentic-match__right-rail,
+  .authentic-match__center {
+    min-height: 0;
+  }
+
+  .authentic-match__left-rail,
+  .authentic-match__right-rail {
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .authentic-match__left-rail::-webkit-scrollbar,
+  .authentic-match__right-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .authentic-match__center {
+    justify-content: start;
+  }
+}
+
 @media (max-width: 980px) {
   .authentic-match {
     padding: 10px;
@@ -1290,17 +1330,45 @@ button.authentic-board-card.is-card-target:focus-visible,
   .authentic-match__left-rail {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    order: 2;
   }
 
   .authentic-weather {
     grid-column: 1 / -1;
   }
+
+  .authentic-match__center {
+    order: 1;
+  }
+
+  .authentic-match__right-rail {
+    order: 3;
+  }
 }
 
 @media (max-width: 560px) {
+  .authentic-match {
+    padding: 8px;
+  }
+
   .authentic-match__topbar {
     grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 7px;
     text-align: center;
+  }
+
+  .authentic-match__title-block h1 {
+    font-size: 18px;
+  }
+
+  .authentic-match__title-block p,
+  .authentic-match__next-action {
+    font-size: 11px;
+  }
+
+  .authentic-match__next-action {
+    padding-top: 5px;
   }
 
   .authentic-match__seed {
@@ -1332,16 +1400,25 @@ button.authentic-board-card.is-card-target:focus-visible,
   .authentic-board-row {
     grid-template-columns: 50px minmax(0, 1fr) 36px;
     gap: 5px;
-    min-height: 78px;
+    min-height: 70px;
+    margin-bottom: 4px;
+    padding: 4px;
   }
 
   .authentic-board-row__label strong {
     font-size: 8px;
-    letter-spacing: 0.06em;
   }
 
   .authentic-board-row__score {
     font-size: 22px;
+  }
+
+  .authentic-board-row__cards {
+    gap: 4px;
+  }
+
+  .authentic-hand__cards {
+    padding-top: 7px;
   }
 
   .authentic-modal {

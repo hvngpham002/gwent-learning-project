@@ -102,14 +102,14 @@ const DisclaimerModal: React.FC = () => {
 
           <p>
             This project is:
-            <ul>
-              <li>Not affiliated with CD Projekt Red</li>
-              <li>Created for educational purposes only</li>
-              <li>Not for commercial use</li>
-              <li>A fan project intended for learning and portfolio demonstration</li>
-            </ul>
-            With that being said, how about a round of Gwent?
           </p>
+          <ul>
+            <li>Not affiliated with CD Projekt Red</li>
+            <li>Created for educational purposes only</li>
+            <li>Not for commercial use</li>
+            <li>A fan project intended for learning and portfolio demonstration</li>
+          </ul>
+          <p>With that being said, how about a round of Gwent?</p>
         </Content>
         <Button onClick={handleAccept}>*Nods Silently*</Button>
       </Modal>

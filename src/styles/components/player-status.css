@@ -6,6 +6,8 @@
     border-radius: 8px;
     padding: var(--spacing-sm);
     width: 215px;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .player-info {
@@ -185,4 +187,28 @@
   .hand-size img {
      width: 30px;
      width: 30px;
+  }
+
+  @media (max-width: 760px) {
+    .player-status {
+      width: 100%;
+    }
+
+    .leader-card img {
+      width: 132px;
+      height: 186px;
+    }
+
+    .player-score {
+      top: 18%;
+      left: min(150px, 70%);
+      width: 42px;
+      height: 42px;
+      font-size: 24px;
+      line-height: 42px;
+    }
+
+    .leader-score-container {
+      align-items: flex-start;
+    }
   }

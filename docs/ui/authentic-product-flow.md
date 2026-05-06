@@ -1,6 +1,6 @@
 # Authentic Product Flow
 
-This document tracks the current opt-in authentic product loop after cEp13.
+This document tracks the current opt-in authentic product loop after cEp14.
 
 ## Routes
 
@@ -40,6 +40,10 @@ Runtime engine state is not encoded into the URL. In-app transitions are coordin
 ## Scroll Regions
 
 cEp13 standardizes dense product scroll regions with hidden native scrollbars plus subtle fade-edge indicators instead of visible custom scrollbar rails. The treatment is used for the pre-game deck-selection list, deck-builder deck list, card pool, stats rail, `cards in deck` list, Card Studio library/editor/preview columns, inspect modal body, and battle log. The deck builder and Card Studio now span the full viewport; only their internal list/column regions scroll when content exceeds the visible height. The intent is to keep the parchment/card presentation visually clean while still showing that more content exists when a list exceeds its available panel height.
+
+cEp14 extends the same viewport-spanning authoring treatment to Official Porting. The candidate/filter column, review editor, and image/status rail are bounded internal scroll regions on desktop and mobile; staged official candidates still remain review-only and are not promoted into product deck sources. cEp14 also keeps mobile Deck Builder focused on the selected deck/card pool before the deck list and stats rail, and keeps mobile Card Studio focused on the editor before the library and preview rail.
+
+On the authentic match route, cEp14 keeps the desktop board, both rails, and the top of the human hand visible at `1440x900` by bounding the desktop rails and tightening row/topbar spacing. At mobile width, the match board and human hand render before the secondary public-zone/score panels so gameplay surfaces appear in the initial viewport; pass, leader, log, discard, weather, and score panels remain reachable below without changing engine state or hidden-info boundaries.
 
 ## Custom Catalog Runtime
 

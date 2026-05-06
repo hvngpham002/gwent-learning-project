@@ -1,0 +1,213 @@
+[
+  {
+    "name": "desktop-authentic-match-board",
+    "issues": [],
+    "document": {
+      "clientWidth": 1440,
+      "scrollWidth": 1440,
+      "clientHeight": 900,
+      "scrollHeight": 900
+    },
+    "regions": [
+      {
+        "selector": ".authentic-match__center",
+        "top": 141,
+        "height": 747,
+        "clientHeight": 747,
+        "scrollHeight": 805,
+        "overflowY": "visible"
+      },
+      {
+        "selector": "[data-testid=\"authentic-human-hand\"]",
+        "top": 783,
+        "height": 163,
+        "clientHeight": 161,
+        "scrollHeight": 161,
+        "overflowY": "visible"
+      },
+      {
+        "selector": ".authentic-match__left-rail",
+        "top": 141,
+        "height": 747,
+        "clientHeight": 747,
+        "scrollHeight": 785,
+        "overflowY": "auto"
+      }
+    ]
+  },
+  {
+    "name": "mobile-authentic-match-board",
+    "issues": [],
+    "document": {
+      "clientWidth": 390,
+      "scrollWidth": 390,
+      "clientHeight": 900,
+      "scrollHeight": 2370
+    },
+    "regions": [
+      {
+        "selector": ".authentic-match__center",
+        "top": 62,
+        "height": 786,
+        "clientHeight": 786,
+        "scrollHeight": 786,
+        "overflowY": "visible"
+      },
+      {
+        "selector": "[data-testid=\"authentic-human-hand\"]",
+        "top": 686,
+        "height": 162,
+        "clientHeight": 160,
+        "scrollHeight": 160,
+        "overflowY": "visible"
+      },
+      {
+        "selector": ".authentic-match__left-rail",
+        "top": 859,
+        "height": 785,
+        "clientHeight": 785,
+        "scrollHeight": 785,
+        "overflowY": "visible"
+      }
+    ]
+  },
+  {
+    "name": "mobile-authentic-deck-builder",
+    "issues": [],
+    "document": {
+      "clientWidth": 390,
+      "scrollWidth": 390,
+      "clientHeight": 900,
+      "scrollHeight": 900
+    },
+    "regions": [
+      {
+        "selector": ".authentic-deck-builder__pool",
+        "top": 89,
+        "height": 688,
+        "clientHeight": 688,
+        "scrollHeight": 688,
+        "overflowY": "hidden"
+      },
+      {
+        "selector": "[data-testid=\"authentic-deck-builder-deck-list\"]",
+        "top": 776,
+        "height": 62,
+        "clientHeight": 62,
+        "scrollHeight": 587,
+        "overflowY": "auto"
+      }
+    ]
+  },
+  {
+    "name": "mobile-authentic-card-studio",
+    "issues": [],
+    "document": {
+      "clientWidth": 390,
+      "scrollWidth": 390,
+      "clientHeight": 900,
+      "scrollHeight": 900
+    },
+    "regions": [
+      {
+        "selector": ".authentic-card-studio__editor",
+        "top": 89,
+        "height": 697,
+        "clientHeight": 697,
+        "scrollHeight": 1435,
+        "overflowY": "auto"
+      },
+      {
+        "selector": ".authentic-card-studio__library",
+        "top": 786,
+        "height": 57,
+        "clientHeight": 57,
+        "scrollHeight": 166,
+        "overflowY": "auto"
+      }
+    ]
+  },
+  {
+    "name": "desktop-authentic-official-porting",
+    "issues": [],
+    "document": {
+      "clientWidth": 1440,
+      "scrollWidth": 1440,
+      "clientHeight": 900,
+      "scrollHeight": 900
+    },
+    "regions": [
+      {
+        "selector": ".authentic-official-porting__list-panel",
+        "top": 56,
+        "height": 844,
+        "clientHeight": 844,
+        "scrollHeight": 12527,
+        "overflowY": "auto"
+      },
+      {
+        "selector": ".authentic-official-porting__editor",
+        "top": 56,
+        "height": 844,
+        "clientHeight": 844,
+        "scrollHeight": 844,
+        "overflowY": "auto"
+      },
+      {
+        "selector": ".authentic-official-porting__preview",
+        "top": 56,
+        "height": 844,
+        "clientHeight": 844,
+        "scrollHeight": 844,
+        "overflowY": "auto"
+      }
+    ]
+  },
+  {
+    "name": "mobile-authentic-official-porting",
+    "issues": [],
+    "document": {
+      "clientWidth": 390,
+      "scrollWidth": 390,
+      "clientHeight": 900,
+      "scrollHeight": 900
+    },
+    "regions": [
+      {
+        "selector": ".authentic-official-porting__list-panel",
+        "top": 117,
+        "height": 216,
+        "clientHeight": 216,
+        "scrollHeight": 12519,
+        "overflowY": "auto"
+      },
+      {
+        "selector": ".authentic-official-porting__editor",
+        "top": 333,
+        "height": 297,
+        "clientHeight": 297,
+        "scrollHeight": 1401,
+        "overflowY": "auto"
+      },
+      {
+        "selector": ".authentic-official-porting__preview",
+        "top": 630,
+        "height": 270,
+        "clientHeight": 270,
+        "scrollHeight": 807,
+        "overflowY": "auto"
+      }
+    ]
+  },
+  {
+    "name": "mobile-legacy-default",
+    "issues": [],
+    "document": {
+      "clientWidth": 390,
+      "scrollWidth": 390,
+      "clientHeight": 900,
+      "scrollHeight": 1999
+    },
+    "regions": []
+  }
+]

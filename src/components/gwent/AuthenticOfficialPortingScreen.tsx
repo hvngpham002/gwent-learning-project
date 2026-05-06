@@ -383,7 +383,7 @@ const AuthenticOfficialPortingScreen: React.FC<AuthenticOfficialPortingScreenPro
         </header>
 
         <div className="authentic-official-porting__body">
-          <aside className="authentic-official-porting__list-panel">
+          <aside className="authentic-official-porting__list-panel authentic-scroll-fade-y">
             <div className="authentic-official-porting__filters">
               <input
                 aria-label="Search official candidates"
@@ -467,7 +467,7 @@ const AuthenticOfficialPortingScreen: React.FC<AuthenticOfficialPortingScreenPro
             </div>
           </aside>
 
-          <section className="authentic-official-porting__editor">
+          <section className="authentic-official-porting__editor authentic-scroll-fade-y">
             <div className="authentic-official-porting__editor-heading">
               <div>
                 <h2>{selectedRecord.name}</h2>
@@ -503,7 +503,7 @@ const AuthenticOfficialPortingScreen: React.FC<AuthenticOfficialPortingScreenPro
             </label>
           </section>
 
-          <aside className="authentic-official-porting__preview">
+          <aside className="authentic-official-porting__preview authentic-scroll-fade-y">
             <div className="authentic-official-porting__crop-frame" style={cropStyle} data-fit={selectedImage.crop.fit} data-testid="official-porting-preview">
               <div className="authentic-official-porting__crop-inner" style={cropInnerStyle}>
                 {selectedCardSource ? <AuthenticCard card={fromCatalogCard(selectedCardSource)} size="lg" /> : null}

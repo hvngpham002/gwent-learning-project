@@ -48,7 +48,7 @@ The default local `npm run ci` gate remains the fast deterministic unit/lint/bui
 
 ## Current Committed Coverage
 
-The committed smoke spec currently runs 28 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, and match-end ledger flows.
+The committed smoke spec currently runs 34 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, responsive cEp14 layout tripwires, and match-end ledger flows.
 
 ## dp6-smoke Engine Shell Coverage
 
@@ -101,6 +101,7 @@ The same smoke spec verifies:
 - cEp12 adds a selected-weather drag/drop smoke with the local weather fixture. It selects a visible playable weather card, drags it to the highlighted Weather panel itself, and asserts active drop state, card-flight overlay destination inside the Weather card strip, Weather panel count increase, `Human played` activity, drag preview cleanup, and hidden-info-safe page text. cEp13's post-review UI iteration removed the old visible `play weather` button, so the smoke asserts the target is the panel section, not a nested button.
 - cEp13 adds a generated weather-overlay smoke using the same local weather fixture. It plays a visible weather card into the Weather panel, then asserts that affected board rows render `authentic-row-weather-overlay` spans with the expected public `data-weather-effect` value: Frost on 2 close rows, Fog on 2 ranged rows, Rain on 2 siege rows, or Skellige Storm on 4 ranged/siege rows. The current cEp13 runtime assets are SVG overlays; the smoke contract stays DOM/behavior based rather than file-extension based.
 - cEp13 also asserts the score-card life display on the cEp8 leader route: the human score card renders `authentic-life-gems-human`, exposes `2 of 2 gems remaining`, shows two intact gem icons, and no longer includes the old `gems 2` text in the score-card meta.
+- cEp14 adds responsive stabilization tripwires: the legacy `/` route has no mobile document overflow or console/page errors, mobile pre-game keeps the Step 2 game-mode content inside its panel, desktop authentic match shows all six rows plus the top of the human hand within `1440x900`, mobile authentic match shows board/hand before secondary panels while preserving hidden-info assertions, Official Porting uses bounded internal scroll regions on desktop and mobile, and mobile Deck Builder/Card Studio expose the card pool/editor before secondary rails.
 
 ## Current Limits
 
