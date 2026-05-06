@@ -87,7 +87,7 @@ The same smoke spec verifies:
 - Official Porting opens at `/?engine=1&ui=authentic&view=official-porting`, shows the `181` official candidate count, renders candidate list/status/preview surfaces, and avoids mobile horizontal overflow without promoting staged official cards into deck sources.
 - Pre-game `begin match →` opens the dedicated mulligan flow before the match table.
 - Direct `view=match` and deck-builder `play →` also land on mulligan first.
-- Human keep-hand and one-card redraw paths dispatch legal mulligan commands and present the player replacement animation.
+- Human keep-hand and one-card redraw paths dispatch legal mulligan commands and present the player replacement animation; the smoke also asserts that clicking a different mulligan card replaces the current selected card.
 - The second one-card redraw keeps card opacity stable and avoids hand-strip scrollbars.
 - AI choosing, hidden-safe AI presentation, forced debug zero-card keep, one-redraw, and two-redraw animations are reachable for QA inspection.
 - `Start the match?` and `Return to setup?` handoff modals render as overlay popups with transparent shells, not separate full parchment screens.

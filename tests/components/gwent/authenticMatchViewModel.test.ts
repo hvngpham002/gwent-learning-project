@@ -268,9 +268,9 @@ describe("authentic match view models", () => {
     expect(chooseDebugAiMulliganMove({ moves, mulligansUsed: 1, desiredRedrawCount: 1 })?.moveId).toBe("mulligan:seat_b:none");
   });
 
-  it("caps mulligan selection at one card per redraw and frees the slot when deselecting", () => {
+  it("replaces the mulligan selection at one card per redraw and frees the slot when deselecting", () => {
     expect(toggleMulliganSelection({ selectedCardIds: [], cardId: "a" })).toEqual(["a"]);
-    expect(toggleMulliganSelection({ selectedCardIds: ["a"], cardId: "b" })).toEqual(["a"]);
+    expect(toggleMulliganSelection({ selectedCardIds: ["a"], cardId: "b" })).toEqual(["b"]);
     expect(toggleMulliganSelection({ selectedCardIds: ["a"], cardId: "a" })).toEqual([]);
     expect(toggleMulliganSelection({ selectedCardIds: [], cardId: "c" })).toEqual(["c"]);
   });

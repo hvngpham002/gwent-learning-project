@@ -500,6 +500,10 @@ export const toggleMulliganSelection = ({
     return selectedCardIds.filter((selectedId) => selectedId !== cardId);
   }
 
+  if (maxCards <= 1) {
+    return [cardId];
+  }
+
   if (selectedCardIds.length >= maxCards) {
     return [...selectedCardIds];
   }
