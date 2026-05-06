@@ -868,6 +868,24 @@ test("authentic Card Studio imports a playable custom unit for the deck builder"
 
   await page.goto(authenticCardStudioUrl);
   await expect(page.getByTestId("authentic-card-studio")).toBeVisible();
+  const cardStudioFrame = await page.locator(".authentic-card-studio").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      height: Math.round(rect.height),
+      width: Math.round(rect.width),
+    };
+  });
+  const cardStudioViewport = page.viewportSize();
+  expect(cardStudioViewport).not.toBeNull();
+  expect(cardStudioFrame.width).toBeGreaterThanOrEqual((cardStudioViewport?.width ?? 0) - 1);
+  expect(cardStudioFrame.height).toBeGreaterThanOrEqual((cardStudioViewport?.height ?? 0) - 1);
+  await expect(page.locator(".authentic-card-studio__library")).toHaveCSS("overflow-y", "auto");
+  await expect(page.locator(".authentic-card-studio__library")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.locator(".authentic-card-studio__editor")).toHaveCSS("overflow-y", "auto");
+  await expect(page.locator(".authentic-card-studio__editor")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.locator(".authentic-card-studio__preview")).toHaveCSS("overflow-y", "auto");
+  await expect(page.locator(".authentic-card-studio__preview")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.locator(".authentic-card-studio__editor")).not.toHaveCSS("mask-image", "none");
   await page.getByRole("button", { name: "import" }).click();
   await page.locator(".authentic-card-studio__modal-box textarea").fill(JSON.stringify(customRecord));
   await page.getByRole("button", { name: "import" }).last().click();

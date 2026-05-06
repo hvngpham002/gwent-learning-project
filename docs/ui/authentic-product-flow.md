@@ -39,7 +39,7 @@ Runtime engine state is not encoded into the URL. In-app transitions are coordin
 
 ## Scroll Regions
 
-cEp13 standardizes dense product scroll regions with hidden native scrollbars plus subtle fade-edge indicators instead of visible custom scrollbar rails. The treatment is used for the pre-game deck-selection list, deck-builder deck list, card pool, stats rail, `cards in deck` list, inspect modal body, and battle log. The deck builder itself now spans the full viewport; only its internal list regions scroll when their content exceeds the visible column height. The intent is to keep the parchment/card presentation visually clean while still showing that more content exists when a list exceeds its available panel height.
+cEp13 standardizes dense product scroll regions with hidden native scrollbars plus subtle fade-edge indicators instead of visible custom scrollbar rails. The treatment is used for the pre-game deck-selection list, deck-builder deck list, card pool, stats rail, `cards in deck` list, Card Studio library/editor/preview columns, inspect modal body, and battle log. The deck builder and Card Studio now span the full viewport; only their internal list/column regions scroll when content exceeds the visible height. The intent is to keep the parchment/card presentation visually clean while still showing that more content exists when a list exceeds its available panel height.
 
 ## Custom Catalog Runtime
 

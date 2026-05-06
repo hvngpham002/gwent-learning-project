@@ -562,7 +562,7 @@ const AuthenticCardStudioScreen: React.FC<AuthenticCardStudioScreenProps> = ({
         </header>
 
         <div className="authentic-card-studio__body">
-          <aside className="authentic-card-studio__library">
+          <aside className="authentic-card-studio__library authentic-scroll-fade-y">
             <div className="authentic-card-studio__label">library · {store.cards.length} cards · {store.leaders.length} leaders</div>
             <div className="authentic-card-studio__filters">
               {(["all", "cards", "leaders", "drafts", "playable"] as const).map((nextFilter) => (
@@ -594,7 +594,7 @@ const AuthenticCardStudioScreen: React.FC<AuthenticCardStudioScreenProps> = ({
             </div>
           </aside>
 
-          <section className="authentic-card-studio__editor">
+          <section className="authentic-card-studio__editor authentic-scroll-fade-y">
             <div className="authentic-card-studio__editor-actions">
               <button type="button" className="authentic-button authentic-button--secondary" onClick={duplicateRecord} disabled={!isSavedRecord}>duplicate</button>
               <button type="button" className="authentic-button authentic-button--destructive" onClick={deleteRecord} disabled={!isSavedRecord}>delete</button>
@@ -636,7 +636,7 @@ const AuthenticCardStudioScreen: React.FC<AuthenticCardStudioScreenProps> = ({
             </div>
           </section>
 
-          <aside className="authentic-card-studio__preview">
+          <aside className="authentic-card-studio__preview authentic-scroll-fade-y">
             <div className="authentic-card-studio__preview-card">
               {kind === "card" ? (
                 <AuthenticCard card={fromCatalogCard((editing as CustomCardRecord).source)} size="lg" />
