@@ -747,6 +747,14 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   const pageErrors = collectPageErrors(page);
 
   await page.goto(authenticPregameUrl);
+  const topbarActions = page.getByTestId("authentic-pregame-topbar-actions");
+  await expect(topbarActions.getByRole("button", { name: "open deck builder →" })).toBeVisible();
+  await expect(topbarActions.getByTestId("authentic-pregame-card-studio")).toBeVisible();
+  await expect(page.locator(".authentic-pregame__body")).toHaveCSS("scrollbar-width", "none");
+  const pregameDeckList = page.locator(".authentic-pregame__deck-list");
+  await expect(pregameDeckList).toHaveCSS("overflow-y", "auto");
+  await expect(pregameDeckList).toHaveCSS("scrollbar-width", "none");
+  await expect(pregameDeckList).not.toHaveCSS("mask-image", "none");
   await page.getByTestId("authentic-pregame-create-deck").click();
   await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
   await expect(page.getByTestId("authentic-deck-builder-faction")).toBeVisible();
@@ -765,6 +773,15 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
   await expect(page.getByTestId("authentic-deck-builder-card-pool")).toBeVisible();
   await expect(page.getByTestId("authentic-deck-builder-stats")).toBeVisible();
   await expect(page.getByTestId("authentic-deck-builder-leader")).toBeVisible();
+  await expect(page.getByTestId("authentic-deck-builder-deck-list")).toHaveCSS("overflow-y", "auto");
+  await expect(page.getByTestId("authentic-deck-builder-deck-list")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.locator(".authentic-deck-builder__pool-grid")).toHaveCSS("overflow-y", "auto");
+  await expect(page.locator(".authentic-deck-builder__pool-grid")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.getByTestId("authentic-deck-builder-stats")).toHaveCSS("overflow-y", "auto");
+  await expect(page.getByTestId("authentic-deck-builder-stats")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.locator(".authentic-deck-builder__deck-cards")).toHaveCSS("overflow-y", "auto");
+  await expect(page.locator(".authentic-deck-builder__deck-cards")).toHaveCSS("scrollbar-width", "none");
+  await expect(page.locator(".authentic-deck-builder__deck-cards")).not.toHaveCSS("mask-image", "none");
   await expect(page.getByRole("button", { name: "+ new" })).toBeVisible();
   await expect(page.getByRole("button", { name: "import" })).toBeVisible();
   await expect(page.getByRole("button", { name: "export" })).toBeVisible();

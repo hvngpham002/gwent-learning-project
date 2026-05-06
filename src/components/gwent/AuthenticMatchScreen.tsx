@@ -1307,7 +1307,7 @@ const BattleLog: React.FC<{ entries: readonly BattleLogEntry[] }> = ({ entries }
       {entries.length === 0 ? <p>No commands yet.</p> : null}
       <div
         ref={scrollerRef}
-        className="authentic-log__scroller"
+        className="authentic-log__scroller authentic-scroll-fade-y"
         role="log"
         aria-live="polite"
         aria-label="battle log"

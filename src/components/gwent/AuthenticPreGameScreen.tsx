@@ -121,29 +121,31 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
             </button>
             <h1>Prepare for Battle</h1>
           </div>
-          <button
-            type="button"
-            className="authentic-button authentic-button--ghost authentic-pregame__ghost"
-            onClick={() => onOpenDeckBuilder?.("edit")}
-          >
-            open deck builder →
-          </button>
-          {onOpenCardStudio ? (
+          <div className="authentic-pregame__topbar-actions" data-testid="authentic-pregame-topbar-actions">
             <button
               type="button"
               className="authentic-button authentic-button--ghost authentic-pregame__ghost"
-              data-testid="authentic-pregame-card-studio"
-              onClick={onOpenCardStudio}
+              onClick={() => onOpenDeckBuilder?.("edit")}
             >
-              card studio →
+              open deck builder →
             </button>
-          ) : null}
+            {onOpenCardStudio ? (
+              <button
+                type="button"
+                className="authentic-button authentic-button--ghost authentic-pregame__ghost"
+                data-testid="authentic-pregame-card-studio"
+                onClick={onOpenCardStudio}
+              >
+                card studio →
+              </button>
+            ) : null}
+          </div>
         </header>
 
-        <div className="authentic-pregame__body">
-          <section className="authentic-pregame__panel">
+        <div className="authentic-pregame__body authentic-scroll-fade-y">
+          <section className="authentic-pregame__panel authentic-pregame__panel--deck">
             <div className="authentic-pregame__section-label">Step 1 - choose deck</div>
-            <div className="authentic-pregame__deck-list">
+            <div className="authentic-pregame__deck-list authentic-scroll-fade-y">
               {deckOptions.map((option) => (
                 <button
                   key={option.optionId}

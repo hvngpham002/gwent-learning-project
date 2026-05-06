@@ -34,7 +34,12 @@ Runtime engine state is not encoded into the URL. In-app transitions are coordin
 - `rematch` restarts the same setup and seed, then returns to the mulligan screen.
 - `← back` from deck builder returns to pre-game and preserves browser-local deck state.
 - `← back` from Card Studio returns to the prior authentic surface when opened in-app, or pre-game when opened directly.
+- cEp13 groups the pre-game `open deck builder →` button directly beside `card studio →` in the top-bar action cluster.
 - Button variants are defined in `docs/ui/authentic-button-style-guide.md`. Primary flow actions share the same visual language: `begin match →`, mulligan `keep hand` / `confirm mulligan` / `start match`, and round `next round →` use an orange fill with white text, then switch on hover to a black border, transparent background, and orange text.
+
+## Scroll Regions
+
+cEp13 standardizes dense product scroll regions with hidden native scrollbars plus subtle fade-edge indicators instead of visible custom scrollbar rails. The treatment is used for the pre-game deck-selection list, deck-builder deck list, card pool, stats rail, `cards in deck` list, inspect modal body, and battle log. The intent is to keep the parchment/card presentation visually clean while still showing that more content exists when a list exceeds its available panel height.
 
 ## Custom Catalog Runtime
 

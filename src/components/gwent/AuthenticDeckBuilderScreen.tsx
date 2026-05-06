@@ -377,7 +377,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
         </header>
 
         <div className="authentic-deck-builder__body">
-          <aside className="authentic-deck-builder__deck-list" data-testid="authentic-deck-builder-deck-list">
+          <aside className="authentic-deck-builder__deck-list authentic-scroll-fade-y" data-testid="authentic-deck-builder-deck-list">
             <div className="authentic-deck-builder__label">your decks · {decks.length}</div>
             {decks.map((deck) => {
               const deckStats = validateDeckPreset(deck, sourceSets.cards, sourceSets.leaders, blockedSources);
@@ -440,7 +440,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
               </div>
             </div>
 
-            <div className="authentic-deck-builder__pool-grid">
+            <div className="authentic-deck-builder__pool-grid authentic-scroll-fade-y">
               {pool.map(({ card, count, limit, addState }) => (
                 <div
                   key={card.sourceId}
@@ -456,7 +456,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
             </div>
           </section>
 
-          <aside className="authentic-deck-builder__stats" data-testid="authentic-deck-builder-stats">
+          <aside className="authentic-deck-builder__stats authentic-scroll-fade-y" data-testid="authentic-deck-builder-stats">
             <section className="authentic-deck-builder__leader-section">
               {leader ? (
                 <div className="authentic-deck-builder__leader-preview">
@@ -553,7 +553,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
 
             <section>
               <div className="authentic-deck-builder__label">cards in deck</div>
-              <div className="authentic-deck-builder__deck-cards">
+              <div className="authentic-deck-builder__deck-cards authentic-scroll-fade-y">
                 {deckItems.length === 0 ? <p>(empty)</p> : null}
                 {deckItems.map(({ card, count }) => (
                   <div
@@ -790,7 +790,7 @@ const AuthenticDeckBuilderScreen: React.FC<AuthenticDeckBuilderScreenProps> = ({
                   close
                 </button>
               </div>
-              <div className="authentic-deck-builder__inspect-body">
+              <div className="authentic-deck-builder__inspect-body authentic-scroll-fade-y">
                 <div className="authentic-deck-builder__inspect-art">
                   <AuthenticCard card={fromCatalogCard(card)} size="lg" />
                 </div>
