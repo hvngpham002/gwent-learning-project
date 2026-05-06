@@ -66,7 +66,7 @@ It verifies:
 - the AI seat shows a hand count, not AI hand card tiles;
 - human and AI zero-card mulligans complete;
 - the authentic battle log shows hidden-info-safe mulligan/action summaries in a scrollbar-hidden scroll region with separate number/type/message columns, move-only numbering, red/accent move messages at the normal log font size, same-size number/type labels, and unnumbered event rows;
-- the authentic pre-game and deck-builder surfaces use grouped top-bar authoring navigation plus bounded hidden-scrollbar/fade-edge regions for dense deck/card lists;
+- the authentic pre-game and deck-builder surfaces use grouped top-bar authoring navigation, a viewport-spanning deck-builder workspace, and bounded hidden-scrollbar/fade-edge regions for dense deck/card lists;
 - a human hand card can be selected and played through a legal target action;
 - mobile width `390x900` does not create horizontal document overflow before or after target actions wrap.
 

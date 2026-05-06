@@ -769,6 +769,17 @@ test("authentic deck builder opens, edits, and starts a hidden-safe match", asyn
 
   await page.goto(authenticDeckBuilderUrl);
   await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  const deckBuilderFrame = await page.locator(".authentic-deck-builder").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      height: Math.round(rect.height),
+      width: Math.round(rect.width),
+    };
+  });
+  const deckBuilderViewport = page.viewportSize();
+  expect(deckBuilderViewport).not.toBeNull();
+  expect(deckBuilderFrame.width).toBeGreaterThanOrEqual((deckBuilderViewport?.width ?? 0) - 1);
+  expect(deckBuilderFrame.height).toBeGreaterThanOrEqual((deckBuilderViewport?.height ?? 0) - 1);
   await expect(page.getByTestId("authentic-deck-builder-deck-list")).toBeVisible();
   await expect(page.getByTestId("authentic-deck-builder-card-pool")).toBeVisible();
   await expect(page.getByTestId("authentic-deck-builder-stats")).toBeVisible();
