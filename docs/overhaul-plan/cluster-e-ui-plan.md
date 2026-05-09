@@ -50,14 +50,22 @@ The UI may select, inspect, animate, and dispatch exact engine commands. It may 
 
 ## Route Strategy
 
-The legacy UI should remain the default until the product UI is meaningfully playable. The existing opt-in engine shell remains useful as a diagnostic harness.
+cEp15 promotes the authentic product UI to the app's main address while keeping the older surfaces available by name.
 
-Recommended rollout:
+Canonical routes:
 
-- keep `/` as the legacy route for now;
-- keep the current `?engine=1` shell available during the first UI foundation phase;
-- introduce the authentic product UI behind an explicit opt-in such as `?engine=1&ui=authentic` while it is incomplete;
-- once the authentic match screen can complete a current human-vs-AI game, promote it to the normal engine route and keep the old shell behind a dev/debug flag only if it still catches regressions.
+- `/` opens the authentic pre-game setup screen.
+- `/match` opens the direct authentic match development/smoke route.
+- `/deck-builder` opens the catalog-backed browser-local deck builder.
+- `/card-studio` opens browser-local Card Studio.
+- `/official-porting` opens the official card porting review tool.
+- `/components` opens the authentic component foundation review page.
+- `/ui-harness` opens the authentic UI harness/gallery.
+- `/engine-diagnostic` opens the diagnostic engine shell.
+- `/legacy` opens the temporary legacy Redux UI holding route.
+- `/ai-lab` is reserved for the upcoming AI Lab product surface and is not implemented in cEp15.
+
+The old `/?engine=1`, `/?engine=1&ui=authentic`, and `/?engine=1&ui=authentic&view=...` URLs remain compatibility aliases for cEp15, but new docs and tests should use canonical paths.
 
 ## Screen Mapping
 
@@ -255,29 +263,31 @@ Acceptance:
 - hidden-info behavior still holds for custom AI hand/deck contents;
 - docs explain browser-local storage, JSON backup, image path/upload limits, and where repo images/catalog data belong for permanent source commits.
 
-### `cEp8`: Product Promotion And Mode Expansion
+### `cEp15`: Product Promotion And URL Contract
 
-Goal: make the new UI the main game experience and open the path for broader modes.
+Goal: make the authentic UI the main game experience and replace the query-heavy route surface with a clean URL contract.
 
 Scope:
 
-- promote the authentic engine-backed UI to the default app experience when smoke and manual play are clean;
-- add or unlock local PvP and AI-vs-AI product mode surfaces when existing engine support is sufficient;
-- keep replay/simulation/debug surfaces clearly separated from normal play;
-- retire or quarantine obsolete shell/legacy UI paths only after replacement coverage exists.
+- promote `/` to the authentic pre-game setup screen;
+- move the legacy Redux UI to `/legacy`;
+- move the diagnostic engine shell to `/engine-diagnostic`;
+- add canonical paths for match, deck builder, Card Studio, Official Porting, component foundation, and UI harness;
+- keep old query-style URLs as compatibility aliases for at least this phase;
+- reserve `/ai-lab` for the upcoming AI Lab UI without wiring benchmarks or simulations.
 
 Acceptance:
 
 - default route reaches the new product UI;
 - current human-vs-AI remains playable;
-- local PvP or AI-vs-AI UI entry points do not leak hidden information beyond intentional same-device constraints;
+- canonical route paths and old query aliases both resolve;
 - final browser smoke covers default route, setup, match, mobile width, and hidden-info safety.
 
 ### Actual Post-cEp7 Polish Slices
 
 The live sequence after cEp7 intentionally split the old cEp8 promotion idea
-into smaller product-polish phases. Product promotion remains future work until
-the authentic match loop is cleaner.
+into smaller product-polish phases. Product promotion landed later as cEp15
+after the authentic match loop and responsive tripwires were cleaner.
 
 - `cEp8`: Weather leader choice UI. Closed the multi-legal-leader-move gap for
   `play_any_weather` by rendering an exact legal-move choice menu with row
@@ -288,7 +298,7 @@ the authentic match loop is cleaner.
 - `cEp10`: Round and match flow polish. Refined resolve-round actions, round
   ledgers, match-end ledgers, and rematch/change-deck/close navigation while
   keeping round/game resolution engine-owned.
-- `cEp11`: Board targeting polish. Current active handoff. Adds a pure
+- `cEp11`: Board targeting polish. Adds a pure
   selected-card target view-model so board rows, visible board cards, horn
   slots, and the Weather panel are clear spatial targets. Compact right-rail
   fallback actions remain for global/no-target plays. Avoids nested
@@ -296,6 +306,10 @@ the authentic match loop is cleaner.
   `<div>` and rendering the row target as a dedicated overlay button.
   Preserves right-click inspection and hidden-info safety; engine legality
   and command execution stay engine-owned.
+- `cEp15`: Route promotion and URL contract. Promotes `/` to authentic
+  pre-game, keeps `/legacy` and `/engine-diagnostic` as named routes, moves
+  authentic sub-surfaces to canonical paths, keeps old query aliases for this
+  phase, and reserves `/ai-lab` for the next AI Lab UI phase.
 
 ## Relationship To ML Work
 

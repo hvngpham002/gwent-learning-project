@@ -67,7 +67,7 @@ Size modifiers:
 - Listbox:
   - custom triggers use `field`.
 - Component foundation:
-  - `/?engine=1&ui=authentic&view=ui-component-foundation` renders all shared button variants and states for review.
+  - `/components` renders all shared button variants and states for review.
 
 ## Exceptions
 

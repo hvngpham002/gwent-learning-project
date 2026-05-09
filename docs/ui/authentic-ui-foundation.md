@@ -22,8 +22,9 @@ The foundation contains:
   `src/components/gwent/`;
 - a small product UI harness/gallery component in
   `src/components/gwent/AuthenticUiHarness.tsx`;
-- an opt-in route variant `?engine=1&ui=authentic` driven by
-  `src/appMode.ts`.
+- the canonical `/ui-harness` route, with the old
+  `?engine=1&ui=authentic&view=harness` URL retained as a compatibility alias
+  by `src/appMode.ts`.
 
 ## What The Foundation Does Not Own
 
@@ -35,7 +36,7 @@ own:
 - a Card Studio or content-authoring tool;
 - repository image management;
 - engine rules, legal moves, AI policy, deck validation, scoring, prompts, or
-  route promotion;
+  future route cleanup;
 - final drag-and-drop card play or full game-end browser automation.
 
 Those behaviors belong to the current product screens and future Cluster E
@@ -45,19 +46,21 @@ phases, not to this reusable visual substrate.
 
 | URL | Behavior |
 |---|---|
-| `/` | Legacy Redux UI (default route). Unchanged. |
-| `/?engine=1` | Existing diagnostic engine shell (`EngineGameManager`). Unchanged. |
-| `/?engine=1&ui=authentic` | Authentic pre-game setup screen. New default authentic route after `cEp4`. |
-| `/?engine=1&ui=authentic&view=pregame` | Explicit authentic pre-game setup screen. |
-| `/?engine=1&ui=authentic&view=deck-builder` | Catalog-backed browser-local authentic deck builder. |
-| `/?engine=1&ui=authentic&view=match` | Direct development match route. Starts the default setup, shows the cEp6 mulligan flow first, then the match table after start confirmation. |
-| `/?engine=1&ui=authentic&view=harness` | Opt-in authentic UI foundation harness. |
-| `/?engine=1&ui=authentic&view=ui-component-foundation` | Consolidated review page for authentic tokens, typography, buttons, cards, alerts, modals, and game-surface primitives. |
-| `/?ui=authentic` | Legacy UI. The authentic harness requires `engine=1`. |
+| `/` | Authentic pre-game setup screen. |
+| `/match` | Direct development match route. Starts the default setup, shows the cEp6 mulligan flow first, then the match table after start confirmation. |
+| `/deck-builder` | Catalog-backed browser-local authentic deck builder. |
+| `/card-studio` | Browser-local Card Studio. |
+| `/official-porting` | Official card porting review tool. |
+| `/components` | Consolidated review page for authentic tokens, typography, buttons, cards, alerts, modals, and game-surface primitives. |
+| `/ui-harness` | Authentic UI foundation harness. |
+| `/engine-diagnostic` | Diagnostic engine shell (`EngineGameManager`). |
+| `/legacy` | Temporary legacy Redux UI holding route. |
+| `/ai-lab` | Reserved for the upcoming AI Lab route; not implemented in cEp15. |
 
-`VITE_ENGINE_UI=1` continues to enable the engine UI without `engine=1`. When
-this env flag is present and `ui=authentic` is set, the authentic pre-game route
-renders. Add `view=harness` to open the foundation harness.
+`/?engine=1`, `/?engine=1&ui=authentic`, and
+`/?engine=1&ui=authentic&view=...` remain compatibility aliases for cEp15.
+`VITE_ENGINE_UI=1` no longer overrides `/`; the root route remains authentic
+pre-game even when the env flag is present.
 
 ## Opening The Harness
 
@@ -68,7 +71,7 @@ npm run dev
 Then open:
 
 ```
-http://localhost:5173/?engine=1&ui=authentic&view=harness
+http://localhost:5173/ui-harness
 ```
 
 The harness shows:

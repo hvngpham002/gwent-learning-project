@@ -177,7 +177,7 @@ const FONT_AUDIT_ROWS = [
     token: "body",
     stack: '"Inter", sans-serif',
     source: "src/styles/global.css",
-    use: "default legacy route and non-authentic diagnostic surfaces unless overridden",
+    use: "named legacy route and non-authentic diagnostic surfaces unless overridden",
     sample: "Legacy surfaces inherit the app body stack.",
     sampleClass: "authentic-foundation__font-sample--legacy",
   },
@@ -190,7 +190,7 @@ const FONT_USAGE_ROWS = [
   ["Cards and card backs", "--font-display + --font-data", "names and banners use display; strength and compact numeric badges use data"],
   ["Leader cards", "--font-body + --font-display", "leader names use display; faction/ability captions use body"],
   ["Listbox, alerts, toast, modals", "--font-body + --font-display", "labels and body text use body; titles and actions use display"],
-  ["Legacy app shell", "Inter, sans-serif", "global body fallback for the old default route"],
+  ["Legacy app shell", "Inter, sans-serif", "global body fallback for the /legacy route"],
 ] as const;
 
 const TypographyAudit: React.FC = () => (
@@ -242,9 +242,9 @@ const TypographyAudit: React.FC = () => (
       <article className="authentic-foundation__font-panel">
         <h3>Open Decisions</h3>
         <p>
-          Keep Inter isolated to legacy surfaces, or replace the legacy body stack later when the authentic route becomes
-          default. Decide whether production should self-host EB Garamond and JetBrains Mono instead of depending on the
-          external Google Fonts import.
+          Keep Inter isolated to legacy surfaces, or replace the legacy body stack in a later cleanup pass. Decide
+          whether production should self-host EB Garamond and JetBrains Mono instead of depending on the external Google
+          Fonts import.
         </p>
       </article>
     </div>

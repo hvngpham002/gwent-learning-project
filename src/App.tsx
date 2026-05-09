@@ -1,23 +1,24 @@
 import ReduxGameManager from './components/game/ReduxGameManager'
 import EngineGameManager from './components/game/EngineGameManager'
 import AuthenticGameApp from './components/gwent/AuthenticGameApp'
-import { getEngineUiVariantFromSearch, shouldUseEngineUi } from './appMode'
+import { resolveAppRoute } from './appMode'
 
 function App() {
-  const search = window.location.search;
-  const useEngineUi = shouldUseEngineUi({
-    search,
+  const route = resolveAppRoute({
+    pathname: window.location.pathname,
+    search: window.location.search,
     envFlag: import.meta.env.VITE_ENGINE_UI,
-  });
+  })
 
-  if (!useEngineUi) {
-    return <ReduxGameManager />;
+  if (route.surface === 'legacy') {
+    return <ReduxGameManager />
   }
 
-  if (getEngineUiVariantFromSearch(search) === 'authentic') {
-    return <AuthenticGameApp search={search} />;
+  if (route.surface === 'engine-diagnostic') {
+    return <EngineGameManager />
   }
-  return <EngineGameManager />;
+
+  return <AuthenticGameApp routeView={route.view} search={window.location.search} />
 }
 
 export default App

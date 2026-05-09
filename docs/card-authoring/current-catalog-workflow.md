@@ -1,16 +1,18 @@
 # Current Catalog Card Authoring Workflow
 
-The legacy default route still has legacy card-data paths, but the current engine/authentic product path consumes catalog source data. New content should be added to the catalog source tree.
+The named legacy route still has legacy card-data paths, but the current engine/authentic product path consumes catalog source data. New content should be added to the catalog source tree.
 
 ## Browser-Local Card Studio
 
 The authentic UI now includes Card Studio at:
 
 ```text
-/?engine=1&ui=authentic&view=card-studio
+/card-studio
 ```
 
 Card Studio creates browser-local custom cards and leaders under localStorage key `gwent_custom_catalog_v1`. It does not write files into the repository. Use it for prototyping, previewing authentic card faces, validating source IDs/abilities/images, and exporting handoff JSON.
+
+The old `/?engine=1&ui=authentic&view=card-studio` URL remains a cEp15 compatibility alias.
 
 Playable custom records can enter the deck builder and engine matches only when they use implemented ability IDs. Draft records with planned or placeholder abilities can be saved, previewed, imported, and exported, but they are blocked from playable decks and match start.
 
@@ -31,10 +33,12 @@ Official Witcher 3 Gwent cards scraped from Game8 use a separate staging workflo
 The official porting route is:
 
 ```text
-/?engine=1&ui=authentic&view=official-porting
+/official-porting
 ```
 
 Official candidates are not Card Studio custom records and do not use `custom_*` source IDs.
+
+The old `/?engine=1&ui=authentic&view=official-porting` URL remains a cEp15 compatibility alias.
 
 cBp4 promoted 157 engine-ready official non-leader candidates into the permanent catalog under `src/data/catalog/cards/*`. cBp4.1 then split the two combined Skellige Berserker scrape candidates into four catalog records (`skellige.berserker`, `skellige.vildkaarl`, `skellige.young-berserker`, `skellige.young-vildkaarl`), removed the redundant combined Cow/Bovine source, and added a `side_deck_only` tag plus narrow Deck Builder V1 guards. Follow-up cleanup pruned exact duplicate Nilfgaard typo records, records the Game8 Menno spelling mismatch as a duplicate resolution to the existing catalog source, and consolidates Dwarven Skirmisher to one Close Combat Muster source with `deckLimit: 3` rather than a scrape-derived ranged/close split. The promotion manifest lives at `src/data/catalog/cards/official-promotion.ts` and exposes `directPromotedCandidateCount`, `deferredCandidateCount`, `promotedCatalogSourceCount`, `splitResolutions`, `duplicateResolutions`, and counts by faction/kind. Legacy current entries remain authoritative.
 

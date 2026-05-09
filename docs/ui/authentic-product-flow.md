@@ -1,18 +1,21 @@
 # Authentic Product Flow
 
-This document tracks the current opt-in authentic product loop after cEp14.
+This document tracks the current authentic product loop after cEp15.
 
 ## Routes
 
-- `/` remains the legacy app.
-- `/?engine=1` remains the diagnostic engine shell.
-- `/?engine=1&ui=authentic` and `/?engine=1&ui=authentic&view=pregame` open the authentic pre-game setup screen.
-- `/?engine=1&ui=authentic&view=deck-builder` opens the browser-local catalog deck builder.
-- `/?engine=1&ui=authentic&view=card-studio` opens browser-local Card Studio for custom cards and leaders.
-- `/?engine=1&ui=authentic&view=official-porting` opens the official-card porting review tool for staged Game8 official candidates. It is an authoring route and does not add official staged cards to product deck sources.
-- `/?engine=1&ui=authentic&view=match` starts a direct authentic match from the URL seed, then shows the mulligan screen first.
-- `/?engine=1&ui=authentic&view=harness` opens the cEp1 card foundation harness.
-- `/?engine=1&ui=authentic&view=ui-component-foundation` opens the review surface for shared authentic UI primitives.
+- `/` opens the authentic pre-game setup screen and is the main product address.
+- `/match` starts a direct authentic match from the URL seed, then shows the mulligan screen first.
+- `/deck-builder` opens the browser-local catalog deck builder.
+- `/card-studio` opens browser-local Card Studio for custom cards and leaders.
+- `/official-porting` opens the official-card porting review tool for staged Game8 official candidates. It is an authoring route and does not add official staged cards to product deck sources.
+- `/components` opens the review surface for shared authentic UI primitives.
+- `/ui-harness` opens the cEp1 card foundation harness.
+- `/engine-diagnostic` opens the diagnostic engine shell.
+- `/legacy` opens the temporary legacy Redux UI holding route.
+- `/ai-lab` is reserved for the upcoming Cluster E AI Lab phase and is not implemented in cEp15.
+
+Old `?engine=1&ui=authentic&view=...` URLs and `/?engine=1` remain compatibility aliases for this phase, but canonical docs and tests should prefer the path-based routes above.
 
 Runtime engine state is not encoded into the URL. In-app transitions are coordinated by `AuthenticGameApp` and the engine adapter.
 
@@ -25,7 +28,7 @@ Runtime engine state is not encoded into the URL. In-app transitions are coordin
 5. Mulligan confirms only an engine-legal `choose_mulligan` move. Zero selected cards is the keep-hand path when that legal move is present. One selected card redraws that card immediately; clicking a different mulligan card replaces the selected card like the in-game hand-selection surface, while clicking the selected card clears the selection. If fewer than two redraws have been used, the replacement remains in hand and may be selected for the next redraw.
 6. Human one-card redraws briefly animate the selected card sliding out and its replacement sliding in. After the AI's legal mulligan command applies, the mulligan screen presents the opponent choice with hidden card backs only, waits for the AI presentation to finish, then opens the wax-seal `Start the match?` modal before `AuthenticMatchScreen` renders the match table. `review hand` dismisses the modal and leaves the mulligan screen available; the footer `start match` action reopens the same modal rather than entering the match directly.
 7. Round-resolved ledger actions dismiss the overlay only. Rule resolution remains engine-owned. cEp10: the non-game-end ledger reads `You hold the field.` / `<opponent> holds the field.` / `Neither side yields.`, lists score, gem-loss `◆ before → after` rows (or `gem loss: none`), and the engine-supplied next-starter label, then offers exactly one primary `next round →` action. The action only updates local dismissed-overlay state — it does not dispatch any engine command, does not advance any timer, and does not re-resolve the round. The overlay key embeds `activeMatchKey` so dismissed-state cannot survive into a fresh match.
-8. Match-concluded ledger actions either rematch with the same documented setup/seed behavior or return to setup. cEp10: the match-end ledger reads `Victory over <opponent>.` / `Defeat against <opponent>.` / `Draw.` with eyebrow `match concluded · X to Y`, renders real `roundHistory` rows, and renders standing rows (`result`, `rounds humanWins - aiWins`, `gems humanGems - aiGems`, or `gems unknown` when data is unavailable) from engine state only — no MMR, rank, ladder, streak, reward, or XP placeholders. When `onReturnToPreGame` is wired, navigation is `change deck` ghost + `rematch` primary; direct match (`view=match`) shows `close` ghost + `rematch` primary. The match-end ledger does not ship `Escape` dismissal because the same outcome is only reachable through visible navigation; non-game-end ledgers do dismiss on `Escape`.
+8. Match-concluded ledger actions either rematch with the same documented setup/seed behavior or return to setup. cEp10: the match-end ledger reads `Victory over <opponent>.` / `Defeat against <opponent>.` / `Draw.` with eyebrow `match concluded · X to Y`, renders real `roundHistory` rows, and renders standing rows (`result`, `rounds humanWins - aiWins`, `gems humanGems - aiGems`, or `gems unknown` when data is unavailable) from engine state only — no MMR, rank, ladder, streak, reward, or XP placeholders. When `onReturnToPreGame` is wired, navigation is `change deck` ghost + `rematch` primary; direct `/match` loads show `close` ghost + `rematch` primary. The match-end ledger does not ship `Escape` dismissal because the same outcome is only reachable through visible navigation; non-game-end ledgers do dismiss on `Escape`.
 
 ## Navigation
 

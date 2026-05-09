@@ -1,12 +1,14 @@
 # Card Studio V1
 
-Card Studio V1 is a browser-local authoring surface for custom catalog cards and leaders in the opt-in authentic UI:
+Card Studio V1 is a browser-local authoring surface for custom catalog cards and leaders in the authentic UI:
 
 ```text
-/?engine=1&ui=authentic&view=card-studio
+/card-studio
 ```
 
 It is for prototyping playable custom content and exporting handoff JSON. It does not write repository files, upload images, author new abilities, or change engine rules.
+
+The old `/?engine=1&ui=authentic&view=card-studio` URL remains a cEp15 compatibility alias, not the canonical docs target.
 
 ## Storage
 

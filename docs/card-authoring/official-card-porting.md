@@ -57,11 +57,13 @@ The image manifest records the preferred path, Game8 image URL provenance, wheth
 
 ## Review Route
 
-Open the opt-in authoring route:
+Open the authoring route:
 
 ```text
-/?engine=1&ui=authentic&view=official-porting
+/official-porting
 ```
+
+The old `/?engine=1&ui=authentic&view=official-porting` URL remains a cEp15 compatibility alias, not the canonical docs target.
 
 The route lets reviewers:
 

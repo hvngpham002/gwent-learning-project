@@ -1,18 +1,22 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 
-const engineUrl = "/?engine=1&seed=dp6-smoke";
-const authenticPregameUrl = "/?engine=1&ui=authentic&seed=ep4-smoke";
-const authenticPregameRestartUrl = "/?engine=1&ui=authentic&seed=ep4-restart&debugAiMulligan=1&debugAiMulliganCount=0";
-const authenticDeckBuilderUrl = "/?engine=1&ui=authentic&view=deck-builder&seed=ep5-builder";
-const authenticCardStudioUrl = "/?engine=1&ui=authentic&view=card-studio&seed=ep7-studio";
-const authenticOfficialPortingUrl = "/?engine=1&ui=authentic&view=official-porting&seed=bp3-porting";
-const authenticDirectUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-direct";
-const authenticMulliganDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-debug&debugAiMulligan=1&debugAiMulliganCount=2";
-const authenticMulliganOneDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-one&debugAiMulligan=1&debugAiMulliganCount=1";
-const authenticMulliganKeepDebugUrl = "/?engine=1&ui=authentic&view=match&seed=ep4-keep&debugAiMulligan=1&debugAiMulliganCount=0";
-const authenticMatchEndBackfillUrl = "/?engine=1&ui=authentic&view=match&seed=cep111-match-end";
-const authenticHarnessUrl = "/?engine=1&ui=authentic&view=harness";
-const authenticComponentFoundationUrl = "/?engine=1&ui=authentic&view=ui-component-foundation";
+const legacyUrl = "/legacy";
+const engineUrl = "/engine-diagnostic?seed=dp6-smoke";
+const diagnosticRouteSmokeUrl = "/engine-diagnostic?seed=route-smoke";
+const authenticPregameUrl = "/?seed=ep4-smoke";
+const authenticPregameRestartUrl = "/?seed=ep4-restart&debugAiMulligan=1&debugAiMulliganCount=0";
+const authenticDeckBuilderUrl = "/deck-builder?seed=ep5-builder";
+const authenticDeckBuilderCompatibilityUrl = "/?engine=1&ui=authentic&view=deck-builder&seed=route-alias";
+const authenticCardStudioUrl = "/card-studio?seed=ep7-studio";
+const authenticOfficialPortingUrl = "/official-porting?seed=bp3-porting";
+const authenticDirectUrl = "/match?seed=ep4-direct";
+const authenticDirectRouteSmokeUrl = "/match?seed=route-direct";
+const authenticMulliganDebugUrl = "/match?seed=ep4-debug&debugAiMulligan=1&debugAiMulliganCount=2";
+const authenticMulliganOneDebugUrl = "/match?seed=ep4-one&debugAiMulligan=1&debugAiMulliganCount=1";
+const authenticMulliganKeepDebugUrl = "/match?seed=ep4-keep&debugAiMulligan=1&debugAiMulliganCount=0";
+const authenticMatchEndBackfillUrl = "/match?seed=cep111-match-end";
+const authenticHarnessUrl = "/ui-harness";
+const authenticComponentFoundationUrl = "/components";
 
 type LocalDeckFixture = {
   readonly presetId: string;
@@ -185,7 +189,7 @@ const enterAuthenticMatchFromPreGame = async (
     readonly deckName: string;
   },
 ) => {
-  await page.goto(`/?engine=1&ui=authentic&seed=${seed}`);
+  await page.goto(`/?seed=${seed}`);
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
 
   const deckOption = page.getByTestId("authentic-pregame-deck-option").filter({ hasText: deckName });
@@ -320,24 +324,34 @@ const confirmMulliganAndWaitForHumanTurn = async (page: import("@playwright/test
   );
 };
 
-test("default route keeps the legacy app as the default", async ({ page }) => {
+test("default route mounts the authentic pre-game setup (cEp15)", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByTestId("engine-shell")).toHaveCount(0);
-  await expect(page.locator("body")).toContainText(/Gwent/i);
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Prepare for Battle" })).toBeVisible();
 });
 
-test("legacy default route avoids mobile overflow and DOM nesting errors (cEp14)", async ({ page }) => {
+test("legacy route avoids mobile overflow and DOM nesting errors (cEp14)", async ({ page }) => {
   test.setTimeout(60_000);
   const browserErrors = collectBrowserErrors(page);
 
   await page.setViewportSize({ width: 390, height: 900 });
   await page.addInitScript(() => window.localStorage.removeItem("hasSeenDisclaimer"));
-  await page.goto("/");
+  await page.goto(legacyUrl);
 
   await expect(page.locator("body")).toContainText(/Educational Project Disclaimer|Gwent/i);
+  await expect(page.getByTestId("authentic-pregame")).toHaveCount(0);
   await expectNoHorizontalOverflow(page);
   expect(browserErrors).toEqual([]);
+});
+
+test("engine diagnostic canonical route mounts the diagnostic shell (cEp15)", async ({ page }) => {
+  await page.goto(diagnosticRouteSmokeUrl);
+
+  await expect(page.getByTestId("engine-shell")).toBeVisible();
+  await expect(page.getByTestId("engine-status-banner")).toContainText(/Seed route-smoke/i);
+  await expect(page.getByTestId("authentic-game-app")).toHaveCount(0);
 });
 
 test("engine shell supports the dp6-smoke mulligan and first card play flow", async ({ page }) => {
@@ -391,7 +405,7 @@ test("engine shell avoids horizontal overflow on a mobile viewport", async ({ pa
   await expectNoHorizontalOverflow(page);
 });
 
-test("authentic UI harness mounts on the opt-in authentic route", async ({ page }) => {
+test("authentic UI harness mounts on the canonical route", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
   await page.goto(authenticHarnessUrl);
@@ -502,6 +516,22 @@ test("authentic component foundation page avoids horizontal overflow on mobile",
   await expect(page.getByTestId("authentic-foundation-buttons")).toBeVisible();
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
+});
+
+test("canonical direct match route opens at mulligan (cEp15)", async ({ page }) => {
+  await page.goto(authenticDirectRouteSmokeUrl);
+
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed route-direct/i);
+  await expect(page.getByTestId("engine-shell")).toHaveCount(0);
+});
+
+test("old authentic query alias still mounts the matching surface (cEp15)", async ({ page }) => {
+  await page.goto(authenticDeckBuilderCompatibilityUrl);
+
+  await expect(page.getByTestId("authentic-deck-builder")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Deck Builder" })).toBeVisible();
+  await expect(page.getByTestId("engine-shell")).toHaveCount(0);
 });
 
 test("authentic pre-game starts a configured match without hidden leaks", async ({ page }) => {
@@ -746,7 +776,7 @@ test("authentic pre-game starts a configured match without hidden leaks", async 
 test("authentic pre-game starts the official Skellige starter with linked side deck", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
-  await page.goto("/?engine=1&ui=authentic&seed=bp5-skellige");
+  await page.goto("/?seed=bp5-skellige");
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
 
   const skelligeStarter = page
@@ -1479,7 +1509,7 @@ test("authentic match exposes a weather choice menu for play_any_weather (cEp8)"
   let optionLabels: string[] = [];
 
   for (const seed of candidateSeeds) {
-    await page.goto(`/?engine=1&ui=authentic&seed=${seed}`);
+    await page.goto(`/?seed=${seed}`);
     await expect(page.getByTestId("authentic-pregame")).toBeVisible();
 
     const eredinDeck = page
@@ -2214,7 +2244,7 @@ test("authentic match opens a one-time look_three_cards reveal modal (cCp28)", a
     );
   });
 
-  await page.goto("/?engine=1&ui=authentic&seed=ccp28-emperor-1");
+  await page.goto("/?seed=ccp28-emperor-1");
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
 
   const emperorDeck = page

@@ -1,6 +1,6 @@
 # Browser Smoke Tests
 
-The browser smoke harness uses Playwright with Chromium only. It covers the opt-in engine shell and the current authentic product loop as short UI regression tripwires; it is not a full game automation suite.
+The browser smoke harness uses Playwright with Chromium only. It covers the diagnostic engine shell and the current authentic product loop as short UI regression tripwires; it is not a full game automation suite.
 
 ## Local Setup
 
@@ -48,20 +48,22 @@ The default local `npm run ci` gate remains the fast deterministic unit/lint/bui
 
 ## Current Committed Coverage
 
-The committed smoke spec currently runs 34 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, responsive cEp14 layout tripwires, and match-end ledger flows.
+The committed smoke spec currently runs 37 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, route-promotion guards, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, responsive cEp14 layout tripwires, and match-end ledger flows.
 
 ## dp6-smoke Engine Shell Coverage
 
 The committed smoke spec uses:
 
 ```text
-/?engine=1&seed=dp6-smoke
+/engine-diagnostic?seed=dp6-smoke
 ```
 
 It verifies:
 
-- `/` still renders the legacy app and does not mount the engine shell.
-- the engine shell renders through opt-in routing;
+- `/` renders the authentic pre-game setup and does not mount the engine shell.
+- `/legacy` still renders the legacy app.
+- `/engine-diagnostic?seed=route-smoke` renders the diagnostic shell through the canonical path.
+- the engine shell still renders through the old `/?engine=1` compatibility alias where covered by route-unit tests;
 - the status banner exposes seed, AI policy, phase, and next action context;
 - the AI seat shows a hand count, not AI hand card tiles;
 - human and AI zero-card mulligans complete;
@@ -80,13 +82,18 @@ The authentic mulligan smoke extends this guard to the normal non-debug product 
 
 The same smoke spec verifies:
 
-- `/` remains the legacy route, `/?engine=1` remains the diagnostic shell, and `?engine=1&ui=authentic` opens the authentic pre-game setup screen.
-- `/?engine=1&ui=authentic&view=harness` still opens the cEp1 foundation harness.
-- `/?engine=1&ui=authentic&view=ui-component-foundation` opens the component foundation page with shared tokens, audited typography, button variants, form controls, cards, backs, leaders, alerts, toasts, modals, and hidden-info-safe samples.
-- Card Studio opens at `/?engine=1&ui=authentic&view=card-studio`, can import and save a minimal playable custom card, and exposes that card in the deck-builder pool without requiring repository file writes.
-- Official Porting opens at `/?engine=1&ui=authentic&view=official-porting`, shows the `181` official candidate count, renders candidate list/status/preview surfaces, and avoids mobile horizontal overflow without promoting staged official cards into deck sources.
+- `/` opens the authentic pre-game setup screen.
+- `/legacy` opens the temporary legacy UI route.
+- `/engine-diagnostic` opens the diagnostic shell.
+- `/ui-harness` opens the cEp1 foundation harness.
+- `/components` opens the component foundation page with shared tokens, audited typography, button variants, form controls, cards, backs, leaders, alerts, toasts, modals, and hidden-info-safe samples.
+- `/deck-builder` opens the browser-local catalog deck builder.
+- `/card-studio` can import and save a minimal playable custom card, and exposes that card in the deck-builder pool without requiring repository file writes.
+- `/official-porting` shows the `181` official candidate count, renders candidate list/status/preview surfaces, and avoids mobile horizontal overflow without promoting staged official cards into deck sources.
+- `/match?seed=route-direct` opens the direct authentic match route at mulligan.
+- `/?engine=1&ui=authentic&view=deck-builder` remains covered as a compatibility alias.
 - Pre-game `begin match →` opens the dedicated mulligan flow before the match table.
-- Direct `view=match` and deck-builder `play →` also land on mulligan first.
+- Direct `/match` and deck-builder `play →` also land on mulligan first.
 - Human keep-hand and one-card redraw paths dispatch legal mulligan commands and present the player replacement animation; the smoke also asserts that clicking a different mulligan card replaces the current selected card.
 - The second one-card redraw keeps card opacity stable and avoids hand-strip scrollbars.
 - AI choosing, hidden-safe AI presentation, forced debug zero-card keep, one-redraw, and two-redraw animations are reachable for QA inspection.
@@ -101,7 +108,7 @@ The same smoke spec verifies:
 - cEp12 adds a selected-weather drag/drop smoke with the local weather fixture. It selects a visible playable weather card, drags it to the highlighted Weather panel itself, and asserts active drop state, card-flight overlay destination inside the Weather card strip, Weather panel count increase, `Human played` activity, drag preview cleanup, and hidden-info-safe page text. cEp13's post-review UI iteration removed the old visible `play weather` button, so the smoke asserts the target is the panel section, not a nested button.
 - cEp13 adds a generated weather-overlay smoke using the same local weather fixture. It plays a visible weather card into the Weather panel, then asserts that affected board rows render `authentic-row-weather-overlay` spans with the expected public `data-weather-effect` value: Frost on 2 close rows, Fog on 2 ranged rows, Rain on 2 siege rows, or Skellige Storm on 4 ranged/siege rows. The current cEp13 runtime assets are SVG overlays; the smoke contract stays DOM/behavior based rather than file-extension based.
 - cEp13 also asserts the score-card life display on the cEp8 leader route: the human score card renders `authentic-life-gems-human`, exposes `2 of 2 gems remaining`, shows two intact gem icons, and no longer includes the old `gems 2` text in the score-card meta.
-- cEp14 adds responsive stabilization tripwires: the legacy `/` route has no mobile document overflow or console/page errors, mobile pre-game keeps the Step 2 game-mode content inside its panel, desktop authentic match shows all six rows plus the top of the human hand within `1440x900`, mobile authentic match shows board/hand before secondary panels while preserving hidden-info assertions, Official Porting uses bounded internal scroll regions on desktop and mobile, and mobile Deck Builder/Card Studio expose the card pool/editor before secondary rails.
+- cEp14 adds responsive stabilization tripwires, now carried on the promoted route contract: `/legacy` has no mobile document overflow or console/page errors, mobile pre-game keeps the Step 2 game-mode content inside its panel, desktop authentic match shows all six rows plus the top of the human hand within `1440x900`, mobile authentic match shows board/hand before secondary panels while preserving hidden-info assertions, Official Porting uses bounded internal scroll regions on desktop and mobile, and mobile Deck Builder/Card Studio expose the card pool/editor before secondary rails.
 
 ## Current Limits
 

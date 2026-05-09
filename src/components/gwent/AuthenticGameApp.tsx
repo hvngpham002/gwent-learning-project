@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { getAuthenticUiViewFromSearch } from "@/appMode";
+import { getAuthenticUiViewFromSearch, type AuthenticUiView } from "@/appMode";
 import type { CatalogDeckPreset } from "@/game/catalog";
 
 import AuthenticComponentFoundationPage from "./AuthenticComponentFoundationPage";
@@ -22,11 +22,12 @@ import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import { seedFromSearch, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 
 interface AuthenticGameAppProps {
+  readonly routeView?: AuthenticUiView;
   readonly search?: string;
 }
 
-const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.location.search }) => {
-  const routeView = getAuthenticUiViewFromSearch(search);
+const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ routeView, search = window.location.search }) => {
+  const resolvedRouteView = routeView ?? getAuthenticUiViewFromSearch(search);
   const [viewOverride, setViewOverride] = useState<"pregame" | "deck-builder" | "card-studio" | "official-porting" | null>(null);
   const [returnViewFromStudio, setReturnViewFromStudio] = useState<"pregame" | "deck-builder">("pregame");
   const [setupConfig, setSetupConfig] = useState<AuthenticMatchSetupConfig | null>(null);
@@ -35,7 +36,7 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ search = window.loc
   const [officialPortingStore, setOfficialPortingStore] = useState(() => readOfficialPortingStore());
   const customSourceSets = buildCustomCatalogSourceSets(customCatalogStore.store);
   const blockedCustomSources = buildCardStudioBlockedSources(customCatalogStore.store);
-  const view = setupConfig ? "match" : (viewOverride ?? routeView);
+  const view = setupConfig ? "match" : (viewOverride ?? resolvedRouteView);
 
   const updateDecks = (decks: readonly CatalogDeckPreset[], activePresetId?: string) => {
     const normalizedStore = normalizeDeckStore(decks, activePresetId);
