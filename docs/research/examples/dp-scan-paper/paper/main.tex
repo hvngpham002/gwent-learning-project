@@ -1,0 +1,49 @@
+% main.tex — entry point
+% Build: cd paper && make
+% Or:    pdflatex main && bibtex main && pdflatex main && pdflatex main
+
+\documentclass[12pt]{article}
+\input{preamble}
+
+% ── Title block ───────────────────────────────────────────────────────────────
+\title{\textbf{Differentially Private Spatial Scan Statistics\\
+       for Prospective Disease Surveillance}}
+
+\author{Pham Viet Hung\\
+        VinUniversity\\
+        \and
+        Kok-Seng Wong (Supervisor)\\
+        VinUniversity
+        \and
+        Andrew Taylor-Robinson (Co-supervisor)\\
+        VinUniversity
+        \and
+        Helen Nguyen (Co-supervisor)\\
+        University of Illinois Urbana-Champaign
+        }
+
+\date{}
+
+% ── Document ──────────────────────────────────────────────────────────────────
+\begin{document}
+
+\linenumbers
+\maketitle
+\thispagestyle{empty}
+
+\input{sections/00-abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-method}
+\input{sections/04-experiments}
+\input{sections/05-conclusion}
+
+% ── Bibliography ──────────────────────────────────────────────────────────────
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,23 @@
+citekey: xi2023mastering
+title: "Mastering Strategy Card Game (Legends of Code and Magic) via End-to-End Policy and Optimistic Smooth Fictitious Play"
+authors:
+  - "Wei Xi"
+  - "Yongxin Zhang"
+  - "Changnan Xiao"
+  - "Xuefeng Huang"
+  - "Shihong Deng"
+  - "Haowei Liang"
+  - "Jie Chen"
+  - "Peng Sun"
+year: 2023
+venue: "arXiv 2303.04096"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The Cluster F queue previously used the short alias locm2023osfp; the shared bibliography and local source package use xi2023mastering."
+  - "The existing ignored local PDF was present as soruce.pdf and was normalized to source.pdf before annotation."
+  - "pdfinfo reported the local source as 17 PDF pages before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

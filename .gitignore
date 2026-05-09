@@ -14,6 +14,17 @@ dist
 dist-ssr
 *.tsbuildinfo
 *.local
+docs/research/literature/ai/source/**/*.pdf
+docs/research/manuscripts/**/paper/*.aux
+docs/research/manuscripts/**/paper/*.bbl
+docs/research/manuscripts/**/paper/*.blg
+docs/research/manuscripts/**/paper/*.fdb_latexmk
+docs/research/manuscripts/**/paper/*.fls
+docs/research/manuscripts/**/paper/*.log
+docs/research/manuscripts/**/paper/*.out
+docs/research/manuscripts/**/paper/*.pdf
+docs/research/manuscripts/**/paper/*.synctex.gz
+docs/research/manuscripts/**/paper/*.toc
 
 # Editor directories and files
 .vscode/*

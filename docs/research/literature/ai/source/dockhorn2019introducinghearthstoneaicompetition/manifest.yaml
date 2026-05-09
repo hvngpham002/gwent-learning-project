@@ -1,0 +1,17 @@
+citekey: dockhorn2019introducinghearthstoneaicompetition
+title: "Introducing the Hearthstone-AI Competition"
+authors:
+  - "Alexander Dockhorn"
+  - "Sanaz Mostaghim"
+year: 2019
+venue: "arXiv 1906.04238"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The Cluster F queue previously used the short alias dockhorn2019hearthstone; the shared bibliography and local source package use dockhorn2019introducinghearthstoneaicompetition."
+  - "A local source.pdf was already present before annotation."
+  - "pdfinfo reported the local source as four PDF pages before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

@@ -1,0 +1,124 @@
+% sections/04-experiments.tex
+
+\section{Experiments}
+\label{sec:experiments}
+
+All experiments use synthetic case count data generated on the real administrative
+structure of Vietnam (63 provinces), with standard surveillance parameters:
+spatial window up to 10\% of $\Ntot$, temporal window 14 days,
+$|\Wcal| \approx 6{,}000$ candidate windows, $M = 999$ Monte Carlo simulations.
+No real disease data is used; province boundaries and adjacency are real.
+All code is in Python, CPU-only, running on \placeholder{hardware spec}.
+
+% ── Experiment 1 ──────────────────────────────────────────────────────────────
+
+\subsection{Experiment 1: Sensitivity Surface}
+\label{sec:exp1}
+
+\paragraph{Goal.}
+Visualize $\sens$ as a function of $\kw$ to empirically validate the functional
+form of Theorem~\ref{thm:sensitivity} and identify the tightness gap between the
+upper bound and the empirical maximum sensitivity.
+
+\paragraph{Setup.}
+\placeholder{For each $\kw \in \{2, 3, 5, 10, 20, 50, 100, 200\}$, generate 10{,}000
+random neighboring dataset pairs. Compute $|\LLR(w, D) - \LLR(w, D')|$ for each pair.
+Report the empirical maximum alongside the bound $f(\kw)$.}
+
+\paragraph{Results.}
+\placeholder{Figure~\ref{fig:sensitivity-surface} shows the sensitivity surface.
+The bound $f(\kw)$ \todo{is/is not} tight within a factor of $X$ across all densities
+tested. The largest gap occurs at $\kw = \todo{?}$.}
+
+\begin{figure}[ht]
+    \centering
+    \placeholder{Figure: sensitivity surface $\Delta(\kw)$ vs. $\kw$.
+    Two curves: empirical maximum (dots) and bound $f(\kw)$ (line).
+    Log scale on y-axis. Key reference points: Ha Giang ($\kw=3$), Hanoi ($\kw=45$),
+    Dong Nai ($\kw=200$).
+    File: figures/exp1-sensitivity-surface.pdf}
+    \caption{Sensitivity bound $\sens$ as a function of window density $\kw$.
+             The upper bound from Theorem~\ref{thm:sensitivity} (solid) is compared to
+             the empirical maximum sensitivity (dots) over 10{,}000 random dataset pairs.}
+    \label{fig:sensitivity-surface}
+\end{figure}
+
+% ── Experiment 2 ──────────────────────────────────────────────────────────────
+
+\subsection{Experiment 2: Detection Quality Under Privacy}
+\label{sec:exp2}
+
+\paragraph{Goal.}
+Compare detection quality of the proposed exponential mechanism (Theorem~\ref{thm:mechanism})
+against the Laplace baseline across a range of privacy budgets $\eps \in \{0.1, 0.5, 1.0, 2.0, 5.0\}$.
+
+\paragraph{Setup.}
+\placeholder{Inject a synthetic outbreak in a dense province ($\kw = 200$) and a sparse
+province ($\kw = 3$). For each mechanism and each $\eps$, run 1{,}000 trials.
+Measure: (1) fraction of trials where $\wstar$ matches the injected cluster,
+(2) expected $\LLR(\wstar)$ relative to the non-private optimum.}
+
+\paragraph{Results.}
+\placeholder{Table~\ref{tab:detection} shows detection rates.
+The exponential mechanism maintains $>\!90\%$ detection rate for the dense cluster
+at $\eps = \todo{?}$, where the Laplace baseline drops to $\todo{?}\%$.
+For the sparse cluster, both mechanisms perform similarly because the sensitivity
+is high regardless.}
+
+\begin{table}[ht]
+    \centering
+    \caption{Detection rate (\% of trials where $\wstar$ = injected cluster) for the
+             exponential mechanism (Theorem~\ref{thm:mechanism}) vs. the Laplace
+             baseline, at varying $\eps$.}
+    \label{tab:detection}
+    \begin{tabular}{@{}lcccccc@{}}
+        \toprule
+        & \multicolumn{5}{c}{Privacy budget $\eps$} \\
+        \cmidrule(l){2-6}
+        Mechanism & 0.1 & 0.5 & 1.0 & 2.0 & 5.0 \\
+        \midrule
+        Laplace (dense, $\kw=200$)      & \placeholder{?} & \placeholder{?} & \placeholder{?} & \placeholder{?} & \placeholder{?} \\
+        Exponential (dense, $\kw=200$)  & \placeholder{?} & \placeholder{?} & \placeholder{?} & \placeholder{?} & \placeholder{?} \\
+        \midrule
+        Laplace (sparse, $\kw=3$)       & \placeholder{?} & \placeholder{?} & \placeholder{?} & \placeholder{?} & \placeholder{?} \\
+        Exponential (sparse, $\kw=3$)   & \placeholder{?} & \placeholder{?} & \placeholder{?} & \placeholder{?} & \placeholder{?} \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% ── Experiment 3 ──────────────────────────────────────────────────────────────
+
+\subsection{Experiment 3: Surveillance Horizon Under Composition}
+\label{sec:exp3}
+
+\paragraph{Goal.}
+Validate the $\Tmax$ formula from Theorem~\ref{thm:composition} empirically and
+compare the operational horizon of zCDP composition against naive composition across
+a range of $\rhow$ values.
+
+\paragraph{Setup.}
+\placeholder{For each $\rhow \in \{0.001, 0.005, 0.01, 0.05, 0.1\}$ and target budget
+$\eps_{\mathrm{target}} \in \{0.5, 1.0, 2.0\}$, compute $\Tmax$ from the formula and
+compare to the exact quadratic solution.
+Report the approximation error as a function of $\rhow$.}
+
+\paragraph{Results.}
+\placeholder{Figure~\ref{fig:horizon} shows $\Tmax$ as a function of $\rhow$.
+The approximation is within $\todo{?}\%$ of the exact solution for $\rhow < 0.05$.
+At $\rhow = 0.01$, $\eps = 1$, $\delta = 10^{-6}$: $\Tmax \approx 180$ weeks vs.
+10 weeks under naive composition.}
+
+\begin{figure}[ht]
+    \centering
+    \placeholder{Figure: $\Tmax$ vs. $\rhow$ for three target budgets.
+    Two curves per budget: zCDP formula (solid) and naive composition (dashed).
+    Log scale on y-axis (weeks).
+    File: figures/exp3-surveillance-horizon.pdf}
+    \caption{Maximum surveillance duration $\Tmax$ (weeks) as a function of the
+             per-week zCDP cost $\rhow$, for target budgets
+             $\eps \in \{0.5, 1.0, 2.0\}$.
+             Solid: Theorem~\ref{thm:composition} (zCDP).
+             Dashed: naive composition.
+             $\delta = 10^{-6}$ throughout.}
+    \label{fig:horizon}
+\end{figure}

@@ -1,0 +1,18 @@
+citekey: zinkevich2007regret
+title: "Regret Minimization in Games with Incomplete Information"
+authors:
+  - "Martin Zinkevich"
+  - "Michael Johanson"
+  - "Michael Bowling"
+  - "Carmelo Piccione"
+year: 2007
+venue: "Advances in Neural Information Processing Systems 20"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "Earlier Cluster F queue and handoff notes referred to this CFR foundation source as zinkevich2007cfr; the bibliography-aligned annotation citekey is zinkevich2007regret."
+  - "A local source.pdf was already present before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

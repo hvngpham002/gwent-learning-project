@@ -1,0 +1,17 @@
+citekey: kowalski2023competition
+title: "Summarizing Strategy Card Game AI Competition"
+authors:
+  - "Jakub Kowalski"
+  - "Radosław Miernik"
+year: 2023
+venue: "arXiv 2305.11814"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The Cluster F queue previously used the short alias locm2023competition; the shared bibliography and local source package use kowalski2023competition."
+  - "A local source.pdf was already present before annotation."
+  - "pdfinfo reported the local source as eight PDF pages before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

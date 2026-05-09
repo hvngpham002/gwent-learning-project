@@ -2,16 +2,34 @@
 
 The ML goal should be treated as a product of a correct deterministic engine. A model cannot learn a reliable game if the game has duplicate rule paths, hidden non-determinism, or illegal action side effects.
 
+## Literature-Grounded Workflow
+
+Cluster F starts with a research-foundation stage, not model training. Until at least a small annotated literature base exists, the right next AI/ML work is reading and triaging papers, not writing `legal-heuristic-v1` or a self-play training program.
+
+Operating rules:
+
+- `docs/research/literature/ai/annotations/` is the source of truth for literature-grounded AI/ML claims. Implementation-affecting research claims in future Cluster F specs must cite annotation files there.
+- The first Cluster F work is research foundation and benchmark/evaluation-ladder planning, not model training. The annotation workflow at `docs/research/literature/ai/ANNOTATION_WORKFLOW.md` defines the page-bounded batch reading protocol, source package contract, and required body sections.
+- Future benchmark, search, training, self-play, difficulty, and model architecture decisions should cite annotations or be explicitly labeled project hypotheses.
+- Compact decision notes live under `docs/research/literature/ai/decisions/` and should be used to turn small annotation batches into implementation-adjacent roadmap choices. The first accepted note is `docs/research/literature/ai/decisions/2026-05-09-batch-a-search-baseline.md`, which keeps search in scope but gates implementation on an evaluation and determinization-risk harness. The second accepted note is `docs/research/literature/ai/decisions/2026-05-09-batch-b-evaluation-ladder.md`, which made the next implementation-adjacent artifact a benchmark/evaluation harness before search or model training. cFp21 starts that harness with versioned in-memory ledgers and fixed-suite summaries in `src/game/benchmark/`, documented at `docs/research/literature/ai/benchmark-harness.md`.
+- `docs/research/bibliography/references.bib` is the shared BibTeX database for research manuscripts. Annotation citekeys should match BibTeX citekeys when possible.
+- Draft paper tracks live under `docs/research/manuscripts/`: an applied Gwent AI systems paper and a theory-oriented imperfect-information card-game paper. These are placeholders until annotations and experiments justify concrete claims.
+- This roadmap document remains a roadmap summary, not the source of truth for literature claims. If a roadmap statement contradicts an annotation, update the annotation, retract it, or label the roadmap statement a project hypothesis.
+- The current completed simulation/export infrastructure (headless AI-vs-AI runner, batch seed suites, hidden-info-safe `sim-export-v1` decision rows, validated in-memory JSONL boundary, `legal-heuristic-v0`) gives us a base for experiments. It does not yet constitute a validated AI research program.
+
+The active literature sweep prompt lives at `docs/research/literature/ai/prompts/lit-sweep-gwent-ai-prompt.md`. The first multi-model sweep was triaged in `docs/research/literature/ai/results/2026-05-08/triage.md`; the current post-triage annotation queue lives at `docs/research/literature/ai/results/2026-05-08/queue.md`.
+
 ## Stages
 
 | Stage | Name | Goal |
 |---|---|---|
-| 1 | Legal heuristic AI | Current AI rebuilt as a policy over legal moves and shared scoring. |
-| 2 | AI vs AI simulation | Headless games for policy evaluation and regression. |
-| 3 | Replay and metrics | Event logs, deterministic seeds, win-rate and strategy metrics. |
-| 4 | Observation/action API | Stable training environment interface. |
-| 5 | Baseline training | Random, heuristic, supervised imitation from heuristic games, then self-play experiments. |
-| 6 | Evaluation ladder | Tournament harness, Elo, matchup matrices, seed suites. |
+| 0 | Literature foundation | Annotation workflow, sweep prompt, multi-model triage, and source-grounded notes for AI/ML claims (Cluster F starting point). cFp0 created the workflow; cFp1 triaged the first ChatGPT/Claude/DeepSeek/Gemini/Qwen sweep. Annotation has not started yet. |
+| 1 | Legal heuristic AI | Current AI rebuilt as a policy over legal moves and shared scoring. `legal-heuristic-v0` exists; `legal-heuristic-v1` is gated on literature foundation. |
+| 2 | AI vs AI simulation | Headless games for policy evaluation and regression. Implemented under `cDp8` / `cDp9`. |
+| 3 | Replay and metrics | Event logs, deterministic seeds, win-rate and strategy metrics. Implemented as deterministic command replay, batch diagnostics, and fingerprints under `cDp9`. |
+| 4 | Observation/action API | Stable training environment interface. Hidden-info-safe `sim-export-v1` decision rows, per-row legal action lists, and validated in-memory JSONL boundary exist under `cDp10` / `cDp11`. File writers, fixed action vectors, and Python tooling are still future work. |
+| 5 | Baseline training | Random, heuristic, supervised imitation from heuristic games, then self-play experiments. Not started; gated on the literature foundation and the next planned work. |
+| 6 | Evaluation ladder | Started in cFp21 with an in-memory benchmark harness, `benchmark-match-v1` raw ledgers, `benchmark-summary-v1` fixed-suite summaries, mirrored current-deck smoke matchups, and a deterministic `legal-first-v0` comparator. Elo, Glicko, TrueSkill, larger tournament matrices, and exploitability probes remain future work. |
 
 ## Policy Interface
 
@@ -147,4 +165,3 @@ Possible future paths:
 - Learned model is exported back to the app as policy weights or a service.
 
 The critical early investment is not model code. It is legal moves, deterministic replay, and clean observations.
-

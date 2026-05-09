@@ -1,3 +1,4 @@
+import type { CatalogDeckPreset, CatalogFaction } from "@/game/catalog";
 import type { EngineCommand, GameEvent, LegalMoveKind, MatchPhase, MatchState, SeatId } from "@/game/core";
 import type { EnginePolicy } from "@/game/ai";
 
@@ -5,10 +6,24 @@ export type SimulationTerminalStatus = "completed" | "max_steps_exceeded" | "pol
 
 export type SimulationCommand = Exclude<EngineCommand, { type: "StartMatch" }>;
 
+export interface HeadlessSeatSimulationConfig {
+  seatId: SeatId;
+  playerId?: string;
+  controllerKind?: "ai";
+  faction: Exclude<CatalogFaction, "neutral">;
+  deckPreset: CatalogDeckPreset;
+}
+
+export interface HeadlessSeatSimulationConfigs {
+  seat_a: HeadlessSeatSimulationConfig;
+  seat_b: HeadlessSeatSimulationConfig;
+}
+
 export interface HeadlessMatchSimulationInput {
   seed: string | number;
   maxSteps?: number;
   policies?: Partial<Record<SeatId, EnginePolicy>>;
+  seats?: HeadlessSeatSimulationConfigs;
 }
 
 export interface SimulationStepLog {
@@ -67,6 +82,7 @@ export interface HeadlessMatchSimulationResult {
 export interface ReplayHeadlessMatchCommandsInput {
   seed: string | number;
   commandLog: readonly SimulationCommand[];
+  seats?: HeadlessMatchSimulationInput["seats"];
 }
 
 export interface SimulationSeedSuite {

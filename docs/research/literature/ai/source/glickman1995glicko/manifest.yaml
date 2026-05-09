@@ -1,0 +1,15 @@
+citekey: glickman1995glicko
+title: "The Glicko system"
+authors:
+  - "Mark E. Glickman"
+year: 1995
+venue: "Boston University"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The Cluster F queue previously used the short alias glicko1995; the shared bibliography and local source package use glickman1995glicko."
+  - "A local source.pdf was already present before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

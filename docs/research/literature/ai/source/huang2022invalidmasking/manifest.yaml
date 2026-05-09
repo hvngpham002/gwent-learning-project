@@ -1,0 +1,15 @@
+citekey: huang2022invalidmasking
+title: "A Closer Look at Invalid Action Masking in Policy Gradient Algorithms"
+authors:
+  - "Shengyi Huang"
+  - "Santiago Ontanon"
+year: 2022
+venue: "The International FLAIRS Conference Proceedings 35"
+doi: "10.32473/flairs.v35i.130584"
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The existing local huang2022invalidmasking.pdf was normalized to source.pdf before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

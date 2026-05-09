@@ -1,0 +1,166 @@
+% sections/03-method.tex
+
+\section{Method}
+\label{sec:method}
+
+We present three theorems forming a dependency chain:
+Theorem~\ref{thm:sensitivity} derives the sensitivity bound;
+Theorem~\ref{thm:mechanism} instantiates the private release mechanism using that bound;
+Theorem~\ref{thm:composition} applies zCDP composition to the prospective setting.
+
+% ── Theorem 1 ─────────────────────────────────────────────────────────────────
+
+\subsection{Theorem 1: Sensitivity Bound}
+\label{sec:method:sensitivity}
+
+\begin{theorem}[Sensitivity Bound]
+\label{thm:sensitivity}
+Let $D$ and $D'$ be neighboring datasets differing in exactly one reporting node
+inside window $w$ (i.e., one node's count changes by $\pm 1$).
+The global sensitivity of the Kulldorff log-likelihood ratio satisfies:
+\[
+    \sens = \max_{D, D' : d(D,D')=1} |\LLR(w, D) - \LLR(w, D')| \leq f(\kw)
+\]
+where $f(\kw)$ is a closed-form function satisfying:
+(i) $f$ is monotonically decreasing in $\kw$, and
+(ii) $f(\kw) \to 0$ as $\kw \to \infty$.
+\end{theorem}
+
+\begin{proof}
+\todo{Derive the closed-form upper bound $f(\kw)$.
+Key step: when one node changes by $\pm 1$, show that $c$, $C$, and $\mu = C \cdot \nw / N$
+all shift simultaneously.
+Compute $|\LLR(c, C, \mu) - \LLR(c \pm 1, C \pm 1, \mu')|$ and find the maximum
+over all valid $(c, C, \nw, \Ntot)$ with $\kw$ nodes.}
+\end{proof}
+
+\begin{remark}
+The candidate form $f(\kw) = \ln(\kw / (\kw - 1)) + 1/\kw$ satisfies properties (i)
+and (ii) above.
+This form is \emph{not} the proven result; it is a heuristic starting point for the
+derivation.
+All numerical sensitivity values are withheld until Theorem~\ref{thm:sensitivity}
+is formally proven.
+\end{remark}
+
+\begin{remark}
+$\kw$ does not appear in the LLR formula~\eqref{eq:llr} because it is irrelevant to
+outbreak detection.
+It is essential to privacy: it determines how many independent actors can each
+change $\cobs$ by $\pm 1$.
+The simultaneous change in $\Ctot$ and $\muexp$ (which depends on $\Ctot$) is what
+makes the derivation non-trivial and propagates globally to all candidate windows.
+\end{remark}
+
+% ── Theorem 2 ─────────────────────────────────────────────────────────────────
+
+\subsection{Theorem 2: Private Window Selection}
+\label{sec:method:mechanism}
+
+\begin{theorem}[Private Window Selection]
+\label{thm:mechanism}
+Define the normalized utility function:
+\[
+    \util = \frac{\LLR(w)}{\sens}
+\]
+The global sensitivity of $u$ is $1$.
+The mechanism that selects window $\wstar$ with probability:
+\[
+    \Pr[\wstar = w] \propto \exp\!\left(\frac{\eps \cdot \util}{2}\right)
+\]
+is $\eps$-differentially private.
+
+Furthermore, let $w_0 = \arg\max_w \util$ be the \emph{privacy-adjusted optimal window}
+and define:
+\[
+    \gapu = u(w_0) - \max_{w \neq w_0} u(w) = \frac{\LLR(w_0)}{\Delta(k_{w_0})} - \max_{w \neq w_0}\frac{\LLR(w)}{\Delta(k_w)}
+\]
+Then:
+\[
+    \Pr[\wstar = w_0] \geq 1 - |\Wcal| \cdot \exp\!\left(\frac{-\eps \cdot \gapu}{2}\right)
+\]
+\end{theorem}
+
+\begin{proof}
+\textit{(Global sensitivity = 1.)}
+When one node's count changes by $\pm 1$, $\LLR(w)$ changes by at most $\sens$
+(Theorem~\ref{thm:sensitivity}).
+Therefore $u(w) = \LLR(w)/\sens$ changes by at most $\sens/\sens = 1$.
+
+\textit{($\eps$-DP and utility guarantee.)}
+The mechanism is the exponential mechanism~\cite{mcsherry2007} instantiated with
+utility function $u$ and global sensitivity $\Delta u = 1$.
+$\eps$-DP follows directly from the exponential mechanism privacy guarantee.
+The utility bound follows from Theorem~\ref{thm:mst-utility} with $\Delta q = 1$
+and $\Delta = \gapu$.
+\end{proof}
+
+\begin{remark}
+$w_0$ is the \emph{privacy-adjusted optimal window}: the candidate with the highest
+ratio of statistical evidence to sensitivity.
+This differs from both the ground-truth outbreak location and the non-private argmax
+(highest raw LLR).
+A dense window with moderate LLR may outrank a sparse window with high LLR because
+$\sens$ is smaller for dense windows.
+\end{remark}
+
+\begin{remark}
+The Monte Carlo p-value (Step~3 of Algorithm~\ref{alg:kulldorff}) is applied to $\wstar$
+after the DP mechanism runs.
+By the post-processing theorem~\cite[Proposition~2.1]{dwork2013}, this costs no
+additional privacy budget.
+\end{remark}
+
+Algorithm~\ref{alg:private} presents the complete private scan statistic procedure.
+It modifies only Step~2 of Algorithm~\ref{alg:kulldorff}; Steps~1 and~3 are unchanged.
+
+\input{algorithms/alg2-private}
+
+% ── Theorem 3 ─────────────────────────────────────────────────────────────────
+
+\subsection{Theorem 3: Prospective Composition}
+\label{sec:method:composition}
+
+In the prospective surveillance setting~\cite{kulldorff2001}, the scan statistic is
+run once per week for $T$ consecutive weeks, releasing a cluster alert each time.
+
+\begin{theorem}[Prospective Composition]
+\label{thm:composition}
+Let the mechanism from Theorem~\ref{thm:mechanism} be run for $T$ weeks, each release
+contributing $\rhow$-zCDP.
+Then:
+\[
+    \rhotot = T \cdot \rhow
+\]
+Converting to $(\eps, \delta)$-DP via~\cite{bun2016}:
+\[
+    \eps_{\mathrm{total}} = T\rhow + 2\sqrt{T\rhow \cdot \ln(1/\delta)}
+\]
+For small $\rhow$, the maximum number of weeks within a target budget $\eps_{\mathrm{target}}$
+is approximately:
+\[
+    \Tmax \approx \frac{\eps_{\mathrm{target}}^2}{4\rhow \cdot \ln(1/\delta)}
+\]
+\end{theorem}
+
+\begin{proof}
+\todo{Fill in the proof. Use linear composition of $\rho$-zCDP mechanisms
+(\cite{bun2016} Lem 1.7, p.7; adaptive form Lem 2.3, p.12) to obtain
+$\rho_{\mathrm{total}} = T\rhow$, then apply the zCDP~$\to$~$(\eps,\delta)$-DP
+conversion (\cite{bun2016} Prop 1.3, p.6). Each weekly release is a fresh
+invocation of the per-week $\rho$-zCDP mechanism on that week's dataset; zCDP
+composition is over mechanisms, not over disjoint inputs, so temporal window
+overlap does not affect the bound. For $T_{\max}$, drop the linear term $T\rhow$
+(valid when $\rhow \ll \ln(1/\delta)$) and solve
+$\eps \approx 2\sqrt{T\rhow\ln(1/\delta)}$ for $T$.}
+\end{proof}
+
+\begin{remark}
+Under naive composition, $T$ releases each costing $\eps_{\mathrm{week}}$-DP accumulate
+$T \cdot \eps_{\mathrm{week}}$ total.
+With $\eps_{\mathrm{week}} = 0.1$ and a system budget of $\eps = 1$, this exhausts in
+$T = 10$ weeks.
+Under Theorem~\ref{thm:composition} with $\rhow = 0.01$, $\delta = 10^{-6}$:
+$\Tmax \approx 1 / (4 \times 0.01 \times 13.8) \approx 180$ weeks ($\approx 3.5$ years).
+zCDP composition is what makes continuous prospective surveillance deployable.
+\end{remark}

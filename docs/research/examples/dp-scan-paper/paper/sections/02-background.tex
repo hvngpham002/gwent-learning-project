@@ -1,0 +1,128 @@
+% sections/02-background.tex
+
+\section{Background}
+\label{sec:background}
+
+\subsection{The Kulldorff Spatial Scan Statistic}
+\label{sec:background:kulldorff}
+
+Let $S = \{s_1, \ldots, s_K\}$ be a set of $\Ktot$ reporting nodes (e.g., provinces or
+sampling sites), each associated with an observed case count $c_i$ and a testing
+volume $n_i$.
+Let $\Ctot = \sum_i c_i$ be the national total of observed cases and $\Ntot = \sum_i n_i$
+the national total testing volume.
+
+A \emph{candidate window} $w$ is a pair (circle, time period) parameterized by a center
+node, a spatial radius, and a temporal duration.
+For each window $w$, let $\kw$ be the number of nodes inside $w$,
+$\nw = \sum_{i \in w} n_i$ the testing volume inside $w$,
+and $\cobs = \sum_{i \in w} c_i$ the observed cases inside $w$.
+The expected case count under the null hypothesis of uniform distribution is:
+\begin{equation}
+    \muexp = \Ctot \cdot \frac{\nw}{\Ntot}
+    \label{eq:mu}
+\end{equation}
+
+The \emph{log-likelihood ratio} (LLR) for window $w$ under the Poisson model
+is~\cite{kulldorff1997}:
+\begin{equation}
+    \LLR(w) =
+    \begin{cases}
+        \cobs \ln\!\left(\dfrac{\cobs}{\muexp}\right)
+        + (\Ctot - \cobs) \ln\!\left(\dfrac{\Ctot - \cobs}{\Ctot - \muexp}\right)
+        & \text{if } \cobs > \muexp \\[6pt]
+        0 & \text{otherwise}
+    \end{cases}
+    \label{eq:llr}
+\end{equation}
+
+The \emph{relative risk} inside $w$ is:
+\begin{equation}
+    \RR(w) = \frac{\cobs / \nw}{(\Ctot - \cobs) / (\Ntot - \nw)}
+    \label{eq:rr}
+\end{equation}
+
+Note that $\kw$ does not appear in \cref{eq:llr}: the detection question requires
+only aggregate counts.
+The privacy question, however, requires knowing how many independent actors contributed
+to those aggregates, which is exactly $\kw$.
+
+The primary cluster is $\wstar = \arg\max_{w \in \Wcal} \LLR(w)$.
+Statistical significance is assessed by Monte Carlo simulation: $M = 999$ datasets
+are drawn under the null hypothesis, and the p-value is
+$p = (\#\{m : \LLR_m \geq \LLR(\wstar)\} + 1) / (M + 1)$~\cite{kulldorff1997}.
+
+Algorithm~\ref{alg:kulldorff} formalizes the complete procedure.
+
+\input{algorithms/alg1-kulldorff}
+
+% ── Data structure example ────────────────────────────────────────────────────
+
+\paragraph{Running example.}
+Table~\ref{tab:data} shows a synthetic dataset on Vietnamese province structure
+used throughout this paper.
+The sensitivity column ($\sens$) does \emph{not} appear here; it is the quantity
+derived in Theorem~\ref{thm:sensitivity}.
+
+\input{tables/tab1-data-structure}
+
+% ── Differential Privacy ──────────────────────────────────────────────────────
+
+\subsection{Differential Privacy}
+\label{sec:background:dp}
+
+\begin{definition}[$(\eps, \delta)$-Differential Privacy~\cite{dwork2006}]
+A randomized mechanism $\mathcal{M}: \mathcal{D} \to \mathcal{R}$ is
+$(\eps, \delta)$-differentially private if for all neighboring datasets
+$D, D' \in \mathcal{D}$ differing in one record and all $S \subseteq \mathcal{R}$:
+\[
+    \Pr[\mathcal{M}(D) \in S] \leq e^\eps \cdot \Pr[\mathcal{M}(D') \in S] + \delta
+\]
+When $\delta = 0$ this is \emph{pure} $\eps$-DP.
+\end{definition}
+
+The \emph{global sensitivity} of a function $f$ measures the maximum change one
+record can cause in the output:
+\[
+    \Delta f = \max_{D, D' : d(D,D') = 1} \|f(D) - f(D')\|_1
+\]
+
+\begin{definition}[$\rho$-zero-concentrated DP (zCDP)~\cite{bun2016}]
+A mechanism $\mathcal{M}$ satisfies $\rho$-zCDP if for all neighboring $D, D'$
+and all $\alpha \in (1, \infty)$:
+\(D_\alpha(\mathcal{M}(D) \| \mathcal{M}(D')) \leq \rho\alpha\),
+where $D_\alpha$ is the R\'{e}nyi divergence of order $\alpha$.
+\end{definition}
+
+The key composition property is that $T$ mechanisms satisfying
+$\rho_1, \ldots, \rho_T$-zCDP compose to $(\rho_1 + \cdots + \rho_T)$-zCDP~\cite{bun2016},
+and $\rho$-zCDP implies $(\rho + 2\sqrt{\rho \ln(1/\delta)}, \delta)$-DP for any $\delta > 0$.
+
+% ── Exponential Mechanism ─────────────────────────────────────────────────────
+
+\subsection{The Exponential Mechanism}
+\label{sec:background:expomech}
+
+\begin{definition}[Exponential Mechanism~\cite{mcsherry2007}]
+Let $\mathcal{R}$ be a finite output set and $q: \mathcal{D} \times \mathcal{R} \to \mathbb{R}$
+a utility function with global sensitivity $\Delta q$.
+The exponential mechanism outputs $r \in \mathcal{R}$ with probability:
+\[
+    \Pr[\mathcal{M}_E(D) = r] \propto \exp\!\left(\frac{\eps \cdot q(D,r)}{2\,\Delta q}\right)
+\]
+This mechanism is $\eps$-differentially private.
+\end{definition}
+
+\begin{theorem}[Utility Guarantee~{\cite[Theorem~6]{mcsherry2007}}]
+\label{thm:mst-utility}
+Let $r_0 = \arg\max_r q(D,r)$ and $\Delta = q(D,r_0) - \max_{r \neq r_0} q(D,r)$.
+Then:
+\[
+    \Pr[\mathcal{M}_E(D) \neq r_0] \leq |\mathcal{R}| \cdot \exp\!\left(\frac{-\eps \cdot \Delta}{2\,\Delta q}\right)
+\]
+\end{theorem}
+
+The post-processing theorem~\cite[Proposition~2.1]{dwork2013} ensures that applying
+any function to the output of a DP mechanism is still DP at no additional privacy cost.
+In particular, computing the Monte Carlo p-value after the private window selection
+costs no additional privacy budget.

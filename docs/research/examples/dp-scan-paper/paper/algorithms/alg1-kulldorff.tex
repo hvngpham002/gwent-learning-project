@@ -1,0 +1,67 @@
+% algorithms/alg1-kulldorff.tex
+% Algorithm 1: Non-private Kulldorff scan statistic (established, Kulldorff 1997)
+% Placed in background section. The private variant is alg2-private.tex.
+
+\begin{algorithm}[H]
+\caption{Kulldorff Prospective Space-Time Scan Statistic~\cite{kulldorff1997,neill2004}}
+\label{alg:kulldorff}
+\begin{algorithmic}[1]
+
+\Statex \textbf{Input:}
+  Spatial units $S = \{s_1, \ldots, s_\Ktot\}$;
+  counts $c_i$ and testing volumes $n_i$ for each $s_i$;
+  national totals $\Ctot$, $\Ntot$;
+  max spatial window $\alpha$ (\% of $\Ntot$);
+  max temporal window $T_{\max}$;
+  simulations $M$
+\Statex \textbf{Output:}
+  Primary cluster $\wstar$ with $\LLR(\wstar)$, $\RR(\wstar)$, $p$-value
+
+\Statex
+\Statex \textit{// Step 1: Score every candidate window}
+\State $\Wcal \gets \emptyset$
+\For{each center $s_i \in S$}
+    \For{each radius $r$ by nearest-neighbor, while $\nw \leq \alpha \cdot \Ntot$}
+        \For{$t = 1, \ldots, T_{\max}$}
+            \State $w \gets (s_i,\; r,\; t)$
+            \State $\cobs \gets \sum_{s_j \in w} c_j$
+                \Comment{observed cases inside $w$}
+            \State $\nw \gets \sum_{s_j \in w} n_j$
+                \Comment{testing volume inside $w$}
+            \State $\muexp \gets \Ctot \cdot \nw / \Ntot$
+                \Comment{expected cases under null}
+            \If{$\cobs > \muexp$}
+                \State $\LLR(w) \gets
+                    \cobs \ln\!\left(\dfrac{\cobs}{\muexp}\right)
+                    + (\Ctot - \cobs)\ln\!\left(\dfrac{\Ctot - \cobs}{\Ctot - \muexp}\right)$
+                \State $\RR(w) \gets
+                    \dfrac{\cobs / \nw}{(\Ctot - \cobs) / (\Ntot - \nw)}$
+            \Else
+                \State $\LLR(w) \gets 0$
+            \EndIf
+            \State $\Wcal \gets \Wcal \cup \{w\}$
+        \EndFor
+    \EndFor
+\EndFor
+
+\Statex
+\Statex \textit{// Step 2: Select primary cluster (deterministic argmax)}
+\State $\wstar \gets \arg\max_{w \in \Wcal}\; \LLR(w)$
+
+\Statex
+\Statex \textit{// Step 3: Significance testing via Monte Carlo}
+\State $\textit{count} \gets 0$
+\For{$m = 1$ to $M$}
+    \Comment{$M = 999$ by convention}
+    \State Redistribute $\Ctot$ cases across $S$ proportional to $n_i$
+    \State $\LLR_m \gets \max_{w \in \Wcal}\; \LLR(w)$ on randomized data
+    \If{$\LLR_m \geq \LLR(\wstar)$}
+        \State $\textit{count} \gets \textit{count} + 1$
+    \EndIf
+\EndFor
+\State $p \gets (\textit{count} + 1) / (M + 1)$
+
+\State \Return $\wstar,\; \LLR(\wstar),\; \RR(\wstar),\; p$
+
+\end{algorithmic}
+\end{algorithm}

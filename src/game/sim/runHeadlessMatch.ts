@@ -11,6 +11,8 @@ import { buildSimulationSummary, getWinner } from "./metrics";
 import type {
   HeadlessMatchSimulationInput,
   HeadlessMatchSimulationResult,
+  HeadlessSeatSimulationConfig,
+  HeadlessSeatSimulationConfigs,
   ReplayHeadlessMatchCommandsInput,
   SimulationCommand,
   SimulationError,
@@ -21,30 +23,48 @@ import type {
 const DEFAULT_MAX_STEPS = 300;
 const SEATS: readonly SeatId[] = ["seat_a", "seat_b"];
 
-export const createHeadlessSimulationConfig = (seed: string | number): MatchConfig => ({
-  matchId: `sim:${seed}`,
-  seed,
-  seats: [
-    {
-      seatId: "seat_a",
-      playerId: "sim-seat-a",
-      controllerKind: "ai",
-      faction: "northern_realms",
-      deckPreset: currentNorthernRealmsDeckPreset,
-    },
-    {
-      seatId: "seat_b",
-      playerId: "sim-seat-b",
-      controllerKind: "ai",
-      faction: "nilfgaard",
-      deckPreset: currentNilfgaardDeckPreset,
-    },
-  ],
-  catalog: {
-    cards: currentCatalogCards,
-    leaders: currentCatalogLeaders,
+const createDefaultSeatConfigs = (): HeadlessSeatSimulationConfigs => ({
+  seat_a: {
+    seatId: "seat_a",
+    playerId: "sim-seat-a",
+    controllerKind: "ai",
+    faction: "northern_realms",
+    deckPreset: currentNorthernRealmsDeckPreset,
+  },
+  seat_b: {
+    seatId: "seat_b",
+    playerId: "sim-seat-b",
+    controllerKind: "ai",
+    faction: "nilfgaard",
+    deckPreset: currentNilfgaardDeckPreset,
   },
 });
+
+const normalizeSeatConfig = (seatId: SeatId, config: HeadlessSeatSimulationConfig): HeadlessSeatSimulationConfig => ({
+  ...config,
+  seatId,
+  controllerKind: "ai",
+});
+
+export const createHeadlessSimulationConfig = (
+  seed: string | number,
+  seats?: HeadlessMatchSimulationInput["seats"],
+): MatchConfig => {
+  const resolvedSeats = seats ?? createDefaultSeatConfigs();
+
+  return {
+    matchId: `sim:${seed}`,
+    seed,
+    seats: [
+      normalizeSeatConfig("seat_a", resolvedSeats.seat_a),
+      normalizeSeatConfig("seat_b", resolvedSeats.seat_b),
+    ],
+    catalog: {
+      cards: currentCatalogCards,
+      leaders: currentCatalogLeaders,
+    },
+  };
+};
 
 const policyIds = (input: HeadlessMatchSimulationInput): Record<SeatId, string> => ({
   seat_a: input.policies?.seat_a?.id ?? legalHeuristicPolicyV0.id,
@@ -134,7 +154,7 @@ const createResult = ({
 
 export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput): HeadlessMatchSimulationResult => {
   const maxSteps = input.maxSteps ?? DEFAULT_MAX_STEPS;
-  const started = startMatch(createHeadlessSimulationConfig(input.seed));
+  const started = startMatch(createHeadlessSimulationConfig(input.seed, input.seats));
   let state = started.state;
   const steps: SimulationStepLog[] = [];
   const commandLog: SimulationCommand[] = [];
@@ -262,8 +282,8 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
   });
 };
 
-export const replayHeadlessMatchCommands = ({ seed, commandLog }: ReplayHeadlessMatchCommandsInput): MatchState => {
-  let state = startMatch(createHeadlessSimulationConfig(seed)).state;
+export const replayHeadlessMatchCommands = ({ seed, commandLog, seats }: ReplayHeadlessMatchCommandsInput): MatchState => {
+  let state = startMatch(createHeadlessSimulationConfig(seed, seats)).state;
 
   commandLog.forEach((command, index) => {
     const transaction = executeCommand({ state, command, catalogCards: currentCatalogCards, catalogLeaders: currentCatalogLeaders });

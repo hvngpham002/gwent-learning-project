@@ -1,0 +1,43 @@
+% algorithms/alg2-private.tex
+% Algorithm 2: Private scan statistic — YOUR contribution (Theorem 2)
+% Placed in the method section. Differs from Algorithm 1 only in Step 2.
+
+\begin{algorithm}[H]
+\caption{Private Prospective Scan Statistic (Theorem~\ref{thm:mechanism})}
+\label{alg:private}
+\begin{algorithmic}[1]
+
+\Statex \textbf{Input:}
+  Same as Algorithm~\ref{alg:kulldorff}, plus privacy budget $\eps$
+\Statex \textbf{Output:}
+  Privately selected cluster $\wstar$ with $\LLR(\wstar)$, $\RR(\wstar)$, $p$-value
+
+\Statex
+\Statex \textit{// Step 1: Score every candidate window (identical to Algorithm~\ref{alg:kulldorff})}
+\State Run Step~1 of Algorithm~\ref{alg:kulldorff} to obtain $\LLR(w)$ for all $w \in \Wcal$
+
+\Statex
+\Statex \textit{// Step 2: Private window selection (replaces deterministic argmax)}
+\For{each $w \in \Wcal$}
+    \State $\kw \gets$ number of reporting nodes inside $w$
+    \State $\sens \gets f(\kw)$
+        \Comment{sensitivity bound from Theorem~\ref{thm:sensitivity}}
+    \State $u(w) \gets \LLR(w) / \sens$
+        \Comment{normalized utility, global sensitivity $= 1$}
+    \State $p_w \gets \exp\!\left(\eps \cdot u(w) / 2\right)$
+        \Comment{unnormalized selection weight}
+\EndFor
+\State $Z \gets \sum_{w \in \Wcal} p_w$
+    \Comment{partition function}
+\State Sample $\wstar \sim \Pr[\wstar = w] = p_w / Z$
+    \Comment{exponential mechanism~\cite{mcsherry2007}}
+
+\Statex
+\Statex \textit{// Step 3: Significance testing (post-processing; no additional budget)}
+\State Run Step~3 of Algorithm~\ref{alg:kulldorff} on $\wstar$
+    \Comment{safe by post-processing theorem~\cite[Prop.~2.1]{dwork2013}}
+
+\State \Return $\wstar,\; \LLR(\wstar),\; \RR(\wstar),\; p$
+
+\end{algorithmic}
+\end{algorithm}

@@ -1,0 +1,16 @@
+citekey: cowling2012ismcts
+title: "Information Set Monte Carlo Tree Search"
+authors:
+  - "Peter I. Cowling"
+  - "Edward J. Powley"
+  - "Daniel Whitehouse"
+year: 2012
+venue: "IEEE Transactions on Computational Intelligence and AI in Games"
+doi: "10.1109/TCIAIG.2012.2200894"
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "A local PDF was already present as cowling2012ismcts.pdf; source.pdf is a local normalized copy for the annotation workflow."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

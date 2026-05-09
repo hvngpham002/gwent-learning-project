@@ -1,0 +1,35 @@
+% main.tex - imperfect-information theory manuscript entry point
+% Build: pdflatex main && bibtex main && pdflatex main && pdflatex main
+
+\documentclass[12pt]{article}
+\input{preamble}
+
+\title{\textbf{Legal-Action Abstractions for\\
+       Imperfect-Information Card Games}}
+
+\author{Viet Hung Pham}
+
+\date{}
+
+\begin{document}
+
+\linenumbers
+\maketitle
+\thispagestyle{empty}
+
+\input{sections/00-abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-model}
+\input{sections/03-abstraction}
+\input{sections/04-evaluation}
+\input{sections/05-related-work}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plain}
+\bibliography{../../../bibliography/references}
+
+\end{document}

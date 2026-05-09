@@ -1,0 +1,2358 @@
+% references.bib
+% Shared bibliography — Privacy Research Monorepo
+% GENERATED FILE. Do not hand-edit this file directly.
+% Source shards live under shared/bibliography/references.d/.
+% New entries belong in shared/bibliography/references.d/000-inbox.bib first.
+%
+% Canonical shard order:
+%   000-inbox                           intake queue
+%   100-scan-statistics                  legacy A — Scan Statistics
+%   110-dp-foundations                   legacy B — Differential Privacy Foundations
+%   120-private-selection                legacy C — Private Selection
+%   130-composition-and-continual-observation legacy D — Composition and Continual Observation
+%   140-dp-inference                     legacy E — DP Inference
+%   150-spatial-dp                       legacy F — Spatial DP
+%   160-disease-surveillance             legacy G — Disease Surveillance
+%   170-spatial-sdc                      legacy H — Spatial SDC
+%   180-context-ethics                   legacy I — Context and Ethics
+%   190-auxiliary-methods                legacy J — Auxiliary Methods
+%   200-linkage-risk                     legacy K — Linkage Risk
+%   210-multisource-platforms            legacy L — Multisource Platforms
+
+
+% ============================================================
+% 000-inbox — Inbox
+% ============================================================
+
+% STATUS: INBOX
+% PRIMARY_CATEGORY:
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] PetEVAL paper; strongest veterinary-domain benchmark boundary for thesis-wip. Annotate before strengthening animal-health benchmark-gap claims.
+@inproceedings{farrell2025peteval,
+  title = {PetEVAL: A veterinary free text electronic health records benchmark},
+  author = {Farrell, Sean and Radford, Alan and Al Moubayed, Noura and Noble, Peter-John},
+  booktitle = {Proceedings of the 24th Workshop on Biomedical Language Processing},
+  pages = {341--353},
+  year = {2025}
+}
+
+% ============================================================
+% 100-scan-statistics (legacy A) — Scan Statistics
+% ============================================================
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Foundational scan statistic: LLR, mu, RR, p-value definitions
+@article{kulldorff1997,
+  author = {Kulldorff, Martin},
+  year = {1997},
+  month = {06},
+  pages = {1481-1496},
+  title = {A Spatial Scan Statistic},
+  volume = {26},
+  journal = {Communications in Statistics - Theory and Methods},
+  doi = {10.1080/03610929708831995}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Prospective extension with temporal windows; direct basis for thesis
+@article{kulldorff2001,
+  author = {Kulldorff, Martin},
+  year = {2001},
+  month = {02},
+  pages = {61-72},
+  title = {Prospective Time Periodic Geographical Disease Surveillance Using A Scan Statistic},
+  volume = {164},
+  journal = {Journal of the Royal Statistical Society Series A},
+  doi = {10.1111/1467-985X.00186}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Algorithmic formalization of scan statistics
+@article{neill2004,
+  author = {Neill, Daniel and Moore, Andrew},
+  year = {2004},
+  month = {07},
+  pages = {},
+  title = {Rapid Detection of Significant Spatial Clusters},
+  doi = {10.1145/1014052.1014082}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Neill (2012) — LTSS property; fast exact optimization of Kulldorff-type scores over subsets. Category A.
+@article{neill2012,
+    author = {Neill, Daniel B.},
+    title = {Fast Subset Scan for Spatial Pattern Detection},
+    journal = {Journal of the Royal Statistical Society Series B: Statistical Methodology},
+    volume = {74},
+    number = {2},
+    pages = {337-360},
+    year = {2012},
+    month = {03},
+    abstract = {We propose a new ‘fast subset scan’ approach for accurate and computationally efficient event detection in massive data sets. We treat event detection as a search over subsets of data records, finding the subset which maximizes some score function. We prove that many commonly used functions (e.g. Kulldorff’s spatial scan statistic and extensions) satisfy the ‘linear time subset scanning’ property, enabling exact and efficient optimization over subsets. In the spatial setting, we demonstrate that proximity-constrained subset scans substantially improve the timeliness and accuracy of event detection, detecting emerging outbreaks of disease 2 days faster than existing methods.},
+    issn = {1369-7412},
+    doi = {10.1111/j.1467-9868.2011.01014.x},
+    url = {https://doi.org/10.1111/j.1467-9868.2011.01014.x},
+    eprint = {https://academic.oup.com/jrsssb/article-pdf/74/2/337/49513923/jrsssb_74_2_337.pdf},
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Space-time permutation variant
+@article{kulldorff2005,
+  author = {Kulldorff, Martin and Heffernan, Richard and Jacobs, Jessica and Martins, Assuncao and Mostashari, Farzad},
+  year = {2005},
+  month = {04},
+  pages = {e59},
+  title = {A Space–Time Permutation Scan Statistic for Disease Outbreak Detection},
+  volume = {2},
+  journal = {PLoS medicine},
+  doi = {10.1371/journal.pmed.0020059}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] Kulldorff et al. (2006) — Elliptic spatial scan: identical Kulldorff Poisson LLR, only window collection differs. Eccentricity penalty LLR_adj = LLR*(4s/(s+1)^2)^a. Category A (spatial scan statistics).
+@article{kulldorff2006,
+author = {Kulldorff, Martin and Huang, Lan and Pickle, Linda and Duczmal, Luiz},
+title = {An elliptic spatial scan statistic},
+journal = {Statistics in Medicine},
+volume = {25},
+number = {22},
+pages = {3929-3943},
+keywords = {disease surveillance, clusters, clustering, spatial statistics, eccentricity penalty, statistical power},
+doi = {https://doi.org/10.1002/sim.2490},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.2490},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1002/sim.2490},
+abstract = {Abstract The spatial scan statistic is commonly used for geographical disease cluster detection, cluster evaluation and disease surveillance. The most commonly used shape of the scanning window is circular. In this paper we explore an elliptic version of the spatial scan statistic, using a scanning window of variable location, shape (eccentricity), angle and size, and with and without an eccentricity penalty. The method is applied to breast cancer mortality data from Northeastern United States and female oral cancer mortality in the United States. Power comparisons are made with the circular scan statistic. Copyright © 2006 John Wiley \& Sons, Ltd.},
+year = {2006}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] SaTScan software user guide — primary software reference for Kulldorff spatial scan statistic implementation
+@manual{kulldorff2022,
+  author  = {Kulldorff, Martin},
+  title   = {{SaTScan\texttrademark{} User Guide for Version 10.1}},
+  year    = {2022},
+  month   = jul,
+  url     = {https://www.satscan.org/}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Approximation algorithms for scan statistics
+@inproceedings{agarwal2006,
+  author = {Agarwal, Deepak and McGregor, Andrew and Phillips, Jeff and Venkatasubramanian, Suresh and Zhu, Zhengyuan},
+  year = {2006},
+  month = {08},
+  pages = {24-33},
+  title = {Spatial Scan Statistics Approximations and Performance Study},
+  volume = {2006},
+  journal = {Conference on Knowledge Discovery in Data Mining},
+  doi = {10.1145/1150402.1150410}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES: 160-disease-surveillance
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] COVID-19 application of prospective space-time scan
+% Also relevant to: G (Privacy in Disease Surveillance)
+@article{desjardins2020,
+  author = {Desjardins, Michael and Hohl, Alexander and Delmelle, Eric},
+  year = {2020},
+  month = {03},
+  pages = {},
+  title = {Rapid surveillance of COVID-19 in the United States using a prospective space-time scan statistic: Detecting and evaluating emerging clusters},
+  volume = {118},
+  journal = {Applied Geography},
+  doi = {10.1016/j.apgeog.2020.102202}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] Duczmal et al. (2007) — GA scan: Kulldorff Poisson LLR applied to arbitrary connected zones; non-compactness penalty K(z)=4πA(z)/H(z)^2; ~10x faster, ~5x less variance than SA scan. Category A (spatial scan statistics).
+@article{duczmal2007,
+title = {A genetic algorithm for irregularly shaped spatial scan statistics},
+journal = {Computational Statistics \& Data Analysis},
+volume = {52},
+number = {1},
+pages = {43-52},
+year = {2007},
+issn = {0167-9473},
+doi = {https://doi.org/10.1016/j.csda.2007.01.016},
+url = {https://www.sciencedirect.com/science/article/pii/S0167947307000199},
+author = {Luiz Duczmal and André L.F. Cançado and Ricardo H.C. Takahashi and Lupércio F. Bessegato},
+keywords = {Power evaluation, Genetic algorithm, Non-compactness penalty, Spatial scan statistic},
+abstract = {A new approach is presented for the detection and inference of irregularly shaped spatial clusters, using a genetic algorithm. Given a map divided into regions with corresponding populations at risk and cases, the graph-related operations are minimized by means of a fast offspring generation and efficient evaluation of Kuldorff's spatial scan statistic. A penalty function based on the geometric non-compactness concept is employed to avoid excessive irregularity of cluster geometric shape. The algorithm is an order of magnitude faster and exhibits less variance compared to the simulated annealing scan, and is more flexible than the elliptic scan. It has about the same power of detection as the simulated annealing scan for mildly irregular clusters and is superior for the very irregular ones. An application to breast cancer clusters in Brazil is discussed.}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 100-scan-statistics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] Tango & Takahashi (2005) — FleXScan: flexibly shaped scan with connected subgraph windows, same Kulldorff Poisson LLR. Category A (spatial scan statistics).
+@article{tango2005,
+author = {Tango, Toshiro and Takahashi, Kunihiko},
+year = {2005},
+month = {06},
+pages = {11},
+title = {A Flexibly Shaped Spatial Scan Statistic for Detecting Clusters},
+volume = {4},
+journal = {International journal of health geographics},
+doi = {10.1186/1476-072X-4-11}
+}
+
+% ============================================================
+% 110-dp-foundations (legacy B) — Differential Privacy Foundations
+% ============================================================
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Foundational DP definition; calibrating noise to sensitivity
+@InProceedings{dwork2006,
+  author="Dwork, Cynthia
+  and McSherry, Frank
+  and Nissim, Kobbi
+  and Smith, Adam",
+  editor="Halevi, Shai
+  and Rabin, Tal",
+  title="Calibrating Noise to Sensitivity in Private Data Analysis",
+  booktitle="Theory of Cryptography",
+  year="2006",
+  publisher="Springer Berlin Heidelberg",
+  address="Berlin, Heidelberg",
+  pages="265--284",
+  isbn="978-3-540-32732-5"
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Foundational DP definition; calibrating noise to sensitivity
+@InProceedings{dwork2006icalp,
+  author="Dwork, Cynthia",
+  editor="Bugliesi, Michele
+  and Preneel, Bart
+  and Sassone, Vladimiro
+  and Wegener, Ingo",
+  title="Differential Privacy",
+  booktitle="Automata, Languages and Programming",
+  year="2006",
+  publisher="Springer Berlin Heidelberg",
+  address="Berlin, Heidelberg",
+  pages="1--12",
+  abstract="In 1977 Dalenius articulated a desideratum for statistical databases: nothing about an individual should be learnable from the database that cannot be learned without access to the database. We give a general impossibility result showing that a formalization of Dalenius' goal along the lines of semantic security cannot be achieved. Contrary to intuition, a variant of the result threatens the privacy even of someone not in the database. This state of affairs suggests a new measure, differential privacy, which, intuitively, captures the increased risk to one's privacy incurred by participating in a database. The techniques developed in a sequence of papers [8, 13, 3], culminating in those described in [12], can achieve any desired level of privacy under this measure. In many cases, extremely accurate information about the database can be provided while simultaneously ensuring very high levels of privacy.",
+  isbn="978-3-540-35908-1"
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Foundational DP definition; calibrating noise to sensitivity
+@InProceedings{dwork2006eurocrypt,
+  author="Dwork, Cynthia
+  and Kenthapadi, Krishnaram
+  and McSherry, Frank
+  and Mironov, Ilya
+  and Naor, Moni",
+  editor="Vaudenay, Serge",
+  title="Our Data, Ourselves: Privacy Via Distributed Noise Generation",
+  booktitle="Advances in Cryptology - EUROCRYPT 2006",
+  year="2006",
+  publisher="Springer Berlin Heidelberg",
+  address="Berlin, Heidelberg",
+  pages="486--503",
+  isbn="978-3-540-34547-3"
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Exponential mechanism; directly used in thesis (Theorem 2)
+@InProceedings{mcsherry2007,
+  author = {McSherry, Frank and Talwar, Kunal},
+  year = {2007},
+  month = {11},
+  pages = {94-103},
+  title = {Mechanism Design via Differential Privacy},
+  isbn = {978-0-7695-3010-9},
+  journal = {Proceedings - Annual IEEE Symposium on Foundations of Computer Science, FOCS},
+  doi = {10.1109/FOCS.2007.66}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Smooth sensitivity; informs sensitivity analysis approach
+@InProceedings{nissim2007,
+  author = {Nissim, Kobbi and Raskhodnikova, Sofya and Smith, Adam},
+  year = {2007},
+  month = {06},
+  pages = {75-84},
+  title = {Smooth sensitivity and sampling in private data analysis},
+  journal = {Proceedings of the Annual ACM Symposium on Theory of Computing},
+  doi = {10.1145/1250790.1250803}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES: 120-private-selection
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP and robust statistics; propose-test-release framework
+% Also relevant to: C (Sensitivity Analysis)
+@inproceedings{dwork2009,
+  author    = {Dwork, Cynthia and Lei, Jing},
+  title     = {Differential privacy and robust statistics},
+  booktitle = {Proceedings of the 41st Annual ACM Symposium on Theory of Computing
+               (STOC)},
+  pages     = {371--380},
+  year      = {2009},
+  publisher = {ACM},
+  doi       = {10.1145/1536414.1536466}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Comprehensive DP textbook; post-processing theorem (Prop 2.1)
+%        Batch 29: final bibliography tail only — references [83]=Valiant 1984, [84]=Warner randomized response 1965, [85]=Xiao ITCS 2013; no technical content and no new promotions; closes the dwork2013 pass
+%        Batch 28: Appendix B Composition Theorems for (ε,δ)-DP = simple adaptive composition, not advanced composition: Theorem B.1 proves a two-stage $(2ε,2δ)$ bound using the positive remainder measure μ(C1)=(Pr[T1∈C1]−e^ε Pr'[T1∈C1])_+ and Corollary B.2 extends this by induction to $(kε,kδ)$ for equal-budget adaptive mechanisms; acknowledgments non-technical; references pp. 270–276 confirm key identities [11]=Chan–Shi–Song ICALP 2010, [23]=Calibrating Noise to Sensitivity, [26]=dwork2010 STOC, [32]=Boosting and DP, [66]=Nikolov–Talwar–Zhang, [68]=smooth sensitivity, [82]=Ullman 2013 — no new promotions; prior expectation that Appendix B might prove advanced composition was incorrect
+%        Batch 27: §13.1 continuation (composition as the combined-exposure threat; non-algorithmic-thinking challenge; Example 3.7 revisited: 10,000 databases require per-database ε0=1/801 for lifetime ε=1 with probability 1−e^{-32}; possible per-study/per-researcher budgeting; Epsilon Registry proposal) + §13.2 differential-privacy lens (privacy≈stability≈learnability; DP equilibrium prices yield approximate truthfulness; adaptive-data-analysis answers generalize) + Appendix A Gaussian mechanism proof (Theorem A.1 = Thm 3.22 via one-dimensional privacy-loss tail bound and high-dimensional rotation to v = f(x)−f(y); appendix highlights the prospective-only weakness of (ε,δ)-DP) + Appendix A.1 biblio ([23] folklore, [66] non-spherical Gaussian) — no new promotions
+%        Batch 26 (LOAD-BEARING): §12.3.1 finish proof of Theorem 12.5 pan-private counter (bijection for t*≥t decrements noise on disjoint cover {0,…,t-1}; t*<t case increments on {t,…,T-1}; joint (state,output) differ by ≤ e^ε on adjacent streams) + §12.3.2 Theorem 12.6 Ω(log T) lower bound via phase-packing (ε=1, k=(log₂T)/4, T/k disjoint-phase inputs xⁱ=0^{ki}∘1^k∘0^{k((T/k)-i-1)}, match-i events contradict ε-DP) + §12.4 Average-case query release: Algorithm 18 K-Projected Laplace Mechanism (noise Lap(√(8k ln(1/δ))/ε), project onto K=AB₁); Theorem 12.7 (ε,δ)-DP; Theorem 12.8 ‖a−â‖²₂ ≤ kn√(192 ln(1/δ) ln(2|X|/β))/ε via Lemma 12.9 polar-body norm + Minkowski + Hölder + §12.5 biblio primary-attribution CONFIRMED (p. 253: dwork2010 STOC ref [26] for counting-under-continual-observation algorithm AND lower bound; textbook ref [11] is the Chan–Shi–Song continual-release line later tracked in this repo under citekey chan2011, credited for similar algorithms + Lemma 12.2 Laplace-sum concentration) + §13 Reflections / §13.1 Toward Practicing Privacy (reconstruction-attack motivation, five research directions, CDP intro as precursor to zCDP with Chernoff-type concentration Pr[loss≥kε]∼exp(-k²), incomparable to (ε,δ)-DP) — no new promotions per user policy: registry lines 268/299 remain NOT-IN-ANNOTATED[dwork2010] and 269/300 remain NOT-IN-ANNOTATED[chan2011]; dwork2010 STOC now triply load-bearing (Fig 12.1 definition, Thm 12.5 upper bound, Thm 12.6 lower bound) — recommend adding to priority annotation queue
+%        Batch 25 (LOAD-BEARING): §12.1 close + §12.2 Pan-Privacy (Def 12.8 user-level X-adjacency, event-level relaxation, Remark 12.1 secret storage, randomized-response density estimation + pan-private fraction/cropped-mean/heavy-hitter problems) + §12.3 Continual Observation opening (H1N1 event-level vs medical-search user-level; Adj(S,S') via R⊆[|S|], event-level |R|≤1; three naive Ω(√T/ε) options; Figure 12.1 binary-tree event-level (ε,0)-DP counter with expected error (log₂T)^{3/2} and max O((log₂T)^{5/3}); Lemma 12.2 Laplace-sum Bernstein-style tail + Corollaries 12.3–12.4; Figure 12.1 NOT pan-private due to joint state+output leak; §12.3.1 Figure 12.2 Pan-Private Counter with ended-interval noise erasure + Theorem 12.5 (ε,0)-pan-privacy with max error O(log(1/β)·log^{2.5} T/ε) over T outputs and per-round O(log(1/β)·log^{1.5} T/ε), bijection proof begun) — textbook re-exposition of dwork2010 STOC binary-tree counter; per-round log^{1.5}(T)/ε bound referenced in prospective-surveillance-design.md lines 268/299 currently NOT-IN-ANNOTATED[dwork2010]; promotion to SOURCED[dwork2013 Thm 12.5] pending user policy decision at §12.4 biblio batch; chan2011 not cited in these pages
+%        Batch 24: §11.3 ERM (LinearLearner Alg 17 updating w_t via convex-combination with Laplace-perturbed gradient; Thm 11.5 (ε,δ)-DP via Thm 3.20 advanced composition; Thm 11.6 accuracy O(√(ln(1/δ))ln(d/β)/(ε√T)) via two Azuma applications + Thm 11.4) + §11.4 biblio + §12 Additional Models opening (local / pan-privacy / continual observation) + §12.1 Local model (Defs 12.1–12.7 local randomizer, LR oracle, ε-local algorithm, SQ model, PAC; Observation 12.1 ε-local ⇒ ε-DP; local ≡ SQ up to poly factors; three separations from centralized DP: single-query O(1) vs Θ(√n), proper learning local=SQ vs centralized=PAC (parity), query release local=agnostic-SQ vs centralized=agnostic-PAC (conjunctions); local ⇒ pan-private; SMC remark) — not load-bearing; no promotions
+%        Batch 23: §11 PAC + SQ framework (Defs 11.1–11.5) + §11.1 sample complexity of private ML (exp-mech n≥O(max(log|C|/(εα),log|C|/α²)); PAC-learnable ⇔ privately PAC-learnable; SQ + Laplace) + §11.2 DP online learning (Alg 15/16 RWM as per-round exp-mech, Thm 11.1 non-private regret 2√(ln k/T), Thm 11.2 (ε,δ)-DP via Thm 3.20 advanced composition, Thms 11.3–11.4 private regret O(√(ln(1/δ))ln(k/β)/(ε√T))) — Thm 11.2 uses Thm 3.20 already in registry; no new promotions (not load-bearing)
+%        Batch 22: §10.3.1 MIDR close (exp-mech as entropy-regularized welfare max, exactly truthful with VCG payments) + §10.3.2 sensitive surveyor's problem (insensitive vs sensitive value models; sensitive-value impossibility) + §10.3.3 better privacy-cost measures (mutual-information + sandwich paradox, outcome-based cost, allocation rule, upper-bound-only) + §10.4 biblio + Joint Differential Privacy (Kearns–Pai–Roth–Ullman, Rogers–Roth) + §11 ML opening (generalization ≈ privacy) (not load-bearing; no promotions)
+%        Batch 21: §10.2.2 Δ-large games + private correlated-equilibrium mechanism + §10.2.3 punishing exp-mech (Thms 10.3–10.5, facility location) + §10.3 privacy-aware agents + §10.3.1 private-VCG opening (not load-bearing; no promotions)
+%        Batch 20: Thm 9.2 proof sketch + §9.4 biblio + §10 opening (Def 10.1, Def 10.2, Prop 10.1, §10.2.1 digital-goods auction, §10.2.2 Def 10.3) (not load-bearing; no promotions)
+%        Batch 19: §9.1 Def 9.2 close + §9.2 Distributions I–III + Thm 9.1 + §9.2.1 Def 9.3 + §9.3 Def 9.4 + Thm 9.2 (not load-bearing; no promotions)
+%        Batch 18: §8.2.2 Thm 8.8 + Claim 8.9 + §8.3 biblio + §9 opening + §9.1 Defs 9.1–9.2 (not load-bearing; no promotions)
+%        Promoted: Def 2.4 (ε,δ)-DP p.17, Prop 2.1 post-processing p.19, Thm 2.2 group privacy p.20,
+%                  Def 3.4 + Thm 3.10 exp mech p.38 (factor-of-2), Thm 3.14/3.16 basic composition pp.42-43,
+%                  Thm 3.20 advanced composition p.49 + Cor 3.21 inverse design rule,
+%                  §3.6 sparse vector pp.57-64 (Algorithm 1 AboveThreshold, Thm 3.23 ε-DP, Thm 3.24 accuracy,
+%                  Sparse + NumericSparse Thms 3.25-3.28).
+%        Batch 5 resolved: notation-crosswalk Thm 3.10 factor-of-2; theorem3-composition basic-composition row;
+%                  zcdp-composition basic portion (advanced still pending Thm 3.20 in batch 6).
+%        Batch 6 resolved: 8 advanced-composition mirror sites across differential-privacy.md,
+%                  zcdp-composition.md, theorem3-composition.md, prospective-surveillance-design.md
+%                  + 4 claim-registry mirrors, all → SOURCED[dwork2013 p. 49] via Thm 3.20.
+%        Batch 7 resolved: sparse-vector portion of 2 UNSOURCED items (claim-registry.md:302 and
+%                  prospective-surveillance-design.md:247) → SOURCED[dwork2013 §3.6 pp. 57-64].
+%        Batch 8: §4 intro + §4.1 SmallDB + §4.2 opening (pp. 67-76) — query release, not
+%                  load-bearing for dp-scan-paper; no registry promotions.
+%        Batch 9: §4.2 Private MW (Algorithm 5/6, Thm 4.10 convergence, Thms 4.13/4.14/4.15)
+%                  + §4.3 biblio (pp. 77-86) — query release, not load-bearing; no registry promotions.
+%        Batch 10: §4.3 biblio close + §5 opening + §5.1 Net mechanism (Algorithm 7, Defs 5.1-5.2,
+%                  Props 5.1-5.2) + §5.2 IC mechanism opening (Defs 5.3-5.5) (pp. 87-96) — query
+%                  release generalisations, not load-bearing; no registry promotions.
+%        Batch 11: §5.2 IC mechanism (Algorithm 8, Thms 5.3-5.7) + §5.2.1 Median Mechanism
+%                  (Algorithm 9, Thms 5.8-5.10) + Perceptron (Algorithm 10, Thms 5.11-5.12)
+%                  + §5.2.2 OnlineIC opening (Thm 5.13) (pp. 97-106) — query release, not
+%                  load-bearing; no registry promotions.
+%        Batch 12: §5.2.2 OnlineIC complete (Algorithm 11, Thms 5.13-5.15) + §5.3 Connections
+%                  (IC-α-net duality §5.3.1, agnostic-learning equivalence + SQ-model hardness
+%                  §5.3.2, game-theoretic view Def 5.7 + Prop 5.16 §5.3.3) + §5.4 biblio
+%                  (pp. 107-116) — query release generalisations, not load-bearing; no
+%                  registry promotions.
+%        Batch 13: §6 Boosting for Queries intro + §6.1 algorithm (Def 6.1 base synopsis
+%                  generator, Figure 6.1 boosting schema with attenuated reweighting,
+%                  Thm 6.1 accuracy+privacy via advanced composition, Lemma 6.2 opening)
+%                  (pp. 117-126) — boosting over queries, not load-bearing; no registry
+%                  promotions.
+%        Batch 14: §6.1 Boosting proofs complete (Claim 6.3 Z_t bound via telescoping,
+%                  Lemma 6.4 ε*=4αTρ/µ per-sample DP via exp-mech, Eq 6.7 ε_sample via
+%                  Thm 3.20 advanced composition, Eq 6.8 slackness µ) + §6.2 base synopsis
+%                  generators (§6.2.1 Lemma 6.5 generalisation bound, §6.2.2 Thm 6.6
+%                  brute-force base generator, Thm 6.7 syntheticizer for linear queries)
+%                  (pp. 127-136) — boosting over queries, not load-bearing; no registry
+%                  promotions.
+%        Batch 16: §7.2.1 IQR complete (Algorithm 12 Scale, Thm 7.1 (4ε,δ)-DP via two
+%                  discretizations + Thm 3.16) + §7.3 Stability (Defs 7.2-7.3 k-stable +
+%                  distance-to-instability, Prop 7.2 A_dist (ε,δ)-DP + utility, Algorithm 13,
+%                  Algorithm 14 A_samp, Thm 7.3 (ε,δ)-DP + subsampling-stable utility,
+%                  Lemma 7.4) + §7 biblio: PTR=Dwork-Lei[22]; local sensitivity first defined
+%                  by Nissim-Raskhodnikova-Smith[68]; A_samp=Smith-Thakurta[80] (pp. 147-156)
+%                  — not load-bearing; smooth sensitivity NOT defined in dwork2013 §7 (it is
+%                  in nissim2007); no registry promotions.
+%        Batch 15: §6.2.3 Thm 6.8 (fractional linear queries base generator) + Thm 6.9
+%                  (end-to-end assembly, Eq 6.10) + §6.3 biblio (Dwork et al. [32] = dwork2010,
+%                  AdaBoost [78], syntheticizer [28]) (pp. 137-139) — not load-bearing;
+%                  §7.1 Subsample and Aggregate (pp. 140-142) — not load-bearing;
+%                  §7.2 Propose-Test-Release opening (pp. 143-146) LOAD-BEARING: Def 7.1
+%                  local sensitivity p.144, PTR motivation + why naive LS scaling fails,
+%                  PTR test design (distance query + Lap(1/ε) + conservative threshold),
+%                  no (ε,0)-DP from PTR, §7.2.1 IQR example opening; no registry promotions
+%                  (smooth-sensitivity citations in thesis point to nissim2007, not dwork2013).
+%        Citekey retains year=2013 for back-compat; canonical venue year is 2014 (FnT TCS vol. 9).
+@book{dwork2013,
+  author = {Dwork, Cynthia and Roth, Aaron},
+  year = {2013},
+  month = {01},
+  pages = {},
+  title = {The Algorithmic Foundations of Differential Privacy},
+  isbn = {9781601988195},
+  doi = {10.1561/9781601988195}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] zCDP composition; directly used in thesis (Theorem 3)
+@inproceedings{bun2016,
+  author = {Bun, Mark and Steinke, Thomas},
+  year = {2016},
+  month = {11},
+  pages = {635-658},
+  title = {Concentrated Differential Privacy: Simplifications, Extensions, and Lower Bounds},
+  volume = {9985},
+  isbn = {978-3-662-53640-7},
+  doi = {10.1007/978-3-662-53641-4_24}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Renyi DP; related privacy notion for composition analysis
+@INPROCEEDINGS{mironov2017,
+  author = {Mironov, Ilya},
+  booktitle = {2017 IEEE 30th Computer Security Foundations Symposium (CSF)},
+  title = {Rényi Differential Privacy},
+  year = {2017},
+  ISSN = {2374-8303},
+  pages = {263-275},
+  doi = {10.1109/CSF.2017.11},
+  publisher = {IEEE Computer Society},
+  address = {Los Alamitos, CA, USA},
+  month = Aug
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 110-dp-foundations
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Gaussian DP; alternative privacy framework
+@misc{dong2019,
+  title={Gaussian Differential Privacy},
+  author={Jinshuo Dong and Aaron Roth and Weijie J. Su},
+  year={2019},
+  eprint={1905.02383},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG},
+  url={https://arxiv.org/abs/1905.02383}
+}
+
+% ============================================================
+% 120-private-selection (legacy C) — Private Selection
+% ============================================================
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] DP feature selection via stability arguments
+@inproceedings{thakurta2013,
+  author    = {Thakurta, Abhradeep and Smith, Adam},
+  title     = {Differentially private feature selection via stability arguments,
+               and the robustness of the {L}asso},
+  booktitle = {Proceedings of the 26th Annual Conference on Learning Theory (COLT)},
+  pages     = {819--850},
+  year      = {2013},
+  publisher = {PMLR}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES: 110-dp-foundations
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Lipschitz extensions for generalized exponential mechanism
+% Also relevant to: B (DP Foundations)
+@inproceedings{raskhodnikova2016,
+  author = {Raskhodnikova, Sofya and Smith, Adam},
+  year = {2016},
+  month = {10},
+  pages = {495-504},
+  title = {Lipschitz Extensions for Node-Private Graph Statistics and the Generalized Exponential Mechanism},
+  doi = {10.1109/FOCS.2016.60}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Raskhodnikova & Smith (2015) arXiv version of the GEM paper — Lipschitz extensions, generalized exponential mechanism, node-private graph statistics. Category C.
+@misc{raskhodnikova2015,
+      title={Efficient Lipschitz Extensions for High-Dimensional Graph Statistics and Node Private Degree Distributions},
+      author={Sofya Raskhodnikova and Adam Smith},
+      year={2015},
+      eprint={1504.07912},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR},
+      url={https://arxiv.org/abs/1504.07912},
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Private selection from private candidates
+@misc{jingcheng2018,
+  title={Private Selection from Private Candidates},
+  author={Jingcheng Liu and Kunal Talwar},
+  year={2018},
+  eprint={1811.07971},
+  archivePrefix={arXiv},
+  primaryClass={cs.DS},
+  url={https://arxiv.org/abs/1811.07971}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Practical DP Top-k selection with pay-what-you-get composition
+@unknown{durfee2019,
+  author = {Durfee, David and Rogers, Ryan},
+  year = {2019},
+  month = {05},
+  pages = {},
+  title = {Practical Differentially Private Top-$k$ Selection with Pay-what-you-get Composition},
+  doi = {10.48550/arXiv.1905.04273}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Permute-and-flip: alternative to exponential mechanism
+@misc{ryan2020,
+  title={Permute-and-Flip: A new mechanism for differentially private selection},
+  author={Ryan McKenna and Daniel Sheldon},
+  year={2020},
+  eprint={2010.12603},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/2010.12603}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES: 130-composition-and-continual-observation
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Optimal DP composition for exponential mechanisms
+% Also relevant to: D (Composition and Continual Observation)
+@misc{jinshuo2020,
+  title={Optimal Differential Privacy Composition for Exponential Mechanisms and the Cost of Adaptivity},
+  author={Jinshuo Dong and David Durfee and Ryan Rogers},
+  year={2020},
+  eprint={1909.13830},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/1909.13830}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP and robust statistics in high dimensions
+@inproceedings{liu2022,
+  author    = {Liu, Xuechen and Kong, Weihao and Oh, Sewoong},
+  title     = {Differential privacy and robust statistics in high dimensions},
+  booktitle = {Proceedings of the 35th Annual Conference on Learning Theory (COLT)},
+  pages     = {1167--1246},
+  year      = {2022},
+  publisher = {PMLR}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Joint exponential mechanism for DP top-k
+@unknown{gillenwater2022,
+  author = {Gillenwater, Jennifer and Joseph, Matthew and Medina, Andrés and Ribero, Mónica},
+  year = {2022},
+  month = {01},
+  pages = {},
+  title = {A Joint Exponential Mechanism For Differentially Private Top-$k$},
+  doi = {10.48550/arXiv.2201.12333}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] Unbounded DP quantile and maximum estimation
+@misc{durfee2023,
+  title={Unbounded Differentially Private Quantile and Maximum Estimation},
+  author={David Durfee},
+  year={2023},
+  eprint={2305.01177},
+  archivePrefix={arXiv},
+  primaryClass={cs.DS},
+  url={https://arxiv.org/abs/2305.01177}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Universally instance-optimal mechanisms for private estimation
+@InProceedings{asi2024,
+  title = {Universally Instance-Optimal Mechanisms for Private Statistical Estimation},
+  author = {Asi, Hilal and Duchi, John C. and Haque, Saminul and Li, Zewei and Ruan, Feng},
+  booktitle = {Proceedings of Thirty Seventh Conference on Learning Theory},
+  pages = {221--259},
+  year = {2024},
+  editor = {Agrawal, Shipra and Roth, Aaron},
+  volume = {247},
+  series = {Proceedings of Machine Learning Research},
+  month = {30 Jun--03 Jul},
+  publisher = {PMLR},
+  url = {https://proceedings.mlr.press/v247/asi24a.html}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Structure and sensitivity in DP: comparing K-norm mechanisms
+@misc{awan2024,
+  title={Structure and Sensitivity in Differential Privacy: Comparing K-Norm Mechanisms},
+  author={Jordan Awan and Aleksandra Slavkovic},
+  year={2024},
+  eprint={1801.09236},
+  archivePrefix={arXiv},
+  primaryClass={stat.ME},
+  url={https://arxiv.org/abs/1801.09236}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 120-private-selection
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Private selection with heterogeneous sensitivities
+% Directly relevant to thesis's Delta(k_w) normalization approach
+@misc{daniela2025,
+  title={Private Selection with Heterogeneous Sensitivities},
+  author={Daniela Antonova and Allegra Laro and Audra McMillan and Lorenz Wolf},
+  year={2025},
+  eprint={2501.05309},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/2501.05309}
+}
+
+% ============================================================
+% 130-composition-and-continual-observation (legacy D) — Composition and Continual Observation
+% ============================================================
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Foundational DP under continual observation
+@inproceedings{dwork2010,
+  author = {Dwork, Cynthia and Naor, Moni and Pitassi, Toniann and Rothblum, Guy},
+  year = {2010},
+  month = {06},
+  pages = {715-724},
+  title = {Differential privacy under continual observation},
+  journal = {Proceedings of the Annual ACM Symposium on Theory of Computing},
+  doi = {10.1145/1806689.1806787}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Private and continual release of statistics; tree mechanism
+@article{chan2011,
+  author = {Chan, T.-H and Shi, Elaine and Song, Dawn},
+  year = {2011},
+  month = {11},
+  pages = {26},
+  title = {Private and Continual Release of Statistics},
+  volume = {14},
+  journal = {ACM Trans. Inf. Syst. Secur.},
+  doi = {10.1145/2043621.2043626}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP histograms under continual observation: streaming selection
+@misc{cardoso2022,
+  title={Differentially Private Histograms under Continual Observation: Streaming Selection into the Unknown},
+  author={Adrian Rivera Cardoso and Ryan Rogers},
+  year={2022},
+  eprint={2103.16787},
+  archivePrefix={arXiv},
+  primaryClass={cs.DS},
+  url={https://arxiv.org/abs/2103.16787}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Price of DP under continual observation
+@article{jain2023,
+  author = {Jain, Palak and Raskhodnikova, Sofya and Sivakumar, Satchit and Smith, Adam},
+  year = {2023},
+  month = {07},
+  pages = {},
+  title = {The price of differential privacy under continual observation},
+  doi = {10.48550/arXiv.2112.00828}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Almost tight error bounds on DP continual counting
+@misc{monika2024,
+  title={Almost Tight Error Bounds on Differentially Private Continual Counting},
+  author={Monika Henzinger and Jalaj Upadhyay and Sarvagya Upadhyay},
+  year={2024},
+  eprint={2211.05006},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG},
+  url={https://arxiv.org/abs/2211.05006}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Efficient noise generation for streaming DP
+@misc{krishnamurthy2024,
+  title={Efficient and Near-Optimal Noise Generation for Streaming Differential Privacy},
+  author={Krishnamurthy Dvijotham and H. Brendan McMahan and Krishna Pillutla and Thomas Steinke and Abhradeep Thakurta},
+  year={2024},
+  eprint={2404.16706},
+  archivePrefix={arXiv},
+  primaryClass={cs.DS},
+  url={https://arxiv.org/abs/2404.16706}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Continual counting with gradual privacy expiration
+@misc{joel2024,
+  title={Continual Counting with Gradual Privacy Expiration},
+  author={Joel Daniel Andersson and Monika Henzinger and Rasmus Pagh and Teresa Anna Steiner and Jalaj Upadhyay},
+  year={2024},
+  eprint={2406.03802},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/2406.03802}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Lower bounds for DP under continual observation
+@misc{edith2024,
+  title={Lower Bounds for Differential Privacy Under Continual Observation and Online Threshold Queries},
+  author={Edith Cohen and Xin Lyu and Jelani Nelson and Tamás Sarlós and Uri Stemmer},
+  year={2024},
+  eprint={2403.00028},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/2403.00028}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] Fine-grained complexity of DP continual observation
+@misc{hendrik2024,
+  title={Constant matters: Fine-grained Complexity of Differentially Private Continual Observation},
+  author={Hendrik Fichtenberger and Monika Henzinger and Jalaj Upadhyay},
+  year={2024},
+  eprint={2202.11205},
+  archivePrefix={arXiv},
+  primaryClass={cs.DS},
+  url={https://arxiv.org/abs/2202.11205}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 130-composition-and-continual-observation
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Separating oblivious and adaptive DP under continual observation
+@unknown{bun2026,
+  author = {Bun, Mark and Gaboardi, Marco and Wagaman, Connor},
+  year = {2026},
+  month = {03},
+  pages = {},
+  title = {Separating Oblivious and Adaptive Differential Privacy under Continual Observation},
+  doi = {10.48550/arXiv.2603.11029}
+}
+
+% ============================================================
+% 140-dp-inference (legacy E) — DP Inference
+% ============================================================
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP for clinical trial data; early applied DP testing
+@inproceedings{vu2009,
+  author = {Vu, Duy and Slavkovic, Aleksandra},
+  year = {2009},
+  month = {12},
+  pages = {138-143},
+  title = {Differential Privacy for Clinical Trial Data: Preliminary Evaluations},
+  doi = {10.1109/ICDMW.2009.52}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP chi-squared hypothesis testing
+@article{gaboardi2016,
+  author = {Gaboardi, Marco and Lim, Hyun and Rogers, Ryan and Vadhan, Salil},
+  year = {2016},
+  month = {02},
+  pages = {},
+  title = {Differentially Private Chi-Squared Hypothesis Testing: Goodness of Fit and Independence Testing},
+  doi = {10.48550/arXiv.1602.03090}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Revisiting DP hypothesis tests for categorical data
+@misc{wang2017,
+  title={Revisiting Differentially Private Hypothesis Tests for Categorical Data},
+  author={Yue Wang and Jaewoo Lee and Daniel Kifer},
+  year={2017},
+  eprint={1511.03376},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/1511.03376}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP uniformly most powerful tests for binomial data
+@misc{jordan2018,
+  title={Differentially Private Uniformly Most Powerful Tests for Binomial Data},
+  author={Jordan Awan and Aleksandra Slavkovic},
+  year={2018},
+  eprint={1805.09236},
+  archivePrefix={arXiv},
+  primaryClass={math.ST},
+  url={https://arxiv.org/abs/1805.09236}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES: 130-composition-and-continual-observation
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP change-point detection
+% Also relevant to: D (Continual Observation)
+@misc{rachel2018,
+  title={Differentially Private Change-Point Detection},
+  author={Rachel Cummings and Sara Krehbiel and Yajun Mei and Rui Tuo and Wanrong Zhang},
+  year={2018},
+  eprint={1808.10056},
+  archivePrefix={arXiv},
+  primaryClass={math.ST},
+  url={https://arxiv.org/abs/1808.10056}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Closest prior work in DP + surveillance hypothesis testing for the thesis
+%        related-work chapter and Assignment 4 survey.
+@INPROCEEDINGS{degue2018,
+  author={Degue, Kwassi H. and Ny, Jerome Le},
+  booktitle={2018 56th Annual Allerton Conference on Communication, Control, and Computing (Allerton)},
+  title={On Differentially Private Gaussian Hypothesis Testing},
+  year={2018},
+  pages={842-847},
+  doi={10.1109/ALLERTON.2018.8635911}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Structure of optimal private tests for simple hypotheses
+@misc{clement2019,
+  title={The Structure of Optimal Private Tests for Simple Hypotheses},
+  author={Clément L. Canonne and Gautam Kamath and Audra McMillan and Adam Smith and Jonathan Ullman},
+  year={2019},
+  eprint={1811.11148},
+  archivePrefix={arXiv},
+  primaryClass={cs.DS},
+  url={https://arxiv.org/abs/1811.11148}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Private hypothesis selection
+@article{bun2021,
+  author = {Bun, Mark and Kamath, Gautam and Steinke, Thomas and Wu, Zhiwei},
+  year = {2021},
+  month = {01},
+  pages = {1-1},
+  title = {Private Hypothesis Selection},
+  volume = {PP},
+  journal = {IEEE Transactions on Information Theory},
+  doi = {10.1109/TIT.2021.3049802}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] Hypothesis testing for DP linear regression
+@inproceedings{alabi2022,
+  author = {Alabi, Daniel and Vadhan, Salil},
+  year = {2022},
+  month = {01},
+  pages = {14196-14209},
+  title = {Hypothesis Testing for Differentially Private Linear Regression},
+  doi = {10.52202/068431-1032}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 140-dp-inference
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] Adaptive false discovery rate control with privacy guarantee
+@misc{xintao2023,
+  title={Adaptive False Discovery Rate Control with Privacy Guarantee},
+  author={Xintao Xia and Zhanrui Cai},
+  year={2023},
+  eprint={2305.19482},
+  archivePrefix={arXiv},
+  primaryClass={stat.ML},
+  url={https://arxiv.org/abs/2305.19482}
+}
+
+% ============================================================
+% 150-spatial-dp (legacy F) — Spatial DP
+% ============================================================
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 150-spatial-dp
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Privacy meets practice on geographic data
+@inproceedings{machanavajjhala2008,
+  author = {Machanavajjhala, Ashwin and Kifer, Daniel and Abowd, John and Gehrke, Johannes and Vilhuber, Lars},
+  year = {2008},
+  month = {04},
+  pages = {277-286},
+  title = {Privacy: Theory meets Practice on the Map},
+  journal = {IEEE 24th International Conference on Data Engineering (ICDE)},
+  doi = {10.1109/ICDE.2008.4497436}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 150-spatial-dp
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP grids for geospatial data
+@misc{wahbeh2012,
+  title={Differentially Private Grids for Geospatial Data},
+  author={Wahbeh Qardaji and Weining Yang and Ninghui Li},
+  year={2012},
+  eprint={1209.1322},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/1209.1322}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 150-spatial-dp
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP spatial decompositions
+@misc{graham2012,
+  title={Differentially Private Spatial Decompositions},
+  author={Graham Cormode and Magda Procopiuc and Entong Shen and Divesh Srivastava and Ting Yu},
+  year={2012},
+  eprint={1103.5170},
+  archivePrefix={arXiv},
+  primaryClass={cs.DB},
+  url={https://arxiv.org/abs/1103.5170}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 150-spatial-dp
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Geo-indistinguishability: DP for location-based systems
+@inproceedings{andres2013,
+  author = {Andrés, Miguel and Bordenabe, Nicolás and Chatzikokolakis, Kostas and Palamidessi, Catuscia},
+  year = {2013},
+  month = {11},
+  pages = {},
+  title = {Geo-Indistinguishability: Differential Privacy for Location-Based Systems},
+  journal = {Proceedings of the ACM Conference on Computer and Communications Security},
+  doi = {10.1145/2508859.2516735}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 150-spatial-dp
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] DP-WHERE: DP modeling of human mobility
+@inproceedings{mir2013,
+  author = {Mir, Darakhshan and Isaacman, Sibren and Caceres, Ramon and Martonosi, Margaret and Wright, Rebecca},
+  year = {2013},
+  month = {10},
+  pages = {580-588},
+  title = {DP-WHERE: Differentially private modeling of human mobility},
+  journal = {Proceedings - 2013 IEEE International Conference on Big Data, Big Data 2013},
+  doi = {10.1109/BigData.2013.6691626}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 150-spatial-dp
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: LOW
+% [LOW] Fully spatial personalized DP mechanism
+@article{niknam2020,
+  author = {Niknam, Nadia and Abadi, Mahdi and Deldar, Fatemeh},
+  year = {2020},
+  month = {04},
+  pages = {101526},
+  title = {A fully spatial personalized differentially private mechanism to provide non-uniform privacy guarantees for spatial databases},
+  volume = {92},
+  journal = {Information Systems},
+  doi = {10.1016/j.is.2020.101526}
+}
+
+% ============================================================
+% 160-disease-surveillance (legacy G) — Disease Surveillance
+% ============================================================
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] Privacy protection versus cluster detection tradeoff (core tension)
+@article{olson2006,
+  author = {Olson, Karen and Grannis, Shaun and Mandl, Kenneth},
+  year = {2006},
+  month = {12},
+  pages = {2002-8},
+  title = {Privacy Protection Versus Cluster Detection in Spatial Epidemiology},
+  volume = {96},
+  journal = {American journal of public health},
+  doi = {10.2105/AJPH.2005.069526}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Context-sensitive approach to anonymizing spatial surveillance data
+@article{cassa2006,
+  author = {Cassa, Christopher and Grannis, Shaun and Overhage, J. Marc and Mandl, Kenneth},
+  year = {2006},
+  month = {03},
+  pages = {160-5},
+  title = {A Context-Sensitive Approach to Anonymizing Spatial Surveillance Data},
+  volume = {13},
+  journal = {Journal of the American Medical Informatics Association : JAMIA},
+  doi = {10.1197/jamia.M1920}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES: 140-dp-inference
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] DP anomaly detection with epidemic outbreak case study
+% Also relevant to: E (DP Hypothesis Testing)
+@inproceedings{fan2013,
+  author = {Fan, Liyue and Xiong, Li},
+  year = {2013},
+  month = {12},
+  pages = {833-840},
+  title = {Differentially Private Anomaly Detection with a Case Study on Epidemic Outbreak Detection},
+  isbn = {978-1-4799-3142-2},
+  doi = {10.1109/ICDMW.2013.129}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES: 150-spatial-dp
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: HIGH
+% [HIGH] PSCluster: DP spatial cluster detection for mobile crowdsourcing
+% Also relevant to: F (DP for Spatial Data)
+@INPROCEEDINGS{hu2018,
+  author={Hu, Boyang and Zhou, Baojian and Yan, Qiben and Alim, Adil and Chen, Feng and Zeng, Huacheng},
+  booktitle={2018 IEEE Conference on Communications and Network Security (CNS)},
+  title={PSCluster: Differentially Private Spatial Cluster Detection for Mobile Crowdsourcing Applications},
+  year={2018},
+  pages={1-9},
+  doi={10.1109/CNS.2018.8433174}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES: 210-multisource-platforms
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] KOIPE multi-cloud SMC + Bayesian inference attack on aggregated Kulldorff counts; non-DP game-theoretic countermeasure
+@article{liu2022multicloud,
+  author = {Liu, Jianqing and Zhang, Chi and Xue, Kaiping and Fang, Yuguang},
+  year = {2022},
+  month = {01},
+  pages = {1-1},
+  title = {Privacy Preservation in Multi-Cloud Secure Data Fusion for Infectious-Disease Analysis},
+  volume = {PP},
+  journal = {IEEE Transactions on Mobile Computing},
+  doi = {10.1109/TMC.2022.3145745}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES: 150-spatial-dp
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Privacy-preserving sharing of COVID-19 pandemic data
+% Also relevant to: F (DP for Spatial Data)
+@article{liu2023,
+  author = {Liu, Fang and Wang, Dong and Yan, Tian},
+  year = {2023},
+  month = {05},
+  pages = {},
+  title = {Some examples of privacy-preserving sharing of COVID-19 pandemic data with statistical utility evaluation},
+  volume = {23},
+  journal = {BMC Medical Research Methodology},
+  doi = {10.1186/s12874-023-01927-3}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Standardised DP framework for epidemiological modeling with mobile data
+@article{savi2023,
+  author = {Savi, Merveille Koissi and Yadav, Akash and Zhang, Wanrong and Vembar, Navin and Schroeder, Andrew and Balsari, Satchit and Buckee, Caroline and Vadhan, Salil and Kishore, Nishant},
+  year = {2023},
+  month = {10},
+  pages = {e0000233},
+  title = {A standardised differential privacy framework for epidemiological modeling with mobile phone data},
+  volume = {2},
+  journal = {PLOS Digital Health},
+  doi = {10.1371/journal.pdig.0000233}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Impacts of census DP on small-area disease mapping
+@misc{yanran2023,
+  title={Impacts of Census Differential Privacy for Small-Area Disease Mapping to Monitor Health Inequities},
+  author={Yanran Li and Brent A. Coull and Nancy Krieger and Emily Peterson and Lance A. Waller and Jarvis T. Chen and Rachel C. Nethery},
+  year={2023},
+  eprint={2209.04316},
+  archivePrefix={arXiv},
+  primaryClass={stat.AP},
+  url={https://arxiv.org/abs/2209.04316}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 160-disease-surveillance
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper
+% IMPORTANCE: MEDIUM
+% [MEDIUM] DP federated learning for localized control of infectious disease
+@misc{kerkouche2026,
+  title={Differentially private federated learning for localized control of infectious disease dynamics},
+  author={Raouf Kerkouche and Henrik Zunker and Mario Fritz and Martin J. Kühn},
+  year={2026},
+  eprint={2509.14024},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG},
+  url={https://arxiv.org/abs/2509.14024}
+}
+
+% ============================================================
+% 170-spatial-sdc (legacy H) — Spatial SDC
+% ============================================================
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 170-spatial-sdc
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Foundational geomasking for health data confidentiality
+@article{armstrong1999,
+  author = {Armstrong, Marc P. and Rushton, Gerard and Zimmerman, Dale L.},
+  title = {Geographically masking health data to preserve confidentiality},
+  journal = {Statistics in Medicine},
+  volume = {18},
+  number = {5},
+  pages = {497-525},
+  doi = {https://doi.org/10.1002/(SICI)1097-0258(19990315)18:5<497::AID-SIM45>3.0.CO;2-\#},
+  year = {1999}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 170-spatial-sdc
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Geocoding in cancer research review
+@article{rushton2006,
+  author = {Rushton, Gerard and Armstrong, Marc and Gittler, Josephine and Greene, Barry and Pavlik, Claire and West, Michele},
+  year = {2006},
+  month = {03},
+  pages = {S16-24},
+  title = {Geocoding in Cancer Research: A Review},
+  volume = {30},
+  journal = {American journal of preventive medicine},
+  doi = {10.1016/j.amepre.2005.09.011}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 170-spatial-sdc
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Revealing spatial distribution while preserving privacy
+@article{shannon2008,
+  author = {Shannon C. Wieland and Christopher A. Cassa and Kenneth D. Mandl and Bonnie Berger},
+  title = {Revealing the spatial distribution of a disease while preserving privacy},
+  journal = {Proceedings of the National Academy of Sciences},
+  volume = {105},
+  number = {46},
+  pages = {17608-17613},
+  year = {2008},
+  doi = {10.1073/pnas.0801021105},
+  URL = {https://www.pnas.org/doi/abs/10.1073/pnas.0801021105}
+}
+
+% ============================================================
+% 180-context-ethics (legacy I) — Context and Ethics
+% ============================================================
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Economic impact of livestock movement restrictions
+@article{tildesley2019,
+  author = {Tildesley, Michael and Brand, Samuel and Brooks-Pollock, Ellen and Bradbury, N. and Werkman, Marleen and Keeling, Matt},
+  year = {2019},
+  month = {09},
+  pages = {1-7},
+  title = {The Role of Movement Restrictions in Limiting the Economic Impact of Livestock Infections},
+  volume = {2},
+  journal = {Nature Sustainability},
+  doi = {10.1038/s41893-019-0356-5}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] SARS-CoV-2 RNA in wastewater tracks community infection
+@article{peccia2020,
+  author = {Peccia, Jordan and Zulli, Alessandro and Brackney, Doug and Grubaugh, Nathan and Kaplan, Edward and Casanovas-Massana, Arnau and Ko, Albert and Malik, Amyn and Wang, Dennis and Wang, Mike and Warren, Joshua and Weinberger, Daniel and Arnold, Wyatt and Omer, Saad},
+  year = {2020},
+  month = {10},
+  pages = {},
+  title = {Measurement of SARS-CoV-2 RNA in wastewater tracks community infection dynamics},
+  volume = {38},
+  journal = {Nature biotechnology},
+  doi = {10.1038/s41587-020-0684-z}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Mobile phone data for COVID-19 epidemiology
+@article{grantz2020,
+  author = {Grantz, Kyra and Meredith, Hannah and Cummings, Derek and Metcalf, C. Jessica and Grenfell, Bryan and Giles, John and Mehta, Shruti and Solomon, Sunil and Labrique, Alain and Kishore, Nishant and Buckee, Caroline and Wesolowski, Amy},
+  year = {2020},
+  month = {09},
+  pages = {4961},
+  title = {The use of mobile phone data to inform analysis of COVID-19 pandemic epidemiology},
+  volume = {11},
+  journal = {Nature Communications},
+  doi = {10.1038/s41467-020-18190-5}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Big data for public health surveillance in Vietnam
+@inbook{long2021,
+  author = {Long, Bui and Ha, Thai and Nguyen, Ngoc and Sukhbaatar, Khandmaa and Bui My, Hanh},
+  year = {2021},
+  month = {01},
+  pages = {197-204},
+  title = {Big Data for Public Health Surveillance in Vietnam: Challenges and Opportunities},
+  isbn = {978-3-030-49535-0},
+  doi = {10.1007/978-3-030-49536-7_17}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] One Health Joint Plan of Action 2022-2026
+@book{fao2022,
+  title={One Health Joint Plan of Action, 2022--2026: Working together for the health of humans, animals, plants and the environment},
+  author={Nations, F.A.O.U. and Organization, W.H. and Programme, U.N.E. and Health, W.O.A.},
+  isbn={9789251369579},
+  url={https://books.google.com.vn/books?id=henIEAAAQBAJ},
+  year={2022},
+  publisher={Food \& Agriculture Org.}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Infectious disease surveillance in Vietnam: pathogen early detection
+@article{taylorrobinson2022,
+  author = {Taylor-Robinson, Andrew and Nguyen, Thanh Huong},
+  year = {2022},
+  month = {10},
+  pages = {397-400},
+  title = {Infectious Disease Surveillance in Vietnam: Pathogen Early Detection in Hanoi Wastewater},
+  volume = {8},
+  journal = {Exploratory Research and Hypothesis in Medicine},
+  doi = {10.14218/ERHM.2022.00089}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Wastewater sequencing reveals early cryptic SARS-CoV-2 variant transmission
+@article{karthikeyan2022,
+  author = {Karthikeyan, Smruthi and Levy, Joshua and Hoff, Peter and Humphrey, Greg and Birmingham, Amanda and Jepsen, Kristen and Farmer, Sawyer and Tubb, Helena and Valles, Tommy and Tribelhorn, Caitlin and Tsai, Rebecca and Aigner, Stefan and Sathe, Shashank and Moshiri, Niema and Henson, Benjamin and Mark, Adam and Hakim, Abbas and Baer, Nathan and Barber, Tom and Knight, Rob},
+  year = {2022},
+  month = {07},
+  pages = {},
+  title = {Wastewater sequencing reveals early cryptic SARS-CoV-2 variant transmission},
+  volume = {609},
+  journal = {Nature},
+  doi = {10.1038/s41586-022-05049-6}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Animal disease surveillance workforce in Vietnam
+@article{auplish2024,
+  author = {Auplish, Aashima and Vu, Thi and Pham-Duc, Phuc and Green, Alexandra and Tiwari, Harish and Stevenson, Mark and Dhand, Navneet},
+  year = {2024},
+  month = {07},
+  pages = {},
+  title = {Investigating the workforce capacity and needs for animal disease surveillance and outbreak investigation: a mixed-methods study of veterinary services in Vietnam},
+  volume = {11},
+  journal = {Frontiers in Veterinary Science},
+  doi = {10.3389/fvets.2024.1410606}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Ethics framework for displaying wastewater surveillance data
+@article{persad2025,
+  author = {Govind Persad and Anne Barnhill and Douglas MacKay},
+  journal = {Journal of Law and the Biosciences},
+  number = {1},
+  pages = {lsaf001},
+  publisher = {Oxford University Press},
+  title = {Displaying Wastewater Surveillance Data: An Ethics Framework},
+  volume = {12},
+  year = {2025}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 180-context-ethics
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Ethical considerations for wastewater surveillance by US DoD
+@Article{smith2025,
+  author="Smith, Hunter Jackson
+  and Agans, Richard T
+  and Kowallis, William J",
+  title="Ethical Considerations for Wastewater Surveillance Conducted by the US Department of Defense",
+  journal="JMIR Public Health Surveill",
+  year="2025",
+  month="Feb",
+  day="6",
+  volume="11",
+  pages="e67145",
+  issn="2369-2960",
+  doi="10.2196/67145",
+  url="https://publichealth.jmir.org/2025/1/e67145"
+}
+
+% ============================================================
+% 190-auxiliary-methods (legacy J) — Auxiliary Methods
+% ============================================================
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 190-auxiliary-methods
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Differentially private subspace clustering
+@inproceedings{wang2015,
+  author = {Wang, Yining and Wang, Yu-Xiang and Singh, Aarti},
+  booktitle = {Advances in Neural Information Processing Systems},
+  editor = {C. Cortes and N. Lawrence and D. Lee and M. Sugiyama and R. Garnett},
+  pages = {},
+  publisher = {Curran Associates, Inc.},
+  title = {Differentially private subspace clustering},
+  url = {https://proceedings.neurips.cc/paper_files/paper/2015/file/051e4e127b92f5d98d3c79b195f2b291-Paper.pdf},
+  volume = {28},
+  year = {2015}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 190-auxiliary-methods
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Differentially private k-means clustering
+@misc{dong2015,
+  title={Differentially Private $k$-Means Clustering},
+  author={Dong Su and Jianneng Cao and Ninghui Li and Elisa Bertino and Hongxia Jin},
+  year={2015},
+  eprint={1504.05998},
+  archivePrefix={arXiv},
+  primaryClass={cs.CR},
+  url={https://arxiv.org/abs/1504.05998}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 190-auxiliary-methods
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Learning rate adaptation for DP learning
+@InProceedings{koskela2020,
+  title = {Learning Rate Adaptation for Differentially Private Learning},
+  author = {Koskela, Antti and Honkela, Antti},
+  booktitle = {Proceedings of the Twenty Third International Conference on Artificial Intelligence and Statistics},
+  pages = {2465--2475},
+  year = {2020},
+  editor = {Chiappa, Silvia and Calandra, Roberto},
+  volume = {108},
+  series = {Proceedings of Machine Learning Research},
+  month = {26--28 Aug},
+  publisher = {PMLR},
+  url = {https://proceedings.mlr.press/v108/koskela20a.html}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 190-auxiliary-methods
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: LOW
+% [LOW] Differentially private clustering of easy instances
+@article{edith2021,
+  author = {Edith Cohen and Haim Kaplan and Yishay Mansour and Uri Stemmer and Eliad Tsfadia},
+  title = {Differentially-Private Clustering of Easy Instances},
+  journal = {CoRR},
+  volume = {abs/2112.14445},
+  year = {2021},
+  url = {https://arxiv.org/abs/2112.14445},
+  eprinttype = {arXiv},
+  eprint = {2112.14445}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 190-auxiliary-methods
+% SECONDARY_CATEGORIES: 160-disease-surveillance
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Generating Poisson-distributed DP synthetic data
+% Also relevant to: G (Privacy in Disease Surveillance)
+@article{quick2021generatingpoisson,
+  title={Generating Poisson-Distributed Differentially Private Synthetic Data},
+  volume={184},
+  ISSN={1467-985X},
+  url={http://dx.doi.org/10.1111/rssa.12711},
+  DOI={10.1111/rssa.12711},
+  number={3},
+  journal={Journal of the Royal Statistical Society Series A: Statistics in Society},
+  publisher={Oxford University Press (OUP)},
+  author={Quick, Harrison},
+  year={2021},
+  month=jul,
+  pages={1093--1108}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 190-auxiliary-methods
+% SECONDARY_CATEGORIES: 160-disease-surveillance
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Improving Poisson DP synthetic data; application to CDC WONDER
+% Also relevant to: G (Privacy in Disease Surveillance)
+@misc{quick2021improvingpoisson,
+  title={Improving the Utility of Poisson-Distributed, Differentially Private Synthetic Data via Prior Predictive Truncation with an Application to CDC WONDER},
+  author={Harrison Quick},
+  year={2021},
+  eprint={2103.03833},
+  archivePrefix={arXiv},
+  primaryClass={stat.AP},
+  url={https://arxiv.org/abs/2103.03833}
+}
+
+% ============================================================
+% 200-linkage-risk (legacy K) — Linkage Risk
+% ============================================================
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES: 210-multisource-platforms,160-disease-surveillance
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] DIRI: adversarial patient reidentification with LLMs for evaluating clinical
+%        text anonymization. Closest direct precedent for joint structured-plus-text
+%        re-identification: a biencoder ranker p(y|x;theta) = softmax_x[f(y;theta).g(x;theta)]
+%        links redacted clinical notes to candidate patient profiles in a structured
+%        demographic database (Section 3.1, p. 3). Empirical headline: even when
+%        ClinicalBERT masks all identified PII, DIRI still re-identifies 9% of test
+%        notes from a database of several thousand patients (Abstract, p. 1; Section 1,
+%        p. 2). Greater-than-20% token masking is needed to drive top-1 reID below 1%
+%        on the WCM heart-failure cohort (Section 6.1, p. 7). Cohort: 21,311 HF
+%        patients, 14.68M reports, ICD-9 428 / ICD-10 I50, Jan 2008 - Jul 2018, 70/15/15
+%        split (Section 3.3, p. 4). Three tools compared (Philter, BiLSTM-CRF,
+%        ClinicalBERT) with ClinicalBERT dominating across the masking-rate sweep
+%        (Figure 2, p. 6). Models: RoBERTa-base 125M (g) + TAPAS-base 111M (f);
+%        coordinate-ascent training, 55 epochs, lr 1e-5, ~10 GPU-h on Quadro RTX 6000
+%        (Section 3.5, p. 5). No formal DP/k-anonymity guarantee; empirical adversary
+%        only (Sections 6.1-6.3, pp. 7-8). Promoted from inbox to 200-linkage-risk
+%        on 2026-04-25.
+@article{morris2025diri,
+  title = {DIRI: Adversarial Patient Reidentification with Large Language Models for Evaluating Clinical Text Anonymization},
+  author = {Morris, John X. and Campion, Thomas R. and Nutheti, Sri Laasya and Peng, Yifan and Raj, Akhil and Zabih, Ramin and Cole, Curtis L.},
+  journal = {AMIA Joint Summits on Translational Science Proceedings},
+  volume = {2025},
+  pages = {355--364},
+  year = {2025},
+  eprint = {2410.17035},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.CL},
+  url = {https://pubmed.ncbi.nlm.nih.gov/40502277/},
+  note = {PMID: 40502277; PMCID: PMC12150728; preprint: arXiv:2410.17035}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Published template for linkage-risk-modeling thesis direction.
+%        Bayesian/generative model for re-identification risk in incomplete
+%        datasets; validated on real datasets. Closest existing work to the
+%        multi-source extension Hung proposes.
+@article{rocher2019,
+  author = {Rocher, Luc and Hendrickx, Julien and Montjoye, Yves-Alexandre},
+  year = {2019},
+  month = {07},
+  pages = {},
+  title = {Estimating the success of re-identifications in incomplete datasets using generative models},
+  volume = {10},
+  journal = {Nature Communications},
+  doi = {10.1038/s41467-019-10933-3}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Foundational k-anonymity framework; uniqueness of simple demographics.
+%          Related work anchor for the linkage-risk-modeling direction.
+@article{sweeney2002,
+  author = {Sweeney, L.},
+  year = {2002},
+  month = {01},
+  pages = {1-14},
+  title = {k-Anonymity: A Model for Protecting Privacy},
+  volume = {10},
+  journal = {IEEE Security and Privacy}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Netflix Prize de-anonymization; canonical large-scale linkage attack.
+%          Related work anchor for the linkage-risk-modeling direction.
+@inproceedings{narayanan2008,
+  author = {Narayanan, Arvind and Shmatikov, Vitaly},
+  year = {2008},
+  month = {06},
+  pages = {111-125},
+  title = {Robust De-anonymization of Large Sparse Datasets},
+  isbn = {978-0-7695-3168-7},
+  journal = {Proc IEEE Symp Sec Priv},
+  doi = {10.1109/SP.2008.33}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Risk-based k-anonymity for medical records; prosecutor vs. journalist threat
+%          models; D4 (truncated-at-zero Poisson) recommended for journalist scenario.
+%          Related work anchor for thesis-wip linkage-risk direction.
+@article{emam2008,
+author = {Emam, Khaled and Dankar, Fida},
+year = {2008},
+month = {07},
+pages = {627-37},
+title = {Protecting Privacy Using k-Anonymity},
+volume = {15},
+journal = {Journal of the American Medical Informatics Association : JAMIA},
+doi = {10.1197/jamia.M2716}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Adversarial re-identification risk framework integrating prosecutor/journalist/marketer
+%        risk measures via Bayesian network + Monte Carlo simulation. Empirically validates
+%        that pragmatic attacker scenarios reduce Risk_overall by 90–100% vs worst case on
+%        1.58M VUMC EHR records. Directly relevant to thesis-wip linkage-risk framing.
+%        Placed here (Category K); content is re-identification risk, not platform collection.
+@article{xia2021,
+  author = {Xia, Weiyi and Liu, Yongtai and Wan, Zhiyu and Vorobeychik, Yevgeniy and Kantacioglu, Murat and Nyemba, Steve and Clayton, Ellen and Malin, Bradley},
+  year = {2021},
+  month = {01},
+  pages = {744--752},
+  title = {Enabling realistic health data re-identification risk assessment through adversarial modeling},
+  volume = {28},
+  number = {4},
+  journal = {Journal of the American Medical Informatics Association : JAMIA},
+  doi = {10.1093/jamia/ocaa327}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Comprehensive Science Advances review of anonymization science: linkage attacks
+%        (pseudonymization, k-anonymity, uniqueness), attacks on aggregate data (MIA,
+%        attribute inference, reconstruction), ML model privacy, synthetic data, and DP.
+%        Covers rocher2019 framework prominently. Broad reference for thesis-wip linkage-risk
+%        direction and dp-scan-paper related-work framing.
+@article{gadotti2024,
+  author = {Gadotti, Andrea and Rocher, Luc and Houssiau, Florimond and Creţu, Ana-Maria and Montjoye, Yves-Alexandre},
+  year = {2024},
+  month = {07},
+  pages = {eadn7053},
+  title = {Anonymization: The imperfect science of using data while preserving privacy},
+  volume = {10},
+  journal = {Science advances},
+  doi = {10.1126/sciadv.adn7053}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Large-scale deployment case study: re-identification risk management for the
+%        All of Us Research Program (329,084 participants). Describes the Registered Tier
+%        suppression/generalization/date-shifting pipeline and applies the xia2021
+%        adversarial model (voter registration + social media) to confirm 95th-percentile
+%        risk ≤ 0.09. Finds Other or Unknown Gender subgroups exceed threshold (max 0.21).
+%        High relevance to thesis-wip: formalizes compound multi-source disclosure risk
+%        (eqs. 1–2) and demonstrates tiered access architecture for participatory health data.
+@article{xia2023,
+author = {Xia, Weiyi and Basford, Melissa and Carroll, Robert and Clayton, Ellen and Harris, Paul and Kantacioglu, Murat and Liu, Yongtai and Nyemba, Steve and Vorobeychik, Yevgeniy and Wan, Zhiyu and Malin, Bradley},
+year = {2023},
+month = {02},
+pages = {907--914},
+title = {Managing reidentification risks while providing access to the All of Us research program},
+volume = {30},
+number = {5},
+journal = {Journal of the American Medical Informatics Association : JAMIA},
+doi = {10.1093/jamia/ocad021}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Two-parameter Bayesian (Pitman-Yor) model for correctness κ of identification
+%        techniques. Analytical E[κ(n)|h,γ] and PYC-MB scaling law validated on 476
+%        correctness curves (exact, sparse, robust). Relevant to thesis-wip linkage-risk
+%        framing: provides scaling-law template and closed-form V_k, Ξ expressions.
+%        Category K (content); placed after Category L header in file — no move needed.
+@Article{rocher2025,
+  author={Rocher, Luc
+  and Hendrickx, Julien M.
+  and Montjoye, Yves-Alexandre de},
+  title={A scaling law to model the effectiveness of identification techniques},
+  journal={Nature Communications},
+  year={2025},
+  month={Jan},
+  day={09},
+  volume={16},
+  number={1},
+  pages={347},
+  abstract={AI techniques are increasingly being used to identify individuals both offline and online. However, quantifying their effectiveness at scale and, by extension, the risks they pose remains a significant challenge. Here, we propose a two-parameter Bayesian model for exact matching techniques and derive an analytical expression for correctness ($\kappa$), the fraction of people accurately identified in a population. We then generalize the model to forecast how $\kappa$ scales from small-scale experiments to the real world, for exact, sparse, and machine learning-based robust identification techniques. Despite having only two degrees of freedom, our method closely fits 476 correctness curves and strongly outperforms curve-fitting methods and entropy-based rules of thumb. Our work provides a principled framework for forecasting the privacy risks posed by identification techniques, while also supporting independent accountability efforts for AI-based biometric systems.},
+  issn={2041-1723},
+  doi={10.1038/s41467-024-55296-6},
+  url={https://doi.org/10.1038/s41467-024-55296-6}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] SoK paper: canonical taxonomy of 9 linkage attack intents (singling out
+%        through blind targeted reidentification) with (ā,c) identifying-record
+%        formalism. Categorises 94 attacks from 418 papers. Foundational threat-
+%        modelling reference for thesis-wip linkage-risk framing. Category K.
+@article{powar2023,
+  title={SoK: Managing risks of linkage attacks on data privacy},
+  author={Jovan Powar and Alastair R. Beresford},
+  journal={Proc. Priv. Enhancing Technol.},
+  year={2023},
+  volume={2023},
+  pages={97-116},
+  doi={10.56553/popets-2023-0043},
+  url={https://api.semanticscholar.org/CorpusID:257417122}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Graph-based re-identification: BP-IIG attack achieves 52% rank-1
+%        identification in 43k-person mobile phone dataset; 24% after 20 weeks.
+%        GDPR linkability analysis for interaction/contact-tracing data. Category K.
+@article{cretu2022,
+  author = {Creţu, Ana-Maria and Monti, Federico and Marrone, Stefano and Dong, Xiaowen and Bronstein, Michael and Montjoye, Yves-Alexandre},
+  year = {2022},
+  month = {01},
+  pages = {},
+  title = {Interaction data are identifiable even across long periods of time},
+  volume = {13},
+  journal = {Nature Communications},
+  doi = {10.1038/s41467-021-27714-6}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] PPRL fingerprinting attack: tokens shared with quasi-identifiers (YOB, ZIP3)
+%        enable re-identification scaling from <1% at 1M to 10-20% at 250M individuals.
+%        Token design drives risk; full-name+DOB+full-ZIP (Token D) achieves near-zero.
+%        Practical mitigations: centralized matching, demographic separation. Category K.
+@ARTICLE{eliazar2026,
+  title    = "Re-identification risk for common privacy preserving patient
+              matching strategies when shared with de-identified demographics",
+  author   = "Eliazar, Austin and Brown, James Thomas and Cinamon, Sara and
+              Kantarcioglu, Murat and Malin, Bradley",
+  journal  = "J Am Med Inform Assoc",
+  volume   =  33,
+  number   =  2,
+  pages    = "336--346",
+  month    =  feb,
+  year     =  2026,
+  address  = "England",
+  keywords = "electronic medical records; privacy; record linkage",
+  language = "en"
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Reidentification risk and k-anonymization for longitudinal panel data; proposes sno-unicity and k-MM. Category K; directly relevant to thesis-wip linkage-risk direction.
+@article{li2022,
+  author = {Li, Shaobo and Schneider, Matthew and Yu, Yan and Gupta, Sachin},
+  year = {2022},
+  month = {10},
+  pages = {},
+  title = {Reidentification Risk in Panel Data: Protecting for k -Anonymity},
+  volume = {34},
+  journal = {Information Systems Research},
+  doi = {10.1287/isre.2022.1169}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES: 110-dp-foundations
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Intersection attack: independently k-anonymized (ℓ-diverse, t-close) releases about overlapping populations
+%        compose into a privacy breach via sensitive-value-set intersection. Positive result: (ε,δ)-DP implies
+%        (ε',δ')-semantic privacy (Thm 15: ε'=e^{3ε}-1+2√δ, δ'=O(n√δ)), proving DP resists arbitrary side info.
+%        Category K; cross-reference B. Tier 1 foundational paper for thesis-wip multi-source linkage-risk direction.
+@misc{ganta2008,
+      title={Composition Attacks and Auxiliary Information in Data Privacy},
+      author={Srivatsava Ranjit Ganta and Shiva Prasad Kasiviswanathan and Adam Smith},
+      year={2008},
+      eprint={0803.0032},
+      archivePrefix={arXiv},
+      primaryClass={cs.DB},
+      url={https://arxiv.org/abs/0803.0032},
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Unicity bound: 4 spatio-temporal points re-identify 95% of individuals.
+%        Power-law formula ε = α − (vh)^β; β = 0.157 − 0.007p.
+%        Direct empirical-theoretical ancestor of rocher2019. Category K.
+@ARTICLE{demontjoye2013,
+  title    = "Unique in the Crowd: The privacy bounds of human mobility",
+  author   = "de Montjoye, Yves-Alexandre and Hidalgo, C{\'e}sar A and
+              Verleysen, Michel and Blondel, Vincent D",
+  journal  = "Scientific Reports",
+  volume   =  3,
+  number   =  1,
+  pages    = "1376",
+  month    =  mar,
+  year     =  2013,
+  doi      = "10.1038/srep01376"
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Impossibility theorem for k-anonymity in high dimensions. Theorem 1 (eq. 19, p. 906):
+%        lim_{d→∞} E[M(S)/M(D)]=1 — information loss converges to 1 for any k-anonymous grouping.
+%        Corollary 2 (eq. 11, p. 904): lim_{d→∞} P(B_k|B_1)=0 for any k≥2, f<1.
+%        Binary choice: suppress most data OR lose desired anonymity (§4, p. 909).
+%        Category K; thesis-wip Tier 1 foundational paper for problem-lock framing.
+@inproceedings{aggarwal2005,
+author = {Aggarwal, Charu C.},
+title = {On k-anonymity and the curse of dimensionality},
+year = {2005},
+isbn = {1595931546},
+publisher = {VLDB Endowment},
+abstract = {In recent years, the wide availability of personal data has made the problem of privacy preserving data mining an important one. A number of methods have recently been proposed for privacy preserving data mining of multidimensional data records. One of the methods for privacy preserving data mining is that of anonymization, in which a record is released only if it is indistinguishable from k other entities in the data. We note that methods such as k-anonymity are highly dependent upon spatial locality in order to effectively implement the technique in a statistically robust way. In high dimensional space the data becomes sparse, and the concept of spatial locality is no longer easy to define from an application point of view. In this paper, we view the k-anonymization problem from the perspective of inference attacks over all possible combinations of attributes. We show that when the data contains a large number of attributes which may be considered quasi-identifiers, it becomes difficult to anonymize the data without an unacceptably high amount of information loss. This is because an exponential number of combinations of dimensions can be used to make precise inference attacks, even when individual attributes are partially specified within a range. We provide an analysis of the effect of dimensionality on k-anonymity methods. We conclude that when a data set contains a large number of attributes which are open to inference attacks, we are faced with a choice of either completely suppressing most of the data or losing the desired level of anonymity. Thus, this paper shows that the curse of high dimensionality also applies to the problem of privacy preserving data mining.},
+booktitle = {Proceedings of the 31st International Conference on Very Large Data Bases},
+pages = {901–909},
+numpages = {9},
+location = {Trondheim, Norway},
+series = {VLDB '05}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: dp-scan-paper, thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Canonical legal framing of anonymization failure and post-PII regulatory test. Category K.
+@article{ohm2010,
+  added-at = {2012-08-06T13:30:33.000+0200},
+  author = {Ohm, Paul},
+  biburl = {https://www.bibsonomy.org/bibtex/261225f84d3fc809981d436ffe76489b6/sdo},
+  description = {Broken Promises of Privacy: Responding to the Surprising Failure of Anonymization by Paul Ohm :: SSRN},
+  interhash = {e5f5be1dfe3d7da207c058591e18f58f},
+  intrahash = {61225f84d3fc809981d436ffe76489b6},
+  journal = {UCLA Law Review, Vol. 57, p. 1701, 2010},
+  keywords = {anonymity info20 privacy toRead},
+  language = {English},
+  location = {http://ssrn.com/paper=1450006},
+  publisher = {SSRN},
+  timestamp = {2012-08-06T13:30:34.000+0200},
+  title = {Broken Promises of Privacy: Responding to the Surprising Failure of Anonymization},
+  type = {Accepted Paper Series},
+  year = 2009
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] δ-presence: membership-disclosure risk metric for private-subset anonymization. Category K.
+@inproceedings{nergiz2007,
+  author = {Nergiz, Mehmet Ercan and Atzori, Maurizio and Clifton, Chris},
+  title = {Hiding the presence of individuals from shared databases},
+  year = {2007},
+  isbn = {9781595936868},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/1247480.1247554},
+  doi = {10.1145/1247480.1247554},
+  abstract = {Advances in information technology, and its use in research, are increasing both the need for anonymized data and the risks of poor anonymization. We present a metric, δ-presence, that clearly links the quality of anonymization to the risk posed by inadequate anonymization. We show that existing anonymization techniques are inappropriate for situations where δ-presence is a good metric (specifically, where knowing an individual is in the database poses a privacy risk), and present algorithms for effectively anonymizing to meet δ-presence. The algorithms are evaluated in the context of a real-world scenario, demonstrating practical applicability of the approach.},
+  booktitle = {Proceedings of the 2007 ACM SIGMOD International Conference on Management of Data},
+  pages = {665–676},
+  numpages = {12},
+  keywords = {delta presence, k-anonymity, medical databases, privacy},
+  location = {Beijing, China},
+  series = {SIGMOD '07}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Topology-based passive de-anonymization of anonymized social-network graphs. Twitter+Flickr experiment: 30.8% correct re-id at 12.1% error with 150 seeds. Defs 1–4 (re-id algorithm, mapping adversary, privacy breach, success rate). Phase transition 30–150 seeds for 10^5–10^6 members. Category K (Linkage Risk). Distinct from narayanan2008 (Netflix tabular de-anonymization).
+@inproceedings{narayanan2009,
+   title={De-anonymizing Social Networks},
+   url={http://dx.doi.org/10.1109/SP.2009.22},
+   DOI={10.1109/sp.2009.22},
+   booktitle={2009 30th IEEE Symposium on Security and Privacy},
+   publisher={IEEE},
+   author={Narayanan, Arvind and Shmatikov, Vitaly},
+   year={2009},
+   month=may, pages={173–187} }
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES: 190-auxiliary-methods
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] MIA on de-identified MIMIC-III discharge summaries: attacker advantage 0.47,
+%        AUC 0.79 for LAAT ICD-9 classifier at 8066 notes / 4000 tokens (Fig. 1a, p. 4).
+%        Key-phrase-driven synthetic note pipeline (KP-miner + YAKE + GPT-3.5-turbo)
+%        recovers utility within 1–4 F1 points while reducing Adv by 2–5 points (Tables 3–4,
+%        p. 6); does not eliminate leakage. Direct free-text residual-risk paper for
+%        thesis-wip 2023–2026 frontier. Pairs with chuang2025 (shared authors Chuang, Jiang).
+@article{sarkar2024,
+  author = {Sarkar, Atiquer Rahman and Chuang, Yao-Shun and Mohammed, Noman and Jiang, Xiaoqian},
+  journal = {Scientific Reports},
+  doi = {10.1038/s41598-024-81170-y},
+  number = {1},
+  year = {2024},
+  month = {nov 29},
+  pages = {29669},
+  title = {De-identification is not enough: a comparison between de-identified and synthetic clinical notes},
+  url = {https://doi.org/10.1038/s41598-024-81170-y},
+  volume = {14}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES: 190-auxiliary-methods
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Companion paper to sarkar2024 (shared authors Chuang, Sarkar, Mohammed, Jiang).
+%        Benchmarks three prompt strategies (One-shot / Normalized One-shot / Keyword) x
+%        three LLMs (GPT-3.5, GPT-4, Mistral 7B) x two regimes (DE-ID / RE-ID) on 9817
+%        MIMIC-III discharge summaries. One-shot + Mistral 7B leaks date PHI in 87.45%
+%        and geographic PHI in 85.35% of notes (Table 1, p. 888); Keyword generation
+%        leaks only geographic (23-30%) with zero co-occurrence. Normalized One-shot
+%        achieves the highest ICD-9 utility (GPT-3.5 micro 0.749 > 0.746 RE-ID
+%        benchmark, Figure 2, p. 888). RE-ID > DE-ID on utility in 6/9 cells.
+%        Public code: github.com/lifestrugglee/Privacy-Synthetic-Generation.
+@article{chuang2025,
+  author = {Chuang, Yao-Shun and Sarkar, Atiquer Rahman and Hsu, Yu-Chun and Mohammed, Noman and Jiang, Xiaoqian},
+  journal = {Journal of the American Medical Informatics Association : JAMIA},
+  doi = {10.1093/jamia/ocaf037},
+  number = {5},
+  year = {2025},
+  month = {may 1},
+  pages = {885--892},
+  title = {Robust privacy amidst innovation with large language models through a critical assessment of the risks.},
+  url = {https://doi.org/10.1093/jamia/ocaf037},
+  volume = {32}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES: 210-multisource-platforms
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Contextual-Integrity-framed privacy-leakage benchmark for LLM-driven ambient
+%        clinical documentation. 420 aci-bench-derived test transcripts (10 patients x 6
+%        relationship types x 7 information topics). All six evaluated LLMs (LLaMA-3.1
+%        8B/70B, Mixtral 8x7B/8x22B, Claude-3.5 Haiku/Sonnet) leak third-party info under
+%        every single-turn condition. Claude-Haiku best overall (Any 0.02, Specific 0.01,
+%        No-SOAP-Priv); LLaMA-70B best open (Any 0.08). Pooled privacy-prompt reduction
+%        7.2 pp (p=.002); pooled SOAP reduction 4.2 pp (p=.012), model-dependent. Knowledge-
+%        action gap: norm-awareness >= 0.83 yet notes still leak. Two-stage generate-then-
+%        edit with contextually specific prompt brings all models to Any <= 0.06 (Table 7,
+%        p. 15). Public code/data: github.com/nhsengland/priv-lm-health-extended. Rare
+%        direct technical coverage of the conversational/ambient-documentation modality
+%        for thesis-wip.
+@article{chim2026,
+  author  = {Chim, Jenny and Pearson, Jonathan and Schofield, Dan and Liakata, Maria},
+  title   = {Evaluating privacy leakages in {LLM}-driven ambient clinical documentation},
+  journal = {Frontiers in Digital Health},
+  volume  = {8},
+  pages   = {1761624},
+  year    = {2026},
+  doi     = {10.3389/fdgth.2026.1761624},
+  issn    = {2673-253X},
+  url     = {https://doi.org/10.3389/fdgth.2026.1761624}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] Phantom Anonymization: shadow-model attack adapted from synthetic-data evaluation
+%        (Stadler et al. [30]) to syntactic anonymization. Per-target Random-Forest classifier
+%        (100 estimators) trained on anonymized shadow samples. Privacy Gain PG = 1 - (TPR - FPR)
+%        with 0/1/(1,2] semantics (eq. 1, p. 4). Texas Hospital Discharge 2013, 50k records,
+%        11 categorical + 7 numeric attrs, 10 outlier targets. Two scenarios: national
+%        (s_B=s_C=0.8, o_BC=0.8) and study (s_B=s_C=0.2, o_BC=0.2). Grid: k-Anonymity k in
+%        {2,5}, Average Risk {5%, 20%, 50%}, t-Closeness t=0.5, 2-Diversity crossed with
+%        global/local generalization, microaggregation, cell suppression. Key findings:
+%        (1) detectable signals only from outlier targets (Fig. 3, p. 5); (2) transformation
+%        method matters as much as privacy model - microaggregation leaves strongest signals
+%        regardless of k-Anonymity parameter (Figs. 4-5, pp. 6-7; sec. 5.2-5.3); (3) 2-Anonymity
+%        + local generalization gives reasonable trade-off (sec. 5.4, p. 8; sec. 6.1, p. 9);
+%        (4) 0.5-Closeness protects attribute inference but not membership inference under a
+%        dominant sensitive category (sec. 5.3, p. 7). Explicit scope: tool for investigating
+%        anonymization processes, NOT a practical whole-dataset pre-release risk measurement;
+%        no formal guarantee (sec. 6.2, p. 9). Code: github.com/BIH-MI/phantom-anonymization.
+@article{meurers2025,
+  author  = {Meurers, Thierry and Halilovic, Mehmed and Otte, Karen and Despraz, J{\'e}r{\'e}mie and Kaabachi, Bayrem and Kulynych, Bogdan and Raisaro, Jean Louis and Prasser, Fabian},
+  title   = {Phantom Anonymization: Adversarial testing for membership inference risks in anonymized health data},
+  journal = {Computers in Biology and Medicine},
+  volume  = {196},
+  pages   = {110738},
+  year    = {2025},
+  issn    = {0010-4825},
+  doi     = {10.1016/j.compbiomed.2025.110738},
+  url     = {https://doi.org/10.1016/j.compbiomed.2025.110738},
+  keywords = {Health data, Privacy, Anonymization, Membership inference, Adversarial testing}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES: 210-multisource-platforms, 190-auxiliary-methods
+% PROJECTS: thesis-wip
+% IMPORTANCE: HIGH
+% [HIGH] End-to-end titratable pipeline producing five "digital twin" clones
+%        from mixed EHR + Apple Watch + lab data (3029 participants), benchmarked
+%        with paired privacy/utility/fidelity metrics. DataSifter (Small/Medium/Large)
+%        vs. Synthetic Data Vault (CTGAN, Gaussian Copula). DS_Large attains the
+%        highest aggregate SDMetrics privacy score (0.83) while preserving 83.1%
+%        average GLM CI overlap with the original; SDV CTGAN coefficients are not
+%        significantly different from zero on the longitudinal AVG_AEB_day target,
+%        and SDV's only longitudinal synthesizer (PARSynthesizer) is unsuitable
+%        for generic clinical sequences (p. 2; p. 7). No formal DP/k-anonymity
+%        guarantee is claimed; privacy is operationalized via SDMetrics
+%        v0.13.1 inference-attack scores. Single Michigan cohort; no DP comparator
+%        run; DataSifter is patented and exclusively licensed (p. 8).
+@article{marino2025,
+	author = {Marino, Simeone and Cassidy, Ruth and Nanni, Joseph and Wang, Yuxuan and Liu, Yipeng and Tang, Mingyi and Yuan, Yuan and Chen, Toby and Sinha, Anik and Pandian, Balaji and Dinov, Ivo D. and Burns, Michael L.},
+	journal = {npj Digital Medicine},
+	doi = {10.1038/s41746-025-01935-1},
+	number = {1},
+	year = {2025},
+	month = {aug 16},
+	pages = {526},
+	title = {Medical data sharing and synthetic clinical data generation -- maximizing biomedical resource utilization and minimizing participant re-identification risks},
+	url = {https://doi.org/10.1038/s41746-025-01935-1},
+	volume = {8}
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 200-linkage-risk
+% SECONDARY_CATEGORIES: 210-multisource-platforms, 110-dp-foundations
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Comment in npj Digital Medicine surveying privacy-preserving strategies
+%          for EHR secondary use with LLMs. Maps HIPAA/GDPR/APPI/PDPO to a
+%          taxonomy of mitigations (DP, deidentification, surrogation, FL,
+%          synthetic data, local LLM). Defines unique vs group reidentification.
+%          Cites OpenDeID 95% accuracy and the April-2024 MediSecure breach.
+%          Useful as terminology-stabilizing proxy for thesis-wip; no formal DP
+%          guarantees, no empirical results.
+@article{jonnagaddala2025,
+	author = {Jonnagaddala, Jitendra and Wong, Zoie Shui-Yee},
+	journal = {npj Digital Medicine},
+	doi = {10.1038/s41746-025-01429-0},
+	number = {1},
+	year = {2025},
+	month = {jan 16},
+	pages = {34},
+	title = {Privacy preserving strategies for electronic health records in the era of large language models},
+	url = {https://doi.org/10.1038/s41746-025-01429-0},
+	volume = {8},
+}
+
+% ============================================================
+% 210-multisource-platforms (legacy L) — Multisource Platforms
+% ============================================================
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 210-multisource-platforms
+% SECONDARY_CATEGORIES:
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] NCI PPRL re-identification risk evaluation via token frequency + token-count fingerprint analysis.
+%           Companion to eliazar2026. Empirical risk ≈ 0.0002 at k=12, n=400K; negative size-risk correlation.
+%           For thesis-wip: benchmark for HMAC-based PPRL risk and token-count side-channel attack.
+@ARTICLE{kantarcioglu2026,
+  title     = "A novel analysis methodology for assessment of re-identification
+               risks for the National Cancer Institute cancer registry privacy
+               preserving record linkage technique",
+  author    = "Kantarcioglu, Murat and Howe, Will and Liu, Benmei and Petkov,
+               Valentina and Casas-Silva, Esmeralda and Velasquez-Kolnik, Diana
+               and Malin, Bradley A and Penberthy, Lynne",
+  journal   = "J. Am. Med. Inform. Assoc.",
+  publisher = "Oxford University Press (OUP)",
+  volume    =  33,
+  number    =  3,
+  pages     = "663--669",
+  month     =  mar,
+  year      =  2026,
+  keywords  = "data integration; privacy; private record linkage",
+  language  = "en"
+}
+
+% STATUS: ANNOTATED
+% PRIMARY_CATEGORY: 210-multisource-platforms
+% SECONDARY_CATEGORIES: 170-spatial-sdc
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] First systematic SDC anonymization requirements analysis for LMIC HDSS longitudinal event history data.
+%          Sequential noise-addition algorithm preserves event ordering; nosy-neighbor matching for disclosure risk.
+%          For thesis-wip: variable taxonomy (static/status/event), HDSS as multi-source platform, SDC baseline for
+%          comparison with DP-based approaches. Category L; overlaps H (SDC methods).
+@ARTICLE{templ2022,
+  title     = "Privacy of study participants in open-access health and
+               demographic surveillance system data: Requirements analysis for
+               data anonymization",
+  author    = "Templ, Matthias and Kanjala, Chifundo and Siems, Inken",
+  journal   = "JMIR Public Health Surveill.",
+  publisher = "JMIR Publications Inc.",
+  volume    =  8,
+  number    =  9,
+  pages     = "e34472",
+  month     =  sep,
+  year      =  2022,
+  doi       = "10.2196/34472",
+  keywords  = "LMIC; anonymization; health and demographic surveillance system;
+               longitudinal data and event history data; low- and middle-income
+               countries",
+  language  = "en"
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 210-multisource-platforms
+% SECONDARY_CATEGORIES: 160-disease-surveillance
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Official project site for the target animal-health platform setting.
+%          Used to ground public claims about Farm2Vet's platform mission.
+@misc{farm2vets2026,
+  author = {{Farm2Vets}},
+  title = {{Farm2Vets}},
+  year = {2026},
+  url = {https://www.farm2vets.com/en},
+  note = {Accessed 28 April 2026}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 210-multisource-platforms
+% SECONDARY_CATEGORIES: 160-disease-surveillance
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Public planning source for animal-health AI assistant platform analogue.
+%          Used to ground the Zamira/VERA requester-objective sharing scenario.
+@misc{zamira2026vera,
+  author = {{Zamira Australia}},
+  title = {Meet {VERA}: The World's First {AI} Veterinarian},
+  year = {2026},
+  url = {https://www.zamira.com.au/meet-vera-the-worlds-first-ai-veterinarian/},
+  note = {Accessed 26 April 2026}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 210-multisource-platforms
+% SECONDARY_CATEGORIES: 200-linkage-risk
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Official dataset page for MIMIC-IV, used as a proxy evaluation planning source.
+@misc{physionet2026mimiciv,
+  author = {{PhysioNet}},
+  title = {{MIMIC-IV} v3.1},
+  year = {2026},
+  url = {https://physionet.org/content/mimiciv/3.1/},
+  note = {Accessed 26 April 2026}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 210-multisource-platforms
+% SECONDARY_CATEGORIES: 200-linkage-risk
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Official dataset page for MIMIC-IV-Note, used as a proxy evaluation planning source.
+@misc{physionet2026mimicivnote,
+  author = {{PhysioNet}},
+  title = {{MIMIC-IV-Note} v2.2},
+  year = {2026},
+  url = {https://physionet.org/content/mimic-iv-note/2.2/},
+  note = {Accessed 26 April 2026}
+}
+
+% STATUS: UNANNOTATED
+% PRIMARY_CATEGORY: 210-multisource-platforms
+% SECONDARY_CATEGORIES: 160-disease-surveillance,200-linkage-risk
+% PROJECTS: thesis-wip
+% IMPORTANCE: MEDIUM
+% [MEDIUM] Official PetEVAL/SAVSNET dataset card, used as veterinary-domain proxy planning source.
+@misc{savsnet2026peteval,
+  author = {{SAVSNET}},
+  title = {{PetEVAL}},
+  year = {2026},
+  url = {https://huggingface.co/datasets/SAVSNET/PetEVAL},
+  note = {Accessed 26 April 2026}
+}

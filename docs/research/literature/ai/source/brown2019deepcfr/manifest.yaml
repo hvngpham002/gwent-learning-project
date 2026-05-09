@@ -1,0 +1,19 @@
+citekey: brown2019deepcfr
+title: "Deep Counterfactual Regret Minimization"
+authors:
+  - "Noam Brown"
+  - "Adam Lerer"
+  - "Sam Gross"
+  - "Tuomas Sandholm"
+year: 2019
+venue: "Proceedings of the 36th International Conference on Machine Learning, PMLR 97"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The ignored local source.pdf was already present before annotation."
+  - "The shared bibliography records arXiv URL https://arxiv.org/abs/1811.00164."
+  - "pdfinfo reported the local source as 19 PDF pages before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

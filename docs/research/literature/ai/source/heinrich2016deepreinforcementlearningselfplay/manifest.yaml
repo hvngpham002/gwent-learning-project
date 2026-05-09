@@ -1,0 +1,17 @@
+citekey: heinrich2016deepreinforcementlearningselfplay
+title: "Deep Reinforcement Learning from Self-Play in Imperfect-Information Games"
+authors:
+  - "Johannes Heinrich"
+  - "David Silver"
+year: 2016
+venue: "arXiv 1603.01121"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The Cluster F queue previously used the short alias heinrich2016nfsp; the shared bibliography and local source package use heinrich2016deepreinforcementlearningselfplay."
+  - "The ignored local PDF was downloaded from the bibliography-recorded arXiv URL https://arxiv.org/pdf/1603.01121 before annotation."
+  - "pdfinfo reported the local source as 10 PDF pages before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

@@ -1,0 +1,18 @@
+citekey: lanctot2009monte
+title: "Monte Carlo Sampling for Regret Minimization in Extensive Games"
+authors:
+  - "Marc Lanctot"
+  - "Kevin Waugh"
+  - "Martin Zinkevich"
+  - "Michael Bowling"
+year: 2009
+venue: "Advances in Neural Information Processing Systems 22"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "Earlier Cluster F queue and handoff notes referred to this MCCFR source as lanctot2009mccfr; the bibliography-aligned annotation citekey is lanctot2009monte."
+  - "The existing local lanctot2009monte.pdf was normalized to source.pdf before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

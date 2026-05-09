@@ -1,0 +1,18 @@
+citekey: long2010understanding
+title: "Understanding the Success of Perfect Information Monte Carlo Sampling in Game Tree Search"
+authors:
+  - "Jeffrey Long"
+  - "Nathan R. Sturtevant"
+  - "Michael Buro"
+  - "Timothy Furtak"
+year: 2010
+venue: "Proceedings of the Twenty-Fourth AAAI Conference on Artificial Intelligence"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "Earlier Cluster F queue and handoff notes referred to this PIMC caution source as long2010pimc; the bibliography-aligned annotation citekey is long2010understanding."
+  - "A local PDF was already present as long2010understanding.pdf; source.pdf is a local normalized copy for the annotation workflow."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

@@ -1,0 +1,19 @@
+citekey: brown2020rebel
+title: "Combining Deep Reinforcement Learning and Search for Imperfect-Information Games"
+authors:
+  - "Noam Brown"
+  - "Anton Bakhtin"
+  - "Adam Lerer"
+  - "Qucheng Gong"
+year: 2020
+venue: "34th Conference on Neural Information Processing Systems (NeurIPS 2020)"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The ignored local source.pdf was already present before annotation."
+  - "The shared bibliography records arXiv URL https://arxiv.org/abs/2007.13544."
+  - "pdfinfo reported the local source as 25 PDF pages before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

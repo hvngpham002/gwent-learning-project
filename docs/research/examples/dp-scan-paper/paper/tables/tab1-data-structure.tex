@@ -1,0 +1,28 @@
+% tables/tab1-data-structure.tex
+% Table 1: Synthetic dataset showing the data structure.
+% NOTE: Sensitivity column (Delta(k_w)) does NOT appear here —
+%       it is the quantity derived in Theorem 1 (contribution section).
+% Values are synthetic. mu = C * n_w / N must verify correctly for every row.
+% Using C = 100, N = 10,000.
+
+\begin{table}[ht]
+\centering
+\caption{Synthetic dataset illustrating the scan statistic data structure
+         (C = 100 total cases, N = 10{,}000 total samples).
+         Window W\textsubscript{02} is included in the table but is not shown
+         on the map in Figure~\placeholder{X}; the table is illustrative.
+         The sensitivity column $\sens$ is absent here; it is the quantity
+         derived in Theorem~\ref{thm:sensitivity}.}
+\label{tab:data}
+\begin{tabular}{@{}llrrrrrrr@{}}
+\toprule
+Window & Province & $\kw$ & $\nw$ & $c$ & $\mu = C\nw/N$ & $c/\mu$ & $\RR$ & $\LLR$ \\
+\midrule
+W\textsubscript{01} & Dong Nai  & 200 &  500 & 24 &  5.0 & 4.80 & \placeholder{?} & \placeholder{?} \\
+W\textsubscript{02} & Hanoi     &  45 &  200 &  3 &  2.0 & 1.50 & \placeholder{?} & \placeholder{?} \\
+W\textsubscript{03} & Ha Giang  &   3 &   30 &  2 &  0.3 & 6.67 & \placeholder{?} & \placeholder{?} \\
+\midrule
+National            & ---       & 2{,}800 & 10{,}000 & 100 & --- & --- & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}

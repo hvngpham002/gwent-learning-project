@@ -1,0 +1,28 @@
+\begin{abstract}
+    Public health agencies worldwide detect geographic disease clusters
+    by computing the Kulldorff spatial scan statistic over case counts
+    reported by clinics, laboratories, or sentinel sites. Publishing the
+    results creates disclosure risk: a detected cluster containing only
+    two or three reporting nodes effectively identifies those nodes by
+    name. Despite decades of operational deployment through the SaTScan
+    software, no formal privacy mechanism exists for the scan statistic.
+
+    We provide the first differentially private release mechanism for
+    the Kulldorff log-likelihood ratio. We derive a closed-form upper
+    bound on the sensitivity of the scan statistic as a function of
+    cluster density~$k_w$ (Theorem~1), then use this bound to construct
+    an exponential mechanism whose normalized utility has sensitivity~$1$
+    by construction (Theorem~2). For the prospective surveillance
+    setting, where results are released weekly, we apply
+    zero-concentrated differential privacy composition to show that a
+    fixed annual privacy budget supports approximately
+    $T_{\max} \approx [Z]$ weekly releases under zCDP, compared to
+    roughly $10$ under na\"ive composition (Theorem~3).
+
+    Experiments on synthetic outbreak data over a realistic
+    province-level reporting network show that at $\varepsilon = 1$,
+    the mechanism detects $[X]\%$ of injected clusters while the
+    median utility gap remains below $[Y]\%$ of the non-private optimum.
+    These results demonstrate that formal privacy protection is
+    compatible with operationally useful disease surveillance.
+\end{abstract}

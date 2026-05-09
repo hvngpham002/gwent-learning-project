@@ -1,0 +1,17 @@
+citekey: herbrich2006trueskill
+title: "TrueSkill(TM): A Bayesian Skill Rating System"
+authors:
+  - "Ralf Herbrich"
+  - "Tom Minka"
+  - "Thore Graepel"
+year: 2006
+venue: "Advances in Neural Information Processing Systems 19"
+doi:
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The Cluster F queue previously used the alias trueskill2007; the shared bibliography and local source package use herbrich2006trueskill."
+  - "A local source.pdf was already present before annotation."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."

@@ -1,0 +1,79 @@
+% preamble.tex — packages and macros
+% Include this once via \input{preamble} in main.tex
+
+% ── Encoding & fonts ──────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% ── Mathematics ───────────────────────────────────────────────────────────────
+\usepackage{amsmath, amssymb, amsthm, amsfonts}
+
+% ── Algorithms ────────────────────────────────────────────────────────────────
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% ── Tables & figures ──────────────────────────────────────────────────────────
+\usepackage{booktabs}       % \toprule \midrule \bottomrule
+\usepackage{array}          % \raggedright\arraybackslash in p{} columns
+\usepackage{graphicx}       % \includegraphics
+\usepackage{subcaption}     % subfigures side-by-side
+
+% ── Layout ────────────────────────────────────────────────────────────────────
+\usepackage[a4paper, top=0.4in, bottom=0.7in, left=1in, right=1in]{geometry}
+\usepackage{microtype}      % better line breaking
+
+% ── Line numbers (blue, padded 001/002/003, dual-side left+right) ─────────────
+\usepackage{fmtcount}
+\usepackage{lineno}
+\usepackage{xcolor}
+\definecolor{lineblue}{RGB}{0, 102, 204}
+\renewcommand{\linenumberfont}{\normalfont\fontsize{10}{12}\selectfont\color{lineblue}}
+\renewcommand{\thelinenumber}{\padzeroes[3]{\decimal{linenumber}}}
+\setlength{\linenumbersep}{12pt}
+\makeatletter
+\def\makeLineNumberLeft{\hss\linenumberfont\thelinenumber\hskip\linenumbersep}
+\def\makeLineNumberRight{\linenumberfont\thelinenumber\hss}
+\renewcommand\makeLineNumber{%
+  \llap{\makeLineNumberLeft}%
+  % \rlap{\hskip\textwidth\hskip\linenumbersep\makeLineNumberRight}%
+}
+\makeatother
+
+% ── Hyperlinks & references ───────────────────────────────────────────────────
+\usepackage[colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue]{hyperref}
+\usepackage{cleveref}       % \cref{} adds "Theorem", "Figure" etc. automatically
+
+% ── Theorem environments ──────────────────────────────────────────────────────
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{remark}{Remark}
+
+% ── Canonical notation macros ─────────────────────────────────────────────────
+% These match CLAUDE.md exactly. Use these commands everywhere so that
+% renaming a symbol only requires changing one line here.
+
+\newcommand{\kw}{k_w}                          % nodes inside window w
+\newcommand{\nw}{n_w}                          % testing volume inside window w
+\newcommand{\Ktot}{K}                          % total nodes nationally
+\newcommand{\Ntot}{N}                          % total testing volume nationally
+\newcommand{\cobs}{c}                          % observed cases inside window
+\newcommand{\Ctot}{C}                          % total cases nationally
+\newcommand{\muexp}{\mu}                       % expected cases = C*n_w/N
+\newcommand{\LLR}{\mathrm{LLR}}               % log-likelihood ratio
+\newcommand{\RR}{\mathrm{RR}}                 % relative risk
+\newcommand{\sens}{\Delta(\kw)}               % sensitivity bound (Theorem 1)
+\newcommand{\util}{u(w)}                       % normalized utility = LLR/Delta
+\newcommand{\gapu}{\mathrm{gap}_u}            % utility gap between top 2 windows
+\newcommand{\Wcal}{\mathcal{W}}               % set of candidate windows
+\newcommand{\wstar}{w^*}                       % selected window
+\newcommand{\eps}{\varepsilon}                 % privacy budget epsilon
+\newcommand{\rhow}{\rho_{\mathrm{week}}}      % per-week zCDP cost
+\newcommand{\rhotot}{\rho_{\mathrm{total}}}   % total zCDP cost
+\newcommand{\Tmax}{T_{\max}}                  % max surveillance weeks
+
+% ── Draft helpers ─────────────────────────────────────────────────────────────
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\newcommand{\placeholder}[1]{\textcolor{gray}{\textit{[#1]}}}
+\newcommand{\needscite}{\textcolor{orange}{[CITE]}}

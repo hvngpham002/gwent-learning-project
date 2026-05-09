@@ -1,0 +1,37 @@
+% sections/05-conclusion.tex
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have presented the first formal privacy analysis of the Kulldorff spatial scan
+statistic, addressing a gap at the intersection of spatial epidemiology and differential
+privacy.
+Three theorems establish a complete pipeline: a sensitivity bound that quantifies
+how much one reporting node can shift the log-likelihood ratio (Theorem~\ref{thm:sensitivity}),
+a private window selection mechanism based on density-normalized utility
+(Theorem~\ref{thm:mechanism}), and a composition analysis that governs the system's
+operational lifetime under prospective (weekly, repeated) releases
+(Theorem~\ref{thm:composition}).
+
+The key insight is that $k_w$ (the number of reporting nodes inside a candidate
+window) does not appear in the LLR formula because it is irrelevant to outbreak
+detection, but it is the central parameter for privacy: it determines how much any
+single participant can influence the statistic.
+The density-normalized utility function $u(w) = \LLR(w)/\Delta(k_w)$ bridges the
+two domains, enabling a clean application of the exponential mechanism with global
+sensitivity~$1$.
+
+\paragraph{Limitations.}
+Theorem~\ref{thm:sensitivity} currently provides a candidate form for $f(\kw)$;
+the formal proof and tightness characterization are the primary open problem.
+The thesis is scoped to the Poisson LLR and primary cluster selection only;
+the Bernoulli variant and multiple cluster privatization are future work.
+
+\paragraph{Future work.}
+\begin{itemize}
+    \item Formally prove and tighten Theorem~\ref{thm:sensitivity}.
+    \item Extend to multiple cluster selection using the sparse vector technique~\cite{dwork2013}.
+    \item Apply to the VISHC wastewater surveillance data once available.
+    \item Investigate smooth sensitivity~\cite{nissim2007} as an alternative to
+          global sensitivity for further utility improvement.
+\end{itemize}

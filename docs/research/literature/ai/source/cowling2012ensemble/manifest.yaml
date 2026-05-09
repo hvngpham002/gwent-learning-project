@@ -1,0 +1,17 @@
+citekey: cowling2012ensemble
+title: "Ensemble Determinization in Monte Carlo Tree Search for the Imperfect Information Card Game Magic: The Gathering"
+authors:
+  - "Peter I. Cowling"
+  - "Colin D. Ward"
+  - "Edward J. Powley"
+year: 2012
+venue: "IEEE Transactions on Computational Intelligence and AI in Games"
+doi: "10.1109/TCIAIG.2012.2204883"
+primary_source: source.pdf
+source_type: pdf
+status: local-source-available
+notes:
+  - "Shared bibliography entry verified in docs/research/bibliography/references.bib before annotation."
+  - "The Cluster F queue previously used the alias cowling2012mtg for this paper; the source package follows the bibliography-aligned citekey cowling2012ensemble."
+  - "A local PDF was already present as cowling2012ensemble.pdf; source.pdf is a local normalized copy for the annotation workflow."
+  - "Local PDF files under docs/research/literature/ai/source/ are ignored by git unless explicitly licensed and intentionally added later."
