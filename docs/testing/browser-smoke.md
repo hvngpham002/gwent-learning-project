@@ -48,7 +48,7 @@ The default local `npm run ci` gate remains the fast deterministic unit/lint/bui
 
 ## Current Committed Coverage
 
-The committed smoke spec currently runs 37 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, route-promotion guards, the quarantined `/legacy` route, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, responsive layout tripwires, and match-end ledger flows.
+The committed smoke spec currently runs 40 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, route-promotion guards, the quarantined `/legacy` route, authentic harness routes, the component foundation page, `/ai-lab`, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, responsive layout tripwires, and match-end ledger flows.
 
 ## dp6-smoke Engine Shell Coverage
 
@@ -87,11 +87,13 @@ The same smoke spec verifies:
 - `/engine-diagnostic` opens the diagnostic shell.
 - `/ui-harness` opens the cEp1 foundation harness.
 - `/components` opens the component foundation page with shared tokens, audited typography, button variants, form controls, cards, backs, leaders, alerts, toasts, modals, and hidden-info-safe samples.
+- `/ai-lab` opens the read-only AI Lab dashboard, shows `benchmark-smoke-v1`, `legal-heuristic-v0`, and benchmark-only `legal-first-v0`, keeps future run/export/rating/search/training controls disabled, avoids mobile horizontal overflow, and renders no hidden-info/debug runtime strings.
 - `/deck-builder` opens the browser-local catalog deck builder.
 - `/card-studio` can import and save a minimal playable custom card, and exposes that card in the deck-builder pool without requiring repository file writes.
 - `/official-porting` shows the `181` official candidate count, renders candidate list/status/preview surfaces, and avoids mobile horizontal overflow without promoting staged official cards into deck sources.
 - `/match?seed=route-direct` opens the direct authentic match route at mulligan.
 - `/?engine=1&ui=authentic&view=deck-builder` remains covered as a compatibility alias.
+- Pre-game `ai lab →` opens the AI Lab view from the setup tool cluster without mounting the diagnostic shell or running a benchmark.
 - Pre-game `begin match →` opens the dedicated mulligan flow before the match table.
 - Direct `/match` and deck-builder `play →` also land on mulligan first.
 - Human keep-hand and one-card redraw paths dispatch legal mulligan commands and present the player replacement animation; the smoke also asserts that clicking a different mulligan card replaces the current selected card.

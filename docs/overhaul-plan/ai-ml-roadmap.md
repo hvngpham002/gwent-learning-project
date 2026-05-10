@@ -16,6 +16,7 @@ Operating rules:
 - Draft paper tracks live under `docs/research/manuscripts/`: an applied Gwent AI systems paper and a theory-oriented imperfect-information card-game paper. These are placeholders until annotations and experiments justify concrete claims.
 - This roadmap document remains a roadmap summary, not the source of truth for literature claims. If a roadmap statement contradicts an annotation, update the annotation, retract it, or label the roadmap statement a project hypothesis.
 - The current completed simulation/export infrastructure (headless AI-vs-AI runner, batch seed suites, hidden-info-safe `sim-export-v1` decision rows, validated in-memory JSONL boundary, `legal-heuristic-v0`) gives us a base for experiments. It does not yet constitute a validated AI research program.
+- cEp17 adds `/ai-lab` as a read-only product dashboard over the current research status. It mirrors `benchmark-smoke-v1`, `legal-heuristic-v0`, and benchmark-only `legal-first-v0` for discoverability, but it does not execute benchmarks, simulations, ratings, search, training, Python tooling, or file export from the browser.
 
 The active literature sweep prompt lives at `docs/research/literature/ai/prompts/lit-sweep-gwent-ai-prompt.md`. The first multi-model sweep was triaged in `docs/research/literature/ai/results/2026-05-08/triage.md`; the current post-triage annotation queue lives at `docs/research/literature/ai/results/2026-05-08/queue.md`.
 
@@ -30,6 +31,12 @@ The active literature sweep prompt lives at `docs/research/literature/ai/prompts
 | 4 | Observation/action API | Stable training environment interface. Hidden-info-safe `sim-export-v1` decision rows, per-row legal action lists, and validated in-memory JSONL boundary exist under `cDp10` / `cDp11`. File writers, fixed action vectors, and Python tooling are still future work. |
 | 5 | Baseline training | Random, heuristic, supervised imitation from heuristic games, then self-play experiments. Not started; gated on the literature foundation and the next planned work. |
 | 6 | Evaluation ladder | Started in cFp21 with an in-memory benchmark harness, `benchmark-match-v1` raw ledgers, `benchmark-summary-v1` fixed-suite summaries, mirrored current-deck smoke matchups, and a deterministic `legal-first-v0` comparator. Elo, Glicko, TrueSkill, larger tournament matrices, and exploitability probes remain future work. |
+
+## Product AI Lab Boundary
+
+The `/ai-lab` route is a read-only control-plane surface for the product shell. It is allowed to show static suite, policy, ladder, and research-reference metadata, including `benchmark-smoke-v1`, `legal-heuristic-v0`, and `legal-first-v0`.
+
+It is not a runner. Browser benchmark execution, ledger export, ratings, search prototypes, self-play, model training, Python tooling, and product difficulty tiers remain future work and must be specified before being wired.
 
 ## Policy Interface
 

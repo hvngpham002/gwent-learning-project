@@ -11,7 +11,8 @@ export type AuthenticUiView =
   | "deck-builder"
   | "card-studio"
   | "official-porting"
-  | "ui-component-foundation";
+  | "ui-component-foundation"
+  | "ai-lab";
 
 export type AppRoute =
   | { surface: "authentic"; view: AuthenticUiView }
@@ -39,6 +40,7 @@ const canonicalAuthenticViewsByPath: Record<string, AuthenticUiView> = {
   "/official-porting": "official-porting",
   "/components": "ui-component-foundation",
   "/ui-harness": "harness",
+  "/ai-lab": "ai-lab",
 };
 
 // Compatibility helper for the old query/env switch. Primary app routing is
@@ -68,7 +70,8 @@ export const getAuthenticUiViewFromSearch = (search = ""): AuthenticUiView => {
     view === "deck-builder" ||
     view === "card-studio" ||
     view === "official-porting" ||
-    view === "ui-component-foundation"
+    view === "ui-component-foundation" ||
+    view === "ai-lab"
   ) {
     return view;
   }

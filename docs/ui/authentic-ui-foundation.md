@@ -55,7 +55,7 @@ phases, not to this reusable visual substrate.
 | `/ui-harness` | Authentic UI foundation harness. |
 | `/engine-diagnostic` | Diagnostic engine shell (`EngineGameManager`). |
 | `/legacy` | Temporary legacy Redux UI holding route. |
-| `/ai-lab` | Reserved for the upcoming AI Lab route; not implemented yet. |
+| `/ai-lab` | Read-only AI Lab route for benchmark/policy/evaluation status. |
 
 `/?engine=1`, `/?engine=1&ui=authentic`, and
 `/?engine=1&ui=authentic&view=...` remain compatibility aliases.

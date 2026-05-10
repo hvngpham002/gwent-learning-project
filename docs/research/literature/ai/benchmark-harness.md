@@ -63,6 +63,19 @@ uses `currentCatalogCards` and `currentCatalogLeaders`; custom catalog
 snapshots, file output, CLI output, Python tooling, ratings, search, and
 model training are intentionally out of scope.
 
+## Product AI Lab Boundary
+
+cEp17 adds `/ai-lab` as a read-only authentic product dashboard for
+benchmark and policy visibility. The screen mirrors static cFp21 status:
+`benchmark-smoke-v1`, six seeds, mirrored twelve-record expectations,
+current Northern Realms versus current Nilfgaard,
+`legal-heuristic-v0`, and benchmark-only `legal-first-v0`.
+
+The AI Lab does not import or call `runBenchmarkSuite`, headless
+simulation runners, ratings, search, training, Python tooling, file
+writers, or unsafe benchmark output. Browser execution remains deferred
+until a later spec defines a safe runner.
+
 ## Usage
 
 From a Vitest or other Vite-resolved TypeScript context:

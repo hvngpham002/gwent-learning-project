@@ -65,7 +65,7 @@ Canonical routes:
 - `/ui-harness` opens the authentic UI harness/gallery.
 - `/engine-diagnostic` opens the diagnostic engine shell.
 - `/legacy` opens the temporary quarantined legacy Redux UI route.
-- `/ai-lab` is reserved for the upcoming AI Lab product surface and is not implemented yet.
+- `/ai-lab` opens the read-only AI Lab product research dashboard. It shows benchmark-suite status and future experiment entry points without running benchmarks, simulations, ratings, search, training, Python tooling, or file export from the browser.
 
 The old `/?engine=1`, `/?engine=1&ui=authentic`, and `/?engine=1&ui=authentic&view=...` URLs remain compatibility aliases, but new docs and tests should use canonical paths.
 
@@ -317,6 +317,37 @@ after the authentic match loop and responsive tripwires were cleaner.
   types, and old data cards under `src/legacy`, adds a `LegacyRoute` boundary,
   and extends forbidden-import checks so new product/engine work cannot depend
   on quarantined legacy modules.
+- `cEp17`: AI Lab UI foundation. Implements `/ai-lab` as a read-only authentic
+  research dashboard over static UI metadata for `benchmark-smoke-v1`,
+  `legal-heuristic-v0`, benchmark-only `legal-first-v0`, the deferred
+  evaluation ladder, and research-reference paths. Browser benchmark runs,
+  ledger export, ratings, search prototypes, and training remain disabled and
+  unwired.
+
+### `cEp17`: AI Lab UI Foundation
+
+Goal: make the AI/ML research status discoverable from the product shell while
+preserving the cFp21 headless benchmark boundary.
+
+Scope:
+
+- add `/ai-lab` as an authentic route and compatibility `view=ai-lab` alias;
+- render `benchmark-smoke-v1`, six mirrored seeds / twelve expected records,
+  current Northern Realms vs current Nilfgaard, `legal-heuristic-v0`,
+  benchmark-only `legal-first-v0`, and deferred `legal-heuristic-v1`;
+- show the Batch B evaluation order: deterministic ledgers, fixed-suite
+  matrices, ratings, robustness/search probes, then self-play/ML;
+- list the Batch A/B decision docs, benchmark harness doc, and AI/ML roadmap;
+- keep run/export/rating/search/training actions disabled with concise reasons;
+- expose a compact `ai lab →` entry from the pre-game top bar.
+
+Acceptance:
+
+- `/ai-lab` mounts without mobile horizontal overflow;
+- no benchmark, simulation, rating, search, training, Python, or file-export
+  code runs from the browser route;
+- hidden-info/debug runtime fields are not rendered;
+- product/authentic code remains free of `@/legacy/...` imports.
 
 ## Relationship To ML Work
 

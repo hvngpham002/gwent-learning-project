@@ -29,6 +29,7 @@ interface AuthenticPreGameScreenProps {
   readonly onBeginMatch: (config: AuthenticMatchSetupConfig) => void;
   readonly onOpenDeckBuilder?: (mode?: "create" | "edit") => void;
   readonly onOpenCardStudio?: () => void;
+  readonly onOpenAiLab?: () => void;
 }
 
 const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
@@ -39,6 +40,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
   onBeginMatch,
   onOpenDeckBuilder,
   onOpenCardStudio,
+  onOpenAiLab,
 }) => {
   const deckOptions = useMemo(
     () => buildPreGameDeckOptionsWithLocal(localDecks, sourceSets, blockedSources),
@@ -137,6 +139,16 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                 onClick={onOpenCardStudio}
               >
                 card studio →
+              </button>
+            ) : null}
+            {onOpenAiLab ? (
+              <button
+                type="button"
+                className="authentic-button authentic-button--ghost authentic-pregame__ghost"
+                data-testid="authentic-pregame-ai-lab"
+                onClick={onOpenAiLab}
+              >
+                ai lab →
               </button>
             ) : null}
           </div>

@@ -30,6 +30,7 @@ describe("app route resolver", () => {
       view: "ui-component-foundation",
     });
     expectRoute(resolveAppRoute({ pathname: "/ui-harness" }), { surface: "authentic", view: "harness" });
+    expectRoute(resolveAppRoute({ pathname: "/ai-lab" }), { surface: "authentic", view: "ai-lab" });
   });
 
   it("normalizes trailing slashes and falls unknown paths back to authentic pre-game", () => {
@@ -75,6 +76,10 @@ describe("app route resolver", () => {
     expectRoute(resolveAppRoute({ pathname: "/", search: "?engine=1&ui=authentic&view=harness" }), {
       surface: "authentic",
       view: "harness",
+    });
+    expectRoute(resolveAppRoute({ pathname: "/", search: "?engine=1&ui=authentic&view=ai-lab" }), {
+      surface: "authentic",
+      view: "ai-lab",
     });
   });
 
@@ -132,6 +137,7 @@ describe("legacy app mode helpers", () => {
     expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=ui-component-foundation")).toBe(
       "ui-component-foundation",
     );
+    expect(getAuthenticUiViewFromSearch("?engine=1&ui=authentic&view=ai-lab")).toBe("ai-lab");
     expect(getAuthenticUiViewFromSearch("view=other&ui=authentic")).toBe("pregame");
   });
 });

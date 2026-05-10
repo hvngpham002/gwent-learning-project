@@ -1,6 +1,6 @@
 # Authentic Product Flow
 
-This document tracks the current authentic product loop after cEp16.
+This document tracks the current authentic product loop after cEp17.
 
 ## Routes
 
@@ -13,7 +13,7 @@ This document tracks the current authentic product loop after cEp16.
 - `/ui-harness` opens the cEp1 card foundation harness.
 - `/engine-diagnostic` opens the diagnostic engine shell.
 - `/legacy` opens the temporary quarantined legacy Redux UI route.
-- `/ai-lab` is reserved for the upcoming Cluster E AI Lab phase and is not implemented yet.
+- `/ai-lab` opens the read-only AI Lab dashboard for research status, benchmark-suite visibility, policy baselines, evaluation-ladder status, and disabled future experiment actions.
 
 Old `?engine=1&ui=authentic&view=...` URLs and `/?engine=1` remain compatibility aliases for this phase, but canonical docs and tests should prefer the path-based routes above.
 
@@ -37,8 +37,21 @@ Runtime engine state is not encoded into the URL. In-app transitions are coordin
 - `rematch` restarts the same setup and seed, then returns to the mulligan screen.
 - `← back` from deck builder returns to pre-game and preserves browser-local deck state.
 - `← back` from Card Studio returns to the prior authentic surface when opened in-app, or pre-game when opened directly.
-- cEp13 groups the pre-game `open deck builder →` button directly beside `card studio →` in the top-bar action cluster.
+- cEp17 groups the pre-game `ai lab →` button beside `open deck builder →` and `card studio →` in the top-bar action cluster.
 - Button variants are defined in `docs/ui/authentic-button-style-guide.md`. Primary flow actions share the same visual language: `begin match →`, mulligan `keep hand` / `confirm mulligan` / `start match`, and round `next round →` use an orange fill with white text, then switch on hover to a black border, transparent background, and orange text.
+
+## AI Lab
+
+The `/ai-lab` route is implemented as a read-only product research dashboard. It reflects the current cFp21 benchmark status without running that harness in the browser:
+
+- suite: `benchmark-smoke-v1`;
+- shape: 6 seeds, mirrored, 12 expected match records;
+- matchup: current Northern Realms vs current Nilfgaard;
+- policies: product/headless `legal-heuristic-v0`, benchmark-only `legal-first-v0`, and deferred `legal-heuristic-v1`;
+- ladder: deterministic smoke/regression ledgers first, then fixed-suite matrices, ratings, robustness/search probes, and self-play/ML later;
+- references: Batch A search decision, Batch B evaluation-ladder decision, benchmark harness doc, and AI/ML roadmap.
+
+The AI Lab intentionally does not call benchmark, simulation, rating, search, training, Python, or file-export code. `run benchmark`, `export ledger`, `ratings`, `search prototype`, and `training` controls are rendered disabled with short reasons.
 
 ## Scroll Regions
 

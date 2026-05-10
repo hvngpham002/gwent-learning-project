@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { getAuthenticUiViewFromSearch, type AuthenticUiView } from "@/appMode";
 import type { CatalogDeckPreset } from "@/game/catalog";
 
+import AuthenticAiLabScreen from "./AuthenticAiLabScreen";
 import AuthenticComponentFoundationPage from "./AuthenticComponentFoundationPage";
 import AuthenticCardStudioScreen from "./AuthenticCardStudioScreen";
 import AuthenticDeckBuilderScreen from "./AuthenticDeckBuilderScreen";
@@ -28,7 +29,7 @@ interface AuthenticGameAppProps {
 
 const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ routeView, search = window.location.search }) => {
   const resolvedRouteView = routeView ?? getAuthenticUiViewFromSearch(search);
-  const [viewOverride, setViewOverride] = useState<"pregame" | "deck-builder" | "card-studio" | "official-porting" | null>(null);
+  const [viewOverride, setViewOverride] = useState<"pregame" | "deck-builder" | "card-studio" | "official-porting" | "ai-lab" | null>(null);
   const [returnViewFromStudio, setReturnViewFromStudio] = useState<"pregame" | "deck-builder">("pregame");
   const [setupConfig, setSetupConfig] = useState<AuthenticMatchSetupConfig | null>(null);
   const [deckStore, setDeckStore] = useState(() => readDeckBuilderStore());
@@ -169,6 +170,14 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ routeView, search =
     );
   }
 
+  if (view === "ai-lab") {
+    return (
+      <div data-testid="authentic-game-app">
+        <AuthenticAiLabScreen onBack={() => setViewOverride("pregame")} />
+      </div>
+    );
+  }
+
   return (
     <div data-testid="authentic-game-app">
         <AuthenticPreGameScreen
@@ -179,6 +188,7 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ routeView, search =
           onBeginMatch={setSetupConfig}
           onOpenDeckBuilder={openDeckBuilder}
           onOpenCardStudio={() => openCardStudio("pregame")}
+          onOpenAiLab={() => setViewOverride("ai-lab")}
         />
     </div>
   );

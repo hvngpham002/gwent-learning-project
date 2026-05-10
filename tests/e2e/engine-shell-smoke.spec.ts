@@ -17,6 +17,7 @@ const authenticMulliganKeepDebugUrl = "/match?seed=ep4-keep&debugAiMulligan=1&de
 const authenticMatchEndBackfillUrl = "/match?seed=cep111-match-end";
 const authenticHarnessUrl = "/ui-harness";
 const authenticComponentFoundationUrl = "/components";
+const authenticAiLabUrl = "/ai-lab";
 
 type LocalDeckFixture = {
   readonly presetId: string;
@@ -516,6 +517,71 @@ test("authentic component foundation page avoids horizontal overflow on mobile",
   await expect(page.getByTestId("authentic-foundation-buttons")).toBeVisible();
   await expectNoHorizontalOverflow(page);
   expect(pageErrors).toEqual([]);
+});
+
+test("authentic AI Lab route mounts a read-only benchmark dashboard (cEp17)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.goto(authenticAiLabUrl);
+
+  await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "AI Lab" })).toBeVisible();
+  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-smoke-v1");
+  await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-heuristic-v0");
+  await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-first-v0");
+  await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("benchmark-only comparator");
+  await expect(page.getByTestId("authentic-ai-lab-ladder")).toContainText("deterministic smoke/regression ledger");
+  await expect(page.getByTestId("authentic-ai-lab-references")).toContainText(
+    "docs/research/literature/ai/benchmark-harness.md",
+  );
+  await expect(page.getByTestId("engine-shell")).toHaveCount(0);
+
+  const actionButtons = page.getByTestId("authentic-ai-lab-future-actions").locator("button");
+  await expect(actionButtons).toHaveCount(5);
+  const actionCount = await actionButtons.count();
+  for (let index = 0; index < actionCount; index += 1) {
+    const action = actionButtons.nth(index);
+    await expect(action).toBeDisabled();
+    const reasonId = await action.getAttribute("aria-describedby");
+    expect(reasonId).toBeTruthy();
+    if (reasonId) {
+      await expect(page.locator(`#${reasonId}`)).not.toHaveText("");
+    }
+  }
+
+  const beforeUrl = page.url();
+  await page
+    .getByTestId("authentic-ai-lab-action-run-benchmark")
+    .evaluate((element) => (element as HTMLButtonElement).click());
+  expect(page.url()).toBe(beforeUrl);
+  await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
+
+  const aiLabText = await visiblePageText(page);
+  expect(aiLabText).not.toMatch(/cardsById|finalState|commandLog|ownHand|opponentHand|instanceId|sourceId|seat_a:|seat_b:/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("authentic AI Lab avoids horizontal overflow on a mobile viewport (cEp17)", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto(authenticAiLabUrl);
+
+  await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  const aiLabText = await visiblePageText(page);
+  expect(aiLabText).not.toMatch(/cardsById|finalState|commandLog|ownHand|opponentHand|instanceId|sourceId|seat_a:|seat_b:/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("pre-game opens the AI Lab through the setup tool cluster (cEp17)", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+  await page.getByTestId("authentic-pregame-ai-lab").click();
+  await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
+  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-smoke-v1");
+  await expect(page.getByTestId("engine-shell")).toHaveCount(0);
 });
 
 test("canonical direct match route opens at mulligan (cEp15)", async ({ page }) => {
