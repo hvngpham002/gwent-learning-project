@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { ENGINE_AI_POLICY_ID } from "@/components/game/engine/engineShellViewModels";
 import {
+  aiPolicyIdFromSearch,
+  buildPreGameAiPolicyOptions,
   buildPreGameDeckOptions,
   buildPreGameDeckOptionsWithLocal,
   buildPreGameFormatOptions,
@@ -15,6 +16,7 @@ import {
   setupConfigToStartEngineOptions,
 } from "@/components/gwent/preGameViewModel";
 import { currentCatalogCards, currentCatalogLeaders, currentNorthernRealmsDeckPreset } from "@/data/catalog";
+import { DEFAULT_PRODUCT_AI_POLICY_ID } from "@/game/ai";
 import type { CatalogCardSource } from "@/game/catalog";
 
 describe("authentic pre-game view model", () => {
@@ -64,8 +66,9 @@ describe("authentic pre-game view model", () => {
       modeId: "human-vs-ai",
       roundId: "standard",
       formatId: "best-of-3",
-      aiPolicyId: ENGINE_AI_POLICY_ID,
+      aiPolicyId: DEFAULT_PRODUCT_AI_POLICY_ID,
     });
+    expect(getDefaultPreGameSelection("legal-heuristic-v1").aiPolicyId).toBe("legal-heuristic-v1");
   });
 
   it("marks only implemented mode and format options as available", () => {
@@ -73,7 +76,12 @@ describe("authentic pre-game view model", () => {
     expect(buildPreGameModeOptions().find((mode) => mode.id === "human-vs-ai")).toEqual(
       expect.objectContaining({
         name: "Casual",
-        note: ENGINE_AI_POLICY_ID,
+        note: DEFAULT_PRODUCT_AI_POLICY_ID,
+      }),
+    );
+    expect(buildPreGameModeOptions("legal-heuristic-v1").find((mode) => mode.id === "human-vs-ai")).toEqual(
+      expect.objectContaining({
+        note: "legal-heuristic-v1",
       }),
     );
     expect(buildPreGameModeOptions().filter((mode) => !mode.available).every((mode) => mode.note === "coming later")).toBe(true);
@@ -95,6 +103,31 @@ describe("authentic pre-game view model", () => {
     expect(seedFromSearch("?engine=1&ui=authentic")).toBe("");
     expect(normalizePreGameSeed("  fixed-seed  ")).toBe("fixed-seed");
     expect(normalizePreGameSeed(" ", () => "generated-seed")).toBe("generated-seed");
+  });
+
+  it("resolves product AI policy ids from search and rejects benchmark-only ids", () => {
+    expect(aiPolicyIdFromSearch("")).toBe(DEFAULT_PRODUCT_AI_POLICY_ID);
+    expect(aiPolicyIdFromSearch("?ai=legal-heuristic-v0")).toBe("legal-heuristic-v0");
+    expect(aiPolicyIdFromSearch("?ai=legal-heuristic-v1")).toBe("legal-heuristic-v1");
+    expect(aiPolicyIdFromSearch("?ai=legal-first-v0")).toBe(DEFAULT_PRODUCT_AI_POLICY_ID);
+    expect(aiPolicyIdFromSearch("?ai=unknown")).toBe(DEFAULT_PRODUCT_AI_POLICY_ID);
+  });
+
+  it("builds stable and experimental product AI policy selector options", () => {
+    expect(buildPreGameAiPolicyOptions()).toEqual([
+      expect.objectContaining({
+        id: "legal-heuristic-v0",
+        label: "stable · legal-heuristic-v0",
+        shortLabel: "stable",
+      }),
+      expect.objectContaining({
+        id: "legal-heuristic-v1",
+        label: "experimental · legal-heuristic-v1",
+        shortLabel: "experimental",
+        statusLabel: "playtest",
+      }),
+    ]);
+    expect(buildPreGameAiPolicyOptions().map((option) => option.id)).not.toContain("legal-first-v0");
   });
 
   it("suggests the other current preset when the human deck changes", () => {
@@ -159,7 +192,7 @@ describe("authentic pre-game view model", () => {
       roundId: "standard",
       formatId: "best-of-3",
       seed: "ep4-config",
-      aiPolicyId: ENGINE_AI_POLICY_ID,
+      aiPolicyId: DEFAULT_PRODUCT_AI_POLICY_ID,
     });
     expect(setupConfigToStartEngineOptions(config)).toEqual(
       expect.objectContaining({
@@ -168,8 +201,23 @@ describe("authentic pre-game view model", () => {
         aiDeckPresetId: "current-northern-realms",
         humanSeat: "seat_a",
         aiSeat: "seat_b",
+        aiPolicyId: DEFAULT_PRODUCT_AI_POLICY_ID,
       }),
     );
+  });
+
+  it("threads a selected product AI policy into setup config and start options", () => {
+    const config = buildSetupConfig({
+      humanDeckPresetId: "current-northern-realms",
+      opponentDeckPresetId: "current-nilfgaard",
+      roundId: "standard",
+      formatId: "best-of-3",
+      seed: "ep4-v1",
+      aiPolicyId: "legal-heuristic-v1",
+    });
+
+    expect(config.aiPolicyId).toBe("legal-heuristic-v1");
+    expect(setupConfigToStartEngineOptions(config).aiPolicyId).toBe("legal-heuristic-v1");
   });
 
   it("resolves local decks against explicit custom source sets", () => {

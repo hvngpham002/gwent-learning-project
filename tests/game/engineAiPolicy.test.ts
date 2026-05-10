@@ -13,6 +13,10 @@ import {
   commandFromLegalMove,
   legalHeuristicPolicyV0,
   legalHeuristicPolicyV1,
+  DEFAULT_PRODUCT_AI_POLICY_ID,
+  PRODUCT_AI_POLICIES,
+  getProductAiPolicy,
+  resolveProductAiPolicyId,
   type EnginePolicyInput,
   type SeatCardSummary,
   type SeatObservation,
@@ -296,6 +300,17 @@ const promptMove = (
 });
 
 describe("engine AI policy", () => {
+  it("resolves only product-safe AI policies for playable matches", () => {
+    expect(resolveProductAiPolicyId("legal-heuristic-v0")).toBe("legal-heuristic-v0");
+    expect(resolveProductAiPolicyId("legal-heuristic-v1")).toBe("legal-heuristic-v1");
+    expect(resolveProductAiPolicyId("unknown")).toBe(DEFAULT_PRODUCT_AI_POLICY_ID);
+    expect(resolveProductAiPolicyId("legal-first-v0")).toBe(DEFAULT_PRODUCT_AI_POLICY_ID);
+    expect(getProductAiPolicy("legal-heuristic-v0")).toBe(legalHeuristicPolicyV0);
+    expect(getProductAiPolicy("legal-heuristic-v1")).toBe(legalHeuristicPolicyV1);
+    expect(PRODUCT_AI_POLICIES.map((policy) => policy.id)).toEqual(["legal-heuristic-v0", "legal-heuristic-v1"]);
+    expect(PRODUCT_AI_POLICIES.every((policy) => policy.productSelectable)).toBe(true);
+  });
+
   it("builds observations with own hand summaries and opponent hand count only", () => {
     const match = createMatch("ai-observation");
 
@@ -1136,6 +1151,57 @@ describe("engine AI policy", () => {
     expect(
       legalMoves.some((move) => JSON.stringify(commandFromLegalMove(move)) === JSON.stringify(command)),
     ).toBe(true);
+  });
+
+  it("controller delegates to the selected product policy from adapter state", () => {
+    const store = createTestStore();
+    store.dispatch(startEngineMatch({ seed: "ai-controller-policy-v1", aiPolicyId: "legal-heuristic-v1" }));
+    completeMulligans(store);
+    if (store.getState().engine.match?.currentTurn === "seat_a") {
+      store.dispatch(dispatchEngineCommand({ type: "Pass", seatId: "seat_a" }));
+    }
+
+    const engine = store.getState().engine;
+    const legalMoves = selectEngineLegalMovesForAi(store.getState());
+    const observation = buildSeatObservation({
+      state: engine.match!,
+      seatId: "seat_b",
+      catalogCards: engine.runtimeCatalog.cards,
+      catalogLeaders: engine.runtimeCatalog.leaders,
+    });
+    const selected = legalHeuristicPolicyV1.selectMove({ seatId: "seat_b", observation, legalMoves });
+
+    expect(engine.aiPolicyId).toBe("legal-heuristic-v1");
+    expect(getLegalHeuristicAiCommand(engine, "seat_b", "seat_a")).toEqual(
+      selected ? commandFromLegalMove(selected) : null,
+    );
+  });
+
+  it("controller falls back to the default product policy for malformed adapter policy ids", () => {
+    const store = createTestStore();
+    store.dispatch(startEngineMatch({ seed: "ai-controller-policy-fallback" }));
+    completeMulligans(store);
+    if (store.getState().engine.match?.currentTurn === "seat_a") {
+      store.dispatch(dispatchEngineCommand({ type: "Pass", seatId: "seat_a" }));
+    }
+
+    const engine = store.getState().engine;
+    const legalMoves = selectEngineLegalMovesForAi(store.getState());
+    const observation = buildSeatObservation({
+      state: engine.match!,
+      seatId: "seat_b",
+      catalogCards: engine.runtimeCatalog.cards,
+      catalogLeaders: engine.runtimeCatalog.leaders,
+    });
+    const selected = legalHeuristicPolicyV0.selectMove({ seatId: "seat_b", observation, legalMoves });
+
+    expect(
+      getLegalHeuristicAiCommand(
+        { ...engine, aiPolicyId: "legal-first-v0" as never },
+        "seat_b",
+        "seat_a",
+      ),
+    ).toEqual(selected ? commandFromLegalMove(selected) : null);
   });
 
   it("Redux flow lets AI choose and dispatch a legal card play that updates hand, board, and events", () => {

@@ -2,11 +2,13 @@ import React, { useMemo, useState } from "react";
 
 import type { CatalogDeckPreset } from "@/game/catalog";
 import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
+import { resolveProductAiPolicyId } from "@/game/ai";
 
-import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
 import Listbox from "./Listbox";
 import {
+  aiPolicyIdFromSearch,
+  buildPreGameAiPolicyOptions,
   buildPreGameDeckOptions,
   buildPreGameDeckOptionsWithLocal,
   buildPreGameFormatOptions,
@@ -47,16 +49,20 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
     [blockedSources, localDecks, sourceSets],
   );
   const opponentOptions = useMemo(() => buildPreGameDeckOptions(), []);
-  const modeOptions = useMemo(() => buildPreGameModeOptions(), []);
   const roundOptions = useMemo(() => buildPreGameRoundOptions(), []);
   const formatOptions = useMemo(() => buildPreGameFormatOptions(), []);
-  const defaults = useMemo(() => getDefaultPreGameSelection(), []);
+  const initialAiPolicyId = useMemo(() => aiPolicyIdFromSearch(search), [search]);
+  const defaults = useMemo(() => getDefaultPreGameSelection(initialAiPolicyId), [initialAiPolicyId]);
   const [humanDeckOptionId, setHumanDeckOptionId] = useState(`catalog:${defaults.humanDeckPresetId}`);
   const [opponentDeckPresetId, setOpponentDeckPresetId] = useState(defaults.opponentDeckPresetId);
   const [roundId, setRoundId] = useState<"standard" | null>(defaults.roundId);
   const [formatId, setFormatId] = useState<"best-of-3" | null>(defaults.formatId);
+  const [aiPolicyId, setAiPolicyId] = useState(defaults.aiPolicyId);
   const [seed, setSeed] = useState(() => seedFromSearch(search));
   const [copyLabel, setCopyLabel] = useState("copy");
+  const modeOptions = useMemo(() => buildPreGameModeOptions(aiPolicyId), [aiPolicyId]);
+  const aiPolicyOptions = useMemo(() => buildPreGameAiPolicyOptions(), []);
+  const selectedAiPolicy = aiPolicyOptions.find((option) => option.id === aiPolicyId) ?? aiPolicyOptions[0];
 
   const selectedDeck = deckOptions.find((option) => option.optionId === humanDeckOptionId) ?? deckOptions[0];
   const selectedOpponent = opponentOptions.find((option) => option.presetId === opponentDeckPresetId) ?? opponentOptions[1] ?? opponentOptions[0];
@@ -93,6 +99,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
       roundId,
       formatId,
       seed,
+      aiPolicyId,
       catalogCards: sourceSets.cards,
       catalogLeaders: sourceSets.leaders,
     });
@@ -237,6 +244,21 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
 
             <div className="authentic-pregame__field">
               <Listbox
+                label="AI policy"
+                value={aiPolicyId}
+                onChange={(value) => setAiPolicyId(resolveProductAiPolicyId(value))}
+                testId="authentic-pregame-ai-policy-option"
+                options={aiPolicyOptions.map((option) => ({
+                  value: option.id,
+                  label: option.label,
+                  meta: option.statusLabel,
+                }))}
+              />
+              <em>{selectedAiPolicy?.description ?? "Choose the product AI policy for this match."}</em>
+            </div>
+
+            <div className="authentic-pregame__field">
+              <Listbox
                 label="Opponent"
                 value={opponentDeckPresetId}
                 onChange={setOpponentDeckPresetId}
@@ -326,7 +348,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
         <footer className="authentic-pregame__summary">
           <p>
             {selectedDeck?.name ?? "Deck"} vs {selectedOpponent?.name ?? "Opponent"} · Human vs AI · {selectedRound?.name ?? "choose round"} ·{" "}
-            {selectedFormat?.name ?? "choose format"} · seed {seedLabel} · {ENGINE_AI_POLICY_ID}
+            {selectedFormat?.name ?? "choose format"} · seed {seedLabel} · {aiPolicyId}
           </p>
           <button
             type="button"

@@ -1,4 +1,4 @@
-import { legalHeuristicPolicyV0 } from "@/game/ai";
+import { DEFAULT_PRODUCT_AI_POLICY_ID, type ProductAiPolicyId } from "@/game/ai";
 import type {
   CardInstanceId,
   EngineCommand,
@@ -13,8 +13,6 @@ import type { EngineAdapterError, EngineAdapterStatus, EngineCommandRecord, Engi
 
 import type { PlayCardLookupEntry } from "./playMoveHelpers";
 import { describePlayTarget } from "./playMoveHelpers";
-
-export const ENGINE_AI_POLICY_ID = legalHeuristicPolicyV0.id;
 
 export interface SeatLabels {
   seat_a: string;
@@ -138,6 +136,7 @@ export const buildMatchStatusBanner = ({
   lastError,
   winner,
   seatLabels,
+  aiPolicyId = DEFAULT_PRODUCT_AI_POLICY_ID,
 }: {
   match: MatchState | null;
   status: EngineAdapterStatus;
@@ -148,6 +147,7 @@ export const buildMatchStatusBanner = ({
   lastError: EngineAdapterError | null;
   winner: SeatId | "draw" | null;
   seatLabels: SeatLabels;
+  aiPolicyId?: ProductAiPolicyId;
 }): MatchStatusBannerViewModel => {
   if (!match) {
     return {
@@ -181,7 +181,7 @@ export const buildMatchStatusBanner = ({
   } else if (match.phase === "playing" && match.currentTurn === humanSeat && canHumanAct) {
     nextAction = "Your turn: choose a playable card, use leader, or pass.";
   } else if (match.phase === "playing" && match.currentTurn === aiSeat) {
-    nextAction = `${seatLabels[aiSeat]} turn: ${ENGINE_AI_POLICY_ID} will act from legal moves.`;
+    nextAction = `${seatLabels[aiSeat]} turn: ${aiPolicyId} will act from legal moves.`;
   } else if (match.phase === "round_end") {
     actor = "Both players passed";
     nextAction = "Round end: both players passed. Resolve the round.";

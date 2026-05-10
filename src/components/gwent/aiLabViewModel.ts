@@ -12,10 +12,11 @@ export interface AiLabBenchmarkSuite {
 }
 
 export interface AiLabPolicy {
-  readonly id: "legal-heuristic-v0" | "legal-first-v0" | "legal-heuristic-v1";
+  readonly id: ProductAiPolicyId | "legal-first-v0";
   readonly label: string;
   readonly role: string;
   readonly status: string;
+  readonly productSelectable: boolean;
   readonly description: string;
 }
 
@@ -62,28 +63,27 @@ const benchmarkSuite: AiLabBenchmarkSuite = {
   ],
 };
 
-const policies: readonly AiLabPolicy[] = [
-  {
-    id: "legal-heuristic-v0",
-    label: "legal-heuristic-v0",
-    role: "current product/headless heuristic",
-    status: "available",
-    description: "The implemented legal-move-first policy used by the product Human vs AI flow and headless simulations.",
-  },
+const benchmarkOnlyPolicies: readonly AiLabPolicy[] = [
   {
     id: "legal-first-v0",
     label: "legal-first-v0",
     role: "benchmark-only comparator",
     status: "headless comparator",
+    productSelectable: false,
     description: "A deterministic baseline for fixed-suite comparisons. It is not a product difficulty tier.",
   },
-  {
-    id: "legal-heuristic-v1",
-    label: "legal-heuristic-v1",
-    role: "planned policy",
-    status: "not implemented",
-    description: "Deferred until the benchmark ladder can evaluate changes against stable ledgers and matchup matrices.",
-  },
+];
+
+const policies: readonly AiLabPolicy[] = [
+  ...PRODUCT_AI_POLICIES.map((policy): AiLabPolicy => ({
+    id: policy.id,
+    label: policy.label,
+    role: policy.isDefault ? "stable/default product policy" : `${policy.shortLabel} product playtest`,
+    status: policy.productStatus === "stable" ? "implemented · stable/default" : "implemented · experimental/playtest",
+    productSelectable: policy.productSelectable,
+    description: `${policy.description} ${policy.benchmarkStatus}.`,
+  })),
+  ...benchmarkOnlyPolicies,
 ];
 
 const evaluationLayers: readonly AiLabEvaluationLayer[] = [
@@ -179,3 +179,4 @@ export const buildAuthenticAiLabViewModel = (): AiLabViewModel => ({
   researchReferences,
   futureActions,
 });
+import { PRODUCT_AI_POLICIES, type ProductAiPolicyId } from "@/game/ai";

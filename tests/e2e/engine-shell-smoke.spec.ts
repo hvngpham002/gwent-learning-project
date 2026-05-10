@@ -528,8 +528,13 @@ test("authentic AI Lab route mounts a read-only benchmark dashboard (cEp17)", as
   await expect(page.getByRole("heading", { name: "AI Lab" })).toBeVisible();
   await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-smoke-v1");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-heuristic-v0");
+  await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-heuristic-v1");
+  await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("implemented · experimental/playtest");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-first-v0");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("benchmark-only comparator");
+  await expect(page.getByTestId("authentic-ai-lab-policies").filter({ hasText: "legal-heuristic-v1" })).not.toContainText(
+    "not implemented",
+  );
   await expect(page.getByTestId("authentic-ai-lab-ladder")).toContainText("deterministic smoke/regression ledger");
   await expect(page.getByTestId("authentic-ai-lab-references")).toContainText(
     "docs/research/literature/ai/benchmark-harness.md",
@@ -582,6 +587,31 @@ test("pre-game opens the AI Lab through the setup tool cluster (cEp17)", async (
   await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
   await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-smoke-v1");
   await expect(page.getByTestId("engine-shell")).toHaveCount(0);
+});
+
+test("pre-game AI policy selector can start an experimental v1 playtest match (cFp24.1)", async ({ page }) => {
+  await page.goto("/?ai=legal-heuristic-v1&seed=cfp241-v1");
+
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-ai-policy-option")).toContainText(
+    "experimental · legal-heuristic-v1",
+  );
+  await expect(page.locator(".authentic-pregame__summary")).toContainText("legal-heuristic-v1");
+
+  await page.getByTestId("authentic-pregame-ai-policy-option").click();
+  await expect(page.getByRole("option", { name: /stable .* legal-heuristic-v0/i })).toBeVisible();
+  await expect(page.getByRole("option", { name: /experimental .* legal-heuristic-v1/i })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await page.keyboard.press("Escape");
+
+  await page.getByTestId("authentic-pregame-begin").click();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed cfp241-v1/i);
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText("legal-heuristic-v1");
+  await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-mulligan-screen")).toContainText(/legal-heuristic-v1/);
 });
 
 test("canonical direct match route opens at mulligan (cEp15)", async ({ page }) => {

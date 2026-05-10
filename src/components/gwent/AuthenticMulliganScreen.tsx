@@ -21,7 +21,6 @@ import {
 import { engineSelectedCardIdsSet } from "@/store/slices/engineSlice";
 import { dispatchEngineCommand } from "@/store/thunks/engineThunks";
 
-import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import AuthenticCard from "./AuthenticCard";
 import AuthenticCardBack from "./AuthenticCardBack";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
@@ -36,6 +35,7 @@ import "./authentic-mulligan.css";
 
 interface AuthenticMulliganScreenProps {
   readonly seedLabel: string;
+  readonly aiPolicyId: string;
   readonly statusLabel: string;
   readonly aiMulliganAnimation?: {
     readonly selectedCount: number;
@@ -75,6 +75,7 @@ const leaderCard = (
 
 const AuthenticMulliganScreen: React.FC<AuthenticMulliganScreenProps> = ({
   seedLabel,
+  aiPolicyId,
   statusLabel,
   aiMulliganAnimation,
   aiMulliganBaseHandCardIds = [],
@@ -348,7 +349,7 @@ const AuthenticMulliganScreen: React.FC<AuthenticMulliganScreenProps> = ({
           </div>
           <div className="authentic-mulligan__seed">
             <span>{seedLabel}</span>
-            <strong>{ENGINE_AI_POLICY_ID}</strong>
+            <strong>{aiPolicyId}</strong>
           </div>
         </header>
 

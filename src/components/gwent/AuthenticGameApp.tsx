@@ -19,8 +19,7 @@ import {
   buildCustomCatalogSourceSets,
 } from "./cardStudioViewModel";
 import { readOfficialPortingStore, writeOfficialPortingStore } from "./officialPortingStorage";
-import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
-import { seedFromSearch, type AuthenticMatchSetupConfig } from "./preGameViewModel";
+import { aiPolicyIdFromSearch, seedFromSearch, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 
 interface AuthenticGameAppProps {
   readonly routeView?: AuthenticUiView;
@@ -80,6 +79,7 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ routeView, search =
   const playDeck = (deck: CatalogDeckPreset) => {
     const opponentDeckPresetId = deck.faction === "nilfgaard" ? "current-northern-realms" : "current-nilfgaard";
     const seed = seedFromSearch(search) || `ep5-${Date.now().toString(36)}`;
+    const aiPolicyId = aiPolicyIdFromSearch(search);
     setSetupConfig({
       humanDeckPresetId: deck.presetId,
       humanDeckPreset: deck,
@@ -88,7 +88,7 @@ const AuthenticGameApp: React.FC<AuthenticGameAppProps> = ({ routeView, search =
       roundId: "standard",
       formatId: "best-of-3",
       seed,
-      aiPolicyId: ENGINE_AI_POLICY_ID,
+      aiPolicyId,
       catalogCards: customSourceSets.cards,
       catalogLeaders: customSourceSets.leaders,
     });

@@ -21,9 +21,10 @@ starter matrix. Deck categories are documented in
 in `src/game/benchmark/decks.ts`.
 
 cFp24 adds `legal-heuristic-v1` as the first strategic comparator above
-v0 and creates dedicated v1-vs-v0 smoke and starter-matrix suites. The
-product AI default remains `legal-heuristic-v0`; v1 is benchmark-only in
-this phase.
+v0 and creates dedicated v1-vs-v0 smoke and starter-matrix suites.
+cFp24.1 exposes v1 as an experimental product playtest policy through
+the pre-game `AI policy` selector and `?ai=legal-heuristic-v1`, while the
+product default remains `legal-heuristic-v0`.
 
 The harness is implementation support for the Batch A and Batch B
 decision notes:

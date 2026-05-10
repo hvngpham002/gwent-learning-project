@@ -5,6 +5,7 @@ import type { CardInstanceId, SeatId } from "@/game/core";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectEngineAiHandCount,
+  selectEngineAiPolicyId,
   selectEngineAiSeat,
   selectEngineBoardRows,
   selectEngineCanHumanAct,
@@ -44,7 +45,6 @@ import {
 } from "./engine/playMoveHelpers";
 import {
   buildMatchStatusBanner,
-  ENGINE_AI_POLICY_ID,
   getHandCardState,
   groupTargetActions,
   summarizeCommandHistory,
@@ -115,6 +115,7 @@ const EngineGameManager: React.FC = () => {
   const lock = useAppSelector(selectEngineLock);
   const humanSeat = useAppSelector(selectEngineHumanSeat);
   const aiSeat = useAppSelector(selectEngineAiSeat);
+  const aiPolicyId = useAppSelector(selectEngineAiPolicyId);
   const canHumanAct = useAppSelector(selectEngineCanHumanAct);
   const seed = useAppSelector(selectEngineSeed);
   const humanHand = useAppSelector(selectEngineHumanHand);
@@ -222,8 +223,9 @@ const EngineGameManager: React.FC = () => {
         lastError,
         winner,
         seatLabels: SEAT_LABELS,
+        aiPolicyId,
       }),
-    [aiSeat, canHumanAct, humanSeat, lastError, lock, match, status, winner],
+    [aiPolicyId, aiSeat, canHumanAct, humanSeat, lastError, lock, match, status, winner],
   );
   const recentCommands = useMemo(
     () =>
@@ -362,7 +364,7 @@ const EngineGameManager: React.FC = () => {
       <header className="engine-shell__header">
         <div>
           <h1>Engine Match</h1>
-          <p>Seed {String(seed ?? startSeed ?? "default")} · AI {ENGINE_AI_POLICY_ID}</p>
+          <p>Seed {String(seed ?? startSeed ?? "default")} · AI {aiPolicyId}</p>
         </div>
         <button type="button" className="engine-action" data-testid="engine-new-game" onClick={startNewGame}>
           New Game
@@ -372,7 +374,7 @@ const EngineGameManager: React.FC = () => {
       <section className="engine-status-banner" aria-label="Match status" data-testid="engine-status-banner">
         <div className="engine-status-banner__meta">
           <span>Seed {String(seed ?? startSeed ?? "default")}</span>
-          <span>AI {ENGINE_AI_POLICY_ID}</span>
+          <span>AI {aiPolicyId}</span>
           <span>{statusBanner.phaseLabel}</span>
           <span>{statusBanner.roundLabel}</span>
           <span>{statusBanner.actorLabel}</span>

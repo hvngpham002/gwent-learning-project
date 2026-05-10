@@ -6,10 +6,15 @@ import {
 } from "@/data/catalog";
 import type { CatalogCardKind, CatalogDeckPreset, CatalogFaction, CatalogLeaderSource } from "@/game/catalog";
 import type { CatalogCardSource } from "@/game/catalog";
+import {
+  aiPolicyIdFromSearch,
+  DEFAULT_PRODUCT_AI_POLICY_ID,
+  PRODUCT_AI_POLICIES,
+  type ProductAiPolicyId,
+} from "@/game/ai";
 import type { StartEngineMatchOptions } from "@/store/thunks/engineThunks";
 import type { CardStudioBlockedSources, CardStudioSourceSets } from "./cardStudioTypes";
 
-import { ENGINE_AI_POLICY_ID } from "../game/engine/engineShellViewModels";
 import { deckNameKey, validateDeckPreset } from "./deckBuilderViewModel";
 import { getFactionDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
 
@@ -21,7 +26,7 @@ export interface AuthenticMatchSetupConfig {
   readonly roundId: "standard";
   readonly formatId: "best-of-3";
   readonly seed: string | number;
-  readonly aiPolicyId: typeof ENGINE_AI_POLICY_ID;
+  readonly aiPolicyId: ProductAiPolicyId;
   readonly catalogCards?: readonly CatalogCardSource[];
   readonly catalogLeaders?: readonly CatalogLeaderSource[];
 }
@@ -66,6 +71,14 @@ export interface PreGameRoundOptionViewModel {
   readonly name: string;
   readonly available: boolean;
   readonly note: string;
+}
+
+export interface PreGameAiPolicyOptionViewModel {
+  readonly id: ProductAiPolicyId;
+  readonly label: string;
+  readonly shortLabel: string;
+  readonly statusLabel: string;
+  readonly description: string;
 }
 
 const countEntries = (entries: CatalogDeckPreset["mainDeck"]) => entries.reduce((total, entry) => total + entry.count, 0);
@@ -178,19 +191,30 @@ export const buildPreGameDeckOptionsWithLocal = (
   ];
 };
 
-export const buildPreGameModeOptions = (): readonly PreGameModeOptionViewModel[] => [
+export const buildPreGameModeOptions = (
+  aiPolicyId: ProductAiPolicyId = DEFAULT_PRODUCT_AI_POLICY_ID,
+): readonly PreGameModeOptionViewModel[] => [
   {
     id: "human-vs-ai",
     name: "Casual",
     icon: "☕",
     description: "Practice match versus AI. No ranking.",
     available: true,
-    note: ENGINE_AI_POLICY_ID,
+    note: aiPolicyId,
   },
   { id: "ranked", name: "Ranked", icon: "⚔", description: "Climb the ladder. Win streaks affect MMR.", available: false, note: "coming later" },
   { id: "training", name: "Training", icon: "✎", description: "Single round, free mulligans, undo enabled.", available: false, note: "coming later" },
   { id: "seed-suite", name: "Seed Suite", icon: "⚙", description: "Replay deterministic suite from research lab.", available: false, note: "coming later" },
 ];
+
+export const buildPreGameAiPolicyOptions = (): readonly PreGameAiPolicyOptionViewModel[] =>
+  PRODUCT_AI_POLICIES.filter((policy) => policy.productSelectable).map((policy) => ({
+    id: policy.id,
+    label: `${policy.shortLabel} · ${policy.label}`,
+    shortLabel: policy.shortLabel,
+    statusLabel: policy.productStatus,
+    description: policy.description,
+  }));
 
 export const buildPreGameFormatOptions = (): readonly PreGameFormatOptionViewModel[] => [
   { id: "best-of-3", name: "Bo3", available: true, note: "current match format" },
@@ -203,13 +227,15 @@ export const buildPreGameRoundOptions = (): readonly PreGameRoundOptionViewModel
   { id: "instant-death", name: "Instant Death", available: false, note: "one gem each" },
 ];
 
-export const getDefaultPreGameSelection = () => ({
+export const getDefaultPreGameSelection = (
+  aiPolicyId: ProductAiPolicyId = DEFAULT_PRODUCT_AI_POLICY_ID,
+) => ({
   humanDeckPresetId: "current-northern-realms",
   opponentDeckPresetId: "current-nilfgaard",
   modeId: "human-vs-ai" as const,
   roundId: "standard" as const,
   formatId: "best-of-3" as const,
-  aiPolicyId: ENGINE_AI_POLICY_ID,
+  aiPolicyId,
 });
 
 export const getSuggestedOpponentPresetId = (humanPresetId: string, options = buildPreGameDeckOptions()): string => {
@@ -225,6 +251,8 @@ export const seedFromSearch = (search = ""): string => {
   return params.get("seed") ?? "";
 };
 
+export { aiPolicyIdFromSearch };
+
 export const generateVisibleSeed = (now = Date.now()): string => `ep4-${now.toString(36)}`;
 
 export const normalizePreGameSeed = (seedInput: string, generate = generateVisibleSeed): string => {
@@ -239,6 +267,7 @@ export const buildSetupConfig = (input: {
   readonly roundId: "standard";
   readonly formatId: "best-of-3";
   readonly seed: string;
+  readonly aiPolicyId?: ProductAiPolicyId;
   readonly catalogCards?: readonly CatalogCardSource[];
   readonly catalogLeaders?: readonly CatalogLeaderSource[];
 }): AuthenticMatchSetupConfig => {
@@ -249,7 +278,7 @@ export const buildSetupConfig = (input: {
     roundId: input.roundId,
     formatId: input.formatId,
     seed: normalizePreGameSeed(input.seed),
-    aiPolicyId: ENGINE_AI_POLICY_ID,
+    aiPolicyId: input.aiPolicyId ?? DEFAULT_PRODUCT_AI_POLICY_ID,
     ...(input.catalogCards ? { catalogCards: input.catalogCards } : {}),
     ...(input.catalogLeaders ? { catalogLeaders: input.catalogLeaders } : {}),
   };
@@ -265,6 +294,7 @@ export const setupConfigToStartEngineOptions = (config: AuthenticMatchSetupConfi
   aiSeat: "seat_b",
   playerIds: { seat_a: "human", seat_b: "ai" },
   controllerKinds: { seat_a: "human", seat_b: "ai" },
+  aiPolicyId: config.aiPolicyId,
   ...(config.catalogCards ? { catalogCards: config.catalogCards } : {}),
   ...(config.catalogLeaders ? { catalogLeaders: config.catalogLeaders } : {}),
 });

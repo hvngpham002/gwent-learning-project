@@ -5,6 +5,7 @@ import type { CardInstanceId, GameEvent, PlayCardMove, SeatId } from "@/game/cor
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectEngineAiHandCount,
+  selectEngineAiPolicyId,
   selectEngineAiSeat,
   selectEngineBoardRows,
   selectEngineCanAiAct,
@@ -42,7 +43,6 @@ import {
 } from "../game/engine/playMoveHelpers";
 import {
   buildMatchStatusBanner,
-  ENGINE_AI_POLICY_ID,
   getHandCardState,
   summarizeCommandHistory,
   summarizeEvents,
@@ -95,7 +95,7 @@ import {
   type SelectedCardWeatherTargetViewModel,
   type WeatherRowOverlayViewModel,
 } from "./matchViewModel";
-import { setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
+import { aiPolicyIdFromSearch, setupConfigToStartEngineOptions, type AuthenticMatchSetupConfig } from "./preGameViewModel";
 import { getAbilityDisplay, getLeaderAbilityDisplay } from "./displayMetadata";
 import { dimensionsForSize } from "./cardViewModel";
 import "./authentic-match.css";
@@ -301,13 +301,14 @@ const abilitySummary = (card: AuthenticRuntimeCardViewModel | null) => {
 
 const TopBar: React.FC<{
   seedLabel: string;
+  aiPolicyId: string;
   roundLabel: string;
   actorLabel: string;
   phaseLabel: string;
   nextAction: string;
   onNewGame: () => void;
   onReturnToPreGame?: () => void;
-}> = ({ seedLabel, roundLabel, actorLabel, phaseLabel, nextAction, onNewGame, onReturnToPreGame }) => (
+}> = ({ seedLabel, aiPolicyId, roundLabel, actorLabel, phaseLabel, nextAction, onNewGame, onReturnToPreGame }) => (
   <header className="authentic-match__topbar">
     <div className="authentic-match__top-actions">
       <button type="button" className="authentic-button authentic-button--ghost authentic-match__ghost-button" onClick={onNewGame}>
@@ -327,7 +328,7 @@ const TopBar: React.FC<{
     </div>
     <div className="authentic-match__seed">
       <span>{seedLabel}</span>
-      <strong>{ENGINE_AI_POLICY_ID}</strong>
+      <strong>{aiPolicyId}</strong>
     </div>
     <p className="authentic-match__next-action">{nextAction}</p>
   </header>
@@ -1378,10 +1379,14 @@ interface AuthenticMatchScreenProps {
   readonly onReturnToPreGame?: () => void;
 }
 
-const setupKey = (config: AuthenticMatchSetupConfig | undefined, fallbackSeed: string | undefined) =>
+const setupKey = (
+  config: AuthenticMatchSetupConfig | undefined,
+  fallbackSeed: string | undefined,
+  fallbackAiPolicyId: string,
+) =>
   config
     ? `${config.humanDeckPresetId}|${config.opponentDeckPresetId}|${String(config.seed)}|${config.aiPolicyId}`
-    : `direct|${String(fallbackSeed ?? "default")}`;
+    : `direct|${String(fallbackSeed ?? "default")}|${fallbackAiPolicyId}`;
 
 const HUMAN_MULLIGAN_ANIMATION_MS = 1450;
 const AI_MULLIGAN_CARD_ANIMATION_MS = 1700;
@@ -1540,6 +1545,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const lock = useAppSelector(selectEngineLock);
   const humanSeat = useAppSelector(selectEngineHumanSeat);
   const aiSeat = useAppSelector(selectEngineAiSeat);
+  const aiPolicyId = useAppSelector(selectEngineAiPolicyId);
   const canHumanAct = useAppSelector(selectEngineCanHumanAct);
   const canAiAct = useAppSelector(selectEngineCanAiAct);
   const seed = useAppSelector(selectEngineSeed);
@@ -1562,9 +1568,10 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const lookThreeCardsRevealCards = useAppSelector(selectEngineLookThreeCardsReveal);
 
   const startSeed = useMemo(() => getEngineSeedFromSearch(window.location.search), []);
+  const directAiPolicyId = useMemo(() => aiPolicyIdFromSearch(window.location.search), []);
   const debugRevealAiMulligan = useMemo(() => isDebugAiMulliganEnabled(), []);
   const debugAiMulliganCount = useMemo(() => getDebugAiMulliganCount(), []);
-  const activeSetupKey = setupKey(setupConfig, startSeed);
+  const activeSetupKey = setupKey(setupConfig, startSeed, directAiPolicyId);
   const activeMatchKey = `${activeSetupKey}|run:${matchPresentationRun}`;
   const setSyncedHandDragState = useCallback((next: HandDragState | null) => {
     dragStateRef.current = next;
@@ -1605,11 +1612,11 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       return;
     }
     if (!match) {
-      dispatch(startEngineMatch({ seed: startSeed }));
+      dispatch(startEngineMatch({ seed: startSeed, aiPolicyId: directAiPolicyId }));
     }
     // activeSetupKey is included so local pre-game transitions always start the chosen setup.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, activeSetupKey, setSyncedHandDragState]);
+  }, [dispatch, activeSetupKey, directAiPolicyId, setSyncedHandDragState]);
 
   const latestAiMulliganRecord = useMemo(
     () => latestAppliedMulligan(engine.commandHistory, aiSeat, { preferRedraw: true }),
@@ -1860,8 +1867,12 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     setSyncedHandDragState(null);
     setCardFlights([]);
     setMatchPresentationRun((current) => current + 1);
-    dispatch(startEngineMatch(setupConfig ? setupConfigToStartEngineOptions(setupConfig) : { seed: startSeed }));
-  }, [dispatch, setupConfig, setSyncedHandDragState, startSeed]);
+    dispatch(
+      startEngineMatch(
+        setupConfig ? setupConfigToStartEngineOptions(setupConfig) : { seed: startSeed, aiPolicyId: directAiPolicyId },
+      ),
+    );
+  }, [directAiPolicyId, dispatch, setupConfig, setSyncedHandDragState, startSeed]);
 
   const confirmMulliganReview = useCallback(() => {
     if (!visibleMulliganExitAnimationKey || !isMulliganReviewReady) {
@@ -2174,8 +2185,9 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
         lastError,
         winner,
         seatLabels: SEAT_LABELS,
+        aiPolicyId,
       }),
-    [aiSeat, canHumanAct, humanSeat, lastError, lock, match, status, winner],
+    [aiPolicyId, aiSeat, canHumanAct, humanSeat, lastError, lock, match, status, winner],
   );
   const battleLogEntries = useMemo<BattleLogEntry[]>(() => {
     const commandSummaries = summarizeCommandHistory({
@@ -2776,6 +2788,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       <>
         <AuthenticMulliganScreen
           seedLabel={seedLabel}
+          aiPolicyId={aiPolicyId}
           statusLabel={
             visibleMulliganExitAnimation
               ? isMulliganReviewReady
@@ -2827,6 +2840,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       <div className="authentic-match">
         <TopBar
           seedLabel={seedLabel}
+          aiPolicyId={aiPolicyId}
           roundLabel={statusBanner.roundLabel}
           actorLabel={statusBanner.actorLabel}
           phaseLabel={statusBanner.phaseLabel}

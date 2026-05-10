@@ -4,8 +4,8 @@ This document tracks the current authentic product loop after cEp17.
 
 ## Routes
 
-- `/` opens the authentic pre-game setup screen and is the main product address.
-- `/match` starts a direct authentic match from the URL seed, then shows the mulligan screen first.
+- `/` opens the authentic pre-game setup screen and is the main product address. `?ai=legal-heuristic-v1` preselects the experimental AI policy; absent or invalid values fall back to `legal-heuristic-v0`.
+- `/match` starts a direct authentic match from the URL seed, then shows the mulligan screen first. `?ai=legal-heuristic-v1` starts the direct match with v1; absent or invalid values fall back to v0.
 - `/deck-builder` opens the browser-local catalog deck builder.
 - `/card-studio` opens browser-local Card Studio for custom cards and leaders.
 - `/official-porting` opens the official-card porting review tool for staged Game8 official candidates. It is an authoring route and does not add official staged cards to product deck sources.
@@ -21,7 +21,7 @@ Runtime engine state is not encoded into the URL. In-app transitions are coordin
 
 ## In-App Flow
 
-1. Pre-game selects a human deck, catalog opponent, Human vs AI mode, Standard round, Bo3 format, and visible seed.
+1. Pre-game selects a human deck, catalog opponent, Human vs AI mode, AI policy, Standard round, Bo3 format, and visible seed. The `AI policy` selector offers `stable · legal-heuristic-v0` and `experimental · legal-heuristic-v1`; v0 remains the default, v1 is a playtest policy, and `legal-first-v0` remains benchmark-only.
 2. Pre-game and deck builder can open `card studio →`; Card Studio saves browser-local custom cards/leaders, exports/imports JSON, and returns to the prior authentic surface without starting a match.
 3. `begin match →` starts an engine match and lands on `AuthenticMulliganScreen`.
 4. Deck-builder `play →` saves the selected local deck, starts an engine match with that inline `CatalogDeckPreset`, and lands on `AuthenticMulliganScreen`.
@@ -47,11 +47,11 @@ The `/ai-lab` route is implemented as a read-only product research dashboard. It
 - suite: `benchmark-smoke-v1`;
 - shape: 6 seeds, mirrored, 12 expected match records;
 - matchup: current Northern Realms vs current Nilfgaard;
-- policies: product/headless `legal-heuristic-v0`, benchmark-only `legal-first-v0`, and deferred `legal-heuristic-v1`;
+- policies: stable/default product `legal-heuristic-v0`, experimental/playtest product `legal-heuristic-v1`, and benchmark-only `legal-first-v0`;
 - ladder: deterministic smoke/regression ledgers first, then fixed-suite matrices, ratings, robustness/search probes, and self-play/ML later;
 - references: Batch A search decision, Batch B evaluation-ladder decision, benchmark harness doc, and AI/ML roadmap.
 
-The AI Lab intentionally does not call benchmark, simulation, rating, search, training, Python, or file-export code. `run benchmark`, `export ledger`, `ratings`, `search prototype`, and `training` controls are rendered disabled with short reasons.
+The AI Lab derives product policy status from the shared product policy registry so registered product policies do not need duplicate hand-edited implementation strings. It intentionally does not call benchmark, simulation, rating, search, training, Python, or file-export code. `run benchmark`, `export ledger`, `ratings`, `search prototype`, and `training` controls are rendered disabled with short reasons.
 
 ## Scroll Regions
 
@@ -63,7 +63,7 @@ On the authentic match route, cEp14 keeps the desktop board, both rails, and the
 
 ## Custom Catalog Runtime
 
-Card Studio records live in browser localStorage under `gwent_custom_catalog_v1`. Playable custom records are merged with the current catalog for deck-builder/pre-game validation and are passed into `startEngineMatch` as the active runtime catalog. The Redux engine adapter stores that serializable runtime catalog snapshot and uses it for legal moves, command execution, scoring, selectors, and `legal-heuristic-v0` AI observation.
+Card Studio records live in browser localStorage under `gwent_custom_catalog_v1`. Playable custom records are merged with the current catalog for deck-builder/pre-game validation and are passed into `startEngineMatch` as the active runtime catalog. The Redux engine adapter stores that serializable runtime catalog snapshot and selected product AI policy id, then uses them for legal moves, command execution, scoring, selectors, and the active legal heuristic AI observation.
 
 Draft custom records remain visible in Card Studio but do not enter match runtime. If a local deck references a draft or deleted custom source, pre-game and deck builder block play with a validation error instead of deleting the deck.
 

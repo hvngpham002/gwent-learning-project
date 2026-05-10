@@ -6,11 +6,33 @@ Date: 2026-05-10
 
 `legal-heuristic-v1` is the first strategic hand-authored AI baseline
 above `legal-heuristic-v0`. It is deterministic, hidden-info safe, and
-benchmark-only in cFp24. It is not an ML agent, search policy, faction
-specialist, rating system, or product difficulty tier.
+available for product playtesting as of cFp24.1. It is not an ML agent,
+search policy, faction specialist, rating system, or product difficulty
+tier.
 
-The product Human vs AI flow remains on `legal-heuristic-v0` until a
-later product/UI spec decides otherwise.
+The product Human vs AI flow still defaults to `legal-heuristic-v0`.
+Human testers can select `legal-heuristic-v1` from the pre-game `AI
+policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
+`/match`. Invalid `ai` query values fall back to v0, and
+`legal-first-v0` remains benchmark-only.
+
+## Product Playtest Toggle
+
+cFp24.1 adds a product-safe policy registry for playable policies:
+
+- `legal-heuristic-v0`: stable/default product policy.
+- `legal-heuristic-v1`: experimental playtest policy backed by the cFp24
+  benchmark artifacts.
+
+The selector is intentionally labelled `AI policy`, not difficulty. It
+does not add rank, MMR, training mode, or player-facing balance promises.
+The selected policy id is public and appears in pre-game, mulligan, and
+match surfaces so testers can verify which controller is active.
+
+AI Lab policy status now consumes the same product policy metadata. When
+future product policies are registered, `/ai-lab` should derive their
+implemented/playtest status from the registry instead of duplicating
+status strings by hand.
 
 ## Hidden-Info Boundary
 
@@ -134,11 +156,10 @@ These are fixed-suite evidence, not ratings or proof of broad strength.
 - Benchmarks use starter decks and smoke decks only; mechanics stress
   decks and competitive lists remain deferred.
 - Glicko, TrueSkill, search, ML training, Python tooling, browser
-  benchmark execution, and product difficulty selection remain deferred.
+  benchmark execution, and product difficulty tiers remain deferred.
 
 ## Planned Follow-Ups
 
-Useful next steps are a narrow v1.1 tuning pass over reviewed v1 ledgers,
-mechanics stress suites for Spy/Medic/Muster/Weather/Scorch/Decoy/Leader
-behavior, or a later product spec for AI policy selection after benchmark
-review.
+Useful next steps are a narrow v1.1 tuning pass over reviewed v1 ledgers
+or mechanics stress suites for Spy/Medic/Muster/Weather/Scorch/Decoy/
+Leader behavior. Product difficulty tiers remain a separate future spec.

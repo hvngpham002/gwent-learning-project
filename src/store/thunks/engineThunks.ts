@@ -8,6 +8,7 @@ import {
   currentNorthernRealmsDeckPreset,
 } from "@/data/catalog";
 import type { CatalogCardSource, CatalogDeckPreset, CatalogLeaderSource } from "@/game/catalog";
+import type { ProductAiPolicyId } from "@/game/ai";
 import {
   EngineRuleError,
   executeCommand,
@@ -42,6 +43,7 @@ export interface StartEngineMatchOptions {
   aiDeckPreset?: CatalogDeckPreset;
   catalogCards?: readonly CatalogCardSource[];
   catalogLeaders?: readonly CatalogLeaderSource[];
+  aiPolicyId?: ProductAiPolicyId;
   playerIds?: Partial<Record<SeatId, string>>;
   controllerKinds?: Partial<Record<SeatId, ControllerKind>>;
 }
@@ -138,6 +140,7 @@ export const startEngineMatch =
             cards: options.catalogCards ?? currentCatalogCards,
             leaders: options.catalogLeaders ?? currentCatalogLeaders,
           },
+          aiPolicyId: options.aiPolicyId,
         }),
       );
     } catch (error) {

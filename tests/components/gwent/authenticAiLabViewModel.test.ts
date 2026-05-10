@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildAuthenticAiLabViewModel } from "@/components/gwent/aiLabViewModel";
+import { PRODUCT_AI_POLICIES } from "@/game/ai";
 
 const forbiddenHiddenInfoStrings = [
   "cardsById",
@@ -28,23 +29,40 @@ describe("authentic AI Lab view model", () => {
     expect(viewModel.benchmarkSuite.status).toContain("browser run deferred");
   });
 
-  it("lists policy ids and marks legal-first-v0 as benchmark-only", () => {
+  it("derives product policy rows from the shared registry and marks legal-first-v0 as benchmark-only", () => {
     const viewModel = buildAuthenticAiLabViewModel();
 
-    expect(viewModel.policies.map((policy) => policy.id)).toEqual([
-      "legal-heuristic-v0",
-      "legal-first-v0",
-      "legal-heuristic-v1",
-    ]);
+    for (const productPolicy of PRODUCT_AI_POLICIES) {
+      expect(viewModel.policies.find((policy) => policy.id === productPolicy.id)).toEqual(
+        expect.objectContaining({
+          label: productPolicy.label,
+          productSelectable: true,
+        }),
+      );
+    }
     expect(viewModel.policies.find((policy) => policy.id === "legal-heuristic-v0")).toEqual(
-      expect.objectContaining({ role: "current product/headless heuristic" }),
-    );
-    expect(viewModel.policies.find((policy) => policy.id === "legal-first-v0")).toEqual(
-      expect.objectContaining({ role: "benchmark-only comparator" }),
+      expect.objectContaining({ role: "stable/default product policy", status: "implemented · stable/default" }),
     );
     expect(viewModel.policies.find((policy) => policy.id === "legal-heuristic-v1")).toEqual(
-      expect.objectContaining({ status: "not implemented" }),
+      expect.objectContaining({
+        role: "experimental product playtest",
+        status: "implemented · experimental/playtest",
+      }),
     );
+    expect(viewModel.policies.find((policy) => policy.id === "legal-first-v0")).toEqual(
+      expect.objectContaining({ role: "benchmark-only comparator", productSelectable: false }),
+    );
+    expect(PRODUCT_AI_POLICIES.map((policy) => policy.id)).not.toContain("legal-first-v0" as never);
+  });
+
+  it("does not mark registered product policies as not implemented or omit them", () => {
+    const viewModel = buildAuthenticAiLabViewModel();
+
+    for (const productPolicy of PRODUCT_AI_POLICIES) {
+      const row = viewModel.policies.find((policy) => policy.id === productPolicy.id);
+      expect(row).toBeTruthy();
+      expect(`${row?.role} ${row?.status} ${row?.description}`.toLowerCase()).not.toContain("not implemented");
+    }
   });
 
   it("keeps all future actions disabled with reasons", () => {

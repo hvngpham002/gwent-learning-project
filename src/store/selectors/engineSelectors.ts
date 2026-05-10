@@ -43,6 +43,7 @@ export const selectEngineRuntimeCatalogLeaders = (state: RootState) => state.eng
 export const selectEngineMatch = (state: RootState) => state.engine.match;
 export const selectEngineStatus = (state: RootState) => state.engine.status;
 export const selectEngineLock = (state: RootState) => state.engine.lock;
+export const selectEngineAiPolicyId = (state: RootState) => state.engine.aiPolicyId;
 export const selectEnginePrompt = createSelector(selectEngineMatch, (match) => match?.pendingPrompt ?? null);
 export const selectEngineCurrentSeat = createSelector(selectEngineMatch, (match) => match?.currentTurn ?? null);
 export const selectEngineHumanSeat = (state: RootState) => state.engine.seatMap.human;

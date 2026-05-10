@@ -1,6 +1,11 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 import { currentCatalogCards, currentCatalogLeaders } from "@/data/catalog";
+import {
+  DEFAULT_PRODUCT_AI_POLICY_ID,
+  resolveProductAiPolicyId,
+  type ProductAiPolicyId,
+} from "@/game/ai";
 import type { CatalogCardSource, CatalogLeaderSource } from "@/game/catalog";
 import type {
   CardInstanceId,
@@ -52,6 +57,7 @@ export interface EngineAdapterState {
   status: EngineAdapterStatus;
   lock: EngineActionLock | null;
   seatMap: { human: SeatId; ai: SeatId };
+  aiPolicyId: ProductAiPolicyId;
   commandHistory: EngineCommandRecord[];
   eventLog: GameEvent[];
   lastTransactionEvents: GameEvent[];
@@ -102,6 +108,7 @@ export const createInitialEngineState = (): EngineAdapterState => ({
   status: "idle",
   lock: null,
   seatMap: defaultSeatMap,
+  aiPolicyId: DEFAULT_PRODUCT_AI_POLICY_ID,
   commandHistory: [],
   eventLog: [],
   lastTransactionEvents: [],
@@ -122,6 +129,7 @@ const engineSlice = createSlice({
         events: GameEvent[];
         seatMap?: EngineAdapterState["seatMap"];
         runtimeCatalog?: EngineRuntimeCatalogSnapshot;
+        aiPolicyId?: ProductAiPolicyId;
       }>,
     ) => {
       const derived = deriveStatusAndLock(action.payload.match, 0);
@@ -133,6 +141,7 @@ const engineSlice = createSlice({
       state.status = derived.status;
       state.lock = derived.lock;
       state.seatMap = action.payload.seatMap ?? defaultSeatMap;
+      state.aiPolicyId = resolveProductAiPolicyId(action.payload.aiPolicyId);
       state.commandHistory = [];
       state.eventLog = action.payload.events as typeof state.eventLog;
       state.lastTransactionEvents = action.payload.events as typeof state.lastTransactionEvents;

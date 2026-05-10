@@ -7,6 +7,7 @@ import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "
 import {
   selectEngineDebugAiHandCards,
   selectEngineAiHandCount,
+  selectEngineAiPolicyId,
   selectEngineCanHumanAct,
   selectEngineHumanHand,
   selectEngineLegalMovesForHuman,
@@ -14,6 +15,7 @@ import {
 } from "@/store/selectors/engineSelectors";
 import type { CardInstanceId, MatchState, PlayCardMove, SeatId, UseLeaderMove } from "@/game/core";
 import type { CatalogCardSource, CatalogDeckPreset } from "@/game/catalog";
+import { DEFAULT_PRODUCT_AI_POLICY_ID } from "@/game/ai";
 import { currentCatalogCards, currentCatalogLeaders, currentNilfgaardDeckPreset, currentNorthernRealmsDeckPreset } from "@/data/catalog";
 import { getLegalHeuristicAiCommand } from "@/components/game/engine/legalHeuristicAiController";
 
@@ -95,8 +97,20 @@ describe("engine Redux adapter", () => {
     expect(state.engine.match?.seats.seat_a.faction).toBe("northern_realms");
     expect(state.engine.match?.seats.seat_b.faction).toBe("nilfgaard");
     expect(state.engine.seatMap).toEqual({ human: "seat_a", ai: "seat_b" });
+    expect(state.engine.aiPolicyId).toBe(DEFAULT_PRODUCT_AI_POLICY_ID);
+    expect(selectEngineAiPolicyId(state)).toBe(DEFAULT_PRODUCT_AI_POLICY_ID);
     expect(state.engine.status).toBe("ready");
     expect(state.engine.eventLog.some((event) => event.type === "match_started")).toBe(true);
+  });
+
+  it("stores the selected product AI policy id and defaults missing policy to v0", () => {
+    const store = createTestStore();
+
+    store.dispatch(startEngineMatch({ seed: "adapter-policy-v1", aiPolicyId: "legal-heuristic-v1" }));
+    expect(store.getState().engine.aiPolicyId).toBe("legal-heuristic-v1");
+
+    store.dispatch(startEngineMatch({ seed: "adapter-policy-default" }));
+    expect(store.getState().engine.aiPolicyId).toBe(DEFAULT_PRODUCT_AI_POLICY_ID);
   });
 
   it("starts with explicit selected deck presets while preserving seed and seat controllers", () => {
