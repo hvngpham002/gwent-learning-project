@@ -12,8 +12,13 @@ order, or runtime card instance IDs.
 
 cFp22 adds the first durable headless artifact boundary on top of that
 in-memory harness. The CLI report command writes deterministic public
-artifacts for the smoke suite: a JSON manifest, JSON summary, JSONL match
-ledger, and Markdown report.
+artifacts for benchmark suites: a JSON manifest, JSON summary, JSONL
+match ledger, and Markdown report.
+
+cFp23 adds an explicit benchmark deck taxonomy and the first broader
+starter matrix. Deck categories are documented in
+`docs/research/literature/ai/benchmark-deck-taxonomy.md` and registered
+in `src/game/benchmark/decks.ts`.
 
 The harness is implementation support for the Batch A and Batch B
 decision notes:
@@ -57,25 +62,29 @@ Robustness probe:
 
 ## Current Scope
 
-The built-in suite is `benchmark-smoke-v1`. It runs the existing six
-simulation smoke seeds over current Northern Realms versus current
-Nilfgaard, comparing `legal-heuristic-v0` with the deterministic
-benchmark-only `legal-first-v0` baseline. Mirroring is enabled, so the
-suite produces two records per seed.
+The built-in suites are:
+
+- `benchmark-smoke-v1`: a tiny plumbing/regression suite over the current
+  Northern Realms and Nilfgaard presets. It uses the existing six
+  simulation smoke seeds, mirrors `legal-heuristic-v0` versus
+  benchmark-only `legal-first-v0`, and produces 12 records.
+- `benchmark-starter-matrix-v1`: a broader starter-deck coverage suite
+  over the five official starter presets. It includes every unordered
+  pair of distinct starter decks, both policy assignments per deck pair,
+  3 deterministic seeds, mirrored `legal-heuristic-v0` versus
+  `legal-first-v0` runs, and produces 120 records.
 
 The harness supports explicit catalog deck presets per seat. It still
-uses `currentCatalogCards` and `currentCatalogLeaders`. cFp22 adds
-public smoke-suite file artifacts only; custom catalog snapshots, browser
-execution, Python tooling, ratings, search, and model training are
-intentionally out of scope.
+uses `currentCatalogCards` and `currentCatalogLeaders`. cFp23 adds no
+mechanics decks, competitive decks, custom catalog snapshots, browser
+execution, Python tooling, ratings, search, or model training.
 
 ## Product AI Lab Boundary
 
 cEp17 adds `/ai-lab` as a read-only authentic product dashboard for
-benchmark and policy visibility. The screen mirrors static cFp21 status:
-`benchmark-smoke-v1`, six seeds, mirrored twelve-record expectations,
-current Northern Realms versus current Nilfgaard,
-`legal-heuristic-v0`, and benchmark-only `legal-first-v0`.
+benchmark and policy visibility. The screen mirrors static smoke-suite
+status. cFp23 does not wire the starter matrix into the browser; the
+starter artifacts remain headless files for review.
 
 The AI Lab does not import or call `runBenchmarkSuite`, the
 `benchmark:smoke` command, headless simulation runners, ratings, search,
@@ -106,6 +115,12 @@ From the repository root, write the deterministic smoke artifact set:
 npm run benchmark:smoke
 ```
 
+Write the deterministic starter matrix artifact set:
+
+```bash
+npm run benchmark:starter-matrix
+```
+
 The command writes:
 
 ```text
@@ -114,13 +129,21 @@ docs/research/literature/ai/benchmark-results/benchmark-smoke-v1/latest/
   summary.json
   records.jsonl
   report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-starter-matrix-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
 ```
 
-The default run id is `benchmark-smoke-v1:latest`. The `latest/` path is
-intentionally stable and should be reviewed with:
+The default run id is `<suite-id>:latest`. Each `latest/` path is
+intentionally stable and should be reviewed with a suite-specific diff,
+for example:
 
 ```bash
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-smoke-v1/latest
+git diff -- docs/research/literature/ai/benchmark-results/benchmark-starter-matrix-v1/latest
 ```
 
 Policy or engine changes that affect public benchmark behavior should

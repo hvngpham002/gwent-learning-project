@@ -1,18 +1,28 @@
-import type { EnginePolicy } from "@/game/ai";
-import type { CatalogDeckPreset, CatalogFaction } from "@/game/catalog";
-import type { SeatId } from "@/game/core";
-import type { HeadlessMatchSimulationResult, SimulationTerminalStatus } from "@/game/sim";
+import type { EnginePolicy } from '@/game/ai';
+import type { CatalogDeckPreset, CatalogFaction } from '@/game/catalog';
+import type { SeatId } from '@/game/core';
+import type { HeadlessMatchSimulationResult, SimulationTerminalStatus } from '@/game/sim';
 
-export type BenchmarkMatchRecordSchemaVersion = "benchmark-match-v1";
-export type BenchmarkSummarySchemaVersion = "benchmark-summary-v1";
-export type BenchmarkSeatResult = "win" | "loss" | "draw" | "none";
-export type BenchmarkReplayStatus = "passed" | "failed" | "skipped";
+export type BenchmarkMatchRecordSchemaVersion = 'benchmark-match-v1';
+export type BenchmarkSummarySchemaVersion = 'benchmark-summary-v1';
+export type BenchmarkDeckCategory = 'smoke' | 'starter' | 'mechanics' | 'competitive';
+export type BenchmarkSeatResult = 'win' | 'loss' | 'draw' | 'none';
+export type BenchmarkReplayStatus = 'passed' | 'failed' | 'skipped';
+
+export interface BenchmarkDeckDescriptor {
+  deckPresetId: string;
+  label: string;
+  faction: Exclude<CatalogFaction, 'neutral'>;
+  category: BenchmarkDeckCategory;
+  deckPreset: CatalogDeckPreset;
+  notes?: string;
+}
 
 export interface BenchmarkSeatDescriptor {
   seatId: SeatId;
   policyId: string;
   playerId: string;
-  faction: Exclude<CatalogFaction, "neutral">;
+  faction: Exclude<CatalogFaction, 'neutral'>;
   deckPresetId: string;
 }
 
@@ -26,7 +36,7 @@ export interface BenchmarkMatchRecord {
   mirrorIndex?: 0 | 1;
   seats: Record<SeatId, BenchmarkSeatDescriptor>;
   status: SimulationTerminalStatus;
-  winner: SeatId | "draw" | null;
+  winner: SeatId | 'draw' | null;
   resultBySeat: Record<SeatId, BenchmarkSeatResult>;
   roundWinsBySeat: Record<SeatId, number>;
   roundDraws: number;
@@ -47,7 +57,7 @@ export interface BenchmarkMatchRecord {
 export interface BenchmarkMatchupSeatDefinition {
   policyId: string;
   playerId?: string;
-  faction: Exclude<CatalogFaction, "neutral">;
+  faction: Exclude<CatalogFaction, 'neutral'>;
   deckPreset: CatalogDeckPreset;
 }
 
@@ -64,6 +74,7 @@ export interface BenchmarkSuite {
   description: string;
   seeds: readonly (string | number)[];
   defaultMaxSteps?: number;
+  deckDescriptors?: readonly BenchmarkDeckDescriptor[];
   matchups: readonly BenchmarkMatchupDefinition[];
 }
 

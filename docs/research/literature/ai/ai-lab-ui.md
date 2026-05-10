@@ -19,6 +19,11 @@ The AI Lab is read-only. It shows:
 - the Batch B evaluation order: deterministic ledgers, fixed-suite matrices, ratings, robustness/search probes, then self-play/ML;
 - references to the Batch A search decision, Batch B evaluation-ladder decision, benchmark harness doc, and AI/ML roadmap.
 
+cFp23 adds the headless `benchmark-starter-matrix-v1` suite and committed
+starter matrix artifacts, but it does not update this browser surface.
+The AI Lab still does not import benchmark code or read generated
+artifact files.
+
 ## Browser Boundary
 
 The route does not call `runBenchmarkSuite`, headless simulation runners, ratings, search, training, Python tooling, file writers, or unsafe benchmark output. Future actions for `run benchmark`, `export ledger`, `ratings`, `search prototype`, and `training` are intentionally disabled with reasons.
@@ -33,9 +38,16 @@ cFp22 adds a command-line artifact path:
 npm run benchmark:smoke
 ```
 
-That command writes the public `benchmark-smoke-v1/latest` manifest, summary, JSONL records, and Markdown report under `docs/research/literature/ai/benchmark-results/`.
+cFp23 adds a second command-line artifact path:
 
-`/ai-lab` does not run this command, read those files, or trigger browser benchmark execution. Any future browser-facing runner or artifact viewer needs its own spec.
+```bash
+npm run benchmark:starter-matrix
+```
+
+Those commands write public `latest` manifests, summaries, JSONL records,
+and Markdown reports under `docs/research/literature/ai/benchmark-results/`.
+
+`/ai-lab` does not run these commands, read those files, or trigger browser benchmark execution. Any future browser-facing runner or artifact viewer needs its own spec.
 
 ## Hidden-Info Boundary
 

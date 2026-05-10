@@ -9,6 +9,12 @@ Run the smoke suite from the repository root:
 npm run benchmark:smoke
 ```
 
+Run the official starter-deck matrix from the repository root:
+
+```bash
+npm run benchmark:starter-matrix
+```
+
 The command writes the stable latest artifact set:
 
 ```text
@@ -17,14 +23,21 @@ benchmark-smoke-v1/latest/
   summary.json
   records.jsonl
   report.md
+
+benchmark-starter-matrix-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
 ```
 
-The default run id is `benchmark-smoke-v1:latest`. The `latest/` folder
-is intentionally deterministic and reviewable. After policy, engine, or
+The default run id is `<suite-id>:latest`. Each `latest/` folder is
+intentionally deterministic and reviewable. After policy, engine, or
 benchmark-harness changes, review the public behavior diff with:
 
 ```bash
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-smoke-v1/latest
+git diff -- docs/research/literature/ai/benchmark-results/benchmark-starter-matrix-v1/latest
 ```
 
 Default artifacts are hidden-info safe. They serialize public
@@ -36,3 +49,9 @@ or runtime card instance ids.
 
 `/ai-lab` remains read-only and does not run this command, read these
 files, or execute browser benchmarks.
+
+`benchmark-smoke-v1` is a small plumbing regression suite. The cFp23
+`benchmark-starter-matrix-v1` artifacts cover all five official starter
+decks with 10 unordered pairings, both policy assignments, 3 seeds,
+mirrored runs, and 120 records. They are starter coverage artifacts, not
+optimized deck-strength claims.
