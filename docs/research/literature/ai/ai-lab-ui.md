@@ -25,6 +25,18 @@ The route does not call `runBenchmarkSuite`, headless simulation runners, rating
 
 The AI Lab uses static UI metadata under `src/components/gwent/aiLabViewModel.ts` and does not import `src/game/benchmark`.
 
+## Headless Artifact Boundary
+
+cFp22 adds a command-line artifact path:
+
+```bash
+npm run benchmark:smoke
+```
+
+That command writes the public `benchmark-smoke-v1/latest` manifest, summary, JSONL records, and Markdown report under `docs/research/literature/ai/benchmark-results/`.
+
+`/ai-lab` does not run this command, read those files, or trigger browser benchmark execution. Any future browser-facing runner or artifact viewer needs its own spec.
+
 ## Hidden-Info Boundary
 
 The page may show public policy IDs, suite IDs, deck preset names, and documentation paths. It must not render raw engine state, command/event logs, hand/deck arrays, runtime card instance IDs, or unsafe benchmark debug output.

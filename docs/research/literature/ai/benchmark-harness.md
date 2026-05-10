@@ -1,6 +1,6 @@
 # Benchmark Harness
 
-Date: 2026-05-09
+Date: 2026-05-10
 
 ## Purpose
 
@@ -9,6 +9,11 @@ Gwent AI policies. It turns deterministic headless simulations into
 versioned public match records and deterministic summaries without
 exposing raw engine state, command logs, event logs, hand identities, deck
 order, or runtime card instance IDs.
+
+cFp22 adds the first durable headless artifact boundary on top of that
+in-memory harness. The CLI report command writes deterministic public
+artifacts for the smoke suite: a JSON manifest, JSON summary, JSONL match
+ledger, and Markdown report.
 
 The harness is implementation support for the Batch A and Batch B
 decision notes:
@@ -59,9 +64,10 @@ benchmark-only `legal-first-v0` baseline. Mirroring is enabled, so the
 suite produces two records per seed.
 
 The harness supports explicit catalog deck presets per seat. It still
-uses `currentCatalogCards` and `currentCatalogLeaders`; custom catalog
-snapshots, file output, CLI output, Python tooling, ratings, search, and
-model training are intentionally out of scope.
+uses `currentCatalogCards` and `currentCatalogLeaders`. cFp22 adds
+public smoke-suite file artifacts only; custom catalog snapshots, browser
+execution, Python tooling, ratings, search, and model training are
+intentionally out of scope.
 
 ## Product AI Lab Boundary
 
@@ -71,10 +77,11 @@ benchmark and policy visibility. The screen mirrors static cFp21 status:
 current Northern Realms versus current Nilfgaard,
 `legal-heuristic-v0`, and benchmark-only `legal-first-v0`.
 
-The AI Lab does not import or call `runBenchmarkSuite`, headless
-simulation runners, ratings, search, training, Python tooling, file
-writers, or unsafe benchmark output. Browser execution remains deferred
-until a later spec defines a safe runner.
+The AI Lab does not import or call `runBenchmarkSuite`, the
+`benchmark:smoke` command, headless simulation runners, ratings, search,
+training, Python tooling, file writers, or unsafe benchmark output.
+Browser execution remains deferred until a later spec defines a safe
+runner.
 
 ## Usage
 
@@ -90,7 +97,34 @@ console.log(result.summary.matchupSummaries);
 ```
 
 Custom suites can be passed directly to `runBenchmarkSuite({ suite })`.
-All output is returned in memory. cFp21 does not write benchmark files.
+All output is returned in memory unless it is passed through the cFp22
+artifact layer.
+
+From the repository root, write the deterministic smoke artifact set:
+
+```bash
+npm run benchmark:smoke
+```
+
+The command writes:
+
+```text
+docs/research/literature/ai/benchmark-results/benchmark-smoke-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
+```
+
+The default run id is `benchmark-smoke-v1:latest`. The `latest/` path is
+intentionally stable and should be reviewed with:
+
+```bash
+git diff -- docs/research/literature/ai/benchmark-results/benchmark-smoke-v1/latest
+```
+
+Policy or engine changes that affect public benchmark behavior should
+show up as a focused diff in those files.
 
 ## Hidden-Info Contract
 
@@ -108,6 +142,9 @@ Default benchmark output must not include:
 `includeDebugResults: true` is the explicit unsafe/debug escape hatch.
 Those results are named `unsafeDebugResults` and are not part of the
 default benchmark summary contract.
+
+The cFp22 script does not expose an `includeDebugResults` option and does
+not serialize unsafe debug results.
 
 ## Deferred Work
 
