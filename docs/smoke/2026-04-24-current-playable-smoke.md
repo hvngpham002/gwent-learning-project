@@ -1,10 +1,10 @@
 # Current Playable Smoke Checklist - Northern Realms Mirror
 
-Use this checklist after baseline changes and before larger migration phases. It covers the current human-vs-AI path rendered by `src/components/game/ReduxGameManager.tsx`.
+Use this checklist after baseline changes and before larger migration phases. It covers the quarantined `/legacy` human-vs-AI path rendered through `src/legacy/LegacyRoute.tsx` and `src/legacy/components/game/ReduxGameManager.tsx`.
 
 ## Setup
 
-- [ ] Run `npm run dev` and open the local Vite URL.
+- [ ] Run `npm run dev` and open the local Vite URL at `/legacy`.
 - [ ] Confirm the app loads without a console crash.
 - [ ] Confirm both seats are Northern Realms with Foltest leader art/status.
 - [ ] Confirm the player hand is shown and the redraw/mulligan selector opens.

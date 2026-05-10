@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { findMusterCards } from "@/hooks/useGameLogic";
-import { CardAbility, CardType, Faction, RowPosition, type UnitCard } from "@/types/card";
+import { findMusterCards } from "@/legacy/hooks/useGameLogic";
+import { CardAbility, CardType, Faction, RowPosition, type UnitCard } from "@/legacy/types/card";
 
 const musterUnit = (id: string, name: string): UnitCard => ({
   id,

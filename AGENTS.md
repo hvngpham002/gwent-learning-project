@@ -24,7 +24,9 @@
 - The Redux engine adapter stores engine state, command/event history, locks, errors, and UI-only selection. It does not compute rule outcomes.
 - Do not use timers for rule transitions.
 - Do not leak hidden information. AI hand card details must not appear in the default human engine view.
-- Legacy UI remains the default route until a spec explicitly changes that. Engine UI is opt-in through `?engine=1` or `VITE_ENGINE_UI=1`.
+- `/` is the authentic product setup route.
+- `/legacy` is the temporary legacy Redux UI route.
+- New product, engine, simulation, benchmark, catalog, and AI policy code must not depend on `@/legacy/...`.
 
 ## Forbidden Imports And Boundaries
 
@@ -34,6 +36,7 @@ Banned modules and identifiers in engine UI/adapter paths:
 
 - `src/utils/gameHelpers`
 - `@/utils/gameHelpers`
+- `@/legacy/...` outside the documented `/legacy` route and store reducer exceptions
 - `gameHelpers`
 - `calculateTotalScore`
 - `calculateRowStrength`

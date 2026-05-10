@@ -48,9 +48,11 @@ Production code must use the current architecture:
 
 The UI may select, inspect, animate, and dispatch exact engine commands. It may not compute rule outcomes, infer game end, mutate card zones, invent legal targets, or expose hidden opponent card identities.
 
+cEp16 quarantines the old Redux gameplay source under `src/legacy/`. New product UI, engine UI, pure engine, simulation, benchmark, catalog, and AI-policy work must not import `@/legacy/...`; `/legacy` remains available only through the route boundary and temporary store reducer wiring.
+
 ## Route Strategy
 
-cEp15 promotes the authentic product UI to the app's main address while keeping the older surfaces available by name.
+cEp15 promotes the authentic product UI to the app's main address while keeping the older surfaces available by name. cEp16 preserves that route contract and moves legacy gameplay source into quarantine.
 
 Canonical routes:
 
@@ -62,10 +64,10 @@ Canonical routes:
 - `/components` opens the authentic component foundation review page.
 - `/ui-harness` opens the authentic UI harness/gallery.
 - `/engine-diagnostic` opens the diagnostic engine shell.
-- `/legacy` opens the temporary legacy Redux UI holding route.
-- `/ai-lab` is reserved for the upcoming AI Lab product surface and is not implemented in cEp15.
+- `/legacy` opens the temporary quarantined legacy Redux UI route.
+- `/ai-lab` is reserved for the upcoming AI Lab product surface and is not implemented yet.
 
-The old `/?engine=1`, `/?engine=1&ui=authentic`, and `/?engine=1&ui=authentic&view=...` URLs remain compatibility aliases for cEp15, but new docs and tests should use canonical paths.
+The old `/?engine=1`, `/?engine=1&ui=authentic`, and `/?engine=1&ui=authentic&view=...` URLs remain compatibility aliases, but new docs and tests should use canonical paths.
 
 ## Screen Mapping
 
@@ -310,6 +312,11 @@ after the authentic match loop and responsive tripwires were cleaner.
   pre-game, keeps `/legacy` and `/engine-diagnostic` as named routes, moves
   authentic sub-surfaces to canonical paths, keeps old query aliases for this
   phase, and reserves `/ai-lab` for the next AI Lab UI phase.
+- `cEp16`: Legacy quarantine and app shell cleanup. Moves legacy-only Redux
+  gameplay components, hooks, store modules, AI, helper utilities, old card
+  types, and old data cards under `src/legacy`, adds a `LegacyRoute` boundary,
+  and extends forbidden-import checks so new product/engine work cannot depend
+  on quarantined legacy modules.
 
 ## Relationship To ML Work
 

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { createInitialDeck } from "@/utils/deckBuilder";
+import { createInitialDeck } from "@/legacy/utils/deckBuilder";
 import {
   calculateRowStrength,
   calculateTotalScore,
   canPlayInRow,
   getWeatherAffectedRows,
-} from "@/utils/gameHelpers";
-import { CardAbility, CardType, Faction, RowPosition, UnitCard } from "@/types/card";
+} from "@/legacy/utils/gameHelpers";
+import { CardAbility, CardType, Faction, RowPosition, UnitCard } from "@/legacy/types/card";
 
 const unit = (overrides: Partial<UnitCard>): UnitCard => ({
   id: "unit",

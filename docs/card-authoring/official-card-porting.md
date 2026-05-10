@@ -63,7 +63,7 @@ Open the authoring route:
 /official-porting
 ```
 
-The old `/?engine=1&ui=authentic&view=official-porting` URL remains a cEp15 compatibility alias, not the canonical docs target.
+The old `/?engine=1&ui=authentic&view=official-porting` URL remains a compatibility alias, not the canonical docs target.
 
 The route lets reviewers:
 

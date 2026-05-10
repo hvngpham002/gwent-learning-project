@@ -48,7 +48,7 @@ The default local `npm run ci` gate remains the fast deterministic unit/lint/bui
 
 ## Current Committed Coverage
 
-The committed smoke spec currently runs 37 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, route-promotion guards, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, responsive cEp14 layout tripwires, and match-end ledger flows.
+The committed smoke spec currently runs 37 Chromium tests through `npm run ci:browser`: a production build, the diagnostic engine shell, route-promotion guards, the quarantined `/legacy` route, authentic harness routes, the component foundation page, pre-game, deck builder, Card Studio, Official Porting, mulligan, modal, match entry, selected-card targeting, icon-only row-horn targeting, drag/drop, card-flight, weather overlays, responsive layout tripwires, and match-end ledger flows.
 
 ## dp6-smoke Engine Shell Coverage
 
@@ -61,7 +61,7 @@ The committed smoke spec uses:
 It verifies:
 
 - `/` renders the authentic pre-game setup and does not mount the engine shell.
-- `/legacy` still renders the legacy app.
+- `/legacy` still renders the quarantined legacy app and does not mount authentic pre-game.
 - `/engine-diagnostic?seed=route-smoke` renders the diagnostic shell through the canonical path.
 - the engine shell still renders through the old `/?engine=1` compatibility alias where covered by route-unit tests;
 - the status banner exposes seed, AI policy, phase, and next action context;
@@ -83,7 +83,7 @@ The authentic mulligan smoke extends this guard to the normal non-debug product 
 The same smoke spec verifies:
 
 - `/` opens the authentic pre-game setup screen.
-- `/legacy` opens the temporary legacy UI route.
+- `/legacy` opens the temporary quarantined legacy UI route.
 - `/engine-diagnostic` opens the diagnostic shell.
 - `/ui-harness` opens the cEp1 foundation harness.
 - `/components` opens the component foundation page with shared tokens, audited typography, button variants, form controls, cards, backs, leaders, alerts, toasts, modals, and hidden-info-safe samples.

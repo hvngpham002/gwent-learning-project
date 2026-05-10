@@ -332,7 +332,7 @@ test("default route mounts the authentic pre-game setup (cEp15)", async ({ page 
   await expect(page.getByRole("heading", { name: "Prepare for Battle" })).toBeVisible();
 });
 
-test("legacy route avoids mobile overflow and DOM nesting errors (cEp14)", async ({ page }) => {
+test("legacy route mounts the quarantined legacy app without authentic pre-game (cEp16)", async ({ page }) => {
   test.setTimeout(60_000);
   const browserErrors = collectBrowserErrors(page);
 

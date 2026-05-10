@@ -1,7 +1,7 @@
 // deck-builder-screen.jsx — Deck Builder with Import / Export / Save / Load.
 const { useState: useStateD, useRef: useRefD } = React;
 
-// Card pool — drawn from src/data/cards/northern-realms.ts naming
+// Card pool — drawn from legacy-era northern-realms source naming
 const CARD_POOL = [
   // NR Heroes
   { id: 'nr_philippa', name: 'Philippa Eilhart', faction: 'northern_realms', strength: 10, type: 'hero', ability: 'none', row: 'ranged', max: 1 },

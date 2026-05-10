@@ -1,6 +1,6 @@
 # Authentic Deck Builder V1
 
-The authentic deck builder is available at `/deck-builder`. The old `/?engine=1&ui=authentic&view=deck-builder` URL remains a compatibility alias for cEp15, but docs and tests should use the canonical path.
+The authentic deck builder is available at `/deck-builder`. The old `/?engine=1&ui=authentic&view=deck-builder` URL remains a compatibility alias, but docs and tests should use the canonical path.
 
 It edits browser-local `CatalogDeckPreset` objects using the current catalog cards/leaders plus playable browser-local Card Studio sources. The localStorage key is `gwent_authentic_decks_v1`; when no saved decks exist, local editable copies are seeded from the current catalog presets with `local-` preset IDs. When new catalog seed decks are added later, reads merge any missing seed copies into existing saved storage by stable `local-${catalogPresetId}` or normalized deck name without overwriting user-edited decks.
 

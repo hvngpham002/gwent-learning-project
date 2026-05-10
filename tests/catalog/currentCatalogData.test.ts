@@ -20,10 +20,15 @@ import {
   skelligeCatalogCards,
   skelligeCatalogLeaders,
 } from "@/data/catalog";
-import { neutralDeck } from "@/data/cards/neutral";
-import { nilfgaardianEmpireDeck } from "@/data/cards/nilfgaardian-empire";
-import { northernRealmsDeck } from "@/data/cards/northern-realms";
 import { validateCardSources, validateCatalog, validateDeckPresets, validateLeaderSources } from "@/game/catalog";
+
+const quarantinedLegacyFloorCounts = {
+  neutralCards: 24,
+  northernRealmsCards: 25,
+  northernRealmsLeaders: 5,
+  nilfgaardCards: 28,
+  nilfgaardLeaders: 5,
+} as const;
 
 const countPresetCards = (presetId: string) => {
   const preset = currentDeckPresets.find((candidate) => candidate.presetId === presetId);
@@ -90,17 +95,13 @@ describe("current catalog data", () => {
   });
 
   it("preserves legacy source-module counts as a floor for migrated packs", () => {
-    expect(neutralCatalogCards.length).toBeGreaterThanOrEqual(
-      neutralDeck.heroes.length + neutralDeck.units.length + neutralDeck.specials.length,
-    );
+    expect(neutralCatalogCards.length).toBeGreaterThanOrEqual(quarantinedLegacyFloorCounts.neutralCards);
     expect(northernRealmsCatalogCards.length).toBeGreaterThanOrEqual(
-      northernRealmsDeck.heroes.length + northernRealmsDeck.units.length,
+      quarantinedLegacyFloorCounts.northernRealmsCards,
     );
-    expect(northernRealmsCatalogLeaders).toHaveLength(northernRealmsDeck.leaders.length);
-    expect(nilfgaardCatalogCards.length).toBeGreaterThanOrEqual(
-      nilfgaardianEmpireDeck.heroes.length + nilfgaardianEmpireDeck.units.length,
-    );
-    expect(nilfgaardCatalogLeaders).toHaveLength(nilfgaardianEmpireDeck.leaders.length);
+    expect(northernRealmsCatalogLeaders).toHaveLength(quarantinedLegacyFloorCounts.northernRealmsLeaders);
+    expect(nilfgaardCatalogCards.length).toBeGreaterThanOrEqual(quarantinedLegacyFloorCounts.nilfgaardCards);
+    expect(nilfgaardCatalogLeaders).toHaveLength(quarantinedLegacyFloorCounts.nilfgaardLeaders);
   });
 
   it("mirrors current default deck assembly counts without switching gameplay to catalog data", () => {

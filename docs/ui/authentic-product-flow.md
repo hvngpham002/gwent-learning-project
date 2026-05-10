@@ -1,6 +1,6 @@
 # Authentic Product Flow
 
-This document tracks the current authentic product loop after cEp15.
+This document tracks the current authentic product loop after cEp16.
 
 ## Routes
 
@@ -12,8 +12,8 @@ This document tracks the current authentic product loop after cEp15.
 - `/components` opens the review surface for shared authentic UI primitives.
 - `/ui-harness` opens the cEp1 card foundation harness.
 - `/engine-diagnostic` opens the diagnostic engine shell.
-- `/legacy` opens the temporary legacy Redux UI holding route.
-- `/ai-lab` is reserved for the upcoming Cluster E AI Lab phase and is not implemented in cEp15.
+- `/legacy` opens the temporary quarantined legacy Redux UI route.
+- `/ai-lab` is reserved for the upcoming Cluster E AI Lab phase and is not implemented yet.
 
 Old `?engine=1&ui=authentic&view=...` URLs and `/?engine=1` remain compatibility aliases for this phase, but canonical docs and tests should prefer the path-based routes above.
 

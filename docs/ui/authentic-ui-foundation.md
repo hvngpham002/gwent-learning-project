@@ -55,10 +55,10 @@ phases, not to this reusable visual substrate.
 | `/ui-harness` | Authentic UI foundation harness. |
 | `/engine-diagnostic` | Diagnostic engine shell (`EngineGameManager`). |
 | `/legacy` | Temporary legacy Redux UI holding route. |
-| `/ai-lab` | Reserved for the upcoming AI Lab route; not implemented in cEp15. |
+| `/ai-lab` | Reserved for the upcoming AI Lab route; not implemented yet. |
 
 `/?engine=1`, `/?engine=1&ui=authentic`, and
-`/?engine=1&ui=authentic&view=...` remain compatibility aliases for cEp15.
+`/?engine=1&ui=authentic&view=...` remain compatibility aliases.
 `VITE_ENGINE_UI=1` no longer overrides `/`; the root route remains authentic
 pre-game even when the env flag is present.
 

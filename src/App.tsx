@@ -1,6 +1,6 @@
-import ReduxGameManager from './components/game/ReduxGameManager'
 import EngineGameManager from './components/game/EngineGameManager'
 import AuthenticGameApp from './components/gwent/AuthenticGameApp'
+import LegacyRoute from './legacy/LegacyRoute'
 import { resolveAppRoute } from './appMode'
 
 function App() {
@@ -11,7 +11,7 @@ function App() {
   })
 
   if (route.surface === 'legacy') {
-    return <ReduxGameManager />
+    return <LegacyRoute />
   }
 
   if (route.surface === 'engine-diagnostic') {
