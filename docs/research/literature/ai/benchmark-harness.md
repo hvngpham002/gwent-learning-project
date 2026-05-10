@@ -20,6 +20,11 @@ starter matrix. Deck categories are documented in
 `docs/research/literature/ai/benchmark-deck-taxonomy.md` and registered
 in `src/game/benchmark/decks.ts`.
 
+cFp24 adds `legal-heuristic-v1` as the first strategic comparator above
+v0 and creates dedicated v1-vs-v0 smoke and starter-matrix suites. The
+product AI default remains `legal-heuristic-v0`; v1 is benchmark-only in
+this phase.
+
 The harness is implementation support for the Batch A and Batch B
 decision notes:
 
@@ -73,6 +78,14 @@ The built-in suites are:
   pair of distinct starter decks, both policy assignments per deck pair,
   3 deterministic seeds, mirrored `legal-heuristic-v0` versus
   `legal-first-v0` runs, and produces 120 records.
+- `benchmark-v1-smoke-v1`: the current Northern Realms versus Nilfgaard
+  smoke shape, mirrored over the same six seeds, comparing
+  `legal-heuristic-v1` against `legal-heuristic-v0` and producing 12
+  records.
+- `benchmark-v1-starter-matrix-v1`: the official starter-deck matrix
+  shape, comparing `legal-heuristic-v1` against `legal-heuristic-v0`
+  over 10 unordered starter pairs, both policy assignments, 3 seeds,
+  mirrored seats, and producing 120 records.
 
 The harness supports explicit catalog deck presets per seat. It still
 uses `currentCatalogCards` and `currentCatalogLeaders`. cFp23 adds no
@@ -121,6 +134,13 @@ Write the deterministic starter matrix artifact set:
 npm run benchmark:starter-matrix
 ```
 
+Write the v1 comparison artifact sets:
+
+```bash
+npm run benchmark:v1-smoke
+npm run benchmark:v1-starter-matrix
+```
+
 The command writes:
 
 ```text
@@ -135,6 +155,18 @@ docs/research/literature/ai/benchmark-results/benchmark-starter-matrix-v1/latest
   summary.json
   records.jsonl
   report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-smoke-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
 ```
 
 The default run id is `<suite-id>:latest`. Each `latest/` path is
@@ -144,6 +176,8 @@ for example:
 ```bash
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-smoke-v1/latest
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-starter-matrix-v1/latest
+git diff -- docs/research/literature/ai/benchmark-results/benchmark-v1-smoke-v1/latest
+git diff -- docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/latest
 ```
 
 Policy or engine changes that affect public benchmark behavior should
@@ -167,13 +201,14 @@ Those results are named `unsafeDebugResults` and are not part of the
 default benchmark summary contract.
 
 The cFp22 script does not expose an `includeDebugResults` option and does
-not serialize unsafe debug results.
+not serialize unsafe debug results. cFp24 v1 artifacts use the same
+public serializer and hazard-scan contract.
 
 ## Deferred Work
 
 Glicko and TrueSkill are deferred because cFp21 establishes the ledger
 and fixed-suite substrate they should consume. Approximate best response
 is deferred because Batch B treats it as a later robustness probe, not as
-the first evaluation layer. Search policies, `legal-heuristic-v1`, ML
-exports, Python notebooks, and product difficulty tiers remain future
-work.
+the first evaluation layer. Search policies, v1.1/v2 policy tuning, ML
+exports, Python notebooks, mechanics/competitive deck suites, browser
+benchmark execution, and product difficulty tiers remain future work.

@@ -29,6 +29,16 @@ const starterMatrixArtifactDir = resolve(
   'docs/research/literature/ai/benchmark-results/benchmark-starter-matrix-v1/latest'
 );
 
+const v1SmokeArtifactDir = resolve(
+  process.cwd(),
+  'docs/research/literature/ai/benchmark-results/benchmark-v1-smoke-v1/latest'
+);
+
+const v1StarterMatrixArtifactDir = resolve(
+  process.cwd(),
+  'docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/latest'
+);
+
 describe('benchmark artifacts', () => {
   it('builds parseable artifact outputs from a public benchmark run', () => {
     const result = runBenchmarkSuite({ benchmarkRunId: 'benchmark-smoke-v1:test' });
@@ -135,6 +145,70 @@ describe('benchmark artifacts', () => {
     hiddenInfoHazards.forEach((hazard) => {
       expect(combined).not.toContain(hazard);
     });
+  });
+
+  it('keeps committed v1 benchmark artifacts parseable and hidden-info safe', async () => {
+    const cases = [
+      {
+        dir: v1SmokeArtifactDir,
+        suiteId: 'benchmark-v1-smoke-v1',
+        totalMatches: 12,
+        policyIds: ['legal-heuristic-v0', 'legal-heuristic-v1'],
+      },
+      {
+        dir: v1StarterMatrixArtifactDir,
+        suiteId: 'benchmark-v1-starter-matrix-v1',
+        totalMatches: 120,
+        policyIds: ['legal-heuristic-v0', 'legal-heuristic-v1'],
+      },
+    ];
+
+    await Promise.all(
+      cases.map(async ({ dir, suiteId, totalMatches, policyIds }) => {
+        const [manifestText, summaryText, recordsText, reportText] = await Promise.all([
+          readFile(resolve(dir, 'manifest.json'), 'utf8'),
+          readFile(resolve(dir, 'summary.json'), 'utf8'),
+          readFile(resolve(dir, 'records.jsonl'), 'utf8'),
+          readFile(resolve(dir, 'report.md'), 'utf8'),
+        ]);
+        const manifest = JSON.parse(manifestText);
+        const summary = JSON.parse(summaryText);
+        const recordLines = recordsText.trim().split('\n');
+
+        expect(manifest).toEqual(
+          expect.objectContaining({
+            schemaVersion: 'benchmark-artifact-v1',
+            suiteId,
+            recordCount: totalMatches,
+            summarySchemaVersion: 'benchmark-summary-v1',
+            recordSchemaVersion: 'benchmark-match-v1',
+          })
+        );
+        expect(summary).toEqual(
+          expect.objectContaining({
+            schemaVersion: 'benchmark-summary-v1',
+            suiteId,
+            totalMatches,
+            policyIds,
+          })
+        );
+        expect(recordLines).toHaveLength(totalMatches);
+        recordLines.forEach((line) => {
+          expect(JSON.parse(line)).toEqual(
+            expect.objectContaining({
+              schemaVersion: 'benchmark-match-v1',
+              suiteId,
+            })
+          );
+        });
+        expect(reportText).toContain(`total matches: ${totalMatches}`);
+
+        const combined = [manifestText, summaryText, recordsText, reportText].join('\n');
+        hiddenInfoHazards.forEach((hazard) => {
+          expect(combined).not.toContain(hazard);
+        });
+      })
+    );
   });
 
   it('summarizes suite, policies, decks, status counts, replay counts, and diagnostics in Markdown', () => {

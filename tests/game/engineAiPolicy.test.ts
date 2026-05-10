@@ -6,11 +6,16 @@ import {
   currentCatalogLeaders,
   currentNilfgaardDeckPreset,
   currentNorthernRealmsDeckPreset,
+  officialSkelligeStarterDeckPreset,
 } from "@/data/catalog";
 import {
   buildSeatObservation,
   commandFromLegalMove,
   legalHeuristicPolicyV0,
+  legalHeuristicPolicyV1,
+  type EnginePolicyInput,
+  type SeatCardSummary,
+  type SeatObservation,
 } from "@/game/ai";
 import {
   getLegalMoves,
@@ -20,6 +25,7 @@ import {
   type MatchState,
   type SeatId,
 } from "@/game/core";
+import type { CatalogAbilityId, CatalogCardKind, CatalogRow } from "@/game/catalog";
 import engineReducer, { engineCommandApplied } from "@/store/slices/engineSlice";
 import { dispatchEngineCommand, startEngineMatch } from "@/store/thunks/engineThunks";
 import { selectEngineLegalMovesForAi } from "@/store/selectors/engineSelectors";
@@ -65,6 +71,230 @@ const completeMulligans = (store: ReturnType<typeof createTestStore>) => {
   store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_b", cardIds: [] }));
 };
 
+const ROWS = ["close", "ranged", "siege"] as const satisfies readonly CatalogRow[];
+
+const removeEverywhere = (state: MatchState, cardId: string) => {
+  Object.values(state.seats).forEach((seat) => {
+    seat.deck = seat.deck.filter((id) => id !== cardId);
+    seat.hand = seat.hand.filter((id) => id !== cardId);
+    seat.discard = seat.discard.filter((id) => id !== cardId);
+    seat.sideDeck = seat.sideDeck.filter((id) => id !== cardId);
+    seat.removedFromGame = seat.removedFromGame.filter((id) => id !== cardId);
+    ROWS.forEach((row) => {
+      seat.board[row].units = seat.board[row].units.filter((id) => id !== cardId);
+      if (seat.board[row].horn === cardId) seat.board[row].horn = null;
+    });
+  });
+  state.weather.entries = state.weather.entries.filter((id) => id !== cardId);
+};
+
+const putInHand = (state: MatchState, seatId: SeatId, cardId: string) => {
+  removeEverywhere(state, cardId);
+  state.seats[seatId].hand.push(cardId);
+  state.cardsById[cardId].zone = { kind: "hand", seat: seatId };
+  state.cardsById[cardId].controller = seatId;
+};
+
+const putOnBoard = (state: MatchState, seatId: SeatId, cardId: string, row: CatalogRow) => {
+  removeEverywhere(state, cardId);
+  state.seats[seatId].board[row].units.push(cardId);
+  state.cardsById[cardId].zone = { kind: "board_row", seat: seatId, row };
+  state.cardsById[cardId].controller = seatId;
+};
+
+const findInstanceBySource = (state: MatchState, sourceId: string) => {
+  const instance = Object.values(state.cardsById).find((card) => card.sourceId === sourceId);
+  if (!instance) {
+    throw new Error(`Missing test source ${sourceId}`);
+  }
+  return instance.instanceId;
+};
+
+const testCard = ({
+  cardId,
+  sourceId,
+  printedStrength,
+  kind = "unit",
+  rows = ["close"],
+  abilities = [],
+  linkedSourceIds,
+  deckLimit = 3,
+  name = sourceId,
+}: {
+  cardId: string;
+  sourceId: string;
+  printedStrength: number;
+  kind?: CatalogCardKind;
+  rows?: CatalogRow[];
+  abilities?: CatalogAbilityId[];
+  linkedSourceIds?: string[];
+  deckLimit?: number;
+  name?: string;
+}): SeatCardSummary => ({
+  cardId,
+  sourceId,
+  name,
+  kind,
+  printedStrength,
+  rows,
+  abilities,
+  linkedSourceIds,
+  deckLimit,
+});
+
+const emptyRowTotals = () => ({ close: 0, ranged: 0, siege: 0 });
+
+const baseBoardRows = (rows: Partial<Record<SeatId, Partial<Record<CatalogRow, SeatCardSummary[]>>>> = {}) =>
+  (["seat_a", "seat_b"] as const).flatMap((seatId) =>
+    ROWS.map((row) => ({
+      seatId,
+      row,
+      units: rows[seatId]?.[row] ?? [],
+      horn: null,
+    })),
+  );
+
+const baseObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation => ({
+  seatId: "seat_b",
+  opponentSeatId: "seat_a",
+  phase: "playing",
+  round: 1,
+  currentTurn: "seat_b",
+  ownHand: [],
+  ownLeader: {
+    leaderCardId: "leader-b",
+    sourceId: "leader-b",
+    used: false,
+    cancelledThisRound: false,
+  },
+  ownDeckCount: 10,
+  ownDiscardCount: 0,
+  ownPassed: false,
+  ownGems: 2,
+  opponentHandCount: 10,
+  opponentLeader: {
+    leaderCardId: "leader-a",
+    sourceId: "leader-a",
+    used: false,
+    cancelledThisRound: false,
+  },
+  opponentDeckCount: 10,
+  opponentDiscardCount: 0,
+  opponentPassed: false,
+  opponentGems: 2,
+  boardRows: baseBoardRows(),
+  weather: [],
+  score: {
+    totalBySeat: { seat_a: 0, seat_b: 0 },
+    rowTotalsBySeat: { seat_a: emptyRowTotals(), seat_b: emptyRowTotals() },
+    cards: [],
+    activeWeatherEffects: [],
+    diagnostics: [],
+  },
+  pendingPrompt: null,
+  ...overrides,
+});
+
+const policyInput = (
+  legalMoves: LegalMove[],
+  observationOverrides: Partial<SeatObservation> = {},
+): EnginePolicyInput => ({
+  seatId: "seat_b",
+  observation: baseObservation(observationOverrides),
+  legalMoves,
+});
+
+const keepMulliganMove = (): LegalMove => ({
+  kind: "choose_mulligan",
+  moveId: "mulligan:seat_b:none",
+  seatId: "seat_b",
+  label: "Keep hand",
+  cardIds: [],
+  metadata: { cardCount: 0, maxCards: 1 },
+});
+
+const redrawMove = (card: SeatCardSummary): LegalMove => ({
+  kind: "choose_mulligan",
+  moveId: `mulligan:seat_b:${card.cardId}`,
+  seatId: "seat_b",
+  label: "Mulligan 1 card",
+  cardIds: [card.cardId],
+  metadata: { cardCount: 1, maxCards: 1 },
+});
+
+const playMove = (
+  card: SeatCardSummary,
+  target: LegalMove extends infer T
+    ? T extends { kind: "play_card"; target: infer U }
+      ? U
+      : never
+    : never = { kind: "board_row", side: "own", seatId: "seat_b", row: "close" },
+): LegalMove => ({
+  kind: "play_card",
+  moveId: `play:seat_b:${card.cardId}:${target.kind}`,
+  seatId: "seat_b",
+  label: `Play ${card.name}`,
+  sourceCardId: card.cardId,
+  sourceId: card.sourceId,
+  target,
+  metadata: {
+    cardName: card.name,
+    cardKind: card.kind,
+    abilities: card.abilities,
+    targetLabel: target.kind,
+  },
+});
+
+const passMove = (): LegalMove => ({
+  kind: "pass",
+  moveId: "pass:seat_b",
+  seatId: "seat_b",
+  label: "Pass",
+  target: { kind: "none" },
+});
+
+const leaderMove = (
+  ability: LegalMove extends infer T
+    ? T extends { kind: "use_leader"; metadata: { ability: infer U } }
+      ? U
+      : never
+    : never,
+  metadata: Partial<Extract<LegalMove, { kind: "use_leader" }>["metadata"]> = {},
+): LegalMove => ({
+  kind: "use_leader",
+  moveId: `leader:seat_b:leader-b:${String(ability)}`,
+  seatId: "seat_b",
+  leaderCardId: "leader-b",
+  sourceId: "leader-b",
+  label: "Use leader",
+  target: { kind: "none" },
+  metadata: {
+    leaderName: "Leader",
+    ability,
+    abilityStatus: "implemented",
+    targetRequirement: "none",
+    ...metadata,
+  },
+});
+
+const promptMove = (
+  optionId: string,
+  abilityId: string,
+  target: Extract<LegalMove, { kind: "choose_prompt_option" }>["target"] = { kind: "none" },
+): LegalMove => ({
+  kind: "choose_prompt_option",
+  moveId: `prompt:test:${optionId}`,
+  seatId: "seat_b",
+  label: optionId,
+  promptId: "prompt:test",
+  optionId,
+  target,
+  metadata: {
+    promptKind: target.kind === "card_instance_set" ? "choose_card_set" : "choose_card",
+    abilityId,
+  },
+});
+
 describe("engine AI policy", () => {
   it("builds observations with own hand summaries and opponent hand count only", () => {
     const match = createMatch("ai-observation");
@@ -82,6 +312,605 @@ describe("engine AI policy", () => {
     );
     expect(observation.opponentHandCount).toBe(10);
     expect(JSON.stringify(observation)).not.toContain(match.seats.seat_a.hand[0]);
+  });
+
+  it("builds observations with public linked metadata for own hand and visible board cards", () => {
+    const match = startMatch({
+      seed: "ai-observation-linked",
+      seats: [
+        {
+          seatId: "seat_a",
+          playerId: "human",
+          controllerKind: "human",
+          faction: "northern_realms",
+          deckPreset: currentNorthernRealmsDeckPreset,
+        },
+        {
+          seatId: "seat_b",
+          playerId: "ai",
+          controllerKind: "ai",
+          faction: "skellige",
+          deckPreset: officialSkelligeStarterDeckPreset,
+        },
+      ],
+      catalog: {
+        cards: currentCatalogCards,
+        leaders: currentCatalogLeaders,
+      },
+    }).state;
+    const cerys = findInstanceBySource(match, "skellige.cerys");
+    const longship = findInstanceBySource(match, "skellige.light-longship");
+    putInHand(match, "seat_b", cerys);
+    putOnBoard(match, "seat_b", longship, "siege");
+
+    const observation = buildSeatObservation({
+      state: match,
+      seatId: "seat_b",
+      catalogCards: currentCatalogCards,
+      catalogLeaders: currentCatalogLeaders,
+    });
+    const handCerys = observation.ownHand.find((card) => card.sourceId === "skellige.cerys");
+    const boardLongship = observation.boardRows
+      .flatMap((row) => row.units)
+      .find((card) => card.sourceId === "skellige.light-longship");
+
+    expect(handCerys?.linkedSourceIds).toEqual(["skellige.clan-drummond-shield-maiden"]);
+    expect(handCerys?.deckLimit).toBeGreaterThan(0);
+    expect(boardLongship?.linkedSourceIds).toEqual(["skellige.light-longship"]);
+    expect(JSON.stringify(observation)).not.toContain(match.seats.seat_a.hand[0]);
+  });
+
+  describe("legal-heuristic-v1", () => {
+    it("returns null for no legal moves and is deterministic/legal-only", () => {
+      const small = testCard({ cardId: "unit-3", sourceId: "test.unit3", printedStrength: 3 });
+      const large = testCard({ cardId: "unit-8", sourceId: "test.unit8", printedStrength: 8 });
+      const legalMoves = [passMove(), playMove(small), playMove(large)];
+      const input = policyInput(legalMoves, { ownHand: [small, large] });
+
+      const first = legalHeuristicPolicyV1.selectMove(input);
+      const second = legalHeuristicPolicyV1.selectMove(input);
+
+      expect(legalHeuristicPolicyV1.id).toBe("legal-heuristic-v1");
+      expect(legalHeuristicPolicyV1.selectMove({ ...input, legalMoves: [] })).toBeNull();
+      expect(second).toEqual(first);
+      expect(legalMoves).toContain(first);
+    });
+
+    it("mulligans Roach when a muster_roach caller is in hand", () => {
+      const geralt = testCard({
+        cardId: "geralt",
+        sourceId: "neutral.geralt-of-rivia",
+        printedStrength: 15,
+        kind: "hero",
+        abilities: ["muster_roach"],
+        linkedSourceIds: ["neutral.roach"],
+      });
+      const roach = testCard({ cardId: "roach", sourceId: "neutral.roach", printedStrength: 3 });
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([keepMulliganMove(), redrawMove(geralt), redrawMove(roach)], {
+          phase: "mulligan",
+          ownHand: [geralt, roach],
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ kind: "choose_mulligan", cardIds: ["roach"] }));
+    });
+
+    it("mulligans Darkness with base Gaunter but keeps base Gaunter", () => {
+      const gaunter = testCard({
+        cardId: "gaunter",
+        sourceId: "neutral.gaunter-odimm",
+        printedStrength: 2,
+        abilities: ["muster"],
+        linkedSourceIds: ["neutral.gaunter-odimm-darkness"],
+      });
+      const darkness = testCard({
+        cardId: "darkness",
+        sourceId: "neutral.gaunter-odimm-darkness",
+        printedStrength: 4,
+        abilities: ["muster"],
+        linkedSourceIds: ["neutral.gaunter-odimm-darkness"],
+      });
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([keepMulliganMove(), redrawMove(gaunter), redrawMove(darkness)], {
+          phase: "mulligan",
+          ownHand: [gaunter, darkness],
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ cardIds: ["darkness"] }));
+    });
+
+    it("mulligans extra Darkness only when base Gaunter is absent", () => {
+      const darknessA = testCard({
+        cardId: "darkness-a",
+        sourceId: "neutral.gaunter-odimm-darkness",
+        printedStrength: 4,
+        abilities: ["muster"],
+        linkedSourceIds: ["neutral.gaunter-odimm-darkness"],
+      });
+      const darknessB = { ...darknessA, cardId: "darkness-b" };
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([keepMulliganMove(), redrawMove(darknessA), redrawMove(darknessB)], {
+          phase: "mulligan",
+          ownHand: [darknessA, darknessB],
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ cardIds: ["darkness-b"] }));
+    });
+
+    it("mulligans same-source Muster duplicates beyond the first copy", () => {
+      const longshipA = testCard({
+        cardId: "longship-a",
+        sourceId: "skellige.light-longship",
+        printedStrength: 4,
+        abilities: ["muster"],
+        linkedSourceIds: ["skellige.light-longship"],
+      });
+      const longshipB = { ...longshipA, cardId: "longship-b" };
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([keepMulliganMove(), redrawMove(longshipA), redrawMove(longshipB)], {
+          phase: "mulligan",
+          ownHand: [longshipA, longshipB],
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ cardIds: ["longship-b"] }));
+    });
+
+    it("mulligans one-way linked targets while keeping the caller", () => {
+      const cerys = testCard({
+        cardId: "cerys",
+        sourceId: "skellige.cerys",
+        printedStrength: 10,
+        kind: "hero",
+        abilities: ["muster"],
+        linkedSourceIds: ["skellige.clan-drummond-shield-maiden"],
+      });
+      const maiden = testCard({
+        cardId: "maiden",
+        sourceId: "skellige.clan-drummond-shield-maiden",
+        printedStrength: 4,
+        abilities: ["tight_bond"],
+      });
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([keepMulliganMove(), redrawMove(cerys), redrawMove(maiden)], {
+          phase: "mulligan",
+          ownHand: [cerys, maiden],
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ cardIds: ["maiden"] }));
+    });
+
+    it("keeps hand when only the Muster caller or no redraw target is present", () => {
+      const cerys = testCard({
+        cardId: "cerys",
+        sourceId: "skellige.cerys",
+        printedStrength: 10,
+        kind: "hero",
+        abilities: ["muster"],
+        linkedSourceIds: ["skellige.clan-drummond-shield-maiden"],
+      });
+      const plain = testCard({ cardId: "plain", sourceId: "test.plain", printedStrength: 5 });
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([keepMulliganMove(), redrawMove(cerys), redrawMove(plain)], {
+            phase: "mulligan",
+            ownHand: [cerys, plain],
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ cardIds: [] }));
+    });
+
+    it("improves prompt ranking for Medic, discard/draw, restore, acknowledgement, and fallback prompts", () => {
+      const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+      const brute = testCard({ cardId: "brute", sourceId: "test.brute", printedStrength: 10 });
+      const weak = testCard({ cardId: "weak", sourceId: "test.weak", printedStrength: 1 });
+      const hero = testCard({ cardId: "hero", sourceId: "test.hero", printedStrength: 10, kind: "hero" });
+      const medicInput = policyInput(
+        [
+          promptMove("revive:brute", "medic", {
+            kind: "card_instance",
+            side: "own",
+            seatId: "seat_b",
+            cardId: brute.cardId,
+            row: "close",
+          }),
+          promptMove("revive:spy", "medic", {
+            kind: "card_instance",
+            side: "own",
+            seatId: "seat_b",
+            cardId: spy.cardId,
+            row: "close",
+          }),
+        ],
+        {
+          pendingPrompt: {
+            promptId: "prompt:test",
+            seatId: "seat_b",
+            kind: "medic_revive",
+            abilityId: "medic",
+            options: [
+              { optionId: "revive:brute", label: "brute", targetCard: brute, targetStrength: 10 },
+              { optionId: "revive:spy", label: "spy", targetCard: spy, targetStrength: 4 },
+            ],
+          },
+        },
+      );
+      expect(legalHeuristicPolicyV1.selectMove(medicInput)).toEqual(
+        expect.objectContaining({ optionId: "revive:spy" }),
+      );
+
+      const discardInput = policyInput(
+        [
+          promptMove("discard:weak", "discard_two_draw_one_from_deck", {
+            kind: "card_instance_set",
+            side: "own",
+            seatId: "seat_b",
+            cardIds: [weak.cardId],
+          }),
+          promptMove("discard:hero", "discard_two_draw_one_from_deck", {
+            kind: "card_instance_set",
+            side: "own",
+            seatId: "seat_b",
+            cardIds: [hero.cardId],
+          }),
+        ],
+        {
+          ownHand: [weak, hero],
+          pendingPrompt: {
+            promptId: "prompt:test",
+            seatId: "seat_b",
+            kind: "choose_card_set",
+            abilityId: "discard_two_draw_one_from_deck",
+            options: [
+              { optionId: "discard:weak", label: "weak", targetCards: [weak], targetStrength: 1 },
+              { optionId: "discard:hero", label: "hero", targetCards: [hero], targetStrength: 10 },
+            ],
+          },
+        },
+      );
+      expect(legalHeuristicPolicyV1.selectMove(discardInput)).toEqual(
+        expect.objectContaining({ optionId: "discard:weak" }),
+      );
+
+      const deckInput = policyInput(
+        [
+          promptMove("draw:weak", "discard_two_draw_one_from_deck", {
+            kind: "deck_card_instance",
+            side: "own",
+            seatId: "seat_b",
+            cardId: weak.cardId,
+          }),
+          promptMove("draw:hero", "discard_two_draw_one_from_deck", {
+            kind: "deck_card_instance",
+            side: "own",
+            seatId: "seat_b",
+            cardId: hero.cardId,
+          }),
+        ],
+        {
+          pendingPrompt: {
+            promptId: "prompt:test",
+            seatId: "seat_b",
+            kind: "choose_card",
+            abilityId: "discard_two_draw_one_from_deck",
+            options: [
+              { optionId: "draw:weak", label: "weak", targetCard: weak, targetStrength: 1 },
+              { optionId: "draw:hero", label: "hero", targetCard: hero, targetStrength: 10 },
+            ],
+          },
+        },
+      );
+      expect(legalHeuristicPolicyV1.selectMove(deckInput)).toEqual(expect.objectContaining({ optionId: "draw:hero" }));
+
+      const restoreInput = policyInput(
+        [
+          promptMove("restore:weak", "restore_discard_to_hand", {
+            kind: "card_instance",
+            side: "own",
+            seatId: "seat_b",
+            cardId: weak.cardId,
+          }),
+          promptMove("restore:hero", "restore_discard_to_hand", {
+            kind: "card_instance",
+            side: "own",
+            seatId: "seat_b",
+            cardId: hero.cardId,
+          }),
+        ],
+        {
+          pendingPrompt: {
+            promptId: "prompt:test",
+            seatId: "seat_b",
+            kind: "choose_card",
+            abilityId: "restore_discard_to_hand",
+            options: [
+              { optionId: "restore:weak", label: "weak", targetCard: weak, targetStrength: 1 },
+              { optionId: "restore:hero", label: "hero", targetCard: hero, targetStrength: 10 },
+            ],
+          },
+        },
+      );
+      expect(legalHeuristicPolicyV1.selectMove(restoreInput)).toEqual(
+        expect.objectContaining({ optionId: "restore:hero" }),
+      );
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([promptMove("ack:second", "look_three_cards"), promptMove("ack:first", "look_three_cards")], {
+            pendingPrompt: {
+              promptId: "prompt:test",
+              seatId: "seat_b",
+              kind: "choose_option",
+              abilityId: "look_three_cards",
+              options: [
+                { optionId: "ack:second", label: "second" },
+                { optionId: "ack:first", label: "first" },
+              ],
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ optionId: "ack:second" }));
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([promptMove("unknown:low", "unknown"), promptMove("unknown:high", "unknown")], {
+            pendingPrompt: {
+              promptId: "prompt:test",
+              seatId: "seat_b",
+              kind: "choose_card",
+              abilityId: "unknown",
+              options: [
+                { optionId: "unknown:low", label: "low", targetStrength: 1 },
+                { optionId: "unknown:high", label: "high", targetStrength: 9 },
+              ],
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ optionId: "unknown:high" }));
+    });
+
+    it("uses pass and last-gem strategy around opponent pass states", () => {
+      const cheap = testCard({ cardId: "cheap", sourceId: "test.cheap", printedStrength: 3 });
+      const large = testCard({ cardId: "large", sourceId: "test.large", printedStrength: 10 });
+      const impossible = testCard({ cardId: "small", sourceId: "test.small", printedStrength: 2 });
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([passMove(), playMove(large)], {
+            ownHand: [large],
+            opponentPassed: true,
+            score: {
+              ...baseObservation().score,
+              totalBySeat: { seat_a: 5, seat_b: 6 },
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ kind: "pass" }));
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([passMove(), playMove(cheap), playMove(large)], {
+            ownHand: [cheap, large],
+            opponentPassed: true,
+            score: {
+              ...baseObservation().score,
+              totalBySeat: { seat_a: 2, seat_b: 0 },
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ sourceCardId: "cheap" }));
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([passMove(), playMove(impossible)], {
+            ownHand: [impossible],
+            opponentPassed: true,
+            score: {
+              ...baseObservation().score,
+              totalBySeat: { seat_a: 20, seat_b: 0 },
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ kind: "pass" }));
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([passMove(), playMove(impossible)], {
+            ownHand: [impossible],
+            ownGems: 1,
+            score: {
+              ...baseObservation().score,
+              totalBySeat: { seat_a: 20, seat_b: 0 },
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ kind: "pass" }));
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([passMove(), playMove(large)], {
+            ownHand: [large],
+            ownGems: 1,
+            score: {
+              ...baseObservation().score,
+              totalBySeat: { seat_a: 5, seat_b: 0 },
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ sourceCardId: "large" }));
+    });
+
+    it("counts visible linked Muster hand targets when deciding catch-up", () => {
+      const caller = testCard({
+        cardId: "caller",
+        sourceId: "test.muster.caller",
+        printedStrength: 2,
+        abilities: ["muster"],
+        linkedSourceIds: ["test.muster.target"],
+      });
+      const target = testCard({
+        cardId: "target",
+        sourceId: "test.muster.target",
+        printedStrength: 4,
+      });
+
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([passMove(), playMove(caller)], {
+            ownHand: [caller, target],
+            ownGems: 1,
+            opponentPassed: true,
+            score: {
+              ...baseObservation().score,
+              totalBySeat: { seat_a: 5, seat_b: 0 },
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ sourceCardId: "caller" }));
+    });
+
+    it("prefers spies and avoids harmful weather or self-harming Scorch", () => {
+      const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+      const hero = testCard({ cardId: "hero", sourceId: "test.hero", printedStrength: 10, kind: "hero" });
+      expect(
+        legalHeuristicPolicyV1.selectMove(policyInput([passMove(), playMove(hero), playMove(spy)], { ownHand: [hero, spy] })),
+      ).toEqual(expect.objectContaining({ sourceCardId: "spy" }));
+
+      const frost = testCard({
+        cardId: "frost",
+        sourceId: "neutral.biting-frost",
+        printedStrength: 0,
+        kind: "special",
+        abilities: ["frost"],
+      });
+      const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 5 });
+      const ownClose = testCard({ cardId: "own-close", sourceId: "test.own.close", printedStrength: 8 });
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput(
+            [passMove(), playMove(frost, { kind: "weather" }), playMove(unit)],
+            {
+              ownHand: [frost, unit],
+              boardRows: baseBoardRows({ seat_b: { close: [ownClose] } }),
+            },
+          ),
+        ),
+      ).toEqual(expect.objectContaining({ sourceCardId: "unit" }));
+
+      const scorch = testCard({
+        cardId: "scorch",
+        sourceId: "neutral.scorch",
+        printedStrength: 0,
+        kind: "special",
+        abilities: ["scorch"],
+      });
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([passMove(), playMove(scorch, { kind: "none" }), playMove(unit)], {
+            ownHand: [scorch, unit],
+            score: {
+              ...baseObservation().score,
+              cards: [
+                {
+                  cardId: "own-high",
+                  sourceId: "test.own.high",
+                  seatId: "seat_b",
+                  row: "close",
+                  cardKind: "unit",
+                  isUnit: true,
+                  isHero: false,
+                  printedStrength: 12,
+                  afterWeather: 12,
+                  spyMultiplier: 1,
+                  afterSpyMultiplier: 12,
+                  tightBondMultiplier: 1,
+                  afterTightBond: 12,
+                  moraleBonus: 0,
+                  afterMorale: 12,
+                  hornMultiplier: 1,
+                  finalStrength: 12,
+                  eligibleForScorch: true,
+                  modifiers: [],
+                },
+                {
+                  cardId: "opp-low",
+                  sourceId: "test.opp.low",
+                  seatId: "seat_a",
+                  row: "close",
+                  cardKind: "unit",
+                  isUnit: true,
+                  isHero: false,
+                  printedStrength: 8,
+                  afterWeather: 8,
+                  spyMultiplier: 1,
+                  afterSpyMultiplier: 8,
+                  tightBondMultiplier: 1,
+                  afterTightBond: 8,
+                  moraleBonus: 0,
+                  afterMorale: 8,
+                  hornMultiplier: 1,
+                  finalStrength: 8,
+                  eligibleForScorch: true,
+                  modifiers: [],
+                },
+              ],
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ sourceCardId: "unit" }));
+    });
+
+    it("scores leader moves by visible usefulness instead of firing blindly", () => {
+      expect(
+        legalHeuristicPolicyV1.selectMove(policyInput([passMove(), leaderMove("clear_weather")], { weather: [] })),
+      ).toEqual(expect.objectContaining({ kind: "pass" }));
+
+      const frost = testCard({
+        cardId: "weather",
+        sourceId: "neutral.biting-frost",
+        printedStrength: 0,
+        kind: "special",
+        abilities: ["frost"],
+      });
+      expect(
+        legalHeuristicPolicyV1.selectMove(
+          policyInput([passMove(), leaderMove("clear_weather")], {
+            weather: [frost],
+            score: {
+              ...baseObservation().score,
+              cards: [
+                {
+                  cardId: "own-weathered",
+                  sourceId: "test.own.weathered",
+                  seatId: "seat_b",
+                  row: "close",
+                  cardKind: "unit",
+                  isUnit: true,
+                  isHero: false,
+                  printedStrength: 8,
+                  afterWeather: 1,
+                  spyMultiplier: 1,
+                  afterSpyMultiplier: 1,
+                  tightBondMultiplier: 1,
+                  afterTightBond: 8,
+                  moraleBonus: 0,
+                  afterMorale: 1,
+                  hornMultiplier: 1,
+                  finalStrength: 1,
+                  eligibleForScorch: false,
+                  modifiers: ["weather:frost"],
+                },
+              ],
+            },
+          }),
+        ),
+      ).toEqual(expect.objectContaining({ kind: "use_leader", metadata: expect.objectContaining({ ability: "clear_weather" }) }));
+    });
   });
 
   it("converts every supported legal move kind into the exact command payload", () => {

@@ -38,6 +38,8 @@ const toCardSummary = (
     printedStrength: source.strength,
     rows: source.rows,
     abilities: source.abilities,
+    linkedSourceIds: source.linkedSourceIds,
+    deckLimit: source.deckLimit,
   };
 };
 
@@ -90,22 +92,23 @@ const buildPromptSummary = (
         // as the sum of the selected cards' strengths so the heuristic
         // policy can rank multi-card discards deterministically. The acting
         // seat already sees its own hand, so this does not leak hidden info.
-        const targetStrength = target.sourceIds.reduce(
-          (sum, sourceId) => sum + (cardsBySourceId.get(sourceId)?.strength ?? 0),
-          0,
-        );
+        const targetCards = summarizeCards(state, target.cardIds, cardsBySourceId);
+        const targetStrength = targetCards.reduce((sum, card) => sum + card.printedStrength, 0);
         return {
           optionId: option.optionId,
           label: option.label,
           targetStrength,
+          targetCards,
         };
       }
+      const targetCard = summarizeCards(state, [target.cardId], cardsBySourceId).at(0);
       // card_instance and deck_card_instance both expose a single cardId.
       return {
         optionId: option.optionId,
         label: option.label,
         targetCardId: target.cardId,
-        targetStrength: cardsBySourceId.get(target.sourceId)?.strength,
+        targetStrength: targetCard?.printedStrength ?? cardsBySourceId.get(target.sourceId)?.strength,
+        ...(targetCard ? { targetCard } : {}),
       };
     }),
     ...(revealedCards ? { revealedCards } : {}),

@@ -13,7 +13,7 @@ const factionSlug = (descriptor: BenchmarkDeckDescriptor) => descriptor.faction.
 
 const seatForDescriptor = (
   descriptor: BenchmarkDeckDescriptor,
-  policyId: 'legal-heuristic-v0' | 'legal-first-v0'
+  policyId: 'legal-heuristic-v0' | 'legal-heuristic-v1' | 'legal-first-v0'
 ) => ({
   policyId,
   playerId: `benchmark-${policyId}`,
@@ -21,27 +21,41 @@ const seatForDescriptor = (
   deckPreset: descriptor.deckPreset,
 });
 
-const buildStarterMatrixMatchups = (): BenchmarkMatchupDefinition[] => {
+const buildStarterMatrixMatchups = ({
+  firstPolicyId,
+  secondPolicyId,
+  firstPolicyLeftSlug,
+  firstPolicyRightSlug,
+  secondPolicyLeftSlug,
+  secondPolicyRightSlug,
+}: {
+  firstPolicyId: 'legal-heuristic-v0' | 'legal-heuristic-v1';
+  secondPolicyId: 'legal-heuristic-v0' | 'legal-first-v0';
+  firstPolicyLeftSlug: string;
+  firstPolicyRightSlug: string;
+  secondPolicyLeftSlug: string;
+  secondPolicyRightSlug: string;
+}): BenchmarkMatchupDefinition[] => {
   const matchups: BenchmarkMatchupDefinition[] = [];
 
   benchmarkStarterDeckDescriptors.forEach((leftDescriptor, leftIndex) => {
     benchmarkStarterDeckDescriptors.slice(leftIndex + 1).forEach((rightDescriptor) => {
       matchups.push({
-        matchupId: `starter-${factionSlug(leftDescriptor)}-heuristic-vs-${factionSlug(rightDescriptor)}-legal-first-v0`,
-        label: `${leftDescriptor.label} piloted by heuristic vs ${rightDescriptor.label} piloted by deterministic legal-first baseline`,
+        matchupId: `starter-${factionSlug(leftDescriptor)}-${firstPolicyLeftSlug}-vs-${factionSlug(rightDescriptor)}-${secondPolicyRightSlug}`,
+        label: `${leftDescriptor.label} piloted by ${firstPolicyId} vs ${rightDescriptor.label} piloted by ${secondPolicyId}`,
         mirror: true,
         seats: {
-          seat_a: seatForDescriptor(leftDescriptor, 'legal-heuristic-v0'),
-          seat_b: seatForDescriptor(rightDescriptor, 'legal-first-v0'),
+          seat_a: seatForDescriptor(leftDescriptor, firstPolicyId),
+          seat_b: seatForDescriptor(rightDescriptor, secondPolicyId),
         },
       });
       matchups.push({
-        matchupId: `starter-${factionSlug(leftDescriptor)}-legal-first-vs-${factionSlug(rightDescriptor)}-heuristic-v0`,
-        label: `${leftDescriptor.label} piloted by deterministic legal-first baseline vs ${rightDescriptor.label} piloted by heuristic`,
+        matchupId: `starter-${factionSlug(leftDescriptor)}-${secondPolicyLeftSlug}-vs-${factionSlug(rightDescriptor)}-${firstPolicyRightSlug}`,
+        label: `${leftDescriptor.label} piloted by ${secondPolicyId} vs ${rightDescriptor.label} piloted by ${firstPolicyId}`,
         mirror: true,
         seats: {
-          seat_a: seatForDescriptor(leftDescriptor, 'legal-first-v0'),
-          seat_b: seatForDescriptor(rightDescriptor, 'legal-heuristic-v0'),
+          seat_a: seatForDescriptor(leftDescriptor, secondPolicyId),
+          seat_b: seatForDescriptor(rightDescriptor, firstPolicyId),
         },
       });
     });
@@ -90,12 +104,71 @@ export const benchmarkStarterMatrixSuiteV1: BenchmarkSuite = {
   seeds: STARTER_MATRIX_SEEDS,
   defaultMaxSteps: currentSimulationSmokeSuite.defaultMaxSteps,
   deckDescriptors: benchmarkStarterDeckDescriptors,
-  matchups: buildStarterMatrixMatchups(),
+  matchups: buildStarterMatrixMatchups({
+    firstPolicyId: 'legal-heuristic-v0',
+    secondPolicyId: 'legal-first-v0',
+    firstPolicyLeftSlug: 'heuristic',
+    firstPolicyRightSlug: 'heuristic-v0',
+    secondPolicyLeftSlug: 'legal-first',
+    secondPolicyRightSlug: 'legal-first-v0',
+  }),
+};
+
+export const benchmarkV1SmokeSuiteV1: BenchmarkSuite = {
+  id: 'benchmark-v1-smoke-v1',
+  label: 'Benchmark legal heuristic v1 smoke suite',
+  description:
+    'Small fixed-suite benchmark over the current Northern Realms and Nilfgaard presets with mirrored legal-heuristic-v1 versus legal-heuristic-v0 runs.',
+  seeds: currentSimulationSmokeSuite.seeds,
+  defaultMaxSteps: currentSimulationSmokeSuite.defaultMaxSteps,
+  deckDescriptors: benchmarkSmokeDeckDescriptors,
+  matchups: [
+    {
+      matchupId: 'current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0',
+      label:
+        'Current Northern Realms vs Nilfgaard, legal-heuristic-v1 against legal-heuristic-v0',
+      mirror: true,
+      seats: {
+        seat_a: {
+          policyId: 'legal-heuristic-v1',
+          playerId: 'benchmark-legal-heuristic-v1',
+          faction: benchmarkSmokeDeckDescriptors[0].faction,
+          deckPreset: benchmarkSmokeDeckDescriptors[0].deckPreset,
+        },
+        seat_b: {
+          policyId: 'legal-heuristic-v0',
+          playerId: 'benchmark-legal-heuristic-v0',
+          faction: benchmarkSmokeDeckDescriptors[1].faction,
+          deckPreset: benchmarkSmokeDeckDescriptors[1].deckPreset,
+        },
+      },
+    },
+  ],
+};
+
+export const benchmarkV1StarterMatrixSuiteV1: BenchmarkSuite = {
+  id: 'benchmark-v1-starter-matrix-v1',
+  label: 'Benchmark legal heuristic v1 starter matrix',
+  description:
+    'Broader fixed-suite benchmark over all five official starter presets comparing legal-heuristic-v1 against legal-heuristic-v0.',
+  seeds: STARTER_MATRIX_SEEDS,
+  defaultMaxSteps: currentSimulationSmokeSuite.defaultMaxSteps,
+  deckDescriptors: benchmarkStarterDeckDescriptors,
+  matchups: buildStarterMatrixMatchups({
+    firstPolicyId: 'legal-heuristic-v1',
+    secondPolicyId: 'legal-heuristic-v0',
+    firstPolicyLeftSlug: 'heuristic-v1',
+    firstPolicyRightSlug: 'heuristic-v1',
+    secondPolicyLeftSlug: 'heuristic-v0',
+    secondPolicyRightSlug: 'heuristic-v0',
+  }),
 };
 
 export const benchmarkSuites = {
   [benchmarkSmokeSuiteV1.id]: benchmarkSmokeSuiteV1,
   [benchmarkStarterMatrixSuiteV1.id]: benchmarkStarterMatrixSuiteV1,
+  [benchmarkV1SmokeSuiteV1.id]: benchmarkV1SmokeSuiteV1,
+  [benchmarkV1StarterMatrixSuiteV1.id]: benchmarkV1StarterMatrixSuiteV1,
 } as const;
 
 export const getBenchmarkSuite = (id: string): BenchmarkSuite | null =>

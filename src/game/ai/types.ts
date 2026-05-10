@@ -26,6 +26,8 @@ export interface SeatCardSummary {
   printedStrength: number;
   rows: CatalogRow[];
   abilities: CatalogAbilityId[];
+  linkedSourceIds?: readonly string[];
+  deckLimit?: number;
 }
 
 export interface SeatBoardRowSummary {
@@ -40,6 +42,8 @@ export interface PromptOptionSummary {
   label: string;
   targetCardId?: CardInstanceId;
   targetStrength?: number;
+  targetCard?: SeatCardSummary;
+  targetCards?: readonly SeatCardSummary[];
 }
 
 export interface PendingPromptSummary {

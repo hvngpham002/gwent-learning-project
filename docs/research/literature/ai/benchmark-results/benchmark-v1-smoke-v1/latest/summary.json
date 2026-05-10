@@ -1,0 +1,103 @@
+{
+  "averageCommands": 37,
+  "averageLegalMoves": 8.384490521149795,
+  "averageSteps": 37,
+  "benchmarkRunId": "benchmark-v1-smoke-v1:latest",
+  "completionRate": 1,
+  "deckPresetIds": [
+    "current-nilfgaard",
+    "current-northern-realms"
+  ],
+  "errorCodeCounts": {},
+  "leaderUseCount": 2,
+  "matchupSummaries": [
+    {
+      "averageCommands": 37,
+      "averageLegalMoves": 8.384490521149795,
+      "averageSteps": 37,
+      "leaderUseCount": 2,
+      "matchupId": "current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0",
+      "promptCount": 2,
+      "resultCountsByDeck": {
+        "current-nilfgaard": {
+          "draws": 0,
+          "losses": 8,
+          "none": 0,
+          "wins": 4
+        },
+        "current-northern-realms": {
+          "draws": 0,
+          "losses": 4,
+          "none": 0,
+          "wins": 8
+        }
+      },
+      "resultCountsByPolicy": {
+        "legal-heuristic-v0": {
+          "draws": 0,
+          "losses": 8,
+          "none": 0,
+          "wins": 4
+        },
+        "legal-heuristic-v1": {
+          "draws": 0,
+          "losses": 4,
+          "none": 0,
+          "wins": 8
+        }
+      },
+      "statusCounts": {
+        "completed": 12,
+        "engine_error": 0,
+        "max_steps_exceeded": 0,
+        "policy_failed": 0
+      },
+      "totalMatches": 12
+    }
+  ],
+  "maxStepRate": 0,
+  "policyIds": [
+    "legal-heuristic-v0",
+    "legal-heuristic-v1"
+  ],
+  "promptCount": 2,
+  "replayCheckedCount": 12,
+  "replayFailedCount": 0,
+  "resultCountsByDeck": {
+    "current-nilfgaard": {
+      "draws": 0,
+      "losses": 8,
+      "none": 0,
+      "wins": 4
+    },
+    "current-northern-realms": {
+      "draws": 0,
+      "losses": 4,
+      "none": 0,
+      "wins": 8
+    }
+  },
+  "resultCountsByPolicy": {
+    "legal-heuristic-v0": {
+      "draws": 0,
+      "losses": 8,
+      "none": 0,
+      "wins": 4
+    },
+    "legal-heuristic-v1": {
+      "draws": 0,
+      "losses": 4,
+      "none": 0,
+      "wins": 8
+    }
+  },
+  "schemaVersion": "benchmark-summary-v1",
+  "statusCounts": {
+    "completed": 12,
+    "engine_error": 0,
+    "max_steps_exceeded": 0,
+    "policy_failed": 0
+  },
+  "suiteId": "benchmark-v1-smoke-v1",
+  "totalMatches": 12
+}

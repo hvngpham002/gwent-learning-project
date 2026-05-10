@@ -1,4 +1,4 @@
-import { legalHeuristicPolicyV0, type EnginePolicy } from "@/game/ai";
+import { legalHeuristicPolicyV0, legalHeuristicPolicyV1, type EnginePolicy } from "@/game/ai";
 import type { LegalMove } from "@/game/core";
 
 import type { BenchmarkPolicyRegistry } from "./types";
@@ -33,5 +33,6 @@ export const legalFirstPolicyV0: EnginePolicy = {
 
 export const defaultBenchmarkPolicies: BenchmarkPolicyRegistry = {
   [legalHeuristicPolicyV0.id]: legalHeuristicPolicyV0,
+  [legalHeuristicPolicyV1.id]: legalHeuristicPolicyV1,
   [legalFirstPolicyV0.id]: legalFirstPolicyV0,
 };

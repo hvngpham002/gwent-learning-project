@@ -12,7 +12,10 @@ import {
 import type { EnginePolicy } from '@/game/ai';
 import {
   benchmarkStarterMatrixSuiteV1,
+  benchmarkV1SmokeSuiteV1,
+  benchmarkV1StarterMatrixSuiteV1,
   benchmarkSmokeSuiteV1,
+  defaultBenchmarkPolicies,
   getBenchmarkSuite,
   getBenchmarkDeckDescriptorsByCategory,
   legalFirstPolicyV0,
@@ -33,6 +36,12 @@ describe('benchmark harness', () => {
   it('resolves the built-in smoke benchmark suite by id', () => {
     expect(getBenchmarkSuite(benchmarkSmokeSuiteV1.id)).toBe(benchmarkSmokeSuiteV1);
     expect(getBenchmarkSuite('missing-benchmark-suite')).toBeNull();
+  });
+
+  it('registers legal-heuristic-v1 for benchmark use', () => {
+    expect(defaultBenchmarkPolicies['legal-heuristic-v1']?.id).toBe('legal-heuristic-v1');
+    expect(defaultBenchmarkPolicies['legal-heuristic-v0']?.id).toBe('legal-heuristic-v0');
+    expect(defaultBenchmarkPolicies['legal-first-v0']?.id).toBe('legal-first-v0');
   });
 
   it('resolves the starter matrix suite and exposes its starter deck descriptors', () => {
@@ -116,6 +125,34 @@ describe('benchmark harness', () => {
     expect(result.summary.policyIds).toEqual(['legal-first-v0', 'legal-heuristic-v0']);
     expect(result.summary.matchupSummaries).toHaveLength(20);
     expect(result.summary.replayFailedCount).toBe(0);
+  }, 60_000);
+
+  it('runs the legal-heuristic-v1 smoke and starter matrix suites against v0', () => {
+    expect(getBenchmarkSuite(benchmarkV1SmokeSuiteV1.id)).toBe(benchmarkV1SmokeSuiteV1);
+    expect(getBenchmarkSuite(benchmarkV1StarterMatrixSuiteV1.id)).toBe(benchmarkV1StarterMatrixSuiteV1);
+    expect(benchmarkV1SmokeSuiteV1.matchups.every((matchup) => matchup.mirror === true)).toBe(true);
+    expect(benchmarkV1StarterMatrixSuiteV1.seeds).toHaveLength(3);
+    expect(benchmarkV1StarterMatrixSuiteV1.matchups).toHaveLength(20);
+    expect(
+      new Set(benchmarkV1StarterMatrixSuiteV1.matchups.map((matchup) => matchup.matchupId)).size
+    ).toBe(20);
+    expect(benchmarkV1StarterMatrixSuiteV1.matchups.every((matchup) => matchup.mirror === true)).toBe(
+      true
+    );
+
+    const smoke = runBenchmarkSuite({ suiteId: benchmarkV1SmokeSuiteV1.id });
+    expect(smoke.records).toHaveLength(12);
+    expect(smoke.summary.totalMatches).toBe(12);
+    expect(smoke.summary.policyIds).toEqual(['legal-heuristic-v0', 'legal-heuristic-v1']);
+    expect(smoke.summary.replayFailedCount).toBe(0);
+
+    const starter = runBenchmarkSuite({ suiteId: benchmarkV1StarterMatrixSuiteV1.id });
+    expect(starter.records).toHaveLength(120);
+    expect(starter.summary.totalMatches).toBe(120);
+    expect(starter.summary.deckPresetIds).toEqual(officialStarterPresetIds);
+    expect(starter.summary.policyIds).toEqual(['legal-heuristic-v0', 'legal-heuristic-v1']);
+    expect(starter.summary.matchupSummaries).toHaveLength(20);
+    expect(starter.summary.replayFailedCount).toBe(0);
   }, 60_000);
 
   it('records policy failures per match and continues the suite', () => {

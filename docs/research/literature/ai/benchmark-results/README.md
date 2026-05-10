@@ -15,6 +15,13 @@ Run the official starter-deck matrix from the repository root:
 npm run benchmark:starter-matrix
 ```
 
+Run the v1 comparison suites from the repository root:
+
+```bash
+npm run benchmark:v1-smoke
+npm run benchmark:v1-starter-matrix
+```
+
 The command writes the stable latest artifact set:
 
 ```text
@@ -29,6 +36,18 @@ benchmark-starter-matrix-v1/latest/
   summary.json
   records.jsonl
   report.md
+
+benchmark-v1-smoke-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
+
+benchmark-v1-starter-matrix-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
 ```
 
 The default run id is `<suite-id>:latest`. Each `latest/` folder is
@@ -38,6 +57,8 @@ benchmark-harness changes, review the public behavior diff with:
 ```bash
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-smoke-v1/latest
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-starter-matrix-v1/latest
+git diff -- docs/research/literature/ai/benchmark-results/benchmark-v1-smoke-v1/latest
+git diff -- docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/latest
 ```
 
 Default artifacts are hidden-info safe. They serialize public
@@ -55,3 +76,10 @@ files, or execute browser benchmarks.
 decks with 10 unordered pairings, both policy assignments, 3 seeds,
 mirrored runs, and 120 records. They are starter coverage artifacts, not
 optimized deck-strength claims.
+
+cFp24 adds `benchmark-v1-smoke-v1` and
+`benchmark-v1-starter-matrix-v1`. Both compare `legal-heuristic-v1`
+against `legal-heuristic-v0` without changing the product AI default.
+The latest generated results complete with 12/12 and 120/120 records,
+respectively, no replay failures, and no hidden-info hazard-string
+matches.

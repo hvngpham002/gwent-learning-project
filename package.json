@@ -13,6 +13,8 @@
     "lint": "eslint .",
     "benchmark:smoke": "tsx scripts/run-benchmark-report.ts --suite benchmark-smoke-v1",
     "benchmark:starter-matrix": "tsx scripts/run-benchmark-report.ts --suite benchmark-starter-matrix-v1",
+    "benchmark:v1-smoke": "tsx scripts/run-benchmark-report.ts --suite benchmark-v1-smoke-v1",
+    "benchmark:v1-starter-matrix": "tsx scripts/run-benchmark-report.ts --suite benchmark-v1-starter-matrix-v1",
     "check:forbidden-imports": "node scripts/check-forbidden-imports.mjs",
     "check:project-state": "node scripts/check-project-state-update.mjs",
     "check:worktree-clean": "node scripts/check-worktree-clean.mjs",
