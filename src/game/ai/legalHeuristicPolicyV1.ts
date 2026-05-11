@@ -790,7 +790,7 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
 
   if (features.ownGems <= 1 && features.scoreDelta < 0 && passMove) {
     const upperBound = features.ownScore + uniqueCardTempoUpperBound(features);
-     if (upperBound < minimumScoreToWinRound(features)) {
+    if (upperBound < minimumScoreToWinRound(features)) {
       return passMove;
     }
   }
