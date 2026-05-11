@@ -31,7 +31,7 @@ import {
   type EngineBoardRowViewModel,
   type EngineCardViewModel,
 } from "@/store/selectors/engineSelectors";
-import { engineSelectedCardIdsSet, engineSelectedCardSet, engineSelectionCleared } from "@/store/slices/engineSlice";
+import { engineDiagnosticTraceAppended, engineSelectedCardIdsSet, engineSelectedCardSet, engineSelectionCleared } from "@/store/slices/engineSlice";
 import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 
 import {
@@ -143,8 +143,12 @@ const EngineGameManager: React.FC = () => {
   }, [dispatch, match, startSeed]);
 
   useEffect(() => {
-    const command = getLegalHeuristicAiCommand(engine, aiSeat, humanSeat);
+    const { command, diagnosticTrace } = getLegalHeuristicAiCommand(engine, aiSeat, humanSeat);
     if (command) {
+      // cFp25: dispatch the diagnostic trace collected at AI decision time
+      if (diagnosticTrace) {
+        dispatch(engineDiagnosticTraceAppended(diagnosticTrace));
+      }
       dispatch(dispatchEngineCommand(command));
     }
   }, [aiSeat, dispatch, engine, humanSeat]);

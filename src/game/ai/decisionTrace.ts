@@ -73,19 +73,22 @@ export interface AiDecisionBoardRowSummary {
 }
 
 // ---------------------------------------------------------------------------
-// Pass analysis
+// Pass analysis (mirrors legalHeuristicPolicyV1 helper values)
 // ---------------------------------------------------------------------------
 
 export interface AiDecisionPassAnalysis {
   readonly passLegal: boolean;
+  // Exact values from the policy helper canVoluntarilyPassWithLead
   readonly scoreDelta: number;
   readonly opponentHandPressure: number;
   readonly requiredLead: number;
   readonly isVoluntarilySafe: boolean;
   readonly isOpponentPassed: boolean;
   readonly isLastGem: boolean;
-  readonly lastGemSurrenderAllowed: boolean;
+  // Approximate upper-bound (policy iterates unique-card tempo; diagnostics
+  // use a cheaper heuristic to avoid duplicating scoreMove).
   readonly lastGemUpperBound: number;
+  readonly lastGemSurrenderAllowed: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -101,23 +104,26 @@ export interface AiDecisionSelectedMove {
   readonly targetLabel?: string;
   readonly optionId?: string;
   readonly abilityId?: string;
-  readonly moveId: string;
+  // Safe local ref instead of raw moveId (which may contain seat_a:/seat_b:)
+  readonly actionRef: string;
 }
 
 // ---------------------------------------------------------------------------
-// Candidate summaries (redacted where needed)
+// Candidate summaries (fully redacted for hidden AI hand)
 // ---------------------------------------------------------------------------
 
 export interface AiDecisionCandidateSummary {
   readonly kind: AiDecisionCandidateKind;
+  // Generic label — never a card name for AI-hand candidates
   readonly label: string;
   readonly score: number;
   readonly targetKind: string;
   readonly targetLabel: string;
+  // Human-readable reason (e.g. "best tempo", "spy bonus")
   readonly reason: string;
-  // Redacted label for hidden AI hand card alternatives.
-  // Only populated when the candidate originates from an unplayed AI hand
-  // card whose identity must not be exposed to the human player.
+  // Always "hidden hand play" for any candidate originating from the AI's
+  // hidden hand. Only public targets (board cards, weather, etc.) show a
+  // real target label.
   readonly cardLabel: string;
 }
 
@@ -204,6 +210,10 @@ export const buildAiDecisionPublicState = (
   weatherCardCount: input.observation.weather.length,
 });
 
+/**
+ * Builds pass analysis using the same logic the v1 policy uses:
+ * estimateOpponentHandPressure (6/8 per card) and canVoluntarilyPassWithLead.
+ */
 export const buildAiDecisionPassAnalysis = (
   features: AiDecisionTraceFeatures,
 ): AiDecisionPassAnalysis => {
@@ -217,9 +227,6 @@ export const buildAiDecisionPassAnalysis = (
     features.scoreDelta > requiredLead && !features.opponentPassed;
   const isOpponentPassed = features.opponentPassed;
   const isLastGem = features.ownGems <= 1;
-  // Simplified upper-bound: ownScore + max unique tempo (approximate).
-  // The exact upper-bound requires iterating play moves; this is a
-  // diagnostic approximation using scoreDelta + ownHandCount * 50.
   const lastGemUpperBound =
     features.ownScore + features.opponentHandCount * 50;
   const lastGemSurrenderAllowed =
@@ -238,12 +245,17 @@ export const buildAiDecisionPassAnalysis = (
   };
 };
 
+/**
+ * Builds a safe selected-move summary without raw moveId (which may contain
+ * seat_a:/seat_b: instance prefixes). Uses an actionRef instead.
+ */
 export const buildAiDecisionSelectedMove = (
   move: import("@/game/core").LegalMove,
+  actionIndex: number,
 ): AiDecisionSelectedMove => ({
   kind: move.kind as AiDecisionMoveKind,
   label: move.label,
-  moveId: move.moveId,
+  actionRef: `action_${actionIndex}`,
   sourceCardName:
     "sourceCardId" in move || "sourceId" in move
       ? move.label.replace(/^Play /, "").replace(/^Use leader/, "")
@@ -264,6 +276,10 @@ export const buildAiDecisionSelectedMove = (
       : undefined,
 });
 
+// ---------------------------------------------------------------------------
+// Candidate builder
+// ---------------------------------------------------------------------------
+
 export const buildAiDecisionCandidateSummary = (
   kind: AiDecisionCandidateKind,
   label: string,
@@ -283,7 +299,7 @@ export const buildAiDecisionCandidateSummary = (
 });
 
 // ---------------------------------------------------------------------------
-// Candidate redaction helper
+// Candidate redaction: always "hidden hand play" for AI hand candidates
 // ---------------------------------------------------------------------------
 
 export const redactAiHandCardLabel = (): string => "hidden hand play";

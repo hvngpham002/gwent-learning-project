@@ -8,10 +8,12 @@ import {
  * cFp25: Collects a decision trace for a v1 AI decision.
  *
  * This function does NOT mutate any game state, command queue, or engine.
- * It only builds the trace object. The caller (product match screen) is
- * responsible for dispatching the trace to Redux.
+ * It only builds the trace object from the exact pre-command EnginePolicyInput.
  *
- * Returns null when the policy is not v1 or when no move was selected.
+ * Returns null when no move was selected or the trace schema is invalid.
+ *
+ * IMPORTANT: Call this with the same EnginePolicyInput that was passed to
+ * `selectMove`. Do not call it with next-state inputs or for human commands.
  */
 export const collectV1DecisionTrace = (
   input: EnginePolicyInput,
@@ -21,11 +23,10 @@ export const collectV1DecisionTrace = (
     decisionIndex,
   });
 
-  if (!explanation.move || explanation.move.moveId === "__none__") {
+  if (!explanation.move) {
     return null;
   }
 
-  // Verify policy parity: explanation must return the same move.
   if (explanation.trace.schemaVersion !== AI_DECISION_TRACE_SCHEMA_VERSION) {
     return null;
   }

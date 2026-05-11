@@ -1216,23 +1216,23 @@ describe("engine AI policy", () => {
 
   it("controller does not dispatch when blocked and only returns commands derived from AI legal moves", () => {
     const store = createTestStore();
-    expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a")).toBeNull();
+    expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a").command).toBeNull();
 
     store.dispatch(startEngineMatch({ seed: "ai-controller" }));
-    expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a")).toBeNull();
+    expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a").command).toBeNull();
 
     completeMulligans(store);
     const match = store.getState().engine.match!;
     if (match.currentTurn === "seat_a") {
-      expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a")).toBeNull();
+      expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a").command).toBeNull();
       store.dispatch(dispatchEngineCommand({ type: "Pass", seatId: "seat_a" }));
     }
 
     const legalMoves = selectEngineLegalMovesForAi(store.getState());
-    const command = getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a");
-    expect(command).not.toBeNull();
+    const result = getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a");
+    expect(result.command).not.toBeNull();
     expect(
-      legalMoves.some((move) => JSON.stringify(commandFromLegalMove(move)) === JSON.stringify(command)),
+      legalMoves.some((move) => JSON.stringify(commandFromLegalMove(move)) === JSON.stringify(result.command)),
     ).toBe(true);
   });
 
@@ -1255,7 +1255,8 @@ describe("engine AI policy", () => {
     const selected = legalHeuristicPolicyV1.selectMove({ seatId: "seat_b", observation, legalMoves });
 
     expect(engine.aiPolicyId).toBe("legal-heuristic-v1");
-    expect(getLegalHeuristicAiCommand(engine, "seat_b", "seat_a")).toEqual(
+    const v1Result = getLegalHeuristicAiCommand(engine, "seat_b", "seat_a");
+    expect(v1Result.command).toEqual(
       selected ? commandFromLegalMove(selected) : null,
     );
   });
@@ -1283,7 +1284,7 @@ describe("engine AI policy", () => {
         { ...engine, aiPolicyId: "legal-first-v0" as never },
         "seat_b",
         "seat_a",
-      ),
+      ).command,
     ).toEqual(selected ? commandFromLegalMove(selected) : null);
   });
 
@@ -1295,11 +1296,11 @@ describe("engine AI policy", () => {
       store.dispatch(dispatchEngineCommand({ type: "Pass", seatId: "seat_a" }));
     }
 
-    const command = getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a");
-    expect(command).toEqual(expect.objectContaining({ type: "PlayCard", seatId: "seat_b" }));
-    const cardId = command && command.type === "PlayCard" ? command.cardId : null;
+    const result = getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a");
+    expect(result.command).toEqual(expect.objectContaining({ type: "PlayCard", seatId: "seat_b" }));
+    const cardId = result.command && result.command.type === "PlayCard" ? result.command.cardId : null;
 
-    store.dispatch(dispatchEngineCommand(command!));
+    store.dispatch(dispatchEngineCommand(result.command!));
 
     const state = store.getState();
     expect(cardId).toBeTruthy();
@@ -1319,7 +1320,7 @@ describe("engine AI policy", () => {
     base.phase = "playing";
     base.currentTurn = "seat_a";
     store.dispatch(engineCommandApplied({ command: { type: "Pass", seatId: "seat_b" }, match: base, events: [], sequence: 3 }));
-    expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a")).toBeNull();
+    expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a").command).toBeNull();
 
     const humanPrompt = structuredClone(base);
     humanPrompt.currentTurn = "seat_b";
@@ -1333,21 +1334,21 @@ describe("engine AI policy", () => {
     store.dispatch(
       engineCommandApplied({ command: { type: "Pass", seatId: "seat_a" }, match: humanPrompt, events: [], sequence: 4 }),
     );
-    expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a")).toBeNull();
+    expect(getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a").command).toBeNull();
 
     expect(
       getLegalHeuristicAiCommand(
         { ...store.getState().engine, status: "ai_thinking", lock: { kind: "ai_thinking", sinceSequence: 5 } },
         "seat_b",
         "seat_a",
-      ),
+      ).command,
     ).toBeNull();
 
     const gameEnd = structuredClone(base);
     gameEnd.phase = "game_end";
     gameEnd.currentTurn = "seat_b";
     gameEnd.pendingPrompt = null;
-    expect(getLegalHeuristicAiCommand({ match: gameEnd, status: "ready", lock: null }, "seat_b", "seat_a")).toBeNull();
+    expect(getLegalHeuristicAiCommand({ match: gameEnd, status: "ready", lock: null }, "seat_b", "seat_a").command).toBeNull();
   });
 
   it("controller can resolve an AI-owned prompt through the prompt lock", () => {
@@ -1380,7 +1381,7 @@ describe("engine AI policy", () => {
         },
         "seat_b",
         "seat_a",
-      ),
+      ).command,
     ).toEqual({
       type: "ChoosePromptOption",
       seatId: "seat_b",
@@ -1608,7 +1609,7 @@ describe("cFp25: AI decision trace", () => {
     expect(trace.reason).toContain("opponent passed");
   });
 
-  it("candidate summaries do not contain raw engine instance IDs or hidden AI card labels", () => {
+  it("candidate summaries are fully redacted for AI hand and use safe actionRef", () => {
     const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
     const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 5 });
 
@@ -1617,19 +1618,28 @@ describe("cFp25: AI decision trace", () => {
       { ownHand: [spy, unit] },
     );
 
-    const { trace } = (
+    const { trace, move: tracedMove } = (
       explainLegalHeuristicV1Decision(input)
-    ) as { trace: import("@/game/ai").AiDecisionTrace };
+    ) as { trace: import("@/game/ai").AiDecisionTrace; move: LegalMove | null };
 
     // The trace should contain candidates (play moves).
-    // None of them should contain raw engine instance IDs like "seat_a:card:0".
+    // All play_card candidates must be redacted to "hidden hand play".
     const traceJson = JSON.stringify(trace);
     expect(traceJson).not.toMatch(/seat_[ab]:card:/);
 
-    // Candidate labels should be human-readable, not raw IDs.
+    // Candidate labels should be "hidden hand play" for all play_card entries.
     trace.candidates.forEach((candidate) => {
       expect(candidate.cardLabel).not.toMatch(/seat_[ab]:/);
       expect(candidate.cardLabel).not.toMatch(/card:\d+/);
+      if (candidate.kind === "play_card") {
+        expect(candidate.cardLabel).toBe("hidden hand play");
+      }
     });
+
+    // Selected move should use actionRef instead of raw moveId.
+    expect(tracedMove?.kind).toBe("play_card");
+    expect(trace.selected?.actionRef).toBeTruthy();
+    expect(trace.selected?.actionRef).not.toMatch(/seat_[ab]:/);
+    expect(trace.selected?.kind).toBe("play_card");
   });
 });

@@ -1,12 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getEngineSeedFromSearch } from "@/appMode";
-import {
-  collectV1DecisionTrace,
-  buildSeatObservation,
-} from "@/game/ai";
+
 import type { CardInstanceId, GameEvent, PlayCardMove, SeatId } from "@/game/core";
-import { getLegalMoves } from "@/game/core";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectEngineAiHandCount,
@@ -1832,7 +1828,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     if (aiMulliganDecisionKey && readyAiMulliganDecisionKey !== aiMulliganDecisionKey) {
       return;
     }
-    const command = getLegalHeuristicAiCommand(engine, aiSeat, humanSeat);
+    const { command, diagnosticTrace } = getLegalHeuristicAiCommand(engine, aiSeat, humanSeat);
     if (!command) {
       return;
     }
@@ -1850,6 +1846,11 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       }
     }
 
+    // cFp25: dispatch the diagnostic trace collected at AI decision time
+    if (diagnosticTrace) {
+      dispatch(engineDiagnosticTraceAppended(diagnosticTrace));
+    }
+
     dispatch(dispatchEngineCommand(command));
   }, [
     aiMoves,
@@ -1864,58 +1865,6 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     readyAiMulliganDecisionKey,
     visibleHumanMulliganAnimation,
     visibleMulliganExitAnimation,
-  ]);
-
-  // cFp25: collect v1 decision traces after AI dispatch.
-  // This runs after the AI command dispatch and does not affect move selection.
-  useEffect(() => {
-    if (!engine.match || engine.match.phase === "game_end") {
-      return;
-    }
-    if (engine.aiPolicyId !== "legal-heuristic-v1") {
-      return;
-    }
-    // Collect a trace for each command that the AI just dispatched.
-    // We use the last command in history as the signal that an AI decision was made.
-    const lastRecord = engine.commandHistory.at(-1);
-    if (!lastRecord) {
-      return;
-    }
-    const commandSequence = engine.commandHistory.length;
-    try {
-      const runtimeCatalog = engine.runtimeCatalog ?? { cards: [], leaders: [] };
-      const observation = buildSeatObservation({
-        state: engine.match,
-        seatId: aiSeat,
-        catalogCards: runtimeCatalog.cards,
-        catalogLeaders: runtimeCatalog.leaders,
-      });
-      const aiMoves = getLegalMoves({
-        state: engine.match,
-        seatId: aiSeat,
-        catalogCards: runtimeCatalog.cards,
-        catalogLeaders: runtimeCatalog.leaders,
-      });
-      const traceInput: import("@/game/ai").EnginePolicyInput = {
-        seatId: aiSeat,
-        observation,
-        legalMoves: aiMoves,
-      };
-      const trace = collectV1DecisionTrace(traceInput, commandSequence);
-      if (trace) {
-        dispatch(engineDiagnosticTraceAppended(trace));
-      }
-    } catch {
-      // Trace collection is best-effort; errors must not break the game.
-    }
-  }, [
-    engine.commandHistory.length,
-    engine.match,
-    engine.runtimeCatalog,
-    engine.status,
-    engine.aiPolicyId,
-    aiSeat,
-    dispatch,
   ]);
 
   // cFp25: explicit diagnostics export handler.

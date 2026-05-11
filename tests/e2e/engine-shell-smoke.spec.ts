@@ -2404,3 +2404,103 @@ test("authentic match opens a one-time look_three_cards reveal modal (cCp28)", a
 
   expect(pageErrors).toEqual([]);
 });
+
+test("cFp25 Playwright: product diagnostics copy/download with legal-heuristic-v1", async ({ page }) => {
+  const pageErrors = collectPageErrors(page);
+
+  // Mock clipboard.writeText to capture what gets copied
+  await page.addInitScript(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (globalThis as any).__capturedClipboard = "";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (navigator as any).clipboard = {
+      writeText: (text: string) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (globalThis as any).__capturedClipboard = text;
+        return Promise.resolve();
+      },
+    };
+  });
+
+  // Start a match with legal-heuristic-v1
+  await page.goto("/?ai=legal-heuristic-v1&seed=cfp25-browser");
+
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+
+  // Pick a deck and start
+  await page.getByTestId("authentic-pregame-begin").click();
+  await confirmAuthenticMulliganAndStartMatch(page);
+
+  // Wait for at least one AI decision by waiting for pass to become enabled
+  await expect(
+    page.getByTestId("authentic-pass"),
+    "human pass should become enabled after AI decision",
+  ).toBeEnabled({ timeout: 20000 });
+
+  // Click pass to trigger round resolution
+  await page.getByTestId("authentic-pass").click();
+  await expect(page.getByTestId("authentic-resolve-round")).toBeVisible({ timeout: 20000 });
+
+  // cFp25: verify diagnostics panel exists and controls are present
+  await expect(page.getByTestId("authentic-diagnostics-panel")).toBeVisible();
+
+  // cFp25: the diagnostics summary should show trace count
+  const diagnosticsSummary = page.getByTestId("authentic-diagnostics-panel").locator(".authentic-diagnostics__summary");
+  await expect(diagnosticsSummary).toContainText(/trace/i);
+
+  // cFp25: copy diagnostics button exists and is enabled
+  const copyButton = page.getByTestId("authentic-copy-diagnostics");
+  await expect(copyButton).toBeEnabled();
+
+  // cFp25: click copy and verify content via mocked clipboard
+  await copyButton.click();
+  await expect(page.getByTestId("authentic-diagnostics-copy-status")).toContainText(/copied/i);
+
+  // cFp25: wait for clipboard capture, then verify schema/policy/trace
+  await page.waitForTimeout(300);
+  const capturedClipboard = await page.evaluate(() => (globalThis as unknown as Record<string, unknown>).__capturedClipboard as string | undefined);
+  expect(typeof capturedClipboard).toBe("string");
+  if (capturedClipboard) {
+    const parsed = JSON.parse(capturedClipboard);
+    expect(parsed.schemaVersion).toBe("gwent-product-playtest-diagnostics-v1");
+    expect(parsed.aiPolicyId).toBe("legal-heuristic-v1");
+    expect(parsed.decisionTraces).toBeInstanceOf(Array);
+    expect(parsed.decisionTraces.length).toBeGreaterThan(0);
+
+    // Verify at least one trace has expected fields
+    const firstTrace = parsed.decisionTraces[0];
+    expect(firstTrace.schemaVersion).toBe("ai-decision-trace-v1");
+    expect(firstTrace.policyId).toBe("legal-heuristic-v1");
+    expect(firstTrace.decisionIndex).toBeDefined();
+    expect(firstTrace.publicState).toBeDefined();
+
+    // cFp25: verify no hidden-info hazards in exported content
+    const exportText = JSON.stringify(parsed);
+    expect(exportText).not.toMatch(/seat_[ab]:\d{3}:/);
+    expect(exportText).not.toMatch(/instanceId|sourceId|cardsById|finalState|commandLog|ownHand|opponentHand/);
+
+    // Candidate labels should be redacted (no hidden AI card names)
+    for (const trace of parsed.decisionTraces) {
+      if (trace.candidates) {
+        for (const candidate of trace.candidates) {
+          if (candidate.kind === "play_card") {
+            expect(candidate.cardLabel).toBe("hidden hand play");
+          }
+        }
+      }
+    }
+
+    // hiddenInfoSafetyScan should pass
+    expect(parsed.hiddenInfoSafetyScan.passed).toBe(true);
+  }
+
+  // cFp25: download diagnostics button exists
+  const downloadButton = page.getByTestId("authentic-download-diagnostics");
+  await expect(downloadButton).toBeEnabled();
+
+  // cFp25: no raw hidden info leaks in page text
+  const matchPageText = await visiblePageText(page);
+  expect(matchPageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:|seat_[ab]:card:/);
+
+  expect(pageErrors).toEqual([]);
+});

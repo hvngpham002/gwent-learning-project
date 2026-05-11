@@ -469,8 +469,8 @@ describe("engine Redux adapter", () => {
     );
 
     store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_a", cardIds: [] }));
-    const aiCommand = getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a");
-    expect(aiCommand?.type).toBe("ChooseMulligan");
+    const aiResult = getLegalHeuristicAiCommand(store.getState().engine, "seat_b", "seat_a");
+    expect(aiResult.command?.type).toBe("ChooseMulligan");
     store.dispatch(dispatchEngineCommand({ type: "ChooseMulligan", seatId: "seat_b", cardIds: [] }));
     passAiIfNeeded(store);
 
