@@ -135,6 +135,16 @@ const buildPhaseTrace = (
   };
 };
 
+// cFp26: check whether the selected move is a non-pass catch-up play.
+// The reason text must not claim "catch-up move" when the selected move
+// is actually `pass`, even if a top candidate would have been a catch-up.
+const isCatchUpPlay = (move: LegalMove | null): boolean => {
+  if (!move) return false;
+  if (move.kind === "pass") return false;
+  // A catch-up play is any non-pass, non-phase move (play_card, use_leader).
+  return move.kind === "play_card" || move.kind === "use_leader";
+};
+
 // Build trace for playing phase
 const buildPlayingPhaseTrace = (
   features: LegalHeuristicV1Features,
@@ -175,7 +185,8 @@ const buildPlayingPhaseTrace = (
   const sorted = [...candidates].sort((a, b) => b.score - a.score);
   const topCandidates = sorted.slice(0, 5);
 
-  // Build reason string using the same policy logic
+  // Build reason string using the same policy logic, cFp26: use the
+  // *selected* move to decide whether the reason claims a catch-up.
   let reason = "";
   let reasonKind = "policy";
   if (!move || !features.passMove) {
@@ -185,7 +196,8 @@ const buildPlayingPhaseTrace = (
       reason = "opponent passed and ahead — pass";
     } else {
       const bestMove = sorted[0];
-      reason = bestMove
+      const selectedIsCatchUp = isCatchUpPlay(move);
+      reason = selectedIsCatchUp && bestMove
         ? `opponent passed, behind — catch-up move (score ${bestMove.score})`
         : "opponent passed, behind — no useful move, pass";
     }
@@ -196,7 +208,8 @@ const buildPlayingPhaseTrace = (
       reasonKind = "policy-last-gem";
     } else {
       const bestMove = sorted[0];
-      reason = bestMove
+      const selectedIsCatchUp = isCatchUpPlay(move);
+      reason = selectedIsCatchUp && bestMove
         ? `last gem, behind — attempt catch-up (score ${bestMove.score})`
         : "last gem, behind — no useful move";
       reasonKind = "policy-last-gem";

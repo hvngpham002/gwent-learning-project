@@ -133,12 +133,18 @@ export const buildSeatObservation = ({
   const seat = state.seats[seatId];
   const opponent = state.seats[opponentSeatId];
 
+  // cFp26: expose public faction info for tie-aware catch-up logic.
+  const ownFaction = seat.faction;
+  const opponentFaction = opponent.faction;
+
   return {
     seatId,
     opponentSeatId,
     phase: state.phase,
     round: state.round,
     currentTurn: state.currentTurn,
+    ownFaction,
+    opponentFaction,
     ownHand: summarizeCards(state, seat.hand, cardsBySourceId),
     ownLeader: {
       leaderCardId: seat.leader,

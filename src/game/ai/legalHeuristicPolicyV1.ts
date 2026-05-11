@@ -19,6 +19,17 @@ import type {
 
 const MIN_USEFUL_MOVE_SCORE = 25;
 
+// cFp26: Nilfgaard tie-win awareness matching engine round-resolution rules.
+// The engine treats tied scores as: if exactly one seat is Nilfgaard, that
+// Nilfgaard seat wins the tie; if neither or both are Nilfgaard, the round
+// is a draw (tie does not win).
+const ownWinsTiedRound = (features: LegalHeuristicV1Features) =>
+  features.input.observation.ownFaction === "nilfgaard" &&
+  features.input.observation.opponentFaction !== "nilfgaard";
+
+const minimumScoreToWinRound = (features: LegalHeuristicV1Features) =>
+  ownWinsTiedRound(features) ? features.opponentScore : features.opponentScore + 1;
+
 const WEATHER_ROWS_BY_ABILITY: Partial<Record<CatalogAbilityId, readonly CatalogRow[]>> = {
   frost: ["close"],
   fog: ["ranged"],
@@ -740,7 +751,7 @@ const chooseCatchUpMove = (features: LegalHeuristicV1Features) => {
           ? cardStrategicValue(features.ownHandByCardId.get(move.sourceCardId))
           : 120,
     }))
-    .filter((candidate) => features.ownScore + candidate.tempo > features.opponentScore && candidate.score > -100);
+    .filter((candidate) => features.ownScore + candidate.tempo >= minimumScoreToWinRound(features) && candidate.score > -100);
 
   if (candidates.length === 0) {
     return null;
@@ -749,8 +760,8 @@ const chooseCatchUpMove = (features: LegalHeuristicV1Features) => {
   return candidates.sort((left, right) => {
     const costDelta = left.cost - right.cost;
     const overkillDelta =
-      Math.max(0, features.ownScore + left.tempo - features.opponentScore - 1) -
-      Math.max(0, features.ownScore + right.tempo - features.opponentScore - 1);
+      Math.max(0, features.ownScore + left.tempo - minimumScoreToWinRound(features)) -
+      Math.max(0, features.ownScore + right.tempo - minimumScoreToWinRound(features));
     const scoreDelta = right.score - left.score;
     return costDelta || overkillDelta || scoreDelta || byMoveId(left.move, right.move);
   })[0].move;
@@ -770,7 +781,7 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
     }
 
     const upperBound = features.ownScore + uniqueCardTempoUpperBound(features);
-    if (passMove && (features.ownGems > 1 || upperBound <= features.opponentScore)) {
+    if (passMove && (features.ownGems > 1 || upperBound < minimumScoreToWinRound(features))) {
       return passMove;
     }
 
@@ -779,7 +790,7 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
 
   if (features.ownGems <= 1 && features.scoreDelta < 0 && passMove) {
     const upperBound = features.ownScore + uniqueCardTempoUpperBound(features);
-    if (upperBound <= features.opponentScore) {
+     if (upperBound < minimumScoreToWinRound(features)) {
       return passMove;
     }
   }

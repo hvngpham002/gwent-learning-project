@@ -226,6 +226,40 @@ approximate heuristic (`ownScore + opponentHandCount * 50`). The heuristic
 value is still available as `diagnosticApproxUpperBound` for reference.
 `lastGemSurrenderAllowed` is based on `policyLastGemUpperBound`.
 
+### Nilfgaard Tie-Aware Catch-Up (cFp26)
+
+cFp26 repairs two issues exposed by a product playtest export:
+
+1. `legal-heuristic-v1` previously treated a reachable tied score as
+   insufficient when deciding whether catch-up is possible. This is wrong
+   for Nilfgaard, because Nilfgaard wins tied rounds when exactly one
+   seat is Nilfgaard.
+2. The diagnostic reason text could say `"catch-up move"` even when the
+   selected move was `pass`.
+
+The fix adds public faction awareness (`ownFaction`, `opponentFaction`) to
+`SeatObservation` and introduces tie-aware helpers in the v1 policy:
+
+```ts
+const ownWinsTiedRound = (features) =>
+  features.input.observation.ownFaction === "nilfgaard" &&
+  features.input.observation.opponentFaction !== "nilfgaard";
+
+const minimumScoreToWinRound = (features) =>
+  ownWinsTiedRound(features)
+    ? features.opponentScore         // tie is enough — Nilfgaard wins
+    : features.opponentScore + 1;    // must exceed — draw loses
+```
+
+These helpers are used in both the catch-up candidate filter and the
+last-gem impossible-pass gate. The engine rule is: if exactly one seat is
+Nilfgaard, that Nilfgaard seat wins tied rounds; if neither or both are
+Nilfgaard, the round is a draw.
+
+The diagnostic reason text was also fixed: it now checks whether the
+*selected* move is a non-pass catch-up play rather than claiming
+catch-up based on the top sorted candidate alone.
+
 What tracing CAN explain:
 - Which move was selected and its score relative to alternatives.
 - Why pass was safe or unsafe (score delta, opponent hand pressure,

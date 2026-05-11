@@ -96,6 +96,8 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
       humanDeckPresetId: selectedDeck.presetId,
       humanDeckPreset: localDeck,
       opponentDeckPresetId,
+      // cFp26: pass opponent faction for diagnostic export.
+      opponentDeckFaction: selectedOpponent.faction,
       roundId,
       formatId,
       seed,

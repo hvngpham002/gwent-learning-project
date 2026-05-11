@@ -167,6 +167,8 @@ const baseObservation = (overrides: Partial<SeatObservation> = {}): SeatObservat
   phase: "playing",
   round: 1,
   currentTurn: "seat_b",
+  ownFaction: "nilfgaard",
+  opponentFaction: "northern_realms",
   ownHand: [],
   ownLeader: {
     leaderCardId: "leader-b",
@@ -1781,5 +1783,165 @@ describe("cFp25: AI decision trace", () => {
     const traceJson = JSON.stringify(trace);
     expect(traceJson).not.toContain("draug");
     expect(traceJson).not.toContain(draug.sourceId);
+  });
+});
+
+describe("cFp26: tie-aware catch-up for Nilfgaard", () => {
+  const nilfgaardObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation =>
+    baseObservation({
+      ownFaction: "nilfgaard",
+      opponentFaction: "northern_realms",
+      ...overrides,
+    });
+
+  const northernObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation =>
+    baseObservation({
+      ownFaction: "northern_realms",
+      opponentFaction: "nilfgaard",
+      ...overrides,
+    });
+
+  const doubleNilfgaardObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation =>
+    baseObservation({
+      ownFaction: "nilfgaard",
+      opponentFaction: "nilfgaard",
+      ...overrides,
+    });
+
+  it("Nilfgaard last gem can tie: AI plays when upper bound ties opponent score", () => {
+    // Nilfgaard AI: ownScore=0, opponentScore=10, upperBound=10 (can tie)
+    // With tie-aware logic, Nilfgaard wins ties, so upperBound >= minimumScoreToWinRound (10)
+    const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 10 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([passMove(), playMove(playCard)], {
+        ...nilfgaardObservation({
+          ownHand: [playCard],
+          ownGems: 1,
+          score: {
+            ...nilfgaardObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 0 },
+          },
+        }),
+      }),
+    );
+    // Should NOT be pass — Nilfgaard can tie and win
+    expect(selected?.kind).not.toBe("pass");
+  });
+
+  it("Non-Nilfgaard last gem cannot tie: AI passes when upper bound only ties", () => {
+    // Northern Realms AI: ownScore=0, opponentScore=10, upperBound=10
+    // Non-Nilfgaard needs to EXCEED, so upperBound=10 is not enough (needs 11)
+    const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 10 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([passMove(), playMove(playCard)], {
+        ...northernObservation({
+          ownHand: [playCard],
+          ownGems: 1,
+          score: {
+            ...northernObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 0 },
+          },
+        }),
+      }),
+    );
+    // Should be pass — Northern Realms needs >10 to win, 10 is only a tie
+    expect(selected?.kind).toBe("pass");
+  });
+
+  it("Double-Nilfgaard tie does not win: both Nilfgaard means draw on tie", () => {
+    // Both seats are Nilfgaard: tie = draw, so need >10 to win
+    const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 10 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([passMove(), playMove(playCard)], {
+        ...doubleNilfgaardObservation({
+          ownHand: [playCard],
+          ownGems: 1,
+          score: {
+            ...doubleNilfgaardObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 0 },
+          },
+        }),
+      }),
+    );
+    // Should pass — double-Nilfgaard tie is draw, 10 is not enough
+    expect(selected?.kind).toBe("pass");
+  });
+
+  it("Nilfgaard below tie remains impossible: upper bound below opponent score", () => {
+    const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 8 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([passMove(), playMove(playCard)], {
+        ...nilfgaardObservation({
+          ownHand: [playCard],
+          ownGems: 1,
+          score: {
+            ...nilfgaardObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 0 },
+          },
+        }),
+      }),
+    );
+    // upperBound = 8 < 10, so should pass
+    expect(selected?.kind).toBe("pass");
+  });
+
+  it("Opponent-passed catch-up threshold: Nilfgaard can tie to win", () => {
+    // Opponent passed, Nilfgaard behind by exactly tie-able amount
+    const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 5 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([passMove(), playMove(playCard)], {
+        ...nilfgaardObservation({
+          ownHand: [playCard],
+          opponentPassed: true,
+          score: {
+            ...nilfgaardObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 0 },
+          },
+        }),
+      }),
+    );
+    // Nilfgaard can tie (5 = 5), and Nilfgaard wins ties → should attempt catch-up, not pass
+    expect(selected?.kind).toBe("play_card");
+  });
+});
+
+describe("cFp26: diagnostic reason text matches selected move", () => {
+  it("Opponent passed, AI behind, selected is pass: reason must not claim catch-up move", () => {
+    // AI is behind opponent passed, but no useful move → selects pass
+    const small = testCard({ cardId: "small", sourceId: "test.small", printedStrength: 1 });
+    const { trace } = explainLegalHeuristicV1Decision(
+      policyInput(
+        [passMove(), playMove(small)],
+        {
+          ...baseObservation({
+            ownFaction: "northern_realms",
+            opponentFaction: "nilfgaard",
+          }),
+          ownHand: [small],
+          opponentPassed: true,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 50, seat_b: 0 },
+          },
+        },
+      ),
+    );
+    expect(trace.selected?.kind).toBe("pass");
+    expect(trace.reason).not.toContain("catch-up move");
+  });
+
+  it("Hidden-info safety: trace must not contain raw instance IDs or card names", () => {
+    const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+    const { trace } = explainLegalHeuristicV1Decision(
+      policyInput(
+        [passMove(), playMove(spy)],
+        { ownHand: [spy] },
+      ),
+    );
+    const traceJson = JSON.stringify(trace);
+    expect(traceJson).not.toContain("seat_a:");
+    expect(traceJson).not.toContain("seat_b:");
+    expect(traceJson).not.toContain("sourceId");
+    expect(traceJson).not.toContain("test.spy");
   });
 });

@@ -22,6 +22,9 @@ export interface AuthenticMatchSetupConfig {
   readonly humanDeckPresetId: string;
   readonly humanDeckPreset?: CatalogDeckPreset;
   readonly opponentDeckPresetId: string;
+  // cFp26: optional opponent deck faction for diagnostic export.
+  // Stored as a string (not the full preset) to avoid type mismatches.
+  readonly opponentDeckFaction?: CatalogFaction;
   readonly modeId: "human-vs-ai";
   readonly roundId: "standard";
   readonly formatId: "best-of-3";
@@ -264,6 +267,8 @@ export const buildSetupConfig = (input: {
   readonly humanDeckPresetId: string;
   readonly humanDeckPreset?: CatalogDeckPreset;
   readonly opponentDeckPresetId: string;
+  // cFp26: optional opponent deck faction for diagnostic faction export.
+  readonly opponentDeckFaction?: CatalogFaction;
   readonly roundId: "standard";
   readonly formatId: "best-of-3";
   readonly seed: string;
@@ -282,7 +287,10 @@ export const buildSetupConfig = (input: {
     ...(input.catalogCards ? { catalogCards: input.catalogCards } : {}),
     ...(input.catalogLeaders ? { catalogLeaders: input.catalogLeaders } : {}),
   };
-  return input.humanDeckPreset ? { ...config, humanDeckPreset: input.humanDeckPreset } : config;
+  const withHuman = input.humanDeckPreset ? { ...config, humanDeckPreset: input.humanDeckPreset } : config;
+  return input.opponentDeckFaction
+    ? { ...withHuman, opponentDeckFaction: input.opponentDeckFaction }
+    : withHuman;
 };
 
 export const setupConfigToStartEngineOptions = (config: AuthenticMatchSetupConfig): StartEngineMatchOptions => ({

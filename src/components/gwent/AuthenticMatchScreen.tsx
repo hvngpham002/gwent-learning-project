@@ -1874,6 +1874,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       return;
     }
     const humanPreset = setupConfig?.humanDeckPreset ?? null;
+    // cFp26: populate aiDeckFaction from the opponent deck faction when available.
     const exportData = buildProductDiagnosticExport({
       aiPolicyId: engine.aiPolicyId,
       matchSeed: engine.match.rng.seed ?? null,
@@ -1882,7 +1883,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       humanDeckFaction: humanPreset?.faction ?? null,
       aiDeckPresetId: setupConfig?.opponentDeckPresetId ?? null,
       aiDeckPresetName: setupConfig?.opponentDeckPresetId ?? null,
-      aiDeckFaction: null,
+      aiDeckFaction: setupConfig?.opponentDeckFaction ?? null,
       currentPhase: engine.match.phase,
       currentRound: engine.match.round,
       matchResult: null,
@@ -1905,6 +1906,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       return;
     }
     const humanPreset = setupConfig?.humanDeckPreset ?? null;
+    // cFp26: populate aiDeckFaction from the opponent deck faction when available.
     const exportData = buildProductDiagnosticExport({
       aiPolicyId: engine.aiPolicyId,
       matchSeed: engine.match.rng.seed ?? null,
@@ -1913,7 +1915,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
       humanDeckFaction: humanPreset?.faction ?? null,
       aiDeckPresetId: setupConfig?.opponentDeckPresetId ?? null,
       aiDeckPresetName: setupConfig?.opponentDeckPresetId ?? null,
-      aiDeckFaction: null,
+      aiDeckFaction: setupConfig?.opponentDeckFaction ?? null,
       currentPhase: engine.match.phase,
       currentRound: engine.match.round,
       matchResult: null,

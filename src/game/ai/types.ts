@@ -1,4 +1,4 @@
-import type { CatalogAbilityId, CatalogCardKind, CatalogRow } from "@/game/catalog";
+import type { CatalogAbilityId, CatalogCardKind, CatalogFaction, CatalogRow } from "@/game/catalog";
 import type {
   CardInstanceId,
   LegalMove,
@@ -65,6 +65,10 @@ export interface SeatObservation {
   phase: MatchPhase;
   round: number;
   currentTurn: SeatId;
+  // cFp26: public faction info for Nilfgaard tie-win awareness.
+  // Safe to expose — faction is public information visible to both players.
+  ownFaction: CatalogFaction;
+  opponentFaction: CatalogFaction;
   ownHand: SeatCardSummary[];
   ownLeader: {
     leaderCardId: CardInstanceId | null;

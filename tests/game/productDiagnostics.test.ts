@@ -247,6 +247,78 @@ describe("cFp25: product diagnostic export", () => {
   });
 });
 
+describe("cFp26: aiDeckFaction metadata in diagnostic export", () => {
+  it("Nilfgaard AI preset populates aiDeckFaction as nilfgaard", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "ep4-mp13i5kv",
+      humanDeckPresetId: "current-northern-realms-starter",
+      humanDeckPresetName: "Current Northern Realms",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "current-nilfgaard",
+      aiDeckPresetName: "Current Nilfgaard",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [],
+      warnings: [],
+    });
+
+    expect(exportData.aiDeckFaction).toBe("nilfgaard");
+    expect(exportData.humanDeckFaction).toBe("northern_realms");
+  });
+
+  it("null aiDeckFaction when faction genuinely unknown", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "test-unknown",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test",
+      aiDeckFaction: null,
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [],
+      warnings: [],
+    });
+
+    expect(exportData.aiDeckFaction).toBeNull();
+  });
+
+  it("hidden-info safety scan still passes with aiDeckFaction populated", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "test-safety",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test-nilfgaard",
+      aiDeckPresetName: "Test Nilfgaard",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const json = JSON.stringify(exportData);
+    expect(json).not.toContain("seat_a:");
+    expect(json).not.toContain("seat_b:");
+  });
+});
+
 describe("cFp25: diagnostic trace accumulator in Redux", () => {
   it("resets diagnostic traces on engine match start", () => {
     const store = createTestStore();
