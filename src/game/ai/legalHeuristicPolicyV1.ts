@@ -278,7 +278,7 @@ const mulliganRedrawConfidence = (features: LegalHeuristicV1Features, card: Seat
   return 0;
 };
 
-const chooseMulliganMove = (features: LegalHeuristicV1Features) => {
+export const chooseMulliganMove = (features: LegalHeuristicV1Features) => {
   const keepMove = features.mulliganMoves.find((move) => move.cardIds.length === 0) ?? null;
   const candidates: MulliganCandidateRank[] = features.mulliganMoves.flatMap((move) => {
     if (move.cardIds.length !== 1) {
@@ -382,7 +382,7 @@ const chooseLowestPromptSetValue = (features: LegalHeuristicV1Features, moves: r
     return scoreDelta || cardCountDelta || byMoveId(left, right);
   })[0] ?? null;
 
-const choosePromptMove = (features: LegalHeuristicV1Features) => {
+export const choosePromptMove = (features: LegalHeuristicV1Features) => {
   const moves = features.promptMoves;
   if (moves.length === 0) {
     return null;
@@ -577,7 +577,7 @@ function estimateLeaderTempo(features: LegalHeuristicV1Features, move: UseLeader
   }
 }
 
-const scoreWeatherPlayMove = (features: LegalHeuristicV1Features, card: SeatCardSummary) => {
+export const scoreWeatherPlayMove = (features: LegalHeuristicV1Features, card: SeatCardSummary) => {
   if (hasAbility(card, "clear_weather")) {
     const swing = clearWeatherSwing(features);
     return swing > 0 ? 160 + swing * 20 : -260;
@@ -588,13 +588,13 @@ const scoreWeatherPlayMove = (features: LegalHeuristicV1Features, card: SeatCard
   return swing > 0 ? 170 + swing * 25 : -260 + swing * 20;
 };
 
-const scoreScorchMove = (features: LegalHeuristicV1Features, card: SeatCardSummary) => {
+export const scoreScorchMove = (features: LegalHeuristicV1Features, card: SeatCardSummary) => {
   const rows = card.abilities.flatMap((ability) => SCORCH_ROWS_BY_ABILITY[ability] ?? []);
   const swing = scorchSwing(features, rows.length > 0 ? rows : null);
   return swing > 0 ? 230 + swing * 20 : -320 + swing * 20;
 };
 
-const scoreDecoyMove = (features: LegalHeuristicV1Features, move: PlayCardMove) => {
+export const scoreDecoyMove = (features: LegalHeuristicV1Features, move: PlayCardMove) => {
   const target = targetCardForMove(features, move);
   if (!target) {
     return -120;
@@ -607,7 +607,7 @@ const scoreDecoyMove = (features: LegalHeuristicV1Features, move: PlayCardMove) 
   return score;
 };
 
-const scorePlayMove = (features: LegalHeuristicV1Features, move: PlayCardMove) => {
+export const scorePlayMove = (features: LegalHeuristicV1Features, move: PlayCardMove) => {
   const card = features.ownHandByCardId.get(move.sourceCardId);
   if (!card) {
     return -500;
@@ -654,7 +654,7 @@ const scorePlayMove = (features: LegalHeuristicV1Features, move: PlayCardMove) =
   return score;
 };
 
-const scoreLeaderMove = (features: LegalHeuristicV1Features, move: UseLeaderMove) => {
+export const scoreLeaderMove = (features: LegalHeuristicV1Features, move: UseLeaderMove) => {
   const tempo = estimateLeaderTempo(features, move);
   switch (move.metadata.ability) {
     case "clear_weather":
@@ -684,7 +684,7 @@ const scoreLeaderMove = (features: LegalHeuristicV1Features, move: UseLeaderMove
   }
 };
 
-const scoreMove = (features: LegalHeuristicV1Features, move: PlayCardMove | UseLeaderMove) =>
+export const scoreMove = (features: LegalHeuristicV1Features, move: PlayCardMove | UseLeaderMove) =>
   move.kind === "play_card" ? scorePlayMove(features, move) : scoreLeaderMove(features, move);
 
 const bestUsefulMove = (features: LegalHeuristicV1Features) => {
@@ -756,7 +756,7 @@ const chooseCatchUpMove = (features: LegalHeuristicV1Features) => {
   })[0].move;
 };
 
-const choosePlayingMove = (features: LegalHeuristicV1Features) => {
+export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
   const passMove = features.passMove;
 
   if (features.opponentPassed) {

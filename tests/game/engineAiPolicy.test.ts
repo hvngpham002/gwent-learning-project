@@ -11,6 +11,7 @@ import {
 import {
   buildSeatObservation,
   commandFromLegalMove,
+  explainLegalHeuristicV1Decision,
   legalHeuristicPolicyV0,
   legalHeuristicPolicyV1,
   DEFAULT_PRODUCT_AI_POLICY_ID,
@@ -1385,6 +1386,250 @@ describe("engine AI policy", () => {
       seatId: "seat_b",
       promptId: "prompt:ai:controller",
       optionId: "pick:high",
+    });
+  });
+});
+
+describe("cFp25: AI decision trace", () => {
+  it("explainLegalHeuristicV1Decision returns the same move as selectMove for mulligan", () => {
+    const roach = testCard({ cardId: "roach", sourceId: "neutral.roach", printedStrength: 3 });
+    const geralt = testCard({
+      cardId: "geralt",
+      sourceId: "neutral.geralt-of-rivia",
+      printedStrength: 15,
+      kind: "hero",
+      abilities: ["muster_roach"],
+      linkedSourceIds: ["neutral.roach"],
+    });
+
+    const input = policyInput(
+      [keepMulliganMove(), redrawMove(geralt), redrawMove(roach)],
+      { phase: "mulligan", ownHand: [geralt, roach] },
+    );
+
+    const { move: tracedMove } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { move: LegalMove | null };
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+
+    expect(tracedMove).toEqual(selectedMove);
+    expect(tracedMove?.kind).toBe("choose_mulligan");
+  });
+
+  it("explainLegalHeuristicV1Decision returns the same move as selectMove for play card", () => {
+    const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+    const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 5 });
+
+    const input = policyInput(
+      [passMove(), playMove(spy), playMove(unit)],
+      { ownHand: [spy, unit] },
+    );
+
+    const { move: tracedMove } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { move: LegalMove | null };
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+
+    expect(tracedMove).toEqual(selectedMove);
+    expect(tracedMove?.kind).toBe("play_card");
+  });
+
+  it("explainLegalHeuristicV1Decision returns the same move as selectMove for pass", () => {
+    const large = testCard({ cardId: "large", sourceId: "test.large", printedStrength: 10 });
+
+    const input = policyInput(
+      [passMove(), playMove(large)],
+      {
+        ownHand: [large],
+        opponentPassed: true,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 10 },
+        },
+      },
+    );
+
+    const { move: tracedMove } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { move: LegalMove | null };
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+
+    expect(tracedMove).toEqual(selectedMove);
+    expect(tracedMove?.kind).toBe("pass");
+  });
+
+  it("explainLegalHeuristicV1Decision returns the same move as selectMove for leader move", () => {
+    const frost = testCard({
+      cardId: "weather",
+      sourceId: "neutral.biting-frost",
+      printedStrength: 0,
+      kind: "special",
+      abilities: ["frost"],
+    });
+
+    const input = policyInput(
+      [passMove(), leaderMove("clear_weather")],
+      {
+        weather: [frost],
+        score: {
+          ...baseObservation().score,
+          cards: [
+            {
+              cardId: "own-weathered",
+              sourceId: "test.own.weathered",
+              seatId: "seat_b",
+              row: "close",
+              cardKind: "unit",
+              isUnit: true,
+              isHero: false,
+              printedStrength: 8,
+              afterWeather: 1,
+              spyMultiplier: 1,
+              afterSpyMultiplier: 1,
+              tightBondMultiplier: 1,
+              afterTightBond: 8,
+              moraleBonus: 0,
+              afterMorale: 1,
+              hornMultiplier: 1,
+              finalStrength: 1,
+              eligibleForScorch: false,
+              modifiers: ["weather:frost"],
+            },
+          ],
+        },
+      },
+    );
+
+    const { move: tracedMove } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { move: LegalMove | null };
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+
+    expect(tracedMove).toEqual(selectedMove);
+    expect(tracedMove?.kind).toBe("use_leader");
+  });
+
+  it("explainLegalHeuristicV1Decision returns the same move as selectMove for prompt", () => {
+    const brute = testCard({ cardId: "brute", sourceId: "test.brute", printedStrength: 10 });
+
+    const input = policyInput(
+      [promptMove("revive:brute", "medic", {
+        kind: "card_instance",
+        side: "own",
+        seatId: "seat_b",
+        cardId: brute.cardId,
+        row: "close",
+      })],
+      {
+        pendingPrompt: {
+          promptId: "prompt:test",
+          seatId: "seat_b",
+          kind: "medic_revive",
+          abilityId: "medic",
+          options: [{ optionId: "revive:brute", label: "brute", targetCard: brute, targetStrength: 10 }],
+        },
+      },
+    );
+
+    const { move: tracedMove } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { move: LegalMove | null };
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+
+    expect(tracedMove).toEqual(selectedMove);
+    expect(tracedMove?.kind).toBe("choose_prompt_option");
+  });
+
+  it("explainLegalHeuristicV1Decision returns the same move as selectMove for resolve_round_end", () => {
+    const input = policyInput(
+      [{ kind: "resolve_round_end", moveId: "resolve-round-end:1", seatId: "seat_b", label: "Resolve", target: { kind: "none" } }],
+    );
+
+    const { move: tracedMove } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { move: LegalMove | null };
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+
+    expect(tracedMove).toEqual(selectedMove);
+    expect(tracedMove?.kind).toBe("resolve_round_end");
+  });
+
+  it("last-gem pass-safety trace includes ownGems, opponentHandCount, score delta, pressure/required-lead", () => {
+    const useful = testCard({ cardId: "useful", sourceId: "test.useful", printedStrength: 8 });
+
+    const input = policyInput(
+      [passMove(), playMove(useful)],
+      {
+        ownHand: [useful],
+        ownGems: 1,
+        opponentHandCount: 5,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 0, seat_b: 24 },
+        },
+      },
+    );
+
+    const { trace } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { trace: import("@/game/ai").AiDecisionTrace };
+
+    expect(trace.schemaVersion).toBe("ai-decision-trace-v1");
+    expect(trace.publicState.ownGems).toBe(1);
+    expect(trace.publicState.opponentHandCount).toBe(5);
+    expect(trace.passAnalysis).not.toBeNull();
+    expect(trace.passAnalysis?.ownGems ?? trace.passAnalysis?.isLastGem).toBeDefined();
+    expect(trace.passAnalysis?.scoreDelta).toBe(24);
+    expect(trace.passAnalysis?.opponentHandPressure).toBeGreaterThan(0);
+    expect(trace.passAnalysis?.requiredLead).toBeGreaterThan(0);
+  });
+
+  it("opponent-passed safe pass trace records pass as selected and explains opponent-passed/ahead", () => {
+    const useful = testCard({ cardId: "useful", sourceId: "test.useful", printedStrength: 8 });
+
+    const input = policyInput(
+      [passMove(), playMove(useful)],
+      {
+        ownHand: [useful],
+        opponentPassed: true,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 10 },
+        },
+      },
+    );
+
+    const { move: tracedMove, trace } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { move: LegalMove | null; trace: import("@/game/ai").AiDecisionTrace };
+
+    expect(tracedMove?.kind).toBe("pass");
+    expect(trace.selected?.kind).toBe("pass");
+    expect(trace.reason).toContain("opponent passed");
+  });
+
+  it("candidate summaries do not contain raw engine instance IDs or hidden AI card labels", () => {
+    const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+    const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 5 });
+
+    const input = policyInput(
+      [passMove(), playMove(spy), playMove(unit)],
+      { ownHand: [spy, unit] },
+    );
+
+    const { trace } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { trace: import("@/game/ai").AiDecisionTrace };
+
+    // The trace should contain candidates (play moves).
+    // None of them should contain raw engine instance IDs like "seat_a:card:0".
+    const traceJson = JSON.stringify(trace);
+    expect(traceJson).not.toMatch(/seat_[ab]:card:/);
+
+    // Candidate labels should be human-readable, not raw IDs.
+    trace.candidates.forEach((candidate) => {
+      expect(candidate.cardLabel).not.toMatch(/seat_[ab]:/);
+      expect(candidate.cardLabel).not.toMatch(/card:\d+/);
     });
   });
 });

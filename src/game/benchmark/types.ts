@@ -52,6 +52,20 @@ export interface BenchmarkMatchRecord {
   errorCode?: string;
   errorMessage?: string;
   stableFingerprint: string;
+  // cFp25: compact decision trace summary (opt-in, hidden-info safe).
+  decisionTraceSummary?: BenchmarkDecisionTraceSummary;
+}
+
+export interface BenchmarkDecisionTraceSummary {
+  totalDecisions: number;
+  passDecisions: number;
+  playDecisions: number;
+  leaderDecisions: number;
+  promptDecisions: number;
+  mulliganDecisions: number;
+  roundEndDecisions: number;
+  avgCandidateCount: number;
+  redactionWarnings: string[];
 }
 
 export interface BenchmarkMatchupSeatDefinition {
@@ -92,6 +106,10 @@ export interface BenchmarkRunInput {
   benchmarkRunId?: string;
   maxSteps?: number;
   includeDebugResults?: boolean;
+  // cFp25: opt-in decision trace summaries for benchmark investigation.
+  // When true, each match record includes a compact trace summary.
+  // Default artifact shape is unchanged when this is false or omitted.
+  includeDecisionTraces?: boolean;
   policies?: BenchmarkPolicyRegistry;
 }
 

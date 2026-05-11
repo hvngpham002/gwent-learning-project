@@ -326,3 +326,8 @@ export const selectEngineLeaderStatus = createSelector(selectEngineMatch, select
       }
     : null,
 );
+
+// cFp25: diagnostic trace selectors.
+export const selectEngineDiagnosticTraces = (state: RootState) => state.engine.diagnosticTraces;
+export const selectEngineDiagnosticWarnings = (state: RootState) => state.engine.diagnosticWarnings;
+export const selectEngineHasDiagnosticTraces = createSelector(selectEngineDiagnosticTraces, (traces) => traces.length > 0);

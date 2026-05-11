@@ -1,7 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getEngineSeedFromSearch } from "@/appMode";
+import {
+  collectV1DecisionTrace,
+  buildSeatObservation,
+} from "@/game/ai";
 import type { CardInstanceId, GameEvent, PlayCardMove, SeatId } from "@/game/core";
+import { getLegalMoves } from "@/game/core";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectEngineAiHandCount,
@@ -32,7 +37,13 @@ import {
   selectEngineStatus,
   selectEngineWeatherCards,
 } from "@/store/selectors/engineSelectors";
-import { engineMatchCleared, engineSelectedCardSet, engineSelectionCleared, type EngineCommandRecord } from "@/store/slices/engineSlice";
+import {
+  engineMatchCleared,
+  engineSelectedCardSet,
+  engineSelectionCleared,
+  engineDiagnosticTraceAppended,
+  type EngineCommandRecord,
+} from "@/store/slices/engineSlice";
 import { dispatchEngineCommand, resolveEngineRoundEnd, startEngineMatch } from "@/store/thunks/engineThunks";
 
 import {
@@ -50,6 +61,11 @@ import {
   summarizeRoundHistory,
 } from "../game/engine/engineShellViewModels";
 import { getLegalHeuristicAiCommand } from "../game/engine/legalHeuristicAiController";
+import {
+  buildProductDiagnosticExport,
+  copyDiagnosticExport,
+  downloadDiagnosticExport,
+} from "./matchDiagnostics";
 import AuthenticCard from "./AuthenticCard";
 import AuthenticCardBack from "./AuthenticCardBack";
 import AuthenticLeaderCard from "./AuthenticLeaderCard";
@@ -1539,6 +1555,8 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const [aiMulliganBaseHand, setAiMulliganBaseHand] = useState<AiMulliganBaseHand | null>(null);
   const [isStartMatchModalDismissed, setStartMatchModalDismissed] = useState(false);
   const [matchPresentationRun, setMatchPresentationRun] = useState(0);
+  // cFp25: diagnostic export UI state.
+  const [diagnosticsCopyStatus, setDiagnosticsCopyStatus] = useState<"idle" | "copied" | "failed">("idle");
   const engine = useAppSelector(selectEngineState);
   const match = useAppSelector(selectEngineMatch);
   const status = useAppSelector(selectEngineStatus);
@@ -1847,6 +1865,124 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     visibleHumanMulliganAnimation,
     visibleMulliganExitAnimation,
   ]);
+
+  // cFp25: collect v1 decision traces after AI dispatch.
+  // This runs after the AI command dispatch and does not affect move selection.
+  useEffect(() => {
+    if (!engine.match || engine.match.phase === "game_end") {
+      return;
+    }
+    if (engine.aiPolicyId !== "legal-heuristic-v1") {
+      return;
+    }
+    // Collect a trace for each command that the AI just dispatched.
+    // We use the last command in history as the signal that an AI decision was made.
+    const lastRecord = engine.commandHistory.at(-1);
+    if (!lastRecord) {
+      return;
+    }
+    const commandSequence = engine.commandHistory.length;
+    try {
+      const runtimeCatalog = engine.runtimeCatalog ?? { cards: [], leaders: [] };
+      const observation = buildSeatObservation({
+        state: engine.match,
+        seatId: aiSeat,
+        catalogCards: runtimeCatalog.cards,
+        catalogLeaders: runtimeCatalog.leaders,
+      });
+      const aiMoves = getLegalMoves({
+        state: engine.match,
+        seatId: aiSeat,
+        catalogCards: runtimeCatalog.cards,
+        catalogLeaders: runtimeCatalog.leaders,
+      });
+      const traceInput: import("@/game/ai").EnginePolicyInput = {
+        seatId: aiSeat,
+        observation,
+        legalMoves: aiMoves,
+      };
+      const trace = collectV1DecisionTrace(traceInput, commandSequence);
+      if (trace) {
+        dispatch(engineDiagnosticTraceAppended(trace));
+      }
+    } catch {
+      // Trace collection is best-effort; errors must not break the game.
+    }
+  }, [
+    engine.commandHistory.length,
+    engine.match,
+    engine.runtimeCatalog,
+    engine.status,
+    engine.aiPolicyId,
+    aiSeat,
+    dispatch,
+  ]);
+
+  // cFp25: explicit diagnostics export handler.
+  // Generates a product diagnostic export and copies it to clipboard.
+  const handleCopyDiagnostics = useCallback(async () => {
+    if (!engine.match || !engine.match.phase) {
+      return;
+    }
+    const humanPreset = setupConfig?.humanDeckPreset ?? null;
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: engine.aiPolicyId,
+      matchSeed: engine.match.rng.seed ?? null,
+      humanDeckPresetId: setupConfig?.humanDeckPresetId ?? null,
+      humanDeckPresetName: humanPreset?.name ?? null,
+      humanDeckFaction: humanPreset?.faction ?? null,
+      aiDeckPresetId: setupConfig?.opponentDeckPresetId ?? null,
+      aiDeckPresetName: setupConfig?.opponentDeckPresetId ?? null,
+      aiDeckFaction: null,
+      currentPhase: engine.match.phase,
+      currentRound: engine.match.round,
+      matchResult: null,
+      commandHistory: engine.commandHistory,
+      eventLog: engine.eventLog,
+      decisionTraces: engine.diagnosticTraces,
+      warnings: engine.diagnosticWarnings,
+      route: "/",
+    });
+    const ok = await copyDiagnosticExport(exportData);
+    setDiagnosticsCopyStatus(ok ? "copied" : "failed");
+    if (ok) {
+      setTimeout(() => setDiagnosticsCopyStatus("idle"), 2000);
+    }
+  }, [engine, setupConfig]);
+
+  // cFp25: explicit diagnostics download handler.
+  const handleDownloadDiagnostics = useCallback(() => {
+    if (!engine.match || !engine.match.phase) {
+      return;
+    }
+    const humanPreset = setupConfig?.humanDeckPreset ?? null;
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: engine.aiPolicyId,
+      matchSeed: engine.match.rng.seed ?? null,
+      humanDeckPresetId: setupConfig?.humanDeckPresetId ?? null,
+      humanDeckPresetName: humanPreset?.name ?? null,
+      humanDeckFaction: humanPreset?.faction ?? null,
+      aiDeckPresetId: setupConfig?.opponentDeckPresetId ?? null,
+      aiDeckPresetName: setupConfig?.opponentDeckPresetId ?? null,
+      aiDeckFaction: null,
+      currentPhase: engine.match.phase,
+      currentRound: engine.match.round,
+      matchResult: null,
+      commandHistory: engine.commandHistory,
+      eventLog: engine.eventLog,
+      decisionTraces: engine.diagnosticTraces,
+      warnings: engine.diagnosticWarnings,
+      route: "/",
+    });
+    downloadDiagnosticExport(exportData);
+  }, [engine, setupConfig]);
+
+  // cFp25: reset diagnostics on new game start.
+  useEffect(() => {
+    if (matchPresentationRun > 0) {
+      setDiagnosticsCopyStatus("idle");
+    }
+  }, [matchPresentationRun]);
 
   const startNewGame = useCallback(() => {
     setDiscardOpenSeat(null);
@@ -2976,6 +3112,50 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
               </section>
             ) : null}
             <BattleLog entries={battleLogEntries} />
+            {/* cFp25: explicit diagnostics export controls */}
+            {engine.diagnosticTraces.length > 0 && (
+              <section className="authentic-panel authentic-diagnostics" data-testid="authentic-diagnostics-panel">
+                <h2>Playtest Diagnostics</h2>
+                <p className="authentic-diagnostics__summary">
+                  {engine.diagnosticTraces.length} AI decision trace(s) collected.
+                </p>
+                <div className="authentic-diagnostics__actions">
+                  <button
+                    type="button"
+                    className="authentic-btn authentic-btn--primary"
+                    onClick={handleCopyDiagnostics}
+                    disabled={diagnosticsCopyStatus !== "idle"}
+                    data-testid="authentic-copy-diagnostics"
+                    aria-label="copy diagnostics"
+                  >
+                    {diagnosticsCopyStatus === "idle"
+                      ? "copy diagnostics"
+                      : diagnosticsCopyStatus === "copied"
+                        ? "copied!"
+                        : "copy failed"}
+                  </button>
+                  <button
+                    type="button"
+                    className="authentic-btn authentic-btn--ghost"
+                    onClick={handleDownloadDiagnostics}
+                    data-testid="authentic-download-diagnostics"
+                    aria-label="download diagnostics"
+                  >
+                    download diagnostics
+                  </button>
+                </div>
+                {diagnosticsCopyStatus === "copied" ? (
+                  <p className="authentic-diagnostics__status" data-testid="authentic-diagnostics-copy-status">
+                    Diagnostics copied to clipboard.
+                  </p>
+                ) : null}
+                {diagnosticsCopyStatus === "failed" ? (
+                  <p className="authentic-diagnostics__status" data-testid="authentic-diagnostics-copy-status">
+                    Clipboard copy failed. Use download instead.
+                  </p>
+                ) : null}
+              </section>
+            )}
           </aside>
         </div>
         <CardFlightLayer flights={cardFlights} onFlightDone={finishCardFlight} />

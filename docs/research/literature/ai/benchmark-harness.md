@@ -26,6 +26,13 @@ cFp24.1 exposes v1 as an experimental product playtest policy through
 the pre-game `AI policy` selector and `?ai=legal-heuristic-v1`, while the
 product default remains `legal-heuristic-v0`.
 
+cFp25 adds opt-in decision trace summaries to benchmark output for
+playtest investigation. Each match record gains a compact
+`decisionTraceSummary` field when `includeDecisionTraces: true` is
+passed to `runBenchmarkSuite`. The summary contains counts by decision
+type (pass, play, leader, prompt, mulligan, round-end) and is hidden-info
+safe. Default benchmark commands remain unchanged.
+
 The harness is implementation support for the Batch A and Batch B
 decision notes:
 
@@ -204,6 +211,23 @@ default benchmark summary contract.
 The cFp22 script does not expose an `includeDebugResults` option and does
 not serialize unsafe debug results. cFp24 v1 artifacts use the same
 public serializer and hazard-scan contract.
+
+### Opt-In Trace Artifacts (cFp25)
+
+The `includeDecisionTraces: true` flag on `BenchmarkRunInput` enables
+compact decision trace summaries in each `BenchmarkMatchRecord`. The
+summary shape (`BenchmarkDecisionTraceSummary`) contains:
+
+- `totalDecisions`: total AI decisions across the match;
+- `passDecisions`, `playDecisions`, `leaderDecisions`, `promptDecisions`,
+  `mulliganDecisions`, `roundEndDecisions`: counts by decision type;
+- `avgCandidateCount`: average candidate count per decision (approximate);
+- `redactionWarnings`: any redaction warnings from trace collection.
+
+The trace summary is hidden-info safe: it contains only public counts
+and does not include card identities, hand arrays, or instance IDs.
+It is excluded from default benchmark output, preserving backward
+compatibility for existing consumers.
 
 ## Deferred Work
 

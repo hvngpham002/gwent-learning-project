@@ -1577,3 +1577,37 @@ button.authentic-board-card.is-card-target:focus-visible,
     grid-column: 1 / -1;
   }
 }
+
+/* cFp25: diagnostics panel */
+.authentic-diagnostics {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--parchment, #f5f0e1);
+  border: 1px solid var(--ink-3, #8a7e6b);
+  border-radius: 6px;
+}
+
+.authentic-diagnostics h2 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-1, #2c2416);
+}
+
+.authentic-diagnostics__summary {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ink-2, #5c5240);
+}
+
+.authentic-diagnostics__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.authentic-diagnostics__status {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-2, #5c5240);
+}

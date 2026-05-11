@@ -167,6 +167,50 @@ These are fixed-suite evidence, not ratings or proof of broad strength.
 - Glicko, TrueSkill, search, ML training, Python tooling, browser
   benchmark execution, and product difficulty tiers remain deferred.
 
+## Decision Tracing (cFp25)
+
+cFp25 adds a hidden-info-safe decision trace layer that records why v1
+chose each move, without exposing opponent hand identities, AI deck
+order, or raw engine state.
+
+Trace contract:
+
+- `src/game/ai/decisionTrace.ts` defines the `AiDecisionTrace` schema
+  (`ai-decision-trace-v1`), including public state, pass analysis,
+  selected move summary, top candidate summaries (redacted), and a
+  human-readable reason string.
+- `src/game/ai/explainLegalHeuristicV1Decision` is a pure function that
+  calls `legalHeuristicPolicyV1.selectMove` and returns both the same
+  move and a trace. Policy parity is tested: `explainLegalHeuristicV1Decision(input).move`
+  must equal `legalHeuristicPolicyV1.selectMove(input)` for mulligan,
+  prompt, pass, play card, leader, and round-end cases.
+- Traces are accumulated in the Redux engine slice (`diagnosticTraces`)
+  during product matches and reset on rematch/setup.
+- The product match screen (`AuthenticMatchScreen.tsx`) collects traces
+  after each AI decision, provides `copy diagnostics` and
+  `download diagnostics` controls near the battle log, and generates a
+  versioned `gwent-product-playtest-diagnostics-v1` export that includes
+  metadata, command/event summaries, decision traces, and a hidden-info
+  safety scan result.
+- Candidate summaries redact unplayed AI hand card names to
+  `"hidden hand play"`, preventing human players from learning the AI's
+  hidden hand.
+
+What tracing CAN explain:
+- Which move was selected and its score relative to alternatives.
+- Why pass was safe or unsafe (score delta, opponent hand pressure,
+  required lead, last-gem status).
+- Whether a move was a catch-up attempt or a voluntary pass.
+
+What tracing CANNOT explain (by design):
+- Exact opponent hand composition (hidden info).
+- Future hidden deck contents beyond a conservative upper-bound estimate.
+- Hidden opponent leader abilities beyond usage/turn metadata.
+- Multi-turn lookahead that v1 does not compute.
+
+cFp25 is a diagnostics phase, not a tuning phase. No constants,
+thresholds, or decision logic were changed.
+
 ## Planned Follow-Ups
 
 Useful next steps are a narrow v1.1 tuning pass over reviewed v1 ledgers

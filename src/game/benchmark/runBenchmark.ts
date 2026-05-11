@@ -1,6 +1,6 @@
 import { runHeadlessMatchSimulation, type HeadlessMatchSimulationInput, type HeadlessMatchSimulationResult } from "@/game/sim";
 
-import { buildBenchmarkMatchRecord, buildBenchmarkReplayStatus, buildFailedBenchmarkMatchRecord } from "./ledger";
+import { buildBenchmarkDecisionTraceSummary, buildBenchmarkMatchRecord, buildBenchmarkReplayStatus, buildFailedBenchmarkMatchRecord } from "./ledger";
 import { defaultBenchmarkPolicies } from "./policies";
 import { benchmarkSmokeSuiteV1, getBenchmarkSuite } from "./suites";
 import { buildBenchmarkSummary } from "./summaries";
@@ -157,6 +157,10 @@ export const runBenchmarkSuite = (input: BenchmarkRunInput = {}): BenchmarkRunRe
           if (input.includeDebugResults) {
             unsafeDebugResults.push(result);
           }
+          // cFp25: optional decision trace summary for benchmark investigation.
+          const traceSummary = input.includeDecisionTraces
+            ? buildBenchmarkDecisionTraceSummary(result.steps)
+            : undefined;
           records.push(
             buildBenchmarkMatchRecord({
               benchmarkRunId,
@@ -168,6 +172,7 @@ export const runBenchmarkSuite = (input: BenchmarkRunInput = {}): BenchmarkRunRe
               seats: descriptors,
               result,
               replayStatus: buildBenchmarkReplayStatus(result, simulationSeats),
+              traceSummary,
             }),
           );
         } catch (error) {

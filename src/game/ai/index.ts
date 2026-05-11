@@ -4,3 +4,6 @@ export * from "./legalMoveCommands";
 export * from "./legalHeuristicPolicyV0";
 export * from "./legalHeuristicPolicyV1";
 export * from "./productPolicies";
+export * from "./decisionTrace";
+export * from "./explainLegalHeuristicV1Decision";
+export * from "./decisionTraceCollector";

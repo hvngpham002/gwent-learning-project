@@ -2,6 +2,7 @@ import { replayHeadlessMatchCommands } from "@/game/sim";
 import type { HeadlessMatchSimulationInput, HeadlessMatchSimulationResult, SimulationTerminalStatus } from "@/game/sim";
 
 import type {
+  BenchmarkDecisionTraceSummary,
   BenchmarkMatchRecord,
   BenchmarkReplayStatus,
   BenchmarkSeatDescriptor,
@@ -41,6 +42,61 @@ const emptySeatResults = (): Record<"seat_a" | "seat_b", BenchmarkSeatResult> =>
   seat_a: "none",
   seat_b: "none",
 });
+
+// cFp25: build a compact decision trace summary from simulation step logs.
+// This is a public-facing summary, not raw traces — no hidden info leaks.
+export const buildBenchmarkDecisionTraceSummary = (
+  steps: HeadlessMatchSimulationResult["steps"],
+): BenchmarkDecisionTraceSummary => {
+  const counts = {
+    pass: 0,
+    play: 0,
+    leader: 0,
+    prompt: 0,
+    mulligan: 0,
+    roundEnd: 0,
+  };
+
+  steps.forEach((step) => {
+    switch (step.chosenMoveKind) {
+      case "pass":
+        counts.pass += 1;
+        break;
+      case "play_card":
+        counts.play += 1;
+        break;
+      case "use_leader":
+        counts.leader += 1;
+        break;
+      case "choose_prompt_option":
+        counts.prompt += 1;
+        break;
+      case "choose_mulligan":
+        counts.mulligan += 1;
+        break;
+      case "resolve_round_end":
+        counts.roundEnd += 1;
+        break;
+      default:
+        break;
+    }
+  });
+
+  const totalDecisions = Object.values(counts).reduce((sum, v) => sum + v, 0);
+  const avgCandidateCount = steps.length > 0 ? Math.round((steps.length / Math.max(1, totalDecisions)) * 100) / 100 : 0;
+
+  return {
+    totalDecisions,
+    passDecisions: counts.pass,
+    playDecisions: counts.play,
+    leaderDecisions: counts.leader,
+    promptDecisions: counts.prompt,
+    mulliganDecisions: counts.mulligan,
+    roundEndDecisions: counts.roundEnd,
+    avgCandidateCount,
+    redactionWarnings: [],
+  };
+};
 
 const resultBySeat = (winner: BenchmarkMatchRecord["winner"]): BenchmarkMatchRecord["resultBySeat"] => {
   if (winner === "draw") {
@@ -111,6 +167,7 @@ export const buildBenchmarkMatchRecord = ({
   seats,
   result,
   replayStatus,
+  traceSummary,
 }: {
   benchmarkRunId: string;
   suiteId: string;
@@ -121,6 +178,7 @@ export const buildBenchmarkMatchRecord = ({
   seats: Record<"seat_a" | "seat_b", BenchmarkSeatDescriptor>;
   result: HeadlessMatchSimulationResult;
   replayStatus: BenchmarkReplayStatus;
+  traceSummary?: BenchmarkDecisionTraceSummary;
 }): BenchmarkMatchRecord => {
   const roundWinsBySeat = {
     seat_a: result.finalState.roundHistory.filter((round) => round.winner === "seat_a").length,
@@ -156,6 +214,7 @@ export const buildBenchmarkMatchRecord = ({
   return {
     ...baseRecord,
     stableFingerprint: buildStableFingerprint({ record: baseRecord, result }),
+    ...(traceSummary ? { decisionTraceSummary: traceSummary } : {}),
   };
 };
 

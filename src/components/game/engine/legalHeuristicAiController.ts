@@ -60,7 +60,13 @@ export const getLegalHeuristicAiCommand = (
     catalogCards: runtimeCatalog.cards,
     catalogLeaders: runtimeCatalog.leaders,
   });
-  const selectedMove = getProductAiPolicy(engine.aiPolicyId).selectMove({ seatId: aiSeat, observation, legalMoves });
+
+  const policyId = engine.aiPolicyId ?? "legal-heuristic-v0";
+  const selectedMove = getProductAiPolicy(policyId).selectMove({
+    seatId: aiSeat,
+    observation,
+    legalMoves,
+  });
 
   return selectedMove ? commandFromLegalMove(selectedMove) : null;
 };

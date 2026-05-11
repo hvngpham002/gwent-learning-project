@@ -14,6 +14,7 @@ import type {
   MatchState,
   SeatId,
 } from "@/game/core";
+import type { AiDecisionTrace } from "@/game/ai";
 
 export type EngineAdapterStatus =
   | "idle"
@@ -65,6 +66,11 @@ export interface EngineAdapterState {
   selectedMoveId: string | null;
   selectedCardId: CardInstanceId | null;
   selectedCardIds: CardInstanceId[];
+  // cFp25: hidden-info-safe AI decision traces collected during a match.
+  // These are appended by the AI controller and reset on match start.
+  diagnosticTraces: readonly AiDecisionTrace[];
+  // cFp25: warnings from hidden-info redaction during trace collection.
+  diagnosticWarnings: readonly string[];
 }
 
 const defaultSeatMap: EngineAdapterState["seatMap"] = {
@@ -116,6 +122,8 @@ export const createInitialEngineState = (): EngineAdapterState => ({
   selectedMoveId: null,
   selectedCardId: null,
   selectedCardIds: [],
+  diagnosticTraces: [],
+  diagnosticWarnings: [],
 });
 
 const engineSlice = createSlice({
@@ -149,6 +157,8 @@ const engineSlice = createSlice({
       state.selectedMoveId = null;
       state.selectedCardId = null;
       state.selectedCardIds = [];
+      state.diagnosticTraces = [];
+      state.diagnosticWarnings = [];
     },
     engineCommandResolving: (
       state,
@@ -244,6 +254,16 @@ const engineSlice = createSlice({
       state.selectedCardId = null;
       state.selectedCardIds = [];
     },
+    // cFp25: append AI decision traces collected during a match.
+    engineDiagnosticTraceAppended: (state, action: PayloadAction<AiDecisionTrace>) => {
+      // Immer/WritableDraft requires mutable arrays. Spread avoids the
+      // readonly/mutable incompatibility that concat triggers.
+      state.diagnosticTraces = [...state.diagnosticTraces, action.payload];
+    },
+    // cFp25: append hidden-info redaction warnings.
+    engineDiagnosticWarningAdded: (state, action: PayloadAction<string>) => {
+      state.diagnosticWarnings = [...state.diagnosticWarnings, action.payload];
+    },
   },
 });
 
@@ -252,6 +272,8 @@ export const {
   engineCommandApplied,
   engineCommandRejected,
   engineCommandResolving,
+  engineDiagnosticTraceAppended,
+  engineDiagnosticWarningAdded,
   engineMatchCleared,
   engineMatchStarted,
   enginePresentationLockCleared,

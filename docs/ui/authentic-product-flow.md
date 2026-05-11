@@ -177,3 +177,16 @@ Temporary animation debugging is opt-in with query params:
 - `debugAiMulliganCount=0` forces a zero-card AI keep so the hidden-back wave can be inspected. `debugAiMulliganCount=1` forces the AI to choose a legal one-card redraw, and `debugAiMulliganCount=2` spends both AI redraws sequentially, still one card at a time.
 
 Do not use those debug params for normal hidden-info-safe smoke or product review.
+
+## Playtest Diagnostics (cFp25)
+
+cFp25 adds explicit AI decision trace diagnostics to the authentic match surface.
+
+- Traces are collected in-memory in the Redux engine slice (`diagnosticTraces`) after each AI decision when `legal-heuristic-v1` is active. They are reset on rematch/setup.
+- Below the Battle Log in the right rail, when at least one trace exists, a `Playtest Diagnostics` panel shows the trace count and two action buttons: `copy diagnostics` and `download diagnostics`.
+- `copy diagnostics` serialises a versioned `gwent-product-playtest-diagnostics-v1` export to the clipboard and shows a "copied!" confirmation. `download diagnostics` generates a `.json` file download.
+- Both controls are explicit user actions only — no silent persistence, no localStorage writes, no IndexedDB, no server uploads, no file writes.
+- The export includes setup metadata (seed, deck presets, factions, AI policy id), public command/event summaries equivalent to the visible battle log, AI decision traces, and a hidden-info safety scan result.
+- Decision traces use the `ai-decision-trace-v1` schema: public state, pass analysis, selected move summary, top candidate summaries (with hidden AI hand card labels redacted to `"hidden hand play"`), and a human-readable reason string.
+- The `explainLegalHeuristicV1Decision` function guarantees policy parity: its `move` field always equals `legalHeuristicPolicyV1.selectMove(input)` for the same input.
+- AI Lab is not modified by cFp25. It continues to be a read-only research dashboard. Playtest diagnostics are exported from the match screen only.
