@@ -196,6 +196,33 @@ Trace contract:
   `"hidden hand play"`, preventing human players from learning the AI's
   hidden hand.
 
+### Selected Move Label Redaction
+
+All selected move labels are redacted via `safeSelectedMoveLabel` to
+prevent card name leakage from the AI's hidden hand:
+
+- `play_card` → `"hidden hand play"` (never `"Play <card name>"`)
+- `choose_mulligan` → `"mulligan hidden card"` or `"keep hand"`
+- `choose_prompt_option` → `"resolve prompt option"`
+- `use_leader` → `"use leader"`
+- `pass` → `"pass"`
+- `resolve_round_end` → `"resolve round end"`
+
+The `optionId` field was replaced with `optionRef` in `AiDecisionSelectedMove`
+to avoid exposing any potential engine identifiers. Prompt option IDs are
+prompt-local (e.g. `"medic-revive"`, `"clear-weather"`) and do not contain
+card names, but `optionRef` provides an extra safety boundary.
+
+### Policy Last-Gem Upper Bound
+
+cFp25 repair exports `uniqueCardTempoUpperBound` from
+`legalHeuristicPolicyV1` and uses it as `policyLastGemUpperBound` in the
+pass analysis. This matches the policy's own surrender gate logic
+(`ownScore + uniqueCardTempoUpperBound`), replacing the previous
+approximate heuristic (`ownScore + opponentHandCount * 50`). The heuristic
+value is still available as `diagnosticApproxUpperBound` for reference.
+`lastGemSurrenderAllowed` is based on `policyLastGemUpperBound`.
+
 What tracing CAN explain:
 - Which move was selected and its score relative to alternatives.
 - Why pass was safe or unsafe (score delta, opponent hand pressure,

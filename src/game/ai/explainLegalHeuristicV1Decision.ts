@@ -14,6 +14,7 @@ import {
 
 import {
   buildLegalHeuristicV1Features,
+  uniqueCardTempoUpperBound,
   scoreMove,
   scoreLeaderMove,
   legalHeuristicPolicyV1,
@@ -90,18 +91,8 @@ const buildCandidateSummaries = (
   return summaries;
 };
 
-// Compute the v1 unique-card tempo upper bound using exported score helpers.
-const computeV1UpperBound = (
-  features: LegalHeuristicV1Features,
-): number => {
-  const bestTempoByCard = new Map<string, number>();
-  features.playMoves.forEach((move) => {
-    const tempo = Math.max(0, scoreMove(features, move));
-    bestTempoByCard.set(move.sourceCardId, Math.max(bestTempoByCard.get(move.sourceCardId) ?? 0, tempo));
-  });
-  const leaderTempo = Math.max(0, ...features.leaderMoves.map((move) => scoreLeaderMove(features, move)));
-  return [...bestTempoByCard.values()].reduce((sum, tempo) => sum + tempo, 0) + leaderTempo;
-};
+// Alias for clarity — delegates to the policy's own implementation.
+const computeV1UpperBound = uniqueCardTempoUpperBound;
 
 // Build trace for non-playing phases (mulligan, prompt, round_end)
 const buildPhaseTrace = (

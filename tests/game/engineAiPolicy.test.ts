@@ -1642,4 +1642,66 @@ describe("cFp25: AI decision trace", () => {
     expect(trace.selected?.actionRef).not.toMatch(/seat_[ab]:/);
     expect(trace.selected?.kind).toBe("play_card");
   });
+
+  it("selected move label is redacted for play_card (no hidden card name leakage)", () => {
+    const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+
+    const input = policyInput(
+      [passMove(), playMove(spy)],
+      { ownHand: [spy] },
+    );
+
+    const { trace, move: tracedMove } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { trace: import("@/game/ai").AiDecisionTrace; move: LegalMove | null };
+
+    // The engine label would be "Play <card name>" which leaks hidden identity.
+    // The trace label must be redacted.
+    expect(trace.selected?.label).toBe("hidden hand play");
+    expect(trace.selected?.label).not.toContain("Spy");
+    expect(trace.selected?.label).not.toContain("spy");
+
+    // JSON.stringify(trace) must not contain card names from the AI's hidden hand.
+    const traceJson = JSON.stringify(trace);
+    expect(traceJson).not.toContain("Spy");
+    expect(traceJson).not.toContain("test.spy");
+    expect(traceJson).not.toContain(spy.cardId);
+    expect(traceJson).not.toContain(spy.sourceId);
+
+    // Selected move kind should still be correct.
+    expect(tracedMove?.kind).toBe("play_card");
+    expect(trace.selected?.kind).toBe("play_card");
+
+    // actionRef should be present and safe.
+    expect(trace.selected?.actionRef).toBeTruthy();
+    expect(trace.selected?.actionRef).not.toMatch(/seat_[ab]:/);
+  });
+
+  it("selected move label is redacted for choose_mulligan", () => {
+    const draug = testCard({ cardId: "draug", sourceId: "test.draug", printedStrength: 3 });
+    const mulliganMove = {
+      kind: "choose_mulligan" as const,
+      cardIds: [draug.sourceId],
+      target: { kind: "none" },
+      label: `Mulligan ${draug.sourceId}`,
+    } as import("@/game/core").LegalMove;
+
+    const input = policyInput(
+      [passMove(), mulliganMove],
+      { phase: "mulligan", ownHand: [draug] },
+    );
+
+    const { trace } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { trace: import("@/game/ai").AiDecisionTrace };
+
+    expect(trace.selected?.kind).toBe("choose_mulligan");
+    expect(trace.selected?.label).toBe("mulligan hidden card");
+    expect(trace.selected?.label).not.toContain("Draug");
+    expect(trace.selected?.label).not.toContain("draug");
+
+    const traceJson = JSON.stringify(trace);
+    expect(traceJson).not.toContain("draug");
+    expect(traceJson).not.toContain(draug.sourceId);
+  });
 });

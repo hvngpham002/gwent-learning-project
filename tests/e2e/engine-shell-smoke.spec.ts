@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import fs from "node:fs";
 
 const legacyUrl = "/legacy";
 const engineUrl = "/engine-diagnostic?seed=dp6-smoke";
@@ -2408,19 +2409,8 @@ test("authentic match opens a one-time look_three_cards reveal modal (cCp28)", a
 test("cFp25 Playwright: product diagnostics copy/download with legal-heuristic-v1", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
-  // Mock clipboard.writeText to capture what gets copied
-  await page.addInitScript(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (globalThis as any).__capturedClipboard = "";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (navigator as any).clipboard = {
-      writeText: (text: string) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (globalThis as any).__capturedClipboard = text;
-        return Promise.resolve();
-      },
-    };
-  });
+  // Grant clipboard permissions before navigating to the match.
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
 
   // Start a match with legal-heuristic-v1
   await page.goto("/?ai=legal-heuristic-v1&seed=cfp25-browser");
@@ -2452,16 +2442,21 @@ test("cFp25 Playwright: product diagnostics copy/download with legal-heuristic-v
   const copyButton = page.getByTestId("authentic-copy-diagnostics");
   await expect(copyButton).toBeEnabled();
 
-  // cFp25: click copy and verify content via mocked clipboard
+  // cFp25: click copy and verify content via clipboard API
   await copyButton.click();
   await expect(page.getByTestId("authentic-diagnostics-copy-status")).toContainText(/copied/i);
 
-  // cFp25: wait for clipboard capture, then verify schema/policy/trace
-  await page.waitForTimeout(300);
-  const capturedClipboard = await page.evaluate(() => (globalThis as unknown as Record<string, unknown>).__capturedClipboard as string | undefined);
-  expect(typeof capturedClipboard).toBe("string");
-  if (capturedClipboard) {
-    const parsed = JSON.parse(capturedClipboard);
+  // Read clipboard via Playwright's navigator.clipboard.readText
+  const clipboardText = await page.evaluate(async () => {
+    try {
+      return await navigator.clipboard.readText();
+    } catch {
+      return "";
+    }
+  });
+  expect(typeof clipboardText).toBe("string");
+  if (clipboardText) {
+    const parsed = JSON.parse(clipboardText);
     expect(parsed.schemaVersion).toBe("gwent-product-playtest-diagnostics-v1");
     expect(parsed.aiPolicyId).toBe("legal-heuristic-v1");
     expect(parsed.decisionTraces).toBeInstanceOf(Array);
@@ -2497,6 +2492,21 @@ test("cFp25 Playwright: product diagnostics copy/download with legal-heuristic-v
   // cFp25: download diagnostics button exists
   const downloadButton = page.getByTestId("authentic-download-diagnostics");
   await expect(downloadButton).toBeEnabled();
+
+  // cFp25: validate download as the primary artifact path
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    downloadButton.click(),
+  ]);
+  const downloadPath = await download.path();
+  expect(downloadPath).toBeDefined();
+  const downloadText = fs.readFileSync(downloadPath!, "utf-8");
+  const downloaded = JSON.parse(downloadText);
+  expect(downloaded.schemaVersion).toBe("gwent-product-playtest-diagnostics-v1");
+  expect(downloaded.aiPolicyId).toBe("legal-heuristic-v1");
+  expect(downloaded.decisionTraces).toBeInstanceOf(Array);
+  expect(downloaded.decisionTraces.length).toBeGreaterThan(0);
+  expect(downloaded.hiddenInfoSafetyScan.passed).toBe(true);
 
   // cFp25: no raw hidden info leaks in page text
   const matchPageText = await visiblePageText(page);

@@ -1,7 +1,4 @@
-import type {
-  CatalogCardKind,
-  CatalogRow,
-} from "@/game/catalog";
+import type { CatalogRow } from "@/game/catalog";
 import type {
   MatchPhase,
   SeatId,
@@ -86,10 +83,11 @@ export interface AiDecisionPassAnalysis {
   readonly isOpponentPassed: boolean;
   readonly isLastGem: boolean;
   // Approximate upper-bound (heuristic: ownScore + opponentHandCount * 50).
-  readonly lastGemUpperBound: number;
+  readonly diagnosticApproxUpperBound: number;
+  // Policy's real last-gem upper bound (ownScore + uniqueCardTempoUpperBound).
+  // lastGemSurrenderAllowed is based on this field, not on diagnosticApproxUpperBound.
+  readonly policyLastGemUpperBound: number;
   readonly lastGemSurrenderAllowed: boolean;
-  // Exact v1 unique-card tempo upper bound when available.
-  readonly exactV1UpperBound?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -99,15 +97,60 @@ export interface AiDecisionPassAnalysis {
 export interface AiDecisionSelectedMove {
   readonly kind: AiDecisionMoveKind;
   readonly label: string;
-  readonly sourceCardName?: string;
-  readonly sourceCardKind?: CatalogCardKind;
-  readonly targetKind: string;
-  readonly targetLabel?: string;
-  readonly optionId?: string;
-  readonly abilityId?: string;
   // Safe local ref instead of raw moveId (which may contain seat_a:/seat_b:)
   readonly actionRef: string;
+  readonly targetKind: string;
+  readonly targetLabel?: string;
+  // optionRef replaces optionId to avoid leaking hidden engine/card identifiers.
+  readonly optionRef?: string;
+  readonly abilityId?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Candidate summaries (fully redacted for hidden AI hand)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a hidden-info-safe label for a selected move.
+ *
+ * Move labels from the engine (e.g. "Play Spy") may contain card names that
+ * expose the AI's hidden hand. This helper replaces them with generic labels
+ * derived from the move kind.
+ *
+ * For choose_mulligan the label is "mulligan hidden card" when there are
+ * card IDs to mulligan, or "keep hand" when keeping the current hand.
+ *
+ * For choose_prompt_option the label is "resolve prompt option" since prompt
+ * option IDs are prompt-local identifiers (e.g. "medic-revive", "clear-weather")
+ * that could still reveal internal engine structure.
+ *
+ * @param move - The legal move to label.
+ */
+export const safeSelectedMoveLabel = (
+  move: import("@/game/core").LegalMove,
+): string => {
+  switch (move.kind) {
+    case "play_card":
+      return "hidden hand play";
+    case "choose_mulligan": {
+      const cast = move as { cardIds?: unknown[] };
+      if (Array.isArray(cast.cardIds) && cast.cardIds.length > 0) {
+        return "mulligan hidden card";
+      }
+      return "keep hand";
+    }
+    case "choose_prompt_option":
+      return "resolve prompt option";
+    case "use_leader":
+      return "use leader";
+    case "pass":
+      return "pass";
+    case "resolve_round_end":
+      return "resolve round end";
+    default:
+      return String((move as { kind: string }).kind);
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Candidate summaries (fully redacted for hidden AI hand)
@@ -218,12 +261,12 @@ export const buildAiDecisionPublicState = (
  * Builds pass analysis using the same logic the v1 policy uses:
  * estimateOpponentHandPressure (6/8 per card) and canVoluntarilyPassWithLead.
  *
- * @param exactV1UpperBound - When provided, the exact v1 unique-card tempo
- *   upper bound is stored alongside the approximate heuristic value.
+ * @param policyLastGemUpperBound - The real v1 policy upper bound
+ *   (ownScore + uniqueCardTempoUpperBound). Used for lastGemSurrenderAllowed.
  */
 export const buildAiDecisionPassAnalysis = (
   features: AiDecisionTraceFeatures,
-  exactV1UpperBound?: number,
+  policyLastGemUpperBound?: number,
 ): AiDecisionPassAnalysis => {
   const perCardPressure = features.ownGems <= 1 ? 8 : 6;
   const opponentHandPressure = features.opponentHandCount * perCardPressure;
@@ -235,10 +278,13 @@ export const buildAiDecisionPassAnalysis = (
     features.scoreDelta > requiredLead && !features.opponentPassed;
   const isOpponentPassed = features.opponentPassed;
   const isLastGem = features.ownGems <= 1;
-  const lastGemUpperBound =
+  // Approximate diagnostic upper bound (heuristic: ownScore + opponentHandCount * 50).
+  const diagnosticApproxUpperBound =
     features.ownScore + features.opponentHandCount * 50;
+  // Policy's real last-gem upper bound — based on unique-card tempo, not a heuristic.
+  const effectiveUpperBound = policyLastGemUpperBound ?? diagnosticApproxUpperBound;
   const lastGemSurrenderAllowed =
-    lastGemUpperBound <= features.opponentScore;
+    effectiveUpperBound <= features.opponentScore;
 
   return {
     passLegal: true,
@@ -248,9 +294,9 @@ export const buildAiDecisionPassAnalysis = (
     isVoluntarilySafe,
     isOpponentPassed,
     isLastGem,
+    diagnosticApproxUpperBound,
+    policyLastGemUpperBound: policyLastGemUpperBound ?? diagnosticApproxUpperBound,
     lastGemSurrenderAllowed,
-    lastGemUpperBound,
-    exactV1UpperBound,
   };
 };
 
@@ -260,20 +306,22 @@ export const buildAiDecisionPassAnalysis = (
  *
  * CRITICAL: sourceCardName and sourceCardKind are deliberately omitted to
  * prevent leaking the AI's hidden hand card identities to the human player.
+ * The label is also redacted via safeSelectedMoveLabel to avoid leaking card
+ * names from the AI's hidden hand.
  */
 export const buildAiDecisionSelectedMove = (
   move: import("@/game/core").LegalMove,
   actionIndex: number,
 ): AiDecisionSelectedMove => ({
   kind: move.kind as AiDecisionMoveKind,
-  label: move.label,
+  label: safeSelectedMoveLabel(move),
   actionRef: `action_${actionIndex}`,
   targetKind: "target" in move && move.target ? move.target.kind : "none",
   targetLabel:
     "metadata" in move && move.metadata
       ? (move.metadata as { targetLabel?: string }).targetLabel
       : undefined,
-  optionId: "optionId" in move ? (move as { optionId?: string }).optionId : undefined,
+  optionRef: "optionId" in move ? (move as { optionId?: string }).optionId : undefined,
   abilityId:
     "metadata" in move && move.metadata
       ? (move.metadata as { abilityId?: string }).abilityId
@@ -307,3 +355,7 @@ export const buildAiDecisionCandidateSummary = (
 // ---------------------------------------------------------------------------
 
 export const redactAiHandCardLabel = (): string => "hidden hand play";
+
+// ---------------------------------------------------------------------------
+// Candidate builder
+// ---------------------------------------------------------------------------

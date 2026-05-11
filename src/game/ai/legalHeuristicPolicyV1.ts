@@ -701,7 +701,7 @@ const bestUsefulMove = (features: LegalHeuristicV1Features) => {
   return scoreMove(features, best) >= MIN_USEFUL_MOVE_SCORE ? best : null;
 };
 
-const uniqueCardTempoUpperBound = (features: LegalHeuristicV1Features) => {
+export const uniqueCardTempoUpperBound = (features: LegalHeuristicV1Features) => {
   const bestTempoByCard = new Map<string, number>();
   features.playMoves.forEach((move) => {
     const tempo = Math.max(0, estimateImmediateTempo(features, move));
