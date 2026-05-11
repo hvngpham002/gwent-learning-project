@@ -100,9 +100,16 @@ does not assume hidden deck contents.
 
 When neither side has passed, v1 scores useful plays and leader actions,
 prefers high-impact low-tempo plays such as early Spies, avoids obvious
-overkill against a passed opponent, and can pass when it is comfortably
-ahead but behind in hand count. It does not bluff, bait Scorch/weather,
-or plan multi-turn sacrifice lines.
+overkill against a passed opponent, and can voluntarily pass only when
+its lead clears a simple hand-pressure safety threshold. cFp24.2 replaced
+the earlier `scoreDelta > 12 && ownHandCount < opponentHandCount` rule:
+opponent hand count now increases the required lead instead of making a
+pass more attractive. The current helper charges 6 points of pressure per
+opponent hand card, 8 points per card on v1's last gem, and requires at
+least a 24-point lead normally or 36 points on the last gem. A lead in
+the 18-30 range is therefore not treated as safe against an active
+opponent with 9-12 cards when v1 has useful legal plays. It does not
+bluff, bait Scorch/weather, or plan multi-turn sacrifice lines.
 
 ## Prompt And Leader Handling
 
@@ -135,11 +142,12 @@ cFp24 registers v1 in `defaultBenchmarkPolicies` and adds:
   unordered pairings, both v1/v0 policy assignments, 3 seeds, mirrored
   seats, 120 public records.
 
-Latest cFp24 results:
+Latest cFp24.2 results:
 
-- v1 smoke: `legal-heuristic-v1` records 8 wins and 4 losses against v0.
+- v1 smoke: `legal-heuristic-v1` records 6 wins and 6 losses against v0.
 - v1 starter matrix: `legal-heuristic-v1` records 88 wins and 32 losses
-  against v0.
+  against v0; deck and matchup distributions changed from cFp24 after
+  the pass-safety patch.
 
 These are fixed-suite evidence, not ratings or proof of broad strength.
 
@@ -152,7 +160,8 @@ These are fixed-suite evidence, not ratings or proof of broad strength.
   entries, not engine simulation.
 - Faction-specific strategy profiles are not implemented.
 - v1 can still overcommit or over-pass in lines that require sacrifice,
-  baiting, or hand-reading.
+  baiting, hand-reading, or multi-turn valuation beyond the cFp24.2
+  hand-pressure helper.
 - Benchmarks use starter decks and smoke decks only; mechanics stress
   decks and competitive lists remain deferred.
 - Glicko, TrueSkill, search, ML training, Python tooling, browser

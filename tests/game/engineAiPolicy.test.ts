@@ -760,6 +760,88 @@ describe("engine AI policy", () => {
       ).toEqual(expect.objectContaining({ sourceCardId: "large" }));
     });
 
+    it("does not pass on last gem just because it is ahead while opponent has a large hand", () => {
+      const useful = testCard({ cardId: "useful-last-gem", sourceId: "test.useful.last-gem", printedStrength: 8 });
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([passMove(), playMove(useful)], {
+          ownHand: [useful],
+          ownGems: 1,
+          opponentHandCount: 9,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 24 },
+          },
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: useful.cardId }));
+    });
+
+    it("does not pass in the round-one large-opponent-hand playtest shape", () => {
+      const useful = testCard({ cardId: "useful-round-one", sourceId: "test.useful.round-one", printedStrength: 7 });
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([passMove(), playMove(useful)], {
+          ownHand: [useful],
+          ownGems: 2,
+          opponentHandCount: 12,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 31 },
+          },
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: useful.cardId }));
+    });
+
+    it("still passes when the opponent has already passed and v1 is ahead", () => {
+      const useful = testCard({ cardId: "useful-vs-passed", sourceId: "test.useful.vs-passed", printedStrength: 8 });
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([passMove(), playMove(useful)], {
+          ownHand: [useful],
+          opponentPassed: true,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 10 },
+          },
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+    });
+
+    it("still passes on last gem when the visible upper bound cannot catch up", () => {
+      const impossible = testCard({ cardId: "tiny-last-gem", sourceId: "test.tiny.last-gem", printedStrength: 2 });
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([passMove(), playMove(impossible)], {
+          ownHand: [impossible],
+          ownGems: 1,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 20, seat_b: 0 },
+          },
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+    });
+
+    it("still voluntarily passes with a lead beyond the hand-pressure threshold", () => {
+      const useful = testCard({ cardId: "useful-safe-lead", sourceId: "test.useful.safe-lead", printedStrength: 8 });
+      const selected = legalHeuristicPolicyV1.selectMove(
+        policyInput([passMove(), playMove(useful)], {
+          ownHand: [useful],
+          opponentHandCount: 2,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 31 },
+          },
+        }),
+      );
+
+      expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+    });
+
     it("counts visible linked Muster hand targets when deciding catch-up", () => {
       const caller = testCard({
         cardId: "caller",

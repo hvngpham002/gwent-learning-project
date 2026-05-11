@@ -711,6 +711,24 @@ const uniqueCardTempoUpperBound = (features: LegalHeuristicV1Features) => {
   return [...bestTempoByCard.values()].reduce((sum, tempo) => sum + tempo, 0) + leaderTempo;
 };
 
+const estimateOpponentHandPressure = (features: LegalHeuristicV1Features) => {
+  const perCardPressure = features.ownGems <= 1 ? 8 : 6;
+  return features.opponentHandCount * perCardPressure;
+};
+
+const canVoluntarilyPassWithLead = (features: LegalHeuristicV1Features) => {
+  if (features.scoreDelta <= 0) {
+    return false;
+  }
+
+  if (features.opponentPassed) {
+    return true;
+  }
+
+  const requiredLead = Math.max(features.ownGems <= 1 ? 36 : 24, estimateOpponentHandPressure(features));
+  return features.scoreDelta > requiredLead;
+};
+
 const chooseCatchUpMove = (features: LegalHeuristicV1Features) => {
   const candidates = [...features.playMoves, ...features.leaderMoves]
     .map((move) => ({
@@ -766,7 +784,7 @@ const choosePlayingMove = (features: LegalHeuristicV1Features) => {
     }
   }
 
-  if (passMove && features.scoreDelta > 12 && features.ownHandCount < features.opponentHandCount) {
+  if (passMove && canVoluntarilyPassWithLead(features)) {
     return passMove;
   }
 
