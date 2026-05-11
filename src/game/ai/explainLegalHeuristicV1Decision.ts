@@ -159,11 +159,12 @@ const buildPlayingPhaseTrace = (
     ownScore: features.ownScore,
     opponentScore: features.opponentScore,
   };
-  // Compute real v1 unique-card tempo upper bound for pass-safety diagnostics
-  const v1UpperBound = computeV1UpperBound(features);
+  // Compute the real v1 total reachable score for pass-safety diagnostics.
+  const v1TempoUpperBound = computeV1UpperBound(features);
+  const v1PolicyUpperBound = features.ownScore + v1TempoUpperBound;
   const publicState = buildAiDecisionPublicState(input);
   const passAnalysis = features.passMove
-    ? buildAiDecisionPassAnalysis(traceFeatures, v1UpperBound)
+    ? buildAiDecisionPassAnalysis(traceFeatures, v1PolicyUpperBound)
     : null;
   const selected = move ? buildAiDecisionSelectedMove(move, actionIndex) : null;
 
@@ -189,9 +190,8 @@ const buildPlayingPhaseTrace = (
         : "opponent passed, behind — no useful move, pass";
     }
   } else if (features.ownGems <= 1 && features.scoreDelta < 0) {
-    // Use real v1 upper bound (not the 50-per-card heuristic)
-    const exactUpperBound = v1UpperBound;
-    if (exactUpperBound <= features.opponentScore) {
+    // Use real v1 total upper bound (not the 50-per-card heuristic).
+    if (v1PolicyUpperBound <= features.opponentScore) {
       reason = "last gem, catch-up impossible — pass";
       reasonKind = "policy-last-gem";
     } else {

@@ -10,10 +10,12 @@ import {
 } from "@/data/catalog";
 import {
   buildSeatObservation,
+  buildLegalHeuristicV1Features,
   commandFromLegalMove,
   explainLegalHeuristicV1Decision,
   legalHeuristicPolicyV0,
   legalHeuristicPolicyV1,
+  uniqueCardTempoUpperBound,
   DEFAULT_PRODUCT_AI_POLICY_ID,
   PRODUCT_AI_POLICIES,
   getProductAiPolicy,
@@ -1541,6 +1543,52 @@ describe("cFp25: AI decision trace", () => {
     expect(tracedMove?.kind).toBe("choose_prompt_option");
   });
 
+  it("selected prompt optionRef does not copy raw optionId with hidden instance tokens", () => {
+    const rawOptionId = "revive:seat_b:001:hidden:siege";
+    const brute = testCard({ cardId: "hidden-card", sourceId: "test.hidden-card", printedStrength: 10 });
+
+    const input = policyInput(
+      [
+        promptMove(rawOptionId, "medic", {
+          kind: "card_instance",
+          side: "own",
+          seatId: "seat_b",
+          cardId: brute.cardId,
+          row: "siege",
+        }),
+      ],
+      {
+        pendingPrompt: {
+          promptId: "prompt:test",
+          seatId: "seat_b",
+          kind: "medic_revive",
+          abilityId: "medic",
+          options: [
+            {
+              optionId: rawOptionId,
+              label: "hidden revive option",
+              targetCard: brute,
+              targetStrength: 10,
+            },
+          ],
+        },
+      },
+    );
+
+    const { trace, move: tracedMove } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { trace: import("@/game/ai").AiDecisionTrace; move: LegalMove | null };
+
+    expect(tracedMove).toEqual(legalHeuristicPolicyV1.selectMove(input));
+    expect(trace.selected?.kind).toBe("choose_prompt_option");
+    expect(trace.selected?.optionRef).toBe("option_0");
+
+    const traceJson = JSON.stringify(trace);
+    expect(traceJson).not.toContain(rawOptionId);
+    expect(traceJson).not.toContain("seat_b:");
+    expect(traceJson).not.toContain("revive:");
+  });
+
   it("explainLegalHeuristicV1Decision returns the same move as selectMove for resolve_round_end", () => {
     const input = policyInput(
       [{ kind: "resolve_round_end", moveId: "resolve-round-end:1", seatId: "seat_b", label: "Resolve", target: { kind: "none" } }],
@@ -1583,6 +1631,36 @@ describe("cFp25: AI decision trace", () => {
     expect(trace.passAnalysis?.scoreDelta).toBe(24);
     expect(trace.passAnalysis?.opponentHandPressure).toBeGreaterThan(0);
     expect(trace.passAnalysis?.requiredLead).toBeGreaterThan(0);
+  });
+
+  it("last-gem pass analysis uses total v1 reachable score, not tempo-only score", () => {
+    const useful = testCard({ cardId: "useful", sourceId: "test.useful", printedStrength: 8 });
+    const ownScore = 10;
+    const opponentScore = 15;
+
+    const input = policyInput(
+      [passMove(), playMove(useful)],
+      {
+        ownHand: [useful],
+        ownGems: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: opponentScore, seat_b: ownScore },
+        },
+      },
+    );
+    const features = buildLegalHeuristicV1Features(input);
+    const v1TempoUpperBound = uniqueCardTempoUpperBound(features);
+
+    expect(opponentScore).toBeGreaterThan(v1TempoUpperBound);
+    expect(opponentScore).toBeLessThan(ownScore + v1TempoUpperBound);
+
+    const { trace } = (
+      explainLegalHeuristicV1Decision(input)
+    ) as { trace: import("@/game/ai").AiDecisionTrace };
+
+    expect(trace.passAnalysis?.lastGemSurrenderAllowed).toBe(false);
+    expect(trace.passAnalysis?.policyLastGemUpperBound).toBe(ownScore + v1TempoUpperBound);
   });
 
   it("opponent-passed safe pass trace records pass as selected and explains opponent-passed/ahead", () => {

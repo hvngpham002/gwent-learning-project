@@ -209,15 +209,18 @@ prevent card name leakage from the AI's hidden hand:
 - `resolve_round_end` → `"resolve round end"`
 
 The `optionId` field was replaced with `optionRef` in `AiDecisionSelectedMove`
-to avoid exposing any potential engine identifiers. Prompt option IDs are
-prompt-local (e.g. `"medic-revive"`, `"clear-weather"`) and do not contain
-card names, but `optionRef` provides an extra safety boundary.
+to avoid exposing any potential engine identifiers. `optionRef` is a
+deterministic local diagnostic reference (`option_<decision action index>`)
+and is never derived from the raw engine prompt option ID, because some prompt
+option IDs embed card instance tokens such as revive/restore/discard-draw
+targets.
 
 ### Policy Last-Gem Upper Bound
 
 cFp25 repair exports `uniqueCardTempoUpperBound` from
-`legalHeuristicPolicyV1` and uses it as `policyLastGemUpperBound` in the
-pass analysis. This matches the policy's own surrender gate logic
+`legalHeuristicPolicyV1` and stores `ownScore + uniqueCardTempoUpperBound` as
+`policyLastGemUpperBound` in the pass analysis. This matches the policy's own
+surrender gate logic
 (`ownScore + uniqueCardTempoUpperBound`), replacing the previous
 approximate heuristic (`ownScore + opponentHandCount * 50`). The heuristic
 value is still available as `diagnosticApproxUpperBound` for reference.

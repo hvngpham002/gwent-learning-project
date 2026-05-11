@@ -2469,10 +2469,21 @@ test("cFp25 Playwright: product diagnostics copy/download with legal-heuristic-v
     expect(firstTrace.decisionIndex).toBeDefined();
     expect(firstTrace.publicState).toBeDefined();
 
-    // cFp25: verify no hidden-info hazards in exported content
+    // cFp25: verify no exact hidden-info hazards in exported content.
+    // Count fields such as ownHandCount/opponentHandCount are allowed.
     const exportText = JSON.stringify(parsed);
-    expect(exportText).not.toMatch(/seat_[ab]:\d{3}:/);
-    expect(exportText).not.toMatch(/instanceId|sourceId|cardsById|finalState|commandLog|ownHand|opponentHand/);
+    for (const unsafePattern of [
+      /seat_[ab]:\d{3}:/,
+      /"instanceId"\s*:/,
+      /"sourceId"\s*:/,
+      /"cardsById"\s*:/,
+      /"finalState"\s*:/,
+      /"commandLog"\s*:/,
+      /"ownHand"\s*:/,
+      /"opponentHand"\s*:/,
+    ]) {
+      expect(exportText).not.toMatch(unsafePattern);
+    }
 
     // Candidate labels should be redacted (no hidden AI card names)
     for (const trace of parsed.decisionTraces) {
@@ -2507,6 +2518,19 @@ test("cFp25 Playwright: product diagnostics copy/download with legal-heuristic-v
   expect(downloaded.decisionTraces).toBeInstanceOf(Array);
   expect(downloaded.decisionTraces.length).toBeGreaterThan(0);
   expect(downloaded.hiddenInfoSafetyScan.passed).toBe(true);
+  const downloadedText = JSON.stringify(downloaded);
+  for (const unsafePattern of [
+    /seat_[ab]:\d{3}:/,
+    /"instanceId"\s*:/,
+    /"sourceId"\s*:/,
+    /"cardsById"\s*:/,
+    /"finalState"\s*:/,
+    /"commandLog"\s*:/,
+    /"ownHand"\s*:/,
+    /"opponentHand"\s*:/,
+  ]) {
+    expect(downloadedText).not.toMatch(unsafePattern);
+  }
 
   // cFp25: no raw hidden info leaks in page text
   const matchPageText = await visiblePageText(page);

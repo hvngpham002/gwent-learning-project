@@ -101,7 +101,8 @@ export interface AiDecisionSelectedMove {
   readonly actionRef: string;
   readonly targetKind: string;
   readonly targetLabel?: string;
-  // optionRef replaces optionId to avoid leaking hidden engine/card identifiers.
+  // Safe local ref for prompt options. Never derived from raw optionId, which
+  // may contain hidden engine/card identifiers.
   readonly optionRef?: string;
   readonly abilityId?: string;
 }
@@ -321,7 +322,10 @@ export const buildAiDecisionSelectedMove = (
     "metadata" in move && move.metadata
       ? (move.metadata as { targetLabel?: string }).targetLabel
       : undefined,
-  optionRef: "optionId" in move ? (move as { optionId?: string }).optionId : undefined,
+  optionRef:
+    move.kind === "choose_prompt_option"
+      ? `option_${actionIndex}`
+      : undefined,
   abilityId:
     "metadata" in move && move.metadata
       ? (move.metadata as { abilityId?: string }).abilityId
