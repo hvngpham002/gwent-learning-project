@@ -90,6 +90,19 @@ const buildCandidateSummaries = (
   return summaries;
 };
 
+// Compute the v1 unique-card tempo upper bound using exported score helpers.
+const computeV1UpperBound = (
+  features: LegalHeuristicV1Features,
+): number => {
+  const bestTempoByCard = new Map<string, number>();
+  features.playMoves.forEach((move) => {
+    const tempo = Math.max(0, scoreMove(features, move));
+    bestTempoByCard.set(move.sourceCardId, Math.max(bestTempoByCard.get(move.sourceCardId) ?? 0, tempo));
+  });
+  const leaderTempo = Math.max(0, ...features.leaderMoves.map((move) => scoreLeaderMove(features, move)));
+  return [...bestTempoByCard.values()].reduce((sum, tempo) => sum + tempo, 0) + leaderTempo;
+};
+
 // Build trace for non-playing phases (mulligan, prompt, round_end)
 const buildPhaseTrace = (
   input: EnginePolicyInput,
@@ -124,6 +137,7 @@ const buildPhaseTrace = (
       passAnalysis: null,
       selected,
       candidates: [],
+      reasonKind: "phase",
       reason,
     },
     reason,
@@ -154,9 +168,11 @@ const buildPlayingPhaseTrace = (
     ownScore: features.ownScore,
     opponentScore: features.opponentScore,
   };
+  // Compute real v1 unique-card tempo upper bound for pass-safety diagnostics
+  const v1UpperBound = computeV1UpperBound(features);
   const publicState = buildAiDecisionPublicState(input);
   const passAnalysis = features.passMove
-    ? buildAiDecisionPassAnalysis(traceFeatures)
+    ? buildAiDecisionPassAnalysis(traceFeatures, v1UpperBound)
     : null;
   const selected = move ? buildAiDecisionSelectedMove(move, actionIndex) : null;
 
@@ -169,6 +185,7 @@ const buildPlayingPhaseTrace = (
 
   // Build reason string using the same policy logic
   let reason = "";
+  let reasonKind = "policy";
   if (!move || !features.passMove) {
     reason = "no legal moves or pass unavailable";
   } else if (features.opponentPassed) {
@@ -181,14 +198,17 @@ const buildPlayingPhaseTrace = (
         : "opponent passed, behind — no useful move, pass";
     }
   } else if (features.ownGems <= 1 && features.scoreDelta < 0) {
-    const upperBound = features.ownScore + features.opponentHandCount * 50;
-    if (upperBound <= features.opponentScore) {
+    // Use real v1 upper bound (not the 50-per-card heuristic)
+    const exactUpperBound = v1UpperBound;
+    if (exactUpperBound <= features.opponentScore) {
       reason = "last gem, catch-up impossible — pass";
+      reasonKind = "policy-last-gem";
     } else {
       const bestMove = sorted[0];
       reason = bestMove
         ? `last gem, behind — attempt catch-up (score ${bestMove.score})`
         : "last gem, behind — no useful move";
+      reasonKind = "policy-last-gem";
     }
   } else if (passAnalysis && passAnalysis.isVoluntarilySafe) {
     reason = `voluntary pass safe (delta ${passAnalysis.scoreDelta}, required ${passAnalysis.requiredLead})`;
@@ -211,6 +231,7 @@ const buildPlayingPhaseTrace = (
       passAnalysis,
       selected,
       candidates: topCandidates,
+      reasonKind,
       reason,
     },
     reason,
@@ -253,6 +274,7 @@ export const explainLegalHeuristicV1Decision = (
         passAnalysis: null,
         selected: null,
         candidates: [],
+        reasonKind: "none",
         reason: "no legal moves available",
       },
     };

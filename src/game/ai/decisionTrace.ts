@@ -85,10 +85,11 @@ export interface AiDecisionPassAnalysis {
   readonly isVoluntarilySafe: boolean;
   readonly isOpponentPassed: boolean;
   readonly isLastGem: boolean;
-  // Approximate upper-bound (policy iterates unique-card tempo; diagnostics
-  // use a cheaper heuristic to avoid duplicating scoreMove).
+  // Approximate upper-bound (heuristic: ownScore + opponentHandCount * 50).
   readonly lastGemUpperBound: number;
   readonly lastGemSurrenderAllowed: boolean;
+  // Exact v1 unique-card tempo upper bound when available.
+  readonly exactV1UpperBound?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -142,6 +143,9 @@ export interface AiDecisionTrace {
   readonly passAnalysis: AiDecisionPassAnalysis | null;
   readonly selected: AiDecisionSelectedMove | null;
   readonly candidates: AiDecisionCandidateSummary[];
+  // Distinguishes exact-policy reasoning ("policy-...") from diagnostics
+  // that use approximate helpers (e.g. "last-gem-estimate").
+  readonly reasonKind: string;
   readonly reason: string;
 }
 
@@ -213,9 +217,13 @@ export const buildAiDecisionPublicState = (
 /**
  * Builds pass analysis using the same logic the v1 policy uses:
  * estimateOpponentHandPressure (6/8 per card) and canVoluntarilyPassWithLead.
+ *
+ * @param exactV1UpperBound - When provided, the exact v1 unique-card tempo
+ *   upper bound is stored alongside the approximate heuristic value.
  */
 export const buildAiDecisionPassAnalysis = (
   features: AiDecisionTraceFeatures,
+  exactV1UpperBound?: number,
 ): AiDecisionPassAnalysis => {
   const perCardPressure = features.ownGems <= 1 ? 8 : 6;
   const opponentHandPressure = features.opponentHandCount * perCardPressure;
@@ -242,12 +250,16 @@ export const buildAiDecisionPassAnalysis = (
     isLastGem,
     lastGemSurrenderAllowed,
     lastGemUpperBound,
+    exactV1UpperBound,
   };
 };
 
 /**
  * Builds a safe selected-move summary without raw moveId (which may contain
  * seat_a:/seat_b: instance prefixes). Uses an actionRef instead.
+ *
+ * CRITICAL: sourceCardName and sourceCardKind are deliberately omitted to
+ * prevent leaking the AI's hidden hand card identities to the human player.
  */
 export const buildAiDecisionSelectedMove = (
   move: import("@/game/core").LegalMove,
@@ -256,14 +268,6 @@ export const buildAiDecisionSelectedMove = (
   kind: move.kind as AiDecisionMoveKind,
   label: move.label,
   actionRef: `action_${actionIndex}`,
-  sourceCardName:
-    "sourceCardId" in move || "sourceId" in move
-      ? move.label.replace(/^Play /, "").replace(/^Use leader/, "")
-      : undefined,
-  sourceCardKind:
-    "metadata" in move && move.metadata
-      ? (move.metadata as { cardKind?: CatalogCardKind }).cardKind
-      : undefined,
   targetKind: "target" in move && move.target ? move.target.kind : "none",
   targetLabel:
     "metadata" in move && move.metadata
