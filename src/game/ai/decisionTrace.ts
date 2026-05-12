@@ -309,8 +309,10 @@ export const buildAiDecisionPassAnalysis = (
     features.ownScore + features.opponentHandCount * 50;
   // Policy's real last-gem upper bound — based on unique-card tempo, not a heuristic.
   const effectiveUpperBound = policyLastGemUpperBound ?? diagnosticApproxUpperBound;
-  const lastGemSurrenderAllowed =
-    effectiveUpperBound <= features.opponentScore;
+  const effectiveMinimumScoreToWinRound = passDiagnostics?.minimumScoreToWinRound ?? (features.opponentScore + 1);
+  const lastGemSurrenderAllowed = passDiagnostics
+    ? effectiveUpperBound < effectiveMinimumScoreToWinRound
+    : effectiveUpperBound <= features.opponentScore;
 
   return {
     passLegal: true,

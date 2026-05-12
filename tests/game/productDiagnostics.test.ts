@@ -9,6 +9,16 @@ import {
 import { engineDiagnosticTraceAppended, engineMatchStarted } from "@/store/slices/engineSlice";
 import { configureStore } from "@reduxjs/toolkit";
 import engineReducer from "@/store/slices/engineSlice";
+import {
+  explainLegalHeuristicV1Decision,
+  type SeatCardSummary,
+  type SeatObservation,
+  type LegalMove,
+  type CatalogRow,
+  type CatalogAbilityId,
+  type CatalogCardKind,
+} from "@/game/ai";
+import type { MatchScoreBreakdown } from "@/game/core";
 
 const createTestStore = () =>
   configureStore({
@@ -576,5 +586,196 @@ describe("cFp25: diagnostic trace accumulator in Redux", () => {
     );
 
     expect(store.getState().engine.diagnosticTraces).toEqual([]);
+  });
+});
+
+const _emptyScoreBreakdown = (): MatchScoreBreakdown => ({
+  totalBySeat: { seat_a: 0, seat_b: 0 },
+  rowTotalsBySeat: { seat_a: { close: 0, ranged: 0, siege: 0 }, seat_b: { close: 0, ranged: 0, siege: 0 } },
+  cards: [],
+  activeWeatherEffects: [],
+  diagnostics: [],
+});
+
+const _emptyBoardRows = (): SeatObservation["boardRows"] =>
+  (["seat_a", "seat_b"] as const).flatMap((seatId) =>
+    (["close", "ranged", "siege"] as const).map((row) => ({ seatId, row, units: [], horn: null })),
+  );
+
+const _makeCardSummary = (
+  cardId: string,
+  sourceId: string,
+  printedStrength: number,
+  kind: CatalogCardKind = "unit",
+  rows: CatalogRow[] = ["close"],
+  abilities: CatalogAbilityId[] = [],
+): SeatCardSummary => ({
+  cardId,
+  sourceId,
+  name: sourceId,
+  kind,
+  printedStrength,
+  rows,
+  abilities,
+  deckLimit: 3,
+});
+
+const _makeObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation => ({
+  seatId: "seat_b",
+  opponentSeatId: "seat_a",
+  phase: "playing",
+  round: 1,
+  currentTurn: "seat_b",
+  ownFaction: "nilfgaard",
+  opponentFaction: "northern_realms",
+  ownHand: [],
+  ownLeader: { leaderCardId: "leader-b", sourceId: "leader-b", used: false, cancelledThisRound: false },
+  ownDeckCount: 10,
+  ownDiscardCount: 0,
+  ownPassed: false,
+  ownGems: 2,
+  opponentHandCount: 10,
+  opponentLeader: { leaderCardId: "leader-a", sourceId: "leader-a", used: false, cancelledThisRound: false },
+  opponentDeckCount: 10,
+  opponentDiscardCount: 0,
+  opponentPassed: false,
+  opponentGems: 2,
+  boardRows: _emptyBoardRows(),
+  weather: [],
+  score: _emptyScoreBreakdown(),
+  pendingPrompt: null,
+  ...overrides,
+});
+
+const _passMove = (): LegalMove => ({
+  kind: "pass",
+  moveId: "pass:seat_b",
+  seatId: "seat_b",
+  label: "Pass",
+  target: { kind: "none" },
+});
+
+const _playMove = (card: SeatCardSummary): LegalMove => ({
+  kind: "play_card",
+  moveId: `play:seat_b:${card.cardId}:board_row`,
+  seatId: "seat_b",
+  label: `Play ${card.sourceId}`,
+  sourceCardId: card.cardId,
+  sourceId: card.sourceId,
+  target: { kind: "board_row", side: "own", seatId: "seat_b", row: "close" },
+  metadata: { cardName: card.name, cardKind: card.kind, abilities: card.abilities, targetLabel: "board_row" },
+});
+
+describe("cFp26.1: product diagnostic export via explainLegalHeuristicV1Decision", () => {
+  it("builds a trace through explainLegalHeuristicV1Decision and verifies passAnalysis fields plus hidden-info scan", () => {
+    const tiny = _makeCardSummary("tiny-1", "test.tiny-1", 2);
+
+    const observation = _makeObservation({
+      ownHand: [tiny],
+      ownGems: 2,
+      opponentPassed: true,
+      score: {
+        ..._emptyScoreBreakdown(),
+        totalBySeat: { seat_a: 50, seat_b: 10 },
+      },
+    });
+
+    const { trace } = explainLegalHeuristicV1Decision({
+      seatId: "seat_b",
+      observation,
+      legalMoves: [_passMove(), _playMove(tiny)],
+    });
+
+    expect(trace.schemaVersion).toBe("ai-decision-trace-v1");
+    expect(trace.policyId).toBe("legal-heuristic-v1");
+    expect(trace.passAnalysis).not.toBeNull();
+
+    const pa = trace.passAnalysis!;
+    expect(pa.ownWinsTiedRound).toBe(true);
+    expect(pa.minimumScoreToWinRound).toBe(50);
+    expect(pa.policyUpperBoundCanWinRound).toBe(false);
+    expect(pa.hasSingleMoveCatchUp).toBe(false);
+    expect(pa.bestSingleMoveCatchUpScore).toBeNull();
+    expect(pa.bestSingleMoveCatchUpTempo).toBeNull();
+    expect(pa.bestSingleMoveCatchUpKind).toBeNull();
+    expect(pa.preserveHandPassRecommended).toBe(true);
+
+    expect(trace.selected?.kind).toBe("pass");
+    expect(trace.reason).toContain("preserve hand");
+
+    const traceJson = JSON.stringify(trace);
+    expect(traceJson).not.toContain("test.tiny-1");
+    expect(traceJson).not.toContain("tiny-1");
+
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp26-1-product-test",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [trace],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const exportJson = JSON.stringify(exportData);
+    expect(exportJson).not.toContain("test.tiny-1");
+    expect(exportJson).not.toContain("cardsById");
+    expect(exportJson).not.toContain("seat_a:");
+    expect(exportJson).not.toContain("seat_b:");
+  });
+
+  it("builds a trace for last-gem impossible case and verifies catch-up impossible reason", () => {
+    const tiny = _makeCardSummary("tiny-lg", "test.tiny-lg", 2);
+
+    const observation = _makeObservation({
+      ownHand: [tiny],
+      ownGems: 1,
+      opponentPassed: true,
+      score: {
+        ..._emptyScoreBreakdown(),
+        totalBySeat: { seat_a: 20, seat_b: 0 },
+      },
+    });
+
+    const { trace } = explainLegalHeuristicV1Decision({
+      seatId: "seat_b",
+      observation,
+      legalMoves: [_passMove(), _playMove(tiny)],
+    });
+
+    expect(trace.selected?.kind).toBe("pass");
+    expect(trace.passAnalysis).not.toBeNull();
+    expect(trace.passAnalysis!.lastGemSurrenderAllowed).toBe(true);
+    expect(trace.passAnalysis!.policyUpperBoundCanWinRound).toBe(false);
+    expect(trace.reason).toContain("catch-up impossible");
+
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp26-1-last-gem-test",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [trace],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
   });
 });

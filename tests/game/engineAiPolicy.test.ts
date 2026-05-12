@@ -2078,7 +2078,7 @@ describe("cFp26.1: pass decision diagnostics", () => {
 
     expect(tracedMove?.kind).toBe("pass");
     expect(trace.passAnalysis?.preserveHandPassRecommended).toBe(false);
-    expect(trace.reason).toContain("no useful move");
+    expect(trace.reason).toContain("catch-up impossible");
   });
 
   // 6. Policy parity: all focused fixtures

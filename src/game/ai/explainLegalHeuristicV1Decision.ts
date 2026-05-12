@@ -216,6 +216,8 @@ const buildPlayingPhaseTrace = (
       const selectedIsCatchUp = isCatchUpPlay(move);
       if (selectedIsCatchUp && bestMove) {
         reason = `opponent passed, behind — catch-up move (score ${bestMove.score})`;
+      } else if (features.ownGems <= 1 && passDiagnostics.policyUpperBoundCanWinRound === false) {
+        reason = "opponent passed, behind — catch-up impossible, pass";
       } else if (passDiagnostics.preserveHandPassRecommended) {
         reason = "opponent passed, behind — no one-card catch-up; preserve hand";
       } else {
