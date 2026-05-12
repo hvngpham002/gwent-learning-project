@@ -2172,4 +2172,33 @@ describe("cFp26.1: pass decision diagnostics", () => {
     const selectedMove = legalHeuristicPolicyV1.selectMove(input);
     expect(tracedMove).toEqual(selectedMove);
   });
+
+  it("last-gem non-opponentPassed: Nilfgaard tie-win plays when upper bound >= minimumScoreToWinRound", () => {
+    const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 10 });
+    const input = policyInput(
+      [passMove(), playMove(playCard)],
+      {
+        ...nilfgaardObservation({
+          ownHand: [playCard],
+          ownGems: 1,
+          opponentPassed: false,
+          score: {
+            ...nilfgaardObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 0 },
+          },
+        }),
+      },
+    );
+
+    const { move: tracedMove, trace } = explainLegalHeuristicV1Decision(input);
+
+    expect(tracedMove?.kind).toBe("play_card");
+    expect(trace.reason).not.toContain("impossible");
+    expect(trace.reason).not.toContain("pass");
+    expect(trace.passAnalysis).not.toBeNull();
+    expect(trace.passAnalysis!.ownWinsTiedRound).toBe(true);
+    expect(trace.passAnalysis!.minimumScoreToWinRound).toBe(10);
+    expect(trace.passAnalysis!.policyUpperBoundCanWinRound).toBe(true);
+    expect(trace.passAnalysis!.lastGemSurrenderAllowed).toBe(false);
+  });
 });

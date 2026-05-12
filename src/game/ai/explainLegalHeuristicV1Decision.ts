@@ -217,7 +217,7 @@ const buildPlayingPhaseTrace = (
       if (selectedIsCatchUp && bestMove) {
         reason = `opponent passed, behind — catch-up move (score ${bestMove.score})`;
       } else if (features.ownGems <= 1 && passDiagnostics.policyUpperBoundCanWinRound === false) {
-        reason = "opponent passed, behind — catch-up impossible, pass";
+        reason = "opponent passed, last gem — catch-up impossible, pass";
       } else if (passDiagnostics.preserveHandPassRecommended) {
         reason = "opponent passed, behind — no one-card catch-up; preserve hand";
       } else {
@@ -226,7 +226,7 @@ const buildPlayingPhaseTrace = (
     }
   } else if (features.ownGems <= 1 && features.scoreDelta < 0) {
     // Use real v1 total upper bound (not the 50-per-card heuristic).
-    if (v1PolicyUpperBound <= features.opponentScore) {
+    if (passDiagnostics.policyUpperBoundCanWinRound === false) {
       reason = "last gem, catch-up impossible — pass";
       reasonKind = "policy-last-gem";
     } else {
