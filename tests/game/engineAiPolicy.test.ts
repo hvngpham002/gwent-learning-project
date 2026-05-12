@@ -204,6 +204,21 @@ const baseObservation = (overrides: Partial<SeatObservation> = {}): SeatObservat
   ...overrides,
 });
 
+// Shared observation helpers for cFp26 and cFp26.1 tests
+const nilfgaardObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation =>
+  baseObservation({
+    ownFaction: "nilfgaard",
+    opponentFaction: "northern_realms",
+    ...overrides,
+  });
+
+const doubleNilfgaardObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation =>
+  baseObservation({
+    ownFaction: "nilfgaard",
+    opponentFaction: "nilfgaard",
+    ...overrides,
+  });
+
 const policyInput = (
   legalMoves: LegalMove[],
   observationOverrides: Partial<SeatObservation> = {},
@@ -1787,23 +1802,9 @@ describe("cFp25: AI decision trace", () => {
 });
 
 describe("cFp26: tie-aware catch-up for Nilfgaard", () => {
-  const nilfgaardObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation =>
-    baseObservation({
-      ownFaction: "nilfgaard",
-      opponentFaction: "northern_realms",
-      ...overrides,
-    });
-
   const northernObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation =>
     baseObservation({
       ownFaction: "northern_realms",
-      opponentFaction: "nilfgaard",
-      ...overrides,
-    });
-
-  const doubleNilfgaardObservation = (overrides: Partial<SeatObservation> = {}): SeatObservation =>
-    baseObservation({
-      ownFaction: "nilfgaard",
       opponentFaction: "nilfgaard",
       ...overrides,
     });
@@ -1943,5 +1944,232 @@ describe("cFp26: diagnostic reason text matches selected move", () => {
     expect(traceJson).not.toContain("seat_b:");
     expect(traceJson).not.toContain("sourceId");
     expect(traceJson).not.toContain("test.spy");
+  });
+});
+
+describe("cFp26.1: pass decision diagnostics", () => {
+  // 1. Diagnostic-like Round 1 preserve-hand pass
+  it("preserve-hand pass: opponent passed, behind, not last gem, no single-card catch-up", () => {
+    const tiny = testCard({ cardId: "tiny", sourceId: "test.tiny", printedStrength: 2 });
+    // AI is Nilfgaard behind opponent score=50, ownScore=10, not last gem, no card can catch up
+    const { trace, move: tracedMove } = explainLegalHeuristicV1Decision(
+      policyInput(
+        [passMove(), playMove(tiny)],
+        {
+          ...nilfgaardObservation({
+            ownHand: [tiny],
+            ownGems: 2,
+            opponentPassed: true,
+            score: {
+              ...nilfgaardObservation().score,
+              totalBySeat: { seat_a: 50, seat_b: 10 },
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(tracedMove?.kind).toBe("pass");
+    const pa = trace.passAnalysis;
+    expect(pa).not.toBeNull();
+    expect(pa?.preserveHandPassRecommended).toBe(true);
+    expect(pa?.hasSingleMoveCatchUp).toBe(false);
+    expect(trace.reason).toContain("preserve hand");
+    expect(trace.reason).not.toContain("no useful move");
+  });
+
+  // 2. Single-move catch-up available
+  it("single-move catch-up available: selects play card, hasSingleMoveCatchUp true", () => {
+    const bigCard = testCard({ cardId: "big", sourceId: "test.big", printedStrength: 15 });
+    const { trace, move: tracedMove } = explainLegalHeuristicV1Decision(
+      policyInput(
+        [passMove(), playMove(bigCard)],
+        {
+          ...baseObservation({
+            ownFaction: "northern_realms",
+            opponentFaction: "nilfgaard",
+            ownHand: [bigCard],
+            ownGems: 2,
+            opponentPassed: true,
+            score: {
+              ...baseObservation().score,
+              totalBySeat: { seat_a: 5, seat_b: 0 },
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(tracedMove?.kind).toBe("play_card");
+    expect(trace.passAnalysis?.hasSingleMoveCatchUp).toBe(true);
+    expect(trace.passAnalysis?.bestSingleMoveCatchUpKind).toBe("play_card");
+    expect(trace.passAnalysis?.bestSingleMoveCatchUpTempo).not.toBeNull();
+    expect(trace.passAnalysis?.bestSingleMoveCatchUpScore).not.toBeNull();
+    expect(trace.reason).toContain("catch-up");
+  });
+
+  // 3. Nilfgaard tie threshold appears in diagnostics
+  it("Nilfgaard single-seat tie: ownWinsTiedRound true, minimumScoreToWinRound equals opponentScore", () => {
+    const card = testCard({ cardId: "card", sourceId: "test.card", printedStrength: 5 });
+    const { trace } = explainLegalHeuristicV1Decision(
+      policyInput(
+        [passMove(), playMove(card)],
+        {
+          ...nilfgaardObservation({
+            ownHand: [card],
+            opponentPassed: true,
+            score: {
+              ...nilfgaardObservation().score,
+              totalBySeat: { seat_a: 20, seat_b: 10 },
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(trace.passAnalysis?.ownWinsTiedRound).toBe(true);
+    expect(trace.passAnalysis?.minimumScoreToWinRound).toBe(20);
+  });
+
+  // 4. Double-Nilfgaard tie threshold
+  it("double-Nilfgaard: ownWinsTiedRound false, minimumScoreToWinRound equals opponentScore+1", () => {
+    const card = testCard({ cardId: "card", sourceId: "test.card", printedStrength: 5 });
+    const { trace } = explainLegalHeuristicV1Decision(
+      policyInput(
+        [passMove(), playMove(card)],
+        {
+          ...doubleNilfgaardObservation({
+            ownHand: [card],
+            opponentPassed: true,
+            score: {
+              ...doubleNilfgaardObservation().score,
+              totalBySeat: { seat_a: 20, seat_b: 10 },
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(trace.passAnalysis?.ownWinsTiedRound).toBe(false);
+    expect(trace.passAnalysis?.minimumScoreToWinRound).toBe(21);
+  });
+
+  // 5. Last-gem impossible remains distinct
+  it("last-gem impossible: preserveHandPassRecommended false, reason is last-gem impossible", () => {
+    const tiny = testCard({ cardId: "tiny", sourceId: "test.tiny", printedStrength: 2 });
+    const { trace, move: tracedMove } = explainLegalHeuristicV1Decision(
+      policyInput(
+        [passMove(), playMove(tiny)],
+        {
+          ...baseObservation({
+            ownFaction: "northern_realms",
+            opponentFaction: "nilfgaard",
+            ownHand: [tiny],
+            ownGems: 1,
+            opponentPassed: true,
+            score: {
+              ...baseObservation().score,
+              totalBySeat: { seat_a: 20, seat_b: 0 },
+            },
+          }),
+        },
+      ),
+    );
+
+    expect(tracedMove?.kind).toBe("pass");
+    expect(trace.passAnalysis?.preserveHandPassRecommended).toBe(false);
+    expect(trace.reason).toContain("no useful move");
+  });
+
+  // 6. Policy parity: all focused fixtures
+  it("policy parity: explain move equals selectMove for preserve-hand pass", () => {
+    const tiny = testCard({ cardId: "tiny", sourceId: "test.tiny", printedStrength: 2 });
+    const input = policyInput(
+      [passMove(), playMove(tiny)],
+      {
+        ...nilfgaardObservation({
+          ownHand: [tiny],
+          ownGems: 2,
+          opponentPassed: true,
+          score: {
+            ...nilfgaardObservation().score,
+            totalBySeat: { seat_a: 50, seat_b: 10 },
+          },
+        }),
+      },
+    );
+
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    expect(tracedMove).toEqual(selectedMove);
+  });
+
+  it("policy parity: explain move equals selectMove for single-move catch-up", () => {
+    const bigCard = testCard({ cardId: "big", sourceId: "test.big", printedStrength: 15 });
+    const input = policyInput(
+      [passMove(), playMove(bigCard)],
+      {
+        ...baseObservation({
+          ownFaction: "northern_realms",
+          opponentFaction: "nilfgaard",
+          ownHand: [bigCard],
+          ownGems: 2,
+          opponentPassed: true,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 0 },
+          },
+        }),
+      },
+    );
+
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    expect(tracedMove).toEqual(selectedMove);
+  });
+
+  it("policy parity: explain move equals selectMove for Nilfgaard tie case", () => {
+    const card = testCard({ cardId: "card", sourceId: "test.card", printedStrength: 5 });
+    const input = policyInput(
+      [passMove(), playMove(card)],
+      {
+        ...nilfgaardObservation({
+          ownHand: [card],
+          opponentPassed: true,
+          score: {
+            ...nilfgaardObservation().score,
+            totalBySeat: { seat_a: 20, seat_b: 10 },
+          },
+        }),
+      },
+    );
+
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    expect(tracedMove).toEqual(selectedMove);
+  });
+
+  it("policy parity: explain move equals selectMove for last-gem impossible", () => {
+    const tiny = testCard({ cardId: "tiny", sourceId: "test.tiny", printedStrength: 2 });
+    const input = policyInput(
+      [passMove(), playMove(tiny)],
+      {
+        ...baseObservation({
+          ownFaction: "northern_realms",
+          opponentFaction: "nilfgaard",
+          ownHand: [tiny],
+          ownGems: 1,
+          opponentPassed: true,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 20, seat_b: 0 },
+          },
+        }),
+      },
+    );
+
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    expect(tracedMove).toEqual(selectedMove);
   });
 });

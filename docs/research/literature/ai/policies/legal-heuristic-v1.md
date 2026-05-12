@@ -275,6 +275,33 @@ What tracing CANNOT explain (by design):
 cFp25 is a diagnostics phase, not a tuning phase. No constants,
 thresholds, or decision logic were changed.
 
+### Pass Decision Diagnostics (cFp26.1)
+
+cFp26.1 exports structured pass-decision diagnostics from the v1 policy
+for decision traces and product diagnostics. These diagnostics explain
+why v1 chose to pass, without changing any selected-move behavior.
+
+The pass diagnostics include:
+
+- `ownWinsTiedRound` — whether this seat is the sole Nilfgaard faction
+- `minimumScoreToWinRound` — opponent score (Nilfgaard tie wins) or
+  opponent score + 1 (must exceed)
+- `policyUpperBound` — `ownScore + uniqueCardTempoUpperBound`,
+  matching the last-gem surrender gate
+- `policyUpperBoundCanWinRound` — whether `policyUpperBound >= minimumScoreToWinRound`
+- `hasSingleMoveCatchUp` — whether any single play/leader move can reach
+  `minimumScoreToWinRound`
+- `bestSingleMoveCatchUpScore` / `Tempo` / `Kind` — metadata for the
+  best single-move catch-up candidate (null when none exists)
+- `preserveHandPassRecommended` — whether v1 would pass to preserve its
+  hand (requires: opponent passed, scoreDelta ≤ 0, no single-move
+  catch-up, ownGems > 1, pass is legal)
+
+These fields are exposed on `AiDecisionPassAnalysis` and available in
+product diagnostic exports via `passAnalysis`.
+
+cFp26.1 is a diagnostics-only addition. No v1 decision logic changed.
+
 ## Planned Follow-Ups
 
 Useful next steps are a narrow v1.1 tuning pass over reviewed v1 ledgers

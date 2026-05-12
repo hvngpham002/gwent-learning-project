@@ -319,6 +319,185 @@ describe("cFp26: aiDeckFaction metadata in diagnostic export", () => {
   });
 });
 
+describe("cFp26.1: pass analysis fields in diagnostic export", () => {
+  it("preserves new passAnalysis fields in export", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp26-1-test",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 50,
+            scoreDelta: -40,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 2,
+            opponentDeckCount: 5,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: true,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: {
+            passLegal: true,
+            scoreDelta: -40,
+            opponentHandPressure: 42,
+            requiredLead: 42,
+            isVoluntarilySafe: false,
+            isOpponentPassed: true,
+            isLastGem: false,
+            diagnosticApproxUpperBound: 350,
+            policyLastGemUpperBound: 102,
+            lastGemSurrenderAllowed: false,
+            ownWinsTiedRound: false,
+            minimumScoreToWinRound: 51,
+            policyUpperBoundCanWinRound: false,
+            hasSingleMoveCatchUp: false,
+            bestSingleMoveCatchUpScore: null,
+            bestSingleMoveCatchUpTempo: null,
+            bestSingleMoveCatchUpKind: null,
+            preserveHandPassRecommended: true,
+          },
+          selected: {
+            kind: "pass",
+            label: "pass",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "policy",
+          reason: "opponent passed, behind — no one-card catch-up; preserve hand",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.decisionTraces[0].passAnalysis).not.toBeNull();
+    const pa = exportData.decisionTraces[0].passAnalysis!;
+    expect(pa.ownWinsTiedRound).toBe(false);
+    expect(pa.minimumScoreToWinRound).toBe(51);
+    expect(pa.policyUpperBoundCanWinRound).toBe(false);
+    expect(pa.hasSingleMoveCatchUp).toBe(false);
+    expect(pa.preserveHandPassRecommended).toBe(true);
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+  });
+
+  it("hidden-info scan passes for cFp26.1 export with pass analysis", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp26-1-scan",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 50,
+            scoreDelta: -40,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 2,
+            opponentDeckCount: 5,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: true,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: {
+            passLegal: true,
+            scoreDelta: -40,
+            opponentHandPressure: 42,
+            requiredLead: 42,
+            isVoluntarilySafe: false,
+            isOpponentPassed: true,
+            isLastGem: false,
+            diagnosticApproxUpperBound: 350,
+            policyLastGemUpperBound: 102,
+            lastGemSurrenderAllowed: false,
+            ownWinsTiedRound: false,
+            minimumScoreToWinRound: 51,
+            policyUpperBoundCanWinRound: false,
+            hasSingleMoveCatchUp: false,
+            bestSingleMoveCatchUpScore: null,
+            bestSingleMoveCatchUpTempo: null,
+            bestSingleMoveCatchUpKind: null,
+            preserveHandPassRecommended: true,
+          },
+          selected: {
+            kind: "pass",
+            label: "pass",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "policy",
+          reason: "opponent passed, behind — no one-card catch-up; preserve hand",
+        },
+      ],
+      warnings: [],
+    });
+
+    const json = JSON.stringify(exportData);
+    expect(json).not.toContain("cardsById");
+    expect(json).not.toContain("finalState");
+    expect(json).not.toContain("commandLog");
+    expect(json).not.toMatch(/"ownHand"[^"]*:/);
+    expect(json).not.toMatch(/"opponentHand"[^"]*:/);
+    expect(json).not.toMatch(/seat_[ab]:/);
+  });
+});
+
 describe("cFp25: diagnostic trace accumulator in Redux", () => {
   it("resets diagnostic traces on engine match start", () => {
     const store = createTestStore();

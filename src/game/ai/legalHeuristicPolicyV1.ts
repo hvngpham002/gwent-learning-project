@@ -23,11 +23,12 @@ const MIN_USEFUL_MOVE_SCORE = 25;
 // The engine treats tied scores as: if exactly one seat is Nilfgaard, that
 // Nilfgaard seat wins the tie; if neither or both are Nilfgaard, the round
 // is a draw (tie does not win).
-const ownWinsTiedRound = (features: LegalHeuristicV1Features) =>
+// cFp26.1: exported for pass diagnostics helper.
+export const ownWinsTiedRound = (features: LegalHeuristicV1Features) =>
   features.input.observation.ownFaction === "nilfgaard" &&
   features.input.observation.opponentFaction !== "nilfgaard";
 
-const minimumScoreToWinRound = (features: LegalHeuristicV1Features) =>
+export const minimumScoreToWinRound = (features: LegalHeuristicV1Features) =>
   ownWinsTiedRound(features) ? features.opponentScore : features.opponentScore + 1;
 
 const WEATHER_ROWS_BY_ABILITY: Partial<Record<CatalogAbilityId, readonly CatalogRow[]>> = {
@@ -740,7 +741,10 @@ const canVoluntarilyPassWithLead = (features: LegalHeuristicV1Features) => {
   return features.scoreDelta > requiredLead;
 };
 
-const chooseCatchUpMove = (features: LegalHeuristicV1Features) => {
+// cFp26.1: Shared internal candidate ranker used by both chooseCatchUpMove
+// and buildLegalHeuristicV1PassDecisionDiagnostics. Returns internal move
+// data so diagnostics can inspect the best single-move catch-up candidate.
+const rankCatchUpCandidates = (features: LegalHeuristicV1Features) => {
   const candidates = [...features.playMoves, ...features.leaderMoves]
     .map((move) => ({
       move,
@@ -764,7 +768,66 @@ const chooseCatchUpMove = (features: LegalHeuristicV1Features) => {
       Math.max(0, features.ownScore + right.tempo - minimumScoreToWinRound(features));
     const scoreDelta = right.score - left.score;
     return costDelta || overkillDelta || scoreDelta || byMoveId(left.move, right.move);
-  })[0].move;
+  })[0];
+};
+
+const chooseCatchUpMove = (features: LegalHeuristicV1Features) => {
+  const best = rankCatchUpCandidates(features);
+  return best?.move ?? null;
+};
+
+// cFp26.1: Policy-aligned pass decision diagnostics.
+export interface LegalHeuristicV1PassDecisionDiagnostics {
+  readonly ownWinsTiedRound: boolean;
+  readonly minimumScoreToWinRound: number;
+  readonly policyUpperBound: number;
+  readonly policyUpperBoundCanWinRound: boolean;
+  readonly hasSingleMoveCatchUp: boolean;
+  readonly bestSingleMoveCatchUpScore: number | null;
+  readonly bestSingleMoveCatchUpTempo: number | null;
+  readonly bestSingleMoveCatchUpKind: "play_card" | "use_leader" | null;
+  readonly preserveHandPassRecommended: boolean;
+}
+
+export const buildLegalHeuristicV1PassDecisionDiagnostics = (
+  features: LegalHeuristicV1Features,
+): LegalHeuristicV1PassDecisionDiagnostics => {
+  const ownWinsTied = ownWinsTiedRound(features);
+  const minScore = minimumScoreToWinRound(features);
+  const policyUpperBound = features.ownScore + uniqueCardTempoUpperBound(features);
+  const policyUpperBoundCanWin = policyUpperBound >= minScore;
+
+  const bestCandidate = rankCatchUpCandidates(features);
+  const hasSingleMoveCatchUp = bestCandidate !== null;
+
+  let bestSingleMoveCatchUpScore: number | null = null;
+  let bestSingleMoveCatchUpTempo: number | null = null;
+  let bestSingleMoveCatchUpKind: "play_card" | "use_leader" | null = null;
+
+  if (bestCandidate) {
+    bestSingleMoveCatchUpScore = bestCandidate.score;
+    bestSingleMoveCatchUpTempo = bestCandidate.tempo;
+    bestSingleMoveCatchUpKind = bestCandidate.move.kind;
+  }
+
+  const preserveHandPassRecommended =
+    features.opponentPassed === true &&
+    features.scoreDelta <= 0 &&
+    !hasSingleMoveCatchUp &&
+    features.ownGems > 1 &&
+    features.passMove !== null;
+
+  return {
+    ownWinsTiedRound: ownWinsTied,
+    minimumScoreToWinRound: minScore,
+    policyUpperBound,
+    policyUpperBoundCanWinRound: policyUpperBoundCanWin,
+    hasSingleMoveCatchUp,
+    bestSingleMoveCatchUpScore,
+    bestSingleMoveCatchUpTempo,
+    bestSingleMoveCatchUpKind,
+    preserveHandPassRecommended,
+  };
 };
 
 export const choosePlayingMove = (features: LegalHeuristicV1Features) => {

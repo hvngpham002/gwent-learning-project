@@ -9,12 +9,14 @@ import {
   AI_DECISION_TRACE_SCHEMA_VERSION,
   type EnginePolicyInput,
   type AiDecisionExplanation,
+  type AiDecisionPassDiagnosticsInput,
   type AiDecisionTraceFeatures,
 } from "@/game/ai";
 
 import {
   buildLegalHeuristicV1Features,
   uniqueCardTempoUpperBound,
+  buildLegalHeuristicV1PassDecisionDiagnostics,
   scoreMove,
   scoreLeaderMove,
   legalHeuristicPolicyV1,
@@ -172,9 +174,23 @@ const buildPlayingPhaseTrace = (
   // Compute the real v1 total reachable score for pass-safety diagnostics.
   const v1TempoUpperBound = computeV1UpperBound(features);
   const v1PolicyUpperBound = features.ownScore + v1TempoUpperBound;
+
+  // cFp26.1: Compute pass decision diagnostics from policy logic
+  const passDiagnostics = buildLegalHeuristicV1PassDecisionDiagnostics(features);
+  const passDiagnosticsInput: AiDecisionPassDiagnosticsInput = {
+    ownWinsTiedRound: passDiagnostics.ownWinsTiedRound,
+    minimumScoreToWinRound: passDiagnostics.minimumScoreToWinRound,
+    policyUpperBoundCanWinRound: passDiagnostics.policyUpperBoundCanWinRound,
+    hasSingleMoveCatchUp: passDiagnostics.hasSingleMoveCatchUp,
+    bestSingleMoveCatchUpScore: passDiagnostics.bestSingleMoveCatchUpScore,
+    bestSingleMoveCatchUpTempo: passDiagnostics.bestSingleMoveCatchUpTempo,
+    bestSingleMoveCatchUpKind: passDiagnostics.bestSingleMoveCatchUpKind,
+    preserveHandPassRecommended: passDiagnostics.preserveHandPassRecommended,
+  };
+
   const publicState = buildAiDecisionPublicState(input);
   const passAnalysis = features.passMove
-    ? buildAiDecisionPassAnalysis(traceFeatures, v1PolicyUpperBound)
+    ? buildAiDecisionPassAnalysis(traceFeatures, v1PolicyUpperBound, passDiagnosticsInput)
     : null;
   const selected = move ? buildAiDecisionSelectedMove(move, actionIndex) : null;
 
@@ -187,6 +203,7 @@ const buildPlayingPhaseTrace = (
 
   // Build reason string using the same policy logic, cFp26: use the
   // *selected* move to decide whether the reason claims a catch-up.
+  // cFp26.1: Distinguish preserve-hand pass from generic "no useful move".
   let reason = "";
   let reasonKind = "policy";
   if (!move || !features.passMove) {
@@ -197,9 +214,13 @@ const buildPlayingPhaseTrace = (
     } else {
       const bestMove = sorted[0];
       const selectedIsCatchUp = isCatchUpPlay(move);
-      reason = selectedIsCatchUp && bestMove
-        ? `opponent passed, behind — catch-up move (score ${bestMove.score})`
-        : "opponent passed, behind — no useful move, pass";
+      if (selectedIsCatchUp && bestMove) {
+        reason = `opponent passed, behind — catch-up move (score ${bestMove.score})`;
+      } else if (passDiagnostics.preserveHandPassRecommended) {
+        reason = "opponent passed, behind — no one-card catch-up; preserve hand";
+      } else {
+        reason = "opponent passed, behind — no useful move, pass";
+      }
     }
   } else if (features.ownGems <= 1 && features.scoreDelta < 0) {
     // Use real v1 total upper bound (not the 50-per-card heuristic).

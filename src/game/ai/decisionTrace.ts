@@ -88,6 +88,15 @@ export interface AiDecisionPassAnalysis {
   // lastGemSurrenderAllowed is based on this field, not on diagnosticApproxUpperBound.
   readonly policyLastGemUpperBound: number;
   readonly lastGemSurrenderAllowed: boolean;
+  // cFp26.1: Pass decision diagnostics
+  readonly ownWinsTiedRound: boolean;
+  readonly minimumScoreToWinRound: number;
+  readonly policyUpperBoundCanWinRound: boolean;
+  readonly hasSingleMoveCatchUp: boolean;
+  readonly bestSingleMoveCatchUpScore: number | null;
+  readonly bestSingleMoveCatchUpTempo: number | null;
+  readonly bestSingleMoveCatchUpKind: "play_card" | "use_leader" | null;
+  readonly preserveHandPassRecommended: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -259,15 +268,31 @@ export const buildAiDecisionPublicState = (
 });
 
 /**
+ * cFp26.1 pass decision diagnostics (subset used by trace builder).
+ */
+export interface AiDecisionPassDiagnosticsInput {
+  readonly ownWinsTiedRound: boolean;
+  readonly minimumScoreToWinRound: number;
+  readonly policyUpperBoundCanWinRound: boolean;
+  readonly hasSingleMoveCatchUp: boolean;
+  readonly bestSingleMoveCatchUpScore: number | null;
+  readonly bestSingleMoveCatchUpTempo: number | null;
+  readonly bestSingleMoveCatchUpKind: "play_card" | "use_leader" | null;
+  readonly preserveHandPassRecommended: boolean;
+}
+
+/**
  * Builds pass analysis using the same logic the v1 policy uses:
  * estimateOpponentHandPressure (6/8 per card) and canVoluntarilyPassWithLead.
  *
  * @param policyLastGemUpperBound - The real v1 policy upper bound
  *   (ownScore + uniqueCardTempoUpperBound). Used for lastGemSurrenderAllowed.
+ * @param passDiagnostics - cFp26.1 optional pass decision diagnostics.
  */
 export const buildAiDecisionPassAnalysis = (
   features: AiDecisionTraceFeatures,
   policyLastGemUpperBound?: number,
+  passDiagnostics?: AiDecisionPassDiagnosticsInput,
 ): AiDecisionPassAnalysis => {
   const perCardPressure = features.ownGems <= 1 ? 8 : 6;
   const opponentHandPressure = features.opponentHandCount * perCardPressure;
@@ -298,6 +323,15 @@ export const buildAiDecisionPassAnalysis = (
     diagnosticApproxUpperBound,
     policyLastGemUpperBound: policyLastGemUpperBound ?? diagnosticApproxUpperBound,
     lastGemSurrenderAllowed,
+    // cFp26.1: Pass decision diagnostics with safe defaults
+    ownWinsTiedRound: passDiagnostics?.ownWinsTiedRound ?? false,
+    minimumScoreToWinRound: passDiagnostics?.minimumScoreToWinRound ?? features.opponentScore + 1,
+    policyUpperBoundCanWinRound: passDiagnostics?.policyUpperBoundCanWinRound ?? false,
+    hasSingleMoveCatchUp: passDiagnostics?.hasSingleMoveCatchUp ?? false,
+    bestSingleMoveCatchUpScore: passDiagnostics?.bestSingleMoveCatchUpScore ?? null,
+    bestSingleMoveCatchUpTempo: passDiagnostics?.bestSingleMoveCatchUpTempo ?? null,
+    bestSingleMoveCatchUpKind: passDiagnostics?.bestSingleMoveCatchUpKind ?? null,
+    preserveHandPassRecommended: passDiagnostics?.preserveHandPassRecommended ?? false,
   };
 };
 
