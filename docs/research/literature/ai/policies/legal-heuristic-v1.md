@@ -84,9 +84,22 @@ v1 uses `linkedSourceIds` rather than name-prefix matching.
   and redrawing extras.
 - Heroes are not redrawn unless they are an explicit linked summoned
   target.
+- Low standalone no-ability units (strength ≤ 3, no strategic ability, not
+  a Muster caller) are redrawn as a conservative generic class. This
+  catches `neutral.roach` when no `muster_roach` caller is in hand,
+  without hard-coding a Roach-specific rule.
+- Strategically important low-strength cards are NOT redrawn by the low-
+  standalone rule: Spies, Medics, Tight Bond pieces, Morale Boost pieces,
+  Agile units, Berserker/Mardroeme pieces, Decoy, Scorch, weather/special
+  cards, Commander's Horn, Muster callers, and Heroes.
 
-When no linked target is clearly worse than replacement uncertainty, v1
-keeps the hand.
+The shared `rankMulliganCandidates` helper (exported from
+`legalHeuristicPolicyV1`) produces `LegalHeuristicV1MulliganCandidateRank`
+entries with reason kind, confidence, and standalone value. Sort order:
+higher confidence first, lower standalone value first, lower printed
+strength first, `moveId` as deterministic tie-breaker.
+
+When no redraw candidate exceeds the threshold, v1 keeps the hand.
 
 ## Round And Pass Strategy
 
@@ -148,6 +161,13 @@ Latest cFp24.2 results:
 - v1 starter matrix: `legal-heuristic-v1` records 88 wins and 32 losses
   against v0; deck and matchup distributions changed from cFp24 after
   the pass-safety patch.
+
+cFp27 refreshed these artifacts after adding low-standalone redraw:
+
+- v1 smoke: `legal-heuristic-v1` records 5 wins and 7 losses against v0
+  (changed from 6/6).
+- v1 starter matrix: `legal-heuristic-v1` records 89 wins and 31 losses
+  against v0 (changed from 88/32 after pass-safety patch).
 
 These are fixed-suite evidence, not ratings or proof of broad strength.
 
@@ -301,6 +321,34 @@ These fields are exposed on `AiDecisionPassAnalysis` and available in
 product diagnostic exports via `passAnalysis`.
 
 cFp26.1 is a diagnostics-only addition. No v1 decision logic changed.
+
+### Mulligan Diagnostics (cFp27)
+
+cFp27 adds hidden-info-safe mulligan diagnostics and conservative low-
+standalone redraw scoring to the v1 policy. The mulligan diagnostics
+explain why v1 chose a redraw target (or kept the hand) without exposing
+AI hand card names, source IDs, or instance IDs.
+
+The mulligan diagnostics are exposed as `mulliganAnalysis` on
+`AiDecisionTrace` (null during playing phase) and include:
+
+- `mulliganLegal` — whether a mulligan move is legal
+- `selectedCardCount` — number of cards in the selected mulligan redraw
+- `candidateCount` — number of ranked redraw candidates considered
+- `selectedReasonKind` — one of `"linked_payload"`, `"muster_duplicate"`,
+  `"low_standalone_unit"`, `"keep_hand"`, or `"unknown"`
+- `selectedConfidence` — confidence score (0-100) of the selected redraw,
+  or null for keep-hand
+- `selectedStandaloneValueBucket` — `"low"` (< 80), `"medium"` (80-179),
+  `"high"` (≥ 180), or null for keep-hand
+- `topCandidateConfidence` — confidence of the best redraw candidate
+- `topCandidateReasonKind` — reason kind of the best redraw candidate
+
+Internal reason kinds are mapped to exported categories:
+- `linked_roach_payload` / `one_way_linked_payload` → `"linked_payload"`
+- `same_source_muster_duplicate` → `"muster_duplicate"`
+- `low_standalone_unit` → `"low_standalone_unit"` (broad quality class,
+  not a named card)
 
 ## Planned Follow-Ups
 
