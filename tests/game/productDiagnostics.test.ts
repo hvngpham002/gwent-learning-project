@@ -779,3 +779,220 @@ describe("cFp26.1: product diagnostic export via explainLegalHeuristicV1Decision
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
   });
 });
+
+describe("cFp27: mulligan diagnostics in product export", () => {
+  it("preserves mulliganAnalysis in decision trace export", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-mulligan-test",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: {
+            mulliganLegal: true,
+            selectedCardCount: 1,
+            candidateCount: 1,
+            selectedReasonKind: "low_standalone_unit",
+            selectedConfidence: 80,
+            selectedStandaloneValueBucket: "low",
+            topCandidateConfidence: 80,
+            topCandidateReasonKind: "low_standalone_unit",
+          },
+          selected: {
+            kind: "choose_mulligan",
+            label: "mulligan hidden card",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "phase",
+          reason: "mulligan hidden card - low standalone unit",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.decisionTraces[0].mulliganAnalysis).not.toBeNull();
+    const ma = exportData.decisionTraces[0].mulliganAnalysis!;
+    expect(ma.selectedReasonKind).toBe("low_standalone_unit");
+    expect(ma.selectedStandaloneValueBucket).toBe("low");
+    expect(ma.selectedConfidence).toBe(80);
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+  });
+
+  it("hidden-info scan passes for mulligan trace with redacted card data", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-mulligan-scan",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: {
+            mulliganLegal: true,
+            selectedCardCount: 1,
+            candidateCount: 2,
+            selectedReasonKind: "linked_payload",
+            selectedConfidence: 400,
+            selectedStandaloneValueBucket: "low",
+            topCandidateConfidence: 400,
+            topCandidateReasonKind: "linked_payload",
+          },
+          selected: {
+            kind: "choose_mulligan",
+            label: "mulligan hidden card",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "phase",
+          reason: "mulligan hidden card - linked payload",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const json = JSON.stringify(exportData);
+    expect(json).not.toContain("neutral.roach");
+    expect(json).not.toContain("Roach");
+    expect(json).not.toContain("cardIds");
+    expect(json).not.toContain("linkedSourceIds");
+  });
+
+  it("hidden-info scan fails when export contains forbidden mulligan tokens", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-mulligan-hazard",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          selected: null,
+          candidates: [],
+          reasonKind: "phase",
+          reason: "mulligan:seat_b:roach - redraw Roach (neutral.roach)",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+});

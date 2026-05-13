@@ -100,6 +100,62 @@ export interface AiDecisionPassAnalysis {
 }
 
 // ---------------------------------------------------------------------------
+// Mulligan analysis (hidden-info safe)
+// ---------------------------------------------------------------------------
+
+export type AiDecisionMulliganReasonKind =
+  | "linked_payload"
+  | "muster_duplicate"
+  | "low_standalone_unit"
+  | "keep_hand"
+  | "unknown";
+
+export type AiDecisionMulliganValueBucket = "low" | "medium" | "high";
+
+export interface AiDecisionMulliganAnalysis {
+  readonly mulliganLegal: boolean;
+  readonly selectedCardCount: number;
+  readonly candidateCount: number;
+  readonly selectedReasonKind: AiDecisionMulliganReasonKind;
+  readonly selectedConfidence: number | null;
+  readonly selectedStandaloneValueBucket: AiDecisionMulliganValueBucket | null;
+  readonly topCandidateConfidence: number | null;
+  readonly topCandidateReasonKind: AiDecisionMulliganReasonKind | null;
+}
+
+/**
+ * Maps internal mulligan reason kind to the broader exported reason kind.
+ */
+export const toMulliganReasonKind = (
+  reasonKind: string,
+): AiDecisionMulliganReasonKind => {
+  switch (reasonKind) {
+    case "linked_roach_payload":
+    case "one_way_linked_payload":
+      return "linked_payload";
+    case "same_source_muster_duplicate":
+      return "muster_duplicate";
+    case "low_standalone_unit":
+      return "low_standalone_unit";
+    case "keep_hand":
+      return "keep_hand";
+    default:
+      return "unknown";
+  }
+};
+
+/**
+ * Maps standalone value to a bucket label.
+ */
+export const toMulliganValueBucket = (
+  value: number,
+): AiDecisionMulliganValueBucket => {
+  if (value < 80) return "low";
+  if (value < 180) return "medium";
+  return "high";
+};
+
+// ---------------------------------------------------------------------------
 // Selected move summary (hidden-info safe)
 // ---------------------------------------------------------------------------
 
@@ -194,6 +250,7 @@ export interface AiDecisionTrace {
   readonly round: number;
   readonly publicState: AiDecisionPublicState;
   readonly passAnalysis: AiDecisionPassAnalysis | null;
+  readonly mulliganAnalysis: AiDecisionMulliganAnalysis | null;
   readonly selected: AiDecisionSelectedMove | null;
   readonly candidates: AiDecisionCandidateSummary[];
   // Distinguishes exact-policy reasoning ("policy-...") from diagnostics
@@ -397,5 +454,40 @@ export const buildAiDecisionCandidateSummary = (
 export const redactAiHandCardLabel = (): string => "hidden hand play";
 
 // ---------------------------------------------------------------------------
-// Candidate builder
+// Mulligan analysis builder
 // ---------------------------------------------------------------------------
+
+/**
+ * Input shape for mulligan analysis builder. Consumed by
+ * explainLegalHeuristicV1Decision to build a hidden-info-safe
+ * AiDecisionMulliganAnalysis from the shared ranker output.
+ */
+export interface AiDecisionMulliganAnalysisInput {
+  readonly mulliganLegal: boolean;
+  readonly selectedCardCount: number;
+  readonly candidateCount: number;
+  readonly selectedReasonKind: string;
+  readonly selectedConfidence: number | null;
+  readonly selectedStandaloneValue: number | null;
+  readonly topCandidateConfidence: number | null;
+  readonly topCandidateReasonKind: string | null;
+}
+
+export const buildAiDecisionMulliganAnalysis = (
+  input: AiDecisionMulliganAnalysisInput,
+): AiDecisionMulliganAnalysis => ({
+  mulliganLegal: input.mulliganLegal,
+  selectedCardCount: input.selectedCardCount,
+  candidateCount: input.candidateCount,
+  selectedReasonKind: toMulliganReasonKind(input.selectedReasonKind),
+  selectedConfidence: input.selectedConfidence,
+  selectedStandaloneValueBucket:
+    input.selectedStandaloneValue !== null
+      ? toMulliganValueBucket(input.selectedStandaloneValue)
+      : null,
+  topCandidateConfidence: input.topCandidateConfidence,
+  topCandidateReasonKind:
+    input.topCandidateReasonKind !== null
+      ? toMulliganReasonKind(input.topCandidateReasonKind)
+      : null,
+});

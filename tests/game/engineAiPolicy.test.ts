@@ -2202,3 +2202,235 @@ describe("cFp26.1: pass decision diagnostics", () => {
     expect(trace.passAnalysis!.lastGemSurrenderAllowed).toBe(false);
   });
 });
+
+describe("cFp27: mulligan low-standalone and diagnostics", () => {
+  it("redraws low no-ability strength-3 unit through low_standalone_unit rule", () => {
+    const lowUnit = testCard({ cardId: "low-unit", sourceId: "test.low-unit", printedStrength: 3 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(lowUnit)], {
+        phase: "mulligan",
+        ownHand: [lowUnit],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ kind: "choose_mulligan", cardIds: ["low-unit"] }));
+  });
+
+  it("redraws neutral.roach without muster_roach caller via low_standalone rule", () => {
+    const roach = testCard({ cardId: "roach", sourceId: "neutral.roach", printedStrength: 3 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(roach)], {
+        phase: "mulligan",
+        ownHand: [roach],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ kind: "choose_mulligan", cardIds: ["roach"] }));
+  });
+
+  it("prefers Roach-with-caller linked payload over low-standalone redraw", () => {
+    const geralt = testCard({
+      cardId: "geralt",
+      sourceId: "neutral.geralt-of-rivia",
+      printedStrength: 15,
+      kind: "hero",
+      abilities: ["muster_roach"],
+      linkedSourceIds: ["neutral.roach"],
+    });
+    const roach = testCard({ cardId: "roach", sourceId: "neutral.roach", printedStrength: 3 });
+    const lowUnit = testCard({ cardId: "low-unit", sourceId: "test.low-unit", printedStrength: 2 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(geralt), redrawMove(roach), redrawMove(lowUnit)], {
+        phase: "mulligan",
+        ownHand: [geralt, roach, lowUnit],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ cardIds: ["roach"] }));
+  });
+
+  it("keeps strength-3 spy instead of redrawing", () => {
+    const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 3, abilities: ["spy"] });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(spy)], {
+        phase: "mulligan",
+        ownHand: [spy],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ cardIds: [] }));
+  });
+
+  it("keeps strength-3 medic instead of redrawing", () => {
+    const medic = testCard({ cardId: "medic", sourceId: "test.medic", printedStrength: 3, abilities: ["medic"] });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(medic)], {
+        phase: "mulligan",
+        ownHand: [medic],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ cardIds: [] }));
+  });
+
+  it("keeps strength-3 tight_bond unit instead of redrawing", () => {
+    const tb = testCard({ cardId: "tb", sourceId: "test.tb", printedStrength: 3, abilities: ["tight_bond"] });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(tb)], {
+        phase: "mulligan",
+        ownHand: [tb],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ cardIds: [] }));
+  });
+
+  it("keeps strength-3 agile unit instead of redrawing", () => {
+    const agile = testCard({ cardId: "agile", sourceId: "test.agile", printedStrength: 3, abilities: ["agile"] });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(agile)], {
+        phase: "mulligan",
+        ownHand: [agile],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ cardIds: [] }));
+  });
+
+  it("keeps hero cards instead of redrawing through low-standalone rule", () => {
+    const hero = testCard({ cardId: "hero", sourceId: "test.hero", printedStrength: 2, kind: "hero" });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(hero)], {
+        phase: "mulligan",
+        ownHand: [hero],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ cardIds: [] }));
+  });
+
+  it("determinism: equal low-standalone candidates choose by lower standalone value then strength then moveId", () => {
+    const unitA = testCard({ cardId: "unit-a", sourceId: "test.unit-a", printedStrength: 3 });
+    const unitB = testCard({ cardId: "unit-b", sourceId: "test.unit-b", printedStrength: 2 });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(unitA), redrawMove(unitB)], {
+        phase: "mulligan",
+        ownHand: [unitA, unitB],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ cardIds: ["unit-b"] }));
+  });
+
+  // --- Trace / diagnostics tests ---
+
+  it("explain returns same move as selectMove for keep-hand mulligan", () => {
+    const cerys = testCard({
+      cardId: "cerys",
+      sourceId: "skellige.cerys",
+      printedStrength: 10,
+      kind: "hero",
+      abilities: ["muster"],
+      linkedSourceIds: ["skellige.clan-drummond-shield-maiden"],
+    });
+    const input = policyInput([keepMulliganMove(), redrawMove(cerys)], {
+      phase: "mulligan",
+      ownHand: [cerys],
+    });
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    expect(tracedMove).toEqual(selectedMove);
+  });
+
+  it("explain returns same move as selectMove for low-standalone redraw", () => {
+    const lowUnit = testCard({ cardId: "low-unit", sourceId: "test.low-unit", printedStrength: 3 });
+    const input = policyInput([keepMulliganMove(), redrawMove(lowUnit)], {
+      phase: "mulligan",
+      ownHand: [lowUnit],
+    });
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    expect(tracedMove).toEqual(selectedMove);
+    expect(tracedMove?.kind).toBe("choose_mulligan");
+    expect((tracedMove as { cardIds: string[] }).cardIds).toEqual(["low-unit"]);
+  });
+
+  it("mulligan trace includes mulliganAnalysis in mulligan phase", () => {
+    const lowUnit = testCard({ cardId: "low-unit", sourceId: "test.low-unit", printedStrength: 3 });
+    const input = policyInput([keepMulliganMove(), redrawMove(lowUnit)], {
+      phase: "mulligan",
+      ownHand: [lowUnit],
+    });
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.mulliganAnalysis).not.toBeNull();
+    const ma = trace.mulliganAnalysis!;
+    expect(ma.mulliganLegal).toBe(true);
+    expect(ma.candidateCount).toBe(1);
+    expect(ma.selectedReasonKind).toBe("low_standalone_unit");
+    expect(ma.topCandidateReasonKind).toBe("low_standalone_unit");
+  });
+
+  it("mulliganAnalysis is null in playing phase", () => {
+    const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+    const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 5 });
+    const input = policyInput([passMove(), playMove(spy), playMove(unit)], { ownHand: [spy, unit] });
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.mulliganAnalysis).toBeNull();
+  });
+
+  it("low-standalone redraw trace has correct label and reason", () => {
+    const lowUnit = testCard({ cardId: "low-unit", sourceId: "test.low-unit", printedStrength: 3 });
+    const input = policyInput([keepMulliganMove(), redrawMove(lowUnit)], {
+      phase: "mulligan",
+      ownHand: [lowUnit],
+    });
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.selected?.label).toBe("mulligan hidden card");
+    expect(trace.reason).toContain("low standalone unit");
+    expect(trace.mulliganAnalysis?.selectedReasonKind).toBe("low_standalone_unit");
+  });
+
+  it("keep-hand trace has correct label and reason", () => {
+    const cerys = testCard({
+      cardId: "cerys",
+      sourceId: "skellige.cerys",
+      printedStrength: 10,
+      kind: "hero",
+      abilities: ["muster"],
+      linkedSourceIds: ["skellige.clan-drummond-shield-maiden"],
+    });
+    const input = policyInput([keepMulliganMove(), redrawMove(cerys)], {
+      phase: "mulligan",
+      ownHand: [cerys],
+    });
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.selected?.label).toBe("keep hand");
+    expect(trace.reason).toContain("no redraw target above threshold");
+    expect(trace.mulliganAnalysis?.selectedReasonKind).toBe("keep_hand");
+  });
+
+  it("mulligan trace does not leak card identity", () => {
+    const lowUnit = testCard({ cardId: "low-unit", sourceId: "test.low-unit", printedStrength: 3 });
+    const input = policyInput([keepMulliganMove(), redrawMove(lowUnit)], {
+      phase: "mulligan",
+      ownHand: [lowUnit],
+    });
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const traceJson = JSON.stringify(trace);
+    expect(traceJson).not.toContain("low-unit");
+    expect(traceJson).not.toContain("test.low-unit");
+  });
+
+  it("linked payload redraw trace has correct analysis", () => {
+    const geralt = testCard({
+      cardId: "geralt",
+      sourceId: "neutral.geralt-of-rivia",
+      printedStrength: 15,
+      kind: "hero",
+      abilities: ["muster_roach"],
+      linkedSourceIds: ["neutral.roach"],
+    });
+    const roach = testCard({ cardId: "roach", sourceId: "neutral.roach", printedStrength: 3 });
+    const input = policyInput([keepMulliganMove(), redrawMove(geralt), redrawMove(roach)], {
+      phase: "mulligan",
+      ownHand: [geralt, roach],
+    });
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.mulliganAnalysis).not.toBeNull();
+    const ma = trace.mulliganAnalysis!;
+    expect(ma.selectedReasonKind).toBe("linked_payload");
+    expect(trace.selected?.label).toBe("mulligan hidden card");
+    expect(trace.reason).toContain("linked payload");
+  });
+});
