@@ -59,20 +59,52 @@ export interface HiddenInfoSafetyScanResult {
 // Hidden-info hazard tokens
 // ---------------------------------------------------------------------------
 
-const HIDDEN_INFO_TOKENS = [
+// Global forbidden keys — any object containing these keys is a hazard.
+const GLOBAL_FORBIDDEN_KEYS = new Set([
   "cardsById",
   "finalState",
   "commandLog",
-  '"hand"',
-  '"deck"',
   "ownHand",
   "opponentHand",
+  "unsafeDebugResults",
+  // cFp27 repair: explicit cFp27 mulligan leak keys
+  "cardIds",
+  "linkedSourceIds",
+]);
+
+// Global forbidden string tokens — caught anywhere in string values.
+const GLOBAL_FORBIDDEN_STRING_TOKENS = [
+  '"hand"',
+  '"deck"',
   "seat_a:",
   "seat_b:",
-  "unsafeDebugResults",
+  // cFp27 repair: raw mulligan move IDs (catches "mulligan:seat_b:..." and
+  // "mulligan:test" etc. even without seat_a:/seat_b:)
+  "mulligan:",
+];
+
+// Mulligan-trace-specific forbidden tokens — applied only under traces where
+// phase === "mulligan" or mulliganAnalysis is present.
+const MULLIGAN_TRACE_FORBIDDEN_STRING_TOKENS = [
+  "Roach",
+  "neutral.roach",
 ];
 
 const RAW_INSTANCE_PATTERN = /seat_[ab]:/;
+
+/**
+ * Checks whether an object looks like a mulligan-phase decision trace
+ * (identified by phase === "mulligan" or non-null mulliganAnalysis).
+ */
+const isMulliganTrace = (obj: Record<string, unknown>): boolean => {
+  if (typeof obj.phase === "string" && obj.phase === "mulligan") {
+    return true;
+  }
+  if (obj.mulliganAnalysis != null) {
+    return true;
+  }
+  return false;
+};
 
 // ---------------------------------------------------------------------------
 // Hidden-info scanner — scans the FULL ProductDiagnosticExport object
@@ -85,7 +117,7 @@ export const scanForHiddenInfoHazards = (
   const issues: string[] = [];
 
   if (typeof value === "string") {
-    for (const token of HIDDEN_INFO_TOKENS) {
+    for (const token of GLOBAL_FORBIDDEN_STRING_TOKENS) {
       if (value.includes(token)) {
         issues.push(`string value at "${path}" contains forbidden token "${token}"`);
       }
@@ -111,11 +143,61 @@ export const scanForHiddenInfoHazards = (
   for (const [key, nested] of entries) {
     const nestedPath = path === "$" ? key : `${path}.${key}`;
 
-    if (HIDDEN_INFO_TOKENS.some((token) => key === token)) {
+    if (GLOBAL_FORBIDDEN_KEYS.has(key)) {
       issues.push(`forbidden key "${key}" at "${nestedPath}"`);
     }
 
     issues.push(...scanForHiddenInfoHazards(nested, nestedPath));
+  }
+
+  return issues;
+};
+
+/**
+ * Mulligan-trace-specific scan for hidden hand card identity leaks.
+ * Only applies checks within mulligan-phase decision trace objects.
+ */
+export const scanMulliganTraceForLeaks = (
+  value: unknown,
+  path = "$",
+): string[] => {
+  const issues: string[] = [];
+
+  if (typeof value === "string") {
+    for (const token of MULLIGAN_TRACE_FORBIDDEN_STRING_TOKENS) {
+      if (value.includes(token)) {
+        issues.push(`mulligan trace at "${path}" leaks hidden card identity "${token}"`);
+      }
+    }
+    return issues;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      issues.push(...scanMulliganTraceForLeaks(item, `${path}[${index}]`));
+    });
+    return issues;
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return issues;
+  }
+
+  const obj = value as Record<string, unknown>;
+  // If this object is a mulligan trace, apply mulligan-specific checks
+  if (isMulliganTrace(obj)) {
+    for (const [, v] of Object.entries(obj)) {
+      issues.push(...scanMulliganTraceForLeaks(v, path));
+    }
+    return issues;
+  }
+
+  // Only recurse into nested objects to find deeper mulligan traces.
+  // Non-mulligan values are scanned normally (not applying mulligan-specific tokens).
+  for (const [, nested] of Object.entries(obj)) {
+    if (typeof nested === "object" && nested !== null) {
+      issues.push(...scanMulliganTraceForLeaks(nested, path));
+    }
   }
 
   return issues;
@@ -225,6 +307,10 @@ export const buildProductDiagnosticExport = (
     warnings,
   };
   const scanIssues = scanForHiddenInfoHazards(fullExportObj);
+  // cFp27 repair: additional mulligan-trace-specific scan for hidden card
+  // identity leaks (e.g. "Roach", "neutral.roach" in mulligan trace fields).
+  const mulliganScanIssues = scanMulliganTraceForLeaks(fullExportObj);
+  const allIssues = [...scanIssues, ...mulliganScanIssues];
 
   return {
     schemaVersion: PRODUCT_DIAGNOSTICS_SCHEMA_VERSION,
@@ -244,8 +330,8 @@ export const buildProductDiagnosticExport = (
     commandEventSummaries,
     decisionTraces: input.decisionTraces,
     hiddenInfoSafetyScan: {
-      passed: scanIssues.length === 0,
-      issues: scanIssues,
+      passed: allIssues.length === 0,
+      issues: allIssues,
     },
     warnings: [...new Set(warnings)],
   };

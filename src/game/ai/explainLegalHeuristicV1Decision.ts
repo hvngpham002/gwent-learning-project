@@ -2,6 +2,7 @@ import type { LegalMove } from "@/game/core";
 
 import {
   buildAiDecisionCandidateSummary,
+  buildAiDecisionMulliganAnalysis,
   buildAiDecisionPublicState,
   buildAiDecisionPassAnalysis,
   buildAiDecisionSelectedMove,
@@ -9,6 +10,7 @@ import {
   AI_DECISION_TRACE_SCHEMA_VERSION,
   type EnginePolicyInput,
   type AiDecisionExplanation,
+  type AiDecisionMulliganAnalysis,
   type AiDecisionPassDiagnosticsInput,
   type AiDecisionTraceFeatures,
 } from "@/game/ai";
@@ -17,6 +19,7 @@ import {
   buildLegalHeuristicV1Features,
   uniqueCardTempoUpperBound,
   buildLegalHeuristicV1PassDecisionDiagnostics,
+  buildMulliganAnalysis,
   scoreMove,
   scoreLeaderMove,
   legalHeuristicPolicyV1,
@@ -103,6 +106,7 @@ const buildPhaseTrace = (
   move: LegalMove | null,
   policyId: string,
   actionIndex: number,
+  mulliganAnalysis: AiDecisionMulliganAnalysis | null = null,
 ): { trace: import("./decisionTrace").AiDecisionTrace; reason: string } => {
   const publicState = buildAiDecisionPublicState(input);
   const selected = move ? buildAiDecisionSelectedMove(move, actionIndex) : null;
@@ -128,6 +132,7 @@ const buildPhaseTrace = (
       round: input.observation.round,
       publicState,
       passAnalysis: null,
+      mulliganAnalysis,
       selected,
       candidates: [],
       reasonKind: "phase",
@@ -256,6 +261,7 @@ const buildPlayingPhaseTrace = (
       round: input.observation.round,
       publicState,
       passAnalysis,
+      mulliganAnalysis: null,
       selected,
       candidates: topCandidates,
       reasonKind,
@@ -299,6 +305,7 @@ export const explainLegalHeuristicV1Decision = (
         round: input.observation.round,
         publicState: buildAiDecisionPublicState(input),
         passAnalysis: null,
+        mulliganAnalysis: null,
         selected: null,
         candidates: [],
         reasonKind: "none",
@@ -324,13 +331,53 @@ export const explainLegalHeuristicV1Decision = (
       decisionIndex,
     );
   } else if (features.phase === "mulligan") {
+    const { candidates: mulliganCandidates, selectedMove } = buildMulliganAnalysis(features);
+    const topCandidate = mulliganCandidates.length > 0 ? mulliganCandidates[0] : null;
+    const isSelectedRedraw = selectedMove && selectedMove.cardIds.length > 0;
+    const selectedCandidate = topCandidate ?? null;
+    let mulliganReason = "keep_hand";
+    let mulliganConfidence: number | null = null;
+    let mulliganStandaloneValue: number | null = null;
+    if (isSelectedRedraw && selectedCandidate) {
+      mulliganReason = selectedCandidate.reasonKind;
+      mulliganConfidence = selectedCandidate.confidence;
+      mulliganStandaloneValue = selectedCandidate.standaloneValue;
+    }
+    const mulliganAnalysis = buildAiDecisionMulliganAnalysis({
+      mulliganLegal: features.mulliganMoves.length > 0,
+      selectedCardCount: selectedMove?.cardIds?.length ?? 0,
+      candidateCount: mulliganCandidates.length,
+      selectedReasonKind: mulliganReason,
+      selectedConfidence: mulliganConfidence,
+      selectedStandaloneValue: mulliganStandaloneValue,
+      topCandidateConfidence: topCandidate?.confidence ?? null,
+      topCandidateReasonKind: topCandidate?.reasonKind ?? null,
+    });
+    let mulliganTraceReason = "keep hand - no redraw target above threshold";
+    if (isSelectedRedraw) {
+      switch (mulliganReason) {
+        case "linked_roach_payload":
+        case "one_way_linked_payload":
+          mulliganTraceReason = "mulligan hidden card - linked payload";
+          break;
+        case "same_source_muster_duplicate":
+          mulliganTraceReason = "mulligan hidden card - duplicate muster payload";
+          break;
+        case "low_standalone_unit":
+          mulliganTraceReason = "mulligan hidden card - low standalone unit";
+          break;
+      }
+    }
     phaseTrace = buildPhaseTrace(
       input,
       decisionIndex,
       move,
       policyId,
       decisionIndex,
+      mulliganAnalysis,
     );
+    phaseTrace.reason = mulliganTraceReason;
+    phaseTrace.trace = { ...phaseTrace.trace, reason: mulliganTraceReason };
   } else if (move?.kind === "resolve_round_end") {
     phaseTrace = buildPhaseTrace(
       input,

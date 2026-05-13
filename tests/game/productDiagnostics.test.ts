@@ -779,3 +779,506 @@ describe("cFp26.1: product diagnostic export via explainLegalHeuristicV1Decision
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
   });
 });
+
+describe("cFp27: mulligan diagnostics in product export", () => {
+  it("preserves mulliganAnalysis in decision trace export", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-mulligan-test",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: {
+            mulliganLegal: true,
+            selectedCardCount: 1,
+            candidateCount: 1,
+            selectedReasonKind: "low_standalone_unit",
+            selectedConfidence: 80,
+            selectedStandaloneValueBucket: "low",
+            topCandidateConfidence: 80,
+            topCandidateReasonKind: "low_standalone_unit",
+          },
+          selected: {
+            kind: "choose_mulligan",
+            label: "mulligan hidden card",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "phase",
+          reason: "mulligan hidden card - low standalone unit",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.decisionTraces[0].mulliganAnalysis).not.toBeNull();
+    const ma = exportData.decisionTraces[0].mulliganAnalysis!;
+    expect(ma.selectedReasonKind).toBe("low_standalone_unit");
+    expect(ma.selectedStandaloneValueBucket).toBe("low");
+    expect(ma.selectedConfidence).toBe(80);
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+  });
+
+  it("hidden-info scan passes for mulligan trace with redacted card data", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-mulligan-scan",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: {
+            mulliganLegal: true,
+            selectedCardCount: 1,
+            candidateCount: 2,
+            selectedReasonKind: "linked_payload",
+            selectedConfidence: 400,
+            selectedStandaloneValueBucket: "low",
+            topCandidateConfidence: 400,
+            topCandidateReasonKind: "linked_payload",
+          },
+          selected: {
+            kind: "choose_mulligan",
+            label: "mulligan hidden card",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "phase",
+          reason: "mulligan hidden card - linked payload",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const json = JSON.stringify(exportData);
+    expect(json).not.toContain("neutral.roach");
+    expect(json).not.toContain("Roach");
+    expect(json).not.toContain("cardIds");
+    expect(json).not.toContain("linkedSourceIds");
+  });
+
+  it("hidden-info scan fails when export contains forbidden mulligan tokens", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-mulligan-hazard",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          selected: null,
+          candidates: [],
+          reasonKind: "phase",
+          reason: "mulligan:seat_b:roach - redraw Roach (neutral.roach)",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+
+  // cFp27 repair: Focused tests proving each hazard independently fails.
+  it("scan fails for reason containing 'redraw Roach' in mulligan trace", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-repair-roach",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          selected: null,
+          candidates: [],
+          reasonKind: "phase",
+          reason: "redraw Roach",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+
+  it("scan fails for reason containing 'neutral.roach' in mulligan trace", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-repair-neutral-roach",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          selected: null,
+          candidates: [],
+          reasonKind: "phase",
+          reason: "redraw neutral.roach",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+
+  it("scan fails for key 'cardIds' in exported diagnostics object", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-repair-cardids",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [],
+      warnings: [],
+    });
+
+    // Simulate export object containing forbidden key
+    const issues = scanForHiddenInfoHazards({
+      ...exportData,
+      cardIds: ["test-card-1"],
+    });
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("cardIds"))).toBe(true);
+  });
+
+  it("scan fails for key 'linkedSourceIds' in exported diagnostics object", () => {
+    const issues = scanForHiddenInfoHazards({
+      schemaVersion: "test",
+      linkedSourceIds: ["test.source"],
+    });
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("linkedSourceIds"))).toBe(true);
+  });
+
+  it("scan fails for raw 'mulligan:' string even without seat_a:/seat_b:", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-repair-mulligan-id",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "mulligan",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "mulligan",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "mulligan",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 10,
+            opponentHandCount: 10,
+            ownDeckCount: 20,
+            opponentDeckCount: 20,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          selected: null,
+          candidates: [],
+          reasonKind: "phase",
+          reason: "mulligan:hidden-card test",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+
+  it("non-mulligan trace with public target label 'Roach' does not fail hidden-info scan", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp27-repair-public-roach",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          selected: {
+            kind: "play_card",
+            label: "Play Roach",
+            actionRef: "action_0",
+            targetKind: "board_row",
+          },
+          candidates: [
+            {
+              cardLabel: "Roach",
+              kind: "play",
+              actionRef: "action_0",
+              score: 100,
+              targetLabel: "close row",
+            },
+          ],
+          reasonKind: "policy",
+          reason: "best play available",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+  });
+});

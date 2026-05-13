@@ -249,73 +249,129 @@ const standaloneMulliganValue = (card: SeatCardSummary) => {
   return cardStrategicValue(card) + targetPenalty;
 };
 
-interface MulliganCandidateRank {
-  move: ChooseMulliganMove;
-  card: SeatCardSummary;
-  confidence: number;
-  standaloneValue: number;
+// cFp27: Shared mulligan candidate ranker used by both chooseMulliganMove
+// and the mulligan diagnostics helper.
+export type LegalHeuristicV1MulliganReasonKind =
+  | "linked_roach_payload"
+  | "one_way_linked_payload"
+  | "same_source_muster_duplicate"
+  | "low_standalone_unit";
+
+export interface LegalHeuristicV1MulliganCandidateRank {
+  readonly move: ChooseMulliganMove;
+  readonly card: SeatCardSummary;
+  readonly reasonKind: LegalHeuristicV1MulliganReasonKind;
+  readonly confidence: number;
+  readonly standaloneValue: number;
 }
 
-const mulliganRedrawConfidence = (features: LegalHeuristicV1Features, card: SeatCardSummary) => {
-  const linkedCallers = features.input.observation.ownHand.filter(
-    (candidate) =>
-      candidate.cardId !== card.cardId &&
-      isMusterCaller(candidate) &&
-      Boolean(candidate.linkedSourceIds?.includes(card.sourceId)),
-  );
-  const roachCaller = linkedCallers.some((candidate) => hasAbility(candidate, "muster_roach"));
-  const oneWayCaller = linkedCallers.some((candidate) => candidate.sourceId !== card.sourceId);
-  const sameSourceMuster =
-    hasAbility(card, "muster") &&
-    Boolean(card.linkedSourceIds?.includes(card.sourceId)) &&
-    (features.sourceCountsInHand.get(card.sourceId) ?? 0) > 1 &&
-    features.firstCardIdBySource.get(card.sourceId) !== card.cardId;
+const STRATEGIC_ABILITIES = new Set<CatalogAbilityId>([
+  "spy",
+  "medic",
+  "muster",
+  "muster_roach",
+  "tight_bond",
+  "morale_boost",
+  "agile",
+  "berserker",
+  "mardroeme",
+  "summon",
+  "avenger",
+  "scorch",
+  "scorch_close",
+  "scorch_range",
+  "scorch_siege",
+  "commanders_horn",
+  "decoy",
+  "clear_weather",
+  "frost",
+  "fog",
+  "rain",
+  "skellige_storm",
+]);
 
-  if (card.kind === "hero" && !oneWayCaller && !roachCaller) {
-    return 0;
-  }
+const hasStrategicAbility = (card: SeatCardSummary) =>
+  card.abilities.some((ability) => STRATEGIC_ABILITIES.has(ability));
 
-  if (card.sourceId === "neutral.roach" && roachCaller) {
-    return 400;
-  }
+const isMusterCallerForRedraw = (card: SeatCardSummary) =>
+  isMusterCaller(card) &&
+  (hasAbility(card, "muster_roach") ||
+    (hasAbility(card, "muster") && card.linkedSourceIds?.some((sid) => sid !== card.sourceId) === true));
 
-  if (oneWayCaller) {
-    return 320;
-  }
+const rankMulliganCandidates = (features: LegalHeuristicV1Features): readonly LegalHeuristicV1MulliganCandidateRank[] => {
+  const candidates: LegalHeuristicV1MulliganCandidateRank[] = [];
 
-  if (sameSourceMuster) {
-    return 240;
-  }
-
-  return 0;
-};
-
-export const chooseMulliganMove = (features: LegalHeuristicV1Features) => {
-  const keepMove = features.mulliganMoves.find((move) => move.cardIds.length === 0) ?? null;
-  const candidates: MulliganCandidateRank[] = features.mulliganMoves.flatMap((move) => {
+  for (const move of features.mulliganMoves) {
     if (move.cardIds.length !== 1) {
-      return [];
+      continue;
     }
     const card = features.ownHandByCardId.get(move.cardIds[0]);
     if (!card) {
-      return [];
+      continue;
     }
-    const confidence = mulliganRedrawConfidence(features, card);
-    if (confidence <= 0) {
-      return [];
+
+    const linkedCallers = features.input.observation.ownHand.filter(
+      (candidate) =>
+        candidate.cardId !== card.cardId &&
+        isMusterCaller(candidate) &&
+        Boolean(candidate.linkedSourceIds?.includes(card.sourceId)),
+    );
+    const roachCaller = linkedCallers.some((candidate) => hasAbility(candidate, "muster_roach"));
+    const oneWayCaller = linkedCallers.some((candidate) => candidate.sourceId !== card.sourceId);
+
+    // Skip heroes unless they are explicit linked summoned targets
+    if (card.kind === "hero" && !oneWayCaller && !roachCaller) {
+      continue;
     }
-    return [
-      {
+
+    // Skip special/weather cards
+    if (card.kind === "special") {
+      continue;
+    }
+    const sameSourceMuster =
+      hasAbility(card, "muster") &&
+      Boolean(card.linkedSourceIds?.includes(card.sourceId)) &&
+      (features.sourceCountsInHand.get(card.sourceId) ?? 0) > 1 &&
+      features.firstCardIdBySource.get(card.sourceId) !== card.cardId;
+
+    let confidence = 0;
+    let reasonKind: LegalHeuristicV1MulliganReasonKind | null = null;
+
+    // Existing linked/Muster logic preserved
+    if (card.sourceId === "neutral.roach" && roachCaller) {
+      confidence = 400;
+      reasonKind = "linked_roach_payload";
+    } else if (oneWayCaller) {
+      confidence = 320;
+      reasonKind = "one_way_linked_payload";
+    } else if (sameSourceMuster) {
+      confidence = 240;
+      reasonKind = "same_source_muster_duplicate";
+    }
+
+    // cFp27: New low_standalone_unit category
+    if (confidence <= 0 && reasonKind === null) {
+      const isLowStandalone =
+        card.kind === "unit" &&
+        card.printedStrength <= 3 &&
+        !hasStrategicAbility(card) &&
+        !isMusterCallerForRedraw(card);
+
+      if (isLowStandalone) {
+        confidence = 80;
+        reasonKind = "low_standalone_unit";
+      }
+    }
+
+    if (confidence > 0 && reasonKind !== null) {
+      candidates.push({
         move,
         card,
+        reasonKind,
         confidence,
         standaloneValue: standaloneMulliganValue(card),
-      },
-    ];
-  });
-
-  if (candidates.length === 0) {
-    return keepMove ?? features.mulliganMoves.slice().sort(byMoveId)[0] ?? null;
+      });
+    }
   }
 
   return candidates.sort((left, right) => {
@@ -323,7 +379,27 @@ export const chooseMulliganMove = (features: LegalHeuristicV1Features) => {
     const valueDelta = left.standaloneValue - right.standaloneValue;
     const strengthDelta = left.card.printedStrength - right.card.printedStrength;
     return confidenceDelta || valueDelta || strengthDelta || byMoveId(left.move, right.move);
-  })[0].move;
+  });
+};
+
+/**
+ * Builds a diagnostic summary for mulligan decisions, hidden-info safe.
+ */
+export const buildMulliganAnalysis = (
+  features: LegalHeuristicV1Features,
+): {
+  candidates: readonly LegalHeuristicV1MulliganCandidateRank[];
+  selectedMove: ChooseMulliganMove | null;
+} => {
+  const candidates = rankMulliganCandidates(features);
+  const keepMove = features.mulliganMoves.find((move) => move.cardIds.length === 0) ?? null;
+  const selectedMove = candidates.length > 0 ? candidates[0].move : (keepMove ?? features.mulliganMoves.slice().sort(byMoveId)[0] ?? null);
+  return { candidates, selectedMove };
+};
+
+export const chooseMulliganMove = (features: LegalHeuristicV1Features) => {
+  const { selectedMove } = buildMulliganAnalysis(features);
+  return selectedMove;
 };
 
 const optionCardsForMove = (features: LegalHeuristicV1Features, move: ChoosePromptOptionMove) => {
