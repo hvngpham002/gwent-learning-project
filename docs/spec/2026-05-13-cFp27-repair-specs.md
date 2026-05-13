@@ -356,4 +356,3 @@ git push origin codex/cFp27-v1-mulligan-diagnostics
 ```
 
 Only stage files that actually changed. Do not stage `.claude/`, `*.tsbuildinfo`, `dist/`, or unrelated files.
-
