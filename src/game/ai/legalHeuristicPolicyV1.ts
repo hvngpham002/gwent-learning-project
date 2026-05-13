@@ -310,16 +310,6 @@ const rankMulliganCandidates = (features: LegalHeuristicV1Features): readonly Le
       continue;
     }
 
-    // Skip heroes unless they are explicit linked summoned targets
-    if (card.kind === "hero") {
-      continue;
-    }
-
-    // Skip special/weather cards
-    if (card.kind === "special") {
-      continue;
-    }
-
     const linkedCallers = features.input.observation.ownHand.filter(
       (candidate) =>
         candidate.cardId !== card.cardId &&
@@ -328,6 +318,16 @@ const rankMulliganCandidates = (features: LegalHeuristicV1Features): readonly Le
     );
     const roachCaller = linkedCallers.some((candidate) => hasAbility(candidate, "muster_roach"));
     const oneWayCaller = linkedCallers.some((candidate) => candidate.sourceId !== card.sourceId);
+
+    // Skip heroes unless they are explicit linked summoned targets
+    if (card.kind === "hero" && !oneWayCaller && !roachCaller) {
+      continue;
+    }
+
+    // Skip special/weather cards
+    if (card.kind === "special") {
+      continue;
+    }
     const sameSourceMuster =
       hasAbility(card, "muster") &&
       Boolean(card.linkedSourceIds?.includes(card.sourceId)) &&

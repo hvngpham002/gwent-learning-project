@@ -2433,4 +2433,45 @@ describe("cFp27: mulligan low-standalone and diagnostics", () => {
     expect(trace.selected?.label).toBe("mulligan hidden card");
     expect(trace.reason).toContain("linked payload");
   });
+
+  // cFp27 repair: Hero linked-payload regression tests
+  it("redraws hero that is explicit one-way linked summoned target", () => {
+    const caller = testCard({
+      cardId: "caller",
+      sourceId: "test.caller",
+      printedStrength: 5,
+      abilities: ["muster"],
+      linkedSourceIds: ["test.hero-payload"],
+    });
+    const heroPayload = testCard({
+      cardId: "hero-payload",
+      sourceId: "test.hero-payload",
+      printedStrength: 10,
+      kind: "hero",
+    });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(caller), redrawMove(heroPayload)], {
+        phase: "mulligan",
+        ownHand: [caller, heroPayload],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ kind: "choose_mulligan" }));
+    expect(selected).toEqual(expect.objectContaining({ cardIds: ["hero-payload"] }));
+  });
+
+  it("keeps standalone low-strength hero when no linked caller present", () => {
+    const hero = testCard({
+      cardId: "hero",
+      sourceId: "test.hero",
+      printedStrength: 2,
+      kind: "hero",
+    });
+    const selected = legalHeuristicPolicyV1.selectMove(
+      policyInput([keepMulliganMove(), redrawMove(hero)], {
+        phase: "mulligan",
+        ownHand: [hero],
+      }),
+    );
+    expect(selected).toEqual(expect.objectContaining({ cardIds: [] }));
+  });
 });
