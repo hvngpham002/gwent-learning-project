@@ -156,6 +156,132 @@ export const toMulliganValueBucket = (
 };
 
 // ---------------------------------------------------------------------------
+// Hand-shape analysis (hidden-info safe aggregate diagnostics)
+// ---------------------------------------------------------------------------
+
+/**
+ * Quality bucket for the remaining hand's future-round viability.
+ */
+export type AiDecisionHandQuality =
+  | "empty"
+  | "poor"
+  | "thin"
+  | "healthy";
+
+/**
+ * Bucketized maximum positive tempo for a category of moves.
+ */
+export type AiDecisionTempoBucket =
+  | "none"
+  | "low"
+  | "medium"
+  | "high";
+
+/**
+ * Bucketizes a positive tempo value (or null/negative) into a bucket label.
+ */
+export const toAiDecisionTempoBucket = (
+  value: number | null,
+): AiDecisionTempoBucket => {
+  if (value == null || value <= 0) return "none";
+  if (value <= 5) return "low";
+  if (value <= 10) return "medium";
+  return "high";
+};
+
+/**
+ * Classifies the remaining hand's future-round viability.
+ */
+export const classifyFutureRoundHandQuality = (
+  unitCardCount: number,
+  totalHandCount: number,
+): AiDecisionHandQuality => {
+  if (totalHandCount === 0) return "empty";
+  if (unitCardCount === 0) return "poor";
+  if (unitCardCount === 1 && totalHandCount >= 3) return "thin";
+  return "healthy";
+};
+
+/**
+ * Hidden-info-safe aggregate hand-shape analysis.
+ * Uses only broad counts and buckets — never card names, source IDs,
+ * instance IDs, cardIds, linkedSourceIds, or ability arrays.
+ */
+export interface AiDecisionHandShapeAnalysis {
+  readonly unitCardCount: number;
+  readonly heroCardCount: number;
+  readonly specialOrWeatherCardCount: number;
+  readonly totalHandCount: number;
+  readonly positiveUnitMoveCount: number;
+  readonly positiveNonUnitMoveCount: number;
+  readonly bestUnitTempoBucket: AiDecisionTempoBucket;
+  readonly bestNonUnitTempoBucket: AiDecisionTempoBucket;
+  readonly futureRoundHandQuality: AiDecisionHandQuality;
+  readonly specialOnlyHand: boolean;
+  readonly noUnitFutureRisk: boolean;
+}
+
+/**
+ * Builds a hand-shape analysis from observation-level data.
+ *
+ * @param ownHand - The AI's own hand (SeatCardSummary[])
+ * @param scoredCandidates - Scored play/leader candidates with tempo info
+ */
+export const buildAiDecisionHandShapeAnalysis = (
+  ownHand: readonly { kind: string }[],
+  scoredCandidates: readonly {
+    tempo: number;
+    isUnitMove: boolean;
+    score: number;
+  }[],
+): AiDecisionHandShapeAnalysis => {
+  const unitCardCount = ownHand.filter(
+    (c) => c.kind === "unit" || c.kind === "hero",
+  ).length;
+  const heroCardCount = ownHand.filter((c) => c.kind === "hero").length;
+  const specialOrWeatherCardCount = ownHand.filter(
+    (c) => c.kind === "special",
+  ).length;
+  const totalHandCount = ownHand.length;
+
+  const positiveMoves = scoredCandidates.filter((m) => m.score > 0);
+  const positiveUnitMoves = positiveMoves.filter((m) => m.isUnitMove);
+  const positiveNonUnitMoves = positiveMoves.filter((m) => !m.isUnitMove);
+
+  const bestUnitTempo = positiveUnitMoves.reduce(
+    (max, m) => Math.max(max, m.tempo),
+    0,
+  );
+  const bestNonUnitTempo = positiveNonUnitMoves.reduce(
+    (max, m) => Math.max(max, m.tempo),
+    0,
+  );
+
+  const futureRoundHandQuality = classifyFutureRoundHandQuality(
+    unitCardCount,
+    totalHandCount,
+  );
+
+  return {
+    unitCardCount,
+    heroCardCount,
+    specialOrWeatherCardCount,
+    totalHandCount,
+    positiveUnitMoveCount: positiveUnitMoves.length,
+    positiveNonUnitMoveCount: positiveNonUnitMoves.length,
+    bestUnitTempoBucket: toAiDecisionTempoBucket(bestUnitTempo),
+    bestNonUnitTempoBucket: toAiDecisionTempoBucket(bestNonUnitTempo),
+    futureRoundHandQuality,
+    specialOnlyHand:
+      totalHandCount > 0 &&
+      unitCardCount === 0 &&
+      heroCardCount === 0 &&
+      specialOrWeatherCardCount === totalHandCount,
+    noUnitFutureRisk: unitCardCount === 0 && totalHandCount > 0,
+  };
+};
+
+// ---------------------------------------------------------------------------
 // Selected move summary (hidden-info safe)
 // ---------------------------------------------------------------------------
 
@@ -251,6 +377,7 @@ export interface AiDecisionTrace {
   readonly publicState: AiDecisionPublicState;
   readonly passAnalysis: AiDecisionPassAnalysis | null;
   readonly mulliganAnalysis: AiDecisionMulliganAnalysis | null;
+  readonly handShapeAnalysis: AiDecisionHandShapeAnalysis | null;
   readonly selected: AiDecisionSelectedMove | null;
   readonly candidates: AiDecisionCandidateSummary[];
   // Distinguishes exact-policy reasoning ("policy-...") from diagnostics

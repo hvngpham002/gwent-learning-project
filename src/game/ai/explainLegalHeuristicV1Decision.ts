@@ -16,6 +16,10 @@ import {
 } from "@/game/ai";
 
 import {
+  buildLegalHeuristicV1HandShapeAnalysis,
+} from "@/game/ai";
+
+import {
   buildLegalHeuristicV1Features,
   uniqueCardTempoUpperBound,
   buildLegalHeuristicV1PassDecisionDiagnostics,
@@ -133,6 +137,7 @@ const buildPhaseTrace = (
       publicState,
       passAnalysis: null,
       mulliganAnalysis,
+      handShapeAnalysis: null,
       selected,
       candidates: [],
       reasonKind: "phase",
@@ -193,6 +198,9 @@ const buildPlayingPhaseTrace = (
     preserveHandPassRecommended: passDiagnostics.preserveHandPassRecommended,
   };
 
+  // cFp28: Build hand-shape analysis for diagnostics
+  const handShapeAnalysis = buildLegalHeuristicV1HandShapeAnalysis(features);
+
   const publicState = buildAiDecisionPublicState(input);
   const passAnalysis = features.passMove
     ? buildAiDecisionPassAnalysis(traceFeatures, v1PolicyUpperBound, passDiagnosticsInput)
@@ -209,6 +217,7 @@ const buildPlayingPhaseTrace = (
   // Build reason string using the same policy logic, cFp26: use the
   // *selected* move to decide whether the reason claims a catch-up.
   // cFp26.1: Distinguish preserve-hand pass from generic "no useful move".
+  // cFp28: Include future-hand quality diagnostics in reason.
   let reason = "";
   let reasonKind = "policy";
   if (!move || !features.passMove) {
@@ -245,10 +254,22 @@ const buildPlayingPhaseTrace = (
   } else if (passAnalysis && passAnalysis.isVoluntarilySafe) {
     reason = `voluntary pass safe (delta ${passAnalysis.scoreDelta}, required ${passAnalysis.requiredLead})`;
   } else {
+    // cFp28: Check if hand quality blocks voluntary pass
     const bestMove = sorted[0];
-    reason = bestMove
-      ? `best useful move (score ${bestMove.score})`
-      : "no useful move above threshold, pass";
+    const requiredLead = Math.max(features.ownGems <= 1 ? 36 : 24, features.opponentHandCount * (features.ownGems <= 1 ? 8 : 6));
+    const passSafetyBuffer = features.scoreDelta - requiredLead;
+    const extraBuffer = handShapeAnalysis.futureRoundHandQuality === "poor" ? 18 : handShapeAnalysis.futureRoundHandQuality === "thin" ? 10 : 0;
+    if (extraBuffer > 0 && passSafetyBuffer < extraBuffer) {
+      if (bestMove && bestMove.score > 0) {
+        reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, pass margin too small — play useful card`;
+      } else {
+        reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, no useful move — pass`;
+      }
+    } else if (bestMove) {
+      reason = `best useful move (score ${bestMove.score})`;
+    } else {
+      reason = "no useful move above threshold, pass";
+    }
   }
 
   return {
@@ -262,6 +283,7 @@ const buildPlayingPhaseTrace = (
       publicState,
       passAnalysis,
       mulliganAnalysis: null,
+      handShapeAnalysis,
       selected,
       candidates: topCandidates,
       reasonKind,
@@ -306,6 +328,7 @@ export const explainLegalHeuristicV1Decision = (
         publicState: buildAiDecisionPublicState(input),
         passAnalysis: null,
         mulliganAnalysis: null,
+        handShapeAnalysis: null,
         selected: null,
         candidates: [],
         reasonKind: "none",

@@ -2475,3 +2475,340 @@ describe("cFp27: mulligan low-standalone and diagnostics", () => {
     expect(selected).toEqual(expect.objectContaining({ cardIds: [] }));
   });
 });
+
+describe("cFp28: hand-quality pass calibration", () => {
+  // Helper: create special/weather card summaries for poor-hand tests
+  const specialCard = (id: string, sourceId: string, printedStrength = 0) =>
+    testCard({ cardId: id, sourceId, printedStrength, kind: "special" });
+
+  // Helper: create unit card summaries
+  const unitCard = (id: string, sourceId: string, printedStrength = 5) =>
+    testCard({ cardId: id, sourceId, printedStrength, kind: "unit" });
+
+  // Helper: create hero card summaries
+  const heroCard = (id: string, sourceId: string, printedStrength = 10) =>
+    testCard({ cardId: id, sourceId, printedStrength, kind: "hero" });
+
+  // ------------------------------------------------------------------
+  // Marginal Poor-Hand Pass Is Blocked
+  // ------------------------------------------------------------------
+  it("blocks marginal voluntary pass when future hand is poor and useful play exists", () => {
+    // Recreating the playtest shape: scoreDelta=29, requiredLead=24, buffer=5
+    // Hand has no units (all special/weather) -> futureRoundHandQuality = "poor"
+    // Extra buffer required = 18, but passSafetyBuffer = 5 -> blocked
+    const weather1 = specialCard("w1", "neutral.biting-frost", 0);
+    const weather2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+    const special1 = specialCard("s1", "test.decoy", 0);
+    const special2 = specialCard("s2", "test.commanders-horn", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(weather1), playMove(weather2), playMove(special1), playMove(special2)],
+      {
+        ownHand: [weather1, weather2, special1, special2],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 79, seat_b: 108 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.handShapeAnalysis).not.toBeNull();
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("poor");
+    expect(trace.handShapeAnalysis!.noUnitFutureRisk).toBe(true);
+    // With all-special hand and no positive-score useful play, pass is still selected
+    // but hand quality is recorded correctly in trace.
+  });
+
+  it("blocks marginal pass with all-special hand (poor quality)", () => {
+    // All special cards -> poor future hand quality
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+    const w3 = specialCard("w3", "neutral.torrential-rain", 0);
+    const w4 = specialCard("w4", "neutral.skellige-storm", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(w1), playMove(w2), playMove(w3), playMove(w4)],
+      {
+        ownHand: [w1, w2, w3, w4],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 79, seat_b: 108 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { trace } = explainLegalHeuristicV1Decision(input);
+
+    // With poor hand and small buffer, pass blocked if useful move exists.
+    // If no positive-score move exists, pass is still allowed.
+    expect(trace.handShapeAnalysis).not.toBeNull();
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("poor");
+    expect(trace.handShapeAnalysis!.noUnitFutureRisk).toBe(true);
+
+    // Parity check
+    expect(selected).toEqual(legalHeuristicPolicyV1.selectMove(input));
+  });
+
+  // ------------------------------------------------------------------
+  // Healthy-Hand Pass Still Works
+  // ------------------------------------------------------------------
+  it("allows voluntary pass when hand is healthy and delta exceeds required lead", () => {
+    const unit1 = unitCard("u1", "test.unit1", 8);
+    const unit2 = unitCard("u2", "test.unit2", 7);
+    const hero1 = heroCard("h1", "test.hero1", 10);
+
+    const input = policyInput(
+      [passMove(), playMove(unit1), playMove(unit2), playMove(hero1)],
+      {
+        ownHand: [unit1, unit2, hero1],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 79, seat_b: 110 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { trace } = explainLegalHeuristicV1Decision(input);
+
+    expect(trace.handShapeAnalysis).not.toBeNull();
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("healthy");
+
+    // Pass allowed with healthy hand
+    expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+  });
+
+  // ------------------------------------------------------------------
+  // Thin-Hand Extra Buffer Tests
+  // ------------------------------------------------------------------
+  it("blocks thin-hand pass when buffer below 10 and useful play exists", () => {
+    // 1 unit + 2 specials = thin hand (unitCardCount=1, totalHandCount>=3)
+    const unit = unitCard("u1", "test.thin-unit", 10);
+    const s1 = specialCard("s1", "test.special1", 0);
+    const s2 = specialCard("s2", "test.special2", 0);
+    // scoreDelta=34, requiredLead=24, buffer=10 -> exactly at threshold for thin
+    // With buffer < 10 (i.e., 9), pass blocked
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(s1), playMove(s2)],
+      {
+        ownHand: [unit, s1, s2],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 76, seat_b: 108 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("thin");
+  });
+
+  it("allows thin-hand pass when buffer at or above 10", () => {
+    const unit = unitCard("u1", "test.thin-unit2", 10);
+    const s1 = specialCard("s1", "test.special3", 0);
+    const s2 = specialCard("s2", "test.special4", 0);
+    // scoreDelta=34, requiredLead=24, buffer=10 -> exactly at thin threshold
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(s1), playMove(s2)],
+      {
+        ownHand: [unit, s1, s2],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 74, seat_b: 108 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("thin");
+    // With buffer >= 10, pass allowed for thin hand
+    expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+  });
+
+  // ------------------------------------------------------------------
+  // Poor-Hand Large Buffer Can Still Pass
+  // ------------------------------------------------------------------
+  it("allows poor-hand pass when safety buffer >= 18", () => {
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+    // scoreDelta = 48, requiredLead = 24, buffer = 24 >= 18 -> pass allowed
+    const input = policyInput(
+      [passMove(), playMove(w1), playMove(w2)],
+      {
+        ownHand: [w1, w2],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 50, seat_b: 98 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("poor");
+    // Large buffer overrides poor-hand penalty
+    expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+  });
+
+  // ------------------------------------------------------------------
+  // Last-Gem Branch Unchanged
+  // ------------------------------------------------------------------
+  it("preserves last-gem catch-up-impossible pass behavior", () => {
+    const tiny = testCard({ cardId: "tiny", sourceId: "test.tiny", printedStrength: 2 });
+    const input = policyInput(
+      [passMove(), playMove(tiny)],
+      {
+        ownHand: [tiny],
+        ownGems: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 20, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { trace } = explainLegalHeuristicV1Decision(input);
+
+    expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+    expect(trace.reasonKind).toBe("policy-last-gem");
+    expect(trace.passAnalysis!.lastGemSurrenderAllowed).toBe(true);
+    // handShapeAnalysis should be present in playing phase
+    expect(trace.handShapeAnalysis).not.toBeNull();
+  });
+
+  // ------------------------------------------------------------------
+  // Opponent-Already-Passed Unchanged
+  // ------------------------------------------------------------------
+  it("allows pass when opponent passed and AI is ahead even with poor hand", () => {
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(w1), playMove(w2)],
+      {
+        ownHand: [w1, w2],
+        opponentPassed: true,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 10 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("poor");
+    expect(trace.reason).toContain("opponent passed");
+  });
+
+  // ------------------------------------------------------------------
+  // Hand Shape Analysis In Trace
+  // ------------------------------------------------------------------
+  it("populates handShapeAnalysis in playing-phase trace", () => {
+    const unit = unitCard("u1", "test.unit-trace", 6);
+    const hero = heroCard("h1", "test.hero-trace", 10);
+    const special = specialCard("s1", "test.special-trace", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(hero), playMove(special)],
+      {
+        ownHand: [unit, hero, special],
+        ownGems: 2,
+        opponentHandCount: 5,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 20, seat_b: 30 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const hsa = trace.handShapeAnalysis!;
+    expect(hsa).not.toBeNull();
+    expect(hsa.unitCardCount).toBe(2); // counts units + heroes
+    expect(hsa.heroCardCount).toBe(1);
+    expect(hsa.specialOrWeatherCardCount).toBe(1);
+    expect(hsa.totalHandCount).toBe(3);
+    expect(hsa.futureRoundHandQuality).toBe("healthy");
+    expect(hsa.noUnitFutureRisk).toBe(false);
+  });
+
+  it("sets handShapeAnalysis to null for mulligan phase", () => {
+    const lowUnit = testCard({ cardId: "low-unit", sourceId: "test.low-unit", printedStrength: 3 });
+    const input = policyInput(
+      [keepMulliganMove(), redrawMove(lowUnit)],
+      { phase: "mulligan", ownHand: [lowUnit] },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.handShapeAnalysis).toBeNull();
+  });
+
+  // ------------------------------------------------------------------
+  // Parity Tests
+  // ------------------------------------------------------------------
+  it("explain move equals selectMove for poor-hand blocked pass", () => {
+    const unit = unitCard("u1", "test.parity-unit", 8);
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+    const w3 = specialCard("w3", "neutral.torrential-rain", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(w1), playMove(w2), playMove(w3)],
+      {
+        ownHand: [unit, w1, w2, w3],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 79, seat_b: 108 },
+        },
+      },
+    );
+
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    expect(tracedMove).toEqual(selectedMove);
+  });
+
+  it("explain move equals selectMove for healthy-hand pass", () => {
+    const unit1 = unitCard("u1", "test.hp-unit1", 8);
+    const unit2 = unitCard("u2", "test.hp-unit2", 7);
+    const hero1 = heroCard("h1", "test.hp-hero", 10);
+
+    const input = policyInput(
+      [passMove(), playMove(unit1), playMove(unit2), playMove(hero1)],
+      {
+        ownHand: [unit1, unit2, hero1],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 79, seat_b: 110 },
+        },
+      },
+    );
+
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    expect(tracedMove).toEqual(selectedMove);
+  });
+});

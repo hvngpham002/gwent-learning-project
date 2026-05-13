@@ -1211,6 +1211,107 @@ describe("cFp27: mulligan diagnostics in product export", () => {
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
   });
 
+  it("scan passes for cFp28 handShapeAnalysis fields in export", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp28-hand-shape-test",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 3,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          handShapeAnalysis: {
+            unitCardCount: 2,
+            heroCardCount: 1,
+            specialOrWeatherCardCount: 1,
+            totalHandCount: 3,
+            positiveUnitMoveCount: 2,
+            positiveNonUnitMoveCount: 1,
+            bestUnitTempoBucket: "medium",
+            bestNonUnitTempoBucket: "low",
+            futureRoundHandQuality: "healthy",
+            specialOnlyHand: false,
+            noUnitFutureRisk: false,
+          },
+          selected: {
+            kind: "pass",
+            label: "pass",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "policy",
+          reason: "voluntary pass safe (delta 5, required 42)",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const json = JSON.stringify(exportData);
+    expect(json).not.toContain("seat_a:");
+    expect(json).not.toContain("seat_b:");
+    expect(json).not.toContain("cardIds");
+    expect(json).toContain("futureRoundHandQuality");
+    expect(json).toContain("unitCardCount");
+  });
+
+  it("handShapeAnalysis contains only safe aggregate fields", () => {
+    const hsa = {
+      unitCardCount: 2,
+      heroCardCount: 1,
+      specialOrWeatherCardCount: 1,
+      totalHandCount: 3,
+      positiveUnitMoveCount: 2,
+      positiveNonUnitMoveCount: 1,
+      bestUnitTempoBucket: "medium",
+      bestNonUnitTempoBucket: "low",
+      futureRoundHandQuality: "healthy",
+      specialOnlyHand: false,
+      noUnitFutureRisk: false,
+    };
+    const issues = scanForHiddenInfoHazards(hsa);
+    expect(issues.length).toBe(0);
+  });
+
   it("non-mulligan trace with public target label 'Roach' does not fail hidden-info scan", () => {
     const exportData = buildProductDiagnosticExport({
       aiPolicyId: "legal-heuristic-v1",

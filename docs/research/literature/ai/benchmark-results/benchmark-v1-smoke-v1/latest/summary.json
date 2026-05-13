@@ -1,7 +1,7 @@
 {
-  "averageCommands": 35.333333333333336,
-  "averageLegalMoves": 8.544048182945737,
-  "averageSteps": 35.333333333333336,
+  "averageCommands": 35.916666666666664,
+  "averageLegalMoves": 8.466071992469546,
+  "averageSteps": 35.916666666666664,
   "benchmarkRunId": "benchmark-v1-smoke-v1:latest",
   "completionRate": 1,
   "deckPresetIds": [
@@ -9,41 +9,41 @@
     "current-northern-realms"
   ],
   "errorCodeCounts": {},
-  "leaderUseCount": 2,
+  "leaderUseCount": 3,
   "matchupSummaries": [
     {
-      "averageCommands": 35.333333333333336,
-      "averageLegalMoves": 8.544048182945737,
-      "averageSteps": 35.333333333333336,
-      "leaderUseCount": 2,
+      "averageCommands": 35.916666666666664,
+      "averageLegalMoves": 8.466071992469546,
+      "averageSteps": 35.916666666666664,
+      "leaderUseCount": 3,
       "matchupId": "current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0",
-      "promptCount": 1,
+      "promptCount": 3,
       "resultCountsByDeck": {
         "current-nilfgaard": {
           "draws": 0,
-          "losses": 5,
+          "losses": 6,
           "none": 0,
-          "wins": 7
+          "wins": 6
         },
         "current-northern-realms": {
           "draws": 0,
-          "losses": 7,
+          "losses": 6,
           "none": 0,
-          "wins": 5
+          "wins": 6
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 5,
+          "losses": 6,
           "none": 0,
-          "wins": 7
+          "wins": 6
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 7,
+          "losses": 6,
           "none": 0,
-          "wins": 5
+          "wins": 6
         }
       },
       "statusCounts": {
@@ -60,35 +60,35 @@
     "legal-heuristic-v0",
     "legal-heuristic-v1"
   ],
-  "promptCount": 1,
+  "promptCount": 3,
   "replayCheckedCount": 12,
   "replayFailedCount": 0,
   "resultCountsByDeck": {
     "current-nilfgaard": {
       "draws": 0,
-      "losses": 5,
+      "losses": 6,
       "none": 0,
-      "wins": 7
+      "wins": 6
     },
     "current-northern-realms": {
       "draws": 0,
-      "losses": 7,
+      "losses": 6,
       "none": 0,
-      "wins": 5
+      "wins": 6
     }
   },
   "resultCountsByPolicy": {
     "legal-heuristic-v0": {
       "draws": 0,
-      "losses": 5,
+      "losses": 6,
       "none": 0,
-      "wins": 7
+      "wins": 6
     },
     "legal-heuristic-v1": {
       "draws": 0,
-      "losses": 7,
+      "losses": 6,
       "none": 0,
-      "wins": 5
+      "wins": 6
     }
   },
   "schemaVersion": "benchmark-summary-v1",
