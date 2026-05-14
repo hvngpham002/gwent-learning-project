@@ -1,6 +1,6 @@
 # Legal Heuristic v1
 
-Date: 2026-05-10
+Date: 2026-05-14
 
 ## Purpose
 
@@ -15,6 +15,26 @@ Human testers can select `legal-heuristic-v1` from the pre-game `AI
 policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 `/match`. Invalid `ai` query values fall back to v0, and
 `legal-first-v0` remains benchmark-only.
+
+## Current State
+
+The policy ID remains `legal-heuristic-v1`. The current implementation
+phase is cFp30: Weather-Aware Unit Placement, which includes the cFp27
+through cFp30 tuning and diagnostics chain:
+
+- cFp27: linked-card mulligan diagnostics and conservative low-standalone
+  redraw scoring.
+- cFp28: hand-quality pass calibration.
+- cFp29: Medic timing calibration.
+- cFp30: weather-aware non-hero unit placement.
+
+Current cFp30 benchmark totals:
+
+- `benchmark-v1-smoke-v1`: 9 win / 3 loss / 0 draw vs v0.
+- `benchmark-v1-starter-matrix-v1`: 96 win / 23 loss / 1 draw vs v0.
+
+The next likely tuning candidate is cFp31 round-investment and
+future-hand preservation. That behavior is not part of cFp30 or cFp30.1.
 
 ## Product Playtest Toggle
 
@@ -155,19 +175,12 @@ cFp24 registers v1 in `defaultBenchmarkPolicies` and adds:
   unordered pairings, both v1/v0 policy assignments, 3 seeds, mirrored
   seats, 120 public records.
 
-Latest cFp24.2 results:
+Latest cFp30 results:
 
-- v1 smoke: `legal-heuristic-v1` records 6 wins and 6 losses against v0.
-- v1 starter matrix: `legal-heuristic-v1` records 88 wins and 32 losses
-  against v0; deck and matchup distributions changed from cFp24 after
-  the pass-safety patch.
-
-cFp27 refreshed these artifacts after adding low-standalone redraw:
-
-- v1 smoke: `legal-heuristic-v1` records 5 wins and 7 losses against v0
-  (changed from 6/6).
-- v1 starter matrix: `legal-heuristic-v1` records 89 wins and 31 losses
-  against v0 (changed from 88/32 after pass-safety patch).
+- v1 smoke: `legal-heuristic-v1` records 9 wins, 3 losses, and 0 draws
+  against v0.
+- v1 starter matrix: `legal-heuristic-v1` records 96 wins, 23 losses,
+  and 1 draw against v0.
 
 These are fixed-suite evidence, not ratings or proof of broad strength.
 

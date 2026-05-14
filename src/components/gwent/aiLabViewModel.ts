@@ -1,3 +1,5 @@
+import { PRODUCT_AI_POLICIES, type ProductAiPolicyBenchmarkSummary, type ProductAiPolicyId } from "@/game/ai";
+
 export interface AiLabStat {
   readonly label: string;
   readonly value: string;
@@ -18,6 +20,12 @@ export interface AiLabPolicy {
   readonly status: string;
   readonly productSelectable: boolean;
   readonly description: string;
+  readonly latestPhase: string | null;
+  readonly latestSpecPath: string | null;
+  readonly latestReportPath: string | null;
+  readonly latestPolicyDocPath: string | null;
+  readonly latestBenchmarkSummaries: readonly ProductAiPolicyBenchmarkSummary[];
+  readonly capabilities: readonly string[];
 }
 
 export interface AiLabEvaluationLayer {
@@ -71,6 +79,12 @@ const benchmarkOnlyPolicies: readonly AiLabPolicy[] = [
     status: "headless comparator",
     productSelectable: false,
     description: "A deterministic baseline for fixed-suite comparisons. It is not a product difficulty tier.",
+    latestPhase: null,
+    latestSpecPath: null,
+    latestReportPath: null,
+    latestPolicyDocPath: null,
+    latestBenchmarkSummaries: [],
+    capabilities: ["deterministic first-legal-move comparator", "benchmark-only fixed-suite baseline"],
   },
 ];
 
@@ -82,6 +96,12 @@ const policies: readonly AiLabPolicy[] = [
     status: policy.productStatus === "stable" ? "implemented · stable/default" : "implemented · experimental/playtest",
     productSelectable: policy.productSelectable,
     description: `${policy.description} ${policy.benchmarkStatus}.`,
+    latestPhase: policy.latestPhase,
+    latestSpecPath: policy.latestSpecPath,
+    latestReportPath: policy.latestReportPath,
+    latestPolicyDocPath: policy.latestPolicyDocPath,
+    latestBenchmarkSummaries: policy.latestBenchmarkSummaries,
+    capabilities: policy.capabilities,
   })),
   ...benchmarkOnlyPolicies,
 ];
@@ -179,4 +199,3 @@ export const buildAuthenticAiLabViewModel = (): AiLabViewModel => ({
   researchReferences,
   futureActions,
 });
-import { PRODUCT_AI_POLICIES, type ProductAiPolicyId } from "@/game/ai";

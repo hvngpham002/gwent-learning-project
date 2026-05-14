@@ -82,6 +82,55 @@ const AuthenticAiLabScreen: React.FC<AuthenticAiLabScreenProps> = ({ onBack }) =
                   </div>
                   <em>{policy.status}</em>
                   <p>{policy.description}</p>
+                  {policy.latestPhase ? (
+                    <dl className="authentic-ai-lab__policy-meta">
+                      <div>
+                        <dt>latest phase</dt>
+                        <dd data-testid={`authentic-ai-lab-policy-${policy.id}-latest-phase`}>{policy.latestPhase}</dd>
+                      </div>
+                      {policy.latestSpecPath ? (
+                        <div>
+                          <dt>spec</dt>
+                          <dd>
+                            <a href={`/${policy.latestSpecPath}`}>{policy.latestSpecPath}</a>
+                          </dd>
+                        </div>
+                      ) : null}
+                      {policy.latestReportPath ? (
+                        <div>
+                          <dt>report</dt>
+                          <dd>
+                            <a href={`/${policy.latestReportPath}`}>{policy.latestReportPath}</a>
+                          </dd>
+                        </div>
+                      ) : null}
+                      {policy.latestPolicyDocPath ? (
+                        <div>
+                          <dt>policy doc</dt>
+                          <dd>
+                            <a href={`/${policy.latestPolicyDocPath}`}>{policy.latestPolicyDocPath}</a>
+                          </dd>
+                        </div>
+                      ) : null}
+                    </dl>
+                  ) : null}
+                  {policy.latestBenchmarkSummaries.length > 0 ? (
+                    <dl className="authentic-ai-lab__policy-benchmarks">
+                      {policy.latestBenchmarkSummaries.map((summary) => (
+                        <div key={summary.suiteId}>
+                          <dt>{summary.label}</dt>
+                          <dd>{summary.result}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                  {policy.capabilities.length > 0 ? (
+                    <ul className="authentic-ai-lab__policy-capabilities">
+                      {policy.capabilities.map((capability) => (
+                        <li key={capability}>{capability}</li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </article>
               ))}
             </div>

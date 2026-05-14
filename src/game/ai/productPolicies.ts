@@ -10,6 +10,12 @@ export type ProductAiPolicyId = (typeof PRODUCT_AI_POLICY_IDS)[number];
 
 export type ProductAiPolicyStatus = "stable" | "playtest";
 
+export interface ProductAiPolicyBenchmarkSummary {
+  readonly suiteId: string;
+  readonly label: string;
+  readonly result: string;
+}
+
 export interface ProductAiPolicyMetadata {
   readonly id: ProductAiPolicyId;
   readonly label: string;
@@ -19,6 +25,12 @@ export interface ProductAiPolicyMetadata {
   readonly productSelectable: true;
   readonly isDefault: boolean;
   readonly description: string;
+  readonly latestPhase: string | null;
+  readonly latestSpecPath: string | null;
+  readonly latestReportPath: string | null;
+  readonly latestPolicyDocPath: string | null;
+  readonly latestBenchmarkSummaries: readonly ProductAiPolicyBenchmarkSummary[];
+  readonly capabilities: readonly string[];
 }
 
 export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
@@ -31,6 +43,16 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     productSelectable: true,
     isDefault: true,
     description: "Default deterministic legal heuristic for product Human vs AI play.",
+    latestPhase: null,
+    latestSpecPath: null,
+    latestReportPath: null,
+    latestPolicyDocPath: null,
+    latestBenchmarkSummaries: [],
+    capabilities: [
+      "deterministic legal-move selection",
+      "basic mulligan and prompt handling",
+      "stable product default",
+    ],
   },
   {
     id: "legal-heuristic-v1",
@@ -40,7 +62,30 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic heuristic baseline from cFp24.",
+    description: "Experimental deterministic legal heuristic tuned through cFp30 for product playtesting.",
+    latestPhase: "cFp30",
+    latestSpecPath: "docs/spec/2026-05-14-cFp30-specs.md",
+    latestReportPath: "audit/reports/2026-05-14-cFp30-report.md",
+    latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
+    latestBenchmarkSummaries: [
+      {
+        suiteId: "benchmark-v1-smoke-v1",
+        label: "v1 smoke",
+        result: "9 win / 3 loss / 0 draw vs v0",
+      },
+      {
+        suiteId: "benchmark-v1-starter-matrix-v1",
+        label: "v1 starter matrix",
+        result: "96 win / 23 loss / 1 draw vs v0",
+      },
+    ],
+    capabilities: [
+      "linked-card mulligan diagnostics",
+      "tie-aware and pass diagnostics",
+      "hand-quality pass calibration",
+      "Medic timing calibration",
+      "weather-aware unit placement",
+    ],
   },
 ];
 
