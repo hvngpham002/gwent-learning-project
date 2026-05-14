@@ -95,12 +95,15 @@ const RAW_INSTANCE_PATTERN = /seat_[ab]:/;
 // Medic-timing-specific forbidden string tokens — applied ONLY inside medicTimingAnalysis.
 // These catch raw card names, source IDs, and ability array representations that
 // the global scan doesn't target (public card names like "Roach" pass globally).
+// medicTimingAnalysis only contains safe lowercase bucket strings: none, weak, medium, strong.
 const MEDIC_TIMING_FORBIDDEN_STRING_TOKENS = [
-  // Raw card name pattern: multi-word proper names (e.g., "Yennefer of Vengerberg")
-  // are suspicious in medicTimingAnalysis which only contains aggregates.
+  // One-word proper name (e.g., "Draug", "Leshen") — any capitalized word not a safe bucket.
+  /^[A-Z][a-z]+$/,
+  // Multi-word proper names (e.g., "Yennefer of Vengerberg")
   /^[A-Z][a-z]+(?:\s+[a-z]+)?\s+[A-Z][A-Za-z]+$/,
-  // Source ID pattern: namespace.name (e.g., "neutral.yennefer-of-vengerberg")
-  /^[a-z][a-z0-9]*\.[a-z][a-z0-9.-]*$/,
+  // Source ID pattern: namespace.name with hyphens (e.g., "northern-realms.philippa-eilhart",
+  // "neutral.yennefer-of-vengerberg", "nilfgaard.vattier-de-rideaux")
+  /^[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*$/,
 ];
 
 /**

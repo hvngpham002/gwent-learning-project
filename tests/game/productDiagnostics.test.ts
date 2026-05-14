@@ -1776,4 +1776,50 @@ describe("cFp29: medic timing diagnostics in product export", () => {
 
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
   });
+
+  it("scan fails for real source ID 'northern-realms.philippa-eilhart' under medicTimingAnalysis", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+      targetSourceId: "northern-realms.philippa-eilhart",
+    };
+    const issues = scanMedicTimingAnalysis(medicTiming);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("raw card name or source ID"))).toBe(true);
+  });
+
+  it("scan fails for one-word proper name 'Draug' under medicTimingAnalysis", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+      targetName: "Draug",
+    };
+    const issues = scanMedicTimingAnalysis(medicTiming);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("raw card name or source ID"))).toBe(true);
+  });
+
+  it("safe aggregate bucket strings pass medic-timing scan", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+    };
+    const issues = scanMedicTimingAnalysis(medicTiming);
+    expect(issues.length).toBe(0);
+  });
 });
