@@ -180,8 +180,8 @@ These are fixed-suite evidence, not ratings or proof of broad strength.
   entries, not engine simulation.
 - Faction-specific strategy profiles are not implemented.
 - v1 can still overcommit or over-pass in lines that require sacrifice,
-  baiting, hand-reading, or multi-turn valuation beyond the cFp24.2
-  hand-pressure helper.
+   baiting, hand-reading, or multi-turn valuation beyond the cFp28 hand-
+   quality pass calibration.
 - Benchmarks use starter decks and smoke decks only; mechanics stress
   decks and competitive lists remain deferred.
 - Glicko, TrueSkill, search, ML training, Python tooling, browser
@@ -350,8 +350,71 @@ Internal reason kinds are mapped to exported categories:
 - `low_standalone_unit` → `"low_standalone_unit"` (broad quality class,
   not a named card)
 
-## Planned Follow-Ups
+### Hand-Quality Pass Calibration (cFp28)
 
-Useful next steps are a narrow v1.1 tuning pass over reviewed v1 ledgers
-or mechanics stress suites for Spy/Medic/Muster/Weather/Scorch/Decoy/
-Leader behavior. Product difficulty tiers remain a separate future spec.
+cFp28 calibrates voluntary safe-pass decisions against future-round hand
+quality. Motivated by a product playtest export in which a `+29` round-1
+lead (just above `requiredLead` of `24`) was voluntarily passed, leaving
+the AI with no unit cards for a future must-win round.
+
+Two new diagnostic types classify aggregate hand shape:
+
+- `AiDecisionHandQuality`: `"empty"` (no cards), `"poor"` (no units, only
+  specials/weather), `"thin"` (exactly one unit in 3+ cards), `"healthy"`
+  (otherwise).
+- `AiDecisionTempoBucket`: `"none"` (≤ 0), `"low"` (1-5), `"medium"`
+  (6-10), `"high"` (≥ 11).
+
+`AiDecisionHandShapeAnalysis` is a hidden-info-safe struct exposed on
+playing-phase `AiDecisionTrace` via `handShapeAnalysis`. It counts unit,
+hero, and special/weather cards in hand, buckets best tempo values, and
+classifies future-round viability. No card names, source IDs, instance
+IDs, cardIds, linkedSourceIds, or raw abilities are included.
+
+Voluntary pass now requires extra safety buffer when the future hand is
+poor or thin:
+
+- `poor` future hand: `scoreDelta >= requiredLead + 18`
+- `thin` future hand: `scoreDelta >= requiredLead + 10`
+- `healthy` or `empty` future hand: unchanged (`scoreDelta >= requiredLead`)
+
+This gate only applies when `opponentPassed === false`, `isLastGem ===
+false`, and the pass is voluntary (not forced by catch-up impossibility).
+The last-gem catch-up-impossible pass and opponent-passed pass behavior
+are unchanged.
+
+When hand quality blocks a voluntary pass, v1 selects the best positive
+useful play. If no positive play exists, passing is still allowed.
+
+cFp28 is still a heuristic, not lookahead or search. It only considers
+aggregate hand shape for the next round, not multi-round simulation or
+exact card sequencing.
+
+### cFp28 Benchmark Results
+
+Because selected-move behavior changed, benchmark artifacts were refreshed:
+
+- Smoke benchmark: `legal-heuristic-v1` records 6 wins and 6 losses
+  against v0 (changed from 5/7 after cFp27).
+- Starter matrix: `legal-heuristic-v1` records 88 wins and 32 losses
+  against v0 (changed from 89/31 after cFp27).
+
+### cFp28 Repair: Hand-Shape Field Semantics
+
+A follow-up repair aligned the hand-shape diagnostic fields with their
+documented semantics:
+
+- `unitCardCount` now strictly counts cards with `kind === "unit"`. Hero
+  cards are no longer included in this count.
+- `heroCardCount` tracks `kind === "hero"` cards separately.
+- `futureRoundHandQuality` uses `unitTempoCardCount` (= `unitCardCount +
+  heroCardCount`) rather than `unitCardCount` alone, so heroes continue to
+  contribute to future-round viability assessment.
+- `specialOnlyHand` is `true` only when the hand contains zero units AND
+  zero heroes (i.e. only specials/weather remain).
+- `noUnitFutureRisk` is `true` only when `unitTempoCardCount === 0` and
+  the hand is non-empty.
+- Pass-buffer constants (`EXTRA_BUFFER_POOR` = 18, `EXTRA_BUFFER_THIN` =
+  10) and the `getFutureHandExtraBuffer` helper were extracted from inline
+  code into `decisionTrace.ts` and shared by both the policy and
+  explanation modules to prevent divergence.

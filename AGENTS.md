@@ -1,5 +1,13 @@
 # Agent Instructions
 
+## Tool Call Channel Discipline
+
+- Never emit tool calls inside reasoning or thinking content.
+- If a tool is needed, finish the reasoning segment first, then emit the tool call through the proper tool-call channel only.
+- Do not write XML, JSON, or pseudo-code tool calls as plain text.
+- Do not output `<tool_call>`, `<function=...>`, `<parameter=...>`, or similar tool-call markup inside `Thinking:` content.
+- If a tool request is accidentally drafted in reasoning, discard that draft and re-emit the request through OpenCode's normal tool-call mechanism.
+
 ## Read First
 
 1. `AGENTS.md`

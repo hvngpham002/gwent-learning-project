@@ -10,12 +10,17 @@ import type {
 } from "@/game/core";
 
 import type {
-  EnginePolicy,
   EnginePolicyInput,
+  EnginePolicy,
   PromptOptionSummary,
   SeatBoardRowSummary,
   SeatCardSummary,
 } from "./types";
+
+import {
+  buildAiDecisionHandShapeAnalysis,
+  getFutureHandExtraBuffer,
+} from "./decisionTrace";
 
 const MIN_USEFUL_MOVE_SCORE = 25;
 
@@ -799,6 +804,59 @@ export const uniqueCardTempoUpperBound = (features: LegalHeuristicV1Features) =>
   return [...bestTempoByCard.values()].reduce((sum, tempo) => sum + tempo, 0) + leaderTempo;
 };
 
+// ---------------------------------------------------------------------------
+// cFp28: Scored candidates for hand-shape analysis
+// ---------------------------------------------------------------------------
+
+export interface ScoredMove {
+  readonly tempo: number;
+  readonly isUnitMove: boolean;
+  readonly score: number;
+}
+
+/**
+ * Builds scored candidate data from features, reused by both the hand-shape
+ * analysis and the scoring logic.  Does not re-score — delegates to
+ * scoreMove which already exists.
+ */
+export const buildScoredCandidates = (
+  features: LegalHeuristicV1Features,
+): readonly ScoredMove[] => {
+  const results: ScoredMove[] = [];
+
+  for (const move of features.playMoves) {
+    const card = features.ownHandByCardId.get(move.sourceCardId);
+    const isUnitMove = card?.kind === "unit" || card?.kind === "hero";
+    const tempo = estimateImmediateTempo(features, move);
+    const score = scoreMove(features, move);
+    results.push({ tempo, isUnitMove, score });
+  }
+
+  for (const move of features.leaderMoves) {
+    const tempo = estimateLeaderTempo(features, move);
+    const score = scoreMove(features, move);
+    results.push({ tempo, isUnitMove: false, score });
+  }
+
+  return results;
+};
+
+/**
+ * cFp28: Build a hidden-info-safe hand-shape analysis from the current
+ * features.  Uses existing card kind classification and scored-move data.
+ */
+export const buildLegalHeuristicV1HandShapeAnalysis = (
+  features: LegalHeuristicV1Features,
+): import("./decisionTrace").AiDecisionHandShapeAnalysis => {
+  const ownHand = features.input.observation.ownHand;
+  const scoredCandidates = buildScoredCandidates(features);
+
+  return buildAiDecisionHandShapeAnalysis(
+    ownHand,
+    scoredCandidates,
+  );
+};
+
 const estimateOpponentHandPressure = (features: LegalHeuristicV1Features) => {
   const perCardPressure = features.ownGems <= 1 ? 8 : 6;
   return features.opponentHandCount * perCardPressure;
@@ -934,7 +992,19 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
     }
   }
 
+  // cFp28: Calibrate voluntary pass safety with hand quality.
   if (passMove && canVoluntarilyPassWithLead(features)) {
+    const handShape = buildLegalHeuristicV1HandShapeAnalysis(features);
+    const extraBuffer = getFutureHandExtraBuffer(handShape.futureRoundHandQuality);
+    const requiredLead = Math.max(features.ownGems <= 1 ? 36 : 24, estimateOpponentHandPressure(features));
+    const passSafetyBuffer = features.scoreDelta - requiredLead;
+    if (extraBuffer > 0 && passSafetyBuffer < extraBuffer) {
+      // Hand quality requires extra safety margin — prefer useful play.
+      const useful = bestUsefulMove(features);
+      if (useful) {
+        return useful;
+      }
+    }
     return passMove;
   }
 
