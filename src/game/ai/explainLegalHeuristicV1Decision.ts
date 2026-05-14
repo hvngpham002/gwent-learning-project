@@ -31,6 +31,9 @@ import {
   scoreLeaderMove,
   legalHeuristicPolicyV1,
   isMedicSource,
+  medicReviveCandidateValue,
+  MEDIC_WEAK_TARGET_UTILITY,
+  MEDIC_MEDIUM_TARGET_UTILITY,
   type LegalHeuristicV1Features,
 } from "@/game/ai";
 
@@ -39,14 +42,12 @@ const buildMedicTimingAnalysis = (
   features: LegalHeuristicV1Features,
   move: import("@/game/core").LegalMove | null,
 ): AiDecisionMedicTimingAnalysis | null => {
-  const hasAb = (card: { abilities: readonly string[] }, ability: string) => card.abilities.includes(ability);
-
-  // Find unique Medic source cards in legal play-card moves
+  // Find unique Medic source card instances in legal play-card moves
   const medicSourceCardIds = new Set<string>();
   for (const playMove of features.playMoves) {
     const card = features.ownHandByCardId.get(playMove.sourceCardId);
     if (card && isMedicSource(card)) {
-      medicSourceCardIds.add(card.sourceId);
+      medicSourceCardIds.add(playMove.sourceCardId);
     }
   }
   const medicPlayLegal = medicSourceCardIds.size > 0;
@@ -60,28 +61,21 @@ const buildMedicTimingAnalysis = (
   // Best non-Spy revive strength
   let bestReviveStrength = 0;
   for (const c of reviveCandidates) {
-    if (!hasAb(c, "spy") && c.printedStrength > bestReviveStrength) {
+    if (c.abilities.includes("spy") === false && c.printedStrength > bestReviveStrength) {
       bestReviveStrength = c.printedStrength;
     }
   }
 
-  // Best revive value bucket
+  // Best revive value bucket — reuse shared helper
   let bestReviveValueBucket: "none" | "weak" | "medium" | "strong" = "none";
   if (reviveCandidates.length > 0) {
     let bestValue = 0;
     for (const c of reviveCandidates) {
-      let v = c.printedStrength * 10;
-      if (hasAb(c, "spy")) v += 360;
-      if (hasAb(c, "medic")) v += 220;
-      if (hasAb(c, "muster") || hasAb(c, "muster_roach")) v += 170;
-      if (hasAb(c, "tight_bond")) v += 95;
-      if (hasAb(c, "morale_boost")) v += 70;
-      if (hasAb(c, "scorch") || hasAb(c, "scorch_close") || hasAb(c, "scorch_range") || hasAb(c, "scorch_siege")) v += 140;
-      if (c.deckLimit === 1) v += 15;
+      const v = medicReviveCandidateValue(c);
       if (v > bestValue) bestValue = v;
     }
-    if (bestValue < 140) bestReviveValueBucket = "weak";
-    else if (bestValue < 280) bestReviveValueBucket = "medium";
+    if (bestValue <= MEDIC_WEAK_TARGET_UTILITY) bestReviveValueBucket = "weak";
+    else if (bestValue <= MEDIC_MEDIUM_TARGET_UTILITY) bestReviveValueBucket = "medium";
     else bestReviveValueBucket = "strong";
   }
 

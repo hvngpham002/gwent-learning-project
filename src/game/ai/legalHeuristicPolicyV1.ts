@@ -100,7 +100,7 @@ const isMedicReviveCandidate = (card: SeatCardSummary) =>
 const medicReviveCandidates = (features: LegalHeuristicV1Features) =>
   features.input.observation.ownDiscard.filter(isMedicReviveCandidate);
 
-const medicReviveCandidateValue = (candidate: SeatCardSummary) => {
+export const medicReviveCandidateValue = (candidate: SeatCardSummary) => {
   let value = candidate.printedStrength * 10;
   if (hasAbility(candidate, "spy")) value += 360;
   if (hasAbility(candidate, "medic")) value += 220;
