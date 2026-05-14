@@ -19,6 +19,7 @@ import type {
 
 import {
   buildAiDecisionHandShapeAnalysis,
+  getFutureHandExtraBuffer,
 } from "./decisionTrace";
 
 const MIN_USEFUL_MOVE_SCORE = 25;
@@ -804,11 +805,8 @@ export const uniqueCardTempoUpperBound = (features: LegalHeuristicV1Features) =>
 };
 
 // ---------------------------------------------------------------------------
-// cFp28: Hand-shape analysis helpers
+// cFp28: Scored candidates for hand-shape analysis
 // ---------------------------------------------------------------------------
-
-const EXTRA_BUFFER_Poor = 18;
-const EXTRA_BUFFER_Thin = 10;
 
 export interface ScoredMove {
   readonly tempo: number;
@@ -857,23 +855,6 @@ export const buildLegalHeuristicV1HandShapeAnalysis = (
     ownHand,
     scoredCandidates,
   );
-};
-
-/**
- * cFp28: Returns the extra pass buffer required when the future hand quality
- * is poor or thin.  Returns 0 for healthy/empty hands.
- */
-const getFutureHandExtraBuffer = (
-  quality: import("./decisionTrace").AiDecisionHandQuality,
-): number => {
-  switch (quality) {
-    case "poor":
-      return EXTRA_BUFFER_Poor;
-    case "thin":
-      return EXTRA_BUFFER_Thin;
-    default:
-      return 0;
-  }
 };
 
 const estimateOpponentHandPressure = (features: LegalHeuristicV1Features) => {

@@ -6,6 +6,7 @@ import {
   buildAiDecisionPublicState,
   buildAiDecisionPassAnalysis,
   buildAiDecisionSelectedMove,
+  getFutureHandExtraBuffer,
   redactAiHandCardLabel,
   AI_DECISION_TRACE_SCHEMA_VERSION,
   type EnginePolicyInput,
@@ -258,7 +259,7 @@ const buildPlayingPhaseTrace = (
     const bestMove = sorted[0];
     const requiredLead = Math.max(features.ownGems <= 1 ? 36 : 24, features.opponentHandCount * (features.ownGems <= 1 ? 8 : 6));
     const passSafetyBuffer = features.scoreDelta - requiredLead;
-    const extraBuffer = handShapeAnalysis.futureRoundHandQuality === "poor" ? 18 : handShapeAnalysis.futureRoundHandQuality === "thin" ? 10 : 0;
+    const extraBuffer = getFutureHandExtraBuffer(handShapeAnalysis.futureRoundHandQuality);
     if (extraBuffer > 0 && passSafetyBuffer < extraBuffer) {
       if (bestMove && bestMove.score > 0) {
         reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, pass margin too small — play useful card`;

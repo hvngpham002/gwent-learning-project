@@ -2743,11 +2743,11 @@ describe("cFp28: hand-quality pass calibration", () => {
     const { trace } = explainLegalHeuristicV1Decision(input);
     const hsa = trace.handShapeAnalysis!;
     expect(hsa).not.toBeNull();
-    expect(hsa.unitCardCount).toBe(2); // counts units + heroes
-    expect(hsa.heroCardCount).toBe(1);
+    expect(hsa.unitCardCount).toBe(1); // counts only kind === "unit"
+    expect(hsa.heroCardCount).toBe(1); // separate count for heroes
     expect(hsa.specialOrWeatherCardCount).toBe(1);
     expect(hsa.totalHandCount).toBe(3);
-    expect(hsa.futureRoundHandQuality).toBe("healthy");
+    expect(hsa.futureRoundHandQuality).toBe("healthy"); // unitTempoCardCount = 2 -> healthy
     expect(hsa.noUnitFutureRisk).toBe(false);
   });
 
@@ -2810,5 +2810,130 @@ describe("cFp28: hand-quality pass calibration", () => {
     const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
     const selectedMove = legalHeuristicPolicyV1.selectMove(input);
     expect(tracedMove).toEqual(selectedMove);
+  });
+
+  // ------------------------------------------------------------------
+  // Blocked Pass Asserts selected.kind !== "pass"
+  // ------------------------------------------------------------------
+  it("asserts selected.kind !== 'pass' for blocked marginal pass (thin hand)", () => {
+    // 1 unit + 2 specials = thin hand, buffer below 10 -> pass blocked
+    const unit = unitCard("u1", "test.blocked-thin-unit", 12);
+    const s1 = specialCard("s1", "test.blocked-special1", 0);
+    const s2 = specialCard("s2", "test.blocked-special2", 0);
+    // scoreDelta=32, requiredLead=24, buffer=8 < 10 -> blocked
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(s1), playMove(s2)],
+      {
+        ownHand: [unit, s1, s2],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 76, seat_b: 108 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected.kind).not.toBe("pass");
+  });
+
+  it("asserts selected.kind !== 'pass' for blocked marginal pass (thin hand with unit)", () => {
+    // 1 unit + 2 specials = thin hand, buffer below 10 -> pass blocked
+    const unit = unitCard("u1", "test.blocked-poor-unit", 15);
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+    // scoreDelta=31, requiredLead=24, buffer=7 < 18 -> blocked
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(w1), playMove(w2)],
+      {
+        ownHand: [unit, w1, w2],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 77, seat_b: 108 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    // Unit + specials = thin hand (not poor), buffer insufficient -> pass blocked
+    expect(selected.kind).not.toBe("pass");
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("thin");
+  });
+
+  // ------------------------------------------------------------------
+  // Hero Count Semantics
+  // ------------------------------------------------------------------
+  it("counts heroes toward future-round tempo but not unitCardCount", () => {
+    const unit = unitCard("u1", "test.hero-semantics-unit", 8);
+    const hero1 = heroCard("h1", "test.hero-semantics-1", 10);
+    const hero2 = heroCard("h2", "test.hero-semantics-2", 12);
+    const special = specialCard("s1", "test.hero-semantics-special", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(hero1), playMove(hero2), playMove(special)],
+      {
+        ownHand: [unit, hero1, hero2, special],
+        ownGems: 2,
+        opponentHandCount: 4,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 50 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const hsa = trace.handShapeAnalysis!;
+    expect(hsa.unitCardCount).toBe(1); // only kind === "unit"
+    expect(hsa.heroCardCount).toBe(2); // heroes counted separately
+    expect(hsa.futureRoundHandQuality).toBe("healthy"); // unitTempoCardCount = 3
+    expect(hsa.noUnitFutureRisk).toBe(false);
+  });
+
+  it("sets noUnitFutureRisk true when only specials remain", () => {
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(w1), playMove(w2)],
+      {
+        ownHand: [w1, w2],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 50, seat_b: 60 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.handShapeAnalysis!.noUnitFutureRisk).toBe(true);
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("poor");
+  });
+
+  it("sets specialOnlyHand true when hand contains only specials", () => {
+    const w1 = specialCard("w1", "neutral.torrential-rain", 0);
+    const s1 = specialCard("s1", "test.decoy-only", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(w1), playMove(s1)],
+      {
+        ownHand: [w1, s1],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 50, seat_b: 60 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.handShapeAnalysis!.specialOnlyHand).toBe(true);
   });
 });

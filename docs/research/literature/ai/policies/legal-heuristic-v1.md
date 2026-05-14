@@ -398,3 +398,23 @@ Because selected-move behavior changed, benchmark artifacts were refreshed:
   against v0 (changed from 5/7 after cFp27).
 - Starter matrix: `legal-heuristic-v1` records 88 wins and 32 losses
   against v0 (changed from 89/31 after cFp27).
+
+### cFp28 Repair: Hand-Shape Field Semantics
+
+A follow-up repair aligned the hand-shape diagnostic fields with their
+documented semantics:
+
+- `unitCardCount` now strictly counts cards with `kind === "unit"`. Hero
+  cards are no longer included in this count.
+- `heroCardCount` tracks `kind === "hero"` cards separately.
+- `futureRoundHandQuality` uses `unitTempoCardCount` (= `unitCardCount +
+  heroCardCount`) rather than `unitCardCount` alone, so heroes continue to
+  contribute to future-round viability assessment.
+- `specialOnlyHand` is `true` only when the hand contains zero units AND
+  zero heroes (i.e. only specials/weather remain).
+- `noUnitFutureRisk` is `true` only when `unitTempoCardCount === 0` and
+  the hand is non-empty.
+- Pass-buffer constants (`EXTRA_BUFFER_POOR` = 18, `EXTRA_BUFFER_THIN` =
+  10) and the `getFutureHandExtraBuffer` helper were extracted from inline
+  code into `decisionTrace.ts` and shared by both the policy and
+  explanation modules to prevent divergence.

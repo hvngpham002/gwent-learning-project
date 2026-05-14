@@ -191,6 +191,7 @@ export const toAiDecisionTempoBucket = (
 
 /**
  * Classifies the remaining hand's future-round viability.
+ * Uses unit tempo count (unit + hero cards) to classify quality.
  */
 export const classifyFutureRoundHandQuality = (
   unitCardCount: number,
@@ -200,6 +201,38 @@ export const classifyFutureRoundHandQuality = (
   if (unitCardCount === 0) return "poor";
   if (unitCardCount === 1 && totalHandCount >= 3) return "thin";
   return "healthy";
+};
+
+// ---------------------------------------------------------------------------
+// cFp28: Pass safety buffer helpers (shared between policy and explanation)
+// ---------------------------------------------------------------------------
+
+/**
+ * Extra buffer required for voluntary pass when future hand quality is poor.
+ */
+export const EXTRA_BUFFER_POOR = 18;
+
+/**
+ * Extra buffer required for voluntary pass when future hand quality is thin.
+ */
+export const EXTRA_BUFFER_THIN = 10;
+
+/**
+ * Returns the extra pass-safety buffer required for a given hand quality.
+ * Shared between legalHeuristicPolicyV1 and explainLegalHeuristicV1Decision
+ * to avoid duplicated threshold constants.
+ */
+export const getFutureHandExtraBuffer = (
+  quality: AiDecisionHandQuality,
+): number => {
+  switch (quality) {
+    case "poor":
+      return EXTRA_BUFFER_POOR;
+    case "thin":
+      return EXTRA_BUFFER_THIN;
+    default:
+      return 0;
+  }
 };
 
 /**
@@ -236,7 +269,7 @@ export const buildAiDecisionHandShapeAnalysis = (
   }[],
 ): AiDecisionHandShapeAnalysis => {
   const unitCardCount = ownHand.filter(
-    (c) => c.kind === "unit" || c.kind === "hero",
+    (c) => c.kind === "unit",
   ).length;
   const heroCardCount = ownHand.filter((c) => c.kind === "hero").length;
   const specialOrWeatherCardCount = ownHand.filter(
@@ -257,8 +290,11 @@ export const buildAiDecisionHandShapeAnalysis = (
     0,
   );
 
+  // Heroes contribute unit-tempo for future-round viability.
+  const unitTempoCardCount = unitCardCount + heroCardCount;
+
   const futureRoundHandQuality = classifyFutureRoundHandQuality(
-    unitCardCount,
+    unitTempoCardCount,
     totalHandCount,
   );
 
@@ -277,7 +313,7 @@ export const buildAiDecisionHandShapeAnalysis = (
       unitCardCount === 0 &&
       heroCardCount === 0 &&
       specialOrWeatherCardCount === totalHandCount,
-    noUnitFutureRisk: unitCardCount === 0 && totalHandCount > 0,
+    noUnitFutureRisk: unitTempoCardCount === 0 && totalHandCount > 0,
   };
 };
 
