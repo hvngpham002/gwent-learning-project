@@ -5,6 +5,7 @@ import {
   copyDiagnosticExport,
   PRODUCT_DIAGNOSTICS_SCHEMA_VERSION,
   scanForHiddenInfoHazards,
+  scanMedicTimingAnalysis,
 } from "@/components/gwent/matchDiagnostics";
 import { engineDiagnosticTraceAppended, engineMatchStarted } from "@/store/slices/engineSlice";
 import { configureStore } from "@reduxjs/toolkit";
@@ -1505,5 +1506,274 @@ describe("cFp29: medic timing diagnostics in product export", () => {
     };
     const issues = scanForHiddenInfoHazards(medicTiming);
     expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("synthetic raw card name under medicTimingAnalysis fails medic-timing scan", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+      targetName: "Yennefer of Vengerberg",
+    };
+    const issues = scanMedicTimingAnalysis(medicTiming);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("raw card name or source ID"))).toBe(true);
+  });
+
+  it("synthetic raw source ID under medicTimingAnalysis fails medic-timing scan", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+      targetSourceId: "neutral.yennefer-of-vengerberg",
+    };
+    const issues = scanMedicTimingAnalysis(medicTiming);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("raw card name or source ID"))).toBe(true);
+  });
+
+  it("synthetic ability arrays under medicTimingAnalysis fails medic-timing scan", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+      abilities: ["medic"],
+    };
+    const issues = scanMedicTimingAnalysis(medicTiming);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("unexpected array"))).toBe(true);
+  });
+
+  it("scanMedicTimingAnalysis passes for safe medicTimingAnalysis aggregates", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+    };
+    const issues = scanMedicTimingAnalysis(medicTiming);
+    expect(issues.length).toBe(0);
+  });
+
+  it("full export scan fails when medicTimingAnalysis contains raw card name", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp29-medic-hazard-name",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 3,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          medicTimingAnalysis: {
+            medicPlayLegal: true,
+            medicPlayCandidateCount: 1,
+            ownDiscardReviveCandidateCount: 2,
+            bestReviveStrengthBucket: "medium",
+            bestReviveValueBucket: "strong",
+            noTargetMedicRisk: false,
+            selectedMedicWithNoTarget: false,
+            targetName: "Yennefer of Vengerberg",
+          },
+          selected: null,
+          candidates: [],
+          reasonKind: "policy",
+          reason: "best useful move",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+
+  it("full export scan fails when medicTimingAnalysis contains raw source ID", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp29-medic-hazard-source",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 3,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          medicTimingAnalysis: {
+            medicPlayLegal: true,
+            medicPlayCandidateCount: 1,
+            ownDiscardReviveCandidateCount: 2,
+            bestReviveStrengthBucket: "medium",
+            bestReviveValueBucket: "strong",
+            noTargetMedicRisk: false,
+            selectedMedicWithNoTarget: false,
+            targetSourceId: "neutral.yennefer-of-vengerberg",
+          },
+          selected: null,
+          candidates: [],
+          reasonKind: "policy",
+          reason: "best useful move",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+
+  it("full export scan fails when medicTimingAnalysis contains ability arrays", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp29-medic-hazard-abilities",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 3,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          medicTimingAnalysis: {
+            medicPlayLegal: true,
+            medicPlayCandidateCount: 1,
+            ownDiscardReviveCandidateCount: 2,
+            bestReviveStrengthBucket: "medium",
+            bestReviveValueBucket: "strong",
+            noTargetMedicRisk: false,
+            selectedMedicWithNoTarget: false,
+            abilities: ["medic"],
+          },
+          selected: null,
+          candidates: [],
+          reasonKind: "policy",
+          reason: "best useful move",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
   });
 });

@@ -92,6 +92,26 @@ const MULLIGAN_TRACE_FORBIDDEN_STRING_TOKENS = [
 
 const RAW_INSTANCE_PATTERN = /seat_[ab]:/;
 
+// Medic-timing-specific forbidden string tokens — applied ONLY inside medicTimingAnalysis.
+// These catch raw card names, source IDs, and ability array representations that
+// the global scan doesn't target (public card names like "Roach" pass globally).
+const MEDIC_TIMING_FORBIDDEN_STRING_TOKENS = [
+  // Raw card name pattern: multi-word proper names (e.g., "Yennefer of Vengerberg")
+  // are suspicious in medicTimingAnalysis which only contains aggregates.
+  /^[A-Z][a-z]+(?:\s+[a-z]+)?\s+[A-Z][A-Za-z]+$/,
+  // Source ID pattern: namespace.name (e.g., "neutral.yennefer-of-vengerberg")
+  /^[a-z][a-z0-9]*\.[a-z][a-z0-9.-]*$/,
+];
+
+/**
+ * Checks whether an object looks like a medicTimingAnalysis object
+ * (identified by medicPlayLegal boolean field plus medicPlayCandidateCount plus noTargetMedicRisk).
+ */
+const isMedicTimingAnalysis = (obj: Record<string, unknown>): boolean =>
+  typeof obj.medicPlayLegal === "boolean" &&
+  typeof obj.medicPlayCandidateCount === "number" &&
+  typeof obj.noTargetMedicRisk === "boolean";
+
 /**
  * Checks whether an object looks like a mulligan-phase decision trace
  * (identified by phase === "mulligan" or non-null mulliganAnalysis).
@@ -197,6 +217,71 @@ export const scanMulliganTraceForLeaks = (
   for (const [, nested] of Object.entries(obj)) {
     if (typeof nested === "object" && nested !== null) {
       issues.push(...scanMulliganTraceForLeaks(nested, path));
+    }
+  }
+
+  return issues;
+};
+
+// ---------------------------------------------------------------------------
+// Medic-timing-specific scan (cFp29)
+// ---------------------------------------------------------------------------
+
+/**
+ * Medic-timing-specific scan for hidden-info leaks under medicTimingAnalysis.
+ * Only applies medic-timing-specific rules INSIDE medicTimingAnalysis objects.
+ * Outside medicTimingAnalysis, only recurses to find medicTimingAnalysis blocks.
+ */
+export const scanMedicTimingAnalysis = (
+  value: unknown,
+  path = "$",
+  insideMedicTiming = false,
+): string[] => {
+  const issues: string[] = [];
+
+  if (typeof value === "string") {
+    // Only apply medic-timing-specific checks when INSIDE a medicTimingAnalysis block.
+    if (insideMedicTiming) {
+      for (const token of MEDIC_TIMING_FORBIDDEN_STRING_TOKENS) {
+        if (token instanceof RegExp && token.test(value)) {
+          issues.push(`medicTimingAnalysis at "${path}" contains raw card name or source ID "${value}"`);
+          break;
+        }
+      }
+    }
+    return issues;
+  }
+
+  if (Array.isArray(value)) {
+    // medicTimingAnalysis only contains booleans, numbers, and bucket strings.
+    // Any array value inside medicTimingAnalysis is suspicious (e.g., ability arrays).
+    if (insideMedicTiming) {
+      issues.push(`unexpected array at "${path}" in medicTimingAnalysis — possible raw ability list`);
+    }
+    value.forEach((item, index) => {
+      issues.push(...scanMedicTimingAnalysis(item, `${path}[${index}]`, insideMedicTiming));
+    });
+    return issues;
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return issues;
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  // If this is a medicTimingAnalysis object, recurse with medic-timing checks enabled.
+  if (isMedicTimingAnalysis(obj)) {
+    for (const [, v] of Object.entries(obj)) {
+      issues.push(...scanMedicTimingAnalysis(v, path, true));
+    }
+    return issues;
+  }
+
+  // Recurse to find nested medicTimingAnalysis objects.
+  for (const [, nested] of Object.entries(obj)) {
+    if (typeof nested === "object" && nested !== null) {
+      issues.push(...scanMedicTimingAnalysis(nested, path, false));
     }
   }
 
@@ -310,7 +395,10 @@ export const buildProductDiagnosticExport = (
   // cFp27 repair: additional mulligan-trace-specific scan for hidden card
   // identity leaks (e.g. "Roach", "neutral.roach" in mulligan trace fields).
   const mulliganScanIssues = scanMulliganTraceForLeaks(fullExportObj);
-  const allIssues = [...scanIssues, ...mulliganScanIssues];
+  // cFp29 repair: additional medic-timing-specific scan for raw card names,
+  // source IDs, and ability arrays in medicTimingAnalysis aggregates.
+  const medicTimingScanIssues = scanMedicTimingAnalysis(fullExportObj);
+  const allIssues = [...scanIssues, ...mulliganScanIssues, ...medicTimingScanIssues];
 
   return {
     schemaVersion: PRODUCT_DIAGNOSTICS_SCHEMA_VERSION,
