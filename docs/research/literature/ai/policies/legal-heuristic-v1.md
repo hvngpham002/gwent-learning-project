@@ -455,3 +455,13 @@ Key changes:
 - Prompt-target Medic value is preserved; `promptCardValue(...)` continues to
   use the full `includeMedicAbilityBonus` default so Medic targets remain
   attractive when resolving a Medic prompt.
+
+### cFp29 Benchmark Results
+
+Because selected move scoring changed, the v1 benchmark artifacts were
+refreshed after the cFp29 review repairs:
+
+- Smoke benchmark (`benchmark-v1-smoke-v1`): v1 records 10 wins, 2 losses,
+  and 0 draws against v0.
+- Starter matrix (`benchmark-v1-starter-matrix-v1`): v1 records 90 wins,
+  29 losses, and 1 draw against v0.
