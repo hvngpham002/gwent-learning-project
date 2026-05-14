@@ -90,6 +90,63 @@ const isWeatherCard = (card: SeatCardSummary | undefined) =>
 const isScorchCard = (card: SeatCardSummary | undefined) =>
   hasAnyAbility(card, ["scorch", "scorch_close", "scorch_range", "scorch_siege"]);
 
+// cFp30: Weather-aware unit placement helpers
+
+const WEATHER_ABILITIES = ["frost", "fog", "rain", "skellige_storm"] as const;
+
+const abilityToRows = (ability: CatalogAbilityId): readonly CatalogRow[] =>
+  WEATHER_ROWS_BY_ABILITY[ability] ?? [];
+
+/** Returns the set of rows currently affected by active weather (not clear_weather). */
+export const activeWeatherRows = (features: LegalHeuristicV1Features): ReadonlySet<CatalogRow> => {
+  const rows = new Set<CatalogRow>();
+  for (const weatherCard of features.input.observation.weather) {
+    // Skip clear_weather — it removes weather, doesn't add an active penalty.
+    if (hasAbility(weatherCard, "clear_weather")) {
+      continue;
+    }
+    for (const ability of weatherCard.abilities) {
+      if (WEATHER_ABILITIES.includes(ability as typeof WEATHER_ABILITIES[number])) {
+        for (const row of abilityToRows(ability)) {
+          rows.add(row);
+        }
+      }
+    }
+  }
+  return rows;
+};
+
+/** Returns whether the given row is currently weathered for the acting seat. */
+export const isRowWeatheredForPolicy = (
+  features: LegalHeuristicV1Features,
+  row: CatalogRow,
+): boolean => activeWeatherRows(features).has(row);
+
+/**
+ * Returns the weather-adjusted effective strength when placing `card` on
+ * `target` row.
+ * - Heroes are immune to weather.
+ * - Non-hero units on a weathered row have effective strength ≈ 1.
+ * - Commander's Horn on the target row doubles the weather-adjusted strength.
+ */
+export const effectivePlacedStrengthForPolicy = (
+  features: LegalHeuristicV1Features,
+  card: SeatCardSummary,
+  target: { kind: "board_row"; side: "own" | "opponent"; row: CatalogRow },
+): number => {
+  const isWeathered = isRowWeatheredForPolicy(features, target.row);
+  const baseStrength = card.kind === "hero" ? card.printedStrength : isWeathered ? 1 : card.printedStrength;
+
+  // Check if there's already a Commander's Horn on the target row
+  const rowSummary = features.input.observation.boardRows.find(
+    (r) => r.seatId === features.input.seatId && r.row === target.row,
+  );
+  const hasHorn = rowSummary?.horn !== null;
+  const effectiveStrength = hasHorn ? baseStrength * 2 : baseStrength;
+
+  return effectiveStrength;
+};
+
 // cFp29: Medic revive candidate helpers
 export const isMedicSource = (card: SeatCardSummary | undefined) =>
   hasAbility(card, "medic");
@@ -744,7 +801,9 @@ const estimateImmediateTempo = (features: LegalHeuristicV1Features, move: PlayCa
   }
 
   if (move.target.kind === "board_row") {
-    const signedStrength = move.target.side === "opponent" ? -card.printedStrength : card.printedStrength;
+    // cFp30: Use weather-adjusted effective strength for board_row placement
+    const effectiveStrength = effectivePlacedStrengthForPolicy(features, card, move.target);
+    const signedStrength = move.target.side === "opponent" ? -effectiveStrength : effectiveStrength;
     const abilityRows = card.abilities.flatMap((ability) => SCORCH_ROWS_BY_ABILITY[ability] ?? []);
     const scorchBonus = abilityRows.length > 0 ? scorchSwing(features, abilityRows) : 0;
     const linkedHandTempo = move.target.side === "own" ? linkedHandTempoForCard(features, card) : 0;

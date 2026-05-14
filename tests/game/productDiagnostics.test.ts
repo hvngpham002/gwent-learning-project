@@ -6,6 +6,7 @@ import {
   PRODUCT_DIAGNOSTICS_SCHEMA_VERSION,
   scanForHiddenInfoHazards,
   scanMedicTimingAnalysis,
+  scanWeatherPlacementAnalysis,
 } from "@/components/gwent/matchDiagnostics";
 import { engineDiagnosticTraceAppended, engineMatchStarted } from "@/store/slices/engineSlice";
 import { configureStore } from "@reduxjs/toolkit";
@@ -1821,5 +1822,226 @@ describe("cFp29: medic timing diagnostics in product export", () => {
     };
     const issues = scanMedicTimingAnalysis(medicTiming);
     expect(issues.length).toBe(0);
+  });
+});
+
+describe("cFp30: weather placement diagnostics in product export", () => {
+  it("scan passes for weatherPlacementAnalysis fields in export", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp30-weather-placement-test",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 1,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          weatherPlacementAnalysis: {
+            selectedMoveIntoWeatheredRow: false,
+            selectedMoveSide: "own",
+            selectedMoveRow: "close",
+            selectedPrintedStrengthBucket: "high",
+            selectedEffectiveStrengthBucket: "high",
+            ownWeatheredRows: ["ranged"],
+            opponentWeatheredRows: [],
+            candidateWeatheredOwnRowPlayCount: 2,
+            candidateWeatheredOpponentRowPlayCount: 0,
+          },
+          selected: {
+            kind: "play_card",
+            label: "hidden hand play",
+            actionRef: "action_0",
+            targetKind: "board_row",
+          },
+          candidates: [],
+          reasonKind: "policy",
+          reason: "best useful move",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const json = JSON.stringify(exportData);
+    expect(json).toContain("weatherPlacementAnalysis");
+    expect(json).toContain("ownWeatheredRows");
+    expect(json).toContain("selectedEffectiveStrengthBucket");
+  });
+
+  it("synthetic raw source ID under weatherPlacementAnalysis fails scan", () => {
+    const weatherPlacement = {
+      selectedMoveIntoWeatheredRow: false,
+      selectedMoveSide: "own",
+      selectedMoveRow: "close",
+      selectedPrintedStrengthBucket: "high",
+      selectedEffectiveStrengthBucket: "high",
+      ownWeatheredRows: ["ranged"],
+      opponentWeatheredRows: [],
+      candidateWeatheredOwnRowPlayCount: 2,
+      candidateWeatheredOpponentRowPlayCount: 0,
+      targetSourceId: "neutral.impenetrable-fog",
+    };
+    const issues = scanWeatherPlacementAnalysis(weatherPlacement);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("raw card name or source ID"))).toBe(true);
+  });
+
+  it("synthetic source ID under weatherPlacementAnalysis fails scan", () => {
+    const weatherPlacement = {
+      selectedMoveIntoWeatheredRow: false,
+      selectedMoveSide: "own",
+      selectedMoveRow: "close",
+      selectedPrintedStrengthBucket: "high",
+      selectedEffectiveStrengthBucket: "high",
+      ownWeatheredRows: ["ranged"],
+      opponentWeatheredRows: [],
+      candidateWeatheredOwnRowPlayCount: 2,
+      candidateWeatheredOpponentRowPlayCount: 0,
+      weatherSourceId: "neutral.impenetrable-fog",
+    };
+    const issues = scanWeatherPlacementAnalysis(weatherPlacement);
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("raw card name or source ID"))).toBe(true);
+  });
+
+  it("synthetic ability arrays under weatherPlacementAnalysis fails scan", () => {
+    const weatherPlacement = {
+      selectedMoveIntoWeatheredRow: false,
+      selectedMoveSide: "own",
+      selectedMoveRow: "close",
+      selectedPrintedStrengthBucket: "high",
+      selectedEffectiveStrengthBucket: "high",
+      ownWeatheredRows: ["ranged"],
+      opponentWeatheredRows: [],
+      candidateWeatheredOwnRowPlayCount: 2,
+      candidateWeatheredOpponentRowPlayCount: 0,
+      abilities: ["weather"],
+    };
+    const issues = scanWeatherPlacementAnalysis(weatherPlacement);
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("safe aggregate bucket strings pass weather-placement scan", () => {
+    const weatherPlacement = {
+      selectedMoveIntoWeatheredRow: false,
+      selectedMoveSide: "own",
+      selectedMoveRow: "close",
+      selectedPrintedStrengthBucket: "high",
+      selectedEffectiveStrengthBucket: "high",
+      ownWeatheredRows: ["ranged"],
+      opponentWeatheredRows: [],
+      candidateWeatheredOwnRowPlayCount: 2,
+      candidateWeatheredOpponentRowPlayCount: 0,
+    };
+    const issues = scanWeatherPlacementAnalysis(weatherPlacement);
+    expect(issues.length).toBe(0);
+  });
+
+  it("full export scan fails when weatherPlacementAnalysis contains raw source ID", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp30-weather-hazard-source",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 1,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          weatherPlacementAnalysis: {
+            selectedMoveIntoWeatheredRow: false,
+            selectedMoveSide: "own",
+            selectedMoveRow: "close",
+            selectedPrintedStrengthBucket: "high",
+            selectedEffectiveStrengthBucket: "high",
+            ownWeatheredRows: ["ranged"],
+            opponentWeatheredRows: [],
+            candidateWeatheredOwnRowPlayCount: 2,
+            candidateWeatheredOpponentRowPlayCount: 0,
+            targetSourceId: "neutral.impenetrable-fog",
+          },
+          selected: null,
+          candidates: [],
+          reasonKind: "policy",
+          reason: "best useful move",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
   });
 });

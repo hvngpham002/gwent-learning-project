@@ -106,6 +106,16 @@ const MEDIC_TIMING_FORBIDDEN_STRING_TOKENS = [
   /^[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*$/,
 ];
 
+// Weather-placement-specific forbidden string tokens — applied ONLY inside weatherPlacementAnalysis.
+// weatherPlacementAnalysis only contains safe row names (close, ranged, siege, none),
+// safe bucket strings (none, low, medium, high), booleans, and counts.
+const WEATHER_PLACEMENT_FORBIDDEN_STRING_TOKENS = [
+  // Source ID pattern: namespace.name with dots/hyphens
+  /^[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*$/,
+  // One-word proper name (card name leak)
+  /^[A-Z][a-z]+$/,
+];
+
 /**
  * Checks whether an object looks like a medicTimingAnalysis object
  * (identified by medicPlayLegal boolean field plus medicPlayCandidateCount plus noTargetMedicRisk).
@@ -292,6 +302,84 @@ export const scanMedicTimingAnalysis = (
 };
 
 // ---------------------------------------------------------------------------
+// Weather-placement-specific scan (cFp30)
+// ---------------------------------------------------------------------------
+
+/**
+ * Checks whether an object looks like a weatherPlacementAnalysis object
+ * (identified by selectedMoveIntoWeatheredRow boolean plus selectedMoveSide).
+ */
+const isWeatherPlacementAnalysis = (obj: Record<string, unknown>): boolean =>
+  typeof obj.selectedMoveIntoWeatheredRow === "boolean" &&
+  typeof obj.selectedMoveSide === "string" &&
+  typeof obj.selectedMoveRow === "string";
+
+/**
+ * Weather-placement-specific scan for hidden-info leaks under weatherPlacementAnalysis.
+ * Only applies weather-placement-specific rules INSIDE weatherPlacementAnalysis objects.
+ * Outside weatherPlacementAnalysis, only recurses to find weatherPlacementAnalysis blocks.
+ */
+export const scanWeatherPlacementAnalysis = (
+  value: unknown,
+  path = "$",
+  insideWeatherPlacement = false,
+): string[] => {
+  const issues: string[] = [];
+
+  if (typeof value === "string") {
+    if (insideWeatherPlacement) {
+      for (const token of WEATHER_PLACEMENT_FORBIDDEN_STRING_TOKENS) {
+        if (token instanceof RegExp && token.test(value)) {
+          issues.push(`weatherPlacementAnalysis at "${path}" contains raw card name or source ID "${value}"`);
+          break;
+        }
+      }
+    }
+    return issues;
+  }
+
+  if (Array.isArray(value)) {
+    // weatherPlacementAnalysis contains arrays of row names only.
+    // Catch suspicious arrays that contain non-row values.
+    if (insideWeatherPlacement) {
+      for (const item of value) {
+        if (typeof item === "string" && !["close", "ranged", "siege", "none"].includes(item)) {
+          issues.push(`weatherPlacementAnalysis array at "${path}" contains unexpected value "${item}"`);
+          break;
+        }
+      }
+    }
+    value.forEach((item, index) => {
+      issues.push(...scanWeatherPlacementAnalysis(item, `${path}[${index}]`, insideWeatherPlacement));
+    });
+    return issues;
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return issues;
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  // If this is a weatherPlacementAnalysis object, recurse with checks enabled.
+  if (isWeatherPlacementAnalysis(obj)) {
+    for (const [, v] of Object.entries(obj)) {
+      issues.push(...scanWeatherPlacementAnalysis(v, path, true));
+    }
+    return issues;
+  }
+
+  // Recurse to find nested weatherPlacementAnalysis objects.
+  for (const [, nested] of Object.entries(obj)) {
+    if (typeof nested === "object" && nested !== null) {
+      issues.push(...scanWeatherPlacementAnalysis(nested, path, false));
+    }
+  }
+
+  return issues;
+};
+
+// ---------------------------------------------------------------------------
 // Build command/event summaries (hidden-info safe, running offset)
 // ---------------------------------------------------------------------------
 
@@ -401,7 +489,10 @@ export const buildProductDiagnosticExport = (
   // cFp29 repair: additional medic-timing-specific scan for raw card names,
   // source IDs, and ability arrays in medicTimingAnalysis aggregates.
   const medicTimingScanIssues = scanMedicTimingAnalysis(fullExportObj);
-  const allIssues = [...scanIssues, ...mulliganScanIssues, ...medicTimingScanIssues];
+  // cFp30 repair: additional weather-placement-specific scan for raw card
+  // names, source IDs, and ability arrays in weatherPlacementAnalysis aggregates.
+  const weatherPlacementScanIssues = scanWeatherPlacementAnalysis(fullExportObj);
+  const allIssues = [...scanIssues, ...mulliganScanIssues, ...medicTimingScanIssues, ...weatherPlacementScanIssues];
 
   return {
     schemaVersion: PRODUCT_DIAGNOSTICS_SCHEMA_VERSION,

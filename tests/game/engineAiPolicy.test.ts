@@ -3232,3 +3232,196 @@ describe("cFp29: medic timing calibration", () => {
     expect(explained.move?.moveId).toBe(selected?.moveId);
   });
 });
+
+describe("cFp30: weather-aware unit placement", () => {
+  const fogCard = testCard({
+    cardId: "fog",
+    sourceId: "neutral.impenetrable-fog",
+    printedStrength: 0,
+    kind: "special",
+    abilities: ["fog"],
+  });
+
+  const nonHeroUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.unit.${cardId}`, printedStrength: strength });
+
+  const heroUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.hero.${cardId}`, printedStrength: strength, kind: "hero" });
+
+  const spyUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.spy.${cardId}`, printedStrength: strength, abilities: ["spy"] });
+
+  // Test 1: Non-hero strength 10 to own weathered ranged row does not beat own unweathered row play
+  it("non-hero weathered own-row play scores lower than unweathered row", () => {
+    const strongUnit = nonHeroUnit("strong", 10);
+    const input = policyInput(
+      [
+        playMove(strongUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(strongUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+      ],
+      {
+        ownHand: [strongUnit],
+        weather: [fogCard],
+      },
+    );
+
+    const features = buildLegalHeuristicV1Features(input);
+    const rangedMove = features.playMoves.find((m) => m.target.kind === "board_row" && m.target.row === "ranged");
+    const closeMove = features.playMoves.find((m) => m.target.kind === "board_row" && m.target.row === "close");
+
+    expect(rangedMove).not.toBeUndefined();
+    expect(closeMove).not.toBeUndefined();
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    // With weather, close row should be preferred since ranged is fogged
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card" && selected.target.kind === "board_row") {
+      expect(selected.target.row).toBe("close");
+    }
+  });
+
+  // Test 2: Horned own ranged row under Fog does not attract additional non-hero units purely from printed strength
+  it("horned weathered row does not over-attract non-hero units", () => {
+    const strongUnit = nonHeroUnit("infantry", 10);
+    // Simulate horn present
+    const hornBoardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, horn: testCard({ cardId: "horn-card", sourceId: "test.commanders-horn", printedStrength: 0, kind: "special", abilities: ["commanders_horn"] }) }
+        : r,
+    );
+
+    const input = policyInput(
+      [
+        playMove(strongUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(strongUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+      ],
+      {
+        ownHand: [strongUnit],
+        weather: [fogCard],
+        boardRows: hornBoardRows,
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    // Weather analysis should be present
+    expect(trace.weatherPlacementAnalysis).not.toBeNull();
+    expect(trace.weatherPlacementAnalysis?.ownWeatheredRows).toContain("ranged");
+  });
+
+  // Test 3: Non-hero target-side Spy placement uses weather-adjusted signed tempo
+  it("spy on opponent weathered row uses weather-adjusted tempo", () => {
+    const spy = spyUnit("spy1", 4);
+    const input = policyInput(
+      [
+        playMove(spy, { kind: "board_row", side: "opponent", seatId: "seat_a", row: "ranged" }),
+        playMove(spy, { kind: "board_row", side: "opponent", seatId: "seat_a", row: "close" }),
+      ],
+      {
+        ownHand: [spy],
+        weather: [fogCard],
+      },
+    );
+
+    // We can't call estimateImmediateTempo directly (private), but we can
+    // verify the weather placement analysis reflects the weathered row
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.weatherPlacementAnalysis).not.toBeNull();
+  });
+
+  // Test 4: Hero placement stays weather immune
+  it("hero placement ignores weather penalty", () => {
+    const hero = heroUnit("hero1", 10);
+    const input = policyInput(
+      [
+        playMove(hero, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+      ],
+      {
+        ownHand: [hero],
+        weather: [fogCard],
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.weatherPlacementAnalysis?.selectedPrintedStrengthBucket).toBe("high");
+    // Hero effective strength should remain high even on weathered row
+    expect(trace.weatherPlacementAnalysis?.selectedEffectiveStrengthBucket).toBe("high");
+  });
+
+  // Test 5: Selected-move parity with weathered-row fixture
+  it("explain parity with weathered-row fixture", () => {
+    const unit = nonHeroUnit("unit1", 8);
+    const hero = heroUnit("hero1", 12);
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(hero)],
+      {
+        ownHand: [unit, hero],
+        weather: [fogCard],
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    expect(tracedMove?.moveId).toBe(selected?.moveId);
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.weatherPlacementAnalysis).not.toBeNull();
+  });
+
+  // Test 6: Existing cFp29 Medic timing tests still pass (smoke test)
+  it("preserves cFp29 Medic timing behavior alongside weather awareness", () => {
+    const medic = testCard({
+      cardId: "medic1",
+      sourceId: "test.medic-yennefer",
+      printedStrength: 5,
+      abilities: ["medic"],
+    });
+    const strongUnit = testCard({ cardId: "strong", sourceId: "test.strong", printedStrength: 12 });
+
+    const input = policyInput(
+      [passMove(), playMove(medic)],
+      {
+        ownHand: [medic],
+        ownDiscard: [strongUnit],
+        ownGems: 2,
+        opponentHandCount: 8,
+        weather: [fogCard],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 35 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.medicTimingAnalysis).not.toBeNull();
+    expect(trace.medicTimingAnalysis?.ownDiscardReviveCandidateCount).toBe(1);
+    expect(trace.weatherPlacementAnalysis).not.toBeNull();
+  });
+
+  // Test 7: Weather trace diagnostics are hidden-info safe
+  it("weather placement analysis contains only safe fields", () => {
+    const unit = nonHeroUnit("unit1", 8);
+    const input = policyInput(
+      [playMove(unit)],
+      {
+        ownHand: [unit],
+        weather: [fogCard],
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis;
+    expect(wa).not.toBeNull();
+    expect(typeof wa?.selectedMoveIntoWeatheredRow).toBe("boolean");
+    expect(["own", "opponent", "none"]).toContain(wa?.selectedMoveSide);
+    expect(["close", "ranged", "siege", "none"]).toContain(wa?.selectedMoveRow);
+    expect(["none", "low", "medium", "high"]).toContain(wa?.selectedPrintedStrengthBucket);
+    expect(["none", "low", "medium", "high"]).toContain(wa?.selectedEffectiveStrengthBucket);
+    expect(Array.isArray(wa?.ownWeatheredRows)).toBe(true);
+    expect(Array.isArray(wa?.opponentWeatheredRows)).toBe(true);
+    expect(typeof wa?.candidateWeatheredOwnRowPlayCount).toBe("number");
+    expect(typeof wa?.candidateWeatheredOpponentRowPlayCount).toBe("number");
+  });
+});

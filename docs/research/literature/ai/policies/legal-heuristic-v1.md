@@ -465,3 +465,46 @@ refreshed after the cFp29 review repairs:
   and 0 draws against v0.
 - Starter matrix (`benchmark-v1-starter-matrix-v1`): v1 records 90 wins,
   29 losses, and 1 draw against v0.
+
+### Weather-Aware Unit Placement (cFp30)
+
+cFp30 calibrates non-hero unit placement tempo based on active weather on
+the target row. Motivated by a product playtest diagnostic export in which
+the AI repeatedly played high-value non-hero units into its own weathered
+rows, reducing their effective board value from full printed strength to 1.
+
+Key changes:
+
+- `estimateImmediateTempo(...)` now uses weather-adjusted effective strength
+  for board-row placements of non-hero units. Active weather rows are derived
+  from `observation.weather`, excluding `clear_weather` entries.
+- Non-hero units placed on weathered rows use base placed strength `1` instead
+  of printed strength. Heroes remain weather-immune and keep printed strength.
+- Commander's Horn on a weathered row doubles the weather-adjusted strength
+  (so a non-hero on a weathered horned row scores about `2`, not `20`).
+- Spy placement on opponent weathered rows uses weather-adjusted signed tempo
+  (e.g., `-1` not `-4` for strength-4 Spy into Fogged ranged row).
+- `AiDecisionWeatherPlacementAnalysis` is a hidden-info-safe struct exposed on
+  playing-phase traces via `weatherPlacementAnalysis`. It includes:
+  - `selectedMoveIntoWeatheredRow`: whether the selected move targets a weathered row
+  - `selectedMoveSide` / `selectedMoveRow`: placement target metadata
+  - `selectedPrintedStrengthBucket` / `selectedEffectiveStrengthBucket`: strength
+    buckets before/after weather adjustment
+  - `ownWeatheredRows` / `opponentWeatheredRows`: public row names only
+  - `candidateWeatheredOwnRowPlayCount` / `candidateWeatheredOpponentRowPlayCount`:
+    counts of candidates that place into weathered rows
+- `scanWeatherPlacementAnalysis` in `matchDiagnostics.ts` provides targeted
+  hidden-info scanning for weather-placement diagnostics, catching source IDs
+  and ability arrays within the weather-placement subtree.
+- No card names, source IDs, instance IDs, cardIds, linkedSourceIds, or raw
+  abilities are included in the diagnostic trace.
+
+Weather adjustment logic mirrors engine scoring:
+
+- Biting Frost affects close combat rows.
+- Impenetrable Fog affects ranged rows.
+- Torrential Rain affects siege rows.
+- Skellige Storm affects ranged and siege rows.
+- Clear Weather removes weather but is not itself an active row penalty.
+- King Bran weather reduction is deferred (not readily available via public
+  leader metadata in the observation).

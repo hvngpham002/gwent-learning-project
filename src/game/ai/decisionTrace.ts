@@ -420,6 +420,28 @@ export interface AiDecisionMedicTimingAnalysis {
 }
 
 // ---------------------------------------------------------------------------
+// Weather placement analysis (cFp30: hidden-info-safe aggregate diagnostics)
+// ---------------------------------------------------------------------------
+
+export type AiDecisionWeatherPlacementStrengthBucket =
+  | "none"
+  | "low"
+  | "medium"
+  | "high";
+
+export interface AiDecisionWeatherPlacementAnalysis {
+  readonly selectedMoveIntoWeatheredRow: boolean;
+  readonly selectedMoveSide: "own" | "opponent" | "none";
+  readonly selectedMoveRow: CatalogRow | "none";
+  readonly selectedPrintedStrengthBucket: AiDecisionWeatherPlacementStrengthBucket;
+  readonly selectedEffectiveStrengthBucket: AiDecisionWeatherPlacementStrengthBucket;
+  readonly ownWeatheredRows: CatalogRow[];
+  readonly opponentWeatheredRows: CatalogRow[];
+  readonly candidateWeatheredOwnRowPlayCount: number;
+  readonly candidateWeatheredOpponentRowPlayCount: number;
+}
+
+// ---------------------------------------------------------------------------
 // Top-level trace
 // ---------------------------------------------------------------------------
 
@@ -435,6 +457,7 @@ export interface AiDecisionTrace {
   readonly mulliganAnalysis: AiDecisionMulliganAnalysis | null;
   readonly handShapeAnalysis: AiDecisionHandShapeAnalysis | null;
   readonly medicTimingAnalysis: AiDecisionMedicTimingAnalysis | null;
+  readonly weatherPlacementAnalysis: AiDecisionWeatherPlacementAnalysis | null;
   readonly selected: AiDecisionSelectedMove | null;
   readonly candidates: AiDecisionCandidateSummary[];
   // Distinguishes exact-policy reasoning ("policy-...") from diagnostics
@@ -656,6 +679,15 @@ export interface AiDecisionMulliganAnalysisInput {
   readonly topCandidateConfidence: number | null;
   readonly topCandidateReasonKind: string | null;
 }
+
+export const toWeatherStrengthBucket = (
+  value: number,
+): AiDecisionWeatherPlacementStrengthBucket => {
+  if (value <= 0) return "none";
+  if (value <= 3) return "low";
+  if (value <= 7) return "medium";
+  return "high";
+};
 
 export const buildAiDecisionMulliganAnalysis = (
   input: AiDecisionMulliganAnalysisInput,

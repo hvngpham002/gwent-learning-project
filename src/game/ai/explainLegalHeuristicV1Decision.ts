@@ -9,6 +9,7 @@ import {
   getFutureHandExtraBuffer,
   redactAiHandCardLabel,
   toAiDecisionTempoBucket,
+  toWeatherStrengthBucket,
   AI_DECISION_TRACE_SCHEMA_VERSION,
   type EnginePolicyInput,
   type AiDecisionExplanation,
@@ -16,10 +17,14 @@ import {
   type AiDecisionMedicTimingAnalysis,
   type AiDecisionPassDiagnosticsInput,
   type AiDecisionTraceFeatures,
+  type AiDecisionWeatherPlacementAnalysis,
 } from "@/game/ai";
 
 import {
   buildLegalHeuristicV1HandShapeAnalysis,
+  activeWeatherRows,
+  isRowWeatheredForPolicy,
+  effectivePlacedStrengthForPolicy,
 } from "@/game/ai";
 
 import {
@@ -36,6 +41,59 @@ import {
   MEDIC_MEDIUM_TARGET_UTILITY,
   type LegalHeuristicV1Features,
 } from "@/game/ai";
+
+// cFp30: Build hidden-info-safe Weather placement analysis
+const buildWeatherPlacementAnalysis = (
+  features: LegalHeuristicV1Features,
+  move: import("@/game/core").LegalMove | null,
+): AiDecisionWeatherPlacementAnalysis | null => {
+  const weatheredRows = activeWeatherRows(features);
+  const weatheredRowsArr = [...weatheredRows].sort();
+
+  // Determine selected move weather info
+  let selectedMoveIntoWeatheredRow = false;
+  let selectedMoveSide: "own" | "opponent" | "none" = "none";
+  let selectedMoveRow: import("@/game/catalog").CatalogRow | "none" = "none";
+  let selectedPrintedStrengthBucket: import("@/game/ai/decisionTrace").AiDecisionWeatherPlacementStrengthBucket = "none";
+  let selectedEffectiveStrengthBucket: import("@/game/ai/decisionTrace").AiDecisionWeatherPlacementStrengthBucket = "none";
+
+  if (move && move.kind === "play_card" && move.target.kind === "board_row") {
+    const card = features.ownHandByCardId.get(move.sourceCardId);
+    if (card) {
+      selectedMoveSide = move.target.side;
+      selectedMoveRow = move.target.row;
+      selectedPrintedStrengthBucket = toWeatherStrengthBucket(card.printedStrength);
+      const effective = effectivePlacedStrengthForPolicy(features, card, move.target);
+      selectedEffectiveStrengthBucket = toWeatherStrengthBucket(effective);
+      selectedMoveIntoWeatheredRow = isRowWeatheredForPolicy(features, move.target.row);
+    }
+  }
+
+  // Count candidates that target weathered rows
+  let weatheredOwnRowPlayCount = 0;
+  let weatheredOpponentRowPlayCount = 0;
+  for (const playMove of features.playMoves) {
+    if (playMove.target.kind === "board_row" && isRowWeatheredForPolicy(features, playMove.target.row)) {
+      if (playMove.target.side === "own") weatheredOwnRowPlayCount++;
+      else weatheredOpponentRowPlayCount++;
+    }
+  }
+
+  // Determine opponent weathered rows (same weather affects both sides' rows)
+  const opponentWeatheredRows = weatheredRowsArr;
+
+  return {
+    selectedMoveIntoWeatheredRow,
+    selectedMoveSide,
+    selectedMoveRow,
+    selectedPrintedStrengthBucket,
+    selectedEffectiveStrengthBucket,
+    ownWeatheredRows: weatheredRowsArr,
+    opponentWeatheredRows: opponentWeatheredRows,
+    candidateWeatheredOwnRowPlayCount: weatheredOwnRowPlayCount,
+    candidateWeatheredOpponentRowPlayCount: weatheredOpponentRowPlayCount,
+  };
+};
 
 // cFp29: Build hidden-info-safe Medic timing analysis
 const buildMedicTimingAnalysis = (
@@ -210,6 +268,7 @@ const buildPhaseTrace = (
       mulliganAnalysis,
       handShapeAnalysis: null,
       medicTimingAnalysis: null,
+      weatherPlacementAnalysis: null,
       selected,
       candidates: [],
       reasonKind: "phase",
@@ -276,6 +335,9 @@ const buildPlayingPhaseTrace = (
   // cFp29: Build Medic timing analysis for diagnostics
   const medicTimingAnalysis = buildMedicTimingAnalysis(features, move);
 
+  // cFp30: Build Weather placement analysis for diagnostics
+  const weatherPlacementAnalysis = buildWeatherPlacementAnalysis(features, move);
+
   const publicState = buildAiDecisionPublicState(input);
   const passAnalysis = features.passMove
     ? buildAiDecisionPassAnalysis(traceFeatures, v1PolicyUpperBound, passDiagnosticsInput)
@@ -293,6 +355,7 @@ const buildPlayingPhaseTrace = (
   // *selected* move to decide whether the reason claims a catch-up.
   // cFp26.1: Distinguish preserve-hand pass from generic "no useful move".
   // cFp28: Include future-hand quality diagnostics in reason.
+  // cFp30: Surface weather placement when relevant.
   let reason = "";
   let reasonKind = "policy";
   if (!move || !features.passMove) {
@@ -349,7 +412,12 @@ const buildPlayingPhaseTrace = (
         reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, no useful move — pass`;
       }
     } else if (bestMove) {
-      reason = `best useful move (score ${bestMove.score})`;
+      // cFp30: Surface weather penalty when the selected move plays into a weathered row
+      if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
+        reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
+      } else {
+        reason = `best useful move (score ${bestMove.score})`;
+      }
     } else {
       reason = "no useful move above threshold, pass";
     }
@@ -368,6 +436,7 @@ const buildPlayingPhaseTrace = (
       mulliganAnalysis: null,
       handShapeAnalysis,
       medicTimingAnalysis,
+      weatherPlacementAnalysis,
       selected,
       candidates: topCandidates,
       reasonKind,
@@ -414,6 +483,7 @@ export const explainLegalHeuristicV1Decision = (
         mulliganAnalysis: null,
         handShapeAnalysis: null,
         medicTimingAnalysis: null,
+        weatherPlacementAnalysis: null,
         selected: null,
         candidates: [],
         reasonKind: "none",
