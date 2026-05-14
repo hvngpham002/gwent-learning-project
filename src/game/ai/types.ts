@@ -79,6 +79,7 @@ export interface SeatObservation {
     cancelledThisRound: boolean;
   };
   ownDeckCount: number;
+  ownDiscard: SeatCardSummary[];
   ownDiscardCount: number;
   ownPassed: boolean;
   ownGems: number;

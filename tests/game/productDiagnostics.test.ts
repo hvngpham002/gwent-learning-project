@@ -1383,3 +1383,127 @@ describe("cFp27: mulligan diagnostics in product export", () => {
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
   });
 });
+
+describe("cFp29: medic timing diagnostics in product export", () => {
+  it("scan passes for medicTimingAnalysis fields in export", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp29-medic-timing-test",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 3,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          medicTimingAnalysis: {
+            medicPlayLegal: true,
+            medicPlayCandidateCount: 1,
+            ownDiscardReviveCandidateCount: 2,
+            bestReviveStrengthBucket: "medium",
+            bestReviveValueBucket: "strong",
+            noTargetMedicRisk: false,
+            selectedMedicWithNoTarget: false,
+          },
+          selected: {
+            kind: "play_card",
+            label: "play medic",
+            actionRef: "action_0",
+            targetKind: "board_row",
+          },
+          candidates: [],
+          reasonKind: "policy",
+          reason: "best useful move",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const json = JSON.stringify(exportData);
+    expect(json).toContain("medicTimingAnalysis");
+    expect(json).toContain("ownDiscardReviveCandidateCount");
+    expect(json).toContain("bestReviveValueBucket");
+  });
+
+  it("synthetic raw cardIds under medicTimingAnalysis fails scan", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+      cardIds: ["yc5_abc123", "yc5_def456"],
+    };
+    const issues = scanForHiddenInfoHazards(medicTiming);
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("synthetic raw seat_a:/seat_b: under medicTimingAnalysis fails scan", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+      diagnosticSeatId: "seat_a:discard:0",
+    };
+    const issues = scanForHiddenInfoHazards(medicTiming);
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("synthetic linkedSourceIds under medicTimingAnalysis fails scan", () => {
+    const medicTiming = {
+      medicPlayLegal: true,
+      medicPlayCandidateCount: 1,
+      ownDiscardReviveCandidateCount: 2,
+      bestReviveStrengthBucket: "medium",
+      bestReviveValueBucket: "strong",
+      noTargetMedicRisk: false,
+      selectedMedicWithNoTarget: false,
+      linkedSourceIds: ["neutral.yennefer-of-vengerberg"],
+    };
+    const issues = scanForHiddenInfoHazards(medicTiming);
+    expect(issues.length).toBeGreaterThan(0);
+  });
+});

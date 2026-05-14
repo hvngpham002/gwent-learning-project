@@ -170,6 +170,7 @@ const baseObservation = (overrides: Partial<SeatObservation> = {}): SeatObservat
   ownFaction: "nilfgaard",
   opponentFaction: "northern_realms",
   ownHand: [],
+  ownDiscard: [],
   ownLeader: {
     leaderCardId: "leader-b",
     sourceId: "leader-b",
@@ -3010,5 +3011,224 @@ describe("cFp28: hand-quality pass calibration", () => {
 
     const { trace } = explainLegalHeuristicV1Decision(input);
     expect(trace.handShapeAnalysis!.specialOnlyHand).toBe(true);
+  });
+});
+
+describe("cFp29: medic timing calibration", () => {
+  const medicCard = (id: string, sourceId: string, printedStrength = 5) =>
+    testCard({ cardId: id, sourceId, printedStrength, kind: "unit", abilities: ["medic"] });
+
+  const unitCard = (id: string, sourceId: string, printedStrength = 5) =>
+    testCard({ cardId: id, sourceId, printedStrength, kind: "unit" });
+
+  // Empty discard: Medic no longer dominates a clearly better non-Medic play
+  it("empty discard - non-Medic play preferred over Medic with no revive target", () => {
+    const medic = medicCard("medic1", "test.medic-yennefer", 5);
+    const strongUnit = unitCard("strong", "test.strong-unit", 12);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(strongUnit)],
+      {
+        ownHand: [medic, strongUnit],
+        ownDiscard: [],
+        ownGems: 2,
+        opponentHandCount: 8,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 35 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    expect(selected?.sourceCardId).toBe(strongUnit.cardId);
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.medicTimingAnalysis?.noTargetMedicRisk).toBe(true);
+    expect(trace.medicTimingAnalysis?.medicPlayLegal).toBe(true);
+    expect(trace.medicTimingAnalysis?.ownDiscardReviveCandidateCount).toBe(0);
+  });
+
+  // Empty discard: Medic can still be played as emergency tempo
+  it("empty discard - Medic selected when no better move exists", () => {
+    const medic = medicCard("medic1", "test.medic-yennefer", 8);
+
+    const input = policyInput(
+      [passMove(), playMove(medic)],
+      {
+        ownHand: [medic],
+        ownDiscard: [],
+        ownGems: 2,
+        opponentHandCount: 9,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 50, seat_b: 20 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    expect(selected?.sourceCardId).toBe(medic.cardId);
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.medicTimingAnalysis?.selectedMedicWithNoTarget).toBe(true);
+  });
+
+  // Strong revive target: Medic is attractive
+  it("strong revive target - Medic selected with Spy in discard", () => {
+    const medic = medicCard("medic1", "test.medic-yennefer", 5);
+    const spy = testCard({ cardId: "spy1", sourceId: "test.spy-unit", printedStrength: 7, kind: "unit", abilities: ["spy"] });
+    const normalUnit = unitCard("normal", "test.normal-unit", 6);
+
+    const input = policyInput(
+      [playMove(medic), playMove(normalUnit)],
+      {
+        ownHand: [medic, normalUnit],
+        ownDiscard: [spy],
+        ownGems: 2,
+        opponentHandCount: 8,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 35 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.medicTimingAnalysis?.ownDiscardReviveCandidateCount).toBe(1);
+    expect(trace.medicTimingAnalysis?.bestReviveValueBucket).toBe("strong");
+    expect(trace.medicTimingAnalysis?.noTargetMedicRisk).toBe(false);
+  });
+
+  // Strong revive target with high-strength Medic ability unit
+  it("strong revive target - Medic attractive with high-value Medic unit in discard", () => {
+    const medic = medicCard("medic1", "test.medic-yennefer", 5);
+    const medicUnit = testCard({
+      cardId: "medunit1",
+      sourceId: "test.medic-unit-target",
+      printedStrength: 9,
+      kind: "unit",
+      abilities: ["medic"],
+    });
+    const normalUnit = unitCard("normal", "test.normal-unit", 6);
+
+    const input = policyInput(
+      [playMove(medic), playMove(normalUnit)],
+      {
+        ownHand: [medic, normalUnit],
+        ownDiscard: [medicUnit],
+        ownGems: 2,
+        opponentHandCount: 8,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 35 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.medicTimingAnalysis?.ownDiscardReviveCandidateCount).toBe(1);
+    expect(trace.medicTimingAnalysis?.bestReviveValueBucket).toBe("strong");
+  });
+
+  // Weak revive target: Medic is not overvalued
+  it("weak revive target - stronger normal unit preferred over Medic", () => {
+    const medic = medicCard("medic1", "test.medic-yennefer", 5);
+    const weakUnit = unitCard("weak", "test.weak-unit", 2);
+    const strongUnit = unitCard("strong", "test.strong-unit", 14);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(strongUnit)],
+      {
+        ownHand: [medic, strongUnit],
+        ownDiscard: [weakUnit],
+        ownGems: 2,
+        opponentHandCount: 8,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 35 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    expect(selected?.sourceCardId).toBe(strongUnit.cardId);
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.medicTimingAnalysis?.bestReviveValueBucket).toBe("weak");
+  });
+
+  // Agile target count is unique
+  it("agile revive target counted as one unique candidate", () => {
+    const medic = medicCard("medic1", "test.medic-yennefer", 5);
+    const agileUnit = testCard({
+      cardId: "agile1",
+      sourceId: "test.agile-unit",
+      printedStrength: 4,
+      kind: "unit",
+      rows: ["close", "ranged"],
+      abilities: ["agile"],
+    });
+
+    const input = policyInput(
+      [playMove(medic)],
+      {
+        ownHand: [medic],
+        ownDiscard: [agileUnit],
+        ownGems: 2,
+        opponentHandCount: 8,
+        score: baseObservation().score,
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.medicTimingAnalysis?.ownDiscardReviveCandidateCount).toBe(1);
+  });
+
+  // Explanation parity
+  it("explain move equals selectMove for empty-discard Medic case", () => {
+    const medic = medicCard("medic1", "test.medic-yennefer", 5);
+    const strongUnit = unitCard("strong", "test.strong-unit", 12);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(strongUnit)],
+      {
+        ownHand: [medic, strongUnit],
+        ownDiscard: [],
+        ownGems: 2,
+        opponentHandCount: 8,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 35 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const explained = explainLegalHeuristicV1Decision(input);
+    expect(explained.move?.moveId).toBe(selected?.moveId);
+  });
+
+  it("explain move equals selectMove for strong-target Medic case", () => {
+    const medic = medicCard("medic1", "test.medic-yennefer", 5);
+    const spy = testCard({ cardId: "spy1", sourceId: "test.spy-unit", printedStrength: 7, kind: "unit", abilities: ["spy"] });
+
+    const input = policyInput(
+      [playMove(medic)],
+      {
+        ownHand: [medic],
+        ownDiscard: [spy],
+        ownGems: 2,
+        opponentHandCount: 8,
+        score: baseObservation().score,
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const explained = explainLegalHeuristicV1Decision(input);
+    expect(explained.move?.moveId).toBe(selected?.moveId);
   });
 });

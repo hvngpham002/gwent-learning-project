@@ -24,6 +24,28 @@ import {
 
 const MIN_USEFUL_MOVE_SCORE = 25;
 
+// cFp29: Contextual Medic timing constants
+export const MEDIC_NO_TARGET_UTILITY = -140;
+export const MEDIC_WEAK_TARGET_UTILITY = 70;
+export const MEDIC_MEDIUM_TARGET_UTILITY = 180;
+export const MEDIC_STRONG_TARGET_UTILITY = 320;
+
+export type LegalHeuristicV1MedicTimingBucket =
+  | "none"
+  | "weak"
+  | "medium"
+  | "strong";
+
+export interface LegalHeuristicV1MedicTimingInfo {
+  readonly sourceIsMedic: boolean;
+  readonly reviveCandidateCount: number;
+  readonly bestReviveValue: number;
+  readonly bestReviveStrength: number;
+  readonly bestReviveValueBucket: LegalHeuristicV1MedicTimingBucket;
+  readonly hasReviveTarget: boolean;
+  readonly noTargetPenaltyApplied: boolean;
+}
+
 // cFp26: Nilfgaard tie-win awareness matching engine round-resolution rules.
 // The engine treats tied scores as: if exactly one seat is Nilfgaard, that
 // Nilfgaard seat wins the tie; if neither or both are Nilfgaard, the round
@@ -67,6 +89,111 @@ const isWeatherCard = (card: SeatCardSummary | undefined) =>
 
 const isScorchCard = (card: SeatCardSummary | undefined) =>
   hasAnyAbility(card, ["scorch", "scorch_close", "scorch_range", "scorch_siege"]);
+
+// cFp29: Medic revive candidate helpers
+export const isMedicSource = (card: SeatCardSummary | undefined) =>
+  hasAbility(card, "medic");
+
+const isMedicReviveCandidate = (card: SeatCardSummary) =>
+  card.kind === "unit" && card.rows.length > 0;
+
+const medicReviveCandidates = (features: LegalHeuristicV1Features) =>
+  features.input.observation.ownDiscard.filter(isMedicReviveCandidate);
+
+const medicReviveCandidateValue = (candidate: SeatCardSummary) => {
+  let value = candidate.printedStrength * 10;
+  if (hasAbility(candidate, "spy")) value += 360;
+  if (hasAbility(candidate, "medic")) value += 220;
+  if (hasAbility(candidate, "muster") || hasAbility(candidate, "muster_roach")) value += 170;
+  if (hasAbility(candidate, "tight_bond")) value += 95;
+  if (hasAbility(candidate, "morale_boost")) value += 70;
+  if (hasAbility(candidate, "scorch") || hasAbility(candidate, "scorch_close") || hasAbility(candidate, "scorch_range") || hasAbility(candidate, "scorch_siege")) value += 140;
+  if (candidate.deckLimit === 1) value += 15;
+  return value;
+};
+
+export const medicSourceUtility = (features: LegalHeuristicV1Features, card: SeatCardSummary): LegalHeuristicV1MedicTimingInfo => {
+  const candidates = isMedicSource(card)
+    ? medicReviveCandidates(features)
+    : [];
+
+  if (!isMedicSource(card)) {
+    return {
+      sourceIsMedic: false,
+      reviveCandidateCount: 0,
+      bestReviveValue: 0,
+      bestReviveStrength: 0,
+      bestReviveValueBucket: "none",
+      hasReviveTarget: false,
+      noTargetPenaltyApplied: false,
+    };
+  }
+
+  const reviveCandidateCount = candidates.length;
+  const hasReviveTarget = reviveCandidateCount > 0;
+
+  let bestReviveValue = 0;
+  let bestReviveStrength = 0;
+  for (const c of candidates) {
+    const v = medicReviveCandidateValue(c);
+    if (v > bestReviveValue) bestReviveValue = v;
+    if (c.printedStrength > bestReviveStrength) bestReviveStrength = c.printedStrength;
+  }
+
+  let bestReviveValueBucket: LegalHeuristicV1MedicTimingBucket;
+  if (bestReviveValue === 0 && !hasReviveTarget) {
+    bestReviveValueBucket = "none";
+  } else if (bestReviveValue < 140) {
+    bestReviveValueBucket = "weak";
+  } else if (bestReviveValue < 280) {
+    bestReviveValueBucket = "medium";
+  } else {
+    bestReviveValueBucket = "strong";
+  }
+
+  return {
+    sourceIsMedic: true,
+    reviveCandidateCount,
+    bestReviveValue,
+    bestReviveStrength,
+    bestReviveValueBucket,
+    hasReviveTarget,
+    noTargetPenaltyApplied: !hasReviveTarget,
+  };
+};
+
+const medicSourceUtilityScore = (features: LegalHeuristicV1Features, card: SeatCardSummary) => {
+  if (!isMedicSource(card)) return 0;
+  const candidates = medicReviveCandidates(features);
+  if (candidates.length === 0) return MEDIC_NO_TARGET_UTILITY;
+
+  let bestValue = 0;
+  for (const c of candidates) {
+    const v = medicReviveCandidateValue(c);
+    if (v > bestValue) bestValue = v;
+  }
+
+  if (bestValue < 140) return MEDIC_WEAK_TARGET_UTILITY;
+  if (bestValue < 280) return MEDIC_MEDIUM_TARGET_UTILITY;
+  return MEDIC_STRONG_TARGET_UTILITY;
+};
+
+// cFp29: Medic revive tempo estimate for board_row plays
+const medicReviveTempoForSource = (features: LegalHeuristicV1Features, card: SeatCardSummary) => {
+  if (!isMedicSource(card)) return 0;
+  const candidates = medicReviveCandidates(features);
+  if (candidates.length === 0) return 0;
+
+  // Use the best non-negative printed-strength from non-Spy candidates.
+  // Spy targets are strategic value, not positive board tempo (they go to opponent side).
+  let bestNonSpyStrength = 0;
+  for (const c of candidates) {
+    if (!hasAbility(c, "spy") && c.printedStrength > 0 && c.printedStrength > bestNonSpyStrength) {
+      bestNonSpyStrength = c.printedStrength;
+    }
+  }
+  return bestNonSpyStrength;
+};
 
 export interface LegalHeuristicV1Features {
   input: EnginePolicyInput;
@@ -131,6 +258,7 @@ const collectPublicCards = (input: EnginePolicyInput) => {
   });
   input.observation.weather.forEach(addCard);
   input.observation.pendingPrompt?.revealedCards?.forEach(addCard);
+  (input.observation.ownDiscard ?? []).forEach(addCard);
   input.observation.pendingPrompt?.options.forEach((option) => {
     addCard(option.targetCard);
     option.targetCards?.forEach(addCard);
@@ -182,7 +310,7 @@ export const buildLegalHeuristicV1Features = (input: EnginePolicyInput): LegalHe
 const optionForMove = (features: LegalHeuristicV1Features, move: ChoosePromptOptionMove) =>
   features.promptOptionsById.get(move.optionId);
 
-const cardStrategicValue = (card: SeatCardSummary | undefined) => {
+const cardStrategicValue = (card: SeatCardSummary | undefined, options?: { includeMedicAbilityBonus?: boolean }) => {
   if (!card) {
     return 0;
   }
@@ -193,13 +321,16 @@ const cardStrategicValue = (card: SeatCardSummary | undefined) => {
   if (card.kind === "special") score += 20;
   if (card.deckLimit === 1) score += 8;
 
+  const includeMedicAbilityBonus = options?.includeMedicAbilityBonus ?? true;
   card.abilities.forEach((ability) => {
     switch (ability) {
       case "spy":
         score += 520;
         break;
       case "medic":
-        score += 260;
+        if (includeMedicAbilityBonus) {
+          score += 260;
+        }
         break;
       case "muster":
         score += 210;
@@ -602,12 +733,12 @@ const linkedHandTempoForCard = (features: LegalHeuristicV1Features, card: SeatCa
     .reduce((sum, candidate) => sum + candidate.printedStrength, 0);
 };
 
-const estimateImmediateTempo = (features: LegalHeuristicV1Features, move: PlayCardMove | UseLeaderMove) => {
+const estimateImmediateTempo = (features: LegalHeuristicV1Features, move: PlayCardMove | UseLeaderMove, _cardOverride?: SeatCardSummary) => {
   if (move.kind === "use_leader") {
     return estimateLeaderTempo(features, move);
   }
 
-  const card = features.ownHandByCardId.get(move.sourceCardId);
+  const card = _cardOverride ?? features.ownHandByCardId.get(move.sourceCardId);
   if (!card) {
     return 0;
   }
@@ -617,7 +748,11 @@ const estimateImmediateTempo = (features: LegalHeuristicV1Features, move: PlayCa
     const abilityRows = card.abilities.flatMap((ability) => SCORCH_ROWS_BY_ABILITY[ability] ?? []);
     const scorchBonus = abilityRows.length > 0 ? scorchSwing(features, abilityRows) : 0;
     const linkedHandTempo = move.target.side === "own" ? linkedHandTempoForCard(features, card) : 0;
-    return signedStrength + scorchBonus + linkedHandTempo;
+    // cFp29: Medic revive tempo estimate for own-side Medic source plays
+    const medicReviveTempo = move.target.side === "own" && isMedicSource(card)
+      ? medicReviveTempoForSource(features, card)
+      : 0;
+    return signedStrength + scorchBonus + linkedHandTempo + medicReviveTempo;
   }
 
   if (move.target.kind === "row_horn") {
@@ -723,8 +858,12 @@ export const scorePlayMove = (features: LegalHeuristicV1Features, move: PlayCard
     return rowTotal > 0 ? 140 + rowTotal * 16 : -180;
   }
 
-  const tempo = estimateImmediateTempo(features, move);
-  let score = cardStrategicValue(card) + tempo * 14;
+  const tempo = estimateImmediateTempo(features, move, card);
+  let score = cardStrategicValue(card, { includeMedicAbilityBonus: false }) + tempo * 14;
+  // cFp29: Contextual Medic source utility replaces flat +260 bonus
+  if (isMedicSource(card)) {
+    score += medicSourceUtilityScore(features, card);
+  }
   if (hasAbility(card, "spy")) {
     score += features.round === 1 && features.ownGems > 1 ? 220 : 70;
     if (features.opponentPassed) {

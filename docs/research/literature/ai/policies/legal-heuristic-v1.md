@@ -413,8 +413,45 @@ documented semantics:
 - `specialOnlyHand` is `true` only when the hand contains zero units AND
   zero heroes (i.e. only specials/weather remain).
 - `noUnitFutureRisk` is `true` only when `unitTempoCardCount === 0` and
-  the hand is non-empty.
+   the hand is non-empty.
 - Pass-buffer constants (`EXTRA_BUFFER_POOR` = 18, `EXTRA_BUFFER_THIN` =
-  10) and the `getFutureHandExtraBuffer` helper were extracted from inline
-  code into `decisionTrace.ts` and shared by both the policy and
-  explanation modules to prevent divergence.
+   10) and the `getFutureHandExtraBuffer` helper were extracted from inline
+   code into `decisionTrace.ts` and shared by both the policy and
+   explanation modules to prevent divergence.
+
+### Medic Timing Calibration (cFp29)
+
+cFp29 calibrates Medic source card valuation based on own-discard revive
+target availability. Motivated by a product playtest in which the AI played
+a Medic source early with no meaningful revive target in its own discard
+pile, because `cardStrategicValue(...)` gave every Medic card a flat `+260`
+bonus regardless of whether the ability could actually convert value.
+
+Key changes:
+
+- `SeatObservation` now includes `ownDiscard: SeatCardSummary[]`, populated
+  from the engine discard pile. This is safe because own-discard is public
+  game information visible to the acting seat.
+- `cardStrategicValue(...)` accepts `{ includeMedicAbilityBonus? }` option.
+  The flat `+260` bonus is now gated behind this option (defaults to `true`).
+  `scorePlayMove(...)` passes `{ includeMedicAbilityBonus: false }` for
+  Medic sources, replacing the flat bonus with contextual utility.
+- `medicSourceUtility(...)` replaces the flat bonus with discard-aware
+  utility: negative penalty when no revive targets exist, scaled positive
+  utility when targets are available.
+- `medicReviveTempoForSource(...)` injects expected revive tempo into
+  `estimateImmediateTempo(...)` for own-row Medic plays.
+- `AiDecisionMedicTimingAnalysis` is a hidden-info-safe struct exposed on
+  playing-phase traces via `medicTimingAnalysis`. It includes:
+  - `medicPlayLegal`: whether at least one Medic play-card move is legal
+  - `medicPlayCandidateCount`: unique Medic source cards in hand
+  - `ownDiscardReviveCandidateCount`: unique revive targets in own discard
+  - `bestReviveStrengthBucket`: bucketed best non-Spy printed strength
+  - `bestReviveValueBucket`: `none` / `weak` / `medium` / `strong`
+  - `noTargetMedicRisk`: true when Medic is legal but discard is empty
+  - `selectedMedicWithNoTarget`: true when selected move is a no-target Medic
+- No card names, source IDs, instance IDs, cardIds, linkedSourceIds, or raw
+  abilities are included in the diagnostic trace.
+- Prompt-target Medic value is preserved; `promptCardValue(...)` continues to
+  use the full `includeMedicAbilityBonus` default so Medic targets remain
+  attractive when resolving a Medic prompt.

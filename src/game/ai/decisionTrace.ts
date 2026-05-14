@@ -400,6 +400,26 @@ export interface AiDecisionCandidateSummary {
 }
 
 // ---------------------------------------------------------------------------
+// Medic timing analysis (cFp29: hidden-info-safe aggregate diagnostics)
+// ---------------------------------------------------------------------------
+
+export type AiDecisionMedicTimingBucket =
+  | "none"
+  | "weak"
+  | "medium"
+  | "strong";
+
+export interface AiDecisionMedicTimingAnalysis {
+  readonly medicPlayLegal: boolean;
+  readonly medicPlayCandidateCount: number;
+  readonly ownDiscardReviveCandidateCount: number;
+  readonly bestReviveStrengthBucket: AiDecisionTempoBucket;
+  readonly bestReviveValueBucket: AiDecisionMedicTimingBucket;
+  readonly noTargetMedicRisk: boolean;
+  readonly selectedMedicWithNoTarget: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Top-level trace
 // ---------------------------------------------------------------------------
 
@@ -414,6 +434,7 @@ export interface AiDecisionTrace {
   readonly passAnalysis: AiDecisionPassAnalysis | null;
   readonly mulliganAnalysis: AiDecisionMulliganAnalysis | null;
   readonly handShapeAnalysis: AiDecisionHandShapeAnalysis | null;
+  readonly medicTimingAnalysis: AiDecisionMedicTimingAnalysis | null;
   readonly selected: AiDecisionSelectedMove | null;
   readonly candidates: AiDecisionCandidateSummary[];
   // Distinguishes exact-policy reasoning ("policy-...") from diagnostics

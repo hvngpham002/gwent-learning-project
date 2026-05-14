@@ -8,10 +8,12 @@ import {
   buildAiDecisionSelectedMove,
   getFutureHandExtraBuffer,
   redactAiHandCardLabel,
+  toAiDecisionTempoBucket,
   AI_DECISION_TRACE_SCHEMA_VERSION,
   type EnginePolicyInput,
   type AiDecisionExplanation,
   type AiDecisionMulliganAnalysis,
+  type AiDecisionMedicTimingAnalysis,
   type AiDecisionPassDiagnosticsInput,
   type AiDecisionTraceFeatures,
 } from "@/game/ai";
@@ -28,8 +30,82 @@ import {
   scoreMove,
   scoreLeaderMove,
   legalHeuristicPolicyV1,
+  isMedicSource,
   type LegalHeuristicV1Features,
 } from "@/game/ai";
+
+// cFp29: Build hidden-info-safe Medic timing analysis
+const buildMedicTimingAnalysis = (
+  features: LegalHeuristicV1Features,
+  move: import("@/game/core").LegalMove | null,
+): AiDecisionMedicTimingAnalysis | null => {
+  const hasAb = (card: { abilities: readonly string[] }, ability: string) => card.abilities.includes(ability);
+
+  // Find unique Medic source cards in legal play-card moves
+  const medicSourceCardIds = new Set<string>();
+  for (const playMove of features.playMoves) {
+    const card = features.ownHandByCardId.get(playMove.sourceCardId);
+    if (card && isMedicSource(card)) {
+      medicSourceCardIds.add(card.sourceId);
+    }
+  }
+  const medicPlayLegal = medicSourceCardIds.size > 0;
+  const medicPlayCandidateCount = medicSourceCardIds.size;
+
+  // Count own-discard revive candidates
+  const ownDiscard = features.input.observation.ownDiscard ?? [];
+  const reviveCandidates = ownDiscard.filter((c) => c.kind === "unit" && c.rows.length > 0);
+  const ownDiscardReviveCandidateCount = reviveCandidates.length;
+
+  // Best non-Spy revive strength
+  let bestReviveStrength = 0;
+  for (const c of reviveCandidates) {
+    if (!hasAb(c, "spy") && c.printedStrength > bestReviveStrength) {
+      bestReviveStrength = c.printedStrength;
+    }
+  }
+
+  // Best revive value bucket
+  let bestReviveValueBucket: "none" | "weak" | "medium" | "strong" = "none";
+  if (reviveCandidates.length > 0) {
+    let bestValue = 0;
+    for (const c of reviveCandidates) {
+      let v = c.printedStrength * 10;
+      if (hasAb(c, "spy")) v += 360;
+      if (hasAb(c, "medic")) v += 220;
+      if (hasAb(c, "muster") || hasAb(c, "muster_roach")) v += 170;
+      if (hasAb(c, "tight_bond")) v += 95;
+      if (hasAb(c, "morale_boost")) v += 70;
+      if (hasAb(c, "scorch") || hasAb(c, "scorch_close") || hasAb(c, "scorch_range") || hasAb(c, "scorch_siege")) v += 140;
+      if (c.deckLimit === 1) v += 15;
+      if (v > bestValue) bestValue = v;
+    }
+    if (bestValue < 140) bestReviveValueBucket = "weak";
+    else if (bestValue < 280) bestReviveValueBucket = "medium";
+    else bestReviveValueBucket = "strong";
+  }
+
+  const noTargetMedicRisk = medicPlayLegal && ownDiscardReviveCandidateCount === 0;
+  const selectedMedicWithNoTarget =
+    move?.kind === "play_card" &&
+    features.playMoves.some((m) => m.moveId === move.moveId) &&
+    (() => {
+      const selectedCard = features.ownHandByCardId.get((move as { sourceCardId?: string }).sourceCardId ?? "");
+      return isMedicSource(selectedCard) && ownDiscardReviveCandidateCount === 0;
+    })();
+
+  return medicPlayLegal
+    ? {
+      medicPlayLegal,
+      medicPlayCandidateCount,
+      ownDiscardReviveCandidateCount,
+      bestReviveStrengthBucket: toAiDecisionTempoBucket(bestReviveStrength),
+      bestReviveValueBucket,
+      noTargetMedicRisk,
+      selectedMedicWithNoTarget,
+    }
+    : null;
+};
 
 // Build candidate summaries for diagnostic output.
 // CRITICAL: ALL play_card candidates from the AI's hidden hand are fully
@@ -139,6 +215,7 @@ const buildPhaseTrace = (
       passAnalysis: null,
       mulliganAnalysis,
       handShapeAnalysis: null,
+      medicTimingAnalysis: null,
       selected,
       candidates: [],
       reasonKind: "phase",
@@ -201,6 +278,9 @@ const buildPlayingPhaseTrace = (
 
   // cFp28: Build hand-shape analysis for diagnostics
   const handShapeAnalysis = buildLegalHeuristicV1HandShapeAnalysis(features);
+
+  // cFp29: Build Medic timing analysis for diagnostics
+  const medicTimingAnalysis = buildMedicTimingAnalysis(features, move);
 
   const publicState = buildAiDecisionPublicState(input);
   const passAnalysis = features.passMove
@@ -293,6 +373,7 @@ const buildPlayingPhaseTrace = (
       passAnalysis,
       mulliganAnalysis: null,
       handShapeAnalysis,
+      medicTimingAnalysis,
       selected,
       candidates: topCandidates,
       reasonKind,
@@ -338,6 +419,7 @@ export const explainLegalHeuristicV1Decision = (
         passAnalysis: null,
         mulliganAnalysis: null,
         handShapeAnalysis: null,
+        medicTimingAnalysis: null,
         selected: null,
         candidates: [],
         reasonKind: "none",

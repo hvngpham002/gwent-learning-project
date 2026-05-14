@@ -153,6 +153,7 @@ export const buildSeatObservation = ({
       cancelledThisRound: isLeaderSuppressedThisRound({ state, seatId }),
     },
     ownDeckCount: seat.deck.length,
+    ownDiscard: summarizeCards(state, seat.discard, cardsBySourceId),
     ownDiscardCount: seat.discard.length,
     ownPassed: seat.passed,
     ownGems: seat.gems,
