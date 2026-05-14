@@ -301,6 +301,26 @@ const leaderMove = (
   },
 });
 
+const rowHornMove = (
+  card: SeatCardSummary,
+  seatId: SeatId = "seat_b",
+  row: CatalogRow = "close",
+): LegalMove => ({
+  kind: "play_card",
+  moveId: `play:${seatId}:${card.cardId}:row_horn:${row}`,
+  seatId,
+  label: `Play ${card.name} horn on ${row}`,
+  sourceCardId: card.cardId,
+  sourceId: card.sourceId,
+  target: { kind: "row_horn", seatId, row },
+  metadata: {
+    cardName: card.name,
+    cardKind: card.kind,
+    abilities: card.abilities,
+    targetLabel: `row_horn:${row}`,
+  },
+});
+
 const promptMove = (
   optionId: string,
   abilityId: string,
@@ -2490,12 +2510,60 @@ describe("cFp28: hand-quality pass calibration", () => {
     testCard({ cardId: id, sourceId, printedStrength, kind: "hero" });
 
   // ------------------------------------------------------------------
-  // Marginal Poor-Hand Pass Is Blocked
+  // Marginal Poor-Hand Pass Is Blocked — Commander's Horn fixture
   // ------------------------------------------------------------------
-  it("blocks marginal voluntary pass when future hand is poor and useful play exists", () => {
-    // Recreating the playtest shape: scoreDelta=29, requiredLead=24, buffer=5
-    // Hand has no units (all special/weather) -> futureRoundHandQuality = "poor"
-    // Extra buffer required = 18, but passSafetyBuffer = 5 -> blocked
+  it("blocks marginal voluntary pass when future hand is poor and Commander's Horn useful play exists", () => {
+    // scoreDelta=29, requiredLead=24, passSafetyBuffer=5
+    // ownHand: horn + 3 specials -> futureRoundHandQuality = "poor", noUnitFutureRisk
+    // Commander's Horn targets close row which has high row total -> positive score
+    const horn = testCard({
+      cardId: "horn",
+      sourceId: "test.commanders-horn",
+      printedStrength: 0,
+      kind: "special",
+      abilities: ["commanders_horn"],
+    });
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+    const w3 = specialCard("w3", "neutral.torrential-rain", 0);
+
+    const hornMove = rowHornMove(horn);
+    const input = policyInput(
+      [passMove(), hornMove, playMove(w1), playMove(w2), playMove(w3)],
+      {
+        ownHand: [horn, w1, w2, w3],
+        ownGems: 2,
+        opponentHandCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 79, seat_b: 108 },
+          rowTotalsBySeat: {
+            seat_a: emptyRowTotals(),
+            seat_b: { close: 10, ranged: 0, siege: 0 },
+          },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { trace } = explainLegalHeuristicV1Decision(input);
+
+    expect(selected.kind).not.toBe("pass");
+    expect(selected.kind).toBe("play_card");
+    expect(trace.handShapeAnalysis).not.toBeNull();
+    expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("poor");
+    expect(trace.handShapeAnalysis!.noUnitFutureRisk).toBe(true);
+    expect(trace.handShapeAnalysis!.unitCardCount).toBe(0);
+    expect(trace.handShapeAnalysis!.heroCardCount).toBe(0);
+    expect(trace.reason).toMatch(/future hand|pass margin/);
+    // Policy parity
+    expect(explainLegalHeuristicV1Decision(input).move).toEqual(selected);
+  });
+
+  // ------------------------------------------------------------------
+  // All-special hand with no positive useful move — pass still allowed
+  // ------------------------------------------------------------------
+  it("allows poor-hand pass when no positive useful move exists", () => {
     const weather1 = specialCard("w1", "neutral.biting-frost", 0);
     const weather2 = specialCard("w2", "neutral.impenetrable-fog", 0);
     const special1 = specialCard("s1", "test.decoy", 0);
@@ -2514,15 +2582,17 @@ describe("cFp28: hand-quality pass calibration", () => {
       },
     );
 
+    const selected = legalHeuristicPolicyV1.selectMove(input);
     const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
     expect(trace.handShapeAnalysis).not.toBeNull();
     expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("poor");
     expect(trace.handShapeAnalysis!.noUnitFutureRisk).toBe(true);
-    // With all-special hand and no positive-score useful play, pass is still selected
-    // but hand quality is recorded correctly in trace.
+    expect(trace.reason).toContain("future hand poor");
+    expect(trace.reason).toContain("no useful move");
   });
 
-  it("blocks marginal pass with all-special hand (poor quality)", () => {
+  it("records poor-hand analysis when all weather plays are non-useful", () => {
     // All special cards -> poor future hand quality
     const w1 = specialCard("w1", "neutral.biting-frost", 0);
     const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
@@ -2553,6 +2623,9 @@ describe("cFp28: hand-quality pass calibration", () => {
 
     // Parity check
     expect(selected).toEqual(legalHeuristicPolicyV1.selectMove(input));
+    expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+    expect(trace.reason).toContain("future hand poor");
+    expect(trace.reason).toContain("no useful move");
   });
 
   // ------------------------------------------------------------------
@@ -2594,8 +2667,7 @@ describe("cFp28: hand-quality pass calibration", () => {
     const unit = unitCard("u1", "test.thin-unit", 10);
     const s1 = specialCard("s1", "test.special1", 0);
     const s2 = specialCard("s2", "test.special2", 0);
-    // scoreDelta=34, requiredLead=24, buffer=10 -> exactly at threshold for thin
-    // With buffer < 10 (i.e., 9), pass blocked
+    // scoreDelta=32, requiredLead=24, buffer=8 < 10 -> pass blocked
     const input = policyInput(
       [passMove(), playMove(unit), playMove(s1), playMove(s2)],
       {
@@ -2609,8 +2681,11 @@ describe("cFp28: hand-quality pass calibration", () => {
       },
     );
 
+    const selected = legalHeuristicPolicyV1.selectMove(input);
     const { trace } = explainLegalHeuristicV1Decision(input);
     expect(trace.handShapeAnalysis!.futureRoundHandQuality).toBe("thin");
+    expect(selected.kind).not.toBe("pass");
+    expect(trace.reason).toMatch(/future hand|pass margin/);
   });
 
   it("allows thin-hand pass when buffer at or above 10", () => {
