@@ -1,7 +1,7 @@
 {
-  "averageCommands": 38.5,
-  "averageLegalMoves": 8.21179595958677,
-  "averageSteps": 38.5,
+  "averageCommands": 37.75,
+  "averageLegalMoves": 8.292440477773733,
+  "averageSteps": 37.75,
   "benchmarkRunId": "benchmark-v1-smoke-v1:latest",
   "completionRate": 1,
   "deckPresetIds": [
@@ -9,41 +9,41 @@
     "current-northern-realms"
   ],
   "errorCodeCounts": {},
-  "leaderUseCount": 3,
+  "leaderUseCount": 4,
   "matchupSummaries": [
     {
-      "averageCommands": 38.5,
-      "averageLegalMoves": 8.21179595958677,
-      "averageSteps": 38.5,
-      "leaderUseCount": 3,
+      "averageCommands": 37.75,
+      "averageLegalMoves": 8.292440477773733,
+      "averageSteps": 37.75,
+      "leaderUseCount": 4,
       "matchupId": "current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0",
       "promptCount": 18,
       "resultCountsByDeck": {
         "current-nilfgaard": {
           "draws": 0,
-          "losses": 10,
+          "losses": 9,
           "none": 0,
-          "wins": 2
+          "wins": 3
         },
         "current-northern-realms": {
           "draws": 0,
-          "losses": 2,
+          "losses": 3,
           "none": 0,
-          "wins": 10
+          "wins": 9
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 10,
+          "losses": 9,
           "none": 0,
-          "wins": 2
+          "wins": 3
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 2,
+          "losses": 3,
           "none": 0,
-          "wins": 10
+          "wins": 9
         }
       },
       "statusCounts": {
@@ -66,29 +66,29 @@
   "resultCountsByDeck": {
     "current-nilfgaard": {
       "draws": 0,
-      "losses": 10,
+      "losses": 9,
       "none": 0,
-      "wins": 2
+      "wins": 3
     },
     "current-northern-realms": {
       "draws": 0,
-      "losses": 2,
+      "losses": 3,
       "none": 0,
-      "wins": 10
+      "wins": 9
     }
   },
   "resultCountsByPolicy": {
     "legal-heuristic-v0": {
       "draws": 0,
-      "losses": 10,
+      "losses": 9,
       "none": 0,
-      "wins": 2
+      "wins": 3
     },
     "legal-heuristic-v1": {
       "draws": 0,
-      "losses": 2,
+      "losses": 3,
       "none": 0,
-      "wins": 10
+      "wins": 9
     }
   },
   "schemaVersion": "benchmark-summary-v1",

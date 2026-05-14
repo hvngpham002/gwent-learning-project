@@ -3280,10 +3280,9 @@ describe("cFp30: weather-aware unit placement", () => {
     }
   });
 
-  // Test 2: Horned own ranged row under Fog does not attract additional non-hero units purely from printed strength
+  // Test 2: Horned own ranged row under Fog must not be selected over comparable unweathered close row
   it("horned weathered row does not over-attract non-hero units", () => {
     const strongUnit = nonHeroUnit("infantry", 10);
-    // Simulate horn present
     const hornBoardRows = baseBoardRows({
       seat_b: { ranged: [] },
     }).map((r) =>
@@ -3304,16 +3303,33 @@ describe("cFp30: weather-aware unit placement", () => {
       },
     );
 
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    // Weather-adjusted horn row (strength ~2) must lose to clean close row (~10)
+    if (selected && selected.kind === "play_card" && selected.target.kind === "board_row") {
+      expect(selected.target.row).toBe("close");
+    }
     const { trace } = explainLegalHeuristicV1Decision(input);
-    // Weather analysis should be present
     expect(trace.weatherPlacementAnalysis).not.toBeNull();
     expect(trace.weatherPlacementAnalysis?.ownWeatheredRows).toContain("ranged");
   });
 
-  // Test 3: Non-hero target-side Spy placement uses weather-adjusted signed tempo
-  it("spy on opponent weathered row uses weather-adjusted tempo", () => {
+  // Test 3a: Spy placement uses opponent target-row horn, not AI's own horn state
+  it("spy opponent-side horn uses target row horn, not own horn", () => {
     const spy = spyUnit("spy1", 4);
-    const input = policyInput(
+
+    // Fixture A: horn on AI's own ranged row, NONE on opponent ranged.
+    // The spy target is opponent close (not weathered), so horn on own side
+    // should not affect the spy's tempo for opponent targets.
+    const ownHornBoardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, horn: testCard({ cardId: "horn-own", sourceId: "test.commanders-horn", printedStrength: 0, kind: "special", abilities: ["commanders_horn"] }) }
+        : r,
+    );
+
+    const inputA = policyInput(
       [
         playMove(spy, { kind: "board_row", side: "opponent", seatId: "seat_a", row: "ranged" }),
         playMove(spy, { kind: "board_row", side: "opponent", seatId: "seat_a", row: "close" }),
@@ -3321,13 +3337,39 @@ describe("cFp30: weather-aware unit placement", () => {
       {
         ownHand: [spy],
         weather: [fogCard],
+        boardRows: ownHornBoardRows,
       },
     );
 
-    // We can't call estimateImmediateTempo directly (private), but we can
-    // verify the weather placement analysis reflects the weathered row
-    const { trace } = explainLegalHeuristicV1Decision(input);
-    expect(trace.weatherPlacementAnalysis).not.toBeNull();
+    // Horn on own row must not double the spy tempo on opponent rows
+    const { trace: traceA } = explainLegalHeuristicV1Decision(inputA);
+    expect(traceA.weatherPlacementAnalysis).not.toBeNull();
+    expect(traceA.weatherPlacementAnalysis?.opponentWeatheredRows).toContain("ranged");
+
+    // Fixture B: horn on opponent's ranged row (the spy target).
+    // The opponent horn should be picked up for the horned-row calculation.
+    const oppHornBoardRows = baseBoardRows({
+      seat_a: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_a" && r.row === "ranged"
+        ? { ...r, horn: testCard({ cardId: "horn-opp", sourceId: "test.commanders-horn", printedStrength: 0, kind: "special", abilities: ["commanders_horn"] }) }
+        : r,
+    );
+
+    const inputB = policyInput(
+      [
+        playMove(spy, { kind: "board_row", side: "opponent", seatId: "seat_a", row: "ranged" }),
+        playMove(spy, { kind: "board_row", side: "opponent", seatId: "seat_a", row: "close" }),
+      ],
+      {
+        ownHand: [spy],
+        weather: [fogCard],
+        boardRows: oppHornBoardRows,
+      },
+    );
+
+    const { trace: traceB } = explainLegalHeuristicV1Decision(inputB);
+    expect(traceB.weatherPlacementAnalysis).not.toBeNull();
   });
 
   // Test 4: Hero placement stays weather immune

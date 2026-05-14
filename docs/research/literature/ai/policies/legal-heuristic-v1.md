@@ -507,4 +507,14 @@ Weather adjustment logic mirrors engine scoring:
 - Skellige Storm affects ranged and siege rows.
 - Clear Weather removes weather but is not itself an active row penalty.
 - King Bran weather reduction is deferred (not readily available via public
-  leader metadata in the observation).
+   leader metadata in the observation).
+
+### cFp30 Benchmark Results
+
+Because selected move scoring changed, the v1 benchmark artifacts were
+refreshed after cFp30:
+
+- Smoke benchmark (`benchmark-v1-smoke-v1`): v1 records 9 wins, 3 losses,
+  and 0 draws against v0 (changed from cFp29 10/2/0).
+- Starter matrix (`benchmark-v1-starter-matrix-v1`): v1 records 96 wins,
+  23 losses, and 1 draw against v0 (changed from cFp29 90/29/1).

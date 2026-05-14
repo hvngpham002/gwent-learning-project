@@ -138,8 +138,9 @@ export const effectivePlacedStrengthForPolicy = (
   const baseStrength = card.kind === "hero" ? card.printedStrength : isWeathered ? 1 : card.printedStrength;
 
   // Check if there's already a Commander's Horn on the target row
+  const rowSeatId = target.side === "own" ? features.input.seatId : features.input.observation.opponentSeatId;
   const rowSummary = features.input.observation.boardRows.find(
-    (r) => r.seatId === features.input.seatId && r.row === target.row,
+    (r) => r.seatId === rowSeatId && r.row === target.row,
   );
   const hasHorn = rowSummary?.horn !== null;
   const effectiveStrength = hasHorn ? baseStrength * 2 : baseStrength;
