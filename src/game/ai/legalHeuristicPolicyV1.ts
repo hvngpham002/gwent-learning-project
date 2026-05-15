@@ -1198,20 +1198,81 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
   // Determine recommendation
   let recommendation: import("./decisionTrace").AiDecisionRoundInvestmentRecommendation = "continue";
 
-  if (features.ownGems <= 1) {
-    // Last gem: always fight (unless catch-up impossible — handled elsewhere)
-    recommendation = "fight_last_gem";
-  } else if (selectedMoveIsCardAdvantage) {
-    // Card-advantage moves are always worth playing
-    recommendation = "continue";
-  } else if (risk === "critical") {
-    recommendation = features.scoreDelta >= -10
-      ? "preserve_future_hand"
-      : "sacrifice_round";
-  } else if (features.scoreDelta >= -10 && selectedMoveWouldLeaveNoPositiveUnitMove) {
-    recommendation = "preserve_future_hand";
-  } else if (features.scoreDelta < 0 && selectedMoveWouldLeaveNoUnitTempoCard && futureRoundHandQuality !== "healthy") {
-    recommendation = "sacrifice_round";
+  // cFp32: Compute pass diagnostics for catch-up status
+  const passDiags = buildLegalHeuristicV1PassDecisionDiagnostics(features);
+  const hasSingleMoveCatchUp = passDiags.hasSingleMoveCatchUp;
+  const upperBoundCanWin = passDiags.policyUpperBoundCanWinRound;
+
+  // cFp32: Determine catch-up status for diagnostics
+  let catchUpStatus: import("./decisionTrace").AiDecisionRoundCatchUpStatus;
+  if (hasSingleMoveCatchUp) {
+    catchUpStatus = "single_move_catch_up";
+  } else if (upperBoundCanWin) {
+    catchUpStatus = "upper_bound_possible";
+  } else {
+    catchUpStatus = "upper_bound_impossible";
+  }
+
+  // cFp32: Determine stop-loss recommendation and reason
+  let stopLossRecommended = false;
+  let stopLossReason: import("./decisionTrace").AiDecisionRoundStopLossReason = "none";
+
+  if (features.ownGems > 1 && !selectedMoveIsCardAdvantage && features.scoreDelta < 0 && !hasSingleMoveCatchUp && upperBoundCanWin === false) {
+    // cFp32: Stop-loss gate — behind, no clean catch-up, upper-bound impossible
+    let reason: import("./decisionTrace").AiDecisionRoundStopLossReason = "upper_bound_impossible";
+
+    // Check if selected move is a low-value Medic
+    if (selectedMove?.kind === "play_card") {
+      const selectedCard = features.ownHandByCardId.get(selectedMove.sourceCardId);
+      if (selectedCard && isMedicSource(selectedCard)) {
+        const medicInfo = medicSourceUtility(features, selectedCard);
+        if (medicInfo.bestReviveValueBucket === "none" || medicInfo.bestReviveValueBucket === "weak" || medicInfo.bestReviveValueBucket === "medium") {
+          reason = "medium_medic_target";
+        }
+      } else if (selectedCard?.kind === "unit" || selectedCard?.kind === "hero") {
+        // Check if placing into weathered row with low effective strength
+        for (const playMove of features.playMoves) {
+          if (playMove.sourceCardId === selectedMove.sourceCardId && playMove.target.kind === "board_row" && isRowWeatheredForPolicy(features, playMove.target.row)) {
+            const eff = effectivePlacedStrengthForPolicy(features, selectedCard, playMove.target);
+            if (eff <= 3) {
+              reason = "weathered_low_tempo";
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    // Apply stop-loss when hand is scarce or move burns last useful unit
+    const lowHand = currentRoundHandCount <= 4;
+    const burnsLastUnit = selectedMoveWouldLeaveNoPositiveUnitMove || selectedMoveWouldLeaveNoUnitTempoCard;
+    if (lowHand || burnsLastUnit) {
+      stopLossRecommended = true;
+      stopLossReason = reason;
+      recommendation = "sacrifice_round";
+      if (risk === "none") {
+        risk = "high";
+      }
+    }
+  }
+
+  // Standard recommendation logic (stop-loss above can already set recommendation)
+  if (recommendation === "continue") {
+    if (features.ownGems <= 1) {
+      // Last gem: always fight (unless catch-up impossible — handled elsewhere)
+      recommendation = "fight_last_gem";
+    } else if (selectedMoveIsCardAdvantage) {
+      // Card-advantage moves are always worth playing
+      recommendation = "continue";
+    } else if (risk === "critical") {
+      recommendation = features.scoreDelta >= -10
+        ? "preserve_future_hand"
+        : "sacrifice_round";
+    } else if (features.scoreDelta >= -10 && selectedMoveWouldLeaveNoPositiveUnitMove) {
+      recommendation = "preserve_future_hand";
+    } else if (features.scoreDelta < 0 && selectedMoveWouldLeaveNoUnitTempoCard && futureRoundHandQuality !== "healthy") {
+      recommendation = "sacrifice_round";
+    }
   }
 
   return {
@@ -1233,6 +1294,9 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
     scoreDelta: features.scoreDelta,
     risk,
     recommendation,
+    catchUpStatus,
+    stopLossRecommended,
+    stopLossReason,
   };
 };
 
@@ -1268,6 +1332,9 @@ export const shouldPassForRoundInvestment = (
 
   // Card-advantage moves (Spy, etc.) — always play them
   if (analysis.selectedMoveIsCardAdvantage) return false;
+
+  // cFp32: Stop-loss gate — behind, no clean catch-up, upper-bound impossible
+  if (analysis.stopLossRecommended) return true;
 
   // cFp31 repair Fix 4: Removed features.ownHandCount > 2 gate from critical-risk branch
   // Critical risk: hand nearly empty and no positive unit moves left.

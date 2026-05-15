@@ -19,8 +19,8 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The current implementation
-phase is cFp31: Round Investment Preservation, which includes the cFp27
-through cFp31 tuning and diagnostics chain:
+phase is cFp32: Stop-Loss Round Sacrifice, which includes the cFp27
+through cFp32 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -28,11 +28,12 @@ through cFp31 tuning and diagnostics chain:
 - cFp29: Medic timing calibration.
 - cFp30: weather-aware non-hero unit placement.
 - cFp31: round-investment and future-hand preservation.
+- cFp32: stop-loss round sacrifice for non-elimination rounds.
 
-Current cFp31 benchmark totals (refreshed in cFp31.1):
+Current cFp32 benchmark totals:
 
-- `benchmark-v1-smoke-v1`: 9 win / 3 loss / 0 draw vs v0.
-- `benchmark-v1-starter-matrix-v1`: 103 win / 15 loss / 2 draw vs v0.
+- `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
+- `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
 
 ## Product Playtest Toggle
 
@@ -579,6 +580,43 @@ Windows `tsx` binary resolution issue blocked the original cFp31 branch
 from regenerating them:
 
 - Smoke benchmark (`benchmark-v1-smoke-v1`): 9 wins, 3 losses, 0 draws
-  against v0.
+   against v0.
 - Starter matrix (`benchmark-v1-starter-matrix-v1`): 103 wins, 15 losses,
-  2 draws against v0.
+   2 draws against v0.
+
+### Stop-Loss Round Sacrifice (cFp32)
+
+cFp32 adds a stop-loss gate that triggers `sacrifice_round` for non-elimination
+rounds where catch-up is publicly impossible or too expensive and the selected
+move would burn scarce future hand. Motivated by a product playtest diagnostic
+export (`gwent-diagnostics-ep4-mp6cglwp.json`) in which v1 spent cards in
+Round 1 despite being behind by 12, having no single-move catch-up, and having
+`policyUpperBoundCanWinRound === false`.
+
+Key changes:
+
+- `catchUpStatus` field on `AiDecisionRoundInvestmentAnalysis`: `"single_move_catch_up"` /
+  `"upper_bound_possible"` / `"upper_bound_impossible"`.
+- `stopLossRecommended` boolean and `stopLossReason` string (`"none"`,
+  `"upper_bound_impossible"`, `"low_hand_no_clean_catch_up"`,
+  `"weathered_low_tempo"`, `"medium_medic_target"`).
+- `shouldPassForRoundInvestment` now checks `stopLossRecommended` before
+  returning the best useful play. The stop-loss gate fires when:
+  - legal pass exists, opponent has not passed
+  - `ownGems > 1` (last-gem rounds stay under existing logic)
+  - score delta < 0 (behind)
+  - no single-move catch-up
+  - upper-bound cannot win OR the selected move burns the last useful unit
+  - hand size ≤ 4 OR weathered low-tempo placement OR medium-or-worse Medic target
+- **Exceptions**: Last-gem rounds, opponent-passed rounds, Spy/card-advantage
+  moves, and single-card hands are never blocked by the stop-loss gate.
+- Explanation layer updated with "stop-loss" reason strings that mirror the
+  policy's `stopLossReason` field.
+- `policy-round-investment` reason kind used for stop-loss pass decisions.
+
+### cFp32 Benchmark Results
+
+- Smoke benchmark (`benchmark-v1-smoke-v1`): 10 wins, 2 losses, 0 draws
+  against v0 (changed from cFp31 9/3/0).
+- Starter matrix (`benchmark-v1-starter-matrix-v1`): 102 wins, 16 losses,
+  2 draws against v0 (changed from cFp31 103/15/2).

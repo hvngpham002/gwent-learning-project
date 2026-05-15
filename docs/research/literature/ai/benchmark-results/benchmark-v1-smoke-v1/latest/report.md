@@ -27,27 +27,27 @@
 
 | Policy | Results |
 |---|---|
-| legal-heuristic-v0 | 3 win / 9 loss / 0 draw / 0 none |
-| legal-heuristic-v1 | 9 win / 3 loss / 0 draw / 0 none |
+| legal-heuristic-v0 | 2 win / 10 loss / 0 draw / 0 none |
+| legal-heuristic-v1 | 10 win / 2 loss / 0 draw / 0 none |
 
 ## Result Counts By Deck
 
 | Deck preset | Results |
 |---|---|
-| current-nilfgaard | 3 win / 9 loss / 0 draw / 0 none |
-| current-northern-realms | 9 win / 3 loss / 0 draw / 0 none |
+| current-nilfgaard | 2 win / 10 loss / 0 draw / 0 none |
+| current-northern-realms | 10 win / 2 loss / 0 draw / 0 none |
 
 ## Averages
 
-- steps: 37.667
-- commands: 37.667
-- legal moves: 8.315
+- steps: 38.5
+- commands: 38.5
+- legal moves: 8.218
 
 ## Matchups
 
 | Matchup | Matches | Avg steps | Avg commands | Avg legal moves |
 |---|---:|---:|---:|---:|
-| current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0 | 12 | 37.667 | 37.667 | 8.315 |
+| current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0 | 12 | 38.5 | 38.5 | 8.218 |
 
 ## Diagnostics
 

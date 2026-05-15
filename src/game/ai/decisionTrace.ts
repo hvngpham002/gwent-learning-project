@@ -458,6 +458,18 @@ export type AiDecisionRoundInvestmentRecommendation =
   | "fight_last_gem"
   | "continue";
 
+export type AiDecisionRoundCatchUpStatus =
+  | "single_move_catch_up"
+  | "upper_bound_possible"
+  | "upper_bound_impossible";
+
+export type AiDecisionRoundStopLossReason =
+  | "none"
+  | "upper_bound_impossible"
+  | "low_hand_no_clean_catch_up"
+  | "weathered_low_tempo"
+  | "medium_medic_target";
+
 export interface AiDecisionRoundInvestmentAnalysis {
   readonly ownBoardUnitCount: number;
   readonly ownBoardHeroCount: number;
@@ -477,6 +489,10 @@ export interface AiDecisionRoundInvestmentAnalysis {
   readonly scoreDelta: number;
   readonly risk: AiDecisionRoundInvestmentRisk;
   readonly recommendation: AiDecisionRoundInvestmentRecommendation;
+  // cFp32: stop-loss diagnostics
+  readonly catchUpStatus: AiDecisionRoundCatchUpStatus;
+  readonly stopLossRecommended: boolean;
+  readonly stopLossReason: AiDecisionRoundStopLossReason;
 }
 
 // ---------------------------------------------------------------------------

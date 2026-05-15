@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp31",
-        latestSpecPath: "docs/spec/2026-05-14-cFp31-specs.md",
-        latestReportPath: "audit/reports/2026-05-14-cFp31-report.md",
+        latestPhase: "cFp32",
+        latestSpecPath: "docs/spec/2026-05-15-cFp32-specs.md",
+        latestReportPath: "audit/reports/2026-05-15-cFp32-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp31",
-        latestSpecPath: "docs/spec/2026-05-14-cFp31-specs.md",
-        latestReportPath: "audit/reports/2026-05-14-cFp31-report.md",
+        latestPhase: "cFp32",
+        latestSpecPath: "docs/spec/2026-05-15-cFp32-specs.md",
+        latestReportPath: "audit/reports/2026-05-15-cFp32-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -75,11 +75,11 @@ describe("authentic AI Lab view model", () => {
       expect.arrayContaining([
         expect.objectContaining({
           suiteId: "benchmark-v1-smoke-v1",
-          result: "9 win / 3 loss / 0 draw vs v0",
+          result: "10 win / 2 loss / 0 draw vs v0",
         }),
         expect.objectContaining({
           suiteId: "benchmark-v1-starter-matrix-v1",
-          result: "103 win / 15 loss / 2 draw vs v0",
+          result: "102 win / 16 loss / 2 draw vs v0",
         }),
       ]),
     );
@@ -91,6 +91,7 @@ describe("authentic AI Lab view model", () => {
         "Medic timing calibration",
         "weather-aware unit placement",
         "round-investment preservation",
+        "stop-loss round sacrifice",
       ]),
     );
   });

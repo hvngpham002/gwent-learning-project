@@ -434,8 +434,22 @@ const buildPlayingPhaseTrace = (
         reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, no useful move — pass`;
       }
     } else if (bestMove) {
-      // cFp31: Check if pass was selected despite bestMove existing (round-investment pass)
-      if (move?.kind === "pass" && roundInvestmentAnalysis) {
+      // cFp32: Check stop-loss before general round-investment
+     if (move?.kind === "pass" && roundInvestmentAnalysis && roundInvestmentAnalysis.stopLossRecommended) {
+          const slReason = roundInvestmentAnalysis.stopLossReason;
+          if (slReason === "upper_bound_impossible") {
+            reason = "stop-loss — sacrifice round — catch-up impossible — preserve cards";
+          } else if (slReason === "weathered_low_tempo") {
+            reason = "stop-loss — sacrifice round — low-tempo weathered placement — preserve cards";
+          } else if (slReason === "medium_medic_target") {
+            reason = "stop-loss — sacrifice round — medium medic target — preserve cards";
+          } else if (slReason === "low_hand_no_clean_catch_up") {
+            reason = "stop-loss — sacrifice round — low hand, no clean catch-up — preserve cards";
+          } else {
+            reason = "stop-loss — sacrifice round — preserve cards for future rounds";
+          }
+        reasonKind = "policy-round-investment";
+      } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
         if (roundInvestmentAnalysis.recommendation === "preserve_future_hand" || roundInvestmentAnalysis.recommendation === "sacrifice_round") {
           reason = roundInvestmentAnalysis.recommendation === "preserve_future_hand"
             ? "preserve future hand — pass"
@@ -458,8 +472,22 @@ const buildPlayingPhaseTrace = (
         }
       }
     } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
-      // cFp31: Round-investment pass detection
-      if (roundInvestmentAnalysis.recommendation === "preserve_future_hand" || roundInvestmentAnalysis.recommendation === "sacrifice_round") {
+      // cFp32: Check stop-loss before general round-investment
+     if (roundInvestmentAnalysis.stopLossRecommended) {
+          const slReason = roundInvestmentAnalysis.stopLossReason;
+          if (slReason === "upper_bound_impossible") {
+            reason = "stop-loss — sacrifice round — catch-up impossible — preserve cards";
+          } else if (slReason === "weathered_low_tempo") {
+            reason = "stop-loss — sacrifice round — low-tempo weathered placement — preserve cards";
+          } else if (slReason === "medium_medic_target") {
+            reason = "stop-loss — sacrifice round — medium medic target — preserve cards";
+          } else if (slReason === "low_hand_no_clean_catch_up") {
+            reason = "stop-loss — sacrifice round — low hand, no clean catch-up — preserve cards";
+          } else {
+            reason = "stop-loss — sacrifice round — preserve cards for future rounds";
+          }
+          reasonKind = "policy-round-investment";
+      } else if (roundInvestmentAnalysis.recommendation === "preserve_future_hand" || roundInvestmentAnalysis.recommendation === "sacrifice_round") {
         reason = roundInvestmentAnalysis.recommendation === "preserve_future_hand"
           ? "preserve future hand — pass"
           : "sacrifice round — preserve cards";
