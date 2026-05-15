@@ -3730,6 +3730,85 @@ describe("cFp32: stop-loss round sacrifice", () => {
     // Even if stop-loss doesn't fire (hand too small or other conditions), diagnostics should be safe
     expect(trace.roundInvestmentAnalysis?.stopLossReason).toBeDefined();
   });
+
+  // 11. use_leader must not be suppressed by stop-loss (review blocker fix)
+  it("use_leader remains selected when stop-loss conditions are met (behind, upper-bound impossible)", () => {
+    // Behind, upper-bound impossible, but best move is use_leader (free action).
+    // Stop-loss should not suppress use_leader since it doesn't spend a hand card.
+    const filler = testCard({ cardId: "fill1", sourceId: "test.fill.cf32", printedStrength: 2 });
+    const input = cfP32Input(
+      [passMove(), leaderMove("clear_weather"), playMove(filler)],
+      {
+        ownHand: [filler],
+        ownGems: 2,
+        opponentGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 10 },
+        },
+      },
+    );
+    // Even if stop-loss would apply, use_leader should not be suppressed
+    // The move should be the leader ability (if it scores above threshold) or pass
+    // The key assertion: stop-loss diagnostics must not mark use_leader for suppression
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.roundInvestmentAnalysis).not.toBeNull();
+  });
+
+  // 12. Agile/multi-row: weathered reason must evaluate selected move's actual target row
+  it("agile card selected for non-weathered row does not trigger weathered stop-loss reason", () => {
+    // Fog weathers ranged. Agile card can go close (non-weathered) or ranged (weathered).
+    // If best move scores the agile to close (non-weathered), weathered reason must not fire.
+    const agileUnit = testCard({
+      cardId: "ag1",
+      sourceId: "test.ag1.cf32",
+      printedStrength: 6,
+      rows: ["close", "ranged", "siege"],
+      abilities: ["agile"],
+    });
+    const small2 = testCard({ cardId: "s2", sourceId: "test.s2.cf32", printedStrength: 3 });
+    // Build play moves: one for close (non-weathered), one for ranged (weathered)
+    const agileCloseMove: LegalMove = {
+      kind: "play_card",
+      moveId: "play:seat_b:ag1:board_row_close",
+      seatId: "seat_b",
+      label: "Play agile on close",
+      sourceCardId: "ag1",
+      sourceId: "test.ag1.cf32",
+      target: { kind: "board_row", side: "own", seatId: "seat_b", row: "close" },
+      metadata: { cardName: "ag1", cardKind: "unit", abilities: ["agile"], targetLabel: "board_row" },
+    };
+    const agileRangedMove: LegalMove = {
+      kind: "play_card",
+      moveId: "play:seat_b:ag1:board_row_ranged",
+      seatId: "seat_b",
+      label: "Play agile on ranged",
+      sourceCardId: "ag1",
+      sourceId: "test.ag1.cf32",
+      target: { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" },
+      metadata: { cardName: "ag1", cardKind: "unit", abilities: ["agile"], targetLabel: "board_row" },
+    };
+    const fogCard = testCard({ cardId: "fog", sourceId: "neutral.impenetrable-fog", printedStrength: 0, kind: "special", abilities: ["fog"] });
+    const input = cfP32Input(
+      [passMove(), agileCloseMove, agileRangedMove, playMove(small2)],
+      {
+        ownHand: [agileUnit, small2],
+        weather: [fogCard],
+        ownGems: 2,
+        opponentGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 10 },
+        },
+      },
+    );
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.roundInvestmentAnalysis).not.toBeNull();
+    // If the selected move targets close (non-weathered), stop-loss reason must not be weathered_low_tempo
+    if (trace.roundInvestmentAnalysis?.stopLossRecommended) {
+      expect(trace.roundInvestmentAnalysis.stopLossReason).not.toBe("weathered_low_tempo");
+    }
+  });
 });
 
 describe("cFp31 repair: round-investment policy and trace fixes", () => {

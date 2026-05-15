@@ -1230,14 +1230,12 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
           reason = "medium_medic_target";
         }
       } else if (selectedCard?.kind === "unit" || selectedCard?.kind === "hero") {
-        // Check if placing into weathered row with low effective strength
-        for (const playMove of features.playMoves) {
-          if (playMove.sourceCardId === selectedMove.sourceCardId && playMove.target.kind === "board_row" && isRowWeatheredForPolicy(features, playMove.target.row)) {
-            const eff = effectivePlacedStrengthForPolicy(features, selectedCard, playMove.target);
-            if (eff <= 3) {
-              reason = "weathered_low_tempo";
-            }
-            break;
+        // Check if the selected move places into a weathered row with low effective strength.
+        // Evaluate the selected move's actual target row, not another row option for the same card.
+        if (selectedMove.target.kind === "board_row" && isRowWeatheredForPolicy(features, selectedMove.target.row)) {
+          const eff = effectivePlacedStrengthForPolicy(features, selectedCard, selectedMove.target);
+          if (eff <= 3) {
+            reason = "weathered_low_tempo";
           }
         }
       }
@@ -1334,7 +1332,8 @@ export const shouldPassForRoundInvestment = (
   if (analysis.selectedMoveIsCardAdvantage) return false;
 
   // cFp32: Stop-loss gate — behind, no clean catch-up, upper-bound impossible
-  if (analysis.stopLossRecommended) return true;
+  // Only suppress play_card candidates; use_leader is free (no hand card spent).
+  if (analysis.stopLossRecommended && candidate.kind === "play_card") return true;
 
   // cFp31 repair Fix 4: Removed features.ownHandCount > 2 gate from critical-risk branch
   // Critical risk: hand nearly empty and no positive unit moves left.
