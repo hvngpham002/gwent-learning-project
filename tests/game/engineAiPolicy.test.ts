@@ -3735,11 +3735,12 @@ describe("cFp32: stop-loss round sacrifice", () => {
   it("use_leader remains selected when stop-loss conditions are met (behind, upper-bound impossible)", () => {
     // Behind, upper-bound impossible, but best move is use_leader (free action).
     // Stop-loss should not suppress use_leader since it doesn't spend a hand card.
-    const filler = testCard({ cardId: "fill1", sourceId: "test.fill.cf32", printedStrength: 2 });
+    const filler1 = testCard({ cardId: "fill1", sourceId: "test.fill1.cf32", printedStrength: 2 });
+    const filler2 = testCard({ cardId: "fill2", sourceId: "test.fill2.cf32", printedStrength: 2 });
     const input = cfP32Input(
-      [passMove(), leaderMove("clear_weather"), playMove(filler)],
+      [passMove(), leaderMove("look_three_cards", { opponentHandCount: 5 })],
       {
-        ownHand: [filler],
+        ownHand: [filler1, filler2],
         ownGems: 2,
         opponentGems: 2,
         score: {
@@ -3748,11 +3749,13 @@ describe("cFp32: stop-loss round sacrifice", () => {
         },
       },
     );
-    // Even if stop-loss would apply, use_leader should not be suppressed
-    // The move should be the leader ability (if it scores above threshold) or pass
-    // The key assertion: stop-loss diagnostics must not mark use_leader for suppression
-    const { trace } = explainLegalHeuristicV1Decision(input);
-    expect(trace.roundInvestmentAnalysis).not.toBeNull();
+    const move = legalHeuristicPolicyV1.selectMove(input);
+    expect(move?.kind).toBe("use_leader");
+
+    const { move: tracedMove, trace } = explainLegalHeuristicV1Decision(input);
+    expect(tracedMove?.kind).toBe("use_leader");
+    expect(trace.roundInvestmentAnalysis?.selectedMoveSpendsHandCard).toBe(false);
+    expect(trace.roundInvestmentAnalysis?.stopLossRecommended).toBe(false);
   });
 
   // 12. Agile/multi-row: weathered reason must evaluate selected move's actual target row

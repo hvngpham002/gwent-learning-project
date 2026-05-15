@@ -1217,7 +1217,7 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
   let stopLossRecommended = false;
   let stopLossReason: import("./decisionTrace").AiDecisionRoundStopLossReason = "none";
 
-  if (features.ownGems > 1 && !selectedMoveIsCardAdvantage && features.scoreDelta < 0 && !hasSingleMoveCatchUp && upperBoundCanWin === false) {
+  if (features.ownGems > 1 && selectedMoveSpendsHandCard && !selectedMoveIsCardAdvantage && features.scoreDelta < 0 && !hasSingleMoveCatchUp && upperBoundCanWin === false) {
     // cFp32: Stop-loss gate — behind, no clean catch-up, upper-bound impossible
     let reason: import("./decisionTrace").AiDecisionRoundStopLossReason = "upper_bound_impossible";
 
