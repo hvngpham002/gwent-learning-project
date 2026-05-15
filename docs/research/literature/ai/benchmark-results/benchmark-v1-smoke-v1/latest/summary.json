@@ -1,7 +1,7 @@
 {
-  "averageCommands": 37.75,
-  "averageLegalMoves": 8.292440477773733,
-  "averageSteps": 37.75,
+  "averageCommands": 37.666666666666664,
+  "averageLegalMoves": 8.315317329918878,
+  "averageSteps": 37.666666666666664,
   "benchmarkRunId": "benchmark-v1-smoke-v1:latest",
   "completionRate": 1,
   "deckPresetIds": [
@@ -12,9 +12,9 @@
   "leaderUseCount": 4,
   "matchupSummaries": [
     {
-      "averageCommands": 37.75,
-      "averageLegalMoves": 8.292440477773733,
-      "averageSteps": 37.75,
+      "averageCommands": 37.666666666666664,
+      "averageLegalMoves": 8.315317329918878,
+      "averageSteps": 37.666666666666664,
       "leaderUseCount": 4,
       "matchupId": "current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0",
       "promptCount": 18,

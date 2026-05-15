@@ -79,7 +79,7 @@ describe("authentic AI Lab view model", () => {
         }),
         expect.objectContaining({
           suiteId: "benchmark-v1-starter-matrix-v1",
-          result: "96 win / 23 loss / 1 draw vs v0",
+          result: "103 win / 15 loss / 2 draw vs v0",
         }),
       ]),
     );

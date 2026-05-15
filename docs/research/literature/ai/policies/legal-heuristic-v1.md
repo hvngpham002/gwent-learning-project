@@ -1,6 +1,6 @@
 # Legal Heuristic v1
 
-Date: 2026-05-14
+Date: 2026-05-15
 
 ## Purpose
 
@@ -29,10 +29,10 @@ through cFp31 tuning and diagnostics chain:
 - cFp30: weather-aware non-hero unit placement.
 - cFp31: round-investment and future-hand preservation.
 
-Current cFp31 benchmark totals (carried from cFp30):
+Current cFp31 benchmark totals (refreshed in cFp31.1):
 
 - `benchmark-v1-smoke-v1`: 9 win / 3 loss / 0 draw vs v0.
-- `benchmark-v1-starter-matrix-v1`: 96 win / 23 loss / 1 draw vs v0.
+- `benchmark-v1-starter-matrix-v1`: 103 win / 15 loss / 2 draw vs v0.
 
 ## Product Playtest Toggle
 
@@ -173,12 +173,12 @@ cFp24 registers v1 in `defaultBenchmarkPolicies` and adds:
   unordered pairings, both v1/v0 policy assignments, 3 seeds, mirrored
   seats, 120 public records.
 
-Latest cFp30 results:
+Latest cFp31.1 results:
 
 - v1 smoke: `legal-heuristic-v1` records 9 wins, 3 losses, and 0 draws
   against v0.
-- v1 starter matrix: `legal-heuristic-v1` records 96 wins, 23 losses,
-  and 1 draw against v0.
+- v1 starter matrix: `legal-heuristic-v1` records 103 wins, 15 losses,
+  and 2 draws against v0.
 
 These are fixed-suite evidence, not ratings or proof of broad strength.
 
@@ -574,11 +574,11 @@ Key changes:
 
 ### cFp31 Benchmark Results
 
-Benchmark artifacts were not refreshed due to a pre-existing Windows
-`tsx` binary resolution issue (`spawn EINVAL`). Totals carry forward
-from cFp30:
+cFp31.1 refreshed the cFp31 benchmark artifacts on macOS after the
+Windows `tsx` binary resolution issue blocked the original cFp31 branch
+from regenerating them:
 
 - Smoke benchmark (`benchmark-v1-smoke-v1`): 9 wins, 3 losses, 0 draws
   against v0.
-- Starter matrix (`benchmark-v1-starter-matrix-v1`): 96 wins, 23 losses,
-  1 draw against v0.
+- Starter matrix (`benchmark-v1-starter-matrix-v1`): 103 wins, 15 losses,
+  2 draws against v0.

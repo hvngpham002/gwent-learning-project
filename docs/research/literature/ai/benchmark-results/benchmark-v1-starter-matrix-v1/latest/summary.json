@@ -1,7 +1,7 @@
 {
-  "averageCommands": 32.625,
-  "averageLegalMoves": 7.665726393151764,
-  "averageSteps": 32.625,
+  "averageCommands": 32.733333333333334,
+  "averageLegalMoves": 7.680473553178317,
+  "averageSteps": 32.733333333333334,
   "benchmarkRunId": "benchmark-v1-starter-matrix-v1:latest",
   "completionRate": 1,
   "deckPresetIds": [
@@ -15,38 +15,38 @@
   "leaderUseCount": 52,
   "matchupSummaries": [
     {
-      "averageCommands": 30.166666666666668,
-      "averageLegalMoves": 7.720318953077573,
-      "averageSteps": 30.166666666666668,
+      "averageCommands": 29,
+      "averageLegalMoves": 7.727533960292582,
+      "averageSteps": 29,
       "leaderUseCount": 0,
       "matchupId": "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1",
-      "promptCount": 6,
+      "promptCount": 4,
       "resultCountsByDeck": {
         "official-monsters-starter": {
-          "draws": 0,
-          "losses": 4,
+          "draws": 1,
+          "losses": 5,
           "none": 0,
-          "wins": 2
+          "wins": 0
         },
         "official-scoiatael-starter": {
-          "draws": 0,
-          "losses": 2,
+          "draws": 1,
+          "losses": 0,
           "none": 0,
-          "wins": 4
+          "wins": 5
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
-          "draws": 0,
-          "losses": 4,
+          "draws": 1,
+          "losses": 5,
           "none": 0,
-          "wins": 2
+          "wins": 0
         },
         "legal-heuristic-v1": {
-          "draws": 0,
-          "losses": 2,
+          "draws": 1,
+          "losses": 0,
           "none": 0,
-          "wins": 4
+          "wins": 5
         }
       },
       "statusCounts": {
@@ -58,12 +58,12 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 30,
-      "averageLegalMoves": 7.6838369995549,
-      "averageSteps": 30,
+      "averageCommands": 29.333333333333332,
+      "averageLegalMoves": 7.7936180314007535,
+      "averageSteps": 29.333333333333332,
       "leaderUseCount": 0,
       "matchupId": "starter-monsters-heuristic-v0-vs-skellige-heuristic-v1",
-      "promptCount": 2,
+      "promptCount": 3,
       "resultCountsByDeck": {
         "official-monsters-starter": {
           "draws": 0,
@@ -102,7 +102,7 @@
     },
     {
       "averageCommands": 29.5,
-      "averageLegalMoves": 7.310400538570728,
+      "averageLegalMoves": 7.3161476650075095,
       "averageSteps": 29.5,
       "leaderUseCount": 3,
       "matchupId": "starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0",
@@ -144,38 +144,38 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 27.833333333333332,
-      "averageLegalMoves": 7.630485312899107,
-      "averageSteps": 27.833333333333332,
+      "averageCommands": 27,
+      "averageLegalMoves": 7.769374201787996,
+      "averageSteps": 27,
       "leaderUseCount": 4,
       "matchupId": "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0",
       "promptCount": 1,
       "resultCountsByDeck": {
         "official-monsters-starter": {
           "draws": 0,
-          "losses": 2,
+          "losses": 1,
           "none": 0,
-          "wins": 4
+          "wins": 5
         },
         "official-skellige-starter": {
           "draws": 0,
-          "losses": 4,
+          "losses": 5,
           "none": 0,
-          "wins": 2
+          "wins": 1
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 4,
+          "losses": 5,
           "none": 0,
-          "wins": 2
+          "wins": 1
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 2,
+          "losses": 1,
           "none": 0,
-          "wins": 4
+          "wins": 5
         }
       },
       "statusCounts": {
@@ -187,9 +187,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 30.666666666666668,
-      "averageLegalMoves": 7.9384012132332025,
-      "averageSteps": 30.666666666666668,
+      "averageCommands": 30.333333333333332,
+      "averageLegalMoves": 7.997725762141084,
+      "averageSteps": 30.333333333333332,
       "leaderUseCount": 1,
       "matchupId": "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1",
       "promptCount": 1,
@@ -230,9 +230,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 31.833333333333332,
-      "averageLegalMoves": 7.14303281533885,
-      "averageSteps": 31.833333333333332,
+      "averageCommands": 32.333333333333336,
+      "averageLegalMoves": 7.076940861315862,
+      "averageSteps": 32.333333333333336,
       "leaderUseCount": 0,
       "matchupId": "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1",
       "promptCount": 7,
@@ -273,9 +273,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 33.5,
-      "averageLegalMoves": 6.920070226966779,
-      "averageSteps": 33.5,
+      "averageCommands": 33.833333333333336,
+      "averageLegalMoves": 6.959625778375778,
+      "averageSteps": 33.833333333333336,
       "leaderUseCount": 0,
       "matchupId": "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1",
       "promptCount": 7,
@@ -316,12 +316,12 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 35.666666666666664,
-      "averageLegalMoves": 7.890961165508333,
-      "averageSteps": 35.666666666666664,
-      "leaderUseCount": 6,
+      "averageCommands": 33.833333333333336,
+      "averageLegalMoves": 8.195231547903715,
+      "averageSteps": 33.833333333333336,
+      "leaderUseCount": 5,
       "matchupId": "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0",
-      "promptCount": 9,
+      "promptCount": 8,
       "resultCountsByDeck": {
         "official-monsters-starter": {
           "draws": 0,
@@ -359,12 +359,12 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 34.666666666666664,
-      "averageLegalMoves": 6.933994862351951,
-      "averageSteps": 34.666666666666664,
+      "averageCommands": 35.666666666666664,
+      "averageLegalMoves": 6.861151868849564,
+      "averageSteps": 35.666666666666664,
       "leaderUseCount": 6,
       "matchupId": "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0",
-      "promptCount": 15,
+      "promptCount": 16,
       "resultCountsByDeck": {
         "official-nilfgaard-starter": {
           "draws": 0,
@@ -445,38 +445,38 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 34.5,
-      "averageLegalMoves": 8.145697031062886,
-      "averageSteps": 34.5,
+      "averageCommands": 35,
+      "averageLegalMoves": 8.107507442873297,
+      "averageSteps": 35,
       "leaderUseCount": 6,
       "matchupId": "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1",
       "promptCount": 4,
       "resultCountsByDeck": {
         "official-monsters-starter": {
           "draws": 0,
-          "losses": 2,
+          "losses": 1,
           "none": 0,
-          "wins": 4
+          "wins": 5
         },
         "official-northern-realms-starter": {
           "draws": 0,
-          "losses": 4,
+          "losses": 5,
           "none": 0,
-          "wins": 2
+          "wins": 1
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 4,
+          "losses": 5,
           "none": 0,
-          "wins": 2
+          "wins": 1
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 2,
+          "losses": 1,
           "none": 0,
-          "wins": 4
+          "wins": 5
         }
       },
       "statusCounts": {
@@ -488,12 +488,12 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 41.833333333333336,
-      "averageLegalMoves": 7.499985888143782,
-      "averageSteps": 41.833333333333336,
-      "leaderUseCount": 11,
+      "averageCommands": 40.5,
+      "averageLegalMoves": 7.616129906726825,
+      "averageSteps": 40.5,
+      "leaderUseCount": 10,
       "matchupId": "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
-      "promptCount": 13,
+      "promptCount": 12,
       "resultCountsByDeck": {
         "official-nilfgaard-starter": {
           "draws": 0,
@@ -531,38 +531,38 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 35.333333333333336,
-      "averageLegalMoves": 8.401267914573237,
-      "averageSteps": 35.333333333333336,
-      "leaderUseCount": 3,
+      "averageCommands": 38.166666666666664,
+      "averageLegalMoves": 8.30360925514987,
+      "averageSteps": 38.166666666666664,
+      "leaderUseCount": 4,
       "matchupId": "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1",
       "promptCount": 7,
       "resultCountsByDeck": {
         "official-northern-realms-starter": {
           "draws": 1,
-          "losses": 4,
+          "losses": 5,
           "none": 0,
-          "wins": 1
+          "wins": 0
         },
         "official-scoiatael-starter": {
           "draws": 1,
-          "losses": 1,
+          "losses": 0,
           "none": 0,
-          "wins": 4
+          "wins": 5
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 1,
-          "losses": 4,
+          "losses": 5,
           "none": 0,
-          "wins": 1
+          "wins": 0
         },
         "legal-heuristic-v1": {
           "draws": 1,
-          "losses": 1,
+          "losses": 0,
           "none": 0,
-          "wins": 4
+          "wins": 5
         }
       },
       "statusCounts": {
@@ -574,38 +574,38 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 30.333333333333332,
-      "averageLegalMoves": 8.045527280922817,
-      "averageSteps": 30.333333333333332,
-      "leaderUseCount": 2,
+      "averageCommands": 32.166666666666664,
+      "averageLegalMoves": 7.894192504588042,
+      "averageSteps": 32.166666666666664,
+      "leaderUseCount": 3,
       "matchupId": "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1",
-      "promptCount": 3,
+      "promptCount": 4,
       "resultCountsByDeck": {
         "official-northern-realms-starter": {
           "draws": 0,
-          "losses": 5,
+          "losses": 6,
           "none": 0,
-          "wins": 1
+          "wins": 0
         },
         "official-skellige-starter": {
           "draws": 0,
-          "losses": 1,
+          "losses": 0,
           "none": 0,
-          "wins": 5
+          "wins": 6
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 5,
+          "losses": 6,
           "none": 0,
-          "wins": 1
+          "wins": 0
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 1,
+          "losses": 0,
           "none": 0,
-          "wins": 5
+          "wins": 6
         }
       },
       "statusCounts": {
@@ -617,9 +617,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 32.5,
-      "averageLegalMoves": 8.739010797631488,
-      "averageSteps": 32.5,
+      "averageCommands": 33,
+      "averageLegalMoves": 8.663400165447579,
+      "averageSteps": 33,
       "leaderUseCount": 1,
       "matchupId": "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0",
       "promptCount": 3,
@@ -660,12 +660,12 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 37.166666666666664,
-      "averageLegalMoves": 8.13376009994458,
-      "averageSteps": 37.166666666666664,
+      "averageCommands": 37,
+      "averageLegalMoves": 8.151139779088963,
+      "averageSteps": 37,
       "leaderUseCount": 1,
       "matchupId": "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0",
-      "promptCount": 4,
+      "promptCount": 3,
       "resultCountsByDeck": {
         "official-nilfgaard-starter": {
           "draws": 0,
@@ -746,9 +746,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 32.333333333333336,
-      "averageLegalMoves": 8.16995769138439,
-      "averageSteps": 32.333333333333336,
+      "averageCommands": 32.833333333333336,
+      "averageLegalMoves": 8.09279719755723,
+      "averageSteps": 32.833333333333336,
       "leaderUseCount": 1,
       "matchupId": "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0",
       "promptCount": 5,
@@ -789,12 +789,12 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 29.5,
-      "averageLegalMoves": 6.81079182028937,
-      "averageSteps": 29.5,
+      "averageCommands": 29.833333333333332,
+      "averageLegalMoves": 6.836503547287861,
+      "averageSteps": 29.833333333333332,
       "leaderUseCount": 0,
       "matchupId": "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1",
-      "promptCount": 5,
+      "promptCount": 6,
       "resultCountsByDeck": {
         "official-scoiatael-starter": {
           "draws": 0,
@@ -832,38 +832,38 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 28.833333333333332,
-      "averageLegalMoves": 7.054823496396078,
-      "averageSteps": 28.833333333333332,
+      "averageCommands": 29,
+      "averageLegalMoves": 7.104637832586616,
+      "averageSteps": 29,
       "leaderUseCount": 0,
       "matchupId": "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0",
-      "promptCount": 6,
+      "promptCount": 7,
       "resultCountsByDeck": {
         "official-scoiatael-starter": {
           "draws": 0,
-          "losses": 3,
+          "losses": 1,
           "none": 0,
-          "wins": 3
+          "wins": 5
         },
         "official-skellige-starter": {
           "draws": 0,
-          "losses": 3,
+          "losses": 5,
           "none": 0,
-          "wins": 3
+          "wins": 1
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 3,
+          "losses": 5,
           "none": 0,
-          "wins": 3
+          "wins": 1
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 3,
+          "losses": 1,
           "none": 0,
-          "wins": 3
+          "wins": 5
         }
       },
       "statusCounts": {
@@ -885,8 +885,8 @@
   "replayFailedCount": 0,
   "resultCountsByDeck": {
     "official-monsters-starter": {
-      "draws": 0,
-      "losses": 24,
+      "draws": 1,
+      "losses": 23,
       "none": 0,
       "wins": 24
     },
@@ -898,35 +898,35 @@
     },
     "official-northern-realms-starter": {
       "draws": 1,
-      "losses": 20,
+      "losses": 23,
       "none": 0,
-      "wins": 27
+      "wins": 24
     },
     "official-scoiatael-starter": {
-      "draws": 1,
-      "losses": 29,
+      "draws": 2,
+      "losses": 24,
       "none": 0,
-      "wins": 18
+      "wins": 22
     },
     "official-skellige-starter": {
       "draws": 0,
-      "losses": 17,
+      "losses": 19,
       "none": 0,
-      "wins": 31
+      "wins": 29
     }
   },
   "resultCountsByPolicy": {
     "legal-heuristic-v0": {
-      "draws": 1,
-      "losses": 96,
+      "draws": 2,
+      "losses": 103,
       "none": 0,
-      "wins": 23
+      "wins": 15
     },
     "legal-heuristic-v1": {
-      "draws": 1,
-      "losses": 23,
+      "draws": 2,
+      "losses": 15,
       "none": 0,
-      "wins": 96
+      "wins": 103
     }
   },
   "schemaVersion": "benchmark-summary-v1",
