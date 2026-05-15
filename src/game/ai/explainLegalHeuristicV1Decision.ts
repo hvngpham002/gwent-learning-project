@@ -1,4 +1,4 @@
-import type { LegalMove } from "@/game/core";
+import type { LegalMove, PlayCardMove, UseLeaderMove } from "@/game/core";
 
 import {
   buildAiDecisionCandidateSummary,
@@ -22,6 +22,8 @@ import {
 
 import {
   buildLegalHeuristicV1HandShapeAnalysis,
+  buildLegalHeuristicV1RoundInvestmentAnalysis,
+  buildLegalHeuristicV1RoundInvestmentDecision,
   activeWeatherRows,
   isRowWeatheredForPolicy,
   effectivePlacedStrengthForPolicy,
@@ -269,6 +271,7 @@ const buildPhaseTrace = (
       handShapeAnalysis: null,
       medicTimingAnalysis: null,
       weatherPlacementAnalysis: null,
+      roundInvestmentAnalysis: null,
       selected,
       candidates: [],
       reasonKind: "phase",
@@ -337,6 +340,25 @@ const buildPlayingPhaseTrace = (
 
   // cFp30: Build Weather placement analysis for diagnostics
   const weatherPlacementAnalysis = buildWeatherPlacementAnalysis(features, move);
+
+  // cF31: Build Round investment analysis for diagnostics
+  // cFp31 repair Fix 1: When the selected move is `pass`, use the shared
+  // round-investment decision helper so the explanation analyzes the same
+  // candidate the policy evaluated (not null).
+  const selectedPlayMove = (move?.kind === "play_card" || move?.kind === "use_leader")
+    ? (move as PlayCardMove | UseLeaderMove)
+    : null;
+  const roundDecision = buildLegalHeuristicV1RoundInvestmentDecision(features);
+  let roundInvestmentAnalysis = buildLegalHeuristicV1RoundInvestmentAnalysis(
+    features,
+    selectedPlayMove ?? null,
+    handShapeAnalysis,
+  );
+  // When the policy chose pass due to round-investment logic, use the helper's
+  // analysis so the explanation reason matches the policy decision.
+  if (move?.kind === "pass" && roundDecision.shouldPass && roundDecision.analysis) {
+    roundInvestmentAnalysis = roundDecision.analysis;
+  }
 
   const publicState = buildAiDecisionPublicState(input);
   const passAnalysis = features.passMove
@@ -412,11 +434,38 @@ const buildPlayingPhaseTrace = (
         reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, no useful move — pass`;
       }
     } else if (bestMove) {
-      // cFp30: Surface weather penalty when the selected move plays into a weathered row
-      if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
-        reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
+      // cFp31: Check if pass was selected despite bestMove existing (round-investment pass)
+      if (move?.kind === "pass" && roundInvestmentAnalysis) {
+        if (roundInvestmentAnalysis.recommendation === "preserve_future_hand" || roundInvestmentAnalysis.recommendation === "sacrifice_round") {
+          reason = roundInvestmentAnalysis.recommendation === "preserve_future_hand"
+            ? "preserve future hand — pass"
+            : "sacrifice round — preserve cards";
+          reasonKind = "policy-round-investment";
+        } else {
+          // cFp30: Surface weather penalty when the selected move plays into a weathered row
+          if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
+            reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
+          } else {
+            reason = `best useful move (score ${bestMove.score})`;
+          }
+        }
       } else {
-        reason = `best useful move (score ${bestMove.score})`;
+        // cFp30: Surface weather penalty when the selected move plays into a weathered row
+        if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
+          reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
+        } else {
+          reason = `best useful move (score ${bestMove.score})`;
+        }
+      }
+    } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
+      // cFp31: Round-investment pass detection
+      if (roundInvestmentAnalysis.recommendation === "preserve_future_hand" || roundInvestmentAnalysis.recommendation === "sacrifice_round") {
+        reason = roundInvestmentAnalysis.recommendation === "preserve_future_hand"
+          ? "preserve future hand — pass"
+          : "sacrifice round — preserve cards";
+        reasonKind = "policy-round-investment";
+      } else {
+        reason = "no useful move above threshold, pass";
       }
     } else {
       reason = "no useful move above threshold, pass";
@@ -437,6 +486,7 @@ const buildPlayingPhaseTrace = (
       handShapeAnalysis,
       medicTimingAnalysis,
       weatherPlacementAnalysis,
+      roundInvestmentAnalysis,
       selected,
       candidates: topCandidates,
       reasonKind,
@@ -484,6 +534,7 @@ export const explainLegalHeuristicV1Decision = (
         handShapeAnalysis: null,
         medicTimingAnalysis: null,
         weatherPlacementAnalysis: null,
+        roundInvestmentAnalysis: null,
         selected: null,
         candidates: [],
         reasonKind: "none",

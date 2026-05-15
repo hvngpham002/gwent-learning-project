@@ -11,6 +11,7 @@ import {
 import {
   buildSeatObservation,
   buildLegalHeuristicV1Features,
+  buildLegalHeuristicV1RoundInvestmentAnalysis,
   commandFromLegalMove,
   explainLegalHeuristicV1Decision,
   legalHeuristicPolicyV0,
@@ -927,13 +928,15 @@ describe("engine AI policy", () => {
         abilities: ["frost"],
       });
       const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 5 });
+      const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 3 });
       const ownClose = testCard({ cardId: "own-close", sourceId: "test.own.close", printedStrength: 8 });
+      // cFp31 repair: 3+ cards so round-investment preservation doesn't block positive unit play
       expect(
         legalHeuristicPolicyV1.selectMove(
           policyInput(
-            [passMove(), playMove(frost, { kind: "weather" }), playMove(unit)],
+            [passMove(), playMove(frost, { kind: "weather" }), playMove(unit), playMove(filler)],
             {
-              ownHand: [frost, unit],
+              ownHand: [frost, unit, filler],
               boardRows: baseBoardRows({ seat_b: { close: [ownClose] } }),
             },
           ),
@@ -947,10 +950,12 @@ describe("engine AI policy", () => {
         kind: "special",
         abilities: ["scorch"],
       });
+      const scorchFiller = testCard({ cardId: "scorch-filler", sourceId: "test.scorch.filler", printedStrength: 3 });
+      // cFp31 repair: 3+ cards so round-investment preservation doesn't block positive unit play
       expect(
         legalHeuristicPolicyV1.selectMove(
-          policyInput([passMove(), playMove(scorch, { kind: "none" }), playMove(unit)], {
-            ownHand: [scorch, unit],
+          policyInput([passMove(), playMove(scorch, { kind: "none" }), playMove(unit), playMove(scorchFiller)], {
+            ownHand: [scorch, unit, scorchFiller],
             score: {
               ...baseObservation().score,
               cards: [
@@ -3465,5 +3470,353 @@ describe("cFp30: weather-aware unit placement", () => {
     expect(Array.isArray(wa?.opponentWeatheredRows)).toBe(true);
     expect(typeof wa?.candidateWeatheredOwnRowPlayCount).toBe("number");
     expect(typeof wa?.candidateWeatheredOpponentRowPlayCount).toBe("number");
+  });
+});
+
+describe("cFp31 repair: round-investment policy and trace fixes", () => {
+  const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+  const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 8 });
+  const hero = testCard({ cardId: "hero", sourceId: "test.hero", printedStrength: 10, kind: "hero" });
+  const agileUnit = testCard({ cardId: "agile", sourceId: "test.agile", printedStrength: 6, rows: ["close", "ranged", "siege"], abilities: ["agile"] });
+  const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 3 });
+  const weatherCard = testCard({ cardId: "weather", sourceId: "neutral.biting-frost", printedStrength: 0, kind: "special", abilities: ["frost"] });
+
+  const cfP31Input = (
+    legalMoves: LegalMove[],
+    observationOverrides: Partial<SeatObservation> = {},
+  ): EnginePolicyInput => ({
+    seatId: "seat_b",
+    observation: baseObservation({
+      ownGems: 2,
+      opponentGems: 2,
+      opponentPassed: false,
+      opponentHandCount: 5,
+      ownDeckCount: 5,
+      ...observationOverrides,
+    }),
+    legalMoves,
+  });
+
+  // 1. Near-even preservation pass
+  it("passes to preserve future hand when ahead and best move leaves no positive unit", () => {
+    // Two-card hand: one unit, one weather
+    // After playing unit, only weather remains (no positive unit)
+    const input = cfP31Input(
+      [passMove(), playMove(unit), playMove(weatherCard, { kind: "weather" })],
+      {
+        ownHand: [unit, weatherCard],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 10 },
+        },
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(input);
+    expect(move?.kind).toBe("pass");
+
+    // Explanation parity
+    const explanation = explainLegalHeuristicV1Decision(input);
+    expect(explanation.move?.kind).toBe("pass");
+    expect(explanation.trace.reasonKind).toBe("policy-round-investment");
+    expect(explanation.trace.roundInvestmentAnalysis).not.toBeNull();
+    expect(explanation.trace.roundInvestmentAnalysis?.recommendation).toBe("preserve_future_hand");
+  });
+
+  // 2. Two-card hand preservation (the Fix 4 case)
+  it("passes with two-card hand when playing unit leaves no positive unit", () => {
+    // Exactly 2 cards, one positive unit and one weather
+    const input = cfP31Input(
+      [passMove(), playMove(unit), playMove(weatherCard, { kind: "weather" })],
+      {
+        ownHand: [unit, weatherCard],
+        ownGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 8, seat_b: 5 },
+        },
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(input);
+    expect(move?.kind).toBe("pass");
+  });
+
+  // 3. Sacrifice non-elimination round
+  it("passes to sacrifice round when behind with critical future-hand risk", () => {
+    // Behind significantly, two cards left, playing unit leaves only weather
+    // This creates critical risk (hand nearly empty, no positive unit left)
+    const sacrificeUnit = testCard({ cardId: "sac-unit", sourceId: "test.sac.unit", printedStrength: 4 });
+    const sacrificeWeather = testCard({ cardId: "sac-weather", sourceId: "neutral.sac-frost", printedStrength: 0, kind: "special", abilities: ["frost"] });
+    const input = cfP31Input(
+      [passMove(), playMove(sacrificeUnit), playMove(sacrificeWeather, { kind: "weather" })],
+      {
+        ownHand: [sacrificeUnit, sacrificeWeather],
+        ownGems: 2,
+        opponentGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 30, seat_b: 5 },
+        },
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(input);
+    expect(move?.kind).toBe("pass");
+  });
+
+  // 4. Last gem still fights
+  it("does not pass on last gem even with poor future hand", () => {
+    const input = cfP31Input(
+      [passMove(), playMove(unit)],
+      {
+        ownHand: [unit],
+        ownGems: 1,
+        opponentGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 10, seat_b: 5 },
+        },
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(input);
+    expect(move?.kind).not.toBe("pass");
+  });
+
+  // 5. Spy/card-advantage exception
+  it("plays Spy even when future hand is risky", () => {
+    const spyInput = cfP31Input(
+      [passMove(), playMove(spy)],
+      {
+        ownHand: [spy],
+        ownGems: 2,
+        opponentGems: 2,
+        ownDeckCount: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 3 },
+        },
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(spyInput);
+    expect(move?.kind).toBe("play_card");
+    expect(move?.sourceCardId).toBe("spy");
+  });
+
+  // 5b. Spy hand-count estimation with low deck count
+  it("estimates Spy hand count using min(2, ownDeckCount)", () => {
+    const features = buildLegalHeuristicV1Features(
+      cfP31Input(
+        [passMove(), playMove(spy)],
+        {
+          ownHand: [spy, unit],
+          ownDeckCount: 1,
+          ownGems: 2,
+          opponentGems: 2,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 3 },
+          },
+        },
+      ),
+    );
+    const spyMove = features.playMoves.find((m) => m.sourceCardId === "spy");
+    const analysis = buildLegalHeuristicV1RoundInvestmentAnalysis(features, spyMove ?? null, {
+      unitCardCount: 1,
+      heroCardCount: 0,
+      specialOrWeatherCardCount: 0,
+      totalHandCount: 2,
+      positiveUnitMoveCount: 0,
+      positiveNonUnitMoveCount: 0,
+      bestUnitTempoBucket: "none",
+      bestNonUnitTempoBucket: "none",
+      futureRoundHandQuality: "poor",
+      specialOnlyHand: false,
+      noUnitFutureRisk: false,
+    });
+    // With ownDeckCount=1, Spy draws min(2, 1) = 1, so hand goes from 2 -> 1 + 1 = 2
+    expect(analysis.estimatedHandCountAfterSelectedMove).toBe(2);
+  });
+
+  // 6. Agile/multi-row source-card de-duplication
+  it("counts agile unit as single positive source when it has multiple row options", () => {
+    // Agile unit can play on 3 rows, creating 3 play_card moves
+    // But should only count as 1 unique positive unit source
+    const agileMoves = [
+      playMove(agileUnit, { kind: "board_row", side: "own" as const, seatId: "seat_b", row: "close" }),
+      playMove(agileUnit, { kind: "board_row", side: "own" as const, seatId: "seat_b", row: "ranged" }),
+      playMove(agileUnit, { kind: "board_row", side: "own" as const, seatId: "seat_b", row: "siege" }),
+    ];
+    const features = buildLegalHeuristicV1Features(
+      cfP31Input(
+        [passMove(), ...agileMoves],
+        {
+          ownHand: [agileUnit],
+          ownGems: 2,
+          opponentGems: 2,
+          ownDeckCount: 5,
+        },
+      ),
+    );
+    const analysis = buildLegalHeuristicV1RoundInvestmentAnalysis(
+      features,
+      agileMoves[0],
+      {
+        unitCardCount: 1,
+        heroCardCount: 0,
+        specialOrWeatherCardCount: 0,
+        totalHandCount: 1,
+        positiveUnitMoveCount: 0,
+        positiveNonUnitMoveCount: 0,
+        bestUnitTempoBucket: "none",
+        bestNonUnitTempoBucket: "none",
+        futureRoundHandQuality: "poor",
+        specialOnlyHand: false,
+        noUnitFutureRisk: false,
+      },
+    );
+    // Should count agile as 1 unique positive unit source (not 3 for 3 row moves)
+    expect(analysis.positiveFutureUnitMoveCount).toBe(1);
+  });
+
+  // 7. Healthy hand unchanged (protects against over-passing)
+  it("plays useful card when hand has healthy future options", () => {
+    const input = cfP31Input(
+      [passMove(), playMove(unit), playMove(filler), playMove(hero)],
+      {
+        ownHand: [unit, filler, hero],
+        ownGems: 2,
+        opponentGems: 2,
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(input);
+    // With 3 unit/hero cards, should NOT pass
+    expect(move?.kind).not.toBe("pass");
+  });
+
+  // 10. Trace parity: explanation move equals policy move
+  it("explanation move equals policy move for pass case", () => {
+    const input = cfP31Input(
+      [passMove(), playMove(unit), playMove(weatherCard, { kind: "weather" })],
+      {
+        ownHand: [unit, weatherCard],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 10 },
+        },
+      },
+    );
+    const policyMove = legalHeuristicPolicyV1.selectMove(input);
+    const explanationMove = explainLegalHeuristicV1Decision(input).move;
+    expect(explanationMove?.kind).toBe(policyMove?.kind);
+  });
+
+  it("explanation move equals policy move for non-pass case", () => {
+    const input = cfP31Input(
+      [passMove(), playMove(unit), playMove(filler), playMove(hero)],
+      {
+        ownHand: [unit, filler, hero],
+        ownGems: 2,
+        opponentGems: 2,
+      },
+    );
+    const policyMove = legalHeuristicPolicyV1.selectMove(input);
+    const explanationMove = explainLegalHeuristicV1Decision(input).move;
+    expect(explanationMove?.kind).toBe(policyMove?.kind);
+  });
+
+  // Repair 2: Sacrifice-round explanation test
+  it("sacrifice round — pass with policy-round-investment reason and sacrifice_round recommendation", () => {
+    const sacUnit = testCard({ cardId: "sac-unit-2", sourceId: "test.sac.unit2", printedStrength: 3 });
+    const sacWeather = testCard({ cardId: "sac-weather-2", sourceId: "neutral.sac-frost2", printedStrength: 0, kind: "special", abilities: ["frost"] });
+    const input = cfP31Input(
+      [passMove(), playMove(sacUnit), playMove(sacWeather, { kind: "weather" })],
+      {
+        ownHand: [sacUnit, sacWeather],
+        ownGems: 2,
+        opponentGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 5 },
+        },
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(input);
+    expect(move?.kind).toBe("pass");
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.reasonKind).toBe("policy-round-investment");
+    expect(trace.reason).toContain("sacrifice");
+    expect(trace.roundInvestmentAnalysis).not.toBeNull();
+    expect(trace.roundInvestmentAnalysis?.recommendation).toBe("sacrifice_round");
+  });
+
+  // Repair 2: Strengthened Spy exception test (≥2 cards in hand)
+  it("Spy card-advantage exception with two-card hand beats single-card preservation", () => {
+    const spy2 = testCard({ cardId: "spy2", sourceId: "test.spy2", printedStrength: 4, abilities: ["spy"] });
+    const filler2 = testCard({ cardId: "filler2", sourceId: "test.filler2", printedStrength: 2 });
+    // Two cards in hand: Spy + filler. Own deck has cards (Spy draws).
+    // Future-hand preservation risk exists (after playing Spy, only filler + drawn cards remain).
+    // The Spy/card-advantage exception should fire, selecting Spy over pass.
+    const spyInput = cfP31Input(
+      [passMove(), playMove(spy2), playMove(filler2)],
+      {
+        ownHand: [spy2, filler2],
+        ownGems: 2,
+        opponentGems: 2,
+        ownDeckCount: 5,
+        opponentHandCount: 6,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 3 },
+        },
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(spyInput);
+    // Must play Spy (card-advantage exception), not pass
+    expect(move?.kind).toBe("play_card");
+    expect(move?.sourceCardId).toBe("spy2");
+
+    // Verify this is the Spy exception, not single-card exception
+    // Hand has 2 cards, so it's not a single-card-play situation
+    expect(spyInput.observation.ownHand.length).toBeGreaterThanOrEqual(2);
+  });
+
+  // Repair 2: Strengthened agile/multi-row test
+  it("agile multi-row source is only positive unit — policy selects pass when preservation conditions met", () => {
+    // Agile unit on 3 rows creates multiple positive legal row moves.
+    // It is the only positive unit/hero source.
+    // With 2-card hand (agile + weather), after playing agile, only weather remains.
+    // Policy should select pass to preserve future hand.
+    const agile2 = testCard({
+      cardId: "agile2",
+      sourceId: "test.agile2",
+      printedStrength: 6,
+      rows: ["close", "ranged", "siege"],
+      abilities: ["agile"],
+    });
+    const agileMoves = [
+      playMove(agile2, { kind: "board_row", side: "own" as const, seatId: "seat_b", row: "close" }),
+      playMove(agile2, { kind: "board_row", side: "own" as const, seatId: "seat_b", row: "ranged" }),
+      playMove(agile2, { kind: "board_row", side: "own" as const, seatId: "seat_b", row: "siege" }),
+    ];
+    const agileInput = cfP31Input(
+      [passMove(), ...agileMoves],
+      {
+        ownHand: [agile2, weatherCard],
+        ownGems: 2,
+        opponentGems: 2,
+        ownDeckCount: 5,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 8 },
+        },
+      },
+    );
+    const move = legalHeuristicPolicyV1.selectMove(agileInput);
+    // Should pass — playing agile burns last positive unit
+    expect(move?.kind).toBe("pass");
+
+    // Verify analysis flags
+    const { trace } = explainLegalHeuristicV1Decision(agileInput);
+    expect(trace.roundInvestmentAnalysis).not.toBeNull();
+    expect(trace.roundInvestmentAnalysis?.selectedMoveWouldLeaveNoPositiveUnitMove).toBe(true);
   });
 });

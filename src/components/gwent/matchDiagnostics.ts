@@ -380,6 +380,95 @@ export const scanWeatherPlacementAnalysis = (
 };
 
 // ---------------------------------------------------------------------------
+// Round-investment-specific scan (cFp31)
+// ---------------------------------------------------------------------------
+
+/**
+ * Checks whether an object looks like a roundInvestmentAnalysis object
+ * (identified by risk/recommendation strings plus numeric fields).
+ */
+const isRoundInvestmentAnalysis = (obj: Record<string, unknown>): boolean =>
+  typeof obj.risk === "string" &&
+  typeof obj.recommendation === "string" &&
+  typeof obj.ownBoardCardCount === "number" &&
+  typeof obj.scoreDelta === "number";
+
+// roundInvestmentAnalysis only contains safe enum strings and numeric/boolean values.
+// Safe enum strings: none, watch, high, critical, preserve_future_hand, sacrifice_round, fight_last_gem, continue
+// Plus safe hand quality: empty, poor, thin, healthy
+const ROUND_INVESTMENT_SAFE_STRINGS = new Set([
+  "none", "watch", "high", "critical",
+  "preserve_future_hand", "sacrifice_round", "fight_last_gem", "continue",
+  "empty", "poor", "thin", "healthy",
+]);
+
+/**
+ * Round-investment-specific scan for hidden-info leaks under roundInvestmentAnalysis.
+ * Rejects raw source IDs (namespace.name), raw instance IDs (seat_a:.../seat_b:...),
+ * raw card names (e.g., "Draug", "Yennefer of Vengerberg"), and raw ability arrays.
+ * Allows only safe enum strings.
+ */
+export const scanRoundInvestmentAnalysis = (
+  value: unknown,
+  path = "$",
+  insideRoundInvestment = false,
+): string[] => {
+  const issues: string[] = [];
+
+  if (typeof value === "string") {
+    if (insideRoundInvestment) {
+      // Check if the string is a safe enum value
+      if (!ROUND_INVESTMENT_SAFE_STRINGS.has(value)) {
+        // Check for raw source ID pattern (e.g., "neutral.yennefer-of-vengerberg")
+        if (/^[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*$/.test(value)) {
+          issues.push(`roundInvestmentAnalysis at "${path}" contains raw source ID "${value}"`);
+        } else if (RAW_INSTANCE_PATTERN.test(value)) {
+          issues.push(`roundInvestmentAnalysis at "${path}" contains raw instance ID "${value}"`);
+        } else if (/^[A-Z][a-z]+(?:[':\s]+[-\w]+)*$/.test(value) && value.length > 2) {
+          // Reject card-name-like strings (e.g., "Draug", "Gaunter O'Dimm: Darkness", "Yennefer of Vengerberg")
+          issues.push(`roundInvestmentAnalysis at "${path}" contains raw card name "${value}"`);
+        }
+      }
+    }
+    return issues;
+  }
+
+  if (Array.isArray(value)) {
+    // roundInvestmentAnalysis should not contain arrays at all
+    if (insideRoundInvestment) {
+      issues.push(`unexpected array at "${path}" in roundInvestmentAnalysis — possible raw ability list`);
+    }
+    value.forEach((item, index) => {
+      issues.push(...scanRoundInvestmentAnalysis(item, `${path}[${index}]`, insideRoundInvestment));
+    });
+    return issues;
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return issues;
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  // If this is a roundInvestmentAnalysis object, recurse with checks enabled.
+  if (isRoundInvestmentAnalysis(obj)) {
+    for (const [, v] of Object.entries(obj)) {
+      issues.push(...scanRoundInvestmentAnalysis(v, path, true));
+    }
+    return issues;
+  }
+
+  // Recurse to find nested roundInvestmentAnalysis objects.
+  for (const [, nested] of Object.entries(obj)) {
+    if (typeof nested === "object" && nested !== null) {
+      issues.push(...scanRoundInvestmentAnalysis(nested, path, false));
+    }
+  }
+
+  return issues;
+};
+
+// ---------------------------------------------------------------------------
 // Build command/event summaries (hidden-info safe, running offset)
 // ---------------------------------------------------------------------------
 
@@ -492,7 +581,10 @@ export const buildProductDiagnosticExport = (
   // cFp30 repair: additional weather-placement-specific scan for raw card
   // names, source IDs, and ability arrays in weatherPlacementAnalysis aggregates.
   const weatherPlacementScanIssues = scanWeatherPlacementAnalysis(fullExportObj);
-  const allIssues = [...scanIssues, ...mulliganScanIssues, ...medicTimingScanIssues, ...weatherPlacementScanIssues];
+  // cFp31 repair: additional round-investment-specific scan for raw source IDs,
+  // instance IDs, and ability arrays in roundInvestmentAnalysis aggregates.
+  const roundInvestmentScanIssues = scanRoundInvestmentAnalysis(fullExportObj);
+  const allIssues = [...scanIssues, ...mulliganScanIssues, ...medicTimingScanIssues, ...weatherPlacementScanIssues, ...roundInvestmentScanIssues];
 
   return {
     schemaVersion: PRODUCT_DIAGNOSTICS_SCHEMA_VERSION,

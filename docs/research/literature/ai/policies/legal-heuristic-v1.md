@@ -19,22 +19,20 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The current implementation
-phase is cFp30: Weather-Aware Unit Placement, which includes the cFp27
-through cFp30 tuning and diagnostics chain:
+phase is cFp31: Round Investment Preservation, which includes the cFp27
+through cFp31 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
 - cFp28: hand-quality pass calibration.
 - cFp29: Medic timing calibration.
 - cFp30: weather-aware non-hero unit placement.
+- cFp31: round-investment and future-hand preservation.
 
-Current cFp30 benchmark totals:
+Current cFp31 benchmark totals (carried from cFp30):
 
 - `benchmark-v1-smoke-v1`: 9 win / 3 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 96 win / 23 loss / 1 draw vs v0.
-
-The next likely tuning candidate is cFp31 round-investment and
-future-hand preservation. That behavior is not part of cFp30 or cFp30.1.
 
 ## Product Playtest Toggle
 
@@ -193,8 +191,8 @@ These are fixed-suite evidence, not ratings or proof of broad strength.
   entries, not engine simulation.
 - Faction-specific strategy profiles are not implemented.
 - v1 can still overcommit or over-pass in lines that require sacrifice,
-   baiting, hand-reading, or multi-turn valuation beyond the cFp28 hand-
-   quality pass calibration.
+   baiting, hand-reading, or multi-turn valuation beyond the cFp31 round-
+   investment and future-hand preservation gate.
 - Benchmarks use starter decks and smoke decks only; mechanics stress
   decks and competitive lists remain deferred.
 - Glicko, TrueSkill, search, ML training, Python tooling, browser
@@ -531,3 +529,56 @@ refreshed after cFp30:
   and 0 draws against v0 (changed from cFp29 10/2/0).
 - Starter matrix (`benchmark-v1-starter-matrix-v1`): v1 records 96 wins,
   23 losses, and 1 draw against v0 (changed from cFp29 90/29/1).
+
+### Round Investment Preservation (cFp31)
+
+cFp31 adds round-investment awareness to prevent v1 from overcommitting
+Round 1 and exhausting its hand, leaving Rounds 2/3 as low-card
+formalities. Motivated by product playtest diagnostics showing v1
+refusing to pass unless its lead exceeded the safety threshold, then
+passing Rounds 2/3 because it had burned all useful cards.
+
+Key changes:
+
+- `AiDecisionRoundInvestmentRisk` enum: `"none"`, `"watch"`, `"high"`,
+  `"critical"` — classifies future-hand depletion risk.
+- `AiDecisionRoundInvestmentRecommendation` enum: `"none"`,
+  `"preserve_future_hand"`, `"sacrifice_round"`, `"fight_last_gem"`,
+  `"continue"`.
+- `AiDecisionRoundInvestmentAnalysis` struct exposed on playing-phase
+  traces via `roundInvestmentAnalysis`. It includes:
+  - Board investment counts (own units, heroes, horns, total cards)
+  - Positive future move counts (unit and non-unit)
+  - Future-round hand quality classification
+  - Current and estimated-after-move hand counts
+  - Selected move flags (spends hand card, card-advantage, would leave
+    no positive unit move, would leave no unit tempo card)
+  - Non-elimination round flag, score delta, risk, and recommendation
+- `shouldPassForRoundInvestment(...)` gates `choosePlayingMove` before
+  returning the best useful play. It checks:
+  - **Critical risk**: estimated hand after move ≤ 1, no positive unit
+    moves remain, hand was large enough that preservation matters
+    (`ownHandCount > 2`). Exception: if the move wins the match, play it.
+  - **Preservation**: ahead or near-even (`scoreDelta >= -10`), continuing
+    would leave no positive future plays, and estimated hand after move ≥ 2.
+  - **Sacrifice**: behind (`scoreDelta < 0`), no single-move catch-up,
+    and future-hand risk is `high`.
+- **Exceptions**: Last-gem rounds always fight. Single-card hands always
+  play. Card-advantage moves (Spy) are never blocked.
+- `scanRoundInvestmentAnalysis` in `matchDiagnostics.ts` validates hidden-
+  info safety for round-investment diagnostics.
+- No card names, source IDs, instance IDs, cardIds, linkedSourceIds, or raw
+  abilities are included in the diagnostic trace.
+- `policy-round-investment` reason kind added to trace explanation for
+  round-investment pass decisions.
+
+### cFp31 Benchmark Results
+
+Benchmark artifacts were not refreshed due to a pre-existing Windows
+`tsx` binary resolution issue (`spawn EINVAL`). Totals carry forward
+from cFp30:
+
+- Smoke benchmark (`benchmark-v1-smoke-v1`): 9 wins, 3 losses, 0 draws
+  against v0.
+- Starter matrix (`benchmark-v1-starter-matrix-v1`): 96 wins, 23 losses,
+  1 draw against v0.

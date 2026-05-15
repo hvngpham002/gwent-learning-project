@@ -6,6 +6,7 @@ import {
   PRODUCT_DIAGNOSTICS_SCHEMA_VERSION,
   scanForHiddenInfoHazards,
   scanMedicTimingAnalysis,
+  scanRoundInvestmentAnalysis,
   scanWeatherPlacementAnalysis,
 } from "@/components/gwent/matchDiagnostics";
 import { engineDiagnosticTraceAppended, engineMatchStarted } from "@/store/slices/engineSlice";
@@ -2043,5 +2044,176 @@ describe("cFp30: weather placement diagnostics in product export", () => {
     });
 
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+});
+
+describe("cFp31: round-investment scan", () => {
+  const safeRoundInvestmentAnalysis = {
+    risk: "critical",
+    recommendation: "preserve_future_hand",
+    ownBoardCardCount: 0,
+    scoreDelta: -5,
+  };
+
+  it("passes for safe roundInvestmentAnalysis", () => {
+    const issues = scanRoundInvestmentAnalysis(safeRoundInvestmentAnalysis);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("rejects raw source ID in roundInvestmentAnalysis", () => {
+    const issues = scanRoundInvestmentAnalysis({
+      ...safeRoundInvestmentAnalysis,
+      recommendation: "neutral.yennefer-of-vengerberg",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("rejects hyphenated namespace source ID", () => {
+    const issues = scanRoundInvestmentAnalysis({
+      ...safeRoundInvestmentAnalysis,
+      risk: "northern-realms.philippa-eilhart",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("rejects raw instance ID", () => {
+    const issues = scanRoundInvestmentAnalysis({
+      ...safeRoundInvestmentAnalysis,
+      recommendation: "seat_b:001:hidden",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("rejects one-word card name", () => {
+    const issues = scanRoundInvestmentAnalysis({
+      ...safeRoundInvestmentAnalysis,
+      recommendation: "Draug",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("rejects multi-word card name", () => {
+    const issues = scanRoundInvestmentAnalysis({
+      ...safeRoundInvestmentAnalysis,
+      risk: "Yennefer of Vengerberg",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("rejects colon-and-apostrophe card name like Gaunter O'Dimm: Darkness", () => {
+    const issues = scanRoundInvestmentAnalysis({
+      ...safeRoundInvestmentAnalysis,
+      recommendation: "Gaunter O'Dimm: Darkness",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("rejects ability arrays in roundInvestmentAnalysis", () => {
+    const issues = scanRoundInvestmentAnalysis({
+      ...safeRoundInvestmentAnalysis,
+      abilities: ["spy", "medic"],
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("allows safe enum strings", () => {
+    const safe = {
+      risk: "none",
+      recommendation: "continue",
+      ownBoardCardCount: 3,
+      scoreDelta: 5,
+    };
+    const issues = scanRoundInvestmentAnalysis(safe);
+    expect(issues).toHaveLength(0);
+
+    const sacrifice = {
+      risk: "high",
+      recommendation: "sacrifice_round",
+      ownBoardCardCount: 1,
+      scoreDelta: -15,
+    };
+    const issues2 = scanRoundInvestmentAnalysis(sacrifice);
+    expect(issues2).toHaveLength(0);
+
+    const fight = {
+      risk: "critical",
+      recommendation: "fight_last_gem",
+      ownBoardCardCount: 0,
+      scoreDelta: -20,
+    };
+    const issues3 = scanRoundInvestmentAnalysis(fight);
+    expect(issues3).toHaveLength(0);
+  });
+
+  it("full export scan passes when roundInvestmentAnalysis is safe", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp31-safe-round-investment",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 3,
+            opponentHandCount: 5,
+            ownDeckCount: 8,
+            opponentDeckCount: 10,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          weatherPlacementAnalysis: null,
+          roundInvestmentAnalysis: {
+            risk: "critical",
+            recommendation: "preserve_future_hand",
+            ownBoardCardCount: 0,
+            scoreDelta: 5,
+          },
+          selected: {
+            kind: "pass",
+            label: "pass",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "policy-round-investment",
+          reason: "preserve future hand",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    expect(exportData.hiddenInfoSafetyScan.issues).toHaveLength(0);
   });
 });

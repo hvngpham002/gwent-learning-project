@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp30",
-        latestSpecPath: "docs/spec/2026-05-14-cFp30-specs.md",
-        latestReportPath: "audit/reports/2026-05-14-cFp30-report.md",
+        latestPhase: "cFp31",
+        latestSpecPath: "docs/spec/2026-05-14-cFp31-specs.md",
+        latestReportPath: "audit/reports/2026-05-14-cFp31-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp30",
-        latestSpecPath: "docs/spec/2026-05-14-cFp30-specs.md",
-        latestReportPath: "audit/reports/2026-05-14-cFp30-report.md",
+        latestPhase: "cFp31",
+        latestSpecPath: "docs/spec/2026-05-14-cFp31-specs.md",
+        latestReportPath: "audit/reports/2026-05-14-cFp31-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -90,6 +90,7 @@ describe("authentic AI Lab view model", () => {
         "hand-quality pass calibration",
         "Medic timing calibration",
         "weather-aware unit placement",
+        "round-investment preservation",
       ]),
     );
   });

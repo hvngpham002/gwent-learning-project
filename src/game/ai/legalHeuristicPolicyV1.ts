@@ -22,7 +22,7 @@ import {
   getFutureHandExtraBuffer,
 } from "./decisionTrace";
 
-const MIN_USEFUL_MOVE_SCORE = 25;
+export const MIN_USEFUL_MOVE_SCORE = 25;
 
 // cFp29: Contextual Medic timing constants
 export const MEDIC_NO_TARGET_UTILITY = -140;
@@ -1056,6 +1056,255 @@ export const buildLegalHeuristicV1HandShapeAnalysis = (
   );
 };
 
+// ---------------------------------------------------------------------------
+// cFp31: Round investment analysis
+// ---------------------------------------------------------------------------
+
+const isSpyCard = (card: SeatCardSummary | undefined) => hasAbility(card, "spy");
+
+// cFp31 repair: Shared round-investment decision helper used by both policy
+// and explanation to ensure parity.
+export interface LegalHeuristicV1RoundInvestmentDecision {
+  readonly candidate: PlayCardMove | UseLeaderMove | null;
+  readonly analysis: import("./decisionTrace").AiDecisionRoundInvestmentAnalysis | null;
+  readonly shouldPass: boolean;
+}
+
+export const buildLegalHeuristicV1RoundInvestmentDecision = (
+  features: LegalHeuristicV1Features,
+): LegalHeuristicV1RoundInvestmentDecision => {
+  const candidate = bestUsefulMove(features);
+  if (!candidate) {
+    return { candidate: null, analysis: null, shouldPass: false };
+  }
+  const handShape = buildLegalHeuristicV1HandShapeAnalysis(features);
+  const analysis = buildLegalHeuristicV1RoundInvestmentAnalysis(features, candidate, handShape);
+  return {
+    candidate,
+    analysis,
+    shouldPass: shouldPassForRoundInvestment(features, candidate),
+  };
+};
+
+/**
+ * cFp31: Build round-investment analysis from features and selected move.
+ * Uses only public observation data and scored-move metadata — never card
+ * identities, source IDs, instance IDs, or ability arrays.
+ */
+export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
+  features: LegalHeuristicV1Features,
+  selectedMove: PlayCardMove | UseLeaderMove | null,
+  handShape: import("./decisionTrace").AiDecisionHandShapeAnalysis,
+): import("./decisionTrace").AiDecisionRoundInvestmentAnalysis => {
+  const obs = features.input.observation;
+
+  // Count own board investment
+  let ownBoardUnitCount = 0;
+  let ownBoardHeroCount = 0;
+  let ownBoardHornCount = 0;
+  for (const row of obs.boardRows) {
+    if (row.seatId === features.input.seatId) {
+      for (const card of row.units) {
+        if (card.kind === "hero") ownBoardHeroCount++;
+        else if (card.kind === "unit") ownBoardUnitCount++;
+      }
+      if (row.horn) ownBoardHornCount++;
+    }
+  }
+  const ownBoardCardCount = ownBoardUnitCount + ownBoardHeroCount + ownBoardHornCount;
+
+  // cFp31 repair Fix 3: Count future positive unit/hero by unique sourceCardId
+  // Agile or multi-row cards can create multiple positive move options from the
+  // same card instance. We key by sourceCardId to avoid inflating the count.
+  const positiveUnitSourceCardIds = new Set<string>();
+  let positiveFutureNonUnitMoveCount = 0;
+  for (const move of features.playMoves) {
+    const card = features.ownHandByCardId.get(move.sourceCardId);
+    const score = scoreMove(features, move);
+    if (score > 0) {
+      if (card?.kind === "unit" || card?.kind === "hero") {
+        positiveUnitSourceCardIds.add(move.sourceCardId);
+      }
+    }
+  }
+  // Count positive non-unit moves from leader moves and non-unit play moves
+  for (const move of features.playMoves) {
+    const card = features.ownHandByCardId.get(move.sourceCardId);
+    const score = scoreMove(features, move);
+    if (score > 0 && card && card.kind !== "unit" && card.kind !== "hero") {
+      positiveFutureNonUnitMoveCount++;
+    }
+  }
+  for (const move of features.leaderMoves) {
+    if (scoreMove(features, move) > 0) {
+      positiveFutureNonUnitMoveCount++;
+    }
+  }
+  const positiveFutureUnitMoveCount = positiveUnitSourceCardIds.size;
+
+  const futureRoundHandQuality = handShape.futureRoundHandQuality;
+  const currentRoundHandCount = features.ownHandCount;
+  const nonEliminationRound = features.ownGems > 1;
+
+  // Analyze selected move
+  const selectedMoveSpendsHandCard = selectedMove?.kind === "play_card";
+  const selectedMoveIsCardAdvantage = selectedMove?.kind === "play_card"
+    ? isSpyCard(features.ownHandByCardId.get(selectedMove.sourceCardId))
+    : false;
+
+  // cFp31 repair Fix 2: Estimate hand count after selected move
+  // Spy draws min(2, ownDeckCount) cards
+  let estimatedHandCountAfterSelectedMove = currentRoundHandCount;
+  if (selectedMove?.kind === "play_card") {
+    estimatedHandCountAfterSelectedMove = currentRoundHandCount - 1;
+    if (isSpyCard(features.ownHandByCardId.get(selectedMove.sourceCardId))) {
+      estimatedHandCountAfterSelectedMove += Math.min(2, features.ownDeckCount);
+    }
+  }
+
+  // Would leaving no positive unit move?
+  const selectedMoveCard = selectedMove?.kind === "play_card"
+    ? features.ownHandByCardId.get(selectedMove.sourceCardId)
+    : undefined;
+  const selectedMoveIsPositiveUnit = selectedMove?.kind === "play_card"
+    ? (selectedMoveCard?.kind === "unit" || selectedMoveCard?.kind === "hero")
+    : false;
+
+  // cFp31 repair Fix 3: Use unique source card IDs for the "would leave no positive unit" check
+  let selectedMoveWouldLeaveNoPositiveUnitMove = false;
+  if (selectedMoveIsPositiveUnit && selectedMove && selectedMove.kind === "play_card") {
+    const remaining = new Set(positiveUnitSourceCardIds);
+    remaining.delete(selectedMove.sourceCardId);
+    selectedMoveWouldLeaveNoPositiveUnitMove = remaining.size === 0;
+  } else if (!selectedMoveIsPositiveUnit) {
+    selectedMoveWouldLeaveNoPositiveUnitMove = positiveUnitSourceCardIds.size === 0;
+  }
+
+  // Would leave no unit tempo card?
+  const unitTempoCardCount = handShape.unitCardCount + handShape.heroCardCount;
+  const selectedMoveSpendsUnitTempo = selectedMoveIsPositiveUnit;
+  const selectedMoveWouldLeaveNoUnitTempoCard = selectedMoveSpendsUnitTempo
+    ? unitTempoCardCount <= 1
+    : unitTempoCardCount === 0;
+
+  // Determine risk
+  let risk: import("./decisionTrace").AiDecisionRoundInvestmentRisk = "none";
+  if (estimatedHandCountAfterSelectedMove <= 1 && selectedMoveWouldLeaveNoPositiveUnitMove && nonEliminationRound) {
+    risk = "critical";
+  } else if (futureRoundHandQuality === "poor" || futureRoundHandQuality === "thin") {
+    risk = estimatedHandCountAfterSelectedMove <= 2 ? "high" : "watch";
+  }
+
+  // Determine recommendation
+  let recommendation: import("./decisionTrace").AiDecisionRoundInvestmentRecommendation = "continue";
+
+  if (features.ownGems <= 1) {
+    // Last gem: always fight (unless catch-up impossible — handled elsewhere)
+    recommendation = "fight_last_gem";
+  } else if (selectedMoveIsCardAdvantage) {
+    // Card-advantage moves are always worth playing
+    recommendation = "continue";
+  } else if (risk === "critical") {
+    recommendation = features.scoreDelta >= -10
+      ? "preserve_future_hand"
+      : "sacrifice_round";
+  } else if (features.scoreDelta >= -10 && selectedMoveWouldLeaveNoPositiveUnitMove) {
+    recommendation = "preserve_future_hand";
+  } else if (features.scoreDelta < 0 && selectedMoveWouldLeaveNoUnitTempoCard && futureRoundHandQuality !== "healthy") {
+    recommendation = "sacrifice_round";
+  }
+
+  return {
+    ownBoardUnitCount,
+    ownBoardHeroCount,
+    ownBoardNonHeroUnitCount: ownBoardUnitCount,
+    ownBoardHornCount,
+    ownBoardCardCount,
+    positiveFutureUnitMoveCount,
+    positiveFutureNonUnitMoveCount,
+    futureRoundHandQuality,
+    currentRoundHandCount,
+    estimatedHandCountAfterSelectedMove,
+    selectedMoveSpendsHandCard,
+    selectedMoveIsCardAdvantage,
+    selectedMoveWouldLeaveNoPositiveUnitMove,
+    selectedMoveWouldLeaveNoUnitTempoCard,
+    nonEliminationRound,
+    scoreDelta: features.scoreDelta,
+    risk,
+    recommendation,
+  };
+};
+
+/**
+ * cFp31: Returns true if the AI should pass (or choose pass) to preserve
+ * future hand, even though a useful play exists.
+ *
+ * Only applies on non-elimination rounds (ownGems > 1), when the opponent
+ * has not passed, and pass is legal.
+ *
+ * The thresholds are deliberately conservative to avoid over-passing in
+ * scenarios where the best move is clearly positive.
+ */
+export const shouldPassForRoundInvestment = (
+  features: LegalHeuristicV1Features,
+  candidate: PlayCardMove | UseLeaderMove | null,
+): boolean => {
+  // Must be a non-elimination round
+  if (features.ownGems <= 1) return false;
+  // Pass must exist
+  if (!features.passMove) return false;
+  // Opponent must not have passed
+  if (features.opponentPassed) return false;
+  // Candidate must exist (we're in the choosePlayingMove path)
+  if (!candidate) return false;
+
+  // With 1 card left, there's nothing meaningful to preserve — always play it.
+  if (features.ownHandCount <= 1) return false;
+
+  // Build analysis to determine risk level
+  const handShape = buildLegalHeuristicV1HandShapeAnalysis(features);
+  const analysis = buildLegalHeuristicV1RoundInvestmentAnalysis(features, candidate ?? null, handShape);
+
+  // Card-advantage moves (Spy, etc.) — always play them
+  if (analysis.selectedMoveIsCardAdvantage) return false;
+
+  // cFp31 repair Fix 4: Removed features.ownHandCount > 2 gate from critical-risk branch
+  // Critical risk: hand nearly empty and no positive unit moves left.
+  if (analysis.estimatedHandCountAfterSelectedMove <= 1 &&
+      analysis.selectedMoveWouldLeaveNoPositiveUnitMove) {
+    // Exception: if this move wins the match, play it anyway
+    if (candidate?.kind === "play_card") {
+      const tempo = estimateImmediateTempo(features, candidate);
+      const minScore = minimumScoreToWinRound(features);
+      if (features.opponentGems <= 1 && features.ownScore + tempo >= minScore) {
+        return false; // wins the match — play it
+      }
+    }
+    return true;
+  }
+
+  // cFp31 repair Fix 4: Removed estimatedHandCountAfterSelectedMove >= 2 gate
+  // Ahead or near-even: preserve future hand if continuing burns it.
+  if (features.scoreDelta >= -10) {
+    if (analysis.selectedMoveWouldLeaveNoPositiveUnitMove ||
+        analysis.selectedMoveWouldLeaveNoUnitTempoCard ||
+        (analysis.futureRoundHandQuality !== "healthy" && analysis.estimatedHandCountAfterSelectedMove <= 2)) {
+      return true;
+    }
+  }
+
+  // Behind on non-elimination round: sacrifice if no single-move catch-up
+  if (features.scoreDelta < 0) {
+    const passDiags = buildLegalHeuristicV1PassDecisionDiagnostics(features);
+    if (!passDiags.hasSingleMoveCatchUp && analysis.risk === "high") {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 const estimateOpponentHandPressure = (features: LegalHeuristicV1Features) => {
   const perCardPressure = features.ownGems <= 1 ? 8 : 6;
   return features.opponentHandCount * perCardPressure;
@@ -1205,6 +1454,20 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
       }
     }
     return passMove;
+  }
+
+  // cFp31: Round-investment gate — use shared decision helper for policy/explanation parity.
+  // If continuing would burn the last useful future hand, prefer pass.
+  {
+    const roundDecision = buildLegalHeuristicV1RoundInvestmentDecision(features);
+    if (roundDecision.candidate && passMove && !features.opponentPassed && features.ownGems > 1) {
+      if (roundDecision.shouldPass) {
+        return passMove;
+      }
+    }
+    if (roundDecision.candidate) {
+      return roundDecision.candidate;
+    }
   }
 
   return bestUsefulMove(features) ?? passMove;

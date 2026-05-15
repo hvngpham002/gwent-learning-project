@@ -442,6 +442,44 @@ export interface AiDecisionWeatherPlacementAnalysis {
 }
 
 // ---------------------------------------------------------------------------
+// Round investment analysis (cFp31: hidden-info-safe aggregate diagnostics)
+// ---------------------------------------------------------------------------
+
+export type AiDecisionRoundInvestmentRisk =
+  | "none"
+  | "watch"
+  | "high"
+  | "critical";
+
+export type AiDecisionRoundInvestmentRecommendation =
+  | "none"
+  | "preserve_future_hand"
+  | "sacrifice_round"
+  | "fight_last_gem"
+  | "continue";
+
+export interface AiDecisionRoundInvestmentAnalysis {
+  readonly ownBoardUnitCount: number;
+  readonly ownBoardHeroCount: number;
+  readonly ownBoardNonHeroUnitCount: number;
+  readonly ownBoardHornCount: number;
+  readonly ownBoardCardCount: number;
+  readonly positiveFutureUnitMoveCount: number;
+  readonly positiveFutureNonUnitMoveCount: number;
+  readonly futureRoundHandQuality: AiDecisionHandQuality;
+  readonly currentRoundHandCount: number;
+  readonly estimatedHandCountAfterSelectedMove: number;
+  readonly selectedMoveSpendsHandCard: boolean;
+  readonly selectedMoveIsCardAdvantage: boolean;
+  readonly selectedMoveWouldLeaveNoPositiveUnitMove: boolean;
+  readonly selectedMoveWouldLeaveNoUnitTempoCard: boolean;
+  readonly nonEliminationRound: boolean;
+  readonly scoreDelta: number;
+  readonly risk: AiDecisionRoundInvestmentRisk;
+  readonly recommendation: AiDecisionRoundInvestmentRecommendation;
+}
+
+// ---------------------------------------------------------------------------
 // Top-level trace
 // ---------------------------------------------------------------------------
 
@@ -458,6 +496,7 @@ export interface AiDecisionTrace {
   readonly handShapeAnalysis: AiDecisionHandShapeAnalysis | null;
   readonly medicTimingAnalysis: AiDecisionMedicTimingAnalysis | null;
   readonly weatherPlacementAnalysis: AiDecisionWeatherPlacementAnalysis | null;
+  readonly roundInvestmentAnalysis: AiDecisionRoundInvestmentAnalysis | null;
   readonly selected: AiDecisionSelectedMove | null;
   readonly candidates: AiDecisionCandidateSummary[];
   // Distinguishes exact-policy reasoning ("policy-...") from diagnostics

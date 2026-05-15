@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp30 for product playtesting.",
-    latestPhase: "cFp30",
-    latestSpecPath: "docs/spec/2026-05-14-cFp30-specs.md",
-    latestReportPath: "audit/reports/2026-05-14-cFp30-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp31 for product playtesting.",
+    latestPhase: "cFp31",
+    latestSpecPath: "docs/spec/2026-05-14-cFp31-specs.md",
+    latestReportPath: "audit/reports/2026-05-14-cFp31-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
@@ -85,6 +85,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "hand-quality pass calibration",
       "Medic timing calibration",
       "weather-aware unit placement",
+      "round-investment preservation",
     ],
   },
 ];
