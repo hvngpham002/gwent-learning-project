@@ -54,7 +54,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "stable product default",
     ],
   },
- {
+  {
     id: "legal-heuristic-v1",
     label: "legal-heuristic-v1",
     shortLabel: "experimental",
