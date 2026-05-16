@@ -181,6 +181,11 @@ const confirmAuthenticMulliganAndStartMatch = async (page: Page) => {
   await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
 };
 
+const choosePregameOpponent = async (page: Page, opponentName: string) => {
+  await page.getByTestId("authentic-pregame-opponent-option").click();
+  await page.getByRole("option", { name: new RegExp(escapeRegExp(opponentName), "i") }).click();
+};
+
 const enterAuthenticMatchFromPreGame = async (
   page: Page,
   {
@@ -1344,6 +1349,40 @@ test("authentic mulligan debug routes reveal AI decision and forced redraw anima
   await expect(page.locator(".authentic-mulligan__hidden-hand")).toHaveClass(/is-ai-keep-animating/);
   await expect(page.locator(".authentic-mulligan__hidden-back--held").first()).toHaveCSS("animation-name", "authentic-ai-keep-wave");
   await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 8000 });
+});
+
+test("cCp32.2 AI Scoia'tael keeps forced mulligan animations before first-player prompt resolution", async ({ page }) => {
+  const cases = [
+    { count: 0, status: /AI keeps hand/i },
+    { count: 1, status: /AI redraws 1 card/i },
+    { count: 2, status: /AI redraws 2 cards/i },
+  ] as const;
+
+  for (const { count, status } of cases) {
+    await page.goto(`/?seed=ccp322-scoia-ai-${count}&debugAiMulligan=1&debugAiMulliganCount=${count}`);
+    await expect(page.getByTestId("authentic-pregame")).toBeVisible();
+    await choosePregameOpponent(page, "Official Scoia'tael Starter");
+    await page.getByTestId("authentic-pregame-begin").click();
+
+    await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+    await page.getByTestId("authentic-confirm-mulligan").click();
+    await expect(page.getByTestId("authentic-mulligan-status")).toContainText(status, { timeout: 10000 });
+
+    if (count === 0) {
+      await expect(page.locator('[data-ai-mulligan-state="redrawn"]')).toHaveCount(0);
+      await expect(page.locator(".authentic-mulligan__hidden-hand")).toHaveClass(/is-ai-keep-animating/);
+    } else {
+      await expect(page.locator('[data-ai-mulligan-state="redrawn"]')).toHaveCount(count);
+    }
+
+    await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 10000 });
+    await page.getByTestId("authentic-start-match-confirm").click();
+    await expect(page.getByTestId("authentic-match-screen")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("authentic-mulligan-screen")).toHaveCount(0);
+
+    const pageText = await visiblePageText(page);
+    expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+  }
 });
 
 test("authentic deck builder shows generated cards plus context-menu inspect (cEp5.2)", async ({ page }) => {
