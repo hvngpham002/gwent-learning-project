@@ -19,8 +19,9 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The current implementation
-phase is cFp32: Stop-Loss Round Sacrifice, which includes the cFp27
-through cFp32 tuning and diagnostics chain:
+phase is cFp33: Scoia'tael First-Turn Choice Strategy, which builds on the
+cFp27 through cFp32 tuning and diagnostics chain and adds cFp33 first-turn
+choice logic:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -637,3 +638,46 @@ The public seat observation now exposes:
 Both fields are derived only from public faction identity. They exist so a
 future Cluster F phase can make mulligan decisions with the first-player choice
 in mind without leaking hidden cards.
+
+### Scoia'tael First-Turn Choice (cFp33)
+
+cFp33 replaces `legal-heuristic-v1`'s deterministic
+`scoiatael-first-player:self` prompt fallback with a deterministic
+post-mulligan hand-shape heuristic. The decision is based only on:
+
+- **Legal prompt moves** (presence of self/opponent options)
+- **Own hand summary** (counts by ability bucket, best opening tempo)
+- **Public state** (no opponent hand, no deck contents)
+
+Hand shape features computed from `SeatCardSummary`:
+
+- Spy count (`"spy"` ability) → +35 initiative
+- Muster/Muster Roach count (`"muster"`, `"muster_roach"`) → +25 initiative
+- Best opening printed strength → +25 for 8+, +12 for 5-7
+- Commander's Horn + 3+ proactive cards → +8 initiative
+- Scorch count → +28 reaction
+- Weather count (2+) → +24 reaction, (1) → +10 reaction
+- Decoy without Spy → +8 reaction
+- Medic count → +6 reaction
+- Weak proactive (strength ≤ 4) + reactive density (≥ 2) → +18 reaction
+
+Decision threshold: `reactionScore >= initiativeScore + 12` → choose opponent.
+Ties default to `self` for stability.
+
+Reason kinds (hidden-info-safe enums):
+
+- `spy_or_card_advantage_opener` — go first with Spy
+- `muster_or_thinning_opener` — go first with Muster/thinning
+- `strong_tempo_opener` — go first with 8+ best opening
+- `reactive_weather_or_scorch` — let opponent start with weather/scorch
+- `weak_proactive_reactive_hand` — let opponent start for weak+reactive
+- `default_go_first` — tie/bias → self
+- `only_legal_option` — single option available
+
+`AiDecisionScoiataelFirstTurnAnalysis` exposes counts, scores, tempo bucket,
+and reason kind — never card names, source IDs, instance IDs, or ability
+arrays. A targeted `scanScoiataelFirstTurnAnalysis` scanner rejects raw
+source IDs, card names, instance IDs, and ability arrays in the analysis
+subtree.
+
+`v0` remains unchanged with its deterministic `self` fallback.

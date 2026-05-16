@@ -20,6 +20,10 @@ import type {
 import {
   buildAiDecisionHandShapeAnalysis,
   getFutureHandExtraBuffer,
+  type AiDecisionScoiataelFirstTurnAnalysis,
+  type AiDecisionScoiataelFirstTurnRecommendation,
+  type AiDecisionScoiataelFirstTurnReasonKind,
+  type AiDecisionFirstTurnTempoBucket,
 } from "./decisionTrace";
 
 export const MIN_USEFUL_MOVE_SCORE = 25;
@@ -685,7 +689,8 @@ export const choosePromptMove = (features: LegalHeuristicV1Features) => {
   }
 
   if (abilityId === "scoiatael_choose_first") {
-    return moves.find((move) => move.optionId === "scoiatael-first-player:self") ?? moves[0] ?? null;
+    const result = buildScoiataelFirstTurnChoiceDecision(features);
+    return result.selectedMove ?? null;
   }
 
   if (abilityId === "discard_two_draw_one_from_deck") {
@@ -1541,6 +1546,174 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
   }
 
   return bestUsefulMove(features) ?? passMove;
+};
+
+// ---------------------------------------------------------------------------
+// cFp33: Scoia'tael first-turn choice helper
+// ---------------------------------------------------------------------------
+
+export interface LegalHeuristicV1ScoiataelFirstTurnDecision {
+  readonly selectedMove: ChoosePromptOptionMove | null;
+  readonly analysis: AiDecisionScoiataelFirstTurnAnalysis | null;
+}
+
+/**
+ * cFp33: Decide go-first vs let-opponent-start for the Scoia'tael
+ * first-player prompt. Returns both the selected move and a hidden-info-safe
+ * diagnostic analysis derived only from counts, buckets, and reason kinds.
+ */
+export const buildScoiataelFirstTurnChoiceDecision = (
+  features: LegalHeuristicV1Features,
+): LegalHeuristicV1ScoiataelFirstTurnDecision => {
+  const promptMoves = features.promptMoves;
+  if (promptMoves.length === 0) {
+    return { selectedMove: null, analysis: null };
+  }
+
+  const abilityId = promptMoves[0].metadata.abilityId;
+  if (abilityId !== "scoiatael_choose_first") {
+    return { selectedMove: null, analysis: null };
+  }
+
+  const selfMove = promptMoves.find((m) => m.optionId === "scoiatael-first-player:self");
+  const opponentMove = promptMoves.find((m) => m.optionId === "scoiatael-first-player:opponent");
+  const selfOptionLegal = selfMove != null;
+  const opponentOptionLegal = opponentMove != null;
+
+  if (!selfOptionLegal && !opponentOptionLegal) {
+    return { selectedMove: null, analysis: null };
+  }
+
+  // Count hand features
+  const hand = features.input.observation.ownHand;
+  let spyCount = 0;
+  let musterCount = 0;
+  let medicCount = 0;
+  let weatherCount = 0;
+  let scorchCount = 0;
+  let decoyCount = 0;
+  let hornCount = 0;
+  let proactiveUnitOrHeroCount = 0;
+  let bestOpeningStrength = 0;
+
+  for (const card of hand) {
+    const hasAbility = (ability: string) => card.abilities.includes(ability as never);
+    const isSpy = hasAbility("spy");
+    const isMuster = hasAbility("muster") || hasAbility("muster_roach");
+    const isMedic = hasAbility("medic");
+    const isWeather = hasAbility("frost") || hasAbility("fog") || hasAbility("rain") || hasAbility("skellige_storm");
+    const isScorch = hasAbility("scorch") || hasAbility("scorch_close") || hasAbility("scorch_range") || hasAbility("scorch_siege");
+    const isDecoy = hasAbility("decoy");
+    const isHorn = hasAbility("commanders_horn");
+
+    if (isSpy) spyCount++;
+    if (isMuster) musterCount++;
+    if (isMedic) medicCount++;
+    if (isWeather) weatherCount++;
+    if (isScorch) scorchCount++;
+    if (isDecoy) decoyCount++;
+    if (isHorn) hornCount++;
+
+    if (card.kind === "unit" || card.kind === "hero") {
+      proactiveUnitOrHeroCount++;
+      if (card.printedStrength > bestOpeningStrength) {
+        bestOpeningStrength = card.printedStrength;
+      }
+    }
+  }
+
+  const reactiveSpecialCount = scorchCount + weatherCount + decoyCount;
+
+  // Determine tempo bucket
+  let bestOpeningTempoBucket: AiDecisionFirstTurnTempoBucket = "none";
+  if (bestOpeningStrength >= 8) bestOpeningTempoBucket = "high";
+  else if (bestOpeningStrength >= 5) bestOpeningTempoBucket = "medium";
+  else if (bestOpeningStrength >= 1) bestOpeningTempoBucket = "low";
+
+  // Scoring algorithm
+  let initiativeScore = 10; // default go-first bias
+  let reactionScore = 0;
+
+  if (spyCount > 0) initiativeScore += 35;
+  if (musterCount > 0) initiativeScore += 25;
+  if (bestOpeningStrength >= 8) initiativeScore += 25;
+  else if (bestOpeningStrength >= 5) initiativeScore += 12;
+  if (hornCount > 0 && proactiveUnitOrHeroCount >= 3) initiativeScore += 8;
+
+  if (scorchCount > 0) reactionScore += 28;
+  if (weatherCount >= 2) reactionScore += 24;
+  else if (weatherCount === 1) reactionScore += 10;
+  if (decoyCount > 0 && spyCount === 0) reactionScore += 8;
+  if (medicCount > 0) reactionScore += 6;
+  if (bestOpeningStrength <= 4 && reactiveSpecialCount >= 2) reactionScore += 18;
+
+  // Decision: choose opponent only if reaction significantly outweighs initiative
+  const chooseOpponent = reactionScore >= initiativeScore + 12;
+
+  let selectedMove: ChoosePromptOptionMove | null = null;
+  let recommendation: AiDecisionScoiataelFirstTurnRecommendation;
+
+  if (!selfOptionLegal) {
+    // Only opponent option available
+    selectedMove = opponentMove ?? null;
+    recommendation = "let_opponent_start";
+  } else if (!opponentOptionLegal) {
+    // Only self option available
+    selectedMove = selfMove ?? null;
+    recommendation = "go_first";
+  } else if (chooseOpponent) {
+    selectedMove = opponentMove;
+    recommendation = "let_opponent_start";
+  } else {
+    // Tie or initiative wins — default to self
+    selectedMove = selfMove;
+    recommendation = "go_first";
+  }
+
+  // Determine reason kind
+  let reasonKind: AiDecisionScoiataelFirstTurnReasonKind;
+  if (!selfOptionLegal || !opponentOptionLegal) {
+    reasonKind = "only_legal_option";
+  } else if (recommendation === "let_opponent_start") {
+    if (scorchCount > 0 || weatherCount > 0) {
+      reasonKind = "reactive_weather_or_scorch";
+    } else {
+      reasonKind = "weak_proactive_reactive_hand";
+    }
+  } else {
+    // recommendation is "go_first"
+    if (spyCount > 0) {
+      reasonKind = "spy_or_card_advantage_opener";
+    } else if (musterCount > 0) {
+      reasonKind = "muster_or_thinning_opener";
+    } else if (bestOpeningTempoBucket === "high") {
+      reasonKind = "strong_tempo_opener";
+    } else {
+      reasonKind = "default_go_first";
+    }
+  }
+
+  const analysis: AiDecisionScoiataelFirstTurnAnalysis = {
+    promptLegal: true,
+    selfOptionLegal,
+    opponentOptionLegal,
+    recommendation,
+    reasonKind,
+    initiativeScore,
+    reactionScore,
+    bestOpeningTempoBucket,
+    spyCount,
+    musterCount,
+    medicCount,
+    weatherCount,
+    scorchCount,
+    decoyCount,
+    hornCount,
+    proactiveUnitOrHeroCount,
+    reactiveSpecialCount,
+  };
+
+  return { selectedMove, analysis };
 };
 
 export const legalHeuristicPolicyV1: EnginePolicy = {

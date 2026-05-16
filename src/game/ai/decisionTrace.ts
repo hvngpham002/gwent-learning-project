@@ -496,6 +496,45 @@ export interface AiDecisionRoundInvestmentAnalysis {
 }
 
 // ---------------------------------------------------------------------------
+// Scoia'tael first-turn choice analysis (cFp33: hidden-info-safe aggregate diagnostics)
+// ---------------------------------------------------------------------------
+
+export type AiDecisionScoiataelFirstTurnRecommendation =
+  | "go_first"
+  | "let_opponent_start";
+
+export type AiDecisionScoiataelFirstTurnReasonKind =
+  | "only_legal_option"
+  | "spy_or_card_advantage_opener"
+  | "muster_or_thinning_opener"
+  | "strong_tempo_opener"
+  | "reactive_weather_or_scorch"
+  | "weak_proactive_reactive_hand"
+  | "default_go_first";
+
+export type AiDecisionFirstTurnTempoBucket = "none" | "low" | "medium" | "high";
+
+export interface AiDecisionScoiataelFirstTurnAnalysis {
+  readonly promptLegal: boolean;
+  readonly selfOptionLegal: boolean;
+  readonly opponentOptionLegal: boolean;
+  readonly recommendation: AiDecisionScoiataelFirstTurnRecommendation;
+  readonly reasonKind: AiDecisionScoiataelFirstTurnReasonKind;
+  readonly initiativeScore: number;
+  readonly reactionScore: number;
+  readonly bestOpeningTempoBucket: AiDecisionFirstTurnTempoBucket;
+  readonly spyCount: number;
+  readonly musterCount: number;
+  readonly medicCount: number;
+  readonly weatherCount: number;
+  readonly scorchCount: number;
+  readonly decoyCount: number;
+  readonly hornCount: number;
+  readonly proactiveUnitOrHeroCount: number;
+  readonly reactiveSpecialCount: number;
+}
+
+// ---------------------------------------------------------------------------
 // Top-level trace
 // ---------------------------------------------------------------------------
 
@@ -513,6 +552,7 @@ export interface AiDecisionTrace {
   readonly medicTimingAnalysis: AiDecisionMedicTimingAnalysis | null;
   readonly weatherPlacementAnalysis: AiDecisionWeatherPlacementAnalysis | null;
   readonly roundInvestmentAnalysis: AiDecisionRoundInvestmentAnalysis | null;
+  readonly scoiataelFirstTurnAnalysis: AiDecisionScoiataelFirstTurnAnalysis | null;
   readonly selected: AiDecisionSelectedMove | null;
   readonly candidates: AiDecisionCandidateSummary[];
   // Distinguishes exact-policy reasoning ("policy-...") from diagnostics

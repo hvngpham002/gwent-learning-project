@@ -832,6 +832,202 @@ describe("engine AI policy", () => {
       );
     });
 
+    describe("cFp33: scoia'tael first-turn choice heuristic", () => {
+      const scoiataelPromptMoves = (
+        selfOption = true,
+        opponentOption = true,
+      ): LegalMove[] => {
+        const moves: LegalMove[] = [];
+        if (selfOption) {
+          moves.push(promptMove("scoiatael-first-player:self", "scoiatael_choose_first", { kind: "none" }));
+        }
+        if (opponentOption) {
+          moves.push(promptMove("scoiatael-first-player:opponent", "scoiatael_choose_first", { kind: "none" }));
+        }
+        return moves;
+      };
+
+      it("default/tie chooses self (balanced hand, both options legal)", () => {
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 5, abilities: ["tight_bond"] });
+        const legalMoves = scoiataelPromptMoves();
+        const input = policyInput(legalMoves, {
+          ownHand: [filler],
+        });
+
+        expect(legalHeuristicPolicyV1.selectMove(input)).toEqual(
+          expect.objectContaining({ optionId: "scoiatael-first-player:self" }),
+        );
+      });
+
+      it("spy opener chooses self with reason spy_or_card_advantage_opener", () => {
+        const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 3 });
+        const legalMoves = scoiataelPromptMoves();
+        const input = policyInput(legalMoves, {
+          ownHand: [spy, filler],
+        });
+
+        expect(legalHeuristicPolicyV1.selectMove(input)).toEqual(
+          expect.objectContaining({ optionId: "scoiatael-first-player:self" }),
+        );
+      });
+
+      it("muster opener chooses self with reason muster_or_thinning_opener", () => {
+        const muster = testCard({
+          cardId: "muster",
+          sourceId: "test.muster",
+          printedStrength: 2,
+          abilities: ["muster"],
+          linkedSourceIds: ["test.muster.target"],
+        });
+        const target = testCard({ cardId: "target", sourceId: "test.muster.target", printedStrength: 4 });
+        const legalMoves = scoiataelPromptMoves();
+        const input = policyInput(legalMoves, {
+          ownHand: [muster, target],
+        });
+
+        expect(legalHeuristicPolicyV1.selectMove(input)).toEqual(
+          expect.objectContaining({ optionId: "scoiatael-first-player:self" }),
+        );
+      });
+
+      it("high tempo opener (strength 8+) chooses self", () => {
+        const strongUnit = testCard({ cardId: "strong", sourceId: "test.strong", printedStrength: 10 });
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 2 });
+        const legalMoves = scoiataelPromptMoves();
+        const input = policyInput(legalMoves, {
+          ownHand: [strongUnit, filler],
+        });
+
+        expect(legalHeuristicPolicyV1.selectMove(input)).toEqual(
+          expect.objectContaining({ optionId: "scoiatael-first-player:self" }),
+        );
+      });
+
+      it("reactive weather/scorch chooses opponent (weak proactive + reactive density)", () => {
+        const frost1 = testCard({ cardId: "frost1", sourceId: "test.frost1", printedStrength: 0, kind: "special", abilities: ["frost"] });
+        const frost2 = testCard({ cardId: "frost2", sourceId: "test.frost2", printedStrength: 0, kind: "special", abilities: ["frost"] });
+        const scorch = testCard({ cardId: "scorch", sourceId: "neutral.scorch", printedStrength: 0, kind: "special", abilities: ["scorch"] });
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 1 });
+        const legalMoves = scoiataelPromptMoves();
+        const input = policyInput(legalMoves, {
+          ownHand: [frost1, frost2, scorch, filler],
+        });
+
+        expect(legalHeuristicPolicyV1.selectMove(input)).toEqual(
+          expect.objectContaining({ optionId: "scoiatael-first-player:opponent" }),
+        );
+      });
+
+      it("only self option fallback selects self when opponent option missing", () => {
+        const legalMoves = scoiataelPromptMoves(true, false);
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 3 });
+        const input = policyInput(legalMoves, {
+          ownHand: [filler],
+        });
+
+        expect(legalHeuristicPolicyV1.selectMove(input)).toEqual(
+          expect.objectContaining({ optionId: "scoiatael-first-player:self" }),
+        );
+      });
+
+      it("only opponent option fallback selects opponent when self option missing", () => {
+        const legalMoves = scoiataelPromptMoves(false, true);
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 3 });
+        const input = policyInput(legalMoves, {
+          ownHand: [filler],
+        });
+
+        expect(legalHeuristicPolicyV1.selectMove(input)).toEqual(
+          expect.objectContaining({ optionId: "scoiatael-first-player:opponent" }),
+        );
+      });
+
+      it("v0 unchanged: still chooses self", () => {
+        const legalMoves = scoiataelPromptMoves();
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 3 });
+        const input = policyInput(legalMoves, {
+          ownHand: [filler],
+        });
+
+        expect(legalHeuristicPolicyV0.selectMove(input)).toEqual(
+          expect.objectContaining({ optionId: "scoiatael-first-player:self" }),
+        );
+      });
+
+      it("policy/explanation parity: selectMove and explain return the same option", () => {
+        const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 3 });
+        const legalMoves = scoiataelPromptMoves();
+        const input = policyInput(legalMoves, {
+          ownHand: [spy, filler],
+        });
+
+        const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+        const { move: explainedMove } = explainLegalHeuristicV1Decision(input);
+
+        expect(selectedMove).toEqual(explainedMove);
+      });
+
+      it("hidden-info shape: analysis contains counts/buckets/reason enums only", () => {
+        const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+        const frost = testCard({ cardId: "frost", sourceId: "test.frost", printedStrength: 0, kind: "special", abilities: ["frost"] });
+        const scorch = testCard({ cardId: "scorch", sourceId: "neutral.scorch", printedStrength: 0, kind: "special", abilities: ["scorch"] });
+        const muster = testCard({
+          cardId: "muster",
+          sourceId: "test.muster",
+          printedStrength: 2,
+          abilities: ["muster"],
+          linkedSourceIds: ["test.muster.target"],
+        });
+        const medic = testCard({ cardId: "medic", sourceId: "test.medic", printedStrength: 1, abilities: ["medic"] });
+        const decoy = testCard({ cardId: "decoy", sourceId: "test.decoy", printedStrength: 0, abilities: ["decoy"] });
+        const horn = testCard({ cardId: "horn", sourceId: "test.horn", printedStrength: 0, abilities: ["commanders_horn"] });
+        const filler = testCard({ cardId: "filler", sourceId: "test.filler", printedStrength: 3 });
+
+        const allCards = [spy, frost, scorch, muster, medic, decoy, horn, filler];
+        const legalMoves = scoiataelPromptMoves();
+        const input = policyInput(legalMoves, {
+          ownHand: allCards,
+        });
+
+        const { trace } = explainLegalHeuristicV1Decision(input);
+        const analysis = trace.scoiataelFirstTurnAnalysis;
+
+        expect(analysis).not.toBeNull();
+        expect(analysis!.recommendation).oneOf(["go_first", "let_opponent_start"]);
+        expect(analysis!.reasonKind).oneOf([
+          "only_legal_option",
+          "spy_or_card_advantage_opener",
+          "muster_or_thinning_opener",
+          "strong_tempo_opener",
+          "reactive_weather_or_scorch",
+          "weak_proactive_reactive_hand",
+          "default_go_first",
+        ]);
+        expect(analysis!.bestOpeningTempoBucket).oneOf(["none", "low", "medium", "high"]);
+        expect(typeof analysis!.initiativeScore).toBe("number");
+        expect(typeof analysis!.reactionScore).toBe("number");
+        expect(typeof analysis!.spyCount).toBe("number");
+        expect(typeof analysis!.musterCount).toBe("number");
+        expect(typeof analysis!.medicCount).toBe("number");
+        expect(typeof analysis!.weatherCount).toBe("number");
+        expect(typeof analysis!.scorchCount).toBe("number");
+        expect(typeof analysis!.decoyCount).toBe("number");
+        expect(typeof analysis!.hornCount).toBe("number");
+        expect(typeof analysis!.proactiveUnitOrHeroCount).toBe("number");
+        expect(typeof analysis!.reactiveSpecialCount).toBe("number");
+
+        const json = JSON.stringify(analysis);
+        expect(json).not.toContain("test.spy");
+        expect(json).not.toContain("test.frost");
+        expect(json).not.toContain("neutral.scorch");
+        expect(json).not.toContain("seat_a:");
+        expect(json).not.toContain("seat_b:");
+        expect(json).not.toContain("abilities");
+      });
+    });
+
     it("uses pass and last-gem strategy around opponent pass states", () => {
       const cheap = testCard({ cardId: "cheap", sourceId: "test.cheap", printedStrength: 3 });
       const large = testCard({ cardId: "large", sourceId: "test.large", printedStrength: 10 });
