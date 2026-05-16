@@ -684,6 +684,10 @@ export const choosePromptMove = (features: LegalHeuristicV1Features) => {
     return moves[0];
   }
 
+  if (abilityId === "scoiatael_choose_first") {
+    return moves.find((move) => move.optionId === "scoiatael-first-player:self") ?? moves[0] ?? null;
+  }
+
   if (abilityId === "discard_two_draw_one_from_deck") {
     const discardMoves = moves.filter((move) => move.target.kind === "card_instance_set");
     if (discardMoves.length > 0) {

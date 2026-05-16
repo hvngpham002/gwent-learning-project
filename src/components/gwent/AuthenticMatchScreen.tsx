@@ -1644,6 +1644,16 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     () => eventSlicesByCommandSequence(engine.commandHistory, engine.eventLog),
     [engine.commandHistory, engine.eventLog],
   );
+  const hasResolvedScoiataelFirstPlayerChoice = useMemo(
+    () =>
+      engine.commandHistory.some(
+        (record) =>
+          record.status === "applied" &&
+          record.command.type === "ChoosePromptOption" &&
+          record.command.optionId.startsWith("scoiatael-first-player:"),
+      ),
+    [engine.commandHistory],
+  );
   const latestHumanMulliganRecord = useMemo(
     () => latestAppliedMulligan(engine.commandHistory, humanSeat),
     [engine.commandHistory, humanSeat],
@@ -1680,7 +1690,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     };
   }, [activeMatchKey, completedHumanMulliganAnimationKey, engine.lastTransactionEvents, humanSeat, latestHumanMulliganRecord]);
   const pendingMulliganExitAnimation = useMemo<MulliganExitAnimation | null>(() => {
-    if (!latestAiMulliganRecord || match?.phase !== "playing") {
+    if (!latestAiMulliganRecord || match?.phase !== "playing" || hasResolvedScoiataelFirstPlayerChoice) {
       return null;
     }
     const firstRedrawRecord = latestAiMulliganRedrawBatch[0] ?? null;
@@ -1716,6 +1726,7 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
     aiSeat,
     commandEventsBySequence,
     completedMulliganAnimationKey,
+    hasResolvedScoiataelFirstPlayerChoice,
     latestAiMulliganRecord,
     latestAiMulliganRedrawBatch,
     match?.phase,
@@ -2869,8 +2880,11 @@ const AuthenticMatchScreen: React.FC<AuthenticMatchScreenProps> = ({ setupConfig
   const activeDropMoveId = handDragState?.kind === "dragging" ? handDragState.activeDropMoveId : null;
   const draggingCardId = handDragState?.kind === "dragging" ? handDragState.cardId : null;
   const dragHintLabel = handDragState?.kind === "dragging" ? selectedDragTargetView.rightRailLabel : null;
+  const isScoiataelFirstPlayerPrompt =
+    prompt?.abilityId === "scoiatael_choose_first" &&
+    prompt.stage === "scoiatael_first_player_choice";
 
-  if (match?.phase === "mulligan" || visibleMulliganExitAnimation) {
+  if ((match?.phase === "mulligan" && !isScoiataelFirstPlayerPrompt) || visibleMulliganExitAnimation) {
     return (
       <>
         <AuthenticMulliganScreen

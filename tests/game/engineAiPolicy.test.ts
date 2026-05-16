@@ -6,6 +6,7 @@ import {
   currentCatalogLeaders,
   currentNilfgaardDeckPreset,
   currentNorthernRealmsDeckPreset,
+  officialScoiataelStarterDeckPreset,
   officialSkelligeStarterDeckPreset,
 } from "@/data/catalog";
 import {
@@ -170,6 +171,8 @@ const baseObservation = (overrides: Partial<SeatObservation> = {}): SeatObservat
   currentTurn: "seat_b",
   ownFaction: "nilfgaard",
   opponentFaction: "northern_realms",
+  ownHasPostMulliganFirstPlayerChoice: false,
+  opponentHasPostMulliganFirstPlayerChoice: false,
   ownHand: [],
   ownDiscard: [],
   ownLeader: {
@@ -369,6 +372,78 @@ describe("engine AI policy", () => {
     );
     expect(observation.opponentHandCount).toBe(10);
     expect(JSON.stringify(observation)).not.toContain(match.seats.seat_a.hand[0]);
+  });
+
+  it("builds public post-mulligan Scoia'tael first-player choice metadata", () => {
+    const scoiataelVsNilfgaard = startMatch({
+      seed: "ai-observation-scoiatael-first",
+      seats: [
+        {
+          seatId: "seat_a",
+          playerId: "human",
+          controllerKind: "human",
+          faction: "scoiatael",
+          deckPreset: officialScoiataelStarterDeckPreset,
+        },
+        {
+          seatId: "seat_b",
+          playerId: "ai",
+          controllerKind: "ai",
+          faction: "nilfgaard",
+          deckPreset: currentNilfgaardDeckPreset,
+        },
+      ],
+      catalog: { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+    }).state;
+
+    const scoiataelObservation = buildSeatObservation({
+      state: scoiataelVsNilfgaard,
+      seatId: "seat_a",
+      catalogCards: currentCatalogCards,
+      catalogLeaders: currentCatalogLeaders,
+    });
+    const nilfgaardObservation = buildSeatObservation({
+      state: scoiataelVsNilfgaard,
+      seatId: "seat_b",
+      catalogCards: currentCatalogCards,
+      catalogLeaders: currentCatalogLeaders,
+    });
+
+    expect(scoiataelObservation.ownHasPostMulliganFirstPlayerChoice).toBe(true);
+    expect(scoiataelObservation.opponentHasPostMulliganFirstPlayerChoice).toBe(false);
+    expect(nilfgaardObservation.ownHasPostMulliganFirstPlayerChoice).toBe(false);
+    expect(nilfgaardObservation.opponentHasPostMulliganFirstPlayerChoice).toBe(true);
+
+    const scoiataelMirror = startMatch({
+      seed: "ai-observation-scoiatael-mirror",
+      seats: [
+        {
+          seatId: "seat_a",
+          playerId: "human",
+          controllerKind: "human",
+          faction: "scoiatael",
+          deckPreset: officialScoiataelStarterDeckPreset,
+        },
+        {
+          seatId: "seat_b",
+          playerId: "ai",
+          controllerKind: "ai",
+          faction: "scoiatael",
+          deckPreset: officialScoiataelStarterDeckPreset,
+        },
+      ],
+      catalog: { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+    }).state;
+
+    const mirrorObservation = buildSeatObservation({
+      state: scoiataelMirror,
+      seatId: "seat_a",
+      catalogCards: currentCatalogCards,
+      catalogLeaders: currentCatalogLeaders,
+    });
+
+    expect(mirrorObservation.ownHasPostMulliganFirstPlayerChoice).toBe(false);
+    expect(mirrorObservation.opponentHasPostMulliganFirstPlayerChoice).toBe(false);
   });
 
   it("builds observations with public linked metadata for own hand and visible board cards", () => {
@@ -729,6 +804,32 @@ describe("engine AI policy", () => {
           }),
         ),
       ).toEqual(expect.objectContaining({ optionId: "unknown:high" }));
+    });
+
+    it("chooses self for Scoia'tael first-player prompts", () => {
+      const legalMoves = [
+        promptMove("scoiatael-first-player:opponent", "scoiatael_choose_first", { kind: "none" }),
+        promptMove("scoiatael-first-player:self", "scoiatael_choose_first", { kind: "none" }),
+      ];
+      const input = policyInput(legalMoves, {
+        pendingPrompt: {
+          promptId: "prompt:test",
+          seatId: "seat_b",
+          kind: "choose_option",
+          abilityId: "scoiatael_choose_first",
+          options: [
+            { optionId: "scoiatael-first-player:opponent", label: "opponent goes first" },
+            { optionId: "scoiatael-first-player:self", label: "go first" },
+          ],
+        },
+      });
+
+      expect(legalHeuristicPolicyV1.selectMove(input)).toEqual(
+        expect.objectContaining({ optionId: "scoiatael-first-player:self" }),
+      );
+      expect(legalHeuristicPolicyV0.selectMove(input)).toEqual(
+        expect.objectContaining({ optionId: "scoiatael-first-player:self" }),
+      );
     });
 
     it("uses pass and last-gem strategy around opponent pass states", () => {

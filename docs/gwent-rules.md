@@ -238,7 +238,7 @@ Each faction's passive ability is always in effect.
 | **Monsters** | At the end of each round, **one Unit Card stays on the battlefield** (carrying over to the next round). To choose it, the controlling player shuffles all their Unit Cards on the battlefield **excluding Heroes**, and draws one at random. |
 | **Nilfgaard** | **Wins the round whenever there is a draw.** (Overrides the normal rule that both players lose a gem on a tie.) |
 | **Northern Realms** | **Draws a card from the deck whenever a round is won.** |
-| **Scoia'tael** | **Decides who goes first** at the start of the game (overrides the coin flip). |
+| **Scoia'tael** | **Decides who goes first** after both mulligans, before round 1 begins. |
 | **Skellige** | At the **start of the third round**, **two random Unit Cards, excluding Heroes**, are taken from the controlling player's **discard pile** and put on the battlefield. Shuffle the discard pile and choose two at random. |
 
 ---
@@ -1763,8 +1763,8 @@ points at this section.
 
 ### 17.15 Scoia'tael First-Player Rule
 
-- Scoia'tael's faction ability "Decides who goes first at the start of the game." This **overrides the coin flip**. **[Derived — Scoia'tael vs Scoia'tael:]** The rulebook doesn't specify a tiebreaker; in practice, coin flip presumably still resolves it.
-- **[Implemented (cCp32)]** The engine honors this in `startMatch`: when exactly one seat uses Scoia'tael, the starter is chosen (via `MatchConfig.scoiataelFirstPlayerChoice` or deterministic fallback to the Scoia'tael seat itself). The `turn_set` event uses `reason: "scoiatael_override"` and a `faction_ability_resolved` event with `ability: "scoiatael_choose_first"` is emitted. When both seats are Scoia'tael, the engine falls back to seeded `initial_roll`. The product pre-game UI exposes a first-player selector when the human plays Scoia'tael against a non-Scoia'tael opponent.
+- Scoia'tael's faction ability "Decides who goes first at the start of the game." This **overrides the coin flip** after both players know their final mulliganed hands. **[Derived — Scoia'tael vs Scoia'tael:]** The rulebook doesn't specify a tiebreaker; in practice, coin flip presumably still resolves it.
+- **[Implemented (cCp32.1)]** `startMatch` always records a seeded `initial_roll`. After both mulligans complete, when exactly one seat uses Scoia'tael, the engine opens a `scoiatael_first_player_choice` prompt for that seat. Choosing `self` or `opponent` sets `currentTurn` for round 1, emits `faction_ability_resolved` with `ability: "scoiatael_choose_first"` and `policy: "post_mulligan_choice"`, emits `turn_set` with `reason: "scoiatael_override"`, and transitions to `playing`. The product pre-game UI does not expose this choice. When both seats are Scoia'tael, or neither seat is Scoia'tael, the seeded `initial_roll` stands.
 
 ### 17.16 Northern Realms Card-Draw Trigger
 
