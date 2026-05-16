@@ -1,6 +1,6 @@
 {
   "averageCommands": 32.791666666666664,
-  "averageLegalMoves": 7.698207169905571,
+  "averageLegalMoves": 7.680557741935151,
   "averageSteps": 32.791666666666664,
   "benchmarkRunId": "benchmark-v1-starter-matrix-v1:latest",
   "completionRate": 1,
@@ -12,15 +12,15 @@
     "official-skellige-starter"
   ],
   "errorCodeCounts": {},
-  "leaderUseCount": 49,
+  "leaderUseCount": 50,
   "matchupSummaries": [
     {
-      "averageCommands": 29,
-      "averageLegalMoves": 7.727533960292582,
-      "averageSteps": 29,
+      "averageCommands": 29.166666666666668,
+      "averageLegalMoves": 7.712715870761848,
+      "averageSteps": 29.166666666666668,
       "leaderUseCount": 0,
       "matchupId": "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1",
-      "promptCount": 4,
+      "promptCount": 5,
       "resultCountsByDeck": {
         "official-monsters-starter": {
           "draws": 1,
@@ -101,10 +101,10 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 29.833333333333332,
-      "averageLegalMoves": 7.310323292247652,
-      "averageSteps": 29.833333333333332,
-      "leaderUseCount": 2,
+      "averageCommands": 29.333333333333332,
+      "averageLegalMoves": 7.380333300160886,
+      "averageSteps": 29.333333333333332,
+      "leaderUseCount": 3,
       "matchupId": "starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0",
       "promptCount": 1,
       "resultCountsByDeck": {
@@ -231,7 +231,7 @@
     },
     {
       "averageCommands": 32.666666666666664,
-      "averageLegalMoves": 7.00332975020475,
+      "averageLegalMoves": 6.98770475020475,
       "averageSteps": 32.666666666666664,
       "leaderUseCount": 0,
       "matchupId": "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1",
@@ -359,9 +359,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 36,
-      "averageLegalMoves": 6.912276354958571,
-      "averageSteps": 36,
+      "averageCommands": 35.333333333333336,
+      "averageLegalMoves": 6.941302518853156,
+      "averageSteps": 35.333333333333336,
       "leaderUseCount": 6,
       "matchupId": "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0",
       "promptCount": 16,
@@ -531,9 +531,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 38.166666666666664,
-      "averageLegalMoves": 8.30360925514987,
-      "averageSteps": 38.166666666666664,
+      "averageCommands": 37.5,
+      "averageLegalMoves": 8.16888877849391,
+      "averageSteps": 37.5,
       "leaderUseCount": 4,
       "matchupId": "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1",
       "promptCount": 7,
@@ -703,9 +703,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 33.333333333333336,
-      "averageLegalMoves": 8.02149527043415,
-      "averageSteps": 33.333333333333336,
+      "averageCommands": 32.833333333333336,
+      "averageLegalMoves": 8.097751832154914,
+      "averageSteps": 32.833333333333336,
       "leaderUseCount": 2,
       "matchupId": "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0",
       "promptCount": 6,
@@ -789,38 +789,38 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 29.333333333333332,
-      "averageLegalMoves": 7.052702338917687,
-      "averageSteps": 29.333333333333332,
+      "averageCommands": 31.5,
+      "averageLegalMoves": 6.712233169129721,
+      "averageSteps": 31.5,
       "leaderUseCount": 0,
       "matchupId": "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1",
-      "promptCount": 6,
+      "promptCount": 8,
       "resultCountsByDeck": {
         "official-scoiatael-starter": {
           "draws": 0,
-          "losses": 5,
+          "losses": 6,
           "none": 0,
-          "wins": 1
+          "wins": 0
         },
         "official-skellige-starter": {
           "draws": 0,
-          "losses": 1,
+          "losses": 0,
           "none": 0,
-          "wins": 5
+          "wins": 6
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 5,
+          "losses": 6,
           "none": 0,
-          "wins": 1
+          "wins": 0
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 1,
+          "losses": 0,
           "none": 0,
-          "wins": 5
+          "wins": 6
         }
       },
       "statusCounts": {
@@ -833,7 +833,7 @@
     },
     {
       "averageCommands": 29,
-      "averageLegalMoves": 7.018430936034892,
+      "averageLegalMoves": 6.995782379072609,
       "averageSteps": 29,
       "leaderUseCount": 0,
       "matchupId": "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0",
@@ -841,29 +841,29 @@
       "resultCountsByDeck": {
         "official-scoiatael-starter": {
           "draws": 0,
-          "losses": 1,
+          "losses": 2,
           "none": 0,
-          "wins": 5
+          "wins": 4
         },
         "official-skellige-starter": {
           "draws": 0,
-          "losses": 5,
+          "losses": 4,
           "none": 0,
-          "wins": 1
+          "wins": 2
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 5,
+          "losses": 4,
           "none": 0,
-          "wins": 1
+          "wins": 2
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 1,
+          "losses": 2,
           "none": 0,
-          "wins": 5
+          "wins": 4
         }
       },
       "statusCounts": {
@@ -880,7 +880,7 @@
     "legal-heuristic-v0",
     "legal-heuristic-v1"
   ],
-  "promptCount": 124,
+  "promptCount": 127,
   "replayCheckedCount": 120,
   "replayFailedCount": 0,
   "resultCountsByDeck": {
@@ -904,15 +904,15 @@
     },
     "official-scoiatael-starter": {
       "draws": 2,
-      "losses": 26,
+      "losses": 28,
       "none": 0,
-      "wins": 20
+      "wins": 18
     },
     "official-skellige-starter": {
       "draws": 0,
-      "losses": 18,
+      "losses": 16,
       "none": 0,
-      "wins": 30
+      "wins": 32
     }
   },
   "resultCountsByPolicy": {

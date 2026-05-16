@@ -32,6 +32,11 @@ export interface AuthenticMatchSetupConfig {
   readonly aiPolicyId: ProductAiPolicyId;
   readonly catalogCards?: readonly CatalogCardSource[];
   readonly catalogLeaders?: readonly CatalogLeaderSource[];
+  /**
+   * cCp32: Scoia'tael first-player choice at product layer.
+   * "human" means the human seat starts, "opponent" means the AI seat starts.
+   */
+  readonly scoiataelFirstPlayerChoice?: "human" | "opponent";
 }
 
 export interface PreGameDeckOptionViewModel {
@@ -275,6 +280,8 @@ export const buildSetupConfig = (input: {
   readonly aiPolicyId?: ProductAiPolicyId;
   readonly catalogCards?: readonly CatalogCardSource[];
   readonly catalogLeaders?: readonly CatalogLeaderSource[];
+  // cCp32: Scoia'tael first-player choice at product layer.
+  readonly scoiataelFirstPlayerChoice?: "human" | "opponent";
 }): AuthenticMatchSetupConfig => {
   const config: AuthenticMatchSetupConfig = {
     humanDeckPresetId: input.humanDeckPresetId,
@@ -286,6 +293,7 @@ export const buildSetupConfig = (input: {
     aiPolicyId: input.aiPolicyId ?? DEFAULT_PRODUCT_AI_POLICY_ID,
     ...(input.catalogCards ? { catalogCards: input.catalogCards } : {}),
     ...(input.catalogLeaders ? { catalogLeaders: input.catalogLeaders } : {}),
+    ...(input.scoiataelFirstPlayerChoice ? { scoiataelFirstPlayerChoice: input.scoiataelFirstPlayerChoice } : {}),
   };
   const withHuman = input.humanDeckPreset ? { ...config, humanDeckPreset: input.humanDeckPreset } : config;
   return input.opponentDeckFaction
@@ -293,16 +301,42 @@ export const buildSetupConfig = (input: {
     : withHuman;
 };
 
-export const setupConfigToStartEngineOptions = (config: AuthenticMatchSetupConfig): StartEngineMatchOptions => ({
-  seed: config.seed,
-  humanDeckPresetId: config.humanDeckPresetId,
-  ...(config.humanDeckPreset ? { humanDeckPreset: config.humanDeckPreset } : {}),
-  aiDeckPresetId: config.opponentDeckPresetId,
-  humanSeat: "seat_a",
-  aiSeat: "seat_b",
-  playerIds: { seat_a: "human", seat_b: "ai" },
-  controllerKinds: { seat_a: "human", seat_b: "ai" },
-  aiPolicyId: config.aiPolicyId,
-  ...(config.catalogCards ? { catalogCards: config.catalogCards } : {}),
-  ...(config.catalogLeaders ? { catalogLeaders: config.catalogLeaders } : {}),
-});
+/**
+ * cCp32: Determine if Scoia'tael first-player choice should be shown.
+ * Returns true only when human deck is Scoia'tael and opponent is not.
+ */
+export const shouldShowScoiataelFirstPlayerChoice = (
+  humanFaction: CatalogFaction,
+  opponentFaction: CatalogFaction,
+): boolean => humanFaction === "scoiatael" && opponentFaction !== "scoiatael";
+
+/**
+ * cCp32: Default first-player choice when Scoia'tael is the human seat.
+ * Defaults to human starting first.
+ */
+export const getDefaultScoiataelFirstPlayerChoice = (): "human" | "opponent" => "human";
+
+export const setupConfigToStartEngineOptions = (config: AuthenticMatchSetupConfig): StartEngineMatchOptions => {
+  // cCp32: map Scoia'tael first-player choice to engine format.
+  const scoiataelFirstPlayerChoice = config.scoiataelFirstPlayerChoice
+    ? {
+        choosingSeatId: "seat_a" as const,
+        startingSeatId: config.scoiataelFirstPlayerChoice === "human" ? ("seat_a" as const) : ("seat_b" as const),
+      }
+    : undefined;
+
+  return {
+    seed: config.seed,
+    humanDeckPresetId: config.humanDeckPresetId,
+    ...(config.humanDeckPreset ? { humanDeckPreset: config.humanDeckPreset } : {}),
+    aiDeckPresetId: config.opponentDeckPresetId,
+    humanSeat: "seat_a",
+    aiSeat: "seat_b",
+    playerIds: { seat_a: "human", seat_b: "ai" },
+    controllerKinds: { seat_a: "human", seat_b: "ai" },
+    aiPolicyId: config.aiPolicyId,
+    ...(config.catalogCards ? { catalogCards: config.catalogCards } : {}),
+    ...(config.catalogLeaders ? { catalogLeaders: config.catalogLeaders } : {}),
+    ...(scoiataelFirstPlayerChoice ? { scoiataelFirstPlayerChoice } : {}),
+  };
+};

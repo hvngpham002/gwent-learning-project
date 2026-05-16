@@ -1764,6 +1764,7 @@ points at this section.
 ### 17.15 Scoia'tael First-Player Rule
 
 - Scoia'tael's faction ability "Decides who goes first at the start of the game." This **overrides the coin flip**. **[Derived — Scoia'tael vs Scoia'tael:]** The rulebook doesn't specify a tiebreaker; in practice, coin flip presumably still resolves it.
+- **[Implemented (cCp32)]** The engine honors this in `startMatch`: when exactly one seat uses Scoia'tael, the starter is chosen (via `MatchConfig.scoiataelFirstPlayerChoice` or deterministic fallback to the Scoia'tael seat itself). The `turn_set` event uses `reason: "scoiatael_override"` and a `faction_ability_resolved` event with `ability: "scoiatael_choose_first"` is emitted. When both seats are Scoia'tael, the engine falls back to seeded `initial_roll`. The product pre-game UI exposes a first-player selector when the human plays Scoia'tael against a non-Scoia'tael opponent.
 
 ### 17.16 Northern Realms Card-Draw Trigger
 

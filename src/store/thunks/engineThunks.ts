@@ -16,6 +16,7 @@ import {
   type ControllerKind,
   type EngineCommand,
   type MatchConfig,
+  type ScoiataelFirstPlayerChoice,
   type SeatId,
 } from "@/game/core";
 import {
@@ -46,6 +47,7 @@ export interface StartEngineMatchOptions {
   aiPolicyId?: ProductAiPolicyId;
   playerIds?: Partial<Record<SeatId, string>>;
   controllerKinds?: Partial<Record<SeatId, ControllerKind>>;
+  scoiataelFirstPlayerChoice?: ScoiataelFirstPlayerChoice;
 }
 
 const toAdapterError = (error: unknown): EngineAdapterError => {
@@ -82,6 +84,7 @@ const createDefaultConfig = ({
   catalogLeaders = currentCatalogLeaders,
   playerIds = {},
   controllerKinds = {},
+  scoiataelFirstPlayerChoice,
 }: StartEngineMatchOptions): MatchConfig => {
   const presetById = new Map<string, CatalogDeckPreset>(currentDeckPresets.map((preset) => [preset.presetId, preset]));
   const findPreset = (presetId: string | undefined, fallback: CatalogDeckPreset) => {
@@ -120,6 +123,7 @@ const createDefaultConfig = ({
       cards: catalogCards,
       leaders: catalogLeaders,
     },
+    ...(scoiataelFirstPlayerChoice ? { scoiataelFirstPlayerChoice } : {}),
   };
 };
 

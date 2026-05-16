@@ -10,7 +10,7 @@ import {
   currentNorthernRealmsDeckPreset,
   officialScoiataelStarterDeckPreset,
 } from "@/data/catalog";
-import { executeCommand, startMatch, type GameEvent, type MatchConfig } from "@/game/core";
+import { executeCommand, startMatch, type GameEvent, type MatchConfig, type SeatId } from "@/game/core";
 
 const createConfig = (seed: string | number): MatchConfig => ({
   matchId: `test-${seed}`,
@@ -301,12 +301,32 @@ describe("scoiatael first-player choice", () => {
 
   it("invalid starting seat is rejected", () => {
     expect(() =>
-      startMatch(
-        createScoiataelConfig("seat_a", {
-          scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_a" },
-        }),
-      ),
-    ).not.toThrow(); // valid config
+      startMatch({
+        matchId: "test-invalid-starting-seat",
+        seed: "test-scoiatael-seed",
+        seats: [
+          {
+            seatId: "seat_a",
+            playerId: "player-a",
+            controllerKind: "human",
+            faction: "scoiatael",
+            deckPreset: officialScoiataelStarterDeckPreset,
+          },
+          {
+            seatId: "seat_b",
+            playerId: "player-b",
+            controllerKind: "ai",
+            faction: "nilfgaard",
+            deckPreset: currentNilfgaardDeckPreset,
+          },
+        ],
+        catalog: {
+          cards: currentCatalogCards,
+          leaders: currentCatalogLeaders,
+        },
+        scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_c" as SeatId },
+      }),
+    ).toThrow(/startingSeatId.*seat_c.*not a configured seat/);
   });
 
   it("same seed + same choice is deterministic", () => {
@@ -317,5 +337,20 @@ describe("scoiatael first-player choice", () => {
     const t2 = startMatch(config);
     expect(t1.state.currentTurn).toBe(t2.state.currentTurn);
     expect(t1.state.seats.seat_a.hand).toEqual(t2.state.seats.seat_a.hand);
+  });
+
+  it("same seed + different valid choices changes only starter-sensitive fields", () => {
+    const configA = createScoiataelConfig("seat_a", {
+      scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_a" },
+    });
+    const configB = createScoiataelConfig("seat_a", {
+      scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_b" },
+    });
+    const tA = startMatch(configA);
+    const tB = startMatch(configB);
+    expect(tA.state.currentTurn).toBe("seat_a");
+    expect(tB.state.currentTurn).toBe("seat_b");
+    expect(tA.state.seats.seat_a.hand).toEqual(tB.state.seats.seat_a.hand);
+    expect(tA.state.seats.seat_a.deck).toEqual(tB.state.seats.seat_a.deck);
   });
 });

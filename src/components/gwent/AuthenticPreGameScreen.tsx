@@ -16,8 +16,10 @@ import {
   buildPreGameRoundOptions,
   buildSetupConfig,
   getDefaultPreGameSelection,
+  getDefaultScoiataelFirstPlayerChoice,
   getSuggestedOpponentPresetId,
   seedFromSearch,
+  shouldShowScoiataelFirstPlayerChoice,
   type AuthenticMatchSetupConfig,
 } from "./preGameViewModel";
 import type { CardStudioBlockedSources, CardStudioSourceSets } from "./cardStudioTypes";
@@ -60,12 +62,16 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
   const [aiPolicyId, setAiPolicyId] = useState(defaults.aiPolicyId);
   const [seed, setSeed] = useState(() => seedFromSearch(search));
   const [copyLabel, setCopyLabel] = useState("copy");
+  // cCp32: Scoia'tael first-player choice state
+  const [scoiataelFirstPlayerChoice, setScoiataelFirstPlayerChoice] = useState<"human" | "opponent" | null>(null);
   const modeOptions = useMemo(() => buildPreGameModeOptions(aiPolicyId), [aiPolicyId]);
   const aiPolicyOptions = useMemo(() => buildPreGameAiPolicyOptions(), []);
   const selectedAiPolicy = aiPolicyOptions.find((option) => option.id === aiPolicyId) ?? aiPolicyOptions[0];
 
   const selectedDeck = deckOptions.find((option) => option.optionId === humanDeckOptionId) ?? deckOptions[0];
   const selectedOpponent = opponentOptions.find((option) => option.presetId === opponentDeckPresetId) ?? opponentOptions[1] ?? opponentOptions[0];
+  // cCp32: Scoia'tael first-player choice visibility
+  const showScoiataelChoice = shouldShowScoiataelFirstPlayerChoice(selectedDeck?.faction, selectedOpponent?.faction);
   const selectedRound = roundOptions.find((option) => option.id === roundId) ?? null;
   const selectedFormat = formatOptions.find((option) => option.id === formatId) ?? null;
   const canBegin = Boolean(selectedDeck?.ready && selectedOpponent?.ready && selectedRound?.available && selectedFormat?.available);
@@ -104,6 +110,10 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
       aiPolicyId,
       catalogCards: sourceSets.cards,
       catalogLeaders: sourceSets.leaders,
+      // cCp32: Scoia'tael first-player choice (defaults to human starting).
+      scoiataelFirstPlayerChoice: showScoiataelChoice
+        ? (scoiataelFirstPlayerChoice ?? getDefaultScoiataelFirstPlayerChoice())
+        : undefined,
     });
     setSeed(String(config.seed));
     onBeginMatch(config);
@@ -320,6 +330,30 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
                 </div>
               </div>
 
+              {showScoiataelChoice ? (
+                <div>
+                  <div className="authentic-pregame__section-label">First turn</div>
+                  <div className="authentic-pregame__segments authentic-pregame__segments--format">
+                    <button
+                      type="button"
+                      data-testid="authentic-pregame-scoiatael-first-you"
+                      className={`authentic-button authentic-button--choice authentic-button--compact authentic-pregame__segment-option${(scoiataelFirstPlayerChoice ?? getDefaultScoiataelFirstPlayerChoice()) === "human" ? " is-selected" : ""}`}
+                      onClick={() => setScoiataelFirstPlayerChoice("human")}
+                    >
+                      you
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="authentic-pregame-scoiatael-first-opponent"
+                      className={`authentic-button authentic-button--choice authentic-button--compact authentic-pregame__segment-option${(scoiataelFirstPlayerChoice ?? getDefaultScoiataelFirstPlayerChoice()) === "opponent" ? " is-selected" : ""}`}
+                      onClick={() => setScoiataelFirstPlayerChoice("opponent")}
+                    >
+                      opponent
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
               <label className="authentic-pregame__field authentic-pregame__seed-field">
                 <span>Seed</span>
                 <div className="authentic-pregame__seed-row">
@@ -351,6 +385,7 @@ const AuthenticPreGameScreen: React.FC<AuthenticPreGameScreenProps> = ({
           <p>
             {selectedDeck?.name ?? "Deck"} vs {selectedOpponent?.name ?? "Opponent"} · Human vs AI · {selectedRound?.name ?? "choose round"} ·{" "}
             {selectedFormat?.name ?? "choose format"} · seed {seedLabel} · {aiPolicyId}
+            {showScoiataelChoice ? ` · ${scoiataelFirstPlayerChoice ?? getDefaultScoiataelFirstPlayerChoice()} starts` : ""}
           </p>
           <button
             type="button"

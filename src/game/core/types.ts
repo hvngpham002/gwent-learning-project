@@ -112,6 +112,15 @@ export interface MatchSeatConfig {
   deckPreset: CatalogDeckPreset;
 }
 
+/**
+ * cCp32: Scoia'tael first-player choice.
+ * When exactly one seat is Scoia'tael, that seat may choose who starts.
+ */
+export interface ScoiataelFirstPlayerChoice {
+  readonly choosingSeatId: SeatId;
+  readonly startingSeatId: SeatId;
+}
+
 export interface MatchConfig {
   matchId?: string;
   seed: string | number;
@@ -120,6 +129,11 @@ export interface MatchConfig {
     cards: readonly CatalogCardSource[];
     leaders: readonly CatalogLeaderSource[];
   };
+  /**
+   * cCp32: Optional explicit first-player choice for Scoia'tael.
+   * Honored only when exactly one seat is Scoia'tael.
+   */
+  scoiataelFirstPlayerChoice?: ScoiataelFirstPlayerChoice;
 }
 
 export type PendingPromptStage =
@@ -355,7 +369,8 @@ export type GameEvent =
         | "nilfgaard_draw_win"
         | "monsters_keep_unit"
         | "northern_realms_draw_on_win"
-        | "skellige_round_3_return";
+        | "skellige_round_3_return"
+        | "scoiatael_choose_first";
       outcome: string;
       cardIds?: CardInstanceId[];
       eligibleCount?: number;
