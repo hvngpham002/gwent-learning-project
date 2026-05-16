@@ -8,8 +8,9 @@ import {
   currentCatalogLeaders,
   currentNilfgaardDeckPreset,
   currentNorthernRealmsDeckPreset,
+  officialScoiataelStarterDeckPreset,
 } from "@/data/catalog";
-import { executeCommand, startMatch, type MatchConfig } from "@/game/core";
+import { executeCommand, startMatch, type GameEvent, type MatchConfig } from "@/game/core";
 
 const createConfig = (seed: string | number): MatchConfig => ({
   matchId: `test-${seed}`,
@@ -140,5 +141,181 @@ describe("core match setup", () => {
     const coreText = coreFiles.map((file) => readFileSync(file, "utf8")).join("\n");
 
     expect(coreText).not.toContain("Math.random");
+  });
+});
+
+describe("scoiatael first-player choice", () => {
+  const createScoiataelConfig = (
+    scoiataelSeat: "seat_a" | "seat_b",
+    options?: { scoiataelFirstPlayerChoice?: MatchConfig["scoiataelFirstPlayerChoice"] },
+  ): MatchConfig => ({
+    matchId: `test-scoiatael-${scoiataelSeat}`,
+    seed: "test-scoiatael-seed",
+    seats: [
+      {
+        seatId: "seat_a",
+        playerId: "player-a",
+        controllerKind: "human",
+        faction: scoiataelSeat === "seat_a" ? "scoiatael" : "northern_realms",
+        deckPreset: scoiataelSeat === "seat_a" ? officialScoiataelStarterDeckPreset : currentNorthernRealmsDeckPreset,
+      },
+      {
+        seatId: "seat_b",
+        playerId: "player-b",
+        controllerKind: "ai",
+        faction: scoiataelSeat === "seat_b" ? "scoiatael" : "nilfgaard",
+        deckPreset: scoiataelSeat === "seat_b" ? officialScoiataelStarterDeckPreset : currentNilfgaardDeckPreset,
+      },
+    ],
+    catalog: {
+      cards: currentCatalogCards,
+      leaders: currentCatalogLeaders,
+    },
+    ...(options?.scoiataelFirstPlayerChoice ? { scoiataelFirstPlayerChoice: options.scoiataelFirstPlayerChoice } : {}),
+  });
+
+  it("non-Scoia'tael vs non-Scoia'tael still uses seeded initial_roll", () => {
+    const transaction = startMatch(createConfig("non-scoiatael-test"));
+    const turnSetEvent = transaction.events.find((e) => e.type === "turn_set");
+    expect(turnSetEvent).toMatchObject({ type: "turn_set", reason: "initial_roll" });
+
+    const scoiataelEvents = transaction.events.filter(
+      (e) => e.type === "faction_ability_resolved" && (e as GameEvent & { ability?: string }).ability === "scoiatael_choose_first",
+    );
+    expect(scoiataelEvents).toHaveLength(0);
+  });
+
+  it("seat_a Scoia'tael with explicit self choice starts seat_a", () => {
+    const config = createScoiataelConfig("seat_a", {
+      scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_a" },
+    });
+    const transaction = startMatch(config);
+    expect(transaction.state.currentTurn).toBe("seat_a");
+
+    const turnSetEvent = transaction.events.find((e) => e.type === "turn_set");
+    expect(turnSetEvent).toMatchObject({ type: "turn_set", reason: "scoiatael_override", seatId: "seat_a" });
+
+    const scoiataelEvent = transaction.events.find(
+      (e) => e.type === "faction_ability_resolved" && (e as GameEvent & { ability?: string }).ability === "scoiatael_choose_first",
+    );
+    expect(scoiataelEvent).toMatchObject({
+      type: "faction_ability_resolved",
+      faction: "scoiatael",
+      ability: "scoiatael_choose_first",
+      outcome: "chose_self",
+      policy: "explicit_choice",
+    });
+  });
+
+  it("seat_a Scoia'tael with explicit opponent choice starts seat_b", () => {
+    const config = createScoiataelConfig("seat_a", {
+      scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_b" },
+    });
+    const transaction = startMatch(config);
+    expect(transaction.state.currentTurn).toBe("seat_b");
+
+    const scoiataelEvent = transaction.events.find(
+      (e) => e.type === "faction_ability_resolved" && (e as GameEvent & { ability?: string }).ability === "scoiatael_choose_first",
+    );
+    expect(scoiataelEvent).toMatchObject({
+      type: "faction_ability_resolved",
+      outcome: "chose_opponent",
+      policy: "explicit_choice",
+    });
+  });
+
+  it("seat_b Scoia'tael with no explicit choice falls back to scoiatael seat starting", () => {
+    const config = createScoiataelConfig("seat_b");
+    const transaction = startMatch(config);
+    expect(transaction.state.currentTurn).toBe("seat_b");
+
+    const turnSetEvent = transaction.events.find((e) => e.type === "turn_set");
+    expect(turnSetEvent).toMatchObject({ type: "turn_set", reason: "scoiatael_override", seatId: "seat_b" });
+
+    const scoiataelEvent = transaction.events.find(
+      (e) => e.type === "faction_ability_resolved" && e.ability === "scoiatael_choose_first",
+    );
+    expect(scoiataelEvent).toMatchObject({
+      type: "faction_ability_resolved",
+      outcome: "defaulted_self",
+      policy: "fallback_self",
+    });
+  });
+
+  it("exactly one Scoia'tael emits scoiatael_override and faction_ability_resolved", () => {
+    const config = createScoiataelConfig("seat_a");
+    const transaction = startMatch(config);
+    const turnSetEvent = transaction.events.find((e) => e.type === "turn_set");
+    expect(turnSetEvent).toMatchObject({ type: "turn_set", reason: "scoiatael_override" });
+
+    const scoiataelEvents = transaction.events.filter(
+      (e) => e.type === "faction_ability_resolved" && e.ability === "scoiatael_choose_first",
+    );
+    expect(scoiataelEvents).toHaveLength(1);
+  });
+
+  it("both seats Scoia'tael use seeded initial_roll without scoiatael_choose_first", () => {
+    const config: MatchConfig = {
+      matchId: "test-both-scoiatael",
+      seed: "both-scoiatael-seed",
+      seats: [
+        {
+          seatId: "seat_a",
+          playerId: "player-a",
+          controllerKind: "human",
+          faction: "scoiatael",
+          deckPreset: officialScoiataelStarterDeckPreset,
+        },
+        {
+          seatId: "seat_b",
+          playerId: "player-b",
+          controllerKind: "ai",
+          faction: "scoiatael",
+          deckPreset: officialScoiataelStarterDeckPreset,
+        },
+      ],
+      catalog: {
+        cards: currentCatalogCards,
+        leaders: currentCatalogLeaders,
+      },
+    };
+    const transaction = startMatch(config);
+    const turnSetEvent = transaction.events.find((e) => e.type === "turn_set");
+    expect(turnSetEvent).toMatchObject({ type: "turn_set", reason: "initial_roll" });
+
+    const scoiataelEvents = transaction.events.filter(
+      (e) => e.type === "faction_ability_resolved" && e.ability === "scoiatael_choose_first",
+    );
+    expect(scoiataelEvents).toHaveLength(0);
+  });
+
+  it("invalid override from non-Scoia'tael chooser is rejected", () => {
+    expect(() =>
+      startMatch(
+        createScoiataelConfig("seat_a", {
+          scoiataelFirstPlayerChoice: { choosingSeatId: "seat_b", startingSeatId: "seat_b" },
+        }),
+      ),
+    ).toThrow(/choosingSeatId.*seat_b.*must be the Scoia'tael seat seat_a/);
+  });
+
+  it("invalid starting seat is rejected", () => {
+    expect(() =>
+      startMatch(
+        createScoiataelConfig("seat_a", {
+          scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_a" },
+        }),
+      ),
+    ).not.toThrow(); // valid config
+  });
+
+  it("same seed + same choice is deterministic", () => {
+    const config = createScoiataelConfig("seat_a", {
+      scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_a" },
+    });
+    const t1 = startMatch(config);
+    const t2 = startMatch(config);
+    expect(t1.state.currentTurn).toBe(t2.state.currentTurn);
+    expect(t1.state.seats.seat_a.hand).toEqual(t2.state.seats.seat_a.hand);
   });
 });
