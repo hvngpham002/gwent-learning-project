@@ -136,6 +136,10 @@ export const buildSeatObservation = ({
   // cFp26: expose public faction info for tie-aware catch-up logic.
   const ownFaction = seat.faction;
   const opponentFaction = opponent.faction;
+  const ownHasPostMulliganFirstPlayerChoice =
+    ownFaction === "scoiatael" && opponentFaction !== "scoiatael";
+  const opponentHasPostMulliganFirstPlayerChoice =
+    ownFaction !== "scoiatael" && opponentFaction === "scoiatael";
 
   return {
     seatId,
@@ -145,6 +149,8 @@ export const buildSeatObservation = ({
     currentTurn: state.currentTurn,
     ownFaction,
     opponentFaction,
+    ownHasPostMulliganFirstPlayerChoice,
+    opponentHasPostMulliganFirstPlayerChoice,
     ownHand: summarizeCards(state, seat.hand, cardsBySourceId),
     ownLeader: {
       leaderCardId: seat.leader,

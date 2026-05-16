@@ -34,7 +34,7 @@ import { isEligibleWeatherSourceForLeader, isWeatherLeaderAbility } from "./lead
 import { getLegalMoves, type LegalMoveTarget } from "./legalMoves";
 import { createSeededRngFromState, shuffleWithRng } from "./rng";
 import { calculateScores, findSpecialScorchTargets, findUnitScorchRowTargets } from "./scoring";
-import { startMatch } from "./setup";
+import { getScoiataelFirstPlayerEligibility, startMatch } from "./setup";
 import type {
   CardInstanceId,
   EngineCommand,
@@ -324,9 +324,35 @@ const chooseMulligan = (input: StatefulCommandInput): EngineTransaction => {
   }
 
   if (state.seats.seat_a.mulliganComplete && state.seats.seat_b.mulliganComplete) {
-    const from = state.phase;
-    state.phase = "playing";
-    events.push({ type: "phase_changed", from, to: state.phase, reason: "mulligan_complete" });
+    // cCp32.1: After both mulligans complete, check for Scoia'tael first-player choice.
+    const scoiataelEligibility = getScoiataelFirstPlayerEligibility(state);
+    if (scoiataelEligibility.kind === "choice") {
+      const prompt = {
+        promptId: `scoiatael-first-player:${state.matchId}:${state.round}`,
+        seatId: scoiataelEligibility.choosingSeatId,
+        kind: "choose_option" as const,
+        abilityId: "scoiatael_choose_first",
+        stage: "scoiatael_first_player_choice" as const,
+        options: [
+          {
+            optionId: "scoiatael-first-player:self",
+            label: "go first",
+            target: { kind: "none" as const },
+          },
+          {
+            optionId: "scoiatael-first-player:opponent",
+            label: "opponent goes first",
+            target: { kind: "none" as const },
+          },
+        ],
+      };
+      state.pendingPrompt = prompt;
+      events.push({ type: "prompt_opened", prompt });
+    } else {
+      const from = state.phase;
+      state.phase = "playing";
+      events.push({ type: "phase_changed", from, to: state.phase, reason: "mulligan_complete" });
+    }
   }
 
   return { state, events };
@@ -2026,6 +2052,87 @@ const choosePromptOption = (input: StatefulCommandInput): EngineTransaction => {
         prompt: replay.prompt ?? replay.state.pendingPrompt ?? undefined,
       };
     }
+  }
+
+  // cCp32.1: Scoia'tael post-mulligan first-player choice resolution.
+  if (
+    prompt.kind === "choose_option" &&
+    prompt.abilityId === "scoiatael_choose_first" &&
+    prompt.stage === "scoiatael_first_player_choice"
+  ) {
+    const option = prompt.options.find((entry) => entry.optionId === command.optionId);
+    if (!option || option.target.kind !== "none") {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Scoia'tael first-player prompt option has an unexpected target shape.",
+        { command, promptId: prompt.promptId },
+      );
+    }
+    if (
+      command.optionId !== "scoiatael-first-player:self" &&
+      command.optionId !== "scoiatael-first-player:opponent"
+    ) {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Scoia'tael first-player prompt only accepts self/opponent options.",
+        { command, promptId: prompt.promptId, optionId: command.optionId },
+      );
+    }
+    if (input.state.phase !== "mulligan") {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Scoia'tael first-player choice can only resolve in mulligan phase.",
+        { command, phase: input.state.phase },
+      );
+    }
+
+    const scoiataelEligibility = getScoiataelFirstPlayerEligibility(input.state);
+    if (scoiataelEligibility.kind !== "choice") {
+      throw new EngineRuleError(
+        "illegal_command",
+        "Scoia'tael first-player prompt requires exactly one Scoia'tael seat.",
+        { command },
+      );
+    }
+
+    const choosingSeatId = scoiataelEligibility.choosingSeatId;
+    const startingSeatId =
+      command.optionId === "scoiatael-first-player:self"
+        ? choosingSeatId
+        : scoiataelEligibility.opponentSeatId;
+    const outcome =
+      command.optionId === "scoiatael-first-player:self"
+        ? "chose_self"
+        : "chose_opponent";
+
+    const scoState = cloneState(input.state);
+    const scoEvents: GameEvent[] = [];
+    scoState.pendingPrompt = null;
+
+    scoEvents.push({
+      type: "prompt_resolved",
+      promptId: prompt.promptId,
+      seatId: choosingSeatId,
+      optionId: command.optionId,
+    });
+    scoEvents.push({
+      type: "faction_ability_resolved",
+      faction: "scoiatael",
+      seatId: choosingSeatId,
+      ability: "scoiatael_choose_first",
+      outcome,
+      policy: "post_mulligan_choice",
+    });
+
+    scoState.roundStarter = startingSeatId;
+    scoState.currentTurn = startingSeatId;
+    scoEvents.push({ type: "turn_set", seatId: startingSeatId, reason: "scoiatael_override" });
+
+    const from = scoState.phase;
+    scoState.phase = "playing";
+    scoEvents.push({ type: "phase_changed", from, to: "playing", reason: "mulligan_complete" });
+
+    return { state: scoState, events: scoEvents, prompt: scoState.pendingPrompt ?? undefined };
   }
 
   const state = cloneState(input.state);

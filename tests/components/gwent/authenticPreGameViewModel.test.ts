@@ -10,12 +10,10 @@ import {
   buildPreGameRoundOptions,
   buildSetupConfig,
   getDefaultPreGameSelection,
-  getDefaultScoiataelFirstPlayerChoice,
   getSuggestedOpponentPresetId,
   normalizePreGameSeed,
-  seedFromSearch,
   setupConfigToStartEngineOptions,
-  shouldShowScoiataelFirstPlayerChoice,
+  seedFromSearch,
 } from "@/components/gwent/preGameViewModel";
 import { currentCatalogCards, currentCatalogLeaders, currentNorthernRealmsDeckPreset } from "@/data/catalog";
 import { DEFAULT_PRODUCT_AI_POLICY_ID } from "@/game/ai";
@@ -268,86 +266,4 @@ describe("authentic pre-game view model", () => {
     );
   });
 
-  // cCp32: Scoia'tael first-player choice tests
-  describe("scoiatael first-player choice", () => {
-    it("shouldShowScoiataelFirstPlayerChoice only for human Scoia'tael vs non-Scoia'tael", () => {
-      expect(shouldShowScoiataelFirstPlayerChoice("scoiatael", "nilfgaard")).toBe(true);
-      expect(shouldShowScoiataelFirstPlayerChoice("scoiatael", "northern_realms")).toBe(true);
-      expect(shouldShowScoiataelFirstPlayerChoice("scoiatael", "scoiatael")).toBe(false);
-      expect(shouldShowScoiataelFirstPlayerChoice("nilfgaard", "scoiatael")).toBe(false);
-      expect(shouldShowScoiataelFirstPlayerChoice("northern_realms", "nilfgaard")).toBe(false);
-    });
-
-    it("defaults scoiatael first-player choice to human", () => {
-      expect(getDefaultScoiataelFirstPlayerChoice()).toBe("human");
-    });
-
-    it("builds setup config with scoiatael human-first choice", () => {
-      const config = buildSetupConfig({
-        humanDeckPresetId: "official-scoiatael-starter",
-        opponentDeckPresetId: "current-nilfgaard",
-        roundId: "standard",
-        formatId: "best-of-3",
-        seed: "scoi-test",
-        scoiataelFirstPlayerChoice: "human",
-      });
-      expect(config.scoiataelFirstPlayerChoice).toBe("human");
-
-      const engineOptions = setupConfigToStartEngineOptions(config);
-      expect(engineOptions.scoiataelFirstPlayerChoice).toEqual({
-        choosingSeatId: "seat_a",
-        startingSeatId: "seat_a",
-      });
-    });
-
-    it("builds setup config with scoiatael opponent-first choice", () => {
-      const config = buildSetupConfig({
-        humanDeckPresetId: "official-scoiatael-starter",
-        opponentDeckPresetId: "current-nilfgaard",
-        roundId: "standard",
-        formatId: "best-of-3",
-        seed: "scoi-test",
-        scoiataelFirstPlayerChoice: "opponent",
-      });
-
-      const engineOptions = setupConfigToStartEngineOptions(config);
-      expect(engineOptions.scoiataelFirstPlayerChoice).toEqual({
-        choosingSeatId: "seat_a",
-        startingSeatId: "seat_b",
-      });
-    });
-
-    it("omits scoiataelFirstPlayerChoice when not provided", () => {
-      const config = buildSetupConfig({
-        humanDeckPresetId: "current-northern-realms",
-        opponentDeckPresetId: "current-nilfgaard",
-        roundId: "standard",
-        formatId: "best-of-3",
-        seed: "no-scoi-test",
-      });
-
-      expect(config.scoiataelFirstPlayerChoice).toBeUndefined();
-      expect(setupConfigToStartEngineOptions(config).scoiataelFirstPlayerChoice).toBeUndefined();
-    });
-
-    it("existing setup config mapping remains unchanged for non-Scoia'tael decks", () => {
-      const config = buildSetupConfig({
-        humanDeckPresetId: "current-northern-realms",
-        opponentDeckPresetId: "current-nilfgaard",
-        roundId: "standard",
-        formatId: "best-of-3",
-        seed: "normal-test",
-      });
-
-      expect(config).toEqual({
-        humanDeckPresetId: "current-northern-realms",
-        opponentDeckPresetId: "current-nilfgaard",
-        modeId: "human-vs-ai",
-        roundId: "standard",
-        formatId: "best-of-3",
-        seed: "normal-test",
-        aiPolicyId: DEFAULT_PRODUCT_AI_POLICY_ID,
-      });
-    });
-  });
-});
+ });

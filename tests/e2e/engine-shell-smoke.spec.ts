@@ -430,38 +430,40 @@ test("authentic UI harness mounts on the canonical route", async ({ page }) => {
  expect(pageErrors).toEqual([]);
 });
 
-test("cCp32 Scoia'tael pre-game shows first-turn selector and match reaches mulligan", async ({ page }) => {
+test("cCp32.1 Scoia'tael chooses first turn after mulligan", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
-  await page.goto("/?seed=ccp32-scoiatael-e2e");
+  await page.goto("/?seed=ccp321-scoiatael-e2e");
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
 
-  // Select the Official Scoia'tael Starter deck
   const scoiataelDeck = page
     .getByTestId("authentic-pregame-deck-option")
     .filter({ hasText: "Official Scoia'tael Starter" });
   await expect(scoiataelDeck).toBeVisible();
   await scoiataelDeck.click();
 
-  // The first-turn selector should appear for Scoia'tael vs non-Scoia'tael
-  await expect(page.getByTestId("authentic-pregame-scoiatael-first-you")).toBeVisible();
-  await expect(page.getByTestId("authentic-pregame-scoiatael-first-opponent")).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-scoiatael-first-you")).toHaveCount(0);
+  await expect(page.getByTestId("authentic-pregame-scoiatael-first-opponent")).toHaveCount(0);
 
-  // Choose opponent first
-  await page.getByTestId("authentic-pregame-scoiatael-first-opponent").click();
-  await expect(page.getByTestId("authentic-pregame-scoiatael-first-opponent")).toHaveClass(/is-selected/);
-
-  // Footer summary should reflect the choice
-  await expect(page.locator(".authentic-pregame__summary")).toContainText(/opponent starts/i);
-
-  // Begin match
   await page.getByTestId("authentic-pregame-begin").click();
 
-  // Assert the match reaches mulligan without error
   await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
-  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed ccp32-scoiatael-e2e/i);
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed ccp321-scoiatael-e2e/i);
+  await page.getByTestId("authentic-confirm-mulligan").click();
 
-  // Hidden-info safety
+  const firstTurnPrompt = page.getByTestId("authentic-prompt");
+  await expect(firstTurnPrompt).toBeVisible({ timeout: 15000 });
+  await expect(firstTurnPrompt).toContainText("Scoia'tael first turn");
+  await expect(firstTurnPrompt).toContainText("Choose who starts round 1.");
+  await expect(firstTurnPrompt.getByRole("button", { name: "go first" })).toBeVisible();
+  await expect(firstTurnPrompt.getByRole("button", { name: "opponent goes first" })).toBeVisible();
+
+  await firstTurnPrompt.getByRole("button", { name: "opponent goes first" }).click();
+
+  await expect(firstTurnPrompt).toHaveCount(0);
+  await expect(page.getByTestId("authentic-match-screen")).toBeVisible();
+  await expect(page.locator(".authentic-match__seed")).toContainText(/Seed ccp321-scoiatael-e2e/i);
+
   const pageText = await visiblePageText(page);
   expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
 

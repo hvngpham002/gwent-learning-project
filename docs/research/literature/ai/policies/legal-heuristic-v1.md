@@ -620,3 +620,20 @@ Key changes:
   against v0 (changed from cFp31 9/3/0).
 - Starter matrix (`benchmark-v1-starter-matrix-v1`): 102 wins, 16 losses,
   2 draws against v0 (changed from cFp31 103/15/2).
+
+### Scoia'tael First-Player Prompt (cCp32.1)
+
+cCp32.1 moves the Scoia'tael faction first-player choice from pre-game setup
+to a post-mulligan engine prompt. `legal-heuristic-v1` resolves
+`scoiatael_choose_first` deterministically with `scoiatael-first-player:self`
+for now. This is intentionally simple: no faction-specific mulligan/first-turn
+strategy has been tuned yet.
+
+The public seat observation now exposes:
+
+- `ownHasPostMulliganFirstPlayerChoice`
+- `opponentHasPostMulliganFirstPlayerChoice`
+
+Both fields are derived only from public faction identity. They exist so a
+future Cluster F phase can make mulligan decisions with the first-player choice
+in mind without leaking hidden cards.

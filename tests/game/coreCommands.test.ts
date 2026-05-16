@@ -5,6 +5,7 @@ import {
   currentCatalogLeaders,
   currentNilfgaardDeckPreset,
   currentNorthernRealmsDeckPreset,
+  officialScoiataelStarterDeckPreset,
 } from "@/data/catalog";
 import {
   EngineRuleError,
@@ -189,6 +190,115 @@ describe("core command transactions", () => {
 
     expect(afterB.state.phase).toBe("playing");
     expect(afterB.state.currentTurn).toBe(firstTurn);
+  });
+
+  // cCp32.1: Scoia'tael post-mulligan first-player choice tests
+  it("opens scoiatael prompt after both mulligans when seat_a is Scoia'tael", () => {
+    const scoiConfig: MatchConfig = {
+      matchId: "test-scoi-cmd",
+      seed: "scoi-cmd-seed",
+      seats: [
+        {
+          seatId: "seat_a",
+          playerId: "player-a",
+          controllerKind: "human",
+          faction: "scoiatael",
+          deckPreset: officialScoiataelStarterDeckPreset,
+        },
+        {
+          seatId: "seat_b",
+          playerId: "player-b",
+          controllerKind: "ai",
+          faction: "nilfgaard",
+          deckPreset: currentNilfgaardDeckPreset,
+        },
+      ],
+      catalog: { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+    };
+    const state = startMatch(scoiConfig).state;
+    const afterA = execute(state, { type: "ChooseMulligan", seatId: "seat_a", cardIds: [] }).state;
+    const afterB = execute(afterA, { type: "ChooseMulligan", seatId: "seat_b", cardIds: [] });
+
+    expect(afterB.state.phase).toBe("mulligan");
+    expect(afterB.state.pendingPrompt).toBeDefined();
+    expect(afterB.state.pendingPrompt?.stage).toBe("scoiatael_first_player_choice");
+  });
+
+  it("resolves scoiatael prompt with self option sets currentTurn to scoiatael seat", () => {
+    const scoiConfig: MatchConfig = {
+      matchId: "test-scoi-self",
+      seed: "scoi-self-seed",
+      seats: [
+        {
+          seatId: "seat_a",
+          playerId: "player-a",
+          controllerKind: "human",
+          faction: "scoiatael",
+          deckPreset: officialScoiataelStarterDeckPreset,
+        },
+        {
+          seatId: "seat_b",
+          playerId: "player-b",
+          controllerKind: "ai",
+          faction: "nilfgaard",
+          deckPreset: currentNilfgaardDeckPreset,
+        },
+      ],
+      catalog: { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+    };
+    const state = startMatch(scoiConfig).state;
+    const afterA = execute(state, { type: "ChooseMulligan", seatId: "seat_a", cardIds: [] }).state;
+    const afterB = execute(afterA, { type: "ChooseMulligan", seatId: "seat_b", cardIds: [] });
+
+    expect(afterB.state.pendingPrompt?.stage).toBe("scoiatael_first_player_choice");
+    const scoiPrompt = afterB.state.pendingPrompt!;
+    const resolved = execute(afterB.state, { type: "ChoosePromptOption", seatId: "seat_a", promptId: scoiPrompt.promptId, optionId: "scoiatael-first-player:self" });
+
+    expect(resolved.state.currentTurn).toBe("seat_a");
+    expect(resolved.state.phase).toBe("playing");
+    expect(resolved.state.pendingPrompt).toBeNull();
+    expect(resolved.events).toContainEqual(
+      expect.objectContaining({ type: "faction_ability_resolved", ability: "scoiatael_choose_first", outcome: "chose_self" }),
+    );
+    expect(resolved.events).toContainEqual(
+      expect.objectContaining({ type: "turn_set", reason: "scoiatael_override", seatId: "seat_a" }),
+    );
+  });
+
+  it("resolves scoiatael prompt with opponent option sets currentTurn to opponent seat", () => {
+    const scoiConfig: MatchConfig = {
+      matchId: "test-scoi-opp",
+      seed: "scoi-opp-seed",
+      seats: [
+        {
+          seatId: "seat_a",
+          playerId: "player-a",
+          controllerKind: "human",
+          faction: "scoiatael",
+          deckPreset: officialScoiataelStarterDeckPreset,
+        },
+        {
+          seatId: "seat_b",
+          playerId: "player-b",
+          controllerKind: "ai",
+          faction: "nilfgaard",
+          deckPreset: currentNilfgaardDeckPreset,
+        },
+      ],
+      catalog: { cards: currentCatalogCards, leaders: currentCatalogLeaders },
+    };
+    const state = startMatch(scoiConfig).state;
+    const afterA = execute(state, { type: "ChooseMulligan", seatId: "seat_a", cardIds: [] }).state;
+    const afterB = execute(afterA, { type: "ChooseMulligan", seatId: "seat_b", cardIds: [] });
+
+    const scoiPromptOpp = afterB.state.pendingPrompt!;
+    const resolved = execute(afterB.state, { type: "ChoosePromptOption", seatId: "seat_a", promptId: scoiPromptOpp.promptId, optionId: "scoiatael-first-player:opponent" });
+
+    expect(resolved.state.currentTurn).toBe("seat_b");
+    expect(resolved.state.phase).toBe("playing");
+    expect(resolved.events).toContainEqual(
+      expect.objectContaining({ type: "turn_set", reason: "scoiatael_override", seatId: "seat_b" }),
+    );
   });
 
   it("rejects an illegal mulligan card without mutating state", () => {

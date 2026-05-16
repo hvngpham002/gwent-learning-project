@@ -69,6 +69,10 @@ export interface SeatObservation {
   // Safe to expose — faction is public information visible to both players.
   ownFaction: CatalogFaction;
   opponentFaction: CatalogFaction;
+  // cCp32.1: public post-mulligan Scoia'tael first-player choice metadata.
+  // Safe to expose because it is derived only from public faction identity.
+  ownHasPostMulliganFirstPlayerChoice: boolean;
+  opponentHasPostMulliganFirstPlayerChoice: boolean;
   ownHand: SeatCardSummary[];
   ownLeader: {
     leaderCardId: CardInstanceId | null;

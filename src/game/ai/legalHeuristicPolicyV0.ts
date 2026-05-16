@@ -38,6 +38,15 @@ const choosePromptMove = (input: EnginePolicyInput) => {
     return reactionCancel;
   }
 
+  const scoiataelSelf = promptMoves.find(
+    (move) =>
+      move.metadata.abilityId === "scoiatael_choose_first" &&
+      move.optionId === "scoiatael-first-player:self",
+  );
+  if (scoiataelSelf) {
+    return scoiataelSelf;
+  }
+
   const optionStrength = new Map(
     input.observation.pendingPrompt?.options.map((option) => [option.optionId, option.targetStrength ?? 0]) ?? [],
   );

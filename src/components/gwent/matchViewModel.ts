@@ -239,6 +239,7 @@ export interface PromptPresentationViewModel {
     | "discard_two_draw_one_from_deck"
     | "look_three_cards"
     | "medic_revive"
+    | "scoiatael_choose_first"
     | "generic";
 }
 
@@ -1032,6 +1033,16 @@ export const buildPromptPresentationViewModel = ({
       sourceLabel,
       options,
       kind: "look_three_cards",
+    };
+  }
+
+  if (prompt.abilityId === "scoiatael_choose_first") {
+    return {
+      title: "Scoia'tael first turn",
+      body: "Choose who starts round 1.",
+      sourceLabel,
+      options,
+      kind: "scoiatael_choose_first",
     };
   }
 
