@@ -340,6 +340,14 @@ export const summarizeEvents = ({
       // the suppression scope is the current round only. Render in the same
       // style as the look-three-cards count-only summary.
       label = `${seatLabels[event.seatId]} cancelled ${seatLabels[event.targetSeatId]} leader for round ${event.round}`;
+    } else if (event.type === "faction_ability_resolved" && event.ability === "scoiatael_choose_first") {
+      // cCp32 scoiatael first-player summary. Public — only the outcome
+      // direction is relevant; no card IDs or hidden state is exposed.
+      if (event.outcome === "chose_opponent") {
+        label = "Scoia'tael chose opponent to take first turn";
+      } else {
+        label = "Scoia'tael chose to take first turn";
+      }
     } else if (event.type === "round_resolved") {
       label = `Round ${event.round} resolved: ${seatLabel(event.winner, seatLabels)}`;
     } else if (event.type === "game_ended") {

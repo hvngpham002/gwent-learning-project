@@ -256,6 +256,23 @@ describe("engine shell view models", () => {
     ]);
   });
 
+  it("summarizes scoiatael_choose_first faction ability events safely (cCp32)", () => {
+    const events: GameEvent[] = [
+      { type: "faction_ability_resolved", faction: "scoiatael", seatId: "seat_a", ability: "scoiatael_choose_first", outcome: "chose_self" },
+      { type: "faction_ability_resolved", faction: "scoiatael", seatId: "seat_a", ability: "scoiatael_choose_first", outcome: "chose_opponent" },
+      { type: "faction_ability_resolved", faction: "scoiatael", seatId: "seat_a", ability: "scoiatael_choose_first", outcome: "defaulted_self" },
+    ];
+
+    const summaries = summarizeEvents({ events, seatLabels });
+    expect(summaries[0].label).toBe("Scoia'tael chose to take first turn");
+    expect(summaries[1].label).toBe("Scoia'tael chose opponent to take first turn");
+    expect(summaries[2].label).toBe("Scoia'tael chose to take first turn");
+
+    // Verify no hidden info leaks
+    const combined = summaries.map((s) => s.label).join(" ");
+    expect(combined).not.toMatch(/instanceId|sourceId|seat_a:|seat_b:/);
+  });
+
   it("summarizes round-end score context and round history win/loss/draw rows", () => {
     expect(summarizeRoundEnd({ scoreBySeat: { seat_a: 20, seat_b: 18 }, seatLabels })).toEqual({
       label: "Human is winning. Human 20 - 18 AI.",

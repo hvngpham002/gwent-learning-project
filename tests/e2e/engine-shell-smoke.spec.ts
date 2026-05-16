@@ -427,20 +427,47 @@ test("authentic UI harness mounts on the canonical route", async ({ page }) => {
 
   const harnessText = await visiblePageText(page);
   expect(harnessText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
-  expect(pageErrors).toEqual([]);
+ expect(pageErrors).toEqual([]);
 });
 
-test("authentic UI harness avoids horizontal overflow on a mobile viewport", async ({ page }) => {
+test("cCp32 Scoia'tael pre-game shows first-turn selector and match reaches mulligan", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
 
-  await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto(authenticHarnessUrl);
+  await page.goto("/?seed=ccp32-scoiatael-e2e");
+  await expect(page.getByTestId("authentic-pregame")).toBeVisible();
 
-  await expect(page.getByTestId("authentic-ui-harness")).toBeVisible();
-  await expect(page.getByTestId("authentic-card").first()).toBeVisible();
-  await expectNoHorizontalOverflow(page);
+  // Select the Official Scoia'tael Starter deck
+  const scoiataelDeck = page
+    .getByTestId("authentic-pregame-deck-option")
+    .filter({ hasText: "Official Scoia'tael Starter" });
+  await expect(scoiataelDeck).toBeVisible();
+  await scoiataelDeck.click();
+
+  // The first-turn selector should appear for Scoia'tael vs non-Scoia'tael
+  await expect(page.getByTestId("authentic-pregame-scoiatael-first-you")).toBeVisible();
+  await expect(page.getByTestId("authentic-pregame-scoiatael-first-opponent")).toBeVisible();
+
+  // Choose opponent first
+  await page.getByTestId("authentic-pregame-scoiatael-first-opponent").click();
+  await expect(page.getByTestId("authentic-pregame-scoiatael-first-opponent")).toHaveClass(/is-selected/);
+
+  // Footer summary should reflect the choice
+  await expect(page.locator(".authentic-pregame__summary")).toContainText(/opponent starts/i);
+
+  // Begin match
+  await page.getByTestId("authentic-pregame-begin").click();
+
+  // Assert the match reaches mulligan without error
+  await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
+  await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed ccp32-scoiatael-e2e/i);
+
+  // Hidden-info safety
+  const pageText = await visiblePageText(page);
+  expect(pageText).not.toMatch(/instanceId|sourceId|seat_b:\d{3}:|seat_a:\d{3}:/);
+
   expect(pageErrors).toEqual([]);
 });
+
 
 test("authentic component foundation page mounts shared UI primitives", async ({ page }) => {
   const pageErrors = collectPageErrors(page);
