@@ -18,6 +18,7 @@ import {
   type AiDecisionPassDiagnosticsInput,
   type AiDecisionTraceFeatures,
   type AiDecisionWeatherPlacementAnalysis,
+  type AiDecisionScoiataelFirstTurnAnalysis,
 } from "@/game/ai";
 
 import {
@@ -41,6 +42,7 @@ import {
   medicReviveCandidateValue,
   MEDIC_WEAK_TARGET_UTILITY,
   MEDIC_MEDIUM_TARGET_UTILITY,
+  buildScoiataelFirstTurnChoiceDecision,
   type LegalHeuristicV1Features,
 } from "@/game/ai";
 
@@ -242,6 +244,7 @@ const buildPhaseTrace = (
   policyId: string,
   actionIndex: number,
   mulliganAnalysis: AiDecisionMulliganAnalysis | null = null,
+  scoiataelFirstTurnAnalysis: import("./decisionTrace").AiDecisionScoiataelFirstTurnAnalysis | null = null,
 ): { trace: import("./decisionTrace").AiDecisionTrace; reason: string } => {
   const publicState = buildAiDecisionPublicState(input);
   const selected = move ? buildAiDecisionSelectedMove(move, actionIndex) : null;
@@ -272,6 +275,7 @@ const buildPhaseTrace = (
       medicTimingAnalysis: null,
       weatherPlacementAnalysis: null,
       roundInvestmentAnalysis: null,
+      scoiataelFirstTurnAnalysis,
       selected,
       candidates: [],
       reasonKind: "phase",
@@ -515,6 +519,7 @@ const buildPlayingPhaseTrace = (
       medicTimingAnalysis,
       weatherPlacementAnalysis,
       roundInvestmentAnalysis,
+      scoiataelFirstTurnAnalysis: null,
       selected,
       candidates: topCandidates,
       reasonKind,
@@ -563,6 +568,7 @@ export const explainLegalHeuristicV1Decision = (
         medicTimingAnalysis: null,
         weatherPlacementAnalysis: null,
         roundInvestmentAnalysis: null,
+        scoiataelFirstTurnAnalysis: null,
         selected: null,
         candidates: [],
         reasonKind: "none",
@@ -580,13 +586,56 @@ export const explainLegalHeuristicV1Decision = (
     features.promptMoves.length > 0 &&
     (move?.kind === "choose_prompt_option" || !features.passMove)
   ) {
-    phaseTrace = buildPhaseTrace(
-      input,
-      decisionIndex,
-      move,
-      policyId,
-      decisionIndex,
+    let scoiataelAnalysis: AiDecisionScoiataelFirstTurnAnalysis | null = null;
+    let scoiataelReason = "";
+    const scoiataelPromptMove = features.promptMoves.find(
+      (m) => m.metadata.abilityId === "scoiatael_choose_first",
     );
+    if (scoiataelPromptMove) {
+      const scoiataelDecision = buildScoiataelFirstTurnChoiceDecision(features);
+      scoiataelAnalysis = scoiataelDecision.analysis;
+      if (move && scoiataelAnalysis) {
+        if (scoiataelAnalysis.recommendation === "go_first") {
+          if (scoiataelAnalysis.reasonKind === "spy_or_card_advantage_opener") {
+            scoiataelReason = "Scoia'tael chooses first: spy/card-advantage opener";
+          } else if (scoiataelAnalysis.reasonKind === "muster_or_thinning_opener") {
+            scoiataelReason = "Scoia'tael chooses first: muster/thinning opener";
+          } else if (scoiataelAnalysis.reasonKind === "strong_tempo_opener") {
+            scoiataelReason = "Scoia'tael chooses first: strong tempo opener";
+          } else {
+            scoiataelReason = "Scoia'tael chooses first: default go-first bias";
+          }
+        } else {
+          if (scoiataelAnalysis.reasonKind === "reactive_weather_or_scorch") {
+            scoiataelReason = "Scoia'tael lets opponent start: reactive weather/scorch hand";
+          } else {
+            scoiataelReason = "Scoia'tael lets opponent start: weak proactive reactive hand";
+          }
+        }
+      }
+    }
+    if (scoiataelAnalysis) {
+      phaseTrace = buildPhaseTrace(
+        input,
+        decisionIndex,
+        move,
+        policyId,
+        decisionIndex,
+        null,
+        scoiataelAnalysis,
+      );
+      if (scoiataelReason) {
+        phaseTrace = { trace: { ...phaseTrace.trace, reason: scoiataelReason }, reason: scoiataelReason };
+      }
+    } else {
+      phaseTrace = buildPhaseTrace(
+        input,
+        decisionIndex,
+        move,
+        policyId,
+        decisionIndex,
+      );
+    }
   } else if (features.phase === "mulligan") {
     const { candidates: mulliganCandidates, selectedMove } = buildMulliganAnalysis(features);
     const topCandidate = mulliganCandidates.length > 0 ? mulliganCandidates[0] : null;

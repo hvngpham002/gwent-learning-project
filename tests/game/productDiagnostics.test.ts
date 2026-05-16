@@ -8,6 +8,7 @@ import {
   scanMedicTimingAnalysis,
   scanRoundInvestmentAnalysis,
   scanWeatherPlacementAnalysis,
+  scanScoiataelFirstTurnAnalysis,
 } from "@/components/gwent/matchDiagnostics";
 import { engineDiagnosticTraceAppended, engineMatchStarted } from "@/store/slices/engineSlice";
 import { configureStore } from "@reduxjs/toolkit";
@@ -2258,5 +2259,174 @@ describe("cFp31: round-investment scan", () => {
 
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
     expect(exportData.hiddenInfoSafetyScan.issues).toHaveLength(0);
+  });
+});
+
+describe("cFp33: scoia'tael first-turn analysis scan", () => {
+  const safeScoiataelAnalysis = {
+    promptLegal: true,
+    selfOptionLegal: true,
+    opponentOptionLegal: true,
+    recommendation: "go_first",
+    reasonKind: "spy_or_card_advantage_opener",
+    initiativeScore: 45,
+    reactionScore: 6,
+    bestOpeningTempoBucket: "medium",
+    spyCount: 1,
+    musterCount: 0,
+    medicCount: 0,
+    weatherCount: 0,
+    scorchCount: 0,
+    decoyCount: 0,
+    hornCount: 0,
+    proactiveUnitOrHeroCount: 2,
+    reactiveSpecialCount: 0,
+  };
+
+  it("passes for safe scoiataelFirstTurnAnalysis", () => {
+    const issues = scanScoiataelFirstTurnAnalysis(safeScoiataelAnalysis);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("rejects raw source ID embedded in scoiataelFirstTurnAnalysis subtree", () => {
+    const issues = scanScoiataelFirstTurnAnalysis({
+      ...safeScoiataelAnalysis,
+      leakedSourceId: "scoiatael.mahakaman-defender",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("raw source ID"))).toBe(true);
+  });
+
+  it("rejects raw card name embedded in scoiataelFirstTurnAnalysis subtree", () => {
+    const issues = scanScoiataelFirstTurnAnalysis({
+      ...safeScoiataelAnalysis,
+      leakedCardName: "Mahakaman Defender",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.some((i) => i.includes("raw card name"))).toBe(true);
+  });
+
+  it("rejects abilities array in scoiataelFirstTurnAnalysis", () => {
+    const issues = scanScoiataelFirstTurnAnalysis({
+      ...safeScoiataelAnalysis,
+      abilities: ["spy", "medic"],
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("rejects raw instance ID in scoiataelFirstTurnAnalysis", () => {
+    const issues = scanScoiataelFirstTurnAnalysis({
+      ...safeScoiataelAnalysis,
+      leakedInstanceId: "seat_a:abc123",
+    });
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("allows safe enum strings", () => {
+    const goFirst = {
+      ...safeScoiataelAnalysis,
+      recommendation: "go_first",
+      reasonKind: "default_go_first",
+      bestOpeningTempoBucket: "high",
+    };
+    const issues1 = scanScoiataelFirstTurnAnalysis(goFirst);
+    expect(issues1).toHaveLength(0);
+
+    const letOpponentChoice = {
+      ...safeScoiataelAnalysis,
+      recommendation: "let_opponent_start",
+      reasonKind: "reactive_weather_or_scorch",
+    };
+    const issues2 = scanScoiataelFirstTurnAnalysis(letOpponentChoice);
+    expect(issues2).toHaveLength(0);
+  });
+
+  it("full buildProductDiagnosticExport with safe scoiataelFirstTurnAnalysis passes hidden-info scan", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp33-scoiatael-safe",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "scoiatael",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 0,
+            opponentScore: 0,
+            scoreDelta: 0,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 5,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 0,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          scoiataelFirstTurnAnalysis: {
+            promptLegal: true,
+            selfOptionLegal: true,
+            opponentOptionLegal: true,
+            recommendation: "go_first",
+            reasonKind: "spy_or_card_advantage_opener",
+            initiativeScore: 45,
+            reactionScore: 6,
+            bestOpeningTempoBucket: "medium",
+            spyCount: 1,
+            musterCount: 0,
+            medicCount: 0,
+            weatherCount: 0,
+            scorchCount: 0,
+            decoyCount: 0,
+            hornCount: 0,
+            proactiveUnitOrHeroCount: 2,
+            reactiveSpecialCount: 0,
+          },
+          selected: {
+            kind: "choose_prompt_option",
+            label: "resolve prompt option",
+            actionRef: "action_0",
+            targetKind: "none",
+          },
+          candidates: [],
+          reasonKind: "phase",
+          reason: "Scoia'tael chooses first: spy/card-advantage opener",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const json = JSON.stringify(exportData);
+    expect(json).toContain("scoiataelFirstTurnAnalysis");
+    expect(json).toContain("spy_or_card_advantage_opener");
+    expect(json).not.toContain("seat_a:");
+    expect(json).not.toContain("seat_b:");
+    expect(json).not.toContain("mahakaman-defender");
   });
 });

@@ -472,6 +472,92 @@ export const scanRoundInvestmentAnalysis = (
 };
 
 // ---------------------------------------------------------------------------
+// Scoia'tael first-turn analysis scan (cFp33)
+// ---------------------------------------------------------------------------
+
+/**
+ * Checks whether an object looks like a scoiataelFirstTurnAnalysis object
+ * (identified by promptLegal boolean plus recommendation string).
+ */
+const isScoiataelFirstTurnAnalysis = (obj: Record<string, unknown>): boolean =>
+  typeof obj.promptLegal === "boolean" &&
+  typeof obj.recommendation === "string" &&
+  typeof obj.reasonKind === "string" &&
+  typeof obj.initiativeScore === "number";
+
+// scoiataelFirstTurnAnalysis only contains safe enum strings, counts, and scores.
+// Safe enums: go_first, let_opponent_start, only_legal_option, spy_or_card_advantage_opener,
+// muster_or_thinning_opener, strong_tempo_opener, reactive_weather_or_scorch,
+// weak_proactive_reactive_hand, default_go_first
+// Tempo bucket: none, low, medium, high
+const SCOIATAEL_FIRST_TURN_SAFE_STRINGS = new Set([
+  "go_first", "let_opponent_start",
+  "only_legal_option", "spy_or_card_advantage_opener",
+  "muster_or_thinning_opener", "strong_tempo_opener",
+  "reactive_weather_or_scorch", "weak_proactive_reactive_hand", "default_go_first",
+  "none", "low", "medium", "high",
+]);
+
+/**
+ * Scoia'tael first-turn analysis scan for hidden-info leaks.
+ * Rejects raw source IDs (namespace.name), raw instance IDs (seat_a:.../seat_b:...),
+ * raw card names, and raw ability arrays. Allows only safe enum strings.
+ */
+export const scanScoiataelFirstTurnAnalysis = (
+  value: unknown,
+  path = "$",
+  insideScoiatael = false,
+): string[] => {
+  const issues: string[] = [];
+
+  if (typeof value === "string") {
+    if (insideScoiatael) {
+      if (!SCOIATAEL_FIRST_TURN_SAFE_STRINGS.has(value)) {
+        if (/^[a-z][a-z0-9-]*\.[a-z][a-z0-9.-]*$/.test(value)) {
+          issues.push(`scoiataelFirstTurnAnalysis at "${path}" contains raw source ID "${value}"`);
+        } else if (RAW_INSTANCE_PATTERN.test(value)) {
+          issues.push(`scoiataelFirstTurnAnalysis at "${path}" contains raw instance ID "${value}"`);
+        } else if (/^[A-Z][a-z]+(?:[':\s]+[-\w]+)*$/.test(value) && value.length > 2) {
+          issues.push(`scoiataelFirstTurnAnalysis at "${path}" contains raw card name "${value}"`);
+        }
+      }
+    }
+    return issues;
+  }
+
+  if (Array.isArray(value)) {
+    if (insideScoiatael) {
+      issues.push(`unexpected array at "${path}" in scoiataelFirstTurnAnalysis — possible raw ability list`);
+    }
+    value.forEach((item, index) => {
+      issues.push(...scanScoiataelFirstTurnAnalysis(item, `${path}[${index}]`, insideScoiatael));
+    });
+    return issues;
+  }
+
+  if (typeof value !== "object" || value === null) {
+    return issues;
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  if (isScoiataelFirstTurnAnalysis(obj)) {
+    for (const [, v] of Object.entries(obj)) {
+      issues.push(...scanScoiataelFirstTurnAnalysis(v, path, true));
+    }
+    return issues;
+  }
+
+  for (const [, nested] of Object.entries(obj)) {
+    if (typeof nested === "object" && nested !== null) {
+      issues.push(...scanScoiataelFirstTurnAnalysis(nested, path, false));
+    }
+  }
+
+  return issues;
+};
+
+// ---------------------------------------------------------------------------
 // Build command/event summaries (hidden-info safe, running offset)
 // ---------------------------------------------------------------------------
 
@@ -592,7 +678,9 @@ export const buildProductDiagnosticExport = (
   // cFp31 repair: additional round-investment-specific scan for raw source IDs,
   // instance IDs, and ability arrays in roundInvestmentAnalysis aggregates.
   const roundInvestmentScanIssues = scanRoundInvestmentAnalysis(fullExportObj);
-  const allIssues = [...scanIssues, ...mulliganScanIssues, ...medicTimingScanIssues, ...weatherPlacementScanIssues, ...roundInvestmentScanIssues];
+  // cFp33: additional scoiatael-first-turn-analysis-specific scan.
+  const scoiataelScanIssues = scanScoiataelFirstTurnAnalysis(fullExportObj);
+  const allIssues = [...scanIssues, ...mulliganScanIssues, ...medicTimingScanIssues, ...weatherPlacementScanIssues, ...roundInvestmentScanIssues, ...scoiataelScanIssues];
 
   return {
     schemaVersion: PRODUCT_DIAGNOSTICS_SCHEMA_VERSION,

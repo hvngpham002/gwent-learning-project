@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp32 for product playtesting.",
-    latestPhase: "cFp32",
-    latestSpecPath: "docs/spec/2026-05-15-cFp32-specs.md",
-    latestReportPath: "audit/reports/2026-05-15-cFp32-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp33 for product playtesting.",
+    latestPhase: "cFp33",
+    latestSpecPath: "docs/spec/2026-05-17-cFp33-specs.md",
+    latestReportPath: "audit/reports/2026-05-17-cFp33-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
         {
@@ -87,6 +87,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
         "weather-aware unit placement",
         "round-investment preservation",
         "stop-loss round sacrifice",
+        "Scoia'tael first-turn choice strategy",
       ],
   },
 ];
