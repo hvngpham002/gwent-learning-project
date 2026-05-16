@@ -476,16 +476,21 @@ export const scanRoundInvestmentAnalysis = (
 // ---------------------------------------------------------------------------
 
 /**
- * Builds command/event summaries using a running event offset (matching the
- * battle-log pattern). Each entry tracks cumulative event count so slices
- * are contiguous and correct.
+ * Builds command/event summaries using a running event offset over the events
+ * emitted by recorded commands. The event log can contain startup events
+ * emitted before command history begins, so the initial offset skips any
+ * prefix not covered by command event counts.
  */
 export const buildCommandEventSummaries = (
   commandHistory: readonly InternalCommandRecord[],
   eventLog: readonly GameEvent[],
 ): DiagnosticCommandEventSummary[] => {
   const summaries: DiagnosticCommandEventSummary[] = [];
-  let cumulativeEventCount = 0;
+  const totalCommandEventCount = commandHistory.reduce(
+    (total, record) => total + record.eventCount,
+    0,
+  );
+  let cumulativeEventCount = Math.max(0, eventLog.length - totalCommandEventCount);
 
   for (const record of commandHistory) {
     const eventsForCommand = eventLog.slice(

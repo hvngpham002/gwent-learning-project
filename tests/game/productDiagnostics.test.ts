@@ -84,6 +84,49 @@ describe("cFp25: product diagnostic export", () => {
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
   });
 
+  it("skips pre-command event prefixes when building command event summaries", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "test-match-prefix",
+      humanDeckPresetId: "test-human-deck",
+      humanDeckPresetName: "Test Human Deck",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test-ai-deck",
+      aiDeckPresetName: "Test AI Deck",
+      aiDeckFaction: "scoiatael",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [
+        {
+          sequence: 1,
+          command: { type: "ChooseMulligan", seatId: "seat_a" },
+          status: "applied",
+          eventCount: 1,
+        },
+        {
+          sequence: 2,
+          command: { type: "ChooseMulligan", seatId: "seat_b" },
+          status: "applied",
+          eventCount: 1,
+        },
+      ],
+      eventLog: [
+        { type: "match_started", matchId: "test-match-prefix", seed: "test-match-prefix", seats: ["seat_a", "seat_b"] },
+        { type: "mulligan_chosen", seatId: "seat_a", cardIds: [], drawCount: 0 },
+        { type: "mulligan_chosen", seatId: "seat_b", cardIds: [], drawCount: 0 },
+      ],
+      decisionTraces: [],
+      warnings: [],
+      route: "/",
+    });
+
+    expect(exportData.commandEventSummaries).toHaveLength(2);
+    expect(exportData.commandEventSummaries[0].eventTypes).toEqual(["mulligan_chosen"]);
+    expect(exportData.commandEventSummaries[1].eventTypes).toEqual(["mulligan_chosen"]);
+    expect(exportData.commandEventSummaries[0].eventTypes).not.toContain("match_started");
+  });
+
   it("resets between rematches/new matches (empty traces when no match started)", () => {
     const store = createTestStore();
 
