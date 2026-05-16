@@ -493,9 +493,9 @@ describe("engine Redux adapter", () => {
     );
   });
 
-  // cCp32: Scoia'tael first-player choice adapter tests
-  describe("scoiatael first-player choice adapter", () => {
-    it("starts Scoia'tael match with human-first choice", () => {
+  // cCp32.1: Scoia'tael first-player choice happens post-mulligan via prompt, not at setup
+  describe("scoiatael adapter", () => {
+    it("starts Scoia'tael match using seeded initial_roll (no pre-game override)", () => {
       const store = createTestStore();
 
       store.dispatch(
@@ -504,70 +504,13 @@ describe("engine Redux adapter", () => {
           humanDeckPresetId: "official-scoiatael-starter",
           humanSeat: "seat_a",
           aiSeat: "seat_b",
-          scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_a" },
         }),
       );
 
       const state = store.getState();
       expect(state.engine.match?.seats.seat_a.faction).toBe("scoiatael");
-      expect(state.engine.match?.currentTurn).toBe("seat_a");
-      expect(state.engine.lastTransactionEvents).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ type: "turn_set", reason: "scoiatael_override" }),
-          expect.objectContaining({ type: "faction_ability_resolved", ability: "scoiatael_choose_first", outcome: "chose_self" }),
-        ]),
-      );
-    });
 
-    it("starts Scoia'tael match with opponent-first choice", () => {
-      const store = createTestStore();
-
-      store.dispatch(
-        startEngineMatch({
-          seed: "scoi-adapter-seed-2",
-          humanDeckPresetId: "official-scoiatael-starter",
-          humanSeat: "seat_a",
-          aiSeat: "seat_b",
-          scoiataelFirstPlayerChoice: { choosingSeatId: "seat_a", startingSeatId: "seat_b" },
-        }),
-      );
-
-      const state = store.getState();
-      expect(state.engine.match?.currentTurn).toBe("seat_b");
-      expect(state.engine.lastTransactionEvents).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ type: "turn_set", reason: "scoiatael_override" }),
-          expect.objectContaining({ type: "faction_ability_resolved", outcome: "chose_opponent" }),
-        ]),
-      );
-    });
-
-    it("falls back to scoiatael seat when no explicit choice provided", () => {
-      const store = createTestStore();
-
-      store.dispatch(
-        startEngineMatch({
-          seed: "scoi-fallback-seed",
-          humanDeckPresetId: "official-scoiatael-starter",
-        }),
-      );
-
-      const state = store.getState();
-      expect(state.engine.match?.currentTurn).toBe("seat_a");
-      expect(state.engine.lastTransactionEvents).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ type: "turn_set", reason: "scoiatael_override" }),
-          expect.objectContaining({ type: "faction_ability_resolved", outcome: "defaulted_self", policy: "fallback_self" }),
-        ]),
-      );
-    });
-
-    it("non-Scoia'tael match does not emit scoiatael_override", () => {
-      const store = createTestStore();
-
-      store.dispatch(startEngineMatch({ seed: "no-scoi-adapter" }));
-
-      const events = store.getState().engine.lastTransactionEvents;
+      const events = state.engine.lastTransactionEvents;
       const scoiataelEvents = events?.filter(
         (e) => e.type === "faction_ability_resolved" && e.ability === "scoiatael_choose_first",
       );

@@ -112,15 +112,6 @@ export interface MatchSeatConfig {
   deckPreset: CatalogDeckPreset;
 }
 
-/**
- * cCp32: Scoia'tael first-player choice.
- * When exactly one seat is Scoia'tael, that seat may choose who starts.
- */
-export interface ScoiataelFirstPlayerChoice {
-  readonly choosingSeatId: SeatId;
-  readonly startingSeatId: SeatId;
-}
-
 export interface MatchConfig {
   matchId?: string;
   seed: string | number;
@@ -129,18 +120,14 @@ export interface MatchConfig {
     cards: readonly CatalogCardSource[];
     leaders: readonly CatalogLeaderSource[];
   };
-  /**
-   * cCp32: Optional explicit first-player choice for Scoia'tael.
-   * Honored only when exactly one seat is Scoia'tael.
-   */
-  scoiataelFirstPlayerChoice?: ScoiataelFirstPlayerChoice;
 }
 
 export type PendingPromptStage =
   | "discard_selection"
   | "deck_draw_selection"
   | "opponent_hand_reveal"
-  | "leader_cancel_reaction";
+  | "leader_cancel_reaction"
+  | "scoiatael_first_player_choice";
 
 // cCp29 reaction-prompt context for `cancel_leader`. The reaction prompt
 // is opened on top of an attempted opponent active leader (still legal).

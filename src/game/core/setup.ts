@@ -17,84 +17,27 @@ import type {
   ZoneRef,
 } from "./types";
 
-// cCp32: Scoia'tael first-player choice helpers.
-const findScoiaTaelSeats = (seats: readonly [MatchSeatConfig, MatchSeatConfig]): SeatId[] =>
-  seats.filter((seat) => seat.faction === "scoiatael").map((seat) => seat.seatId);
+// cCp32.1: Scoia'tael first-player choice eligibility check.
+// Returns `choice` only when exactly one seat is Scoia'tael (the unique chooser).
+// Returns `none` for zero or two Scoia'tael seats (both use seeded initial roll).
+export type ScoiataelFirstPlayerEligibility =
+  | { kind: "none"; reason: "no_scoiatael" | "mirror_scoiatael" }
+  | { kind: "choice"; choosingSeatId: SeatId; opponentSeatId: SeatId };
 
-const validateScoiataelChoice = (
-  seats: readonly [MatchSeatConfig, MatchSeatConfig],
-  choice?: { choosingSeatId: SeatId; startingSeatId: SeatId },
-) => {
-  if (!choice) {
-    return null;
+export function getScoiataelFirstPlayerEligibility(state: { seats: Record<SeatId, { faction: string }> }): ScoiataelFirstPlayerEligibility {
+  const scoiataelSeats = Object.entries(state.seats).filter(([, s]) => s.faction === "scoiatael");
+
+  if (scoiataelSeats.length === 0) {
+    return { kind: "none", reason: "no_scoiatael" };
   }
-  const seatIds = seats.map((s) => s.seatId);
-  const scoiataelSeats = findScoiaTaelSeats(seats);
-
-  if (scoiataelSeats.length !== 1) {
-    throw new Error(
-      `scoiataelFirstPlayerChoice requires exactly one Scoia'tael seat (found ${scoiataelSeats.length}).`,
-    );
+  if (scoiataelSeats.length >= 2) {
+    return { kind: "none", reason: "mirror_scoiatael" };
   }
 
-  if (choice.choosingSeatId !== scoiataelSeats[0]) {
-    throw new Error(
-      `scoiataelFirstPlayerChoice.choosingSeatId ${choice.choosingSeatId} must be the Scoia'tael seat ${scoiataelSeats[0]}.`,
-    );
-  }
-
-  if (!seatIds.includes(choice.startingSeatId)) {
-    throw new Error(
-      `scoiataelFirstPlayerChoice.startingSeatId ${choice.startingSeatId} is not a configured seat.`,
-    );
-  }
-
-  return { scoiataelSeatId: scoiataelSeats[0], startingSeatId: choice.startingSeatId };
-};
-
-const determineInitialStarter = (
-  config: MatchConfig,
-  rng: ReturnType<typeof createSeededRng>,
-): {
-  currentTurn: SeatId;
-  turnReason: "initial_roll" | "scoiatael_override";
-  scoiataelAbilityEvent: GameEvent | null;
-} => {
-  const scoiataelSeats = findScoiaTaelSeats(config.seats);
-  const seedRoll = rng.next() < 0.5 ? config.seats[0].seatId : config.seats[1].seatId;
-
-  if (scoiataelSeats.length !== 1) {
-    return { currentTurn: seedRoll, turnReason: "initial_roll", scoiataelAbilityEvent: null };
-  }
-
-  const scoiataelSeatId = scoiataelSeats[0];
-  const validated = validateScoiataelChoice(config.seats, config.scoiataelFirstPlayerChoice);
-
-  let startingSeatId: SeatId;
-  let outcome: "chose_self" | "chose_opponent" | "defaulted_self";
-  let policy: "explicit_choice" | "fallback_self";
-
-  if (validated) {
-    startingSeatId = validated.startingSeatId;
-    outcome = startingSeatId === scoiataelSeatId ? "chose_self" : "chose_opponent";
-    policy = "explicit_choice";
-  } else {
-    startingSeatId = scoiataelSeatId;
-    outcome = "defaulted_self";
-    policy = "fallback_self";
-  }
-
-  const scoiataelAbilityEvent: GameEvent = {
-    type: "faction_ability_resolved",
-    faction: "scoiatael",
-    seatId: scoiataelSeatId,
-    ability: "scoiatael_choose_first",
-    outcome,
-    policy,
-  };
-
-  return { currentTurn: startingSeatId, turnReason: "scoiatael_override", scoiataelAbilityEvent };
-};
+  const [choosingSeatId] = scoiataelSeats[0] as [SeatId, unknown];
+  const opponentSeatId = choosingSeatId === "seat_a" ? "seat_b" : "seat_a";
+  return { kind: "choice", choosingSeatId, opponentSeatId };
+}
 
 const createRow = (): RowState => ({
   units: [],
@@ -322,11 +265,8 @@ export const startMatch = (config: MatchConfig): EngineTransaction => {
     return [seat.seatId, seat] as const;
   });
 
-  const { currentTurn, turnReason, scoiataelAbilityEvent } = determineInitialStarter(config, rng);
-  events.push({ type: "turn_set", seatId: currentTurn, reason: turnReason });
-  if (scoiataelAbilityEvent) {
-    events.push(scoiataelAbilityEvent);
-  }
+  const currentTurn = rng.next() < 0.5 ? config.seats[0].seatId : config.seats[1].seatId;
+  events.push({ type: "turn_set", seatId: currentTurn, reason: "initial_roll" });
 
   const state: MatchState = {
     matchId: config.matchId ?? `match:${config.seed}`,
