@@ -1,7 +1,7 @@
 {
-  "averageCommands": 32.975,
-  "averageLegalMoves": 7.750742358205382,
-  "averageSteps": 32.975,
+  "averageCommands": 33.108333333333334,
+  "averageLegalMoves": 7.729734650635175,
+  "averageSteps": 33.108333333333334,
   "benchmarkRunId": "benchmark-v1-starter-matrix-v1:latest",
   "completionRate": 1,
   "deckPresetIds": [
@@ -703,9 +703,9 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 32.5,
-      "averageLegalMoves": 7.973203932110478,
-      "averageSteps": 32.5,
+      "averageCommands": 33.666666666666664,
+      "averageLegalMoves": 7.8741120517685985,
+      "averageSteps": 33.666666666666664,
       "leaderUseCount": 1,
       "matchupId": "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0",
       "promptCount": 12,
@@ -789,38 +789,38 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 29,
-      "averageLegalMoves": 7.337296037296038,
-      "averageSteps": 29,
+      "averageCommands": 30.5,
+      "averageLegalMoves": 7.016233766233767,
+      "averageSteps": 30.5,
       "leaderUseCount": 0,
       "matchupId": "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1",
       "promptCount": 15,
       "resultCountsByDeck": {
         "official-scoiatael-starter": {
           "draws": 0,
-          "losses": 4,
+          "losses": 5,
           "none": 0,
-          "wins": 2
+          "wins": 1
         },
         "official-skellige-starter": {
           "draws": 0,
-          "losses": 2,
+          "losses": 1,
           "none": 0,
-          "wins": 4
+          "wins": 5
         }
       },
       "resultCountsByPolicy": {
         "legal-heuristic-v0": {
           "draws": 0,
-          "losses": 4,
+          "losses": 5,
           "none": 0,
-          "wins": 2
+          "wins": 1
         },
         "legal-heuristic-v1": {
           "draws": 0,
-          "losses": 2,
+          "losses": 1,
           "none": 0,
-          "wins": 4
+          "wins": 5
         }
       },
       "statusCounts": {
@@ -904,29 +904,29 @@
     },
     "official-scoiatael-starter": {
       "draws": 1,
-      "losses": 32,
+      "losses": 33,
       "none": 0,
-      "wins": 15
+      "wins": 14
     },
     "official-skellige-starter": {
       "draws": 1,
-      "losses": 16,
+      "losses": 15,
       "none": 0,
-      "wins": 31
+      "wins": 32
     }
   },
   "resultCountsByPolicy": {
     "legal-heuristic-v0": {
       "draws": 2,
-      "losses": 88,
+      "losses": 89,
       "none": 0,
-      "wins": 30
+      "wins": 29
     },
     "legal-heuristic-v1": {
       "draws": 2,
-      "losses": 30,
+      "losses": 29,
       "none": 0,
-      "wins": 88
+      "wins": 89
     }
   },
   "schemaVersion": "benchmark-summary-v1",

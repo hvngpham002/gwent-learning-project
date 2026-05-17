@@ -6,15 +6,15 @@
 - benchmark run id: benchmark-v1-starter-matrix-v1:latest
 - schema: benchmark-failure-mining-v1
 - record count: 120
-- finding count: 395
+- finding count: 397
 - generated at: benchmark-v1-starter-matrix-v1:latest (deterministic run metadata, not wall-clock time)
 
 ## Finding Counts By Severity
 
 | Severity | Count |
 |---|---:|
-| warning | 306 |
-| watch | 89 |
+| warning | 307 |
+| watch | 90 |
 | info | 0 |
 
 ## Finding Counts By Kind
@@ -22,9 +22,9 @@
 | Kind | Count |
 |---|---:|
 | matchup_skew | 6 |
-| deck_skew | 1 |
+| deck_skew | 2 |
 | round_one_overinvestment | 5 |
-| round_three_low_resource | 34 |
+| round_three_low_resource | 35 |
 | suspicious_pass | 318 |
 | weathered_row_play | 25 |
 | medic_timing_risk | 6 |
@@ -56,17 +56,17 @@
 | preserve_future_hand_pass | 6 |
 | sacrifice_round_pass | 0 |
 | voluntary_safe_pass | 0 |
-| stop_loss_pass | 9 |
+| stop_loss_pass | 10 |
 | insufficient_context | 2 |
 
 ## Tuning Queue
 
 | Rank | Cluster | Severity | Count | Recommendation |
 |---:|---|---|---:|---|
-| 1 | round_resource_exhaustion | warning | 39 | Tune round investment and future-hand valuation before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
+| 1 | round_resource_exhaustion | warning | 40 | Tune round investment and future-hand valuation before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
 | 2 | weathered_row_low_tempo | watch | 25 | Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo. |
 | 3 | medic_no_target_timing | warning | 6 | Review Medic timing thresholds where no-target or weak-target diagnostics still allow a Medic play. |
-| 4 | skellige_matchup_skew | warning | 22 | Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes. |
+| 4 | skellige_matchup_skew | warning | 24 | Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes. |
 | 5 | remaining_suspicious_pass | warning | 318 | Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes. |
 
 ## Deferred Signals

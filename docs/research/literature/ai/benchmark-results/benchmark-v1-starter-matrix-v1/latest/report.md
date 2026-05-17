@@ -27,8 +27,8 @@
 
 | Policy | Results |
 |---|---|
-| legal-heuristic-v0 | 30 win / 88 loss / 2 draw / 0 none |
-| legal-heuristic-v1 | 88 win / 30 loss / 2 draw / 0 none |
+| legal-heuristic-v0 | 29 win / 89 loss / 2 draw / 0 none |
+| legal-heuristic-v1 | 89 win / 29 loss / 2 draw / 0 none |
 
 ## Result Counts By Deck
 
@@ -37,14 +37,14 @@
 | official-monsters-starter | 28 win / 19 loss / 1 draw / 0 none |
 | official-nilfgaard-starter | 23 win / 25 loss / 0 draw / 0 none |
 | official-northern-realms-starter | 21 win / 26 loss / 1 draw / 0 none |
-| official-scoiatael-starter | 15 win / 32 loss / 1 draw / 0 none |
-| official-skellige-starter | 31 win / 16 loss / 1 draw / 0 none |
+| official-scoiatael-starter | 14 win / 33 loss / 1 draw / 0 none |
+| official-skellige-starter | 32 win / 15 loss / 1 draw / 0 none |
 
 ## Averages
 
-- steps: 32.975
-- commands: 32.975
-- legal moves: 7.751
+- steps: 33.108
+- commands: 33.108
+- legal moves: 7.73
 
 ## Matchups
 
@@ -66,9 +66,9 @@
 | starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 32.5 | 32.5 | 7.946 |
 | starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0 | 6 | 29.167 | 29.167 | 9.158 |
 | starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0 | 6 | 36 | 36 | 8.033 |
-| starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 32.5 | 32.5 | 7.973 |
+| starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 33.667 | 33.667 | 7.874 |
 | starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 31.333 | 31.333 | 8.317 |
-| starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 29 | 29 | 7.337 |
+| starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 30.5 | 30.5 | 7.016 |
 | starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 30.833 | 30.833 | 6.873 |
 
 ## Diagnostics

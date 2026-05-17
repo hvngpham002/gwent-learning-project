@@ -323,15 +323,14 @@ export const buildRoundResourceBudget = (
 // Pressure only applies when board investment is AT OR OVER budget.
 // Under-budget investment is not a pressure signal.
 export const buildRoundResourcePressure = (
-  _features: LegalHeuristicV1Features,
+  features: LegalHeuristicV1Features,
   roundInvestmentAnalysis: import("./decisionTrace").AiDecisionRoundInvestmentAnalysis,
-  _selectedMove: PlayCardMove | UseLeaderMove | null,
 ): AiDecisionRoundResourcePressure => {
   const budget = roundInvestmentAnalysis.roundResourceBudget;
   const boardCardCount = roundInvestmentAnalysis.ownBoardCardCount;
 
   // Round 3: no resource pressure from cFp36 perspective
-  if (_features.round >= 3) return "none";
+  if (features.round >= 3) return "none";
 
   // Under budget: no pressure — plenty of room to play
   if (boardCardCount < budget) {
@@ -1503,7 +1502,6 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
       resourceExhaustionRecommended: false,
       resourceExhaustionReason: "none" as const,
     },
-    selectedMove,
   );
   const resourceExhaustionDecision = buildRoundResourceExhaustionDecision(
     features,

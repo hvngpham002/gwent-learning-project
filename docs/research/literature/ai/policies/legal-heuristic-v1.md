@@ -187,12 +187,16 @@ cFp24 registers v1 in `defaultBenchmarkPolicies` and adds:
   unordered pairings, both v1/v0 policy assignments, 3 seeds, mirrored
   seats, 120 public records.
 
-Latest cFp31.1 results:
+Latest cFp36-repair results (repaired policy code):
 
-- v1 smoke: `legal-heuristic-v1` records 9 wins, 3 losses, and 0 draws
+- v1 smoke: `legal-heuristic-v1` records 10 wins, 2 losses, and 0 draws
   against v0.
-- v1 starter matrix: `legal-heuristic-v1` records 103 wins, 15 losses,
-  and 2 draws against v0.
+- v1 starter matrix: `legal-heuristic-v1` records 89 wins, 29 losses,
+  and 2 draws against v0 (120 records). The repaired totals (89/29/2)
+  differ from the pre-repair totals (102/16/2) because the
+  `resourceExhaustionRecommended` fix allows exception plays to proceed
+  instead of over-passing (the previous over-passing masked other
+  weaknesses in v1's decision logic).
 
 These are fixed-suite evidence, not ratings or proof of broad strength.
 
@@ -779,19 +783,28 @@ New diagnostic fields on `AiDecisionRoundInvestmentAnalysis`:
 
 ### cFp36 Repair
 
-A follow-up repair fixed three logic bugs:
+A follow-up repair fixed four issues:
 
 1. `buildRoundResourcePressure` now correctly returns `"none"` when board
    investment is under budget (floor budget caused false pressure signals).
+   Removed the unused `_selectedMove` parameter to fix lint error.
 2. Exception reasons now produce `resourceExhaustionRecommended === false`;
    only budget-exceeded reasons set it to `true`.
 3. Added `exception_match_winning_play` check and cheap single-move catch-up
    logic to `buildRoundResourceExhaustionDecision` and
    `shouldPassForRoundInvestment`.
+4. Moved the play-card exception reason check in
+   `explainLegalHeuristicV1Decision.ts` before the `bestMove` block so that
+   exception reason strings (e.g. "round resource pressure ignored — card
+   advantage move") can actually appear in the trace reason when a useful
+   play_card is selected and an exception applies.
 
-The repair reduced v1 win rate in the smoke benchmark from 102/16/2 (before
-repair, exception reasons incorrectly triggered preservation) to 88/30/2
-(after repair, exception reasons correctly allow plays). This regression is
-expected: the previous over-passing masked other weaknesses, and the correct
-behavior allows more plays that the v0 policy could exploit. The tuning queue
-still ranks `round_resource_exhaustion` as #1 for further tuning.
+The repaired v1 starter matrix shows 89/29/2 (vs pre-repair 102/16/2), a
+difference of 13 fewer wins and 13 more losses. This is caused by the
+`resourceExhaustionRecommended` fix: before repair, exception reasons
+incorrectly set `resourceExhaustionRecommended = true`, causing the policy
+to over-pass. After repair, exception reasons correctly set
+`resourceExhaustionRecommended = false`, allowing exception plays to
+proceed — the correct behavior per spec. The previous over-passing masked
+other weaknesses in v1's decision logic. The tuning queue still ranks
+`round_resource_exhaustion` as #1 for further tuning.

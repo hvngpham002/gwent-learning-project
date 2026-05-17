@@ -436,9 +436,35 @@ const buildPlayingPhaseTrace = (
       } else {
         reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, no useful move — pass`;
       }
+    // cFp36: Check play-card exception reasons before the bestMove block,
+    // so they fire regardless of whether bestMove exists.
+    } else if (move?.kind === "play_card" && roundInvestmentAnalysis) {
+      const resReason = roundInvestmentAnalysis.resourceExhaustionReason;
+      if (resReason === "exception_card_advantage") {
+        reason = "round resource pressure ignored — card advantage move";
+        reasonKind = "policy-round-investment";
+      } else if (resReason === "exception_last_gem") {
+        reason = "round resource pressure ignored — last gem";
+        reasonKind = "policy-round-investment";
+      } else if (resReason === "exception_match_winning_play") {
+        reason = "round resource pressure ignored — match-winning play";
+        reasonKind = "policy-round-investment";
+      } else if (resReason === "round_three_no_budget") {
+        reason = "round resource pressure ignored — round 3, no budget";
+        reasonKind = "policy-round-investment";
+      } else if (resReason === "thin_future_hand" || resReason === "poor_future_hand" || resReason === "last_useful_unit" || resReason === "round_budget_exceeded") {
+        reason = "cheap catch-up allowed — play useful card";
+        reasonKind = "policy-round-investment";
+      } else if (roundInvestmentAnalysis.resourceExhaustionRecommended) {
+        reason = "round resource budget exceeded — preserve future hand";
+        reasonKind = "policy-round-investment";
+      } else {
+        reason = "best useful move";
+        reasonKind = "policy";
+      }
     } else if (bestMove) {
       // cFp32: Check stop-loss before general round-investment
-     if (move?.kind === "pass" && roundInvestmentAnalysis && roundInvestmentAnalysis.stopLossRecommended) {
+      if (move?.kind === "pass" && roundInvestmentAnalysis && roundInvestmentAnalysis.stopLossRecommended) {
           const slReason = roundInvestmentAnalysis.stopLossReason;
           if (slReason === "upper_bound_impossible") {
             reason = "stop-loss — sacrifice round — catch-up impossible — preserve cards";
@@ -487,35 +513,7 @@ const buildPlayingPhaseTrace = (
           reason = `best useful move (score ${bestMove.score})`;
         }
       }
-     } else if (move?.kind === "play_card" && roundInvestmentAnalysis) {
-          // cFp36: Check exception reasons first (resourceExhaustionRecommended is false for exceptions)
-          const resReason = roundInvestmentAnalysis.resourceExhaustionReason;
-          if (resReason === "exception_card_advantage") {
-            reason = "round resource pressure ignored — card advantage move";
-            reasonKind = "policy-round-investment";
-          } else if (resReason === "exception_last_gem") {
-            reason = "round resource pressure ignored — last gem";
-            reasonKind = "policy-round-investment";
-          } else if (resReason === "exception_leader") {
-            reason = "round resource pressure ignored — free leader action";
-            reasonKind = "policy-round-investment";
-          } else if (resReason === "exception_match_winning_play") {
-            reason = "round resource pressure ignored — match-winning play";
-            reasonKind = "policy-round-investment";
-          } else if (resReason === "round_three_no_budget") {
-            reason = "round resource pressure ignored — round 3, no budget";
-            reasonKind = "policy-round-investment";
-          } else if (resReason === "thin_future_hand" || resReason === "poor_future_hand" || resReason === "last_useful_unit" || resReason === "round_budget_exceeded") {
-            reason = "cheap catch-up allowed — play useful card";
-            reasonKind = "policy-round-investment";
-          } else if (roundInvestmentAnalysis.resourceExhaustionRecommended) {
-            reason = "round resource budget exceeded — preserve future hand";
-            reasonKind = "policy-round-investment";
-          } else {
-            reason = "best useful move";
-            reasonKind = "policy";
-          }
-       } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
+     } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
         // cFp32: Check stop-loss before general round-investment
        if (roundInvestmentAnalysis.stopLossRecommended) {
           const slReason = roundInvestmentAnalysis.stopLossReason;
