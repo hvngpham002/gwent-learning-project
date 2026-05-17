@@ -320,36 +320,37 @@ export const buildRoundResourceBudget = (
 
 // Determine resource pressure level based on current board investment
 // relative to the calculated budget.
+// Pressure only applies when board investment is AT OR OVER budget.
+// Under-budget investment is not a pressure signal.
 export const buildRoundResourcePressure = (
   _features: LegalHeuristicV1Features,
   roundInvestmentAnalysis: import("./decisionTrace").AiDecisionRoundInvestmentAnalysis,
-  selectedMove: PlayCardMove | UseLeaderMove | null,
+  _selectedMove: PlayCardMove | UseLeaderMove | null,
 ): AiDecisionRoundResourcePressure => {
-  // selectedMove context available for future pressure adjustments
-  void selectedMove;
   const budget = roundInvestmentAnalysis.roundResourceBudget;
   const boardCardCount = roundInvestmentAnalysis.ownBoardCardCount;
 
   // Round 3: no resource pressure from cFp36 perspective
   if (_features.round >= 3) return "none";
 
+  // Under budget: no pressure — plenty of room to play
+  if (boardCardCount < budget) {
+    return "none";
+  }
+
   // At or over budget: pressure to preserve
   const excess = boardCardCount - budget;
   if (excess >= 2) return "critical";
   if (excess >= 1) return "high";
-
-  // Under budget: check how far under
-  if (budget > boardCardCount) {
-    const deficit = budget - boardCardCount;
-    if (deficit >= 3) return "critical";
-    if (deficit >= 2) return "high";
-    if (deficit >= 1) return "watch";
-  }
-  return "none";
+  return "watch";
 };
 
 // cFp36: Determine if resource exhaustion preservation is recommended.
 // Returns the reason if it should be applied, "none" otherwise.
+// Exception reasons (exception_*, round_three_no_budget) must NOT set
+// resourceExhaustionRecommended = true — only budget-exceeded reasons
+// (round_budget_exceeded, thin_future_hand, poor_future_hand, last_useful_unit)
+// should suppress plays.
 export const buildRoundResourceExhaustionDecision = (
   features: LegalHeuristicV1Features,
   roundInvestmentAnalysis: import("./decisionTrace").AiDecisionRoundInvestmentAnalysis,
@@ -360,12 +361,14 @@ export const buildRoundResourceExhaustionDecision = (
   const boardCardCount = roundInvestmentAnalysis.ownBoardCardCount;
   const round = features.round;
 
+  // ------------------------------------------------------------------
   // Exceptions: never block these for resource budgeting
+  // ------------------------------------------------------------------
 
   // Last-gem exception
   if (features.ownGems <= 1) return "exception_last_gem";
 
-  // Card-advantage exception
+  // Card-advantage exception (Spy, etc.)
   if (selectedMove && roundInvestmentAnalysis.selectedMoveIsCardAdvantage) {
     return "exception_card_advantage";
   }
@@ -379,18 +382,51 @@ export const buildRoundResourceExhaustionDecision = (
   // Single-card hand: nothing meaningful to preserve
   if (features.ownHandCount <= 1) return "none";
 
-  // Must be a non-elimination round
-  if (features.ownGems <= 1) return "exception_last_gem";
-
   // Opponent must not have passed
   if (features.opponentPassed) return "none";
 
   // Only applies to play_card moves (spend hand cards)
   if (!selectedMove || selectedMove.kind !== "play_card") return "none";
 
-  // Check if we're over budget
+  // ------------------------------------------------------------------
+  // Match-winning play exception: if opponent is on last gem and this
+  // move wins the match, always play it regardless of budget.
+  // ------------------------------------------------------------------
+  if (selectedMove.kind === "play_card") {
+    const tempo = estimateImmediateTempo(features, selectedMove);
+    const minScore = minimumScoreToWinRound(features);
+    if (features.opponentGems <= 1 && features.ownScore + tempo >= minScore) {
+      return "exception_match_winning_play";
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Cheap single-move catch-up exception: if the candidate catches up
+  // to minimumScoreToWinRound with small overkill and does not leave
+  // future unit tempo completely empty, allow it even if over budget.
+  // ------------------------------------------------------------------
+  if (features.scoreDelta < 0 && selectedMove.kind === "play_card") {
+    const candidateTempo = estimateImmediateTempo(features, selectedMove);
+    const minScoreToWin = minimumScoreToWinRound(features);
+    const catchesUp = features.ownScore + candidateTempo >= minScoreToWin;
+    const overkill = catchesUp
+      ? Math.max(0, features.ownScore + candidateTempo - minScoreToWin)
+      : Infinity;
+    // Allow catch-up if: catches up, small overkill (<=3), and doesn't
+    // leave no future unit tempo, OR if it's card advantage.
+    if (
+      catchesUp &&
+      overkill <= 3 &&
+      !roundInvestmentAnalysis.selectedMoveWouldLeaveNoUnitTempoCard
+    ) {
+      return "none";
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // Budget-exceeded reasons: these DO set resourceExhaustionRecommended
+  // ------------------------------------------------------------------
   if (boardCardCount >= budget) {
-    // Playing this card would leave us with thin/poor future hand
     if (handQuality === "poor") return "poor_future_hand";
     if (handQuality === "thin") return "thin_future_hand";
     if (roundInvestmentAnalysis.selectedMoveWouldLeaveNoUnitTempoCard) {
@@ -1501,7 +1537,14 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
     selectedMove,
     futureRoundHandQuality,
   );
-  const resourceExhaustionRecommended = resourceExhaustionDecision !== "none";
+  // resourceExhaustionRecommended is only true when the budget is actually
+  // exceeded (budget-exceeded reasons), NOT for exception reasons or
+  // round_three_no_budget.
+  const resourceExhaustionRecommended =
+    resourceExhaustionDecision === "round_budget_exceeded" ||
+    resourceExhaustionDecision === "thin_future_hand" ||
+    resourceExhaustionDecision === "poor_future_hand" ||
+    resourceExhaustionDecision === "last_useful_unit";
 
   return {
     ownBoardUnitCount,
@@ -1568,6 +1611,34 @@ export const shouldPassForRoundInvestment = (
   // cFp32: Stop-loss gate — behind, no clean catch-up, upper-bound impossible
   // Only suppress play_card candidates; use_leader is free (no hand card spent).
   if (analysis.stopLossRecommended && candidate.kind === "play_card") return true;
+
+  // cFp36: Match-winning exception — if opponent is on last gem and this
+  // move wins the match, always play it regardless of resource budget.
+  if (candidate?.kind === "play_card" && features.opponentGems <= 1) {
+    const tempo = estimateImmediateTempo(features, candidate);
+    const minScore = minimumScoreToWinRound(features);
+    if (features.ownScore + tempo >= minScore) {
+      return false; // wins the match — play it
+    }
+  }
+
+  // cFp36: Cheap single-move catch-up exception — if the candidate catches
+  // up with small overkill and doesn't leave no future unit tempo, allow it.
+  if (candidate?.kind === "play_card" && features.scoreDelta < 0) {
+    const candidateTempo = estimateImmediateTempo(features, candidate);
+    const minScoreToWin = minimumScoreToWinRound(features);
+    const catchesUp = features.ownScore + candidateTempo >= minScoreToWin;
+    const overkill = catchesUp
+      ? Math.max(0, features.ownScore + candidateTempo - minScoreToWin)
+      : Infinity;
+    if (
+      catchesUp &&
+      overkill <= 3 &&
+      !analysis.selectedMoveWouldLeaveNoUnitTempoCard
+    ) {
+      return false; // cheap catch-up — play it
+    }
+  }
 
   // cFp36: Round resource budget gate — conservative non-elimination preservation
   // Only applies when board investment already exceeds the budget for hand quality,

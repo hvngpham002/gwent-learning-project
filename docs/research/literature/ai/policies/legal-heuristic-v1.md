@@ -720,3 +720,78 @@ source IDs, card names, instance IDs, and ability arrays in the analysis
 subtree.
 
 `v0` remains unchanged with its deterministic `self` fallback.
+
+### Round Resource Exhaustion Tuning (cFp36)
+
+cFp36 adds a conservative non-elimination round resource budget gate to
+`legal-heuristic-v1`. The policy becomes more willing to pass or sacrifice a
+non-elimination round when board investment already exceeds the budget for the
+current hand quality and round.
+
+Budget calculation:
+
+- `AiDecisionHandQuality` classification determines the base budget:
+  `"healthy"` → 5 board cards, `"thin"` → 4, `"poor"` → 3.
+- Floor: 2, cap: 6.
+- Round 2: -1 adjustment if own gems > opponent gems (safer to preserve).
+- Score delta >= 10: -1 adjustment (already favorable).
+- Score delta < -15: +1 (behind, may need more investment).
+- Round 3: budget set to maximum cap (6) — no resource preservation needed.
+- Last-gem (ownGems <= 1): budget set to cap (6) — always fight.
+- Opponent passed or own passed: budget set to cap (6) — no preservation needed.
+
+Resource pressure:
+
+- `AiDecisionRoundResourcePressure` enum: `"none"`, `"watch"`, `"high"`, `"critical"`.
+- Pressure only applies when board investment >= budget.
+- Under-budget investment returns `"none"`.
+- At budget: `"watch"`. Over by 1: `"high"`. Over by 2+: `"critical"`.
+
+Resource exhaustion decision:
+
+- `resourceExhaustionRecommended` is `true` ONLY when the budget is exceeded
+  with a budget-exceeded reason: `"round_budget_exceeded"`, `"thin_future_hand"`,
+  `"poor_future_hand"`, `"last_useful_unit"`.
+- Exception reasons produce `resourceExhaustionRecommended === false`:
+  `"exception_last_gem"`, `"exception_card_advantage"`,
+  `"exception_leader"`, `"exception_match_winning_play"`, `"round_three_no_budget"`.
+
+Exceptions preserved (never block play):
+
+- Last-gem rounds: always fight.
+- Spy/card-advantage moves: always play.
+- Free leader actions (use_leader): always play.
+- Match-winning play: if opponent is on last gem and this move reaches
+  minimumScoreToWinRound, always play.
+- Cheap single-move catch-up: if the candidate catches up to
+  minimumScoreToWinRound with overkill <= 3 and doesn't leave no future unit
+  tempo, allow it.
+- Single-card hand: nothing meaningful to preserve.
+- Round 3: no resource preservation.
+- Opponent already passed: no preservation needed.
+
+New diagnostic fields on `AiDecisionRoundInvestmentAnalysis`:
+
+- `roundResourceBudget`: calculated budget (2-6).
+- `roundResourcePressure`: `"none"` / `"watch"` / `"high"` / `"critical"`.
+- `resourceExhaustionRecommended`: boolean.
+- `resourceExhaustionReason`: reason enum.
+
+### cFp36 Repair
+
+A follow-up repair fixed three logic bugs:
+
+1. `buildRoundResourcePressure` now correctly returns `"none"` when board
+   investment is under budget (floor budget caused false pressure signals).
+2. Exception reasons now produce `resourceExhaustionRecommended === false`;
+   only budget-exceeded reasons set it to `true`.
+3. Added `exception_match_winning_play` check and cheap single-move catch-up
+   logic to `buildRoundResourceExhaustionDecision` and
+   `shouldPassForRoundInvestment`.
+
+The repair reduced v1 win rate in the smoke benchmark from 102/16/2 (before
+repair, exception reasons incorrectly triggered preservation) to 88/30/2
+(after repair, exception reasons correctly allow plays). This regression is
+expected: the previous over-passing masked other weaknesses, and the correct
+behavior allows more plays that the v0 policy could exploit. The tuning queue
+still ranks `round_resource_exhaustion` as #1 for further tuning.

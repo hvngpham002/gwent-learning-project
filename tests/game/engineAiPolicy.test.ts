@@ -12,6 +12,7 @@ import {
 import {
   buildSeatObservation,
   buildLegalHeuristicV1Features,
+  buildLegalHeuristicV1HandShapeAnalysis,
   buildLegalHeuristicV1RoundInvestmentAnalysis,
   commandFromLegalMove,
   explainLegalHeuristicV1Decision,
@@ -4885,7 +4886,219 @@ describe("cFp36: round resource exhaustion tuning", () => {
   });
 
   // ------------------------------------------------------------------
-  // 13. Existing cFp29 Medic timing, cFp30 weather placement, cFp32 stop-loss, cFp33 Scoia'tael tests still pass
+  // 13. Exception reasons: resourceExhaustionRecommended must be false
+  // ------------------------------------------------------------------
+  it("exception_last_gem: resourceExhaustionRecommended === false", () => {
+    const useful = unitCard("u", "test.ex-gem", 8);
+    const input = policyInput(
+      [passMove(), playMove(useful)],
+      {
+        ownHand: [useful],
+        ownGems: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const ri = trace.roundInvestmentAnalysis!;
+    expect(ri.resourceExhaustionReason).toBe("exception_last_gem");
+    expect(ri.resourceExhaustionRecommended).toBe(false);
+  });
+
+  it("exception_card_advantage: resourceExhaustionRecommended === false", () => {
+    const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+    const u1 = unitCard("u1", "test.b1", 2);
+    const u2 = unitCard("u2", "test.b2", 3);
+    const u3 = unitCard("u3", "test.b3", 2);
+    const u4 = unitCard("u4", "test.b4", 3);
+    const u5 = unitCard("u5", "test.b5", 2);
+    const boardUnits = [u1, u2, u3, u4, u5];
+
+    const input = policyInput(
+      [passMove(), playMove(spy), playMove(u1)],
+      {
+        ownHand: [spy, u1, u2, u3, u4, u5],
+        ownGems: 2,
+        round: 1,
+        opponentGems: 2,
+        boardRows: baseBoardRows({
+          seat_b: {
+            close: boardUnits.slice(0, 2),
+            ranged: boardUnits.slice(2, 4),
+            siege: [boardUnits[4]],
+          },
+        }),
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 10, seat_b: 20 },
+        },
+      },
+    );
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const ri = trace.roundInvestmentAnalysis!;
+    expect(ri.resourceExhaustionReason).toBe("exception_card_advantage");
+    expect(ri.resourceExhaustionRecommended).toBe(false);
+  });
+
+  it("exception_match_winning_play: resourceExhaustionRecommended === false", () => {
+    const useful = unitCard("u", "test.match-win-ex", 15);
+    // Board already has 5 cards, opponent on last gem
+    const u1 = unitCard("u1", "test.b1", 2);
+    const u2 = unitCard("u2", "test.b2", 3);
+    const u3 = unitCard("u3", "test.b3", 2);
+    const u4 = unitCard("u4", "test.b4", 3);
+    const u5 = unitCard("u5", "test.b5", 2);
+    const boardUnits = [u1, u2, u3, u4, u5];
+
+    const input = policyInput(
+      [passMove(), playMove(useful), playMove(u1)],
+      {
+        ownHand: [useful, u1],
+        ownGems: 2,
+        opponentGems: 1,
+        round: 1,
+        boardRows: baseBoardRows({
+          seat_b: {
+            close: boardUnits.slice(0, 2),
+            ranged: boardUnits.slice(2, 4),
+            siege: [boardUnits[4]],
+          },
+        }),
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 15 },
+        },
+      },
+    );
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const ri = trace.roundInvestmentAnalysis!;
+    expect(ri.resourceExhaustionReason).toBe("exception_match_winning_play");
+    expect(ri.resourceExhaustionRecommended).toBe(false);
+  });
+
+  it("round 3: resourceExhaustionRecommended === false, reason is round_three_no_budget", () => {
+    const u1 = unitCard("u1", "test.r3-unit", 5);
+    const u2 = unitCard("u2", "test.r2-unit", 5);
+    const u3 = unitCard("u3", "test.b3", 2);
+    const u4 = unitCard("u4", "test.b4", 3);
+    const u5 = unitCard("u5", "test.b5", 2);
+    const boardUnits = [u3, u4, u5];
+
+    const input = policyInput(
+      [passMove(), playMove(u1), playMove(u2)],
+      {
+        ownHand: [u1, u2],
+        ownGems: 2,
+        round: 3,
+        opponentGems: 2,
+        boardRows: baseBoardRows({
+          seat_b: {
+            close: boardUnits.slice(0, 1),
+            ranged: [],
+            siege: [boardUnits[2]],
+          },
+        }),
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 30, seat_b: 20 },
+        },
+      },
+    );
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const ri = trace.roundInvestmentAnalysis!;
+    expect(ri.resourceExhaustionReason).toBe("round_three_no_budget");
+    expect(ri.resourceExhaustionRecommended).toBe(false);
+    // Round 3 budget = cap (6)
+    expect(ri.roundResourceBudget).toBe(6);
+  });
+
+  // ------------------------------------------------------------------
+  // 14. Budget-exceeded reasons: resourceExhaustionRecommended === true
+  // ------------------------------------------------------------------
+  it("round_budget_exceeded: resourceExhaustionRecommended === true", () => {
+    // Board has 6 cards, hand has 3 specials (poor future hand)
+    // Budget for poor = 3, board 6 > 3 -> over budget
+    const b1 = unitCard("b1", "test.board.b1", 2);
+    const b2 = unitCard("b2", "test.board.b2", 3);
+    const b3 = unitCard("b3", "test.board.b3", 2);
+    const b4 = unitCard("b4", "test.board.b4", 3);
+    const b5 = unitCard("b5", "test.board.b5", 2);
+    const b6 = unitCard("b6", "test.board.b6", 2);
+    const boardUnits = [b1, b2, b3, b4, b5, b6];
+
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+    const w3 = specialCard("w3", "neutral.torrential-rain", 0);
+
+    const features = buildLegalHeuristicV1Features(
+      policyInput(
+        [passMove(), playMove(w1)],
+        {
+          ownHand: [w1, w2, w3],
+          ownGems: 2,
+          round: 1,
+          opponentGems: 2,
+          boardRows: baseBoardRows({
+            seat_b: {
+              close: boardUnits.slice(0, 3),
+              ranged: boardUnits.slice(3, 5),
+              siege: [boardUnits[5]],
+            },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 20 },
+          },
+        },
+      ),
+    );
+    const handShape = buildLegalHeuristicV1HandShapeAnalysis(features);
+    const w1Move = features.playMoves.find((m) => m.sourceCardId === w1.cardId);
+    const ri = buildLegalHeuristicV1RoundInvestmentAnalysis(features, w1Move ?? null, handShape);
+
+    // Budget clamped to floor (2), board has 6 -> over budget
+    expect(ri.ownBoardCardCount).toBe(6);
+    expect(ri.resourceExhaustionRecommended).toBe(true);
+  });
+
+  // ------------------------------------------------------------------
+  // 15. Pressure under budget is "none"
+  // ------------------------------------------------------------------
+  it("under-budget board investment: roundResourcePressure === 'none'", () => {
+    const u1 = unitCard("u1", "test.b1", 2);
+    const u2 = unitCard("u2", "test.b2", 3);
+    const boardUnits = [u1, u2];
+
+    const input = policyInput(
+      [passMove(), playMove(u1)],
+      {
+        ownHand: [u1, u2, unitCard("u3", "test.u3", 5)],
+        ownGems: 2,
+        round: 1,
+        opponentGems: 2,
+        boardRows: baseBoardRows({
+          seat_b: {
+            close: boardUnits,
+            ranged: [],
+            siege: [],
+          },
+        }),
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 10, seat_b: 20 },
+        },
+      },
+    );
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const ri = trace.roundInvestmentAnalysis!;
+    // Budget for healthy = 5, board has 2 -> under budget -> pressure "none"
+    expect(ri.roundResourcePressure).toBe("none");
+  });
+
+  // ------------------------------------------------------------------
+  // 16. Existing cFp29 Medic timing, cFp30 weather placement, cFp32 stop-loss, cFp33 Scoia'tael tests still pass
   //     (Covered by existing test suite — this is a smoke check that the
   //      new cFp36 fields don't break type signatures.)
   // ------------------------------------------------------------------
