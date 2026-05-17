@@ -33,6 +33,13 @@ passed to `runBenchmarkSuite`. The summary contains counts by decision
 type (pass, play, leader, prompt, mulligan, round-end) and is hidden-info
 safe. Default benchmark commands remain unchanged.
 
+cFp34 adds a deterministic failure-mining layer over
+`benchmark-v1-starter-matrix-v1`. The mining command may collect richer
+headless decision traces in memory, but it writes only public IDs,
+aggregate counts, rates, booleans, and bucketed diagnostics. It is an
+evaluation artifact for future tuning specs, not a new policy and not a
+product behavior change.
+
 The harness is implementation support for the Batch A and Batch B
 decision notes:
 
@@ -72,6 +79,15 @@ Robustness probe:
 - future approximate best-response or exploitability-style diagnostics
   must state their observation contract and should not be presented as
   exact exploitability.
+
+Failure mining:
+
+- deterministic cFp34 artifact bundle over `benchmark-v1-starter-matrix-v1`;
+- emits matchup/deck skew plus behavior-level findings such as round-one
+  overinvestment, weak round-three resources, suspicious passes,
+  weathered-row plays, and Medic timing risks;
+- `leader_underuse` is explicitly deferred until a safe public
+  leader-availability summary exists.
 
 ## Current Scope
 
@@ -149,6 +165,12 @@ npm run benchmark:v1-smoke
 npm run benchmark:v1-starter-matrix
 ```
 
+Write the v1 starter-matrix failure-mining artifact set:
+
+```bash
+npm run benchmark:v1-failure-mining
+```
+
 The command writes:
 
 ```text
@@ -175,6 +197,12 @@ docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/lat
   summary.json
   records.jsonl
   report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/failure-mining/latest/
+  manifest.json
+  summary.json
+  findings.jsonl
+  report.md
 ```
 
 The default run id is `<suite-id>:latest`. Each `latest/` path is
@@ -186,6 +214,7 @@ git diff -- docs/research/literature/ai/benchmark-results/benchmark-smoke-v1/lat
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-starter-matrix-v1/latest
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-v1-smoke-v1/latest
 git diff -- docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/latest
+git diff -- docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/failure-mining/latest
 ```
 
 Policy or engine changes that affect public benchmark behavior should
@@ -211,6 +240,14 @@ default benchmark summary contract.
 The cFp22 script does not expose an `includeDebugResults` option and does
 not serialize unsafe debug results. cFp24 v1 artifacts use the same
 public serializer and hazard-scan contract.
+
+The cFp34 failure-mining command uses the unsafe/debug headless path only
+inside the Node process. The committed failure-mining artifacts are
+hidden-info safe and contain findings, counts, rates, policy/deck/faction
+IDs, matchup IDs, seeds, mirror indexes, and bucket labels only. They do
+not include raw engine states, command logs, raw events, private-zone
+arrays, debug result objects, runtime card instance IDs, or hidden hand
+card names.
 
 ### Opt-In Trace Artifacts (cFp25)
 

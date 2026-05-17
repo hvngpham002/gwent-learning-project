@@ -1,6 +1,6 @@
 import type { CatalogDeckPreset, CatalogFaction } from "@/game/catalog";
 import type { EngineCommand, GameEvent, LegalMoveKind, MatchPhase, MatchState, SeatId } from "@/game/core";
-import type { EnginePolicy } from "@/game/ai";
+import type { AiDecisionTrace, EnginePolicy } from "@/game/ai";
 
 export type SimulationTerminalStatus = "completed" | "max_steps_exceeded" | "policy_failed" | "engine_error";
 
@@ -24,6 +24,7 @@ export interface HeadlessMatchSimulationInput {
   maxSteps?: number;
   policies?: Partial<Record<SeatId, EnginePolicy>>;
   seats?: HeadlessSeatSimulationConfigs;
+  collectDecisionTraces?: boolean;
 }
 
 export interface SimulationStepLog {
@@ -77,6 +78,7 @@ export interface HeadlessMatchSimulationResult {
   events: GameEvent[];
   summary: SimulationSummary;
   error?: SimulationError;
+  decisionTraces?: readonly AiDecisionTrace[];
 }
 
 export interface ReplayHeadlessMatchCommandsInput {
@@ -115,6 +117,7 @@ export interface HeadlessSimulationBatchInput {
   policies?: Partial<Record<SeatId, EnginePolicy>>;
   verifyReplay?: boolean;
   includeRawResults?: boolean;
+  collectDecisionTraces?: boolean;
 }
 
 export interface SimulationBatchRunRecord {

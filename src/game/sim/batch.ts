@@ -145,7 +145,12 @@ export const runHeadlessSimulationBatch = (
   const verifyReplay = input.verifyReplay ?? true;
   const includeRawResults = input.includeRawResults ?? false;
   const runs = seeds.map((seed) => {
-    const result = runHeadlessMatchSimulation({ seed, maxSteps, policies: input.policies });
+    const result = runHeadlessMatchSimulation({
+      seed,
+      maxSteps,
+      policies: input.policies,
+      collectDecisionTraces: input.collectDecisionTraces,
+    });
     return toRunRecord(result, verifyReplay, includeRawResults);
   });
 

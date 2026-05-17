@@ -153,6 +153,7 @@ export const runBenchmarkSuite = (input: BenchmarkRunInput = {}): BenchmarkRunRe
               seat_a: policies[seats.seat_a.policyId],
               seat_b: policies[seats.seat_b.policyId],
             },
+            collectDecisionTraces: input.includeDecisionTraces,
           });
           if (input.includeDebugResults) {
             unsafeDebugResults.push(result);

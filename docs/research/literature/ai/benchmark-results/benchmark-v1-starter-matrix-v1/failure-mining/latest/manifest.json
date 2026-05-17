@@ -1,0 +1,15 @@
+{
+  "benchmarkRunId": "benchmark-v1-starter-matrix-v1:latest",
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "findings.jsonl",
+    "report.md"
+  ],
+  "findingCount": 388,
+  "generatedAt": "benchmark-v1-starter-matrix-v1:latest",
+  "hiddenInfoSafetyNote": "Failure-mining artifacts contain public benchmark IDs, aggregate counts, rates, bucketed diagnostics, and generated messages only. Raw engine/debug payloads and private zone contents are intentionally omitted.",
+  "recordCount": 120,
+  "schemaVersion": "benchmark-failure-mining-v1",
+  "suiteId": "benchmark-v1-starter-matrix-v1"
+}

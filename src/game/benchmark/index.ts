@@ -6,3 +6,5 @@ export * from './ledger';
 export * from './summaries';
 export * from './runBenchmark';
 export * from './artifacts';
+export * from './failureMining';
+export * from './failureMiningArtifacts';

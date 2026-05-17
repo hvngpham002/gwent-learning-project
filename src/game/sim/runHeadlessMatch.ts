@@ -4,7 +4,13 @@ import {
   currentNilfgaardDeckPreset,
   currentNorthernRealmsDeckPreset,
 } from "@/data/catalog";
-import { buildSeatObservation, commandFromLegalMove, legalHeuristicPolicyV0 } from "@/game/ai";
+import {
+  buildSeatObservation,
+  commandFromLegalMove,
+  explainLegalHeuristicV1Decision,
+  legalHeuristicPolicyV0,
+  type AiDecisionTrace,
+} from "@/game/ai";
 import { executeCommand, getLegalMoves, startMatch, type LegalMove, type MatchConfig, type MatchState, type SeatId } from "@/game/core";
 
 import { buildSimulationSummary, getWinner } from "./metrics";
@@ -90,9 +96,15 @@ export const getHeadlessActingSeat = (state: MatchState): SeatId | null => {
   return null;
 };
 
-const selectMove = (input: HeadlessMatchSimulationInput, state: MatchState, seatId: SeatId, legalMoves: readonly LegalMove[]) => {
+const selectMove = (
+  input: HeadlessMatchSimulationInput,
+  state: MatchState,
+  seatId: SeatId,
+  legalMoves: readonly LegalMove[],
+  decisionIndex: number,
+): { move: LegalMove | null; trace?: AiDecisionTrace } => {
   if (state.phase === "round_end") {
-    return legalMoves.find((move) => move.kind === "resolve_round_end") ?? null;
+    return { move: legalMoves.find((move) => move.kind === "resolve_round_end") ?? null };
   }
 
   const policy = policyForSeat(input, seatId);
@@ -103,7 +115,13 @@ const selectMove = (input: HeadlessMatchSimulationInput, state: MatchState, seat
     catalogLeaders: currentCatalogLeaders,
   });
 
-  return policy.selectMove({ seatId, observation, legalMoves });
+  const policyInput = { seatId, observation, legalMoves };
+  if (input.collectDecisionTraces && policy.id === "legal-heuristic-v1") {
+    const explanation = explainLegalHeuristicV1Decision(policyInput, { decisionIndex });
+    return { move: explanation.move, trace: explanation.trace };
+  }
+
+  return { move: policy.selectMove(policyInput) };
 };
 
 const toErrorMessage = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -117,6 +135,7 @@ const createResult = ({
   events,
   maxSteps,
   error,
+  decisionTraces,
 }: {
   input: HeadlessMatchSimulationInput;
   status: SimulationTerminalStatus;
@@ -126,6 +145,7 @@ const createResult = ({
   events: ReturnType<typeof startMatch>["events"];
   maxSteps: number;
   error?: SimulationError;
+  decisionTraces?: readonly AiDecisionTrace[];
 }): HeadlessMatchSimulationResult => {
   const policiesBySeat = policyIds(input);
   const summary = buildSimulationSummary({
@@ -149,6 +169,7 @@ const createResult = ({
     events,
     summary,
     error,
+    ...(decisionTraces ? { decisionTraces } : {}),
   };
 };
 
@@ -159,10 +180,20 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
   const steps: SimulationStepLog[] = [];
   const commandLog: SimulationCommand[] = [];
   const events = [...started.events];
+  const decisionTraces: AiDecisionTrace[] = [];
 
   for (let step = 1; step <= maxSteps; step += 1) {
     if (state.phase === "game_end") {
-      return createResult({ input, status: "completed", state, steps, commandLog, events, maxSteps });
+      return createResult({
+        input,
+        status: "completed",
+        state,
+        steps,
+        commandLog,
+        events,
+        maxSteps,
+        decisionTraces: input.collectDecisionTraces ? decisionTraces : undefined,
+      });
     }
 
     const seatId = getHeadlessActingSeat(state);
@@ -181,8 +212,11 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
 
     const legalMoves = getLegalMoves({ state, seatId, catalogCards: currentCatalogCards, catalogLeaders: currentCatalogLeaders });
     let chosenMove: LegalMove | null;
+    let decisionTrace: AiDecisionTrace | undefined;
     try {
-      chosenMove = selectMove(input, state, seatId, legalMoves);
+      const selection = selectMove(input, state, seatId, legalMoves, decisionTraces.length);
+      chosenMove = selection.move;
+      decisionTrace = selection.trace;
     } catch (error) {
       return createResult({
         input,
@@ -193,6 +227,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
         events,
         maxSteps,
         error: { code: "policy_select_failed", message: toErrorMessage(error), step, seatId },
+        decisionTraces: input.collectDecisionTraces ? decisionTraces : undefined,
       });
     }
     if (!chosenMove) {
@@ -205,6 +240,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
         events,
         maxSteps,
         error: { code: "no_move_selected", message: `No legal move selected for ${seatId}.`, step, seatId },
+        decisionTraces: input.collectDecisionTraces ? decisionTraces : undefined,
       });
     }
     if (!legalMoves.some((move) => move.moveId === chosenMove.moveId)) {
@@ -217,6 +253,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
         events,
         maxSteps,
         error: { code: "illegal_policy_move", message: `Policy selected a move outside the legal move list.`, step, seatId },
+        decisionTraces: input.collectDecisionTraces ? decisionTraces : undefined,
       });
     }
 
@@ -231,6 +268,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
         events,
         maxSteps,
         error: { code: "move_command_conversion_failed", message: `Could not convert ${chosenMove.moveId}.`, step, seatId },
+        decisionTraces: input.collectDecisionTraces ? decisionTraces : undefined,
       });
     }
 
@@ -252,6 +290,9 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
         commandType: command.type,
         eventTypes: transaction.events.map((event) => event.type),
       });
+      if (decisionTrace) {
+        decisionTraces.push(decisionTrace);
+      }
     } catch (error) {
       return createResult({
         input,
@@ -262,6 +303,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
         events,
         maxSteps,
         error: { code: "engine_command_failed", message: toErrorMessage(error), step, seatId },
+        decisionTraces: input.collectDecisionTraces ? decisionTraces : undefined,
       });
     }
   }
@@ -279,6 +321,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
       message: `Simulation exceeded ${maxSteps} steps before game_end.`,
       step: maxSteps,
     },
+    decisionTraces: input.collectDecisionTraces ? decisionTraces : undefined,
   });
 };
 

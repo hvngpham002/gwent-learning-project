@@ -28,6 +28,13 @@ Slurm allocation for:
 - `npm run benchmark:starter-matrix`
 - `npm run benchmark:v1-smoke`
 - `npm run benchmark:v1-starter-matrix`
+- `npm run benchmark:v1-failure-mining`
+
+cFp34 failure mining is also CPU/Node-only. It runs the v1 starter matrix,
+collects richer headless diagnostics only in memory, and writes the reviewed
+public artifact bundle under `docs/research/literature/ai/benchmark-results/`.
+It does not require H100, Slurm, Python, internet access, model inference, or
+training infrastructure.
 
 Use the H100 cluster only for bounded future experiments that explicitly need a
 GPU, such as:
@@ -46,6 +53,7 @@ benchmark harness, and AI Lab must continue to work without the lab cluster.
 |---|---|
 | Benchmark harness docs | `docs/research/literature/ai/benchmark-harness.md` |
 | Benchmark results | `docs/research/literature/ai/benchmark-results/` |
+| Failure mining artifacts | `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/failure-mining/latest/` |
 | AI policy docs | `docs/research/literature/ai/policies/` |
 | Decision notes | `docs/research/literature/ai/decisions/` |
 | Compute operations docs | `docs/compute/` |
@@ -61,6 +69,7 @@ Git unless a later spec explicitly defines a safe artifact boundary.
 | Data or Output | Sensitivity Class | Storage Rule |
 |---|---|---|
 | Engine benchmark summaries and public JSONL records | `DERIVED-PUBLIC` | Commit only through the existing benchmark artifact paths after hidden-info scan/review |
+| Benchmark failure-mining findings | `DERIVED-PUBLIC` | Commit only through the cFp34 failure-mining artifact path after hidden-info scan/review |
 | Product playtest diagnostic exports | `DERIVED-PUBLIC` by default, review required | Keep local unless a spec asks to copy sanitized examples |
 | Raw engine states, command logs with hidden state, hand/deck arrays | `CONTROLLED` for this project | Do not commit; only use in explicit debug contexts |
 | Model checkpoints / downloaded models | `DERIVED-PUBLIC` or license-specific | Keep in job scratch or external model registry; do not commit |
@@ -99,6 +108,8 @@ git status --short
 npm ci
 npm run benchmark:v1-starter-matrix -- \
   --out "$JOB_SCRATCH/outputs/benchmark-v1-starter-matrix-v1/latest"
+npm run benchmark:v1-failure-mining -- \
+  --out "$JOB_SCRATCH/outputs/benchmark-v1-starter-matrix-v1/failure-mining/latest"
 ```
 
 Copy back only reviewed outputs:

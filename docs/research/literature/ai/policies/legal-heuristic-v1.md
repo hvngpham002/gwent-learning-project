@@ -30,11 +30,17 @@ choice logic:
 - cFp30: weather-aware non-hero unit placement.
 - cFp31: round-investment and future-hand preservation.
 - cFp32: stop-loss round sacrifice for non-elimination rounds.
+- cFp33: Scoia'tael first-turn choice strategy.
 
-Current cFp32 benchmark totals:
+Current cFp33 benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
+
+cFp34 is evaluation infrastructure only. It adds deterministic failure-mining
+artifacts for the v1 starter matrix and does not change v1 move selection,
+engine rules, legal moves, catalog data, deck presets, product UI behavior, or
+the product policy registry.
 
 ## Product Playtest Toggle
 
@@ -183,6 +189,24 @@ Latest cFp31.1 results:
   and 2 draws against v0.
 
 These are fixed-suite evidence, not ratings or proof of broad strength.
+
+## Failure Mining (cFp34)
+
+cFp34 adds `npm run benchmark:v1-failure-mining`, which reruns
+`benchmark-v1-starter-matrix-v1` with opt-in in-memory v1 decision traces and
+writes hidden-info-safe findings to:
+
+```text
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/failure-mining/latest/
+```
+
+The artifact bundle contains `manifest.json`, `summary.json`, `findings.jsonl`,
+and `report.md`. It is intended as evidence for future cFp35+ tuning specs and
+is not a policy change. The first cFp34 artifact reports 388 findings over 120
+records, including matchup/deck skew plus v1 behavior-level signals for
+round-one overinvestment, weak round-three resources, suspicious passes,
+weathered-row plays, and Medic timing risks. `leader_underuse` is deferred until
+a safe public leader-availability summary exists.
 
 ## Known Limitations
 

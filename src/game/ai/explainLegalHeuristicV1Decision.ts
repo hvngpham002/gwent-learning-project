@@ -142,13 +142,11 @@ const buildMedicTimingAnalysis = (
   }
 
   const noTargetMedicRisk = medicPlayLegal && ownDiscardReviveCandidateCount === 0;
-  const selectedMedicWithNoTarget =
+  const selectedMoveIsMedic =
     move?.kind === "play_card" &&
     features.playMoves.some((m) => m.moveId === move.moveId) &&
-    (() => {
-      const selectedCard = features.ownHandByCardId.get((move as { sourceCardId?: string }).sourceCardId ?? "");
-      return isMedicSource(selectedCard) && ownDiscardReviveCandidateCount === 0;
-    })();
+    isMedicSource(features.ownHandByCardId.get((move as { sourceCardId?: string }).sourceCardId ?? ""));
+  const selectedMedicWithNoTarget = selectedMoveIsMedic && ownDiscardReviveCandidateCount === 0;
 
   return medicPlayLegal
     ? {
@@ -158,6 +156,7 @@ const buildMedicTimingAnalysis = (
       bestReviveStrengthBucket: toAiDecisionTempoBucket(bestReviveStrength),
       bestReviveValueBucket,
       noTargetMedicRisk,
+      selectedMoveIsMedic,
       selectedMedicWithNoTarget,
     }
     : null;

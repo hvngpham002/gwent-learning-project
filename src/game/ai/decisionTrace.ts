@@ -416,6 +416,7 @@ export interface AiDecisionMedicTimingAnalysis {
   readonly bestReviveStrengthBucket: AiDecisionTempoBucket;
   readonly bestReviveValueBucket: AiDecisionMedicTimingBucket;
   readonly noTargetMedicRisk: boolean;
+  readonly selectedMoveIsMedic: boolean;
   readonly selectedMedicWithNoTarget: boolean;
 }
 
