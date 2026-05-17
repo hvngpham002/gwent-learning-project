@@ -24,6 +24,8 @@ import {
   type AiDecisionScoiataelFirstTurnRecommendation,
   type AiDecisionScoiataelFirstTurnReasonKind,
   type AiDecisionFirstTurnTempoBucket,
+  type AiDecisionRoundResourcePressure,
+  type AiDecisionRoundResourceExhaustionReason,
 } from "./decisionTrace";
 
 export const MIN_USEFUL_MOVE_SCORE = 25;
@@ -33,6 +35,20 @@ export const MEDIC_NO_TARGET_UTILITY = -140;
 export const MEDIC_WEAK_TARGET_UTILITY = 70;
 export const MEDIC_MEDIUM_TARGET_UTILITY = 180;
 export const MEDIC_STRONG_TARGET_UTILITY = 320;
+
+// cFp36: Round resource budget constants for non-elimination rounds
+// Base board card budget by future hand quality
+const ROUND_RESOURCE_BUDGET_BASE: Record<
+  import("./decisionTrace").AiDecisionHandQuality,
+  number
+> = {
+  healthy: 5,
+  thin: 4,
+  poor: 3,
+  empty: 3,
+};
+const ROUND_RESOURCE_BUDGET_FLOOR = 2;
+const ROUND_RESOURCE_BUDGET_CAP = 6;
 
 export type LegalHeuristicV1MedicTimingBucket =
   | "none"
@@ -255,6 +271,135 @@ const medicReviveTempoForSource = (features: LegalHeuristicV1Features, card: Sea
     }
   }
   return bestNonSpyStrength;
+};
+
+// cFp36: Round resource budget helpers
+// Calculate the budget threshold for non-elimination rounds based on
+// future hand quality, round number, and score delta.
+export const buildRoundResourceBudget = (
+  _features: LegalHeuristicV1Features,
+  handQuality: import("./decisionTrace").AiDecisionHandQuality,
+  round: number,
+  scoreDelta: number,
+  ownGems: number,
+  opponentGems: number,
+  ownPassed: boolean,
+  opponentPassed: boolean,
+): number => {
+  // No budget in elimination rounds (last gem)
+  if (ownGems <= 1) return ROUND_RESOURCE_BUDGET_CAP;
+
+  // Round 3: no resource budget - spend remaining resources
+  if (round >= 3) return ROUND_RESOURCE_BUDGET_CAP;
+
+  // Opponent already passed: no preservation needed
+  if (opponentPassed) return ROUND_RESOURCE_BUDGET_CAP;
+
+  // Own passed: no preservation needed
+  if (ownPassed) return ROUND_RESOURCE_BUDGET_CAP;
+
+  // Start with base budget from hand quality
+  let budget = ROUND_RESOURCE_BUDGET_BASE[handQuality] ?? 3;
+
+  // Round 2 adjustment: -1 if we have more gems (safier to spend less)
+  if (round === 2 && ownGems > opponentGems) {
+    budget -= 1;
+  }
+
+  // Score delta adjustments
+  if (scoreDelta >= 10) {
+    budget -= 1; // Already favorable, can afford to preserve more
+  }
+  if (scoreDelta < -15) {
+    budget += 1; // Significantly behind, may need more investment
+  }
+
+  // Clamp to floor/cap
+  return Math.max(ROUND_RESOURCE_BUDGET_FLOOR, Math.min(budget, ROUND_RESOURCE_BUDGET_CAP));
+};
+
+// Determine resource pressure level based on current board investment
+// relative to the calculated budget.
+export const buildRoundResourcePressure = (
+  _features: LegalHeuristicV1Features,
+  roundInvestmentAnalysis: import("./decisionTrace").AiDecisionRoundInvestmentAnalysis,
+  selectedMove: PlayCardMove | UseLeaderMove | null,
+): AiDecisionRoundResourcePressure => {
+  // selectedMove context available for future pressure adjustments
+  void selectedMove;
+  const budget = roundInvestmentAnalysis.roundResourceBudget;
+  const boardCardCount = roundInvestmentAnalysis.ownBoardCardCount;
+
+  // Round 3: no resource pressure from cFp36 perspective
+  if (_features.round >= 3) return "none";
+
+  // At or over budget: pressure to preserve
+  const excess = boardCardCount - budget;
+  if (excess >= 2) return "critical";
+  if (excess >= 1) return "high";
+
+  // Under budget: check how far under
+  if (budget > boardCardCount) {
+    const deficit = budget - boardCardCount;
+    if (deficit >= 3) return "critical";
+    if (deficit >= 2) return "high";
+    if (deficit >= 1) return "watch";
+  }
+  return "none";
+};
+
+// cFp36: Determine if resource exhaustion preservation is recommended.
+// Returns the reason if it should be applied, "none" otherwise.
+export const buildRoundResourceExhaustionDecision = (
+  features: LegalHeuristicV1Features,
+  roundInvestmentAnalysis: import("./decisionTrace").AiDecisionRoundInvestmentAnalysis,
+  selectedMove: PlayCardMove | UseLeaderMove | null,
+  handQuality: import("./decisionTrace").AiDecisionHandQuality,
+): AiDecisionRoundResourceExhaustionReason => {
+  const budget = roundInvestmentAnalysis.roundResourceBudget;
+  const boardCardCount = roundInvestmentAnalysis.ownBoardCardCount;
+  const round = features.round;
+
+  // Exceptions: never block these for resource budgeting
+
+  // Last-gem exception
+  if (features.ownGems <= 1) return "exception_last_gem";
+
+  // Card-advantage exception
+  if (selectedMove && roundInvestmentAnalysis.selectedMoveIsCardAdvantage) {
+    return "exception_card_advantage";
+  }
+
+  // Free leader exception (use_leader doesn't spend hand cards)
+  if (selectedMove?.kind === "use_leader") return "exception_leader";
+
+  // Round 3: no resource preservation (no future round to preserve for)
+  if (round >= 3) return "round_three_no_budget";
+
+  // Single-card hand: nothing meaningful to preserve
+  if (features.ownHandCount <= 1) return "none";
+
+  // Must be a non-elimination round
+  if (features.ownGems <= 1) return "exception_last_gem";
+
+  // Opponent must not have passed
+  if (features.opponentPassed) return "none";
+
+  // Only applies to play_card moves (spend hand cards)
+  if (!selectedMove || selectedMove.kind !== "play_card") return "none";
+
+  // Check if we're over budget
+  if (boardCardCount >= budget) {
+    // Playing this card would leave us with thin/poor future hand
+    if (handQuality === "poor") return "poor_future_hand";
+    if (handQuality === "thin") return "thin_future_hand";
+    if (roundInvestmentAnalysis.selectedMoveWouldLeaveNoUnitTempoCard) {
+      return "last_useful_unit";
+    }
+    return "round_budget_exceeded";
+  }
+
+  return "none";
 };
 
 export interface LegalHeuristicV1Features {
@@ -1282,6 +1427,82 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
     }
   }
 
+  // cFp36: Calculate round resource budget and pressure
+  const roundResourceBudget = buildRoundResourceBudget(
+    features,
+    futureRoundHandQuality,
+    features.round,
+    features.scoreDelta,
+    features.ownGems,
+    features.opponentGems,
+    features.ownPassed,
+    features.opponentPassed,
+  );
+  const roundResourcePressure = buildRoundResourcePressure(
+    features,
+    {
+      ownBoardUnitCount,
+      ownBoardHeroCount,
+      ownBoardNonHeroUnitCount: ownBoardUnitCount,
+      ownBoardHornCount,
+      ownBoardCardCount,
+      positiveFutureUnitMoveCount,
+      positiveFutureNonUnitMoveCount,
+      futureRoundHandQuality,
+      currentRoundHandCount,
+      estimatedHandCountAfterSelectedMove,
+      selectedMoveSpendsHandCard,
+      selectedMoveIsCardAdvantage,
+      selectedMoveWouldLeaveNoPositiveUnitMove,
+      selectedMoveWouldLeaveNoUnitTempoCard,
+      nonEliminationRound,
+      scoreDelta: features.scoreDelta,
+      risk,
+      recommendation,
+      catchUpStatus,
+      stopLossRecommended,
+      stopLossReason,
+      roundResourceBudget,
+      roundResourcePressure: "none" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "none" as const,
+    },
+    selectedMove,
+  );
+  const resourceExhaustionDecision = buildRoundResourceExhaustionDecision(
+    features,
+    {
+      ownBoardUnitCount,
+      ownBoardHeroCount,
+      ownBoardNonHeroUnitCount: ownBoardUnitCount,
+      ownBoardHornCount,
+      ownBoardCardCount,
+      positiveFutureUnitMoveCount,
+      positiveFutureNonUnitMoveCount,
+      futureRoundHandQuality,
+      currentRoundHandCount,
+      estimatedHandCountAfterSelectedMove,
+      selectedMoveSpendsHandCard,
+      selectedMoveIsCardAdvantage,
+      selectedMoveWouldLeaveNoPositiveUnitMove,
+      selectedMoveWouldLeaveNoUnitTempoCard,
+      nonEliminationRound,
+      scoreDelta: features.scoreDelta,
+      risk,
+      recommendation,
+      catchUpStatus,
+      stopLossRecommended,
+      stopLossReason,
+      roundResourceBudget,
+      roundResourcePressure: "none" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "none" as const,
+    },
+    selectedMove,
+    futureRoundHandQuality,
+  );
+  const resourceExhaustionRecommended = resourceExhaustionDecision !== "none";
+
   return {
     ownBoardUnitCount,
     ownBoardHeroCount,
@@ -1304,6 +1525,10 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
     catchUpStatus,
     stopLossRecommended,
     stopLossReason,
+    roundResourceBudget,
+    roundResourcePressure,
+    resourceExhaustionRecommended,
+    resourceExhaustionReason: resourceExhaustionDecision,
   };
 };
 
@@ -1343,6 +1568,15 @@ export const shouldPassForRoundInvestment = (
   // cFp32: Stop-loss gate — behind, no clean catch-up, upper-bound impossible
   // Only suppress play_card candidates; use_leader is free (no hand card spent).
   if (analysis.stopLossRecommended && candidate.kind === "play_card") return true;
+
+  // cFp36: Round resource budget gate — conservative non-elimination preservation
+  // Only applies when board investment already exceeds the budget for hand quality,
+  // the candidate spends a hand card (not leader/prompt), and no exception applies.
+  if (analysis.resourceExhaustionRecommended && candidate.kind === "play_card") {
+    // Round 3: no budget preservation (no future round to preserve for)
+    if (features.round >= 3) return false;
+    return true;
+  }
 
   // cFp31 repair Fix 4: Removed features.ownHandCount > 2 gate from critical-risk branch
   // Critical risk: hand nearly empty and no positive unit moves left.

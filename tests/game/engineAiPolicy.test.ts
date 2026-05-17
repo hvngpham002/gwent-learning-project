@@ -26,6 +26,7 @@ import {
   type SeatCardSummary,
   type SeatObservation,
 } from "@/game/ai";
+import { scanRoundInvestmentAnalysis } from "@/components/gwent/matchDiagnostics";
 import {
   getLegalMoves,
   startMatch,
@@ -4456,5 +4457,457 @@ describe("cFp31 repair: round-investment policy and trace fixes", () => {
     const { trace } = explainLegalHeuristicV1Decision(agileInput);
     expect(trace.roundInvestmentAnalysis).not.toBeNull();
     expect(trace.roundInvestmentAnalysis?.selectedMoveWouldLeaveNoPositiveUnitMove).toBe(true);
+  });
+});
+
+describe("cFp36: round resource exhaustion tuning", () => {
+  // Helpers local to cFp36 tests
+  const specialCard = (id: string, sourceId: string, printedStrength = 0) =>
+    testCard({ cardId: id, sourceId, printedStrength, kind: "special" });
+  const unitCard = (id: string, sourceId: string, printedStrength = 5) =>
+    testCard({ cardId: id, sourceId, printedStrength, kind: "unit" });
+
+  // ------------------------------------------------------------------
+  // 1. Round 1 non-elimination, opponent active, board over budget, thin future hand
+  // ------------------------------------------------------------------
+  it("round 1: board over budget with thin future hand -> v1 passes", () => {
+    // Board already has 5 units (>= healthy budget of 5)
+    // Hand: 3 specials -> thin future hand quality
+    const u1 = unitCard("u1", "test.b1", 2);
+    const u2 = unitCard("u2", "test.b2", 3);
+    const u3 = unitCard("u3", "test.b3", 2);
+    const u4 = unitCard("u4", "test.b4", 3);
+    const u5 = unitCard("u5", "test.b5", 2);
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+    const w3 = specialCard("w3", "neutral.torrential-rain", 0);
+
+    const boardUnits = [u1, u2, u3, u4, u5];
+    const handCards = [u1, u2, u3, u4, u5, w1, w2, w3];
+    const unitMoves = boardUnits.map((u) => playMove(u));
+
+    const input = policyInput(
+      [passMove(), playMove(w1), playMove(w2), playMove(w3), ...unitMoves],
+      {
+        ownHand: handCards,
+        ownGems: 2,
+        round: 1,
+        opponentGems: 2,
+        ownDeckCount: 5,
+        boardRows: baseBoardRows({
+          seat_b: {
+            close: boardUnits.slice(0, 2),
+            ranged: boardUnits.slice(2, 4),
+            siege: [boardUnits[4]],
+          },
+        }),
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 10, seat_b: 20 },
+          rowTotalsBySeat: {
+            seat_a: emptyRowTotals(),
+            seat_b: { close: 5, ranged: 6, siege: 2 },
+          },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected).toEqual(expect.objectContaining({ kind: "pass" }));
+  });
+
+  // ------------------------------------------------------------------
+  // 2. Spy/card advantage exception: board over budget but candidate is Spy
+  // ------------------------------------------------------------------
+  it("round 1: board over budget but candidate is Spy -> v1 plays Spy", () => {
+    const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+    const u1 = unitCard("u1", "test.b1", 2);
+    const u2 = unitCard("u2", "test.b2", 3);
+    const u3 = unitCard("u3", "test.b3", 2);
+    const u4 = unitCard("u4", "test.b4", 3);
+    const u5 = unitCard("u5", "test.b5", 2);
+    const w = specialCard("w", "neutral.biting-frost", 0);
+
+    const boardUnits = [u1, u2, u3, u4, u5];
+    const handCards = [u1, u2, u3, u4, u5, spy, w];
+
+    const input = policyInput(
+      [passMove(), playMove(spy), playMove(w), playMove(u1)],
+      {
+        ownHand: handCards,
+        ownGems: 2,
+        round: 1,
+        opponentGems: 2,
+        ownDeckCount: 5,
+        boardRows: baseBoardRows({
+          seat_b: {
+            close: boardUnits.slice(0, 2),
+            ranged: boardUnits.slice(2, 4),
+            siege: [boardUnits[4]],
+          },
+        }),
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 10, seat_b: 20 },
+          rowTotalsBySeat: {
+            seat_a: emptyRowTotals(),
+            seat_b: { close: 5, ranged: 6, siege: 2 },
+          },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected).toEqual(expect.objectContaining({ sourceCardId: "spy" }));
+  });
+
+  // ------------------------------------------------------------------
+  // 3. Free leader exception: board over budget but candidate is useful leader
+  // ------------------------------------------------------------------
+  it("round 1: board over budget but candidate is useful leader -> v1 uses leader", () => {
+    const frost = testCard({
+      cardId: "weather",
+      sourceId: "neutral.biting-frost",
+      printedStrength: 0,
+      kind: "special",
+      abilities: ["frost"],
+    });
+    const u1 = unitCard("u1", "test.b1", 2);
+    const u2 = unitCard("u2", "test.b2", 3);
+    const u3 = unitCard("u3", "test.b3", 2);
+    const u4 = unitCard("u4", "test.b4", 3);
+    const u5 = unitCard("u5", "test.b5", 2);
+
+    const boardUnits = [u1, u2, u3, u4, u5];
+    const handCards = [u1, u2, u3, u4, u5, frost];
+
+    const input = policyInput(
+      [passMove(), leaderMove("clear_weather"), playMove(frost, { kind: "weather" })],
+      {
+        ownHand: handCards,
+        ownGems: 2,
+        round: 1,
+        opponentGems: 2,
+        ownDeckCount: 5,
+        boardRows: baseBoardRows({
+          seat_b: {
+            close: boardUnits.slice(0, 2),
+            ranged: boardUnits.slice(2, 4),
+            siege: [boardUnits[4]],
+          },
+        }),
+        weather: [frost],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 50, seat_b: 20 },
+          cards: [
+            {
+              cardId: "own-weathered",
+              sourceId: "test.own.weathered",
+              seatId: "seat_b",
+              row: "close",
+              cardKind: "unit",
+              isUnit: true,
+              isHero: false,
+              printedStrength: 8,
+              afterWeather: 1,
+              spyMultiplier: 1,
+              afterSpyMultiplier: 1,
+              tightBondMultiplier: 1,
+              afterTightBond: 8,
+              moraleBonus: 0,
+              afterMorale: 1,
+              hornMultiplier: 1,
+              finalStrength: 1,
+              eligibleForScorch: false,
+              modifiers: ["weather:frost"],
+            },
+          ],
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected).toEqual(expect.objectContaining({ kind: "use_leader" }));
+  });
+
+  // ------------------------------------------------------------------
+  // 4. Last-gem exception: behind but last gem, useful unit fights
+  // ------------------------------------------------------------------
+  it("last gem: behind, useful unit can fight -> v1 does not resource-budget pass", () => {
+    // Unit strength 8, opponent score 5 -> upper bound 8 >= minScore 6 -> catch-up possible
+    const useful = unitCard("u", "test.useful", 8);
+    const input = policyInput(
+      [passMove(), playMove(useful)],
+      {
+        ownHand: [useful],
+        ownGems: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: useful.cardId }));
+  });
+
+  // ------------------------------------------------------------------
+  // 5. Match-winning exception: opponent on last gem, candidate wins match
+  // ------------------------------------------------------------------
+  it("opponent on last gem and candidate wins match -> v1 plays match-winning card", () => {
+    const useful = unitCard("u", "test.match-win", 15);
+    const input = policyInput(
+      [passMove(), playMove(useful)],
+      {
+        ownHand: [useful],
+        ownGems: 2,
+        opponentGems: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 15 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: useful.cardId }));
+  });
+
+  // ------------------------------------------------------------------
+  // 6. Round 3: no resource-budget pass for future preservation
+  // ------------------------------------------------------------------
+  it("round 3 with low future hand quality -> cFp36 budget does not recommend pass for preservation", () => {
+    const w1 = specialCard("w1", "neutral.biting-frost", 0);
+    const w2 = specialCard("w2", "neutral.impenetrable-fog", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(w1), playMove(w2)],
+      {
+        ownHand: [w1, w2],
+        ownGems: 2,
+        round: 3,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 30, seat_b: 20 },
+        },
+      },
+    );
+
+    // cFp36 should NOT recommend resource preservation in round 3
+    expect(legalHeuristicPolicyV1.selectMove(input)).not.toBeNull();
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace.roundInvestmentAnalysis).not.toBeNull();
+    // Round 3 budget = max cap (6) because round >= 3 -> no resource budget
+    expect(trace.roundInvestmentAnalysis?.roundResourceBudget).toBeGreaterThanOrEqual(6);
+    // The reason should indicate round 3 has no budget
+    expect(trace.roundInvestmentAnalysis?.resourceExhaustionReason).toBe("round_three_no_budget");
+  });
+
+  // ------------------------------------------------------------------
+  // 7. Healthy hand / low board investment -> continues normal move selection
+  // ------------------------------------------------------------------
+  it("healthy hand and low board investment -> v1 continues normal useful move selection", () => {
+    // 2 unit cards + 1 special = healthy future hand, 3 cards in hand
+    const unit1 = unitCard("u1", "test.h1", 8);
+    const unit2 = unitCard("u2", "test.h2", 6);
+    const w = specialCard("w", "neutral.biting-frost", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(unit1), playMove(unit2), playMove(w)],
+      {
+        ownHand: [unit1, unit2, w],
+        ownGems: 2,
+        round: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 5 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    // Should play the strongest unit, not pass
+    expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: unit1.cardId }));
+  });
+
+  // ------------------------------------------------------------------
+  // 8. Cheap single-move catch-up with acceptable future hand
+  // ------------------------------------------------------------------
+  it("cheap catch-up with acceptable future hand -> v1 plays catch-up", () => {
+    const catchUp = unitCard("c", "test.catchup", 15);
+    const filler = unitCard("f", "test.filler", 5);
+
+    const input = policyInput(
+      [passMove(), playMove(catchUp), playMove(filler)],
+      {
+        ownHand: [catchUp, filler],
+        ownGems: 2,
+        round: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 10, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: catchUp.cardId }));
+  });
+
+  // ------------------------------------------------------------------
+  // 9. Expensive catch-up leaving no future unit tempo on non-elimination round
+  // ------------------------------------------------------------------
+  it("expensive catch-up leaving no future tempo on non-elimination -> v1 may pass", () => {
+    // Only 2 cards: one expensive catch-up unit, nothing else for future
+    const expensiveCatchUp = unitCard("c", "test.exp-catchup", 20);
+    // Board already has 5 cards
+    const u1 = unitCard("u1", "test.b1", 2);
+    const u2 = unitCard("u2", "test.b2", 3);
+    const u3 = unitCard("u3", "test.b3", 2);
+    const u4 = unitCard("u4", "test.b4", 3);
+    const u5 = unitCard("u5", "test.b5", 2);
+    const boardUnits = [u1, u2, u3, u4, u5];
+
+    const input = policyInput(
+      [passMove(), playMove(expensiveCatchUp)],
+      {
+        ownHand: [expensiveCatchUp],
+        ownGems: 2,
+        round: 1,
+        boardRows: baseBoardRows({
+          seat_b: {
+            close: boardUnits.slice(0, 2),
+            ranged: boardUnits.slice(2, 4),
+            siege: [boardUnits[4]],
+          },
+        }),
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 25, seat_b: 10 },
+          rowTotalsBySeat: {
+            seat_a: emptyRowTotals(),
+            seat_b: { close: 5, ranged: 6, siege: 2 },
+          },
+        },
+      },
+    );
+
+    // The expensive catch-up is the only card. Hand count = 1 -> exception
+    // So it should be played (nothing to preserve)
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    // With only 1 card, cFp36 exception: nothing meaningful to preserve
+    expect(selected).toEqual(expect.objectContaining({ kind: "play_card" }));
+  });
+
+  // ------------------------------------------------------------------
+  // 10. Explanation parity: selectMove and explain return the same move
+  // ------------------------------------------------------------------
+  it("explanation parity: explain move equals selectMove for cFp36 resource-budget fixtures", () => {
+    const unit = unitCard("u", "test.parity", 10);
+    const w = specialCard("w", "neutral.biting-frost", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(w)],
+      {
+        ownHand: [unit, w],
+        ownGems: 2,
+        round: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 5 },
+        },
+      },
+    );
+
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    const { move: explainedMove } = explainLegalHeuristicV1Decision(input);
+    expect(explainedMove).toEqual(selectedMove);
+  });
+
+  // ------------------------------------------------------------------
+  // 11. Trace includes new resource-budget fields
+  // ------------------------------------------------------------------
+  it("trace includes roundResourceBudget, roundResourcePressure, resourceExhaustionRecommended and reason", () => {
+    const unit = unitCard("u", "test.trace-fields", 10);
+    const w = specialCard("w", "neutral.biting-frost", 0);
+
+    const input = policyInput(
+      [passMove(), playMove(unit), playMove(w)],
+      {
+        ownHand: [unit, w],
+        ownGems: 2,
+        round: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 5 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const ri = trace.roundInvestmentAnalysis;
+    expect(ri).not.toBeNull();
+    expect(typeof ri!.roundResourceBudget).toBe("number");
+    expect(ri!.roundResourceBudget).toBeGreaterThanOrEqual(2);
+    expect(ri!.roundResourceBudget).toBeLessThanOrEqual(6);
+    expect(ri!.roundResourcePressure).oneOf(["none", "watch", "high", "critical"]);
+    expect(typeof ri!.resourceExhaustionRecommended).toBe("boolean");
+    expect(ri!.resourceExhaustionReason).oneOf([
+      "none", "round_budget_exceeded", "thin_future_hand", "poor_future_hand",
+      "last_useful_unit", "round_three_no_budget", "exception_card_advantage",
+      "exception_last_gem", "exception_leader", "exception_match_winning_play",
+    ]);
+  });
+
+  // ------------------------------------------------------------------
+  // 12. Hidden-info scan: safe resource-budget enums accepted, card-name/source-id rejected
+  // ------------------------------------------------------------------
+  it("hidden-info scan: safe resource-budget enums accepted, card-name/source-id rejected", () => {
+    const { trace } = explainLegalHeuristicV1Decision(
+      policyInput(
+        [passMove(), playMove(unitCard("u", "test.safe", 5))],
+        { ownHand: [unitCard("u", "test.safe", 5)] },
+      ),
+    );
+    const ri = trace.roundInvestmentAnalysis!;
+    const scanIssues = scanRoundInvestmentAnalysis(ri);
+    expect(scanIssues).toEqual([]);
+
+    // Inject a card-name-like value to verify rejection
+    const unsafe = {
+      ...ri,
+      roundResourceReason: "test.spy" as const,
+    };
+    const scanIssues2 = scanRoundInvestmentAnalysis(unsafe as unknown as import("@/game/ai").AiDecisionRoundInvestmentAnalysis);
+    expect(scanIssues2.length).toBeGreaterThan(0);
+  });
+
+  // ------------------------------------------------------------------
+  // 13. Existing cFp29 Medic timing, cFp30 weather placement, cFp32 stop-loss, cFp33 Scoia'tael tests still pass
+  //     (Covered by existing test suite — this is a smoke check that the
+  //      new cFp36 fields don't break type signatures.)
+  // ------------------------------------------------------------------
+  it("cFp36 fields do not break cFp32 stop-loss trace signature", () => {
+    const tiny = testCard({ cardId: "tiny", sourceId: "test.tiny", printedStrength: 2 });
+    const input = policyInput(
+      [passMove(), playMove(tiny)],
+      {
+        ownHand: [tiny],
+        ownGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 50, seat_b: 0 },
+        },
+      },
+    );
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const ri = trace.roundInvestmentAnalysis!;
+    expect(ri.stopLossRecommended).toBe(true);
+    // cFp36 fields should still be present
+    expect(typeof ri.roundResourceBudget).toBe("number");
+    expect(typeof ri.roundResourcePressure).toBe("string");
+    expect(typeof ri.resourceExhaustionRecommended).toBe("boolean");
   });
 });

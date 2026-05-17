@@ -2189,6 +2189,60 @@ describe("cFp31: round-investment scan", () => {
     expect(issues3).toHaveLength(0);
   });
 
+  it("cFp36: allows new round resource budget safe enum strings", () => {
+    const cFp36Safe = {
+      risk: "high",
+      recommendation: "sacrifice_round",
+      ownBoardCardCount: 5,
+      scoreDelta: -10,
+      roundResourceBudget: 3,
+      roundResourcePressure: "high" as const,
+      resourceExhaustionRecommended: true,
+      resourceExhaustionReason: "poor_future_hand" as const,
+    };
+    const issues = scanRoundInvestmentAnalysis(cFp36Safe);
+    expect(issues).toHaveLength(0);
+
+    const budgetExceeded = {
+      risk: "watch",
+      recommendation: "continue",
+      ownBoardCardCount: 4,
+      scoreDelta: 5,
+      roundResourceBudget: 3,
+      roundResourcePressure: "watch" as const,
+      resourceExhaustionRecommended: true,
+      resourceExhaustionReason: "round_budget_exceeded" as const,
+    };
+    const issues2 = scanRoundInvestmentAnalysis(budgetExceeded);
+    expect(issues2).toHaveLength(0);
+
+    const exceptionCardAdvantage = {
+      risk: "none",
+      recommendation: "continue",
+      ownBoardCardCount: 5,
+      scoreDelta: 0,
+      roundResourceBudget: 5,
+      roundResourcePressure: "watch" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "exception_card_advantage" as const,
+    };
+    const issues3 = scanRoundInvestmentAnalysis(exceptionCardAdvantage);
+    expect(issues3).toHaveLength(0);
+
+    const roundThreeNoBudget = {
+      risk: "none",
+      recommendation: "continue",
+      ownBoardCardCount: 3,
+      scoreDelta: 0,
+      roundResourceBudget: 6,
+      roundResourcePressure: "none" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "round_three_no_budget" as const,
+    };
+    const issues4 = scanRoundInvestmentAnalysis(roundThreeNoBudget);
+    expect(issues4).toHaveLength(0);
+  });
+
   it("full export scan passes when roundInvestmentAnalysis is safe", () => {
     const exportData = buildProductDiagnosticExport({
       aiPolicyId: "legal-heuristic-v1",

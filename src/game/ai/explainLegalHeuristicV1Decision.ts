@@ -453,7 +453,20 @@ const buildPlayingPhaseTrace = (
           }
         reasonKind = "policy-round-investment";
       } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
-        if (roundInvestmentAnalysis.recommendation === "preserve_future_hand" || roundInvestmentAnalysis.recommendation === "sacrifice_round") {
+        // cFp36: Check resource exhaustion before general round-investment
+        if (roundInvestmentAnalysis.resourceExhaustionRecommended) {
+          const resReason = roundInvestmentAnalysis.resourceExhaustionReason;
+          if (resReason === "poor_future_hand" || resReason === "round_budget_exceeded") {
+            reason = "round resource budget exceeded — preserve future hand";
+          } else if (resReason === "thin_future_hand") {
+            reason = "round resource budget exceeded — thin future hand";
+          } else if (resReason === "last_useful_unit") {
+            reason = "round resource pressure high — sacrifice non-elimination round";
+          } else {
+            reason = "round resource budget exceeded — preserve future hand";
+          }
+          reasonKind = "policy-round-investment";
+        } else if (roundInvestmentAnalysis.recommendation === "preserve_future_hand" || roundInvestmentAnalysis.recommendation === "sacrifice_round") {
           reason = roundInvestmentAnalysis.recommendation === "preserve_future_hand"
             ? "preserve future hand — pass"
             : "sacrifice round — preserve cards";
@@ -474,9 +487,24 @@ const buildPlayingPhaseTrace = (
           reason = `best useful move (score ${bestMove.score})`;
         }
       }
-    } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
-      // cFp32: Check stop-loss before general round-investment
-     if (roundInvestmentAnalysis.stopLossRecommended) {
+     } else if (move?.kind === "play_card" && roundInvestmentAnalysis && roundInvestmentAnalysis.resourceExhaustionRecommended) {
+         // cFp36: Resource pressure ignored due to exception
+         const resReason = roundInvestmentAnalysis.resourceExhaustionReason;
+         if (resReason === "exception_card_advantage") {
+           reason = "round resource pressure ignored — card advantage move";
+         } else if (resReason === "exception_last_gem") {
+           reason = "round resource pressure ignored — last gem";
+         } else if (resReason === "exception_leader") {
+           reason = "round resource pressure ignored — free leader action";
+         } else if (resReason === "round_three_no_budget") {
+           reason = "round resource pressure ignored — round 3, no budget";
+         } else {
+           reason = "round resource pressure ignored — exception play";
+         }
+         reasonKind = "policy-round-investment";
+       } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
+        // cFp32: Check stop-loss before general round-investment
+       if (roundInvestmentAnalysis.stopLossRecommended) {
           const slReason = roundInvestmentAnalysis.stopLossReason;
           if (slReason === "upper_bound_impossible") {
             reason = "stop-loss — sacrifice round — catch-up impossible — preserve cards";

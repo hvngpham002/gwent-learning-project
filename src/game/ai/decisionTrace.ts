@@ -471,6 +471,28 @@ export type AiDecisionRoundStopLossReason =
   | "weathered_low_tempo"
   | "medium_medic_target";
 
+// ---------------------------------------------------------------------------
+// cFp36: Round resource pressure diagnostics
+// ---------------------------------------------------------------------------
+
+export type AiDecisionRoundResourcePressure =
+  | "none"
+  | "watch"
+  | "high"
+  | "critical";
+
+export type AiDecisionRoundResourceExhaustionReason =
+  | "none"
+  | "round_budget_exceeded"
+  | "thin_future_hand"
+  | "poor_future_hand"
+  | "last_useful_unit"
+  | "round_three_no_budget"
+  | "exception_card_advantage"
+  | "exception_last_gem"
+  | "exception_leader"
+  | "exception_match_winning_play";
+
 export interface AiDecisionRoundInvestmentAnalysis {
   readonly ownBoardUnitCount: number;
   readonly ownBoardHeroCount: number;
@@ -494,6 +516,11 @@ export interface AiDecisionRoundInvestmentAnalysis {
   readonly catchUpStatus: AiDecisionRoundCatchUpStatus;
   readonly stopLossRecommended: boolean;
   readonly stopLossReason: AiDecisionRoundStopLossReason;
+  // cFp36: round resource budget diagnostics
+  readonly roundResourceBudget: number;
+  readonly roundResourcePressure: AiDecisionRoundResourcePressure;
+  readonly resourceExhaustionRecommended: boolean;
+  readonly resourceExhaustionReason: AiDecisionRoundResourceExhaustionReason;
 }
 
 // ---------------------------------------------------------------------------

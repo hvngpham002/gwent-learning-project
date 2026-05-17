@@ -397,12 +397,16 @@ const isRoundInvestmentAnalysis = (obj: Record<string, unknown>): boolean =>
 // Safe enum strings: none, watch, high, critical, preserve_future_hand, sacrifice_round, fight_last_gem, continue
 // Plus safe hand quality: empty, poor, thin, healthy
 // Plus cFp32: catchUpStatus and stopLossReason enums
+// Plus cFp36: round resource pressure, exhaustion recommendation, and reason enums
 const ROUND_INVESTMENT_SAFE_STRINGS = new Set([
   "none", "watch", "high", "critical",
   "preserve_future_hand", "sacrifice_round", "fight_last_gem", "continue",
   "empty", "poor", "thin", "healthy",
   "single_move_catch_up", "upper_bound_possible", "upper_bound_impossible",
   "low_hand_no_clean_catch_up", "weathered_low_tempo", "medium_medic_target",
+  "round_budget_exceeded", "thin_future_hand", "poor_future_hand", "last_useful_unit",
+  "round_three_no_budget", "exception_card_advantage", "exception_last_gem",
+  "exception_leader", "exception_match_winning_play",
 ]);
 
 /**

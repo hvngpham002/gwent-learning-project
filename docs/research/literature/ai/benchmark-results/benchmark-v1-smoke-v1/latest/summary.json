@@ -1,7 +1,7 @@
 {
-  "averageCommands": 38.5,
-  "averageLegalMoves": 8.218409601317068,
-  "averageSteps": 38.5,
+  "averageCommands": 39.75,
+  "averageLegalMoves": 8.288138636611762,
+  "averageSteps": 39.75,
   "benchmarkRunId": "benchmark-v1-smoke-v1:latest",
   "completionRate": 1,
   "deckPresetIds": [
@@ -9,15 +9,15 @@
     "current-northern-realms"
   ],
   "errorCodeCounts": {},
-  "leaderUseCount": 4,
+  "leaderUseCount": 1,
   "matchupSummaries": [
     {
-      "averageCommands": 38.5,
-      "averageLegalMoves": 8.218409601317068,
-      "averageSteps": 38.5,
-      "leaderUseCount": 4,
+      "averageCommands": 39.75,
+      "averageLegalMoves": 8.288138636611762,
+      "averageSteps": 39.75,
+      "leaderUseCount": 1,
       "matchupId": "current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0",
-      "promptCount": 19,
+      "promptCount": 30,
       "resultCountsByDeck": {
         "current-nilfgaard": {
           "draws": 0,
@@ -60,7 +60,7 @@
     "legal-heuristic-v0",
     "legal-heuristic-v1"
   ],
-  "promptCount": 19,
+  "promptCount": 30,
   "replayCheckedCount": 12,
   "replayFailedCount": 0,
   "resultCountsByDeck": {

@@ -39,15 +39,15 @@
 
 ## Averages
 
-- steps: 38.5
-- commands: 38.5
-- legal moves: 8.218
+- steps: 39.75
+- commands: 39.75
+- legal moves: 8.288
 
 ## Matchups
 
 | Matchup | Matches | Avg steps | Avg commands | Avg legal moves |
 |---|---:|---:|---:|---:|
-| current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0 | 12 | 38.5 | 38.5 | 8.218 |
+| current-nr-ng-legal-heuristic-v1-vs-legal-heuristic-v0 | 12 | 39.75 | 39.75 | 8.288 |
 
 ## Diagnostics
 
