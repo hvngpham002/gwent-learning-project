@@ -136,6 +136,7 @@ const artifactHashes = (artifacts: SerializedBenchmarkFailureMiningArtifacts) =>
   "summary.json": sha256(artifacts.summaryJson),
   "findings.jsonl": sha256(artifacts.findingsJsonl),
   "report.md": sha256(artifacts.reportMarkdown),
+  "tuning-queue.md": sha256(artifacts.tuningQueueMarkdown),
 });
 
 const topFindingKinds = (result: BenchmarkFailureMiningResult) =>
@@ -144,6 +145,12 @@ const topFindingKinds = (result: BenchmarkFailureMiningResult) =>
     .sort(([, leftCount], [, rightCount]) => rightCount - leftCount)
     .slice(0, 3)
     .map(([kind, count]) => `${kind}=${count}`)
+    .join(", ") || "none";
+
+const topQueueClusters = (result: BenchmarkFailureMiningResult) =>
+  result.summary.tuningQueue
+    .slice(0, 3)
+    .map((item) => item.clusterId)
     .join(", ") || "none";
 
 const run = async () => {
@@ -176,7 +183,9 @@ const run = async () => {
       `benchmark failure mining complete: suite=${benchmarkResult.summary.suiteId}`,
       `records=${benchmarkResult.records.length}`,
       `findings=${miningResult.findings.length}`,
+      `suppressedSuspiciousPass=${miningResult.summary.suppressedFindingCountsByKind.suspicious_pass ?? 0}`,
       `topKinds=${topFindingKinds(miningResult)}`,
+      `topQueue=${topQueueClusters(miningResult)}`,
       `out=${options.outDir}`,
       ...Object.entries(hashes).map(([file, hash]) => `${file}=${hash}`),
     ].join("\n"),

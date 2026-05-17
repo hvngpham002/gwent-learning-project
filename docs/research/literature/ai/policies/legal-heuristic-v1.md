@@ -42,6 +42,12 @@ artifacts for the v1 starter matrix and does not change v1 move selection,
 engine rules, legal moves, catalog data, deck presets, product UI behavior, or
 the product policy registry.
 
+cFp35 is evaluator calibration only. It narrows the failure-mining
+`suspicious_pass` signal, records suppressed broad-pass analyzer noise as
+aggregate counts, and adds a deterministic tuning queue for cFp36. It does not
+change v1 scoring, move selection, v0 behavior, engine rules, legal moves,
+catalog data, deck presets, product UI behavior, or the product policy registry.
+
 ## Product Playtest Toggle
 
 cFp24.1 adds a product-safe policy registry for playable policies:
@@ -190,7 +196,7 @@ Latest cFp31.1 results:
 
 These are fixed-suite evidence, not ratings or proof of broad strength.
 
-## Failure Mining (cFp34)
+## Failure Mining (cFp34-cFp35)
 
 cFp34 adds `npm run benchmark:v1-failure-mining`, which reruns
 `benchmark-v1-starter-matrix-v1` with opt-in in-memory v1 decision traces and
@@ -201,12 +207,21 @@ docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/fai
 ```
 
 The artifact bundle contains `manifest.json`, `summary.json`, `findings.jsonl`,
-and `report.md`. It is intended as evidence for future cFp35+ tuning specs and
-is not a policy change. The first cFp34 artifact reports 388 findings over 120
-records, including matchup/deck skew plus v1 behavior-level signals for
-round-one overinvestment, weak round-three resources, suspicious passes,
-weathered-row plays, and Medic timing risks. `leader_underuse` is deferred until
-a safe public leader-availability summary exists.
+`report.md`, and cFp35's `tuning-queue.md`. It is intended as evidence for
+future tuning specs and is not a policy change. cFp34's first artifact reported
+388 findings over 120 records, including 315 broad `suspicious_pass` findings.
+cFp35 recalibrates that evaluator so `suspicious_pass` is not emitted solely
+because `stopLossRecommended === false`; the refreshed artifact reports 295
+findings, including 222 calibrated suspicious-pass findings and 93 suppressed
+broad-pass candidates recorded only as aggregate analyzer-noise counts.
+
+The cFp35 tuning queue ranks `round_resource_exhaustion`,
+`weathered_row_low_tempo`, `medic_no_target_timing`, `skellige_matchup_skew`,
+and `remaining_suspicious_pass`. The recommended cFp36 scope is to tune
+round-resource exhaustion first, not suspicious-pass broadly.
+`leader_underuse` remains deferred until a safe public leader-availability
+summary exists. H100/Slurm is still not involved; the command is CPU/Node
+benchmark infrastructure.
 
 ## Known Limitations
 

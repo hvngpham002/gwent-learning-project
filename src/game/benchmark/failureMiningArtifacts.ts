@@ -8,6 +8,7 @@ export interface SerializedBenchmarkFailureMiningArtifacts {
   readonly summaryJson: string;
   readonly findingsJsonl: string;
   readonly reportMarkdown: string;
+  readonly tuningQueueMarkdown: string;
 }
 
 export const benchmarkFailureMiningArtifactFiles = [
@@ -15,6 +16,7 @@ export const benchmarkFailureMiningArtifactFiles = [
   "summary.json",
   "findings.jsonl",
   "report.md",
+  "tuning-queue.md",
 ] as const;
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
@@ -48,6 +50,7 @@ export const serializeBenchmarkFailureMiningArtifacts = (
   summaryJson: stablePrettyJson(result.summary),
   findingsJsonl: result.findings.length === 0 ? "" : `${result.findings.map(stableJsonLine).join("\n")}\n`,
   reportMarkdown: result.markdownReport,
+  tuningQueueMarkdown: result.tuningQueueMarkdown,
 });
 
 export const writeBenchmarkFailureMiningArtifacts = async ({
@@ -63,6 +66,7 @@ export const writeBenchmarkFailureMiningArtifacts = async ({
     writeFile(resolve(outDir, "summary.json"), artifacts.summaryJson, "utf8"),
     writeFile(resolve(outDir, "findings.jsonl"), artifacts.findingsJsonl, "utf8"),
     writeFile(resolve(outDir, "report.md"), artifacts.reportMarkdown, "utf8"),
+    writeFile(resolve(outDir, "tuning-queue.md"), artifacts.tuningQueueMarkdown, "utf8"),
   ]);
   return {
     outDir,
@@ -90,6 +94,7 @@ export const combinedBenchmarkFailureMiningArtifactText = (
     artifacts.summaryJson,
     artifacts.findingsJsonl,
     artifacts.reportMarkdown,
+    artifacts.tuningQueueMarkdown,
   ].join("\n");
 
 export const scanBenchmarkFailureMiningArtifactsForHiddenInfo = (

@@ -22,6 +22,13 @@ export type BenchmarkFailureFindingKind =
 
 export type BenchmarkFailureFindingSeverity = "info" | "watch" | "warning";
 
+export type BenchmarkSuspiciousPassSuppressionCategory =
+  | "preserve_future_hand_pass"
+  | "sacrifice_round_pass"
+  | "voluntary_safe_pass"
+  | "stop_loss_pass"
+  | "insufficient_context";
+
 export interface BenchmarkFailureFinding {
   readonly schemaVersion: typeof BENCHMARK_FAILURE_MINING_SCHEMA_VERSION;
   readonly findingId: string;
@@ -41,6 +48,20 @@ export interface BenchmarkFailureFinding {
   readonly evidence: Record<string, string | number | boolean | null>;
 }
 
+export interface BenchmarkFailureTuningQueueItem {
+  readonly rank: number;
+  readonly clusterId: string;
+  readonly title: string;
+  readonly findingKinds: readonly BenchmarkFailureFindingKind[];
+  readonly severity: BenchmarkFailureFindingSeverity;
+  readonly count: number;
+  readonly affectedDecks: readonly string[];
+  readonly affectedFactions: readonly string[];
+  readonly affectedMatchups: readonly string[];
+  readonly recommendation: string;
+  readonly suggestedNextSpecId: string;
+}
+
 export interface BenchmarkFailureMiningSummary {
   readonly schemaVersion: typeof BENCHMARK_FAILURE_MINING_SCHEMA_VERSION;
   readonly suiteId: string;
@@ -49,6 +70,9 @@ export interface BenchmarkFailureMiningSummary {
   readonly findingCount: number;
   readonly findingCountsByKind: Record<string, number>;
   readonly findingCountsBySeverity: Record<string, number>;
+  readonly suppressedFindingCountsByKind: Record<string, number>;
+  readonly suppressedSuspiciousPassCountsByCategory: Record<BenchmarkSuspiciousPassSuppressionCategory, number>;
+  readonly tuningQueue: readonly BenchmarkFailureTuningQueueItem[];
   readonly topFindings: readonly BenchmarkFailureFinding[];
   readonly deferredSignals: readonly {
     readonly kind: BenchmarkFailureFindingKind;
@@ -79,6 +103,7 @@ export interface BenchmarkFailureMiningResult {
   readonly summary: BenchmarkFailureMiningSummary;
   readonly findings: readonly BenchmarkFailureFinding[];
   readonly markdownReport: string;
+  readonly tuningQueueMarkdown: string;
 }
 
 type Evidence = BenchmarkFailureFinding["evidence"];
@@ -100,6 +125,13 @@ const FINDING_KINDS: readonly BenchmarkFailureFindingKind[] = [
   "replay_failed",
 ];
 const FINDING_SEVERITIES: readonly BenchmarkFailureFindingSeverity[] = ["warning", "watch", "info"];
+const SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES: readonly BenchmarkSuspiciousPassSuppressionCategory[] = [
+  "preserve_future_hand_pass",
+  "sacrifice_round_pass",
+  "voluntary_safe_pass",
+  "stop_loss_pass",
+  "insufficient_context",
+];
 const SEVERITY_RANK: Record<BenchmarkFailureFindingSeverity, number> = {
   warning: 0,
   watch: 1,
@@ -135,6 +167,11 @@ const findingId = (parts: readonly (string | number | undefined)[]) => parts.map
 
 const compareOptional = (left?: string | number, right?: string | number) =>
   String(left ?? "").localeCompare(String(right ?? ""));
+
+const sortUnique = (values: readonly (string | undefined)[]) =>
+  [...new Set(values.filter((value): value is string => Boolean(value)))].sort((left, right) =>
+    left.localeCompare(right),
+  );
 
 export const compareBenchmarkFailureFindings = (
   left: BenchmarkFailureFinding,
@@ -492,6 +529,110 @@ const isWeakRoundThreeTrace = (trace: AiDecisionTrace) => {
   return noUsefulUnitTempo && (handShape.specialOnlyHand || handShape.futureRoundHandQuality !== "healthy");
 };
 
+const buildZeroCounts = <T extends string>(values: readonly T[]) =>
+  Object.fromEntries(values.map((value) => [value, 0])) as Record<T, number>;
+
+const incrementCount = <T extends string>(counts: Record<T, number>, key: T) => {
+  counts[key] = (counts[key] ?? 0) + 1;
+};
+
+const isSafePassRecommendation = (recommendation: string | undefined) =>
+  recommendation === "preserve_future_hand" || recommendation === "sacrifice_round";
+
+const getPassOpponentPassed = (trace: AiDecisionTrace) =>
+  trace.passAnalysis?.isOpponentPassed ?? trace.publicState?.opponentPassed ?? null;
+
+const getPassScoreDelta = (trace: AiDecisionTrace) =>
+  trace.passAnalysis?.scoreDelta ?? trace.roundInvestmentAnalysis?.scoreDelta ?? trace.publicState?.scoreDelta ?? null;
+
+const classifySuppressedPassCandidate = (trace: AiDecisionTrace): BenchmarkSuspiciousPassSuppressionCategory => {
+  const recommendation = trace.roundInvestmentAnalysis?.recommendation;
+  if (trace.roundInvestmentAnalysis?.stopLossRecommended === true) return "stop_loss_pass";
+  if (recommendation === "preserve_future_hand") return "preserve_future_hand_pass";
+  if (recommendation === "sacrifice_round") return "sacrifice_round_pass";
+
+  const scoreDelta = getPassScoreDelta(trace);
+  const opponentPassed = getPassOpponentPassed(trace);
+  if (
+    trace.passAnalysis?.isVoluntarilySafe === true ||
+    (opponentPassed === true && typeof scoreDelta === "number" && scoreDelta > 0)
+  ) {
+    return "voluntary_safe_pass";
+  }
+
+  return "insufficient_context";
+};
+
+const analyzeSuspiciousPassTrace = (
+  trace: AiDecisionTrace,
+):
+  | {
+      readonly shouldEmit: true;
+      readonly severity: BenchmarkFailureFindingSeverity;
+      readonly evidence: Evidence;
+    }
+  | {
+      readonly shouldEmit: false;
+      readonly suppressionCategory?: BenchmarkSuspiciousPassSuppressionCategory;
+    } => {
+  if (trace.selected?.kind !== "pass") return { shouldEmit: false };
+
+  const passAnalysis = trace.passAnalysis;
+  const roundInvestment = trace.roundInvestmentAnalysis;
+  const recommendation = roundInvestment?.recommendation;
+  const opponentPassed = getPassOpponentPassed(trace);
+  const stopLossRecommended = roundInvestment?.stopLossRecommended === true;
+  const recommendationContinue = recommendation === "continue";
+  const singleMoveCatchUpIgnored =
+    passAnalysis?.hasSingleMoveCatchUp === true && !isSafePassRecommendation(recommendation);
+  const fightLastGemUpperBoundCanWin =
+    passAnalysis?.policyUpperBoundCanWinRound === true && recommendation === "fight_last_gem";
+  const activeVoluntaryUnsafe =
+    passAnalysis?.isVoluntarilySafe === false &&
+    opponentPassed === false &&
+    !isSafePassRecommendation(recommendation) &&
+    !stopLossRecommended;
+  const broadCfp34Candidate =
+    passAnalysis?.isVoluntarilySafe === false ||
+    recommendationContinue ||
+    roundInvestment?.stopLossRecommended === false ||
+    passAnalysis?.hasSingleMoveCatchUp === true;
+
+  const shouldEmit =
+    !stopLossRecommended &&
+    !isSafePassRecommendation(recommendation) &&
+    (recommendationContinue || singleMoveCatchUpIgnored || fightLastGemUpperBoundCanWin || activeVoluntaryUnsafe);
+
+  if (!shouldEmit) {
+    return {
+      shouldEmit: false,
+      suppressionCategory: broadCfp34Candidate ? classifySuppressedPassCandidate(trace) : undefined,
+    };
+  }
+
+  return {
+    shouldEmit: true,
+    severity: recommendationContinue || singleMoveCatchUpIgnored || fightLastGemUpperBoundCanWin ? "warning" : "watch",
+    evidence: {
+      decisionIndex: trace.decisionIndex,
+      round: trace.round,
+      scoreDelta: getPassScoreDelta(trace),
+      isVoluntarilySafe: passAnalysis?.isVoluntarilySafe ?? null,
+      isOpponentPassed: opponentPassed,
+      hasSingleMoveCatchUp: passAnalysis?.hasSingleMoveCatchUp ?? null,
+      policyUpperBoundCanWinRound: passAnalysis?.policyUpperBoundCanWinRound ?? null,
+      roundInvestmentRecommendation: recommendation ?? null,
+      stopLossRecommended: roundInvestment?.stopLossRecommended ?? null,
+      recommendationContinue,
+      singleMoveCatchUpIgnored,
+      fightLastGemUpperBoundCanWin,
+      activeVoluntaryUnsafe,
+      selectedKind: trace.selected.kind,
+      reasonKind: trace.reasonKind,
+    },
+  };
+};
+
 const buildTraceFindings = ({
   suiteId,
   benchmarkRunId,
@@ -502,6 +643,7 @@ const buildTraceFindings = ({
   contexts: readonly { record: BenchmarkMatchRecord; result?: HeadlessMatchSimulationResult }[];
 }) => {
   const findings: BenchmarkFailureFinding[] = [];
+  const suppressedSuspiciousPassCountsByCategory = buildZeroCounts(SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES);
 
   contexts.forEach(({ record, result }) => {
     const traces = result?.decisionTraces ?? [];
@@ -543,34 +685,21 @@ const buildTraceFindings = ({
       }
 
       if (trace.selected?.kind === "pass") {
-        const passAnalysis = trace.passAnalysis;
-        const roundInvestment = trace.roundInvestmentAnalysis;
-        const voluntaryUnsafe = passAnalysis?.isVoluntarilySafe === false;
-        const recommendationContinue = roundInvestment?.recommendation === "continue";
-        const stopLossNotRecommended = roundInvestment?.stopLossRecommended === false;
-        const singleMoveCatchUpIgnored = passAnalysis?.hasSingleMoveCatchUp === true;
-        if (voluntaryUnsafe || recommendationContinue || stopLossNotRecommended || singleMoveCatchUpIgnored) {
+        const suspiciousPass = analyzeSuspiciousPassTrace(trace);
+        if (suspiciousPass.shouldEmit) {
           findings.push(
             createFinding({
               ...base,
               kind: "suspicious_pass",
-              severity: singleMoveCatchUpIgnored || recommendationContinue ? "warning" : "watch",
+              severity: suspiciousPass.severity,
               count: 1,
               message: `${descriptor.policyId} passed in a state that merits review.`,
-              evidence: {
-                decisionIndex: trace.decisionIndex,
-                round: trace.round,
-                scoreDelta: passAnalysis?.scoreDelta ?? roundInvestment?.scoreDelta ?? null,
-                isVoluntarilySafe: passAnalysis?.isVoluntarilySafe ?? null,
-                hasSingleMoveCatchUp: passAnalysis?.hasSingleMoveCatchUp ?? null,
-                roundInvestmentRecommendation: roundInvestment?.recommendation ?? null,
-                stopLossRecommended: roundInvestment?.stopLossRecommended ?? null,
-                selectedKind: trace.selected.kind,
-                reasonKind: trace.reasonKind,
-              },
+              evidence: suspiciousPass.evidence,
               idParts: [descriptor.policyId, record.matchupId, record.seed, record.mirrorIndex, trace.seatId, trace.decisionIndex],
             }),
           );
+        } else if (suspiciousPass.suppressionCategory) {
+          incrementCount(suppressedSuspiciousPassCountsByCategory, suspiciousPass.suppressionCategory);
         }
       }
 
@@ -631,7 +760,7 @@ const buildTraceFindings = ({
     });
   });
 
-  return findings;
+  return { findings, suppressedSuspiciousPassCountsByCategory };
 };
 
 const buildRoundOneOverinvestmentFindings = ({
@@ -694,6 +823,119 @@ const buildCounts = <T extends string>(values: readonly T[], allValues: readonly
   return counts;
 };
 
+const maxSeverity = (findings: readonly BenchmarkFailureFinding[]): BenchmarkFailureFindingSeverity => {
+  if (findings.some((finding) => finding.severity === "warning")) return "warning";
+  if (findings.some((finding) => finding.severity === "watch")) return "watch";
+  return "info";
+};
+
+const isSkelligeRelevant = (finding: BenchmarkFailureFinding) =>
+  finding.faction === "skellige" ||
+  finding.deckPresetId?.includes("skellige") ||
+  finding.matchupId?.includes("skellige") ||
+  false;
+
+const buildTuningQueueItem = ({
+  rank,
+  clusterId,
+  title,
+  findingKinds,
+  findings,
+  recommendation,
+}: {
+  readonly rank: number;
+  readonly clusterId: string;
+  readonly title: string;
+  readonly findingKinds: readonly BenchmarkFailureFindingKind[];
+  readonly findings: readonly BenchmarkFailureFinding[];
+  readonly recommendation: string;
+}): BenchmarkFailureTuningQueueItem | null => {
+  if (findings.length === 0) return null;
+  return {
+    rank,
+    clusterId,
+    title,
+    findingKinds,
+    severity: maxSeverity(findings),
+    count: findings.length,
+    affectedDecks: sortUnique(findings.map((finding) => finding.deckPresetId)),
+    affectedFactions: sortUnique(findings.map((finding) => finding.faction)),
+    affectedMatchups: sortUnique(findings.map((finding) => finding.matchupId)),
+    recommendation,
+    suggestedNextSpecId: "cFp36",
+  };
+};
+
+const buildTuningQueue = (findings: readonly BenchmarkFailureFinding[]): readonly BenchmarkFailureTuningQueueItem[] => {
+  const resourceFindings = findings.filter(
+    (finding) => finding.kind === "round_one_overinvestment" || finding.kind === "round_three_low_resource",
+  );
+  const weatherFindings = findings.filter((finding) => finding.kind === "weathered_row_play");
+  const medicFindings = findings.filter((finding) => finding.kind === "medic_timing_risk");
+  const skelligeSkewFindings = findings.filter(
+    (finding) =>
+      isSkelligeRelevant(finding) &&
+      (finding.kind === "deck_skew" ||
+        finding.kind === "matchup_skew" ||
+        finding.kind === "round_one_overinvestment" ||
+        finding.kind === "round_three_low_resource"),
+  );
+  const suspiciousPassFindings = findings.filter((finding) => finding.kind === "suspicious_pass");
+
+  return [
+    buildTuningQueueItem({
+      rank: 1,
+      clusterId: "round_resource_exhaustion",
+      title: "Round resource exhaustion",
+      findingKinds: ["round_one_overinvestment", "round_three_low_resource"],
+      findings: resourceFindings,
+      recommendation:
+        "Tune round investment and future-hand valuation before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources.",
+    }),
+    buildTuningQueueItem({
+      rank: 2,
+      clusterId: "weathered_row_low_tempo",
+      title: "Weathered row low tempo",
+      findingKinds: ["weathered_row_play"],
+      findings: weatherFindings,
+      recommendation:
+        "Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo.",
+    }),
+    buildTuningQueueItem({
+      rank: 3,
+      clusterId: "medic_no_target_timing",
+      title: "Medic no-target timing",
+      findingKinds: ["medic_timing_risk"],
+      findings: medicFindings,
+      recommendation:
+        "Review Medic timing thresholds where no-target or weak-target diagnostics still allow a Medic play.",
+    }),
+    buildTuningQueueItem({
+      rank: 4,
+      clusterId: "skellige_matchup_skew",
+      title: "Skellige matchup skew",
+      findingKinds: ["deck_skew", "matchup_skew", "round_one_overinvestment", "round_three_low_resource"],
+      findings: skelligeSkewFindings,
+      recommendation:
+        "Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes.",
+    }),
+    buildTuningQueueItem({
+      rank: 5,
+      clusterId: "remaining_suspicious_pass",
+      title: "Remaining suspicious pass",
+      findingKinds: ["suspicious_pass"],
+      findings: suspiciousPassFindings,
+      recommendation:
+        "Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes.",
+    }),
+  ]
+    .filter((item): item is BenchmarkFailureTuningQueueItem => item !== null)
+    .sort((left, right) => left.rank - right.rank || left.clusterId.localeCompare(right.clusterId))
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+};
+
+const formatList = (values: readonly string[]) => (values.length === 0 ? "none" : values.join(", "));
+
 const buildMarkdownReport = (summary: BenchmarkFailureMiningSummary) => {
   const severityRows = FINDING_SEVERITIES.map(
     (severity) => `| ${severity} | ${summary.findingCountsBySeverity[severity] ?? 0} |`,
@@ -714,6 +956,18 @@ const buildMarkdownReport = (summary: BenchmarkFailureMiningSummary) => {
     summary.deferredSignals.length === 0
       ? "| none | none |"
       : summary.deferredSignals.map((signal) => `| ${signal.kind} | ${signal.reason} |`).join("\n");
+  const suppressedRows = SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES.map(
+    (category) => `| ${category} | ${summary.suppressedSuspiciousPassCountsByCategory[category] ?? 0} |`,
+  ).join("\n");
+  const queueRows =
+    summary.tuningQueue.length === 0
+      ? "| none | none | none | 0 | none |"
+      : summary.tuningQueue
+          .map(
+            (item) =>
+              `| ${item.rank} | ${item.clusterId} | ${item.severity} | ${item.count} | ${item.recommendation} |`,
+          )
+          .join("\n");
 
   return `# Benchmark Failure Mining Report
 
@@ -744,6 +998,18 @@ ${kindRows}
 |---|---|---|---:|---|
 ${topRows}
 
+## Suppressed Analyzer Noise
+
+| Suspicious-pass suppression category | Count |
+|---|---:|
+${suppressedRows}
+
+## Tuning Queue
+
+| Rank | Cluster | Severity | Count | Recommendation |
+|---:|---|---|---:|---|
+${queueRows}
+
 ## Deferred Signals
 
 | Kind | Reason |
@@ -756,17 +1022,80 @@ This report is derived from public benchmark records plus in-memory headless dia
 `;
 };
 
+const buildTuningQueueMarkdown = (summary: BenchmarkFailureMiningSummary) => {
+  const queueRows =
+    summary.tuningQueue.length === 0
+      ? "| none | none | none | 0 | none | none |"
+      : summary.tuningQueue
+          .map(
+            (item) =>
+              `| ${item.rank} | ${item.clusterId} | ${item.severity} | ${item.count} | ${formatList(item.affectedFactions)} | ${item.recommendation} |`,
+          )
+          .join("\n");
+  const suppressedRows = SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES.map(
+    (category) => `| ${category} | ${summary.suppressedSuspiciousPassCountsByCategory[category] ?? 0} |`,
+  ).join("\n");
+  const topCluster = summary.tuningQueue[0]?.clusterId ?? "none";
+  const recommendedScope =
+    topCluster === "round_resource_exhaustion"
+      ? "cFp36 should tune round-resource exhaustion first, not suspicious-pass broadly."
+      : topCluster === "none"
+        ? "cFp36 should further improve evaluator signals before behavior tuning because no ranked cluster was produced."
+        : `cFp36 should tune ${topCluster} first, while keeping suppressed pass categories out of behavior-tuning scope.`;
+
+  return `# Benchmark Failure-Mining Tuning Queue
+
+## Source
+
+- suite id: ${summary.suiteId}
+- benchmark run id: ${summary.benchmarkRunId}
+- schema: ${summary.schemaVersion}
+- record count: ${summary.recordCount}
+- finding count: ${summary.findingCount}
+- calibrated suspicious-pass findings: ${summary.findingCountsByKind.suspicious_pass ?? 0}
+- suppressed broad suspicious-pass candidates: ${summary.suppressedFindingCountsByKind.suspicious_pass ?? 0}
+
+## Ranked Queue
+
+| Rank | Cluster | Severity | Finding count | Affected factions | Recommendation |
+|---:|---|---|---:|---|---|
+${queueRows}
+
+## Suppressed Analyzer Noise
+
+| Suspicious-pass suppression category | Count |
+|---|---:|
+${suppressedRows}
+
+## Recommended cFp36 Scope
+
+${recommendedScope}
+
+## Hidden-Info Boundary
+
+This queue is derived from public benchmark IDs and aggregate failure-mining findings only. It contains no raw engine state, command logs, private-zone arrays, runtime card instance IDs, or hidden hand card names.
+`;
+};
+
 export function buildBenchmarkFailureMiningReport(
   input: BuildBenchmarkFailureMiningInput,
 ): BenchmarkFailureMiningResult {
   const contexts = alignDebugResults(input.records, input.debugResults);
+  const traceResult = buildTraceFindings({ ...input, contexts });
   const findings = [
     ...buildPublicStatusFindings(input),
     ...buildMatchupSkewFindings(input),
     ...buildDeckSkewFindings(input),
     ...buildRoundOneOverinvestmentFindings({ ...input, contexts }),
-    ...buildTraceFindings({ ...input, contexts }),
+    ...traceResult.findings,
   ].sort(compareBenchmarkFailureFindings);
+  const suppressedSuspiciousPassCount = SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES.reduce(
+    (total, category) => total + (traceResult.suppressedSuspiciousPassCountsByCategory[category] ?? 0),
+    0,
+  );
+  const suppressedFindingCountsByKind = buildZeroCounts(FINDING_KINDS);
+  suppressedFindingCountsByKind.suspicious_pass = suppressedSuspiciousPassCount;
+  const tuningQueue = buildTuningQueue(findings);
 
   const deferredSignals: BenchmarkFailureMiningSummary["deferredSignals"] = [
     {
@@ -810,6 +1139,9 @@ export function buildBenchmarkFailureMiningReport(
       findings.map((finding) => finding.severity),
       FINDING_SEVERITIES,
     ),
+    suppressedFindingCountsByKind,
+    suppressedSuspiciousPassCountsByCategory: traceResult.suppressedSuspiciousPassCountsByCategory,
+    tuningQueue,
     topFindings: findings.slice(0, 10),
     deferredSignals,
   };
@@ -819,7 +1151,7 @@ export function buildBenchmarkFailureMiningReport(
     suiteId: input.suiteId,
     benchmarkRunId: input.benchmarkRunId,
     generatedAt: input.benchmarkRunId,
-    files: ["manifest.json", "summary.json", "findings.jsonl", "report.md"],
+    files: ["manifest.json", "summary.json", "findings.jsonl", "report.md", "tuning-queue.md"],
     recordCount: input.records.length,
     findingCount: findings.length,
     hiddenInfoSafetyNote: HIDDEN_INFO_SAFETY_NOTE,
@@ -830,5 +1162,6 @@ export function buildBenchmarkFailureMiningReport(
     summary,
     findings,
     markdownReport: buildMarkdownReport(summary),
+    tuningQueueMarkdown: buildTuningQueueMarkdown(summary),
   };
 }

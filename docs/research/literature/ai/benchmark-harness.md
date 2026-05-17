@@ -40,6 +40,14 @@ aggregate counts, rates, booleans, and bucketed diagnostics. It is an
 evaluation artifact for future tuning specs, not a new policy and not a
 product behavior change.
 
+cFp35 calibrates that failure-mining layer. It narrows the
+`suspicious_pass` evaluator so a pass is not flagged solely because
+`stopLossRecommended === false`, records suppressed broad-pass analyzer
+noise as aggregate counts, and adds a deterministic `tuning-queue.md`
+artifact for cFp36 scoping. It does not change `legal-heuristic-v1`,
+v0, engine rules, legal moves, UI behavior, catalog data, deck presets,
+or H100/Slurm workflow.
+
 The harness is implementation support for the Batch A and Batch B
 decision notes:
 
@@ -82,10 +90,12 @@ Robustness probe:
 
 Failure mining:
 
-- deterministic cFp34 artifact bundle over `benchmark-v1-starter-matrix-v1`;
+- deterministic cFp34/cFp35 artifact bundle over `benchmark-v1-starter-matrix-v1`;
 - emits matchup/deck skew plus behavior-level findings such as round-one
-  overinvestment, weak round-three resources, suspicious passes,
+  overinvestment, weak round-three resources, calibrated suspicious passes,
   weathered-row plays, and Medic timing risks;
+- records suppressed broad suspicious-pass candidates only as aggregate
+  counts and writes a ranked `tuning-queue.md` for future spec scoping;
 - `leader_underuse` is explicitly deferred until a safe public
   leader-availability summary exists.
 
@@ -203,6 +213,7 @@ docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/fai
   summary.json
   findings.jsonl
   report.md
+  tuning-queue.md
 ```
 
 The default run id is `<suite-id>:latest`. Each `latest/` path is
@@ -241,13 +252,13 @@ The cFp22 script does not expose an `includeDebugResults` option and does
 not serialize unsafe debug results. cFp24 v1 artifacts use the same
 public serializer and hazard-scan contract.
 
-The cFp34 failure-mining command uses the unsafe/debug headless path only
+The cFp34/cFp35 failure-mining command uses the unsafe/debug headless path only
 inside the Node process. The committed failure-mining artifacts are
 hidden-info safe and contain findings, counts, rates, policy/deck/faction
-IDs, matchup IDs, seeds, mirror indexes, and bucket labels only. They do
-not include raw engine states, command logs, raw events, private-zone
-arrays, debug result objects, runtime card instance IDs, or hidden hand
-card names.
+IDs, matchup IDs, seeds, mirror indexes, bucket labels, aggregate
+suppression counts, and ranked queue metadata only. They do not include
+raw engine states, command logs, raw events, private-zone arrays, debug
+result objects, runtime card instance IDs, or hidden hand card names.
 
 ### Opt-In Trace Artifacts (cFp25)
 
