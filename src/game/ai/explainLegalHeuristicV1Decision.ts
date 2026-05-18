@@ -463,6 +463,9 @@ const buildPlayingPhaseTrace = (
       } else if (roundInvestmentAnalysis.resourceExhaustionRecommended && roundInvestmentAnalysis.recommendation === "fight_last_gem") {
         reason = "round resource pressure ignored — last-gem fight";
         reasonKind = "policy-round-investment";
+      } else if (roundInvestmentAnalysis.resourceExhaustionRecommended && passDiagnosticsInput.hasSingleMoveCatchUp && passDiagnosticsInput.policyUpperBoundCanWinRound) {
+        reason = "round resource pressure ignored — single-move catch-up";
+        reasonKind = "policy-round-investment";
       } else if (roundInvestmentAnalysis.resourceExhaustionRecommended && roundInvestmentAnalysis.recommendation === "preserve_future_hand") {
         reason = "round resource budget exceeded — preserve future hand";
         reasonKind = "policy-round-investment";

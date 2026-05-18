@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp33 for product playtesting.",
-    latestPhase: "cFp33",
-    latestSpecPath: "docs/spec/2026-05-17-cFp33-specs.md",
-    latestReportPath: "audit/reports/2026-05-17-cFp33-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp37 with pass-decision alignment and round-resource resource-gate scope-down for product playtesting.",
+    latestPhase: "cFp37",
+    latestSpecPath: "docs/spec/2026-05-18-cFp37-specs.md",
+    latestReportPath: "audit/reports/2026-05-18-cFp37-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
         {
@@ -88,6 +88,8 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
         "round-investment preservation",
         "stop-loss round sacrifice",
         "Scoia'tael first-turn choice strategy",
+        "round-resource exhaustion diagnostics and budget gate",
+        "pass-decision alignment — resource-gate scope-down",
       ],
   },
 ];

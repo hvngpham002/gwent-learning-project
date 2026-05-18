@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp33",
-        latestSpecPath: "docs/spec/2026-05-17-cFp33-specs.md",
-        latestReportPath: "audit/reports/2026-05-17-cFp33-report.md",
+        latestPhase: "cFp37",
+        latestSpecPath: "docs/spec/2026-05-18-cFp37-specs.md",
+        latestReportPath: "audit/reports/2026-05-18-cFp37-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp33",
-        latestSpecPath: "docs/spec/2026-05-17-cFp33-specs.md",
-        latestReportPath: "audit/reports/2026-05-17-cFp33-report.md",
+        latestPhase: "cFp37",
+        latestSpecPath: "docs/spec/2026-05-18-cFp37-specs.md",
+        latestReportPath: "audit/reports/2026-05-18-cFp37-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -93,6 +93,8 @@ describe("authentic AI Lab view model", () => {
         "round-investment preservation",
         "stop-loss round sacrifice",
         "Scoia'tael first-turn choice strategy",
+        "round-resource exhaustion diagnostics and budget gate",
+        "pass-decision alignment — resource-gate scope-down",
       ]),
     );
   });

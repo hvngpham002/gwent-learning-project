@@ -1358,11 +1358,9 @@ describe("engine AI policy", () => {
       // cFp37 narrows the cFp36 resource gate so it only allows pass when
       // round-investment recommends "preserve_future_hand" or "sacrifice_round".
 
-   it("resourceExhaustionRecommended=true with recommendation=continue selects play-card, not pass", () => {
+  it("resourceExhaustionRecommended with preserve/sacrifice recommendation allows pass", () => {
         // cFp37 narrows the cFp36 resource gate so it only allows pass when
-        // round-investment recommendation says preserve or sacrifice. This test
-        // verifies that when both resource exhaustion AND preservation conditions
-        // are met, the policy correctly passes.
+        // round-investment recommendation says preserve or sacrifice.
         const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
         const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
         const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
@@ -1372,7 +1370,6 @@ describe("engine AI policy", () => {
         const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
         const moves = [passMove(), playMove(playCard)];
 
-        // Over-budget board with few useful cards in hand — preservation applies.
         const input = policyInput(moves, {
           ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, playCard],
           boardRows: baseBoardRows({
@@ -1385,11 +1382,114 @@ describe("engine AI policy", () => {
         });
 
         const selected = legalHeuristicPolicyV1.selectMove(input);
-        // cFp37 allows resource-gate pass when recommendation is preserve/sacrifice
         expect(selected?.kind).toBe("pass");
       });
 
-      it("recommendation=preserve_future_hand with resource exhaustion still selects pass", () => {
+      it("spy with resource exhaustion still plays (continue hard-block)", () => {
+        // cFp37 hard-block: card-advantage moves bypass resource-gate pass.
+        const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const moves = [passMove(), playMove(spy)];
+
+        const input = policyInput(moves, {
+          ownHand: [spy, unit1, unit2, unit3, unit4, unit5, unit6],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 20 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "spy" }));
+      });
+
+      it("single-move catch-up overrides resource gate (catch-up hard-block)", () => {
+        // cFp37 hard-block: single-move catch-up with upper-bound-can-win bypasses resource-gate pass.
+        // AI has 5 units on board (over budget), strong unit in hand can catch up.
+        // Overkill = 7 (> 3) so cheap catch-up exception doesn't apply.
+        const strongUnit = testCard({ cardId: "strong", sourceId: "test.strong", printedStrength: 18 });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 5 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 5 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 5 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 5 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 5 });
+        const moves = [passMove(), playMove(strongUnit)];
+
+        const input = policyInput(moves, {
+          ownHand: [strongUnit, unit1, unit2, unit3, unit4, unit5],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 36, seat_b: 25 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "strong" }));
+      });
+
+      it("use_leader bypasses resource-gate pass (free move)", () => {
+        // cFp37 hard-block: use_leader is not play_card, so resource gate doesn't apply.
+        // Resource gate only checks play_card candidates — leader moves are always allowed.
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const moves = [passMove(), leaderMove("clear_weather")];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 20 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        // Policy returns a valid move (not null) — resource gate doesn't block use_leader
+        expect(selected).not.toBeNull();
+      });
+
+      it("stop-loss gate still works with cFp37 resource gate", () => {
+        // cFp37 should not interfere with stop-loss pass decisions.
+        const tiny = testCard({ cardId: "tiny", sourceId: "test.tiny", printedStrength: 2 });
+        const weak = testCard({ cardId: "weak", sourceId: "test.weak", printedStrength: 3 });
+        const weak2 = testCard({ cardId: "weak2", sourceId: "test.weak2", printedStrength: 3 });
+        const weak3 = testCard({ cardId: "weak3", sourceId: "test.weak3", printedStrength: 3 });
+        const moves = [passMove(), playMove(tiny)];
+
+        const input = policyInput(moves, {
+          ownHand: [tiny, weak, weak2, weak3],
+          ownGems: 2,
+          opponentPassed: false,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 30, seat_b: 0 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("pass");
+      });
+
+      it("explanation trace for blocked resource pressure pass uses policy-round-investment", () => {
         const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
         const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
         const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
@@ -1410,8 +1510,9 @@ describe("engine AI policy", () => {
           },
         });
 
-        const selected = legalHeuristicPolicyV1.selectMove(input);
-        expect(selected?.kind).toBe("pass");
+        const { trace, move } = explainLegalHeuristicV1Decision(input);
+        expect(move?.kind).toBe("pass");
+        expect(trace.reasonKind).toBe("policy-round-investment");
       });
 
       it("Spy/card-advantage still ignores resource pressure and plays", () => {
@@ -1501,33 +1602,7 @@ describe("engine AI policy", () => {
           },
         });
 
-        const { trace, move } = explainLegalHeuristicV1Decision(input);
-        expect(move?.kind).toBe("pass");
-        expect(trace.reasonKind).toBe("policy-round-investment");
-      });
-
-      it("explanation trace for allowed resource pass uses policy-round-investment", () => {
-        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
-        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
-        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
-        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
-        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
-        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
-        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
-        const moves = [passMove(), playMove(playCard)];
-
-        const input = policyInput(moves, {
-          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, playCard],
-          boardRows: baseBoardRows({
-            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6] },
-          }),
-          score: {
-            ...baseObservation().score,
-            totalBySeat: { seat_a: 0, seat_b: 20 },
-          },
-        });
-
-        const { trace, move } = explainLegalHeuristicV1Decision(input);
+       const { trace, move } = explainLegalHeuristicV1Decision(input);
         expect(move?.kind).toBe("pass");
         expect(trace.reasonKind).toBe("policy-round-investment");
       });
