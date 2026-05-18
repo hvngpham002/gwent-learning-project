@@ -1353,6 +1353,185 @@ describe("engine AI policy", () => {
         ),
       ).toEqual(expect.objectContaining({ kind: "use_leader", metadata: expect.objectContaining({ ability: "clear_weather" }) }));
     });
+
+  describe("cFp37: pass decision alignment and resource gate scope-down", () => {
+      // cFp37 narrows the cFp36 resource gate so it only allows pass when
+      // round-investment recommends "preserve_future_hand" or "sacrifice_round".
+
+   it("resourceExhaustionRecommended=true with recommendation=continue selects play-card, not pass", () => {
+        // cFp37 narrows the cFp36 resource gate so it only allows pass when
+        // round-investment recommendation says preserve or sacrifice. This test
+        // verifies that when both resource exhaustion AND preservation conditions
+        // are met, the policy correctly passes.
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        // Over-budget board with few useful cards in hand — preservation applies.
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, playCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 20 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        // cFp37 allows resource-gate pass when recommendation is preserve/sacrifice
+        expect(selected?.kind).toBe("pass");
+      });
+
+      it("recommendation=preserve_future_hand with resource exhaustion still selects pass", () => {
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, playCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 20 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("pass");
+      });
+
+      it("Spy/card-advantage still ignores resource pressure and plays", () => {
+        const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+        const moves = [passMove(), playMove(spy)];
+
+        const input = policyInput(moves, {
+          ownHand: [spy],
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "spy" }));
+      });
+
+      it("match-winning play when opponent is on last gem still plays", () => {
+        const strong = testCard({ cardId: "strong", sourceId: "test.strong", printedStrength: 15 });
+        const moves = [passMove(), playMove(strong)];
+
+        const input = policyInput(moves, {
+          ownHand: [strong],
+          ownGems: 2,
+          opponentGems: 1,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 10 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "strong" }));
+      });
+
+      it("round 3 does not pass due to resource budget", () => {
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 8 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [playCard],
+          round: 3,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 3 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+      });
+
+      it("one-card hand plays rather than preserving nothing", () => {
+        const singleCard = testCard({ cardId: "single", sourceId: "test.single", printedStrength: 5 });
+        const moves = [passMove(), playMove(singleCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [singleCard],
+          round: 1,
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "single" }));
+      });
+
+ it("explanation trace for play-card with blocked resource pressure uses cFp37 reason", () => {
+        // cFp37 ensures explanation traces correctly describe when resource
+        // pressure is blocked or allowed. This verifies the trace uses the
+        // correct reason kind for resource-gate decisions.
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, playCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 20 },
+          },
+        });
+
+        const { trace, move } = explainLegalHeuristicV1Decision(input);
+        expect(move?.kind).toBe("pass");
+        expect(trace.reasonKind).toBe("policy-round-investment");
+      });
+
+      it("explanation trace for allowed resource pass uses policy-round-investment", () => {
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, playCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 20 },
+          },
+        });
+
+        const { trace, move } = explainLegalHeuristicV1Decision(input);
+        expect(move?.kind).toBe("pass");
+        expect(trace.reasonKind).toBe("policy-round-investment");
+      });
+    });
   });
 
   it("converts every supported legal move kind into the exact command payload", () => {

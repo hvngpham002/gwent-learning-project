@@ -19,9 +19,8 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The current implementation
-phase is cFp33: Scoia'tael First-Turn Choice Strategy, which builds on the
-cFp27 through cFp32 tuning and diagnostics chain and adds cFp33 first-turn
-choice logic:
+phase is cFp37: Pass Decision Alignment and Resource Gate Scope-Down, which
+builds on the cFp27 through cFp36 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -31,22 +30,26 @@ choice logic:
 - cFp31: round-investment and future-hand preservation.
 - cFp32: stop-loss round sacrifice for non-elimination rounds.
 - cFp33: Scoia'tael first-turn choice strategy.
+- cFp34: automated failure-mining evaluation infrastructure.
+- cFp35: failure-mining calibration and tuning queue.
+- cFp36: round resource exhaustion budget gate with diagnostics.
+- cFp37: pass-decision alignment — narrows the cFp36 resource gate so it only
+  allows pass when round-investment recommends preserve or sacrifice, blocking
+  it when recommendation is continue, fight_last_gem, or single-move catch-up.
 
-Current cFp33 benchmark totals:
+Current cFp37 benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
+- Failure mining: 295 findings, suspicious_pass = 222 (restored to cFp35 levels).
 
-cFp34 is evaluation infrastructure only. It adds deterministic failure-mining
-artifacts for the v1 starter matrix and does not change v1 move selection,
-engine rules, legal moves, catalog data, deck presets, product UI behavior, or
-the product policy registry.
-
-cFp35 is evaluator calibration only. It narrows the failure-mining
-`suspicious_pass` signal, records suppressed broad-pass analyzer noise as
-aggregate counts, and adds a deterministic tuning queue for cFp36. It does not
-change v1 scoring, move selection, v0 behavior, engine rules, legal moves,
-catalog data, deck presets, product UI behavior, or the product policy registry.
+cFp37 is a behavior repair that fixes the cFp36 pass-policy regression. The
+cFp36 resource budget gate was mechanically correct but too broad: it could
+force pass even when round-investment said `continue` or `fight_last_gem`.
+cFp37 introduces `shouldPassForResourceExhaustion` with 10 hard-block
+conditions that prevent the resource gate from overriding continue,
+fight_last_gem, and single-move catch-up signals. The change restores
+cFp35-level benchmark totals without deleting cFp36 diagnostics.
 
 ## Product Playtest Toggle
 

@@ -437,10 +437,9 @@ const buildPlayingPhaseTrace = (
         reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, no useful move — pass`;
       }
     }
-    // cFp36: narrow play-card branch — only handle real cFp36 exception/budget
-    // reason strings. When reason is "none" (or no cFp36 reason applies), leave
-    // reason empty so the bestMove block below handles standard play-card
-    // explanation (weathered-row, generic best move).
+    // cFp36/cFp37: narrow play-card branch — only handle real cFp36 exception/budget
+    // reason strings. cFp37: when resource pressure is blocked by continue,
+    // fight_last_gem, or single-move catch-up, explain why the play was selected.
     if (!reason && move?.kind === "play_card" && roundInvestmentAnalysis) {
       const resReason = roundInvestmentAnalysis.resourceExhaustionReason;
       if (resReason === "exception_card_advantage") {
@@ -458,8 +457,17 @@ const buildPlayingPhaseTrace = (
       } else if (resReason === "thin_future_hand" || resReason === "poor_future_hand" || resReason === "last_useful_unit" || resReason === "round_budget_exceeded") {
         reason = "cheap catch-up allowed — play useful card";
         reasonKind = "policy-round-investment";
-      } else if (roundInvestmentAnalysis.resourceExhaustionRecommended) {
+      } else if (roundInvestmentAnalysis.resourceExhaustionRecommended && roundInvestmentAnalysis.recommendation === "continue") {
+        reason = "round resource pressure ignored — continue recommendation";
+        reasonKind = "policy-round-investment";
+      } else if (roundInvestmentAnalysis.resourceExhaustionRecommended && roundInvestmentAnalysis.recommendation === "fight_last_gem") {
+        reason = "round resource pressure ignored — last-gem fight";
+        reasonKind = "policy-round-investment";
+      } else if (roundInvestmentAnalysis.resourceExhaustionRecommended && roundInvestmentAnalysis.recommendation === "preserve_future_hand") {
         reason = "round resource budget exceeded — preserve future hand";
+        reasonKind = "policy-round-investment";
+      } else if (roundInvestmentAnalysis.resourceExhaustionRecommended && roundInvestmentAnalysis.recommendation === "sacrifice_round") {
+        reason = "round resource pressure high — sacrifice non-elimination round";
         reasonKind = "policy-round-investment";
       }
       // else: reason is "none" — fall through to bestMove block below

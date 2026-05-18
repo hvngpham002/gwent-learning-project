@@ -1573,6 +1573,47 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
   };
 };
 
+// cFp37: Narrow resource-gate pass helper. Only allows pass when the broader
+// round-investment recommendation already says preserve_future_hand or
+// sacrifice_round, and none of the hard-block conditions below are true.
+const shouldPassForResourceExhaustion = (
+  features: LegalHeuristicV1Features,
+  candidate: PlayCardMove | UseLeaderMove | null,
+  analysis: import("./decisionTrace").AiDecisionRoundInvestmentAnalysis,
+  passDiagnostics: LegalHeuristicV1PassDecisionDiagnostics,
+): boolean => {
+  // Hard block: resource exhaustion not recommended
+  if (!analysis.resourceExhaustionRecommended) return false;
+  // Hard block: no candidate
+  if (!candidate) return false;
+  // Hard block: not a play_card (leader moves are free)
+  if (candidate.kind !== "play_card") return false;
+  // Hard block: round 3 — no future round to preserve for
+  if (features.round >= 3) return false;
+  // Hard block: last gem — must fight
+  if (features.ownGems <= 1) return false;
+  // Hard block: opponent passed — no preservation needed
+  if (features.opponentPassed) return false;
+  // Hard block: card advantage (Spy) — always play
+  if (analysis.selectedMoveIsCardAdvantage) return false;
+  // Hard block: round-investment says continue — don't override
+  if (analysis.recommendation === "continue") return false;
+  // Hard block: round-investment says fight_last_gem — don't override
+  if (analysis.recommendation === "fight_last_gem") return false;
+  // Hard block: single-move catch-up available and upper bound can win
+  if (passDiagnostics.hasSingleMoveCatchUp && passDiagnostics.policyUpperBoundCanWinRound) return false;
+
+  // Allowed: all blocks passed and recommendation is preserve/sacrifice
+  if (
+    analysis.recommendation === "preserve_future_hand" ||
+    analysis.recommendation === "sacrifice_round"
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
 /**
  * cFp31: Returns true if the AI should pass (or choose pass) to preserve
  * future hand, even though a useful play exists.
@@ -1606,6 +1647,9 @@ export const shouldPassForRoundInvestment = (
   // Card-advantage moves (Spy, etc.) — always play them
   if (analysis.selectedMoveIsCardAdvantage) return false;
 
+  // cFp37: Compute pass diagnostics early — needed by resource gate
+  const passDiags = buildLegalHeuristicV1PassDecisionDiagnostics(features);
+
   // cFp32: Stop-loss gate — behind, no clean catch-up, upper-bound impossible
   // Only suppress play_card candidates; use_leader is free (no hand card spent).
   if (analysis.stopLossRecommended && candidate.kind === "play_card") return true;
@@ -1638,12 +1682,10 @@ export const shouldPassForRoundInvestment = (
     }
   }
 
-  // cFp36: Round resource budget gate — conservative non-elimination preservation
-  // Only applies when board investment already exceeds the budget for hand quality,
-  // the candidate spends a hand card (not leader/prompt), and no exception applies.
-  if (analysis.resourceExhaustionRecommended && candidate.kind === "play_card") {
-    // Round 3: no budget preservation (no future round to preserve for)
-    if (features.round >= 3) return false;
+  // cFp37: Narrow round resource gate — only allow pass when round-investment
+  // recommendation already says preserve or sacrifice. Block pass when
+  // recommendation says continue, fight_last_gem, or single-move catch-up exists.
+  if (shouldPassForResourceExhaustion(features, candidate, analysis, passDiags)) {
     return true;
   }
 
@@ -1674,7 +1716,6 @@ export const shouldPassForRoundInvestment = (
 
   // Behind on non-elimination round: sacrifice if no single-move catch-up
   if (features.scoreDelta < 0) {
-    const passDiags = buildLegalHeuristicV1PassDecisionDiagnostics(features);
     if (!passDiags.hasSingleMoveCatchUp && analysis.risk === "high") {
       return true;
     }
