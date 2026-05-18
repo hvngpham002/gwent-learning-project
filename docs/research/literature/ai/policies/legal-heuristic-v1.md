@@ -190,13 +190,15 @@ cFp24 registers v1 in `defaultBenchmarkPolicies` and adds:
 Latest cFp36-repair results (repaired policy code):
 
 - v1 smoke: `legal-heuristic-v1` records 10 wins, 2 losses, and 0 draws
-  against v0.
+  against v0 (unchanged from cFp35).
 - v1 starter matrix: `legal-heuristic-v1` records 89 wins, 29 losses,
-  and 2 draws against v0 (120 records). The repaired totals (89/29/2)
-  differ from the pre-repair totals (102/16/2) because the
-  `resourceExhaustionRecommended` fix allows exception plays to proceed
-  instead of over-passing (the previous over-passing masked other
-  weaknesses in v1's decision logic).
+  and 2 draws against v0 (120 records). Benchmark progression:
+  cFp35 / origin-dev baseline: 102/16/2, pre-repair cFp36 branch:
+  88/30/2, repaired cFp36 branch: 89/29/2. The repaired totals differ
+  from the cFp35 baseline (102/16/2) because the baseline's totals
+  included exception reasons that incorrectly set
+  `resourceExhaustionRecommended = true`, causing the policy to over-pass.
+  The repair allows exception plays to proceed correctly.
 
 These are fixed-suite evidence, not ratings or proof of broad strength.
 
@@ -799,12 +801,12 @@ A follow-up repair fixed four issues:
    advantage move") can actually appear in the trace reason when a useful
    play_card is selected and an exception applies.
 
-The repaired v1 starter matrix shows 89/29/2 (vs pre-repair 102/16/2), a
-difference of 13 fewer wins and 13 more losses. This is caused by the
-`resourceExhaustionRecommended` fix: before repair, exception reasons
-incorrectly set `resourceExhaustionRecommended = true`, causing the policy
-to over-pass. After repair, exception reasons correctly set
-`resourceExhaustionRecommended = false`, allowing exception plays to
-proceed — the correct behavior per spec. The previous over-passing masked
-other weaknesses in v1's decision logic. The tuning queue still ranks
-`round_resource_exhaustion` as #1 for further tuning.
+Benchmark progression (v1 starter matrix, 120 records): cFp35 / origin-dev
+baseline: 102/16/2, pre-repair cFp36 branch: 88/30/2, repaired cFp36 branch:
+89/29/2. The repaired baseline (89/29/2) differs from the cFp35 baseline
+(102/16/2) because the cFp35 baseline's totals included exception reasons
+that incorrectly set `resourceExhaustionRecommended = true`, causing the
+policy to over-pass. The pre-repair cFp36 branch (88/30/2) was lower due to
+a separate code path. The repair allows exception plays to proceed
+correctly, recovering 1 win/loss over the pre-repair branch. The tuning
+queue still ranks `round_resource_exhaustion` as #1 for further tuning.

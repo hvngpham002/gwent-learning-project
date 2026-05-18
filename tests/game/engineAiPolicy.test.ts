@@ -5064,6 +5064,31 @@ describe("cFp36: round resource exhaustion tuning", () => {
   });
 
   // ------------------------------------------------------------------
+  // 17. Play-card without cFp36 reason falls through to best-move explanation
+  // ------------------------------------------------------------------
+  it("play-card without cFp36 reason produces best-useful-move explanation", () => {
+    const u1 = unitCard("u1", "test.close", 5);
+
+    const input = policyInput(
+      [passMove(), playMove(u1)],
+      {
+        ownHand: [u1],
+        ownGems: 2,
+        round: 1,
+        opponentGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 10, seat_b: 3 },
+        },
+      },
+    );
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    // No cFp36 reason → falls through to standard best-move explanation
+    expect(trace.reason).toContain("best useful move");
+    expect(trace.reason).toContain("score");
+  });
+
+  // ------------------------------------------------------------------
   // 15. Pressure under budget is "none"
   // ------------------------------------------------------------------
   it("under-budget board investment: roundResourcePressure === 'none'", () => {

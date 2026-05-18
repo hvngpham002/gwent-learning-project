@@ -436,9 +436,12 @@ const buildPlayingPhaseTrace = (
       } else {
         reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, no useful move — pass`;
       }
-    // cFp36: Check play-card exception reasons before the bestMove block,
-    // so they fire regardless of whether bestMove exists.
-    } else if (move?.kind === "play_card" && roundInvestmentAnalysis) {
+    }
+    // cFp36: narrow play-card branch — only handle real cFp36 exception/budget
+    // reason strings. When reason is "none" (or no cFp36 reason applies), leave
+    // reason empty so the bestMove block below handles standard play-card
+    // explanation (weathered-row, generic best move).
+    if (!reason && move?.kind === "play_card" && roundInvestmentAnalysis) {
       const resReason = roundInvestmentAnalysis.resourceExhaustionReason;
       if (resReason === "exception_card_advantage") {
         reason = "round resource pressure ignored — card advantage move";
@@ -458,12 +461,12 @@ const buildPlayingPhaseTrace = (
       } else if (roundInvestmentAnalysis.resourceExhaustionRecommended) {
         reason = "round resource budget exceeded — preserve future hand";
         reasonKind = "policy-round-investment";
-      } else {
-        reason = "best useful move";
-        reasonKind = "policy";
       }
-    } else if (bestMove) {
-      // cFp32: Check stop-loss before general round-investment
+      // else: reason is "none" — fall through to bestMove block below
+    }
+    // If reason is still empty after cFp28/cFp36 checks, handle bestMove
+    // (stop-loss, pass resource exhaustion, weathered-row, generic best move).
+    if (!reason && bestMove) {
       if (move?.kind === "pass" && roundInvestmentAnalysis && roundInvestmentAnalysis.stopLossRecommended) {
           const slReason = roundInvestmentAnalysis.stopLossReason;
           if (slReason === "upper_bound_impossible") {
@@ -479,7 +482,6 @@ const buildPlayingPhaseTrace = (
           }
         reasonKind = "policy-round-investment";
       } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
-        // cFp36: Check resource exhaustion before general round-investment
         if (roundInvestmentAnalysis.resourceExhaustionRecommended) {
           const resReason = roundInvestmentAnalysis.resourceExhaustionReason;
           if (resReason === "poor_future_hand" || resReason === "round_budget_exceeded") {
@@ -498,7 +500,6 @@ const buildPlayingPhaseTrace = (
             : "sacrifice round — preserve cards";
           reasonKind = "policy-round-investment";
         } else {
-          // cFp30: Surface weather penalty when the selected move plays into a weathered row
           if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
             reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
           } else {
@@ -506,16 +507,16 @@ const buildPlayingPhaseTrace = (
           }
         }
       } else {
-        // cFp30: Surface weather penalty when the selected move plays into a weathered row
         if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
           reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
         } else {
           reason = `best useful move (score ${bestMove.score})`;
         }
       }
-     } else if (move?.kind === "pass" && roundInvestmentAnalysis) {
-        // cFp32: Check stop-loss before general round-investment
-       if (roundInvestmentAnalysis.stopLossRecommended) {
+    }
+    // Pass fallback: no reason set yet, no bestMove, but roundInvestmentAnalysis exists.
+    if (!reason && move?.kind === "pass" && roundInvestmentAnalysis) {
+      if (roundInvestmentAnalysis.stopLossRecommended) {
           const slReason = roundInvestmentAnalysis.stopLossReason;
           if (slReason === "upper_bound_impossible") {
             reason = "stop-loss — sacrifice round — catch-up impossible — preserve cards";
@@ -534,10 +535,10 @@ const buildPlayingPhaseTrace = (
           ? "preserve future hand — pass"
           : "sacrifice round — preserve cards";
         reasonKind = "policy-round-investment";
-      } else {
-        reason = "no useful move above threshold, pass";
       }
-    } else {
+    }
+    // Final fallback.
+    if (!reason) {
       reason = "no useful move above threshold, pass";
     }
   }
