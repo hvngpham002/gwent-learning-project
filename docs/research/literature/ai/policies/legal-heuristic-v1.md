@@ -40,6 +40,10 @@ through cFp37 tuning and diagnostics chain:
   strength ≥ 6 into own weathered rows where effective strength ≤ 3 when a
   clearly better legal line exists. Tactical exceptions: Spy, strong Medic,
   Muster/linked callers, match-winning plays, last-gem catch-up, no-better-line.
+  Repair 1: tightened unit-kind guard to `card.kind === "unit"`, fixed
+  `betterNonWeatheredAlternativeAvailable` to be independent of exemption status,
+  corrected reason strings to distinguish "penalty applied — still best" from
+  "no better visible line".
 
 Current cFp38 benchmark totals:
 

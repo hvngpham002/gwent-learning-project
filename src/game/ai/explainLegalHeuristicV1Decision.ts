@@ -86,7 +86,7 @@ const buildWeatherPlacementAnalysis = (
       if (isLowTempoRisk) {
         const hasExemption = shouldExemptFromWeatheredLowTempoPenalty(features, move);
         const hasBetterLine = hasClearlyBetterNonWeatheredLine(features, move);
-        betterNonWeatheredAlternativeAvailable = hasBetterLine && !hasExemption;
+        betterNonWeatheredAlternativeAvailable = hasBetterLine;
         weatheredLowTempoPenaltyApplied = hasBetterLine && !hasExemption;
       }
     }
@@ -536,6 +536,8 @@ const buildPlayingPhaseTrace = (
         } else {
           if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
             if (weatherPlacementAnalysis.weatheredLowTempoPenaltyApplied) {
+              reason = `weathered row penalty applied — still best visible line (score ${bestMove.score})`;
+            } else if (weatherPlacementAnalysis.betterNonWeatheredAlternativeAvailable === false) {
               reason = `weathered row penalty accepted — no better visible line (score ${bestMove.score})`;
             } else {
               reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
@@ -547,6 +549,8 @@ const buildPlayingPhaseTrace = (
       } else {
         if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
           if (weatherPlacementAnalysis.weatheredLowTempoPenaltyApplied) {
+            reason = `weathered row penalty applied — still best visible line (score ${bestMove.score})`;
+          } else if (weatherPlacementAnalysis.betterNonWeatheredAlternativeAvailable === false) {
             reason = `weathered row penalty accepted — no better visible line (score ${bestMove.score})`;
           } else {
             reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;

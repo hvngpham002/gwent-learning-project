@@ -173,10 +173,10 @@ export const effectivePlacedStrengthForPolicy = (
 // ---------------------------------------------------------------------------
 
 /**
- * cFp38: Returns true when placing `card` on `target` is an own-side,
- * low-effective weathered board-row placement that wastes meaningful
- * printed strength (≥ 6) into a row where effective strength collapses
- * to 3 or less. Heroes are excluded because they are immune to weather.
+ * cFp38: Returns true when placing a normal non-hero `card` on `target`
+ * is an own-side low-effective weathered board-row placement that wastes
+ * meaningful printed strength (≥ 6) into a row where effective strength
+ * collapses to 3 or less.
  */
 export const isOwnWeatheredLowTempoUnitPlacement = (
   features: LegalHeuristicV1Features,
@@ -187,7 +187,8 @@ export const isOwnWeatheredLowTempoUnitPlacement = (
 
   const card = features.ownHandByCardId.get(move.sourceCardId);
   if (!card) return false;
-  if (card.kind !== "hero" && card.printedStrength >= 6) {
+  if (card.kind !== "unit") return false;
+  if (card.printedStrength >= 6) {
     if (isRowWeatheredForPolicy(features, move.target.row)) {
       const effectiveStrength = effectivePlacedStrengthForPolicy(features, card, move.target);
       if (effectiveStrength <= 3) {
