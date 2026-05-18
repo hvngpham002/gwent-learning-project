@@ -440,6 +440,10 @@ export interface AiDecisionWeatherPlacementAnalysis {
   readonly opponentWeatheredRows: CatalogRow[];
   readonly candidateWeatheredOwnRowPlayCount: number;
   readonly candidateWeatheredOpponentRowPlayCount: number;
+  // cFp38: Low-tempo weathered row placement diagnostics
+  readonly selectedMoveLowTempoWeatherRisk: boolean;
+  readonly betterNonWeatheredAlternativeAvailable: boolean;
+  readonly weatheredLowTempoPenaltyApplied: boolean;
 }
 
 // ---------------------------------------------------------------------------

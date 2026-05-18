@@ -43,6 +43,9 @@ import {
   MEDIC_WEAK_TARGET_UTILITY,
   MEDIC_MEDIUM_TARGET_UTILITY,
   buildScoiataelFirstTurnChoiceDecision,
+  isOwnWeatheredLowTempoUnitPlacement,
+  shouldExemptFromWeatheredLowTempoPenalty,
+  hasClearlyBetterNonWeatheredLine,
   type LegalHeuristicV1Features,
 } from "@/game/ai";
 
@@ -61,6 +64,11 @@ const buildWeatherPlacementAnalysis = (
   let selectedPrintedStrengthBucket: import("@/game/ai/decisionTrace").AiDecisionWeatherPlacementStrengthBucket = "none";
   let selectedEffectiveStrengthBucket: import("@/game/ai/decisionTrace").AiDecisionWeatherPlacementStrengthBucket = "none";
 
+  // cFp38: Low-tempo weathered row placement diagnostics
+  let selectedMoveLowTempoWeatherRisk = false;
+  let betterNonWeatheredAlternativeAvailable = false;
+  let weatheredLowTempoPenaltyApplied = false;
+
   if (move && move.kind === "play_card" && move.target.kind === "board_row") {
     const card = features.ownHandByCardId.get(move.sourceCardId);
     if (card) {
@@ -70,6 +78,17 @@ const buildWeatherPlacementAnalysis = (
       const effective = effectivePlacedStrengthForPolicy(features, card, move.target);
       selectedEffectiveStrengthBucket = toWeatherStrengthBucket(effective);
       selectedMoveIntoWeatheredRow = isRowWeatheredForPolicy(features, move.target.row);
+
+      // cFp38: Evaluate low-tempo risk on the selected move
+      const isLowTempoRisk = isOwnWeatheredLowTempoUnitPlacement(features, move);
+      selectedMoveLowTempoWeatherRisk = isLowTempoRisk;
+
+      if (isLowTempoRisk) {
+        const hasExemption = shouldExemptFromWeatheredLowTempoPenalty(features, move);
+        const hasBetterLine = hasClearlyBetterNonWeatheredLine(features, move);
+        betterNonWeatheredAlternativeAvailable = hasBetterLine && !hasExemption;
+        weatheredLowTempoPenaltyApplied = hasBetterLine && !hasExemption;
+      }
     }
   }
 
@@ -96,6 +115,10 @@ const buildWeatherPlacementAnalysis = (
     opponentWeatheredRows: opponentWeatheredRows,
     candidateWeatheredOwnRowPlayCount: weatheredOwnRowPlayCount,
     candidateWeatheredOpponentRowPlayCount: weatheredOpponentRowPlayCount,
+    // cFp38
+    selectedMoveLowTempoWeatherRisk,
+    betterNonWeatheredAlternativeAvailable,
+    weatheredLowTempoPenaltyApplied,
   };
 };
 
@@ -512,14 +535,22 @@ const buildPlayingPhaseTrace = (
           reasonKind = "policy-round-investment";
         } else {
           if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
-            reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
+            if (weatherPlacementAnalysis.weatheredLowTempoPenaltyApplied) {
+              reason = `weathered row penalty accepted — no better visible line (score ${bestMove.score})`;
+            } else {
+              reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
+            }
           } else {
             reason = `best useful move (score ${bestMove.score})`;
           }
         }
       } else {
         if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
-          reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
+          if (weatherPlacementAnalysis.weatheredLowTempoPenaltyApplied) {
+            reason = `weathered row penalty accepted — no better visible line (score ${bestMove.score})`;
+          } else {
+            reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
+          }
         } else {
           reason = `best useful move (score ${bestMove.score})`;
         }

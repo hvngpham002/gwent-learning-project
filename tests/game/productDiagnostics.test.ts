@@ -1928,6 +1928,10 @@ describe("cFp30: weather placement diagnostics in product export", () => {
             opponentWeatheredRows: [],
             candidateWeatheredOwnRowPlayCount: 2,
             candidateWeatheredOpponentRowPlayCount: 0,
+            // cFp38
+            selectedMoveLowTempoWeatherRisk: false,
+            betterNonWeatheredAlternativeAvailable: false,
+            weatheredLowTempoPenaltyApplied: false,
           },
           selected: {
             kind: "play_card",
@@ -1961,6 +1965,10 @@ describe("cFp30: weather placement diagnostics in product export", () => {
       opponentWeatheredRows: [],
       candidateWeatheredOwnRowPlayCount: 2,
       candidateWeatheredOpponentRowPlayCount: 0,
+      // cFp38
+      selectedMoveLowTempoWeatherRisk: false,
+      betterNonWeatheredAlternativeAvailable: false,
+      weatheredLowTempoPenaltyApplied: false,
       targetSourceId: "neutral.impenetrable-fog",
     };
     const issues = scanWeatherPlacementAnalysis(weatherPlacement);
@@ -1979,6 +1987,10 @@ describe("cFp30: weather placement diagnostics in product export", () => {
       opponentWeatheredRows: [],
       candidateWeatheredOwnRowPlayCount: 2,
       candidateWeatheredOpponentRowPlayCount: 0,
+      // cFp38
+      selectedMoveLowTempoWeatherRisk: false,
+      betterNonWeatheredAlternativeAvailable: false,
+      weatheredLowTempoPenaltyApplied: false,
       weatherSourceId: "neutral.impenetrable-fog",
     };
     const issues = scanWeatherPlacementAnalysis(weatherPlacement);
@@ -1997,6 +2009,10 @@ describe("cFp30: weather placement diagnostics in product export", () => {
       opponentWeatheredRows: [],
       candidateWeatheredOwnRowPlayCount: 2,
       candidateWeatheredOpponentRowPlayCount: 0,
+      // cFp38
+      selectedMoveLowTempoWeatherRisk: false,
+      betterNonWeatheredAlternativeAvailable: false,
+      weatheredLowTempoPenaltyApplied: false,
       abilities: ["weather"],
     };
     const issues = scanWeatherPlacementAnalysis(weatherPlacement);
@@ -2014,6 +2030,10 @@ describe("cFp30: weather placement diagnostics in product export", () => {
       opponentWeatheredRows: [],
       candidateWeatheredOwnRowPlayCount: 2,
       candidateWeatheredOpponentRowPlayCount: 0,
+      // cFp38
+      selectedMoveLowTempoWeatherRisk: false,
+      betterNonWeatheredAlternativeAvailable: false,
+      weatheredLowTempoPenaltyApplied: false,
     };
     const issues = scanWeatherPlacementAnalysis(weatherPlacement);
     expect(issues.length).toBe(0);
@@ -2076,6 +2096,10 @@ describe("cFp30: weather placement diagnostics in product export", () => {
             opponentWeatheredRows: [],
             candidateWeatheredOwnRowPlayCount: 2,
             candidateWeatheredOpponentRowPlayCount: 0,
+            // cFp38
+            selectedMoveLowTempoWeatherRisk: false,
+            betterNonWeatheredAlternativeAvailable: false,
+            weatheredLowTempoPenaltyApplied: false,
             targetSourceId: "neutral.impenetrable-fog",
           },
           selected: null,
@@ -2088,6 +2112,89 @@ describe("cFp30: weather placement diagnostics in product export", () => {
     });
 
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(false);
+  });
+
+  it("cFp38: full export scan passes with new weathered-low-tempo booleans", () => {
+    const exportData = buildProductDiagnosticExport({
+      aiPolicyId: "legal-heuristic-v1",
+      matchSeed: "cfp38-weather-low-tempo",
+      humanDeckPresetId: "test",
+      humanDeckPresetName: "Test",
+      humanDeckFaction: "northern_realms",
+      aiDeckPresetId: "test",
+      aiDeckPresetName: "Test AI",
+      aiDeckFaction: "nilfgaard",
+      currentPhase: "playing",
+      currentRound: 1,
+      matchResult: null,
+      commandHistory: [],
+      eventLog: [],
+      decisionTraces: [
+        {
+          schemaVersion: "ai-decision-trace-v1",
+          policyId: "legal-heuristic-v1",
+          seatId: "seat_b",
+          decisionIndex: 0,
+          phase: "playing",
+          round: 1,
+          publicState: {
+            seatId: "seat_b",
+            opponentSeatId: "seat_a",
+            phase: "playing",
+            round: 1,
+            currentTurn: "seat_b",
+            ownScore: 10,
+            opponentScore: 5,
+            scoreDelta: 5,
+            ownGems: 2,
+            opponentGems: 2,
+            ownHandCount: 5,
+            opponentHandCount: 7,
+            ownDeckCount: 10,
+            opponentDeckCount: 10,
+            ownDiscardCount: 0,
+            opponentDiscardCount: 0,
+            ownPassed: false,
+            opponentPassed: false,
+            boardRows: [],
+            weatherCardCount: 1,
+          },
+          passAnalysis: null,
+          mulliganAnalysis: null,
+          weatherPlacementAnalysis: {
+            selectedMoveIntoWeatheredRow: true,
+            selectedMoveSide: "own",
+            selectedMoveRow: "ranged",
+            selectedPrintedStrengthBucket: "high",
+            selectedEffectiveStrengthBucket: "low",
+            ownWeatheredRows: ["ranged"],
+            opponentWeatheredRows: [],
+            candidateWeatheredOwnRowPlayCount: 1,
+            candidateWeatheredOpponentRowPlayCount: 0,
+            // cFp38
+            selectedMoveLowTempoWeatherRisk: true,
+            betterNonWeatheredAlternativeAvailable: false,
+            weatheredLowTempoPenaltyApplied: false,
+          },
+          selected: {
+            kind: "play_card",
+            label: "hidden hand play",
+            actionRef: "action_0",
+            targetKind: "board_row",
+          },
+          candidates: [],
+          reasonKind: "policy",
+          reason: "weathered row penalty accepted — no better visible line (score 50)",
+        },
+      ],
+      warnings: [],
+    });
+
+    expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
+    const json = JSON.stringify(exportData);
+    expect(json).toContain("selectedMoveLowTempoWeatherRisk");
+    expect(json).toContain("betterNonWeatheredAlternativeAvailable");
+    expect(json).toContain("weatheredLowTempoPenaltyApplied");
   });
 });
 

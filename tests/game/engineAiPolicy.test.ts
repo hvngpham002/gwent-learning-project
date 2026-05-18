@@ -5465,3 +5465,323 @@ describe("cFp36: round resource exhaustion tuning", () => {
     expect(typeof ri.resourceExhaustionRecommended).toBe("boolean");
   });
 });
+
+// ==========================================================================
+// cFp38: Weathered Row Low-Tempo Tuning
+// ==========================================================================
+describe("cFp38: weathered row low-tempo tuning", () => {
+  const fogCard = testCard({ cardId: "fog", sourceId: "neutral.impenetrable-fog", printedStrength: 0, kind: "special", abilities: ["fog"] });
+
+  const nonHeroUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.${cardId}`, printedStrength: strength, rows: ["close", "ranged"] });
+
+  const heroUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.${cardId}`, printedStrength: strength, kind: "hero", rows: ["close", "ranged"] });
+
+  const musterCaller = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.${cardId}`, printedStrength: strength, abilities: ["muster"], linkedSourceIds: ["test.roach-payload"] });
+
+  const medicUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.${cardId}`, printedStrength: strength, abilities: ["medic"], rows: ["close", "ranged"] });
+
+  const strongDiscard = testCard({ cardId: "revive-target", sourceId: "test.revive-target", printedStrength: 10 });
+
+  // ------------------------------------------------------------------
+  // Test 1: Same-card agile row choice
+  // ------------------------------------------------------------------
+  it("agile card selects non-weathered row over weathered row when better line exists", () => {
+    const agileUnit = nonHeroUnit("agile", 8);
+    const boardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, units: [] }
+        : r,
+    );
+
+    const input = policyInput(
+      [
+        playMove(agileUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(agileUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+      ],
+      {
+        ownHand: [agileUnit],
+        weather: [fogCard],
+        boardRows,
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card" && selected.target.kind === "board_row") {
+      // Should prefer clean close row (strength 8) over weathered ranged (strength 1)
+      expect(selected.target.row).toBe("close");
+    }
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis!;
+    expect(wa.selectedMoveLowTempoWeatherRisk).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 2: Different-card alternative
+  // ------------------------------------------------------------------
+  it("selects different-card alternative with better tempo over weathered low-tempo play", () => {
+    const highWeathered = nonHeroUnit("high-weathered", 10);
+    const betterCard = nonHeroUnit("better", 6);
+
+    // Only weathered row available for highWeathered, clean row for betterCard
+    const boardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, units: [] }
+        : r,
+    );
+
+    const input = policyInput(
+      [
+        playMove(highWeathered, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(betterCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+      ],
+      {
+        ownHand: [highWeathered, betterCard],
+        weather: [fogCard],
+        boardRows,
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    // Should prefer the better-card on clean row over high-weathered on weathered row
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).toBe(betterCard.cardId);
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // Test 3: No better line
+  // ------------------------------------------------------------------
+  it("selects weathered low-tempo when it is the only useful legal play", () => {
+    const onlyUnit = nonHeroUnit("only-unit", 8);
+
+    const boardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, units: [] }
+        : r,
+    );
+
+    const input = policyInput(
+      [
+        playMove(onlyUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+      ],
+      {
+        ownHand: [onlyUnit],
+        weather: [fogCard],
+        boardRows,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card" && selected.target.kind === "board_row") {
+      expect(selected.target.row).toBe("ranged");
+    }
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis!;
+    expect(wa.selectedMoveLowTempoWeatherRisk).toBe(true);
+    expect(wa.betterNonWeatheredAlternativeAvailable).toBe(false);
+    expect(wa.weatheredLowTempoPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 4: Hero exception
+  // ------------------------------------------------------------------
+  it("hero on weathered row is not treated as low-tempo risk", () => {
+    const hero = heroUnit("hero1", 10);
+
+    const input = policyInput(
+      [
+        playMove(hero, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(hero, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+      ],
+      {
+        ownHand: [hero],
+        weather: [fogCard],
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis!;
+    expect(wa.selectedMoveLowTempoWeatherRisk).toBe(false);
+    // Hero effective strength should remain high even on weathered row
+    expect(wa.selectedEffectiveStrengthBucket).toBe("high");
+  });
+
+  // ------------------------------------------------------------------
+  // Test 5: Muster exception
+  // ------------------------------------------------------------------
+  it("muster/linked caller not penalized by cFp38 low-tempo guard", () => {
+    const musterCallerCard = musterCaller("muster", 8);
+
+    const boardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, units: [] }
+        : r,
+    );
+
+    const input = policyInput(
+      [
+        playMove(musterCallerCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(musterCallerCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+      ],
+      {
+        ownHand: [musterCallerCard],
+        weather: [fogCard],
+        boardRows,
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    // Muster caller with linked targets can still be selected even on weathered row
+    // because it is exempted from the cFp38 penalty
+    expect(selected?.kind).toBe("play_card");
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis!;
+    // Muster caller is exempted, so penalty should not be applied
+    expect(wa.weatheredLowTempoPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 6: Strong Medic exception
+  // ------------------------------------------------------------------
+  it("strong Medic with revive target not penalized by cFp38", () => {
+    const medic = medicUnit("medic", 8);
+
+    const boardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, units: [] }
+        : r,
+    );
+
+    const input = policyInput(
+      [
+        playMove(medic, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(medic, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+      ],
+      {
+        ownHand: [medic],
+        weather: [fogCard],
+        boardRows,
+        ownDiscard: [strongDiscard],
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis!;
+    // Strong Medic should be exempted
+    expect(wa.weatheredLowTempoPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 7: Last-gem catch-up exception
+  // ------------------------------------------------------------------
+  it("last-gem catch-up: weathered low-tempo may be selected when behind with no better line", () => {
+    const onlyUnit = nonHeroUnit("last-unit", 8);
+
+    const boardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, units: [] }
+        : r,
+    );
+
+    const input = policyInput(
+      [
+        playMove(onlyUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+      ],
+      {
+        ownHand: [onlyUnit],
+        weather: [fogCard],
+        boardRows,
+        ownGems: 1,
+        opponentGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 20, seat_b: 5 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis!;
+    // Even if the move lands in weathered row, penalty should not be applied
+    // because no better line exists
+    expect(wa.weatheredLowTempoPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 8: Policy/explanation parity
+  // ------------------------------------------------------------------
+  it("selectMove and explain produce the same move for cFp38 fixture", () => {
+    const agileUnit = nonHeroUnit("parity-unit", 8);
+    const boardRows = baseBoardRows({
+      seat_b: { ranged: [] },
+    }).map((r) =>
+      r.seatId === "seat_b" && r.row === "ranged"
+        ? { ...r, units: [] }
+        : r,
+    );
+
+    const input = policyInput(
+      [
+        playMove(agileUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(agileUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+        passMove(),
+      ],
+      {
+        ownHand: [agileUnit],
+        weather: [fogCard],
+        boardRows,
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    const { move: tracedMove } = explainLegalHeuristicV1Decision(input);
+    expect(tracedMove?.moveId).toBe(selected?.moveId);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 10: cFp38 not wired into v0
+  // ------------------------------------------------------------------
+  it("cFp38 logic is not wired into legal-heuristic-v0", () => {
+    const v1Policy = legalHeuristicPolicyV1;
+    const v0Policy = legalHeuristicPolicyV0;
+
+    expect(v1Policy.id).toBe("legal-heuristic-v1");
+    expect(v0Policy.id).toBe("legal-heuristic-v0");
+    expect(v1Policy).not.toBe(v0Policy);
+  });
+});

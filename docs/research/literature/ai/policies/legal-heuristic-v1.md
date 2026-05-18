@@ -19,8 +19,8 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The current implementation
-phase is cFp37: Pass Decision Alignment and Resource Gate Scope-Down, which
-builds on the cFp27 through cFp36 tuning and diagnostics chain:
+phase is cFp38: Weathered Row Low-Tempo Tuning, which builds on the cFp27
+through cFp37 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -36,12 +36,18 @@ builds on the cFp27 through cFp36 tuning and diagnostics chain:
 - cFp37: pass-decision alignment — narrows the cFp36 resource gate so it only
   allows pass when round-investment recommends preserve or sacrifice, blocking
   it when recommendation is continue, fight_last_gem, or single-move catch-up.
+- cFp38: weathered-row low-tempo scoring penalty — penalizes spending printed
+  strength ≥ 6 into own weathered rows where effective strength ≤ 3 when a
+  clearly better legal line exists. Tactical exceptions: Spy, strong Medic,
+  Muster/linked callers, match-winning plays, last-gem catch-up, no-better-line.
 
-Current cFp37 benchmark totals:
+Current cFp38 benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
-- Failure mining: 295 findings, suspicious_pass = 222 (restored to cFp35 levels).
+- Failure mining: 295 findings, weathered_row_play = 21 (unchanged from cFp37;
+  starter matrix deck matchups do not present the combined conditions needed
+  to trigger the "clearly better line" gate).
 
 cFp37 is a behavior repair that fixes the cFp36 pass-policy regression. The
 cFp36 resource budget gate was mechanically correct but too broad: it could

@@ -168,6 +168,138 @@ export const effectivePlacedStrengthForPolicy = (
   return effectiveStrength;
 };
 
+// ---------------------------------------------------------------------------
+// cFp38: Weathered row low-tempo penalty helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * cFp38: Returns true when placing `card` on `target` is an own-side,
+ * low-effective weathered board-row placement that wastes meaningful
+ * printed strength (≥ 6) into a row where effective strength collapses
+ * to 3 or less. Heroes are excluded because they are immune to weather.
+ */
+export const isOwnWeatheredLowTempoUnitPlacement = (
+  features: LegalHeuristicV1Features,
+  move: PlayCardMove,
+): boolean => {
+  if (move.target.kind !== "board_row") return false;
+  if (move.target.side !== "own") return false;
+
+  const card = features.ownHandByCardId.get(move.sourceCardId);
+  if (!card) return false;
+  if (card.kind !== "hero" && card.printedStrength >= 6) {
+    if (isRowWeatheredForPolicy(features, move.target.row)) {
+      const effectiveStrength = effectivePlacedStrengthForPolicy(features, card, move.target);
+      if (effectiveStrength <= 3) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+/**
+ * cFp38: Returns true when a clearly better legal line exists than the
+ * selected low-tempo weathered placement.
+ *
+ * Uses only public legal moves and avoids recursive scoring loops by
+ * relying on estimateImmediateTempo plus card-kind/leader-kind checks.
+ */
+export const hasClearlyBetterNonWeatheredLine = (
+  features: LegalHeuristicV1Features,
+  selectedMove: PlayCardMove,
+): boolean => {
+  const card = features.ownHandByCardId.get(selectedMove.sourceCardId);
+  if (!card) return false;
+  if (selectedMove.target.kind !== "board_row") return false;
+
+  const selectedEffectiveStrength = effectivePlacedStrengthForPolicy(features, card, selectedMove.target);
+  const selectedTempo = estimateImmediateTempo(features, selectedMove);
+
+  for (const candidate of features.playMoves) {
+    // Skip the same move
+    if (candidate.moveId === selectedMove.moveId) continue;
+
+    // --- Condition 1: Same card, non-weathered own row with +4 effective ---
+    if (
+      candidate.sourceCardId === selectedMove.sourceCardId &&
+      candidate.target.kind === "board_row" &&
+      candidate.target.side === "own"
+    ) {
+      if (!isRowWeatheredForPolicy(features, candidate.target.row)) {
+        const candidateEffective = effectivePlacedStrengthForPolicy(features, card, candidate.target);
+        if (candidateEffective >= selectedEffectiveStrength + 4) {
+          return true;
+        }
+      }
+    }
+
+    // --- Condition 2: Different candidate with materially better tempo ---
+    // Skip candidates that are themselves low-tempo weathered placements
+    if (isOwnWeatheredLowTempoUnitPlacement(features, candidate)) continue;
+
+    const candidateTempo = estimateImmediateTempo(features, candidate);
+    if (candidateTempo >= selectedTempo + 5) {
+      const candidateScore = scoreMove(features, candidate);
+      if (candidateScore >= MIN_USEFUL_MOVE_SCORE) {
+        return true;
+      }
+    }
+  }
+
+  // Also check leader moves as alternatives
+  for (const leaderMove of features.leaderMoves) {
+    const leaderTempo = estimateLeaderTempo(features, leaderMove);
+    const leaderScore = scoreLeaderMove(features, leaderMove);
+    if (
+      leaderTempo >= selectedTempo + 5 &&
+      leaderScore >= MIN_USEFUL_MOVE_SCORE
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+/**
+ * cFp38: Returns true when tactical exceptions prevent applying the
+ * low-tempo penalty to the selected move.
+ */
+export const shouldExemptFromWeatheredLowTempoPenalty = (
+  features: LegalHeuristicV1Features,
+  move: PlayCardMove,
+): boolean => {
+  const card = features.ownHandByCardId.get(move.sourceCardId);
+  if (!card) return false;
+
+  // Exception 1: Spy — card advantage already justified
+  if (hasAbility(card, "spy")) return true;
+
+  // Exception 2: Medic with strong revive value
+  if (isMedicSource(card)) {
+    const medicInfo = medicSourceUtility(features, card);
+    if (medicInfo.bestReviveValueBucket === "strong") return true;
+  }
+
+  // Exception 3: Muster/linked caller
+  if (hasAbility(card, "muster") || hasAbility(card, "muster_roach") || isMusterCaller(card)) return true;
+
+  // Exception 4: Match-winning play (opponent on last gem)
+  if (features.opponentGems <= 1) {
+    const tempo = estimateImmediateTempo(features, move);
+    const minScore = minimumScoreToWinRound(features);
+    if (features.ownScore + tempo >= minScore) return true;
+  }
+
+  // Exception 5: Last-gem catch-up — AI on last gem, behind, no better line
+  // (This exception is handled by hasClearlyBetterNonWeatheredLine returning false)
+  // We only apply the penalty when a clearly better line exists.
+
+  return false;
+};
+
 // cFp29: Medic revive candidate helpers
 export const isMedicSource = (card: SeatCardSummary | undefined) =>
   hasAbility(card, "medic");
@@ -1132,6 +1264,20 @@ export const scorePlayMove = (features: LegalHeuristicV1Features, move: PlayCard
   if (features.ownHandCount < features.opponentHandCount && features.scoreDelta > 8) {
     score -= 80;
   }
+
+  // cFp38: Penalty for spending meaningful non-hero units into own weathered rows
+  // when effective strength collapses to low/no tempo and a better line exists.
+  if (isOwnWeatheredLowTempoUnitPlacement(features, move)) {
+    if (!shouldExemptFromWeatheredLowTempoPenalty(features, move)) {
+      if (hasClearlyBetterNonWeatheredLine(features, move)) {
+        if (move.target.kind === "board_row" && move.target.side === "own") {
+          const lostStrength = Math.max(0, card.printedStrength - effectivePlacedStrengthForPolicy(features, card, move.target));
+          score -= 180 + lostStrength * 22;
+        }
+      }
+    }
+  }
+
   return score;
 };
 
