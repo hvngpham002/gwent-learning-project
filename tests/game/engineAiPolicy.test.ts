@@ -19,6 +19,11 @@ import {
   legalHeuristicPolicyV0,
   legalHeuristicPolicyV1,
   uniqueCardTempoUpperBound,
+  scorePlayMove,
+  isOwnWeatheredLowTempoUnitPlacement,
+  hasClearlyBetterNonWeatheredLine,
+  shouldExemptFromWeatheredLowTempoPenalty,
+  medicSourceUtility,
   DEFAULT_PRODUCT_AI_POLICY_ID,
   PRODUCT_AI_POLICIES,
   getProductAiPolicy,
@@ -5487,7 +5492,7 @@ describe("cFp38: weathered row low-tempo tuning", () => {
   const spyUnit = (cardId: string, strength: number) =>
     testCard({ cardId, sourceId: `test.${cardId}`, printedStrength: strength, abilities: ["spy"], rows: ["close", "ranged"] });
 
-  const strongDiscard = testCard({ cardId: "revive-target", sourceId: "test.revive-target", printedStrength: 10 });
+  const strongDiscard = testCard({ cardId: "revive-target", sourceId: "test.revive-target", printedStrength: 5, abilities: ["spy"] });
 
   const boardRowsWeatheredRanged = () =>
     baseBoardRows({
@@ -5528,19 +5533,24 @@ describe("cFp38: weathered row low-tempo tuning", () => {
   });
 
   // ------------------------------------------------------------------
-  // Test 2: Different-card alternative — v1 prefers clean, v0 unaffected
+  // Test 2: cFp38 penalty proof — uses scorePlayMove to demonstrate
+  // that the penalty reduces weathered move score, making clean win.
+  // Note: cFp30 weather penalty already makes weathered weak (effective=1),
+  // so clean wins even without cFp38. The cFp38 penalty further reduces
+  // the weathered score, proving the penalty mechanism exists and is
+  // correctly applied to low-tempo weathered placements.
   // ------------------------------------------------------------------
-  it("cFp38 penalty flips v1 selection from weathered high-strength to clean alternative", () => {
-    const highWeathered = nonHeroUnit("high-weathered", 12);
-    const betterCard = nonHeroUnit("better", 7);
+  it("cFp38 penalty reduces weathered move score, clean alternative wins", () => {
+    const weathered = nonHeroUnit("penalty-proof", 12);
+    const cleanCard = nonHeroUnit("clean-alt", 7);
 
     const input = policyInput(
       [
-        playMove(highWeathered, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
-        playMove(betterCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+        playMove(weathered, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(cleanCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
       ],
       {
-        ownHand: [highWeathered, betterCard],
+        ownHand: [weathered, cleanCard],
         weather: [fogCard],
         boardRows: boardRowsWeatheredRanged(),
         score: {
@@ -5550,16 +5560,63 @@ describe("cFp38: weathered row low-tempo tuning", () => {
       },
     );
 
+    const features = buildLegalHeuristicV1Features(input);
+
+    // The weathered card IS a low-tempo risk
+    const weatheredMove = input.legalMoves.find(
+      (m): m is import("@/game/core").PlayCardMove =>
+        m.kind === "play_card" &&
+        m.target.kind === "board_row" &&
+        m.target.side === "own" &&
+        m.target.row === "ranged" &&
+        m.sourceCardId === weathered.cardId,
+    )!;
+
+    expect(isOwnWeatheredLowTempoUnitPlacement(features, weatheredMove)).toBe(true);
+
+    // Compute v1 score with cFp38 penalty
+    const weatheredScoreWithPenalty = scorePlayMove(features, weatheredMove);
+
+    // The penalty should be negative (score is reduced)
+    // Lost strength = 12 - 1 = 11, penalty = 180 + 11*22 = 422
+    // Base v1 score without penalty ≈ 200 + 1*14 = 214
+    // With penalty ≈ 214 - 422 = -208
+    expect(weatheredScoreWithPenalty).toBeLessThan(0);
+
+    // Clean card score should be positive
+    const cleanMove = input.legalMoves.find(
+      (m): m is import("@/game/core").PlayCardMove =>
+        m.kind === "play_card" &&
+        m.target.kind === "board_row" &&
+        m.target.side === "own" &&
+        m.target.row === "close" &&
+        m.sourceCardId === cleanCard.cardId,
+    )!;
+    const cleanScore = scorePlayMove(features, cleanMove);
+    expect(cleanScore).toBeGreaterThan(0);
+
+    // Clean wins because weathered score was penalized below zero
+    expect(cleanScore).toBeGreaterThan(weatheredScoreWithPenalty);
+
+    // v1 selects the clean alternative
     const selected = legalHeuristicPolicyV1.selectMove(input);
     expect(selected?.kind).toBe("play_card");
-    // cFp38 penalty should make the clean row play win over weathered 12-strength card
     if (selected && selected.kind === "play_card") {
-      expect(selected.sourceCardId).toBe(betterCard.cardId);
-      expect(selected.target.kind).toBe("board_row");
-      if (selected.target.kind === "board_row") {
-        expect(selected.target.row).toBe("close");
-      }
+      expect(selected.sourceCardId).toBe(cleanCard.cardId);
     }
+
+    // The selected move is the clean alternative, so the trace does not
+    // show a weathered low-tempo risk on the selected move (the penalty
+    // is only attached to diagnostics for the *selected* play).  What
+    // we verify here is that the weathered move would carry the risk
+    // label and that the penalty makes it strictly worse than clean.
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis!;
+    // Clean card selected → no low-tempo risk on selected move
+    expect(wa.selectedMoveLowTempoWeatherRisk).toBe(false);
+    // No weathered move selected → no "better alternative" analysis either
+    expect(wa.betterNonWeatheredAlternativeAvailable).toBe(false);
+    expect(wa.weatheredLowTempoPenaltyApplied).toBe(false);
   });
 
   // ------------------------------------------------------------------
@@ -5626,18 +5683,25 @@ describe("cFp38: weathered row low-tempo tuning", () => {
   });
 
   // ------------------------------------------------------------------
-  // Test 6: Muster exception — force weathered selection
+  // Test 5: Muster exception — proves exemption with both a weathered
+  // risky move AND a clearly better alternative that would trigger the
+  // penalty if the card were not exempt.
   // ------------------------------------------------------------------
-  it("muster/linked caller: weathered selection with risk true but penaltyApplied false", () => {
-    const musterCallerCard = musterCaller("muster", 8);
+  it("muster/linked caller: weathered wins due to muster bonus, exemption verified", () => {
+    // Weathered 16-strength muster caller:
+    //   - Without muster bonus: score ≈ 160+224 = 384 (weathered, effective=1)
+    //   - With muster bonus: score ≈ 160+224+210 = 594 (beats clean 7-strength at ~193)
+    // Clean 7-strength on close: score ≈ 95+98 = 193
+    const musterCallerCard = musterCaller("muster", 16);
+    const cleanAlt = nonHeroUnit("clean", 7);
 
-    // Only weathered option available — forces weathered selection
     const input = policyInput(
       [
         playMove(musterCallerCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(cleanAlt, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
       ],
       {
-        ownHand: [musterCallerCard],
+        ownHand: [musterCallerCard, cleanAlt],
         weather: [fogCard],
         boardRows: boardRowsWeatheredRanged(),
         score: {
@@ -5647,34 +5711,70 @@ describe("cFp38: weathered row low-tempo tuning", () => {
       },
     );
 
+    const features = buildLegalHeuristicV1Features(input);
+
+    // The weathered muster caller IS a low-tempo risk
+    const musterMove = input.legalMoves.find(
+      (m): m is import("@/game/core").PlayCardMove =>
+        m.kind === "play_card" &&
+        m.sourceCardId === musterCallerCard.cardId &&
+        m.target.kind === "board_row" &&
+        m.target.row === "ranged",
+    )!;
+    expect(isOwnWeatheredLowTempoUnitPlacement(features, musterMove)).toBe(true);
+
+    // A clearly better alternative exists (clean card has higher tempo)
+    // Clean tempo = 7, weathered tempo = 1. Clean tempo >= weathered tempo + 5? 7 >= 6? yes.
+    // So hasClearlyBetterNonWeatheredLine should be true
+    expect(hasClearlyBetterNonWeatheredLine(features, musterMove)).toBe(true);
+
+    // The muster caller is exempted
+    expect(shouldExemptFromWeatheredLowTempoPenalty(features, musterMove)).toBe(true);
+
+    // The weathered muster caller wins because of muster bonus
+    // Score-based guard: if the card lookup succeeds, the muster caller
+    // must outscore the clean alternative (muster bonus + higher tempo).
+    const musterScore = scorePlayMove(features, musterMove);
+    const cleanScore = scorePlayMove(features, hasClearlyBetterNonWeatheredLine(features, musterMove)
+      ? input.legalMoves.find(
+          (m): m is import("@/game/core").PlayCardMove =>
+            m.kind === "play_card" &&
+            m.target.kind === "board_row" &&
+            m.target.side === "own" &&
+            m.target.row === "close",
+        )!
+      : musterMove);
+    expect(musterScore).toBeGreaterThan(cleanScore);
+
     const selected = legalHeuristicPolicyV1.selectMove(input);
     expect(selected?.kind).toBe("play_card");
-    if (selected && selected.kind === "play_card" && selected.target.kind === "board_row") {
+    if (selected && selected.kind === "play_card") {
       expect(selected.sourceCardId).toBe(musterCallerCard.cardId);
-      expect(selected.target.row).toBe("ranged");
     }
 
+    // Trace diagnostics: risk=true, better alternative exists, but penalty NOT applied
+    // because of muster exemption
     const { trace } = explainLegalHeuristicV1Decision(input);
     const wa = trace.weatherPlacementAnalysis!;
-    // The weathered 8-strength muster caller IS a low-tempo risk
     expect(wa.selectedMoveLowTempoWeatherRisk).toBe(true);
-    // No better alternative exists (only one move), so penalty not applied
-    expect(wa.betterNonWeatheredAlternativeAvailable).toBe(false);
+    expect(wa.betterNonWeatheredAlternativeAvailable).toBe(true);
     expect(wa.weatheredLowTempoPenaltyApplied).toBe(false);
   });
 
   // ------------------------------------------------------------------
-  // Test 7: Strong Medic exception — force weathered selection
+  // Test 6: Strong Medic exception — same pattern as muster
   // ------------------------------------------------------------------
-  it("strong Medic: weathered selection with risk true but penaltyApplied false", () => {
-    const medic = medicUnit("medic", 8);
+  it("strong Medic: weathered wins due to medic bonus, exemption verified", () => {
+    const medic = medicUnit("medic", 16);
+    const cleanAlt = nonHeroUnit("clean", 7);
 
     const input = policyInput(
       [
         playMove(medic, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(cleanAlt, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
       ],
       {
-        ownHand: [medic],
+        ownHand: [medic, cleanAlt],
         weather: [fogCard],
         boardRows: boardRowsWeatheredRanged(),
         ownDiscard: [strongDiscard],
@@ -5685,20 +5785,54 @@ describe("cFp38: weathered row low-tempo tuning", () => {
       },
     );
 
+    const features = buildLegalHeuristicV1Features(input);
+
+    // The weathered medic IS a low-tempo risk
+    const medicMove = input.legalMoves.find(
+      (m): m is import("@/game/core").PlayCardMove =>
+        m.kind === "play_card" &&
+        m.sourceCardId === medic.cardId &&
+        m.target.kind === "board_row" &&
+        m.target.row === "ranged",
+    )!;
+    expect(isOwnWeatheredLowTempoUnitPlacement(features, medicMove)).toBe(true);
+
+    // Strong Medic with revive target has bestReviveValueBucket = "strong"
+    const medicInfo = medicSourceUtility(features, medic);
+    expect(medicInfo.bestReviveValueBucket).toBe("strong");
+
+    // The medic is exempted
+    expect(shouldExemptFromWeatheredLowTempoPenalty(features, medicMove)).toBe(true);
+
+    // v1 selects the weathered medic due to medic bonus (score guard)
+    const medicScore = scorePlayMove(features, medicMove);
+    const medicCleanMove = input.legalMoves.find(
+      (m): m is import("@/game/core").PlayCardMove =>
+        m.kind === "play_card" &&
+        m.target.kind === "board_row" &&
+        m.target.side === "own" &&
+        m.target.row === "close",
+    );
+    if (medicCleanMove) {
+      const cleanScore = scorePlayMove(features, medicCleanMove);
+      expect(medicScore).toBeGreaterThan(cleanScore);
+    }
+
     const selected = legalHeuristicPolicyV1.selectMove(input);
     expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).toBe(medic.cardId);
+    }
 
     const { trace } = explainLegalHeuristicV1Decision(input);
     const wa = trace.weatherPlacementAnalysis!;
-    // The weathered 8-strength Medic IS a low-tempo risk
     expect(wa.selectedMoveLowTempoWeatherRisk).toBe(true);
-    // No better alternative exists (only one move), so penalty not applied
-    expect(wa.betterNonWeatheredAlternativeAvailable).toBe(false);
+    expect(wa.betterNonWeatheredAlternativeAvailable).toBe(true);
     expect(wa.weatheredLowTempoPenaltyApplied).toBe(false);
   });
 
   // ------------------------------------------------------------------
-  // Test 8: Last-gem catch-up exception
+  // Test 7: Last-gem catch-up exception
   // ------------------------------------------------------------------
   it("last-gem catch-up: weathered low-tempo selected with no better line", () => {
     const onlyUnit = nonHeroUnit("last-unit", 8);
@@ -5731,7 +5865,7 @@ describe("cFp38: weathered row low-tempo tuning", () => {
   });
 
   // ------------------------------------------------------------------
-  // Test 9: Policy/explanation parity
+  // Test 8: Policy/explanation parity
   // ------------------------------------------------------------------
   it("selectMove and explain produce the same move for cFp38 fixture", () => {
     const agileUnit = nonHeroUnit("parity-unit", 8);
@@ -5755,7 +5889,7 @@ describe("cFp38: weathered row low-tempo tuning", () => {
   });
 
   // ------------------------------------------------------------------
-  // Test 10: Spy exception
+  // Test 9: Spy exception
   // ------------------------------------------------------------------
   it("spy on weathered row not penalized by cFp38", () => {
     const spy = spyUnit("spy", 8);
@@ -5785,19 +5919,30 @@ describe("cFp38: weathered row low-tempo tuning", () => {
   });
 
   // ------------------------------------------------------------------
-  // Test 11: v0 isolation — cFp38 logic not wired into v0
+  // Test 10: v0 isolation — behavioral fixture proving cFp30 drives
+  // v0/v1 divergence, not cFp38. v0 ignores cFp30 weather penalty,
+  // so weathered wins in v0. v1 applies cFp30 weather penalty,
+  // so clean wins in v1. cFp38 penalty further reduces weathered
+  // score in v1 but is not the cause of divergence.
   // ------------------------------------------------------------------
-  it("v0 is unaffected by cFp38 weathered-row penalty", () => {
-    const highWeathered = nonHeroUnit("v0-test", 12);
-    const betterCard = nonHeroUnit("v0-alt", 7);
+  it("v0 and v1 diverge on weathered low-tempo play — cFp30 drives difference, v0 unaffected by cFp38", () => {
+    // Weathered 15-strength on fog-ranged vs clean 7-strength on close:
+    //   v0 weathered: 150+25+15*14 = 325 (no weather penalty)
+    //   v0 clean:    70+25+7*14   = 173
+    //   → v0 selects weathered
+    //   v1 weathered: 200+1*14 - cFp38Penalty ≈ negative (weather reduces to effective=1)
+    //   v1 clean:    95+7*14   = 193
+    //   → v1 selects clean
+    const weathered = nonHeroUnit("v0-diverge", 15);
+    const cleanCard = nonHeroUnit("v0-clean", 7);
 
     const input = policyInput(
       [
-        playMove(highWeathered, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
-        playMove(betterCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+        playMove(weathered, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+        playMove(cleanCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
       ],
       {
-        ownHand: [highWeathered, betterCard],
+        ownHand: [weathered, cleanCard],
         weather: [fogCard],
         boardRows: boardRowsWeatheredRanged(),
         score: {
@@ -5807,22 +5952,44 @@ describe("cFp38: weathered row low-tempo tuning", () => {
       },
     );
 
-    // v1 should prefer the clean alternative due to cFp38 penalty
     const v1Selected = legalHeuristicPolicyV1.selectMove(input);
     expect(v1Selected?.kind).toBe("play_card");
     if (v1Selected && v1Selected.kind === "play_card") {
-      expect(v1Selected.sourceCardId).toBe(betterCard.cardId);
+      expect(v1Selected.sourceCardId).toBe(cleanCard.cardId);
     }
 
-    // v0 should NOT be affected by cFp38 — it uses its own scoring without the penalty
-    // v0's selection depends on its own heuristics, not cFp38 logic
     const v0Selected = legalHeuristicPolicyV0.selectMove(input);
     expect(v0Selected?.kind).toBe("play_card");
-    // v0 may pick either card — the point is cFp38 does not change v0's behavior
-    expect(v0Selected?.sourceCardId).toBeTruthy();
+    if (v0Selected && v0Selected.kind === "play_card") {
+      // v0 does NOT apply cFp30 weather penalty, so weathered wins
+      expect(v0Selected.sourceCardId).toBe(weathered.cardId);
+    }
 
-    // Confirm they are different policies
-    expect(legalHeuristicPolicyV0.id).toBe("legal-heuristic-v0");
-    expect(legalHeuristicPolicyV1.id).toBe("legal-heuristic-v1");
+    // v1 and v0 select different cards — proving they use different scoring
+    expect(v1Selected?.sourceCardId).not.toBe(v0Selected?.sourceCardId);
+
+    // v1's weathered move gets the cFp38 penalty; v0 never sees it
+    const features = buildLegalHeuristicV1Features(input);
+    const weatheredMove = input.legalMoves.find(
+      (m): m is import("@/game/core").PlayCardMove =>
+        m.kind === "play_card" && m.sourceCardId === weathered.cardId && m.target.row === "ranged",
+    )!;
+
+    const v1WeatheredScore = scorePlayMove(features, weatheredMove);
+    const v1CleanMove = input.legalMoves.find(
+      (m): m is import("@/game/core").PlayCardMove =>
+        m.kind === "play_card" && m.sourceCardId === cleanCard.cardId && m.target.row === "close",
+    )!;
+    const v1CleanScore = scorePlayMove(features, v1CleanMove);
+
+    // v1 penalizes the weathered move, v1 clean score > v1 weathered score
+    expect(v1CleanScore).toBeGreaterThan(v1WeatheredScore);
+
+    // cFp38 diagnostic: the selected move is the clean card, so the
+    // trace shows no weathered risk on the selected play.  The
+    // weathered move itself was already verified above via scores.
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const wa = trace.weatherPlacementAnalysis!;
+    expect(wa.selectedMoveLowTempoWeatherRisk).toBe(false);
   });
 });
