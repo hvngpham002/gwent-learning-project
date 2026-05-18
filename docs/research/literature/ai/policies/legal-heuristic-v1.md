@@ -223,10 +223,11 @@ because `stopLossRecommended === false`; the refreshed artifact reports 295
 findings, including 222 calibrated suspicious-pass findings and 93 suppressed
 broad-pass candidates recorded only as aggregate analyzer-noise counts.
 
-The cFp35 tuning queue ranks `round_resource_exhaustion`,
+The cFp35 tuning queue ranked `round_resource_exhaustion`,
 `weathered_row_low_tempo`, `medic_no_target_timing`, `skellige_matchup_skew`,
-and `remaining_suspicious_pass`. The recommended cFp36 scope is to tune
-round-resource exhaustion first, not suspicious-pass broadly.
+and `remaining_suspicious_pass`. cFp36/cFp37 have now completed the
+round-resource/pass-priority work, so the next active behavior handoff is
+`cFp38` weathered-row low-tempo tuning.
 `leader_underuse` remains deferred until a safe public leader-availability
 summary exists. H100/Slurm is still not involved; the command is CPU/Node
 benchmark infrastructure.
@@ -811,3 +812,34 @@ a separate code path in the initial implementation. The repair improves the
 first cFp36 implementation by +1 win, recovering one win/loss by allowing
 exception plays to proceed correctly. The tuning queue still ranks
 `round_resource_exhaustion` as #1 for further tuning.
+
+### Pass Decision Alignment (cFp37)
+
+cFp37 keeps the cFp36 round-resource diagnostics but narrows the resource-gate
+pass decision. `shouldPassForResourceExhaustion` only allows pass when
+round-investment already recommends `preserve_future_hand` or
+`sacrifice_round`, and blocks the resource gate when the diagnostic says
+`continue`, `fight_last_gem`, or when a single-move catch-up with public
+upper-bound viability still exists.
+
+Benchmark totals after cFp37:
+
+- `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
+- `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
+- Failure mining: 295 findings; suspicious_pass = 222.
+
+cFp37 restores the cFp35 benchmark/failure-mining baseline without deleting
+cFp36 diagnostics.
+
+### Weathered Row Low-Tempo Handoff (cFp38 Spec Ready)
+
+`docs/spec/2026-05-18-cFp38-specs.md` scopes the next behavior phase. The goal
+is a narrow second-pass guard for cases where medium/high printed-strength
+non-hero units collapse to low effective tempo in the AI's own weathered row
+while a clearly better legal line exists.
+
+cFp38 must preserve tactical exceptions for Spy/card-advantage, strong Medic
+value, Muster/linked callers, useful leaders, match-winning lines, last-gem
+catch-up, and no-better-line cases. It should reduce the existing
+`weathered_row_low_tempo` failure-mining count without materially regressing
+the cFp37 starter-matrix baseline.
