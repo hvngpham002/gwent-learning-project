@@ -53,6 +53,12 @@ Current cFp38 benchmark totals:
   starter matrix deck matchups do not present the combined conditions needed
   to trigger the "clearly better line" gate).
 
+The next active behavior handoff is cFp39: Medic No-Target Timing Guard. It
+targets the 5 remaining `medic_timing_risk` findings, all of which are selected
+no-target Medic source plays from `official-nilfgaard-starter`. The cFp39 spec
+also makes AI Lab metadata updates mandatory after implementation so `/ai-lab`
+stays synchronized with the latest policy phase and benchmark totals.
+
 cFp37 is a behavior repair that fixes the cFp36 pass-policy regression. The
 cFp36 resource budget gate was mechanically correct but too broad: it could
 force pass even when round-investment said `continue` or `fight_last_gem`.
@@ -235,9 +241,9 @@ broad-pass candidates recorded only as aggregate analyzer-noise counts.
 
 The cFp35 tuning queue ranked `round_resource_exhaustion`,
 `weathered_row_low_tempo`, `medic_no_target_timing`, `skellige_matchup_skew`,
-and `remaining_suspicious_pass`. cFp36/cFp37 have now completed the
-round-resource/pass-priority work, so the next active behavior handoff is
-`cFp38` weathered-row low-tempo tuning.
+and `remaining_suspicious_pass`. cFp36/cFp37 completed the
+round-resource/pass-priority work, and cFp38 completed weathered-row low-tempo
+tuning, so the next active behavior handoff is `cFp39` Medic no-target timing.
 `leader_underuse` remains deferred until a safe public leader-availability
 summary exists. H100/Slurm is still not involved; the command is CPU/Node
 benchmark infrastructure.
@@ -841,15 +847,28 @@ Benchmark totals after cFp37:
 cFp37 restores the cFp35 benchmark/failure-mining baseline without deleting
 cFp36 diagnostics.
 
-### Weathered Row Low-Tempo Handoff (cFp38 Spec Ready)
+### Weathered Row Low-Tempo Tuning (cFp38)
 
-`docs/spec/2026-05-18-cFp38-specs.md` scopes the next behavior phase. The goal
-is a narrow second-pass guard for cases where medium/high printed-strength
-non-hero units collapse to low effective tempo in the AI's own weathered row
-while a clearly better legal line exists.
+cFp38 implements the narrow second-pass weathered-row guard from
+`docs/spec/2026-05-18-cFp38-specs.md`. It penalizes own-side non-hero unit
+placements with printed strength >= 6 when weather collapses effective strength
+to <= 3 and a clearly better legal line exists. It preserves tactical
+exceptions for Spy/card-advantage, strong Medic value, Muster/linked callers,
+match-winning lines, last-gem catch-up, and no-better-line cases.
 
-cFp38 must preserve tactical exceptions for Spy/card-advantage, strong Medic
-value, Muster/linked callers, useful leaders, match-winning lines, last-gem
-catch-up, and no-better-line cases. It should reduce the existing
-`weathered_row_low_tempo` failure-mining count without materially regressing
-the cFp37 starter-matrix baseline.
+Benchmark totals remain at the cFp37 baseline:
+
+- `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
+- `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
+- Failure mining: 295 findings; weathered_row_play = 21.
+
+### Medic No-Target Timing Handoff (cFp39 Spec Ready)
+
+`docs/spec/2026-05-18-cFp39-specs.md` scopes the next behavior phase. It targets
+the 5 remaining `medic_timing_risk` findings from failure mining, all selected
+no-target Medic source plays from `official-nilfgaard-starter`.
+
+cFp39 should add a narrow no-target Medic delay guard when a useful non-Medic
+line exists, while preserving emergency raw-tempo Medic plays, strong revive
+targets, prompt-target ranking, select/explain parity, hidden-info-safe
+diagnostics, and AI Lab metadata synchronization.
