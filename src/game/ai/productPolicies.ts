@@ -76,7 +76,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       {
         suiteId: "benchmark-v1-starter-matrix-v1",
         label: "v1 starter matrix",
-        result: "102 win / 16 loss / 2 draw vs v0",
+        result: "104 win / 14 loss / 2 draw vs v0",
       },
     ],
     capabilities: [

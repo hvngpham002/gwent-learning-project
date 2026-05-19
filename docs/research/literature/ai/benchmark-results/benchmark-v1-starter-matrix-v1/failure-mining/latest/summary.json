@@ -6,24 +6,24 @@
       "reason": "Current safe trace data does not expose consecutive legal leader availability by turn; keep this deferred until a public step-level leader-availability summary exists."
     }
   ],
-  "findingCount": 300,
+  "findingCount": 296,
   "findingCountsByKind": {
     "deck_skew": 1,
     "engine_error": 0,
     "leader_underuse": 0,
     "matchup_skew": 2,
     "max_steps": 0,
-    "medic_timing_risk": 4,
+    "medic_timing_risk": 3,
     "policy_failed": 0,
     "replay_failed": 0,
     "round_one_overinvestment": 9,
     "round_three_low_resource": 34,
-    "suspicious_pass": 228,
+    "suspicious_pass": 225,
     "weathered_row_play": 22
   },
   "findingCountsBySeverity": {
     "info": 0,
-    "warning": 227,
+    "warning": 223,
     "watch": 73
   },
   "recordCount": 120,
@@ -40,12 +40,12 @@
     "replay_failed": 0,
     "round_one_overinvestment": 0,
     "round_three_low_resource": 0,
-    "suspicious_pass": 90,
+    "suspicious_pass": 92,
     "weathered_row_play": 0
   },
   "suppressedSuspiciousPassCountsByCategory": {
     "insufficient_context": 1,
-    "preserve_future_hand_pass": 65,
+    "preserve_future_hand_pass": 67,
     "sacrifice_round_pass": 0,
     "stop_loss_pass": 24,
     "voluntary_safe_pass": 0
@@ -143,33 +143,6 @@
       },
       "faction": "nilfgaard",
       "findingId": "medic-timing-risk__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1__starter-matrix-002__1__seat-a__14",
-      "kind": "medic_timing_risk",
-      "matchupId": "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
-      "message": "legal-heuristic-v1 selected a play with weak Medic timing signals.",
-      "mirrorIndex": 1,
-      "policyId": "legal-heuristic-v1",
-      "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-002",
-      "severity": "warning",
-      "suiteId": "benchmark-v1-starter-matrix-v1"
-    },
-    {
-      "benchmarkRunId": "benchmark-v1-starter-matrix-v1:latest",
-      "count": 1,
-      "deckPresetId": "official-nilfgaard-starter",
-      "evidence": {
-        "bestReviveStrengthBucket": "none",
-        "bestReviveValueBucket": "none",
-        "decisionIndex": 15,
-        "medicPlayCandidateCount": 2,
-        "noTargetMedicRisk": true,
-        "ownDiscardReviveCandidateCount": 0,
-        "selectedKind": "play_card",
-        "selectedMedicWithNoTarget": true,
-        "selectedMoveIsMedic": true
-      },
-      "faction": "nilfgaard",
-      "findingId": "medic-timing-risk__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1__starter-matrix-002__1__seat-a__15",
       "kind": "medic_timing_risk",
       "matchupId": "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
       "message": "legal-heuristic-v1 selected a play with weak Medic timing signals.",
@@ -297,6 +270,39 @@
       "seed": "starter-matrix-001",
       "severity": "warning",
       "suiteId": "benchmark-v1-starter-matrix-v1"
+    },
+    {
+      "benchmarkRunId": "benchmark-v1-starter-matrix-v1:latest",
+      "count": 1,
+      "deckPresetId": "official-scoiatael-starter",
+      "evidence": {
+        "activeVoluntaryUnsafe": false,
+        "decisionIndex": 11,
+        "fightLastGemUpperBoundCanWin": false,
+        "hasSingleMoveCatchUp": true,
+        "isOpponentPassed": true,
+        "isVoluntarilySafe": false,
+        "policyUpperBoundCanWinRound": true,
+        "reasonKind": "policy",
+        "recommendationContinue": true,
+        "round": 2,
+        "roundInvestmentRecommendation": "continue",
+        "scoreDelta": 4,
+        "selectedKind": "pass",
+        "singleMoveCatchUpIgnored": true,
+        "stopLossRecommended": false
+      },
+      "faction": "scoiatael",
+      "findingId": "suspicious-pass__legal-heuristic-v1__starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1__starter-matrix-001__0__seat-b__11",
+      "kind": "suspicious_pass",
+      "matchupId": "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1",
+      "message": "legal-heuristic-v1 passed in a state that merits review.",
+      "mirrorIndex": 0,
+      "policyId": "legal-heuristic-v1",
+      "schemaVersion": "benchmark-failure-mining-v1",
+      "seed": "starter-matrix-001",
+      "severity": "warning",
+      "suiteId": "benchmark-v1-starter-matrix-v1"
     }
   ],
   "tuningQueue": [
@@ -391,7 +397,7 @@
         "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1"
       ],
       "clusterId": "medic_no_target_timing",
-      "count": 4,
+      "count": 3,
       "findingKinds": [
         "medic_timing_risk"
       ],
@@ -475,7 +481,7 @@
         "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
       ],
       "clusterId": "remaining_suspicious_pass",
-      "count": 228,
+      "count": 225,
       "findingKinds": [
         "suspicious_pass"
       ],

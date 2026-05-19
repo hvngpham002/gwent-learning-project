@@ -42,9 +42,9 @@
 
 ## Averages
 
-- steps: 33.483
-- commands: 33.483
-- legal moves: 7.587
+- steps: 33.417
+- commands: 33.417
+- legal moves: 7.593
 
 ## Matchups
 
@@ -61,7 +61,7 @@
 | starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 37 | 37 | 6.722 |
 | starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 32.833 | 32.833 | 7.117 |
 | starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1 | 6 | 35 | 35 | 8.108 |
-| starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1 | 6 | 45.167 | 45.167 | 7.355 |
+| starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1 | 6 | 43.833 | 43.833 | 7.472 |
 | starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1 | 6 | 38.5 | 38.5 | 7.999 |
 | starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 32.167 | 32.167 | 7.894 |
 | starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0 | 6 | 33 | 33 | 8.74 |

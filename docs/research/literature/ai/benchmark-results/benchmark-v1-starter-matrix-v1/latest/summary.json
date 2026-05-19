@@ -1,7 +1,7 @@
 {
-  "averageCommands": 33.483333333333334,
-  "averageLegalMoves": 7.587220494444252,
-  "averageSteps": 33.483333333333334,
+  "averageCommands": 33.416666666666664,
+  "averageLegalMoves": 7.593027695373404,
+  "averageSteps": 33.416666666666664,
   "benchmarkRunId": "benchmark-v1-starter-matrix-v1:latest",
   "completionRate": 1,
   "deckPresetIds": [
@@ -12,7 +12,7 @@
     "official-skellige-starter"
   ],
   "errorCodeCounts": {},
-  "leaderUseCount": 53,
+  "leaderUseCount": 52,
   "matchupSummaries": [
     {
       "averageCommands": 30.166666666666668,
@@ -488,12 +488,12 @@
       "totalMatches": 6
     },
     {
-      "averageCommands": 45.166666666666664,
-      "averageLegalMoves": 7.355494704893876,
-      "averageSteps": 45.166666666666664,
-      "leaderUseCount": 11,
+      "averageCommands": 43.833333333333336,
+      "averageLegalMoves": 7.471638723476919,
+      "averageSteps": 43.833333333333336,
+      "leaderUseCount": 10,
       "matchupId": "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
-      "promptCount": 17,
+      "promptCount": 16,
       "resultCountsByDeck": {
         "official-nilfgaard-starter": {
           "draws": 0,
@@ -880,7 +880,7 @@
     "legal-heuristic-v0",
     "legal-heuristic-v1"
   ],
-  "promptCount": 181,
+  "promptCount": 180,
   "replayCheckedCount": 120,
   "replayFailedCount": 0,
   "resultCountsByDeck": {

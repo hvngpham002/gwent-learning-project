@@ -53,16 +53,17 @@ through cFp38 tuning and diagnostics chain:
 Current cFp39 benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
-- `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
-- Failure mining: 300 findings (vs cFp38's 295), breakdown:
-  suspicious_pass = 228 (+6), weathered_row_play = 22 (+1),
-  round_one_overinvestment = 9 (-1), medic_timing_risk = 4 (-1),
+- `benchmark-v1-starter-matrix-v1`: 104 win / 14 loss / 2 draw vs v0.
+- Failure mining: 296 findings (vs cFp38's 295), breakdown:
+  suspicious_pass = 225 (+3), weathered_row_play = 22 (+1),
+  round_one_overinvestment = 9 (-1), medic_timing_risk = 3 (-2),
   round_three_low_resource = 34 (unchanged), matchup_skew = 2,
   deck_skew = 1. medic_no_target_timing remains rank 3 in tuning queue.
-  The net +5 total finding increase is calibration noise in the
-  suspicious-pass evaluator; starter-matrix strength stayed at 102/16/2.
+  The net +1 total finding increase is mostly calibrated suspicious-pass
+  noise, while starter-matrix strength improved to 104/14/2.
 
-The next active behavior handoff is cFp40 (TBD).
+The next active behavior handoff should be scoped from a larger automated
+playtest volume rather than one-off manual logs.
 
 cFp37 is a behavior repair that fixes the cFp36 pass-policy regression. The
 cFp36 resource budget gate was mechanically correct but too broad: it could
@@ -905,9 +906,9 @@ Key implementation details:
 Benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
-- `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
-- Failure mining: 300 findings (suspicious_pass=228, weathered_row_play=22,
-  medic_timing_risk=4, round_one_overinvestment=9, round_three_low_resource=34).
+- `benchmark-v1-starter-matrix-v1`: 104 win / 14 loss / 2 draw vs v0.
+- Failure mining: 296 findings (suspicious_pass=225, weathered_row_play=22,
+  medic_timing_risk=3, round_one_overinvestment=9, round_three_low_resource=34).
 
 cFp39 adds 10 fixture tests to `engineAiPolicy.test.ts` covering:
 - No-target Medic delay penalty when useful non-Medic line exists
