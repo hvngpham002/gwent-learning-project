@@ -3,6 +3,7 @@
 ## Last Updated
 
 - Date: 2026-05-19
+- Active repair spec handoff: `cFp41.1` Recursive Scoring Guard For Expanded Benchmarks (`docs/spec/2026-05-19-cFp41.1-specs.md`). The cFp41 expanded 400-record profile finished quickly but exposed one `legal-heuristic-v1` policy failure: `benchmark-v1-starter-matrix-expanded-v1`, matchup `starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0`, seed `starter-matrix-expanded-010`, mirror index `0`, `policy_select_failed`, `Maximum call stack size exceeded`. Reproduction points to recursive scoring in cFp38/cFp39 alternative-line helpers (`hasUsefulNonMedicLine` / `hasClearlyBetterNonWeatheredLine`) re-entering `scorePlayMove`. cFp41.1 should add non-recursive alternative-line scoring, exact expanded-run regression coverage, helper-level regression coverage, and stale failure-mining queue wording cleanup before increasing benchmark volume further.
 - Completed evaluation-infrastructure phase: `cFp41` Expanded Automated Playtest Volume (`docs/spec/2026-05-19-cFp41-specs.md`, `audit/reports/2026-05-19-cFp41-report.md`). Adds `benchmark-v1-starter-matrix-expanded-v1`, a 400-record discovery suite over the existing official starter-deck v1-vs-v0 matrix: 10 deterministic seeds, 20 matchup definitions, and mirrored seat assignments. Adds `npm run benchmark:v1-starter-matrix-expanded`, `npm run benchmark:v1-failure-mining-expanded`, and cFp40 long-run profiles `v1-expanded` / `v1-expanded-repeat`. AI Lab static metadata now points to the expanded discovery suite while preserving cFp39 as the latest AI-behavior phase. No AI policy behavior, engine rules, legal moves, UI behavior, catalog data, deck presets, ratings, search, training, benchmark artifact output, or product difficulty changed.
 - Completed benchmark-refresh phase: `cFp40.1` Benchmark Artifact Refresh After Long Runner (`docs/spec/2026-05-19-cFp40.1-specs.md`, `audit/reports/2026-05-19-cFp40.1-report.md`). Regenerated the current `v1-current` long-run profile through `npm run benchmark:long -- --profile v1-current` and committed the deterministic benchmark artifact refresh plus docs/AI Lab metadata alignment. Refreshed totals: v1 smoke 10/2/0 vs v0; v1 starter matrix 104/14/2 vs v0; failure mining 296 findings (`suspicious_pass=225`, `round_three_low_resource=34`, `weathered_row_play=22`, `round_one_overinvestment=9`, `medic_timing_risk=3`). No AI policy behavior, engine rules, legal moves, UI behavior, catalog data, deck presets, benchmark suite definitions, or product route behavior changed.
 - Completed benchmark-tooling phase: `cFp40` Long-Run Benchmark Progress Runner (`docs/spec/2026-05-19-cFp40-specs.md`, `audit/reports/2026-05-19-cFp40-report.md`). Adds `npm run benchmark:long` as a user-run orchestration wrapper around existing benchmark npm commands. The runner uses the optional Python `alive-progress` package for terminal progress, falls back to plain progress when the package is missing, and writes ignored local run bundles under `.local/benchmark-runs/<run-id>/` with per-step logs, `run.json`, and `summary.md`. Profiles: `smoke`, `v1-current`, `v1-current-repeat`, and `all-current`. Long benchmark jobs should be run by the user in a terminal or SSH session and then shared back via the generated summary or JSON path, rather than being tied to an agent runtime. No AI policy behavior, engine rules, legal moves, UI behavior, catalog data, deck presets, benchmark suite definitions, or AI Lab runtime behavior changed.
@@ -451,19 +452,23 @@ training, robustness probes, or product difficulty.
 
 Recommended sequence:
 
-1. ask the user to run the new cFp41 discovery profile:
+1. implement `cFp41.1` before increasing benchmark volume. The first cFp41
+   expanded run already exposed a real `legal-heuristic-v1` stack overflow,
+   so repair the recursive cFp38/cFp39 alternative-line scoring path first;
+2. after cFp41.1 is merged, ask the user to rerun the expanded discovery
+   profile:
 
    ```bash
    npm run benchmark:long -- --profile v1-expanded
    ```
 
-2. compare cFp41 trend output against the refreshed cFp40.1 baseline
+3. compare cFp41 trend output against the refreshed cFp40.1 baseline
    (`104/14/2`, 296 findings) before changing policy constants;
-3. use the failure-mining queue only after the larger volume confirms stable
+4. use the failure-mining queue only after the larger volume confirms stable
    signal: current rank order is round-resource exhaustion, weathered-row
    low-tempo, Medic no-target timing, Skellige matchup skew, then remaining
    suspicious-pass contradictions;
-4. keep Glicko/TrueSkill ratings, approximate best-response probes,
+5. keep Glicko/TrueSkill ratings, approximate best-response probes,
    ISMCTS/determinized search, OSFP, NFSP, Deep CFR, ReBeL, and model
    training deferred until they consume the existing ledger/artifact foundation.
 
