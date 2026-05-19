@@ -9,6 +9,19 @@ const STARTER_MATRIX_SEEDS = [
   'starter-matrix-003',
 ] as const;
 
+const STARTER_MATRIX_EXPANDED_SEEDS = [
+  'starter-matrix-expanded-001',
+  'starter-matrix-expanded-002',
+  'starter-matrix-expanded-003',
+  'starter-matrix-expanded-004',
+  'starter-matrix-expanded-005',
+  'starter-matrix-expanded-006',
+  'starter-matrix-expanded-007',
+  'starter-matrix-expanded-008',
+  'starter-matrix-expanded-009',
+  'starter-matrix-expanded-010',
+] as const;
+
 const factionSlug = (descriptor: BenchmarkDeckDescriptor) => descriptor.faction.replace(/_/g, '-');
 
 const seatForDescriptor = (
@@ -164,11 +177,30 @@ export const benchmarkV1StarterMatrixSuiteV1: BenchmarkSuite = {
   }),
 };
 
+export const benchmarkV1StarterMatrixExpandedSuiteV1: BenchmarkSuite = {
+  id: 'benchmark-v1-starter-matrix-expanded-v1',
+  label: 'Benchmark legal heuristic v1 starter matrix expanded',
+  description:
+    'Expanded deterministic discovery suite over all five official starter presets comparing legal-heuristic-v1 against legal-heuristic-v0 across ten fixed seeds.',
+  seeds: STARTER_MATRIX_EXPANDED_SEEDS,
+  defaultMaxSteps: currentSimulationSmokeSuite.defaultMaxSteps,
+  deckDescriptors: benchmarkStarterDeckDescriptors,
+  matchups: buildStarterMatrixMatchups({
+    firstPolicyId: 'legal-heuristic-v1',
+    secondPolicyId: 'legal-heuristic-v0',
+    firstPolicyLeftSlug: 'heuristic-v1',
+    firstPolicyRightSlug: 'heuristic-v1',
+    secondPolicyLeftSlug: 'heuristic-v0',
+    secondPolicyRightSlug: 'heuristic-v0',
+  }),
+};
+
 export const benchmarkSuites = {
   [benchmarkSmokeSuiteV1.id]: benchmarkSmokeSuiteV1,
   [benchmarkStarterMatrixSuiteV1.id]: benchmarkStarterMatrixSuiteV1,
   [benchmarkV1SmokeSuiteV1.id]: benchmarkV1SmokeSuiteV1,
   [benchmarkV1StarterMatrixSuiteV1.id]: benchmarkV1StarterMatrixSuiteV1,
+  [benchmarkV1StarterMatrixExpandedSuiteV1.id]: benchmarkV1StarterMatrixExpandedSuiteV1,
 } as const;
 
 export const getBenchmarkSuite = (id: string): BenchmarkSuite | null =>

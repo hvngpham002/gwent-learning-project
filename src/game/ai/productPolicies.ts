@@ -78,6 +78,11 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
         label: "v1 starter matrix",
         result: "104 win / 14 loss / 2 draw vs v0",
       },
+      {
+        suiteId: "benchmark-v1-starter-matrix-expanded-v1",
+        label: "v1 expanded starter matrix",
+        result: "400-record discovery suite available via benchmark:long",
+      },
     ],
     capabilities: [
       "linked-card mulligan diagnostics",
@@ -92,6 +97,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "round-resource exhaustion diagnostics and budget gate",
       "pass-decision alignment — resource-gate scope-down",
       "weathered-row low-tempo scoring guard",
+      "expanded 400-record starter-matrix discovery suite",
     ],
   },
 ];

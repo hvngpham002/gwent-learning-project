@@ -6,7 +6,7 @@ export interface AiLabStat {
 }
 
 export interface AiLabBenchmarkSuite {
-  readonly id: "benchmark-smoke-v1";
+  readonly id: string;
   readonly label: string;
   readonly status: string;
   readonly summary: string;
@@ -58,16 +58,16 @@ export interface AiLabViewModel {
 }
 
 const benchmarkSuite: AiLabBenchmarkSuite = {
-  id: "benchmark-smoke-v1",
-  label: "Benchmark smoke suite v1",
-  status: "headless/in-memory available, browser run deferred",
+  id: "benchmark-v1-starter-matrix-expanded-v1",
+  label: "Benchmark legal heuristic v1 starter matrix expanded",
+  status: "headless/user-run available, browser run deferred",
   summary:
-    "Fixed current Northern Realms versus current Nilfgaard matchup comparing the product heuristic with a deterministic benchmark comparator.",
+    "Expanded deterministic starter-deck discovery suite comparing legal-heuristic-v1 with legal-heuristic-v0 before the next tuning patch.",
   stats: [
-    { label: "seeds", value: "6" },
+    { label: "seeds", value: "10" },
     { label: "mirroring", value: "enabled" },
-    { label: "expected records", value: "12" },
-    { label: "matchup", value: "current Northern Realms vs current Nilfgaard" },
+    { label: "expected records", value: "400" },
+    { label: "matchup", value: "all official starter deck pairs" },
   ],
 };
 

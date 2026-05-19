@@ -29,6 +29,16 @@ python3 -m pip install --user alive-progress
 npm run benchmark:long -- --profile v1-current
 ```
 
+Run the expanded cFp41 discovery bundle:
+
+```bash
+npm run benchmark:long -- --profile v1-expanded
+```
+
+That profile writes a 400-record starter matrix and matching
+failure-mining artifacts for `benchmark-v1-starter-matrix-expanded-v1`.
+Use it for discovery; keep `v1-current` for quick regression.
+
 The [`alive-progress`](https://github.com/rsalmei/alive-progress)
 package is optional. Without it, the runner falls back to plain step
 progress. The runner writes ignored local run bundles under
@@ -72,6 +82,19 @@ benchmark-v1-starter-matrix-v1/latest/
   summary.json
   records.jsonl
   report.md
+
+benchmark-v1-starter-matrix-expanded-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
+
+benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest/
+  manifest.json
+  summary.json
+  findings.jsonl
+  report.md
+  tuning-queue.md
 ```
 
 The default run id is `<suite-id>:latest`. Each `latest/` folder is

@@ -120,6 +120,52 @@ PROFILES: dict[str, tuple[BenchmarkStep, ...]] = {
             ),
         ),
     ),
+    "v1-expanded": (
+        BenchmarkStep(
+            name="v1 expanded starter matrix",
+            command="npm run benchmark:v1-starter-matrix-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded failure mining",
+            command="npm run benchmark:v1-failure-mining-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest",
+            ),
+        ),
+    ),
+    "v1-expanded-repeat": (
+        BenchmarkStep(
+            name="v1 expanded starter matrix",
+            command="npm run benchmark:v1-starter-matrix-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded failure mining",
+            command="npm run benchmark:v1-failure-mining-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded starter matrix repeat",
+            command="npm run benchmark:v1-starter-matrix-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded failure mining repeat",
+            command="npm run benchmark:v1-failure-mining-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest",
+            ),
+        ),
+    ),
     "all-current": (
         BenchmarkStep(
             name="baseline smoke",

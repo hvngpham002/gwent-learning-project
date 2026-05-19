@@ -120,6 +120,11 @@ The built-in suites are:
   shape, comparing `legal-heuristic-v1` against `legal-heuristic-v0`
   over 10 unordered starter pairs, both policy assignments, 3 seeds,
   mirrored seats, and producing 120 records.
+- `benchmark-v1-starter-matrix-expanded-v1`: the cFp41 expanded
+  starter-deck discovery shape, comparing `legal-heuristic-v1` against
+  `legal-heuristic-v0` over the same 10 unordered starter pairs and
+  policy assignments, but with 10 deterministic seeds. It produces 400
+  records and should be run through the cFp40 long-run wrapper.
 
 The harness supports explicit catalog deck presets per seat. It still
 uses `currentCatalogCards` and `currentCatalogLeaders`. cFp23 adds no
@@ -181,6 +186,13 @@ Write the v1 starter-matrix failure-mining artifact set:
 npm run benchmark:v1-failure-mining
 ```
 
+Write the expanded v1 starter-matrix artifact sets:
+
+```bash
+npm run benchmark:v1-starter-matrix-expanded
+npm run benchmark:v1-failure-mining-expanded
+```
+
 For longer local runs that should not be tied to an agent turn, use the
 cFp40 progress runner. It orchestrates existing npm commands, writes a
 local run log bundle under `.local/benchmark-runs/`, and uses
@@ -204,6 +216,18 @@ Other profiles are `smoke`, `v1-current-repeat`, and `all-current`.
 Future agents should ask the user to run this command for long benchmark
 jobs, then inspect the resulting `summary.md` or `run.json`, rather than
 running multi-minute or multi-hour jobs inside the agent runtime.
+
+cFp41 adds the expanded discovery profile:
+
+```bash
+npm run benchmark:long -- --profile v1-expanded
+```
+
+For determinism checks, use:
+
+```bash
+npm run benchmark:long -- --profile v1-expanded-repeat
+```
 
 The command writes:
 
@@ -233,6 +257,19 @@ docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/lat
   report.md
 
 docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/failure-mining/latest/
+  manifest.json
+  summary.json
+  findings.jsonl
+  report.md
+  tuning-queue.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest/
   manifest.json
   summary.json
   findings.jsonl

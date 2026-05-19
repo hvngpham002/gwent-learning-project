@@ -12,6 +12,7 @@ import {
 import type { EnginePolicy } from '@/game/ai';
 import {
   benchmarkStarterMatrixSuiteV1,
+  benchmarkV1StarterMatrixExpandedSuiteV1,
   benchmarkV1SmokeSuiteV1,
   benchmarkV1StarterMatrixSuiteV1,
   benchmarkSmokeSuiteV1,
@@ -154,6 +155,36 @@ describe('benchmark harness', () => {
     expect(starter.summary.matchupSummaries).toHaveLength(20);
     expect(starter.summary.replayFailedCount).toBe(0);
   }, 60_000);
+
+  it('registers the expanded legal-heuristic-v1 starter matrix discovery suite', () => {
+    const suite = getBenchmarkSuite(benchmarkV1StarterMatrixExpandedSuiteV1.id);
+
+    expect(suite).toBe(benchmarkV1StarterMatrixExpandedSuiteV1);
+    expect(benchmarkV1StarterMatrixExpandedSuiteV1.seeds).toHaveLength(10);
+    expect(benchmarkV1StarterMatrixExpandedSuiteV1.matchups).toHaveLength(20);
+    expect(
+      new Set(benchmarkV1StarterMatrixExpandedSuiteV1.matchups.map((matchup) => matchup.matchupId))
+        .size
+    ).toBe(20);
+    expect(
+      benchmarkV1StarterMatrixExpandedSuiteV1.matchups.every((matchup) => matchup.mirror === true)
+    ).toBe(true);
+    expect(
+      benchmarkV1StarterMatrixExpandedSuiteV1.deckDescriptors
+        ?.map((descriptor) => descriptor.deckPresetId)
+        .sort()
+    ).toEqual(officialStarterPresetIds);
+    expect(
+      benchmarkV1StarterMatrixExpandedSuiteV1.seeds.every((seed) =>
+        String(seed).startsWith('starter-matrix-expanded-')
+      )
+    ).toBe(true);
+    expect(
+      benchmarkV1StarterMatrixExpandedSuiteV1.seeds.length *
+        benchmarkV1StarterMatrixExpandedSuiteV1.matchups.length *
+        2
+    ).toBe(400);
+  });
 
   it('records policy failures per match and continues the suite', () => {
     const throwingPolicy: EnginePolicy = {

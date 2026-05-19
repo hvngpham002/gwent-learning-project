@@ -14,16 +14,16 @@ const forbiddenHiddenInfoStrings = [
 ];
 
 describe("authentic AI Lab view model", () => {
-  it("describes the current smoke benchmark suite without runtime output", () => {
+  it("describes the current expanded benchmark suite without runtime output", () => {
     const viewModel = buildAuthenticAiLabViewModel();
 
-    expect(viewModel.benchmarkSuite.id).toBe("benchmark-smoke-v1");
+    expect(viewModel.benchmarkSuite.id).toBe("benchmark-v1-starter-matrix-expanded-v1");
     expect(viewModel.benchmarkSuite.stats).toEqual(
       expect.arrayContaining([
-        { label: "seeds", value: "6" },
+        { label: "seeds", value: "10" },
         { label: "mirroring", value: "enabled" },
-        { label: "expected records", value: "12" },
-        { label: "matchup", value: "current Northern Realms vs current Nilfgaard" },
+        { label: "expected records", value: "400" },
+        { label: "matchup", value: "all official starter deck pairs" },
       ]),
     );
     expect(viewModel.benchmarkSuite.status).toContain("browser run deferred");
@@ -81,6 +81,10 @@ describe("authentic AI Lab view model", () => {
           suiteId: "benchmark-v1-starter-matrix-v1",
           result: "104 win / 14 loss / 2 draw vs v0",
         }),
+        expect.objectContaining({
+          suiteId: "benchmark-v1-starter-matrix-expanded-v1",
+          result: "400-record discovery suite available via benchmark:long",
+        }),
       ]),
     );
     expect(v1?.capabilities).toEqual(
@@ -97,6 +101,7 @@ describe("authentic AI Lab view model", () => {
         "round-resource exhaustion diagnostics and budget gate",
         "pass-decision alignment — resource-gate scope-down",
         "weathered-row low-tempo scoring guard",
+        "expanded 400-record starter-matrix discovery suite",
       ]),
     );
   });

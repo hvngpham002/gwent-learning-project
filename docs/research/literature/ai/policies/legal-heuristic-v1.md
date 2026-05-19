@@ -65,6 +65,12 @@ Current cFp39 benchmark totals:
 The next active behavior handoff should be scoped from a larger automated
 playtest volume rather than one-off manual logs.
 
+cFp41 adds that expanded discovery surface without changing policy behavior:
+`benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
+matrix over 10 deterministic seeds for 400 records. Use
+`npm run benchmark:long -- --profile v1-expanded` to produce the expanded
+artifact bundle before selecting the next tuning patch.
+
 cFp37 is a behavior repair that fixes the cFp36 pass-policy regression. The
 cFp36 resource budget gate was mechanically correct but too broad: it could
 force pass even when round-investment said `continue` or `fight_last_gem`.
