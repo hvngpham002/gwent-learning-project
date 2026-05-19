@@ -170,6 +170,31 @@ export const effectivePlacedStrengthForPolicy = (
 
 // ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
+// cFp41.1: Non-recursive alternative-line score helper
+// ---------------------------------------------------------------------------
+
+/**
+ * cFp41.1: Quick tempo-based score for alternative-line scanning inside
+ * cFp38/cFp39 guard logic.  Must NOT call any cFp38/cFp39 guard helpers
+ * or full scorePlayMove, because those guards call back into this path
+ * and cause a stack overflow on deep match-ups.
+ *
+ * Uses the same primitives as scorePlayMove (cardStrategicValue + tempo)
+ * but skips Medic utility scoring, Spy bonuses, Muster bonuses, and all
+ * cFp38/cFp39 contextual penalties.
+ */
+const scorePlayMoveForAlternativeScan = (features: LegalHeuristicV1Features, move: PlayCardMove): number => {
+  const card = features.ownHandByCardId.get(move.sourceCardId);
+  if (!card) return -500;
+
+  const tempo = estimateImmediateTempo(features, move);
+  const score = cardStrategicValue(card, { includeMedicAbilityBonus: false }) + tempo * 14;
+
+  return score;
+};
+
+// ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 // cFp39: No-target Medic delay guard helpers
 // ---------------------------------------------------------------------------
 
@@ -200,9 +225,13 @@ export const isNoTargetMedicSourcePlay = (
 };
 
 /**
- * cFp39: Returns true when a useful non-Medic line exists among legal moves.
- * Checks play_card moves (non-Medic) and leader moves for score >= MIN_USEFUL_MOVE_SCORE.
- * Does not recurse into scorePlayMove for the selected no-target Medic move.
+ * cFp39/cFp41.1: Returns true when a useful non-Medic line exists among
+ * legal moves.  Uses the non-recursive `scorePlayMoveForAlternativeScan`
+ * helper to avoid the recursive scoring loop that caused a stack overflow
+ * in the expanded benchmark run.
+ *
+ * Leader moves still use `scoreLeaderMove` because leader scoring does not
+ * recurse into play-card guard helpers.
  */
 export const hasUsefulNonMedicLine = (
   features: LegalHeuristicV1Features,
@@ -211,7 +240,7 @@ export const hasUsefulNonMedicLine = (
     const card = features.ownHandByCardId.get(candidate.sourceCardId);
     if (!card) continue;
     if (isMedicSource(card)) continue;
-    const score = scorePlayMove(features, candidate);
+    const score = scorePlayMoveForAlternativeScan(features, candidate);
     if (score >= MIN_USEFUL_MOVE_SCORE) return true;
   }
 
@@ -298,11 +327,13 @@ export const isOwnWeatheredLowTempoUnitPlacement = (
 };
 
 /**
- * cFp38: Returns true when a clearly better legal line exists than the
+ * cFp38/cFp41.1: Returns true when a clearly better legal line exists than the
  * selected low-tempo weathered placement.
  *
- * Uses only public legal moves and avoids recursive scoring loops by
- * relying on estimateImmediateTempo plus card-kind/leader-kind checks.
+ * Uses non-recursive tempo primitives for alternative scanning to avoid
+ * the recursive scoring loop that caused a stack overflow in the expanded
+ * benchmark run.  The different-card tempo branch uses estimateImmediateTempo
+ * plus a quick alternative-scan score instead of full scoreMove.
  */
 export const hasClearlyBetterNonWeatheredLine = (
   features: LegalHeuristicV1Features,
@@ -339,7 +370,7 @@ export const hasClearlyBetterNonWeatheredLine = (
 
     const candidateTempo = estimateImmediateTempo(features, candidate);
     if (candidateTempo >= selectedTempo + 5) {
-      const candidateScore = scoreMove(features, candidate);
+      const candidateScore = scorePlayMoveForAlternativeScan(features, candidate);
       if (candidateScore >= MIN_USEFUL_MOVE_SCORE) {
         return true;
       }

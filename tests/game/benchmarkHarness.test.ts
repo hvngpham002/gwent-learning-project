@@ -186,6 +186,51 @@ describe('benchmark harness', () => {
     ).toBe(400);
   });
 
+  it('cFp41.1 expanded-run regression: starter-nilfgaard-vs-monsters seed-010 mirror-0 does not stack overflow', () => {
+    // Reproduces the exact cFp41 expanded benchmark failure:
+    // suite: benchmark-v1-starter-matrix-expanded-v1
+    // matchup: starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0
+    // seed: starter-matrix-expanded-010
+    // mirror index: 0
+    // error: policy_select_failed / Maximum call stack size exceeded
+    //
+    // Root cause was recursive scoring in cFp38/cFp39 alternative-line helpers.
+    // The repair replaces full scorePlayMove calls with non-recursive
+    // scorePlayMoveForAlternativeScan in hasUsefulNonMedicLine and
+    // hasClearlyBetterNonWeatheredLine.
+
+    const targetMatchupId = 'starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0';
+    const targetSeed = 'starter-matrix-expanded-010';
+
+    const expandedSuite = getBenchmarkSuite(benchmarkV1StarterMatrixExpandedSuiteV1.id);
+    expect(expandedSuite).not.toBeNull();
+
+    const filteredMatchups = expandedSuite!.matchups.filter(
+      (m) => m.matchupId === targetMatchupId,
+    );
+    expect(filteredMatchups).toHaveLength(1);
+
+    const filteredSuite: BenchmarkSuite = {
+      ...expandedSuite!,
+      seeds: [targetSeed],
+      matchups: filteredMatchups,
+    };
+
+    const result = runBenchmarkSuite({ suite: filteredSuite });
+
+    const failingRecord = result.records.find(
+      (r) => r.seed === targetSeed && r.mirrorIndex === 0,
+    );
+    expect(failingRecord).toBeDefined();
+
+    // The exact previously failing record must NOT be policy_failed
+    expect(failingRecord!.status).not.toBe('policy_failed');
+    expect(failingRecord!.errorCode).not.toBe('policy_select_failed');
+    if (failingRecord!.errorMessage) {
+      expect(failingRecord!.errorMessage).not.toContain('Maximum call stack size exceeded');
+    }
+  });
+
   it('records policy failures per match and continues the suite', () => {
     const throwingPolicy: EnginePolicy = {
       id: 'throwing-benchmark-policy',

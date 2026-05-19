@@ -1067,7 +1067,7 @@ ${queueRows}
 |---|---:|
 ${suppressedRows}
 
-## Recommended cFp36 Scope
+## Recommended Next Scope
 
 ${recommendedScope}
 

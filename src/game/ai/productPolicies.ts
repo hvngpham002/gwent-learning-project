@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp39 with pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, and no-target Medic delay guard for product playtesting.",
-    latestPhase: "cFp39",
-    latestSpecPath: "docs/spec/2026-05-18-cFp39-specs.md",
-    latestReportPath: "audit/reports/2026-05-18-cFp39-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp41.1 with pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, and recursive-scoring guard for expanded benchmark stability.",
+    latestPhase: "cFp41.1",
+    latestSpecPath: "docs/spec/2026-05-19-cFp41.1-specs.md",
+    latestReportPath: "audit/reports/2026-05-19-cFp41.1-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
@@ -81,7 +81,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       {
         suiteId: "benchmark-v1-starter-matrix-expanded-v1",
         label: "v1 expanded starter matrix",
-        result: "400-record discovery suite available via benchmark:long",
+        result: "400 records, 0 policy failures (cFp41.1 guard)",
       },
     ],
     capabilities: [
@@ -98,6 +98,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "pass-decision alignment — resource-gate scope-down",
       "weathered-row low-tempo scoring guard",
       "expanded 400-record starter-matrix discovery suite",
+      "non-recursive alternative-line scoring guard (cFp41.1)",
     ],
   },
 ];

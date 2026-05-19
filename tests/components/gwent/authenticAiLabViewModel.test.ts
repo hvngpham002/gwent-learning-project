@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp39",
-        latestSpecPath: "docs/spec/2026-05-18-cFp39-specs.md",
-        latestReportPath: "audit/reports/2026-05-18-cFp39-report.md",
+        latestPhase: "cFp41.1",
+        latestSpecPath: "docs/spec/2026-05-19-cFp41.1-specs.md",
+        latestReportPath: "audit/reports/2026-05-19-cFp41.1-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp39",
-        latestSpecPath: "docs/spec/2026-05-18-cFp39-specs.md",
-        latestReportPath: "audit/reports/2026-05-18-cFp39-report.md",
+        latestPhase: "cFp41.1",
+        latestSpecPath: "docs/spec/2026-05-19-cFp41.1-specs.md",
+        latestReportPath: "audit/reports/2026-05-19-cFp41.1-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -83,7 +83,7 @@ describe("authentic AI Lab view model", () => {
         }),
         expect.objectContaining({
           suiteId: "benchmark-v1-starter-matrix-expanded-v1",
-          result: "400-record discovery suite available via benchmark:long",
+          result: "400 records, 0 policy failures (cFp41.1 guard)",
         }),
       ]),
     );
@@ -102,6 +102,7 @@ describe("authentic AI Lab view model", () => {
         "pass-decision alignment — resource-gate scope-down",
         "weathered-row low-tempo scoring guard",
         "expanded 400-record starter-matrix discovery suite",
+        "non-recursive alternative-line scoring guard (cFp41.1)",
       ]),
     );
   });

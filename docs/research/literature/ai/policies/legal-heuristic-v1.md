@@ -50,17 +50,14 @@ through cFp38 tuning and diagnostics chain:
   round-investment analysis prevents timing penalty from distorting non-Medic
   decisions.
 
-Current cFp39 benchmark totals:
+Current cFp41.1 benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 104 win / 14 loss / 2 draw vs v0.
-- Failure mining: 296 findings (vs cFp38's 295), breakdown:
-  suspicious_pass = 225 (+3), weathered_row_play = 22 (+1),
-  round_one_overinvestment = 9 (-1), medic_timing_risk = 3 (-2),
-  round_three_low_resource = 34 (unchanged), matchup_skew = 2,
-  deck_skew = 1. medic_no_target_timing remains rank 3 in tuning queue.
-  The net +1 total finding increase is mostly calibrated suspicious-pass
-  noise, while starter-matrix strength improved to 104/14/2.
+- Failure mining: 296 findings. Stale tuning-queue heading replaced with
+  `Recommended Next Scope` (cFp41.1).
+- `benchmark-v1-starter-matrix-expanded-v1`: 400 records, 1 policy_failure
+  resolved (cFp41.1).
 
 The next active behavior handoff should be scoped from a larger automated
 playtest volume rather than one-off manual logs.
@@ -927,3 +924,39 @@ cFp39 adds 10 fixture tests to `engineAiPolicy.test.ts` covering:
 - Hidden-info safety
 - Conditional Medic score compensation in positiveUnitSourceCardIds (repair)
 - Weak no-target Medic without penalty not incorrectly compensated (repair)
+
+### Recursive Scoring Guard (cFp41.1)
+
+cFp41.1 repairs a stack overflow found by the cFp41 expanded benchmark
+(`benchmark-v1-starter-matrix-expanded-v1`, matchup
+`starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0`, seed
+`starter-matrix-expanded-010`, mirror index `0`,
+`policy_select_failed`, `Maximum call stack size exceeded`).
+
+Root cause: cFp38/cFp39 alternative-line helpers called full recursive
+scoring. `hasUsefulNonMedicLine` called `scorePlayMove(candidate)`, and
+`hasClearlyBetterNonWeatheredLine` called `scoreMove(candidate)`. Both
+`scorePlayMove` and `scoreMove` re-entered the same guards
+(`shouldApplyNoTargetMedicDelayPenalty` → `hasUsefulNonMedicLine`,
+`hasClearlyBetterNonWeatheredLine` → `scoreMove` → `scorePlayMove`),
+creating an infinite recursion loop that blew the call stack.
+
+Fix: added `scorePlayMoveForAlternativeScan`, a non-recursive tempo-based
+helper that computes `cardStrategicValue + tempo * 14` without calling any
+cFp38/cFp39 guard helpers. Rewrote `hasUsefulNonMedicLine` to use it for
+play-card candidates. Rewrote `hasClearlyBetterNonWeatheredLine`'s
+different-card branch to use `scorePlayMoveForAlternativeScan` instead of
+`scoreMove`. The same-card +4 effective strength branch already used
+non-recursive `effectivePlacedStrengthForPolicy` and was unchanged.
+
+No constants, thresholds, scoring formulas, or AI policy tuning changed.
+The alternative-scan helper preserves the rough threshold meaning of
+`MIN_USEFUL_MOVE_SCORE` but does not include cFp38/cFp39 contextual
+penalties because it is only deciding whether an alternative line exists.
+
+cFp41.1 adds:
+- 1 exact expanded-run regression test in `benchmarkHarness.test.ts`.
+- 1 helper-level recursion guard test in `engineAiPolicy.test.ts` with
+  no-target Medic + weathered low-tempo placement fixture.
+- Stale `Recommended cFp36 Scope` heading in `failureMining.ts` replaced
+  with `Recommended Next Scope`.

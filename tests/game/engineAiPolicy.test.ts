@@ -6415,4 +6415,110 @@ describe("cFp39: medic no-target timing guard", () => {
     expect(medicAnalysis.positiveFutureUnitMoveCount).toBe(0);
     expect(medicAnalysis.selectedMoveWouldLeaveNoPositiveUnitMove).toBe(true);
   });
+
+  // ------------------------------------------------------------------
+  // cFp41.1: Recursive-scoring guard regression test
+  // ------------------------------------------------------------------
+  it("cFp41.1: no stack overflow when scoring no-target Medic alongside weathered low-tempo placement", () => {
+    // Fixture reproduces the conditions that triggered the stack overflow
+    // in the expanded benchmark run: a no-target Medic source play, a
+    // useful non-Medic line, and a weathered low-tempo own-row unit
+    // placement that exercises both cFp38 and cFp39 guards.
+    const medicCard = testCard({
+      cardId: "medic",
+      sourceId: "test.medic",
+      printedStrength: 1,
+      abilities: ["medic"],
+      rows: ["close"],
+    });
+    const weatheredUnit = testCard({
+      cardId: "weathered-unit",
+      sourceId: "test.weathered.unit",
+      printedStrength: 8,
+      rows: ["close"],
+    });
+    const usefulUnit = testCard({
+      cardId: "useful-unit",
+      sourceId: "test.useful.unit",
+      printedStrength: 6,
+      rows: ["ranged"],
+    });
+    const strongUnit = testCard({
+      cardId: "strong-unit",
+      sourceId: "test.strong.unit",
+      printedStrength: 10,
+      rows: ["ranged"],
+    });
+
+    const boardRows = baseBoardRows({
+      seat_b: {
+        close: [weatheredUnit],
+      },
+    });
+
+    const weatherFrost = testCard({
+      cardId: "frost",
+      sourceId: "neutral.biting-frost",
+      printedStrength: 0,
+      kind: "special",
+      abilities: ["frost"],
+    });
+
+    const moves = [
+      passMove(),
+      playMove(medicCard, { kind: "board_row", side: "own", seatId: "seat_b", row: "close" }),
+      playMove(usefulUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+      playMove(strongUnit, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" }),
+    ];
+
+    const input = policyInput(moves, {
+      ownHand: [medicCard, usefulUnit, strongUnit],
+      weather: [weatherFrost],
+      boardRows,
+    });
+
+    // Should not throw Maximum call stack size exceeded
+    let selectedMove: LegalMove | null;
+    expect(() => {
+      selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    }).not.toThrow();
+
+    expect(selectedMove).not.toBeNull();
+    expect(["play_card", "pass"].includes(selectedMove!.kind)).toBe(true);
+
+    // Verify the explanation path also completes without stack overflow
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    expect(trace).toBeDefined();
+
+    // Trace must be hidden-info safe
+    const json = JSON.stringify(trace);
+    expect(json).not.toContain("seat_a:");
+    expect(json).not.toContain("seat_b:");
+
+    // cFp38/cFp39 analysis booleans should be coherent
+    expect(trace.weatherPlacementAnalysis).toBeDefined();
+    expect(trace.medicTimingAnalysis).toBeDefined();
+    if (trace.weatherPlacementAnalysis) {
+      expect(
+        typeof trace.weatherPlacementAnalysis.selectedMoveLowTempoWeatherRisk,
+      ).toBe("boolean");
+      expect(
+        typeof trace.weatherPlacementAnalysis.betterNonWeatheredAlternativeAvailable,
+      ).toBe("boolean");
+      expect(
+        typeof trace.weatherPlacementAnalysis.weatheredLowTempoPenaltyApplied,
+      ).toBe("boolean");
+    }
+    if (trace.medicTimingAnalysis) {
+      expect(
+        typeof trace.medicTimingAnalysis.selectedNoTargetMedicDelayRisk,
+      ).toBe("boolean");
+      expect(
+        typeof trace.medicTimingAnalysis.betterNonMedicAlternativeAvailable,
+      ).toBe("boolean");
+      expect(
+        typeof trace.medicTimingAnalysis.noTargetMedicDelayPenaltyApplied,
+      ).toBe("boolean");
+    }
+  });
 });
