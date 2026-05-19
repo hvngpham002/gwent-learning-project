@@ -27,6 +27,7 @@ import {
   medicSourceUtility,
   isNoTargetMedicSourcePlay,
   hasUsefulNonMedicLine,
+  shouldApplyNoTargetMedicDelayPenalty,
   DEFAULT_PRODUCT_AI_POLICY_ID,
   PRODUCT_AI_POLICIES,
   getProductAiPolicy,
@@ -6323,13 +6324,15 @@ describe("cFp39: medic no-target timing guard", () => {
   // ------------------------------------------------------------------
   it("Medic score compensation in positiveUnitSourceCardIds is conditional on cFp39 penalty", () => {
     // Scenario: Medic + useful non-Medic unit, empty discard
-    // The Medic should get +260 compensation only when the penalty applies
-    // (useful non-Medic line exists AND no exception).
+    // cFp39 penalty DOES apply (useful non-Medic line exists, no exception).
+    // The conditional +260 compensation in round-investment makes the Medic
+    // count as a positive future unit (rawScore ~-15 + 260 = +245 > 0).
     const medic = medicUnit("medic", 10);
     const strongUnit = nonMedicUnit("strong", 12);
 
+    const medicMove = playMove(medic);
     const input = policyInput(
-      [passMove(), playMove(medic), playMove(strongUnit)],
+      [passMove(), medicMove, playMove(strongUnit)],
       {
         ownHand: [medic, strongUnit],
         ownDiscard: [],
@@ -6341,35 +6344,41 @@ describe("cFp39: medic no-target timing guard", () => {
       },
     );
 
-    // The Medic has a useful non-Medic alternative, so cFp39 penalty applies.
-    // With -140 (cFp29 no-target utility) + -260 (cFp39 delay) + base(125) = -275
-    // The non-Medic unit scores much higher. Policy should select non-Medic.
-    const selected = legalHeuristicPolicyV1.selectMove(input);
-    expect(selected?.kind).toBe("play_card");
-    if (selected && selected.kind === "play_card") {
-      expect(selected.sourceCardId).toBe(strongUnit.cardId);
-    }
+    // Verify cFp39 penalty applies to this Medic play
+    const features = buildLegalHeuristicV1Features(input);
+    const penaltyApplies = shouldApplyNoTargetMedicDelayPenalty(features, medicMove);
+    expect(penaltyApplies).toBe(true);
 
-    // When selected move is NOT Medic, per spec all 3 cFp39 booleans are false.
-    // This test verifies the policy selects non-Medic (proving penalty is in effect).
-    const { trace } = explainLegalHeuristicV1Decision(input);
-    const medicAnalysis = trace.medicTimingAnalysis!;
-    expect(medicAnalysis.selectedNoTargetMedicDelayRisk).toBe(false);
-    expect(medicAnalysis.betterNonMedicAlternativeAvailable).toBe(false);
-    expect(medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe(false);
+    // Build round-investment analysis with the Medic as selected move.
+    // With conditional +260 compensation, the Medic becomes positive
+    // (rawScore ~-15 + 260 = +245). Both Medic and strongUnit are positive.
+    const handShape = buildLegalHeuristicV1HandShapeAnalysis(features);
+    const medicPlayMove = medicMove as import("@/game/ai").PlayCardMove;
+    const medicAnalysis = buildLegalHeuristicV1RoundInvestmentAnalysis(
+      features,
+      medicPlayMove,
+      handShape,
+    );
+
+    // Both the compensated Medic and the strong unit count as positive.
+    expect(medicAnalysis.positiveFutureUnitMoveCount).toBe(2);
+    // Playing Medic would leave the strongUnit as remaining positive unit.
+    expect(medicAnalysis.selectedMoveWouldLeaveNoPositiveUnitMove).toBe(false);
   });
 
   // ------------------------------------------------------------------
   // Test 10: Weak no-target Medic without penalty not incorrectly compensated
   // ------------------------------------------------------------------
-  it("Weak no-target Medic without cFp39 penalty is not incorrectly counted as positive unit", () => {
+  it("Weak no-target Medic without cFp39 penalty is not made positive by unconditional compensation", () => {
     // Scenario: Medic is the only play, no useful non-Medic line.
-    // cFp39 penalty does NOT apply (no useful non-Medic line).
-    // The Medic should be selected normally without any compensation needed.
-    const medic = medicUnit("medic", 10);
+    // cFp39 penalty does NOT apply (hasUsefulNonMedicLine returns false).
+    // Without conditional compensation, a weak no-target Medic should NOT
+    // be counted as a positive unit just because of +260.
+    const medic = medicUnit("medic", 3);
 
+    const medicMove = playMove(medic);
     const input = policyInput(
-      [passMove(), playMove(medic)],
+      [passMove(), medicMove],
       {
         ownHand: [medic],
         ownDiscard: [],
@@ -6381,17 +6390,29 @@ describe("cFp39: medic no-target timing guard", () => {
       },
     );
 
-    const selected = legalHeuristicPolicyV1.selectMove(input);
-    expect(selected?.kind).toBe("play_card");
-    if (selected && selected.kind === "play_card") {
-      expect(selected.sourceCardId).toBe(medic.cardId);
-    }
+    // Verify cFp39 penalty does NOT apply (no useful non-Medic line)
+    const features = buildLegalHeuristicV1Features(input);
+    const penaltyApplies = shouldApplyNoTargetMedicDelayPenalty(features, medicMove);
+    expect(penaltyApplies).toBe(false);
 
-    // Trace confirms no penalty (no useful non-Medic alternative)
-    const { trace } = explainLegalHeuristicV1Decision(input);
-    const medicAnalysis = trace.medicTimingAnalysis!;
-    expect(medicAnalysis.selectedNoTargetMedicDelayRisk).toBe(true);
-    expect(medicAnalysis.betterNonMedicAlternativeAvailable).toBe(false);
-    expect(medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe(false);
+    // Build round-investment analysis with the Medic as selected move.
+    // Since penalty does not apply, no +260 compensation is added.
+    const handShape = buildLegalHeuristicV1HandShapeAnalysis(features);
+    const medicPlayMove = medicMove as import("@/game/ai").PlayCardMove;
+    const medicAnalysis = buildLegalHeuristicV1RoundInvestmentAnalysis(
+      features,
+      medicPlayMove,
+      handShape,
+    );
+
+    // The Medic's raw score is ~-140 (no-target utility) + base(55) = ~-85.
+    // Without compensation, it should NOT count as positive.
+    // positiveFutureUnitMoveCount should be 0 because the Medic alone doesn't
+    // have enough strength to be positive after cFp29 no-target utility.
+    // The policy still selects the Medic because it's the only play_card move
+    // (bestUsefulMove falls through to passMove, but choosePlayingMove
+    // falls back to the only non-pass play).
+    expect(medicAnalysis.positiveFutureUnitMoveCount).toBe(0);
+    expect(medicAnalysis.selectedMoveWouldLeaveNoPositiveUnitMove).toBe(true);
   });
 });
