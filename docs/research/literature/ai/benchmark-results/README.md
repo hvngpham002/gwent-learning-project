@@ -22,6 +22,30 @@ npm run benchmark:v1-smoke
 npm run benchmark:v1-starter-matrix
 ```
 
+Run the current v1 benchmark bundle with local progress and durable logs:
+
+```bash
+python3 -m pip install --user alive-progress
+npm run benchmark:long -- --profile v1-current
+```
+
+The [`alive-progress`](https://github.com/rsalmei/alive-progress)
+package is optional. Without it, the runner falls back to plain step
+progress. The runner writes ignored local run bundles under
+`.local/benchmark-runs/<run-id>/`:
+
+```text
+run.json
+summary.md
+01-*.log
+02-*.log
+...
+```
+
+Use this long-run entrypoint when a benchmark is expected to outlive an
+agent turn. Paste the command into a terminal, let it finish, then point
+Codex to the generated `summary.md` or `run.json`.
+
 The command writes the stable latest artifact set:
 
 ```text

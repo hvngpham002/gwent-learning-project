@@ -181,6 +181,30 @@ Write the v1 starter-matrix failure-mining artifact set:
 npm run benchmark:v1-failure-mining
 ```
 
+For longer local runs that should not be tied to an agent turn, use the
+cFp40 progress runner. It orchestrates existing npm commands, writes a
+local run log bundle under `.local/benchmark-runs/`, and uses
+[`alive-progress`](https://github.com/rsalmei/alive-progress) when the
+optional Python package is installed:
+
+```bash
+python3 -m pip install --user alive-progress
+npm run benchmark:long -- --profile v1-current
+```
+
+The default `v1-current` profile runs:
+
+```text
+npm run benchmark:v1-smoke
+npm run benchmark:v1-starter-matrix
+npm run benchmark:v1-failure-mining
+```
+
+Other profiles are `smoke`, `v1-current-repeat`, and `all-current`.
+Future agents should ask the user to run this command for long benchmark
+jobs, then inspect the resulting `summary.md` or `run.json`, rather than
+running multi-minute or multi-hour jobs inside the agent runtime.
+
 The command writes:
 
 ```text
