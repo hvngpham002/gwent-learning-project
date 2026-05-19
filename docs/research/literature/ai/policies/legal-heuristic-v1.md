@@ -19,8 +19,8 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The current implementation
-phase is cFp38: Weathered Row Low-Tempo Tuning, which builds on the cFp27
-through cFp37 tuning and diagnostics chain:
+phase is cFp39: Medic No-Target Timing Guard, which builds on the cFp27
+through cFp38 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -44,20 +44,21 @@ through cFp37 tuning and diagnostics chain:
   `betterNonWeatheredAlternativeAvailable` to be independent of exemption status,
   corrected reason strings to distinguish "penalty applied — still best" from
   "no better visible line".
+- cFp39: Medic no-target timing guard — -260 delay penalty for no-target Medic
+  plays when a useful non-Medic line exists. Six tactical exceptions preserve
+  emergency Medic plays. Three new trace booleans. Medic score adjustment in
+  round-investment analysis prevents timing penalty from distorting non-Medic
+  decisions.
 
-Current cFp38 benchmark totals:
+Current cFp39 benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
-- Failure mining: 295 findings, weathered_row_play = 21 (unchanged from cFp37;
+- Failure mining: 300 findings, medic_no_target_timing = 3 (in top queue);
   starter matrix deck matchups do not present the combined conditions needed
-  to trigger the "clearly better line" gate).
+  to trigger the "useful non-Medic line" gate.
 
-The next active behavior handoff is cFp39: Medic No-Target Timing Guard. It
-targets the 5 remaining `medic_timing_risk` findings, all of which are selected
-no-target Medic source plays from `official-nilfgaard-starter`. The cFp39 spec
-also makes AI Lab metadata updates mandatory after implementation so `/ai-lab`
-stays synchronized with the latest policy phase and benchmark totals.
+The next active behavior handoff is cFp40 (TBD).
 
 cFp37 is a behavior repair that fixes the cFp36 pass-policy regression. The
 cFp36 resource budget gate was mechanically correct but too broad: it could
@@ -862,13 +863,47 @@ Benchmark totals remain at the cFp37 baseline:
 - `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
 - Failure mining: 295 findings; weathered_row_play = 21.
 
-### Medic No-Target Timing Handoff (cFp39 Spec Ready)
+### Medic No-Target Timing Guard (cFp39)
 
-`docs/spec/2026-05-18-cFp39-specs.md` scopes the next behavior phase. It targets
-the 5 remaining `medic_timing_risk` findings from failure mining, all selected
-no-target Medic source plays from `official-nilfgaard-starter`.
+cFp39 implements the narrow no-target Medic delay guard from
+`docs/spec/2026-05-18-cFp39-specs.md`. It adds a -260 delay penalty (`MEDIC_NO_TARGET_DELAY_PENALTY`)
+when a no-target Medic source play is selected and a useful non-Medic line exists
+(score >= 25 among non-Medic play_card moves and leader moves). Six tactical
+exceptions prevent the penalty from blocking emergency or match-winning plays:
 
-cFp39 should add a narrow no-target Medic delay guard when a useful non-Medic
-line exists, while preserving emergency raw-tempo Medic plays, strong revive
-targets, prompt-target ranking, select/explain parity, hidden-info-safe
-diagnostics, and AI Lab metadata synchronization.
+1. Medic is the only legal non-pass play
+2. Last-gem catch-up (ownGems <= 1, scoreDelta < 0, candidate reaches minimumScoreToWinRound)
+3. Match-winning play (opponent on last gem, candidate reaches minimumScoreToWinRound)
+4. Round 3 with low hand count (ownHandCount <= 2)
+5. Opponent passed and Medic play reaches minimumScoreToWinRound
+6. No useful non-Medic line exists (hasUsefulNonMedicLine returns false)
+
+Key implementation details:
+
+- `isNoTargetMedicSourcePlay(...)` identifies Medic plays with zero revive candidates.
+- `hasUsefulNonMedicLine(...)` checks non-Medic play_card and leader moves for score >= 25.
+- `shouldApplyNoTargetMedicDelayPenalty(...)` combines the above with exception checks.
+- Medic scores are adjusted (+260) in `buildLegalHeuristicV1RoundInvestmentAnalysis` when
+  computing `positiveUnitSourceCardIds` to prevent the timing penalty from indirectly
+  distorting round-investment decisions for non-Medic plays.
+- A Medic-specific clear-round-benefit exception in
+  `shouldPassForRoundInvestment` allows no-target Medic plays that clearly put the AI
+  ahead when behind, even if they leave no positive unit moves.
+- `AiDecisionMedicTimingAnalysis` gains three new booleans:
+  `selectedNoTargetMedicDelayRisk`, `betterNonMedicAlternativeAvailable`,
+  `noTargetMedicDelayPenaltyApplied`.
+- Product diagnostics remain hidden-info safe (no card names, source IDs, or raw abilities).
+
+Benchmark totals remain at the cFp38 baseline:
+
+- `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
+- `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
+- Failure mining: 300 findings, medic_no_target_timing in top queue (3rd place).
+
+cFp39 adds 8 fixture tests to `engineAiPolicy.test.ts` covering:
+- No-target Medic delay penalty when useful non-Medic line exists
+- All 6 exception cases (only play, last-gem catch-up, match-winning,
+  round-3 low hand, opponent passed, no useful alternative)
+- Strong revive target Medic remains unaffected
+- Trace diagnostics for selected/non-selected Medic moves
+- Product diagnostics hidden-info safety

@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp38",
-        latestSpecPath: "docs/spec/2026-05-18-cFp38-specs.md",
-        latestReportPath: "audit/reports/2026-05-18-cFp38-report.md",
+        latestPhase: "cFp39",
+        latestSpecPath: "docs/spec/2026-05-18-cFp39-specs.md",
+        latestReportPath: "audit/reports/2026-05-18-cFp39-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp38",
-        latestSpecPath: "docs/spec/2026-05-18-cFp38-specs.md",
-        latestReportPath: "audit/reports/2026-05-18-cFp38-report.md",
+        latestPhase: "cFp39",
+        latestSpecPath: "docs/spec/2026-05-18-cFp39-specs.md",
+        latestReportPath: "audit/reports/2026-05-18-cFp39-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -89,6 +89,7 @@ describe("authentic AI Lab view model", () => {
         "tie-aware and pass diagnostics",
         "hand-quality pass calibration",
         "Medic timing calibration",
+        "no-target Medic delay guard",
         "weather-aware unit placement",
         "round-investment preservation",
         "stop-loss round sacrifice",

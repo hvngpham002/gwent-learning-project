@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp38 with pass-decision alignment, weather-aware placement, and weathered-row low-tempo guard for product playtesting.",
-    latestPhase: "cFp38",
-    latestSpecPath: "docs/spec/2026-05-18-cFp38-specs.md",
-    latestReportPath: "audit/reports/2026-05-18-cFp38-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp39 with pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, and no-target Medic delay guard for product playtesting.",
+    latestPhase: "cFp39",
+    latestSpecPath: "docs/spec/2026-05-18-cFp39-specs.md",
+    latestReportPath: "audit/reports/2026-05-18-cFp39-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
@@ -84,6 +84,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "tie-aware and pass diagnostics",
       "hand-quality pass calibration",
       "Medic timing calibration",
+      "no-target Medic delay guard",
       "weather-aware unit placement",
       "round-investment preservation",
       "stop-loss round sacrifice",

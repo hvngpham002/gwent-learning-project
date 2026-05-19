@@ -46,6 +46,9 @@ import {
   isOwnWeatheredLowTempoUnitPlacement,
   shouldExemptFromWeatheredLowTempoPenalty,
   hasClearlyBetterNonWeatheredLine,
+  isNoTargetMedicSourcePlay,
+  hasUsefulNonMedicLine,
+  shouldApplyNoTargetMedicDelayPenalty,
   type LegalHeuristicV1Features,
 } from "@/game/ai";
 
@@ -171,6 +174,19 @@ const buildMedicTimingAnalysis = (
     isMedicSource(features.ownHandByCardId.get((move as { sourceCardId?: string }).sourceCardId ?? ""));
   const selectedMedicWithNoTarget = selectedMoveIsMedic && ownDiscardReviveCandidateCount === 0;
 
+  // cFp39: No-target Medic delay guard booleans
+  // Per spec: if the selected move is not a Medic source play, all three booleans are false.
+  let selectedNoTargetMedicDelayRisk = false;
+  let betterNonMedicAlternativeAvailable = false;
+  let noTargetMedicDelayPenaltyApplied = false;
+
+  if (selectedMoveIsMedic && move && move.kind === "play_card") {
+    const playMove = move as PlayCardMove;
+    selectedNoTargetMedicDelayRisk = isNoTargetMedicSourcePlay(features, playMove);
+    betterNonMedicAlternativeAvailable = hasUsefulNonMedicLine(features);
+    noTargetMedicDelayPenaltyApplied = shouldApplyNoTargetMedicDelayPenalty(features, playMove);
+  }
+
   return medicPlayLegal
     ? {
       medicPlayLegal,
@@ -181,6 +197,9 @@ const buildMedicTimingAnalysis = (
       noTargetMedicRisk,
       selectedMoveIsMedic,
       selectedMedicWithNoTarget,
+      selectedNoTargetMedicDelayRisk,
+      betterNonMedicAlternativeAvailable,
+      noTargetMedicDelayPenaltyApplied,
     }
     : null;
 };
@@ -534,7 +553,16 @@ const buildPlayingPhaseTrace = (
             : "sacrifice round — preserve cards";
           reasonKind = "policy-round-investment";
         } else {
-          if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
+          // cFp39: No-target Medic delay reason strings
+          if (medicTimingAnalysis?.selectedNoTargetMedicDelayRisk) {
+            if (medicTimingAnalysis.noTargetMedicDelayPenaltyApplied) {
+              reason = `no-target Medic penalty applied — still best visible line (score ${bestMove.score})`;
+            } else if (medicTimingAnalysis.betterNonMedicAlternativeAvailable) {
+              reason = `no-target Medic accepted — emergency tempo`;
+            } else {
+              reason = `no-target Medic accepted — no useful non-Medic line (score ${bestMove.score})`;
+            }
+          } else if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
             if (weatherPlacementAnalysis.weatheredLowTempoPenaltyApplied) {
               reason = `weathered row penalty applied — still best visible line (score ${bestMove.score})`;
             } else if (weatherPlacementAnalysis.betterNonWeatheredAlternativeAvailable === false) {
@@ -547,7 +575,16 @@ const buildPlayingPhaseTrace = (
           }
         }
       } else {
-        if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
+        // cFp39: No-target Medic delay reason strings
+        if (medicTimingAnalysis?.selectedNoTargetMedicDelayRisk) {
+          if (medicTimingAnalysis.noTargetMedicDelayPenaltyApplied) {
+            reason = `no-target Medic penalty applied — still best visible line (score ${bestMove.score})`;
+          } else if (medicTimingAnalysis.betterNonMedicAlternativeAvailable) {
+            reason = `no-target Medic accepted — emergency tempo`;
+          } else {
+            reason = `no-target Medic accepted — no useful non-Medic line (score ${bestMove.score})`;
+          }
+        } else if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
           if (weatherPlacementAnalysis.weatheredLowTempoPenaltyApplied) {
             reason = `weathered row penalty applied — still best visible line (score ${bestMove.score})`;
           } else if (weatherPlacementAnalysis.betterNonWeatheredAlternativeAvailable === false) {

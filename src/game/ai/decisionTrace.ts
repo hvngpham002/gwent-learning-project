@@ -418,6 +418,10 @@ export interface AiDecisionMedicTimingAnalysis {
   readonly noTargetMedicRisk: boolean;
   readonly selectedMoveIsMedic: boolean;
   readonly selectedMedicWithNoTarget: boolean;
+  // cFp39: No-target Medic delay guard diagnostics
+  readonly selectedNoTargetMedicDelayRisk: boolean;
+  readonly betterNonMedicAlternativeAvailable: boolean;
+  readonly noTargetMedicDelayPenaltyApplied: boolean;
 }
 
 // ---------------------------------------------------------------------------

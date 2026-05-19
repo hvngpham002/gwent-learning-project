@@ -169,6 +169,103 @@ export const effectivePlacedStrengthForPolicy = (
 };
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// cFp39: No-target Medic delay guard helpers
+// ---------------------------------------------------------------------------
+
+/** cFp39: Penalty applied when a no-target Medic is selected despite a better non-Medic line. */
+export const MEDIC_NO_TARGET_DELAY_PENALTY = 260;
+
+/**
+ * cFp39: Returns true when the move is a no-target Medic source play —
+ * the card is a Medic, has zero revive candidates, and is being spent
+ * as a play_card (not prompt resolution).
+ */
+export const isNoTargetMedicSourcePlay = (
+  features: LegalHeuristicV1Features,
+  move: PlayCardMove,
+): boolean => {
+  if (move.kind !== "play_card") return false;
+
+  const card = features.ownHandByCardId.get(move.sourceCardId);
+  if (!card) return false;
+  if (!isMedicSource(card)) return false;
+
+  const medicInfo = medicSourceUtility(features, card);
+  if (medicInfo.reviveCandidateCount !== 0) return false;
+  if (medicInfo.bestReviveValueBucket !== "none") return false;
+  if (!medicInfo.noTargetPenaltyApplied) return false;
+
+  return true;
+};
+
+/**
+ * cFp39: Returns true when a useful non-Medic line exists among legal moves.
+ * Checks play_card moves (non-Medic) and leader moves for score >= MIN_USEFUL_MOVE_SCORE.
+ * Does not recurse into scorePlayMove for the selected no-target Medic move.
+ */
+export const hasUsefulNonMedicLine = (
+  features: LegalHeuristicV1Features,
+): boolean => {
+  for (const candidate of features.playMoves) {
+    const card = features.ownHandByCardId.get(candidate.sourceCardId);
+    if (!card) continue;
+    if (isMedicSource(card)) continue;
+    const score = scorePlayMove(features, candidate);
+    if (score >= MIN_USEFUL_MOVE_SCORE) return true;
+  }
+
+  for (const leaderMove of features.leaderMoves) {
+    const score = scoreLeaderMove(features, leaderMove);
+    if (score >= MIN_USEFUL_MOVE_SCORE) return true;
+  }
+
+  return false;
+};
+
+/**
+ * cFp39: Returns true when the no-target Medic delay penalty should be applied.
+ * Only applies when: move is a no-target Medic source play, a useful non-Medic line
+ * exists, and no tactical exceptions apply.
+ */
+export const shouldApplyNoTargetMedicDelayPenalty = (
+  features: LegalHeuristicV1Features,
+  move: PlayCardMove,
+): boolean => {
+  if (!isNoTargetMedicSourcePlay(features, move)) return false;
+  if (!hasUsefulNonMedicLine(features)) return false;
+
+  // Exception 1: Medic play is the only legal non-pass play
+  if (features.playMoves.length === 1) return false;
+
+  // Exception 2: AI is on last gem and Medic is best visible catch-up
+  if (features.ownGems <= 1 && features.scoreDelta < 0) {
+    const tempo = estimateImmediateTempo(features, move);
+    const minScore = minimumScoreToWinRound(features);
+    if (features.ownScore + tempo >= minScore) return false;
+  }
+
+  // Exception 3: Match-winning play (opponent on last gem)
+  if (features.opponentGems <= 1) {
+    const tempo = estimateImmediateTempo(features, move);
+    const minScore = minimumScoreToWinRound(features);
+    if (features.ownScore + tempo >= minScore) return false;
+  }
+
+  // Exception 4: Round 3 with very low hand count
+  if (features.round === 3 && features.ownHandCount <= 2) return false;
+
+  // Exception 5: Opponent passed and Medic play meets minimumScoreToWinRound
+  if (features.opponentPassed) {
+    const tempo = estimateImmediateTempo(features, move);
+    const minScore = minimumScoreToWinRound(features);
+    if (features.ownScore + tempo >= minScore) return false;
+  }
+
+  return true;
+};
+
+// ---------------------------------------------------------------------------
 // cFp38: Weathered row low-tempo penalty helpers
 // ---------------------------------------------------------------------------
 
@@ -1279,6 +1376,11 @@ export const scorePlayMove = (features: LegalHeuristicV1Features, move: PlayCard
     }
   }
 
+  // cFp39: Penalty for spending no-target Medic when a useful non-Medic line exists.
+  if (shouldApplyNoTargetMedicDelayPenalty(features, move)) {
+    score -= MEDIC_NO_TARGET_DELAY_PENALTY;
+  }
+
   return score;
 };
 
@@ -1452,11 +1554,17 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
   // cFp31 repair Fix 3: Count future positive unit/hero by unique sourceCardId
   // Agile or multi-row cards can create multiple positive move options from the
   // same card instance. We key by sourceCardId to avoid inflating the count.
+  // cFp39: When determining positive unit count, adjust Medic scores to
+  // exclude the no-target delay penalty so round-investment decisions
+  // aren't skewed by timing-specific scoring adjustments.
   const positiveUnitSourceCardIds = new Set<string>();
   let positiveFutureNonUnitMoveCount = 0;
   for (const move of features.playMoves) {
     const card = features.ownHandByCardId.get(move.sourceCardId);
-    const score = scoreMove(features, move);
+    let score = scoreMove(features, move);
+    if (card && isMedicSource(card)) {
+      score += MEDIC_NO_TARGET_DELAY_PENALTY;
+    }
     if (score > 0) {
       if (card?.kind === "unit" || card?.kind === "hero") {
         positiveUnitSourceCardIds.add(move.sourceCardId);
@@ -1834,6 +1942,17 @@ export const shouldPassForRoundInvestment = (
   // recommendation says continue, fight_last_gem, or single-move catch-up exists.
   if (shouldPassForResourceExhaustion(features, candidate, analysis, passDiags)) {
     return true;
+  }
+
+  // Clear-round-benefit exception: if a Medic play clearly puts us ahead
+  // and we're currently behind, allow it even if it leaves no positive unit moves.
+  // This is the cFp39 emergency/tempo exception for Medic plays.
+  if (candidate?.kind === "play_card") {
+    const card = features.ownHandByCardId.get(candidate.sourceCardId);
+    const candidateTempo = estimateImmediateTempo(features, candidate);
+    if (card && isMedicSource(card) && features.scoreDelta < 0 && features.ownScore + candidateTempo > features.opponentScore) {
+      return false;
+    }
   }
 
   // cFp31 repair Fix 4: Removed features.ownHandCount > 2 gate from critical-risk branch

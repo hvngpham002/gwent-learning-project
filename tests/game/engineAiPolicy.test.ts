@@ -25,6 +25,8 @@ import {
   shouldExemptFromWeatheredLowTempoPenalty,
   effectivePlacedStrengthForPolicy,
   medicSourceUtility,
+  isNoTargetMedicSourcePlay,
+  hasUsefulNonMedicLine,
   DEFAULT_PRODUCT_AI_POLICY_ID,
   PRODUCT_AI_POLICIES,
   getProductAiPolicy,
@@ -6028,5 +6030,291 @@ describe("cFp38: weathered row low-tempo tuning", () => {
     const { trace } = explainLegalHeuristicV1Decision(input);
     const wa = trace.weatherPlacementAnalysis!;
     expect(wa.selectedMoveLowTempoWeatherRisk).toBe(false);
+  });
+});
+
+describe("cFp39: medic no-target timing guard", () => {
+  const medicUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.${cardId}`, printedStrength: strength, abilities: ["medic"], rows: ["close", "ranged"] });
+
+  const nonMedicUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.${cardId}`, printedStrength: strength, rows: ["close", "ranged"] });
+
+  const spyUnit = (cardId: string, strength: number) =>
+    testCard({ cardId, sourceId: `test.${cardId}`, printedStrength: strength, abilities: ["spy"] });
+
+  // ------------------------------------------------------------------
+  // Test 1: No-target Medic delayed when useful non-Medic unit exists
+  // ------------------------------------------------------------------
+  it("No-target Medic delayed when useful non-Medic unit exists", () => {
+    const medic = medicUnit("medic", 3);
+    const nonMedic = nonMedicUnit("useful", 6);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(nonMedic)],
+      {
+        ownHand: [medic, nonMedic],
+        ownDiscard: [],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).not.toBe(medic.cardId);
+      expect(selected.sourceCardId).toBe(nonMedic.cardId);
+    }
+
+    // Verify no-target Medic helpers
+    const features = buildLegalHeuristicV1Features(input);
+    const medicMove = input.legalMoves.find((m) => m.kind === "play_card" && m.sourceCardId === medic.cardId)!;
+    expect(isNoTargetMedicSourcePlay(features, medicMove)).toBe(true);
+    expect(hasUsefulNonMedicLine(features, medicMove)).toBe(true);
+
+    // Trace diagnostics — selected move is non-Medic, so all cFp39 booleans are false
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const medicAnalysis = trace.medicTimingAnalysis!;
+    expect(medicAnalysis.selectedNoTargetMedicDelayRisk).toBe(false);
+    expect(medicAnalysis.betterNonMedicAlternativeAvailable).toBe(false);
+    expect(medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 2: No-target Medic can still be played when no useful non-Medic line exists
+  // ------------------------------------------------------------------
+  it("No-target Medic can still be played when no useful non-Medic line exists", () => {
+    const medic = medicUnit("medic", 10);
+    const uselessSpecial = testCard({ cardId: "useless", sourceId: "test.useless", printedStrength: 0, kind: "special", abilities: ["none"] });
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(uselessSpecial)],
+      {
+        ownHand: [medic, uselessSpecial],
+        ownDiscard: [],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).toBe(medic.cardId);
+    }
+
+    // Trace diagnostics
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const medicAnalysis = trace.medicTimingAnalysis!;
+    expect(medicAnalysis.selectedNoTargetMedicDelayRisk).toBe(true);
+    expect(medicAnalysis.betterNonMedicAlternativeAvailable).toBe(false);
+    expect(medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 3: Strong revive target remains attractive
+  // ------------------------------------------------------------------
+  it("Strong revive target remains attractive", () => {
+    const medic = medicUnit("medic", 3);
+    const nonMedic = nonMedicUnit("decent", 5);
+    const strongTarget = spyUnit("spy-target", 8);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(nonMedic)],
+      {
+        ownHand: [medic, nonMedic],
+        ownDiscard: [strongTarget],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).toBe(medic.cardId);
+    }
+
+    // Verify Medic utility shows strong target
+    const features = buildLegalHeuristicV1Features(input);
+    const medicCard = features.ownHandByCardId.get(medic.cardId);
+    if (medicCard) {
+      const medicInfo = medicSourceUtility(features, medicCard);
+      expect(medicInfo.bestReviveValueBucket).toBe("strong");
+      expect(medicInfo.hasReviveTarget).toBe(true);
+    }
+
+    // Trace diagnostics
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const medicAnalysis = trace.medicTimingAnalysis!;
+    expect(medicAnalysis.selectedMoveIsMedic).toBe(true);
+    expect(medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 4: Weak/no-target Medic penalty does not alter prompt target ranking
+  // ------------------------------------------------------------------
+  it("Weak/no-target Medic penalty does not alter prompt target ranking", () => {
+    const brute = testCard({ cardId: "brute", sourceId: "test.brute", printedStrength: 10 });
+    const weak = testCard({ cardId: "weak", sourceId: "test.weak", printedStrength: 1 });
+
+    const promptMoves = [
+      promptMove("revive:brute", "medic", {
+        kind: "card_instance",
+        side: "own",
+        seatId: "seat_b",
+        cardId: brute.cardId,
+        row: "close",
+      }),
+      promptMove("revive:weak", "medic", {
+        kind: "card_instance",
+        side: "own",
+        seatId: "seat_b",
+        cardId: weak.cardId,
+        row: "close",
+      }),
+    ];
+
+    const input = policyInput(promptMoves, {
+      pendingPrompt: {
+        promptId: "prompt:test",
+        seatId: "seat_b",
+        kind: "medic_revive",
+        abilityId: "medic",
+        options: [
+          { optionId: "revive:brute", label: "brute", targetCard: brute, targetStrength: 10 },
+          { optionId: "revive:weak", label: "weak", targetCard: weak, targetStrength: 1 },
+        ],
+      },
+    });
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected).toEqual(expect.objectContaining({ optionId: "revive:brute" }));
+  });
+
+  // ------------------------------------------------------------------
+  // Test 5: Opponent-passed catch-up exception
+  // ------------------------------------------------------------------
+  it("Opponent-passed catch-up exception allows Medic when needed to win", () => {
+    const medic = medicUnit("medic", 12);
+    const smallNonMedic = nonMedicUnit("small", 2);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(smallNonMedic)],
+      {
+        ownHand: [medic, smallNonMedic],
+        ownDiscard: [],
+        opponentPassed: true,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).toBe(medic.cardId);
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // Test 6: Last-gem emergency exception
+  // ------------------------------------------------------------------
+  it("Last-gem emergency exception allows no-target Medic for best catch-up", () => {
+    const medic = medicUnit("medic", 10);
+
+    const input = policyInput(
+      [playMove(medic)],
+      {
+        ownHand: [medic],
+        ownDiscard: [],
+        ownGems: 1,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 15, seat_b: 5 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).toBe(medic.cardId);
+    }
+
+    // Trace diagnostics: penalty should not be applied (last-gem exception)
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const medicAnalysis = trace.medicTimingAnalysis!;
+    expect(medicAnalysis.selectedNoTargetMedicDelayRisk).toBe(true);
+    expect(medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 7: Select/explain parity
+  // ------------------------------------------------------------------
+  it("Select/explain parity for no-target Medic with useful non-Medic alternative", () => {
+    const medic = medicUnit("medic", 3);
+    const nonMedic = nonMedicUnit("useful", 6);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(nonMedic)],
+      {
+        ownHand: [medic, nonMedic],
+        ownDiscard: [],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const selectedMove = legalHeuristicPolicyV1.selectMove(input);
+    const { move: explainedMove } = explainLegalHeuristicV1Decision(input);
+
+    expect(selectedMove).toEqual(explainedMove);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 8: Trace fields are hidden-info safe
+  // ------------------------------------------------------------------
+  it("Trace fields are hidden-info safe", () => {
+    const medic = medicUnit("medic", 3);
+    const nonMedic = nonMedicUnit("useful", 6);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(nonMedic)],
+      {
+        ownHand: [medic, nonMedic],
+        ownDiscard: [],
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const medicAnalysis = trace.medicTimingAnalysis!;
+
+    // New booleans should be present
+    expect(typeof medicAnalysis.selectedNoTargetMedicDelayRisk).toBe("boolean");
+    expect(typeof medicAnalysis.betterNonMedicAlternativeAvailable).toBe("boolean");
+    expect(typeof medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe("boolean");
+
+    // JSON should not contain hidden info
+    const traceJson = JSON.stringify(trace);
+    expect(traceJson).not.toContain("test.medic");
+    expect(traceJson).not.toContain(medic.sourceId);
+    expect(traceJson).not.toContain("seat_a:");
+    expect(traceJson).not.toContain("seat_b:");
   });
 });

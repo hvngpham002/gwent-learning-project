@@ -1487,6 +1487,9 @@ describe("cFp29: medic timing diagnostics in product export", () => {
             bestReviveValueBucket: "strong",
             noTargetMedicRisk: false,
             selectedMedicWithNoTarget: false,
+            selectedNoTargetMedicDelayRisk: false,
+            betterNonMedicAlternativeAvailable: false,
+            noTargetMedicDelayPenaltyApplied: false,
           },
           selected: {
             kind: "play_card",
