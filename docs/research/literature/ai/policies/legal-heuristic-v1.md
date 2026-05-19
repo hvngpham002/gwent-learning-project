@@ -54,9 +54,13 @@ Current cFp39 benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
-- Failure mining: 300 findings, medic_no_target_timing = 3 (in top queue);
-  starter matrix deck matchups do not present the combined conditions needed
-  to trigger the "useful non-Medic line" gate.
+- Failure mining: 300 findings (vs cFp38's 295), breakdown:
+  suspicious_pass = 228 (+6), weathered_row_play = 22 (+1),
+  round_one_overinvestment = 9 (-1), medic_timing_risk = 4 (-1),
+  round_three_low_resource = 34 (unchanged), matchup_skew = 2,
+  deck_skew = 1. medic_no_target_timing remains rank 3 in tuning queue.
+  The net +5 total finding increase is calibration noise in the
+  suspicious-pass evaluator; starter-matrix strength stayed at 102/16/2.
 
 The next active behavior handoff is cFp40 (TBD).
 
@@ -883,27 +887,36 @@ Key implementation details:
 - `isNoTargetMedicSourcePlay(...)` identifies Medic plays with zero revive candidates.
 - `hasUsefulNonMedicLine(...)` checks non-Medic play_card and leader moves for score >= 25.
 - `shouldApplyNoTargetMedicDelayPenalty(...)` combines the above with exception checks.
-- Medic scores are adjusted (+260) in `buildLegalHeuristicV1RoundInvestmentAnalysis` when
-  computing `positiveUnitSourceCardIds` to prevent the timing penalty from indirectly
-  distorting round-investment decisions for non-Medic plays.
+- Medic scores are conditionally adjusted (+260) in
+  `buildLegalHeuristicV1RoundInvestmentAnalysis` when computing
+  `positiveUnitSourceCardIds` — only when
+  `shouldApplyNoTargetMedicDelayPenalty(features, move)` returns true. Medic cards
+  that do not trigger the cFp39 penalty (e.g. no useful non-Medic line exists) are
+  scored at their raw `scoreMove` value for this computation.
 - A Medic-specific clear-round-benefit exception in
-  `shouldPassForRoundInvestment` allows no-target Medic plays that clearly put the AI
-  ahead when behind, even if they leave no positive unit moves.
+  `shouldPassForRoundInvestment` is placed **before** `shouldPassForResourceExhaustion`,
+  allowing no-target Medic plays that clearly put the AI ahead when behind to bypass
+  resource exhaustion blocking.
 - `AiDecisionMedicTimingAnalysis` gains three new booleans:
   `selectedNoTargetMedicDelayRisk`, `betterNonMedicAlternativeAvailable`,
   `noTargetMedicDelayPenaltyApplied`.
 - Product diagnostics remain hidden-info safe (no card names, source IDs, or raw abilities).
 
-Benchmark totals remain at the cFp38 baseline:
+Benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 16 loss / 2 draw vs v0.
-- Failure mining: 300 findings, medic_no_target_timing in top queue (3rd place).
+- Failure mining: 300 findings (suspicious_pass=228, weathered_row_play=22,
+  medic_timing_risk=4, round_one_overinvestment=9, round_three_low_resource=34).
 
-cFp39 adds 8 fixture tests to `engineAiPolicy.test.ts` covering:
+cFp39 adds 10 fixture tests to `engineAiPolicy.test.ts` covering:
 - No-target Medic delay penalty when useful non-Medic line exists
-- All 6 exception cases (only play, last-gem catch-up, match-winning,
-  round-3 low hand, opponent passed, no useful alternative)
-- Strong revive target Medic remains unaffected
-- Trace diagnostics for selected/non-selected Medic moves
-- Product diagnostics hidden-info safety
+- Medic-only hand exception
+- Strong revive target preservation
+- Prompt ranking unchanged
+- Opponent-passed catch-up
+- Last-gem emergency
+- Select/explain parity
+- Hidden-info safety
+- Conditional Medic score compensation in positiveUnitSourceCardIds (repair)
+- Weak no-target Medic without penalty not incorrectly compensated (repair)

@@ -6317,4 +6317,81 @@ describe("cFp39: medic no-target timing guard", () => {
     expect(traceJson).not.toContain("seat_a:");
     expect(traceJson).not.toContain("seat_b:");
   });
+
+  // ------------------------------------------------------------------
+  // Test 9: Medic score compensation is conditional on penalty applied
+  // ------------------------------------------------------------------
+  it("Medic score compensation in positiveUnitSourceCardIds is conditional on cFp39 penalty", () => {
+    // Scenario: Medic + useful non-Medic unit, empty discard
+    // The Medic should get +260 compensation only when the penalty applies
+    // (useful non-Medic line exists AND no exception).
+    const medic = medicUnit("medic", 10);
+    const strongUnit = nonMedicUnit("strong", 12);
+
+    const input = policyInput(
+      [passMove(), playMove(medic), playMove(strongUnit)],
+      {
+        ownHand: [medic, strongUnit],
+        ownDiscard: [],
+        ownGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 40, seat_b: 35 },
+        },
+      },
+    );
+
+    // The Medic has a useful non-Medic alternative, so cFp39 penalty applies.
+    // With -140 (cFp29 no-target utility) + -260 (cFp39 delay) + base(125) = -275
+    // The non-Medic unit scores much higher. Policy should select non-Medic.
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).toBe(strongUnit.cardId);
+    }
+
+    // When selected move is NOT Medic, per spec all 3 cFp39 booleans are false.
+    // This test verifies the policy selects non-Medic (proving penalty is in effect).
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const medicAnalysis = trace.medicTimingAnalysis!;
+    expect(medicAnalysis.selectedNoTargetMedicDelayRisk).toBe(false);
+    expect(medicAnalysis.betterNonMedicAlternativeAvailable).toBe(false);
+    expect(medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe(false);
+  });
+
+  // ------------------------------------------------------------------
+  // Test 10: Weak no-target Medic without penalty not incorrectly compensated
+  // ------------------------------------------------------------------
+  it("Weak no-target Medic without cFp39 penalty is not incorrectly counted as positive unit", () => {
+    // Scenario: Medic is the only play, no useful non-Medic line.
+    // cFp39 penalty does NOT apply (no useful non-Medic line).
+    // The Medic should be selected normally without any compensation needed.
+    const medic = medicUnit("medic", 10);
+
+    const input = policyInput(
+      [passMove(), playMove(medic)],
+      {
+        ownHand: [medic],
+        ownDiscard: [],
+        ownGems: 2,
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: 5, seat_b: 0 },
+        },
+      },
+    );
+
+    const selected = legalHeuristicPolicyV1.selectMove(input);
+    expect(selected?.kind).toBe("play_card");
+    if (selected && selected.kind === "play_card") {
+      expect(selected.sourceCardId).toBe(medic.cardId);
+    }
+
+    // Trace confirms no penalty (no useful non-Medic alternative)
+    const { trace } = explainLegalHeuristicV1Decision(input);
+    const medicAnalysis = trace.medicTimingAnalysis!;
+    expect(medicAnalysis.selectedNoTargetMedicDelayRisk).toBe(true);
+    expect(medicAnalysis.betterNonMedicAlternativeAvailable).toBe(false);
+    expect(medicAnalysis.noTargetMedicDelayPenaltyApplied).toBe(false);
+  });
 });

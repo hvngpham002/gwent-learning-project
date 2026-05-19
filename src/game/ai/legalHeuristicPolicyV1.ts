@@ -1555,14 +1555,16 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
   // Agile or multi-row cards can create multiple positive move options from the
   // same card instance. We key by sourceCardId to avoid inflating the count.
   // cFp39: When determining positive unit count, adjust Medic scores to
-  // exclude the no-target delay penalty so round-investment decisions
-  // aren't skewed by timing-specific scoring adjustments.
+  // exclude the no-target delay penalty — but only when the penalty was
+  // actually applied (i.e. a useful non-Medic line exists and no exception
+  // applies). This prevents non-Medic plays from being incorrectly blocked
+  // by an unconditional Medic score adjustment.
   const positiveUnitSourceCardIds = new Set<string>();
   let positiveFutureNonUnitMoveCount = 0;
   for (const move of features.playMoves) {
     const card = features.ownHandByCardId.get(move.sourceCardId);
     let score = scoreMove(features, move);
-    if (card && isMedicSource(card)) {
+    if (card && isMedicSource(card) && shouldApplyNoTargetMedicDelayPenalty(features, move)) {
       score += MEDIC_NO_TARGET_DELAY_PENALTY;
     }
     if (score > 0) {
@@ -1937,22 +1939,23 @@ export const shouldPassForRoundInvestment = (
     }
   }
 
-  // cFp37: Narrow round resource gate — only allow pass when round-investment
-  // recommendation already says preserve or sacrifice. Block pass when
-  // recommendation says continue, fight_last_gem, or single-move catch-up exists.
-  if (shouldPassForResourceExhaustion(features, candidate, analysis, passDiags)) {
-    return true;
-  }
-
-  // Clear-round-benefit exception: if a Medic play clearly puts us ahead
-  // and we're currently behind, allow it even if it leaves no positive unit moves.
-  // This is the cFp39 emergency/tempo exception for Medic plays.
+  // cFp39: Clear-round-benefit exception for Medic plays — if a Medic play
+  // clearly puts us ahead when behind, allow it before the resource gate.
+  // This takes priority over shouldPassForResourceExhaustion so emergency
+  // Medic tempo plays are never blocked by resource exhaustion.
   if (candidate?.kind === "play_card") {
     const card = features.ownHandByCardId.get(candidate.sourceCardId);
     const candidateTempo = estimateImmediateTempo(features, candidate);
     if (card && isMedicSource(card) && features.scoreDelta < 0 && features.ownScore + candidateTempo > features.opponentScore) {
       return false;
     }
+  }
+
+  // cFp37: Narrow round resource gate — only allow pass when round-investment
+  // recommendation already says preserve or sacrifice. Block pass when
+  // recommendation says continue, fight_last_gem, or single-move catch-up exists.
+  if (shouldPassForResourceExhaustion(features, candidate, analysis, passDiags)) {
+    return true;
   }
 
   // cFp31 repair Fix 4: Removed features.ownHandCount > 2 gate from critical-risk branch
