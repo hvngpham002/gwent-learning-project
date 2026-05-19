@@ -862,7 +862,7 @@ const buildTuningQueueItem = ({
     affectedFactions: sortUnique(findings.map((finding) => finding.faction)),
     affectedMatchups: sortUnique(findings.map((finding) => finding.matchupId)),
     recommendation,
-    suggestedNextSpecId: "cFp36",
+    suggestedNextSpecId: "next",
   };
 };
 
@@ -1038,10 +1038,10 @@ const buildTuningQueueMarkdown = (summary: BenchmarkFailureMiningSummary) => {
   const topCluster = summary.tuningQueue[0]?.clusterId ?? "none";
   const recommendedScope =
     topCluster === "round_resource_exhaustion"
-      ? "cFp36 should tune round-resource exhaustion first, not suspicious-pass broadly."
+      ? "Next behavior phase should tune round-resource exhaustion first, not suspicious-pass broadly."
       : topCluster === "none"
-        ? "cFp36 should further improve evaluator signals before behavior tuning because no ranked cluster was produced."
-        : `cFp36 should tune ${topCluster} first, while keeping suppressed pass categories out of behavior-tuning scope.`;
+        ? "Next behavior phase should further improve evaluator signals before behavior tuning because no ranked cluster was produced."
+        : `Next behavior phase should tune ${topCluster} first, while keeping suppressed pass categories out of behavior-tuning scope.`;
 
   return `# Benchmark Failure-Mining Tuning Queue
 
