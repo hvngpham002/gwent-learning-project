@@ -1,0 +1,15 @@
+{
+  "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "records.jsonl",
+    "report.md"
+  ],
+  "hiddenInfoSafetyNote": "Default artifacts contain only public benchmark records and summaries. They do not serialize unsafe debug results, raw state, command logs, event logs, hand arrays, deck arrays/order, observations, or runtime card instance ids.",
+  "recordCount": 400,
+  "recordSchemaVersion": "benchmark-match-v1",
+  "schemaVersion": "benchmark-artifact-v1",
+  "suiteId": "benchmark-v1-starter-matrix-expanded-v1",
+  "summarySchemaVersion": "benchmark-summary-v1"
+}

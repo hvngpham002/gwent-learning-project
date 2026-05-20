@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp41.1 with pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, and recursive-scoring guard for expanded benchmark stability.",
-    latestPhase: "cFp41.1",
-    latestSpecPath: "docs/spec/2026-05-19-cFp41.1-specs.md",
-    latestReportPath: "audit/reports/2026-05-19-cFp41.1-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp41.1 with pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, and recursive-scoring guard; cFp41.2 commits the expanded benchmark artifact refresh.",
+    latestPhase: "cFp41.2",
+    latestSpecPath: "docs/spec/2026-05-20-cFp41.2-specs.md",
+    latestReportPath: "audit/reports/2026-05-20-cFp41.2-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
@@ -81,7 +81,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       {
         suiteId: "benchmark-v1-starter-matrix-expanded-v1",
         label: "v1 expanded starter matrix",
-        result: "400 records, 0 policy failures (cFp41.1 guard)",
+        result: "310 win / 85 loss / 5 draw vs v0; 0 policy failures",
       },
     ],
     capabilities: [
