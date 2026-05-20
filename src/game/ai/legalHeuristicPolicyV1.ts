@@ -306,6 +306,9 @@ export const ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP = 4;
 
 /**
  * cFp43: Returns the overinvestment reason for round-one spending guard.
+ * Only returns cFp43 exception reasons when the base geometry would otherwise
+ * apply (round 1, play_card, boardAfter >= floor, handAfter <= cap).
+ * Otherwise returns "none" or a narrow phase/scope exception.
  */
 export const buildRoundOneOverinvestmentDecision = (
   features: LegalHeuristicV1Features,
@@ -315,6 +318,13 @@ export const buildRoundOneOverinvestmentDecision = (
   if (!selectedMove || selectedMove.kind !== "play_card") return "exception_non_play_card";
   if (features.round !== 1) return "exception_not_round_one";
   if (features.ownGems <= 1) return "exception_last_gem";
+  const boardAfter = analysis.ownBoardCardCount + 1;
+  const handAfter = analysis.estimatedHandCountAfterSelectedMove;
+  // Guard does not apply when base geometry is not met.
+  if (!(boardAfter >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR && handAfter <= ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP)) {
+    return "none";
+  }
+  // Base geometry applies — evaluate exceptions that allow the play.
   if (features.opponentPassed) return "exception_opponent_passed";
   if (analysis.selectedMoveIsCardAdvantage) return "exception_card_advantage";
   if (features.opponentGems <= 1) {
@@ -328,12 +338,7 @@ export const buildRoundOneOverinvestmentDecision = (
     if (catchesUp && overkill <= 3 && !analysis.selectedMoveWouldLeaveNoUnitTempoCard) return "exception_single_move_catch_up";
   }
   if (features.ownHandCount <= 1) return "exception_single_card_hand";
-  const boardAfter = analysis.ownBoardCardCount + 1;
-  const handAfter = analysis.estimatedHandCountAfterSelectedMove;
-  if (boardAfter >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR && handAfter <= ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP) {
-    return boardAfter >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR ? "round_one_board_limit" : "round_one_low_future_hand";
-  }
-  return "none";
+  return "round_one_board_limit";
 };
 
 // ---------------------------------------------------------------------------

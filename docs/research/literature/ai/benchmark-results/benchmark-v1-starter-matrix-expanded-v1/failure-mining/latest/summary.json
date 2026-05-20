@@ -6,7 +6,7 @@
       "reason": "Current safe trace data does not expose consecutive legal leader availability by turn; keep this deferred until a public step-level leader-availability summary exists."
     }
   ],
-  "findingCount": 1135,
+  "findingCount": 878,
   "findingCountsByKind": {
     "deck_skew": 0,
     "engine_error": 0,
@@ -18,12 +18,12 @@
     "replay_failed": 0,
     "round_one_overinvestment": 26,
     "round_three_low_resource": 86,
-    "suspicious_pass": 928,
+    "suspicious_pass": 671,
     "weathered_row_play": 86
   },
   "findingCountsBySeverity": {
     "info": 0,
-    "warning": 894,
+    "warning": 637,
     "watch": 241
   },
   "recordCount": 400,
@@ -40,14 +40,15 @@
     "replay_failed": 0,
     "round_one_overinvestment": 0,
     "round_three_low_resource": 0,
-    "suspicious_pass": 119,
+    "suspicious_pass": 376,
     "weathered_row_play": 0
   },
   "suppressedSuspiciousPassCountsByCategory": {
     "insufficient_context": 18,
-    "preserve_future_hand_pass": 67,
+    "preserve_future_hand_pass": 52,
+    "round_one_overinvestment_pass": 290,
     "sacrifice_round_pass": 0,
-    "stop_loss_pass": 34,
+    "stop_loss_pass": 16,
     "voluntary_safe_pass": 0
   },
   "topFindings": [
@@ -478,7 +479,7 @@
         "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
       ],
       "clusterId": "remaining_suspicious_pass",
-      "count": 928,
+      "count": 671,
       "findingKinds": [
         "suspicious_pass"
       ],

@@ -6,14 +6,14 @@
 - benchmark run id: benchmark-v1-starter-matrix-expanded-v1:latest
 - schema: benchmark-failure-mining-v1
 - record count: 400
-- finding count: 1135
+- finding count: 878
 - generated at: benchmark-v1-starter-matrix-expanded-v1:latest (deterministic run metadata, not wall-clock time)
 
 ## Finding Counts By Severity
 
 | Severity | Count |
 |---|---:|
-| warning | 894 |
+| warning | 637 |
 | watch | 241 |
 | info | 0 |
 
@@ -25,7 +25,7 @@
 | deck_skew | 0 |
 | round_one_overinvestment | 26 |
 | round_three_low_resource | 86 |
-| suspicious_pass | 928 |
+| suspicious_pass | 671 |
 | weathered_row_play | 86 |
 | medic_timing_risk | 7 |
 | leader_underuse | 0 |
@@ -53,10 +53,11 @@
 
 | Suspicious-pass suppression category | Count |
 |---|---:|
-| preserve_future_hand_pass | 67 |
+| preserve_future_hand_pass | 52 |
 | sacrifice_round_pass | 0 |
 | voluntary_safe_pass | 0 |
-| stop_loss_pass | 34 |
+| stop_loss_pass | 16 |
+| round_one_overinvestment_pass | 290 |
 | insufficient_context | 18 |
 
 ## Tuning Queue
@@ -67,7 +68,7 @@
 | 2 | weathered_row_low_tempo | warning | 86 | Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo. |
 | 3 | medic_no_target_timing | warning | 7 | Review Medic timing thresholds where no-target or weak-target diagnostics still allow a Medic play. |
 | 4 | skellige_matchup_skew | warning | 55 | Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes. |
-| 5 | remaining_suspicious_pass | warning | 928 | Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes. |
+| 5 | remaining_suspicious_pass | warning | 671 | Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes. |
 
 ## Deferred Signals
 

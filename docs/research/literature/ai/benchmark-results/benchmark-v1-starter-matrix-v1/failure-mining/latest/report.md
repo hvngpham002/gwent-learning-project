@@ -6,14 +6,14 @@
 - benchmark run id: benchmark-v1-starter-matrix-v1:latest
 - schema: benchmark-failure-mining-v1
 - record count: 120
-- finding count: 365
+- finding count: 300
 - generated at: benchmark-v1-starter-matrix-v1:latest (deterministic run metadata, not wall-clock time)
 
 ## Finding Counts By Severity
 
 | Severity | Count |
 |---|---:|
-| warning | 292 |
+| warning | 227 |
 | watch | 73 |
 | info | 0 |
 
@@ -25,7 +25,7 @@
 | deck_skew | 1 |
 | round_one_overinvestment | 6 |
 | round_three_low_resource | 36 |
-| suspicious_pass | 299 |
+| suspicious_pass | 234 |
 | weathered_row_play | 18 |
 | medic_timing_risk | 0 |
 | leader_underuse | 0 |
@@ -53,10 +53,11 @@
 
 | Suspicious-pass suppression category | Count |
 |---|---:|
-| preserve_future_hand_pass | 21 |
+| preserve_future_hand_pass | 13 |
 | sacrifice_round_pass | 0 |
 | voluntary_safe_pass | 0 |
-| stop_loss_pass | 16 |
+| stop_loss_pass | 8 |
+| round_one_overinvestment_pass | 81 |
 | insufficient_context | 1 |
 
 ## Tuning Queue
@@ -66,7 +67,7 @@
 | 1 | round_resource_exhaustion | warning | 42 | Tune round investment and future-hand valuation before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
 | 2 | weathered_row_low_tempo | watch | 18 | Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo. |
 | 3 | skellige_matchup_skew | warning | 31 | Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes. |
-| 4 | remaining_suspicious_pass | warning | 299 | Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes. |
+| 4 | remaining_suspicious_pass | warning | 234 | Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes. |
 
 ## Deferred Signals
 

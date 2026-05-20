@@ -71,22 +71,22 @@ describe("authentic AI Lab view model", () => {
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
-    expect(v1?.latestBenchmarkSummaries).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          suiteId: "benchmark-v1-smoke-v1",
-          result: "10 win / 2 loss / 0 draw vs v0",
-        }),
-        expect.objectContaining({
-          suiteId: "benchmark-v1-starter-matrix-v1",
-          result: "104 win / 14 loss / 2 draw vs v0",
-        }),
-        expect.objectContaining({
-          suiteId: "benchmark-v1-starter-matrix-expanded-v1",
-          result: "310 win / 85 loss / 5 draw vs v0; 0 policy failures",
-        }),
-      ]),
-    );
+ expect(v1?.latestBenchmarkSummaries).toEqual(
+       expect.arrayContaining([
+         expect.objectContaining({
+           suiteId: "benchmark-v1-smoke-v1",
+           result: "10 win / 2 loss / 0 draw vs v0",
+         }),
+         expect.objectContaining({
+           suiteId: "benchmark-v1-starter-matrix-v1",
+           result: "102 win / 17 loss / 1 draw vs v0",
+         }),
+         expect.objectContaining({
+           suiteId: "benchmark-v1-starter-matrix-expanded-v1",
+           result: "305 win / 90 loss / 5 draw vs v0; 0 policy failures",
+         }),
+       ]),
+     );
     expect(v1?.capabilities).toEqual(
       expect.arrayContaining([
         "linked-card mulligan diagnostics",

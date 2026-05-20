@@ -598,10 +598,8 @@ const buildPlayingPhaseTrace = (
         }
       } else {
         // cFp43: Round-one overinvestment exception for selected play_card
-        // Only apply cFp43 exception reasons when the cFp43 guard itself triggered the pass decision.
-        // When roundOneOverinvestmentRecommended is false, the pass was caused by other logic
-        // (e.g. cFp36 resource exhaustion), so cFp43 exception reasons should not apply.
-        if (move?.kind === "play_card" && roundInvestmentAnalysis && roundInvestmentAnalysis.roundOneOverinvestmentRecommended) {
+        // Gate on roundOneOverinvestmentReason starting with exception_ (base geometry is true).
+        if (move?.kind === "play_card" && roundInvestmentAnalysis && roundInvestmentAnalysis.roundOneOverinvestmentReason.startsWith("exception_")) {
           const ovReason = roundInvestmentAnalysis.roundOneOverinvestmentReason;
           if (ovReason === "exception_card_advantage") {
             reason = "round-one overinvestment ignored — card advantage move";
