@@ -19,11 +19,12 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
-phase is cFp43: Round-One Overinvestment Guard. The latest committed benchmark
-artifact refresh is the cFp43 post-implementation run for the current
-120-record and expanded 400-record starter matrices. The latest analysis phase
-is cFp42: Round Resource Exhaustion Casebook, which classified the top expanded
-failure-mining queue before cFp43 behavior tuning. The behavior stack builds on
+phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
+cFp44: Post-cFp43 Failure-Mining Casebook, which reviewed the stable post-cFp43
+public benchmark artifacts and recommended the next narrow overinvestment patch
+or a pause for ratings/search. The latest committed benchmark artifact refresh
+is the cFp43 post-implementation run for the current 120-record and expanded
+400-record starter matrices. The behavior stack builds on
 the cFp27 through cFp43 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
@@ -1060,3 +1061,36 @@ findings. The expanded round-one overinvestment signal drops from 51 to 26; the
 starter-matrix strength regresses from the cFp41.2 expanded artifact
 (`310/85/5`) to `305/90/5`, so future changes should watch whether the reduced
 failure-mining signal is worth that tradeoff.
+
+### Post-cFp43 Failure-Mining Casebook (cFp44)
+
+cFp44 is an analysis/documentation phase. It reads the stable post-cFp43 public
+benchmark artifacts and the expanded failure-mining findings to decide whether
+the remaining `round_one_overinvestment` cases justify another behavior patch
+or whether v1 heuristic tuning should pause for ratings/search.
+
+Post-cFp43 findings:
+- Current (120 records): 300 findings
+  (`suspicious_pass=234`, `round_three_low_resource=36`,
+  `weathered_row_play=18`, `round_one_overinvestment=6`, `medic_timing_risk=0`),
+  with `round_one_overinvestment_pass=81` suppressed.
+- Expanded (400 records): 878 findings
+  (`suspicious_pass=671`, `round_three_low_resource=86`, `weathered_row_play=86`,
+  `round_one_overinvestment=26`, `medic_timing_risk=7`),
+  with `round_one_overinvestment_pass=290` suppressed.
+
+Key findings:
+- The remaining 26 expanded `round_one_overinvestment` cases are 100% loss-correlated,
+  meaning the cFp43 guard still has coverage gaps in its geometry (board >= 7, hand <= 4).
+- `round_three_low_resource` (86) is watch/noise — all cases have zero positive unit tempo.
+- `weathered_row_play` (86) is stable since cFp41.2; cFp38 guard is in place.
+- `medic_timing_risk` (7) is low confidence; cFp39's -260 delay covers most.
+- Broad `suspicious_pass` (671) is too large for direct tuning and needs a classifier pass.
+
+Recommendation: The next behavior spec should target the remaining
+`round_one_overinvestment` cases. If those 26 cases are edge cases not worth
+complexity, pause v1 heuristic tuning and move toward ratings/search.
+
+cFp44 does not change AI behavior, engine rules, legal moves, UI behavior,
+catalog data, deck presets, benchmark suite shape, failure-mining classifiers,
+ratings, search, training, or product difficulty.

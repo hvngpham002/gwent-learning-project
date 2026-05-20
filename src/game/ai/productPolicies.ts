@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp43 with pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), and round-one overinvestment guard (cFp43).",
-    latestPhase: "cFp43",
-    latestSpecPath: "docs/spec/2026-05-20-cFp43-specs.md",
-    latestReportPath: "audit/reports/2026-05-20-cFp43-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp43 with post-cFp43 casebook/decision analysis (cFp44). Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43). cFp44 is an analysis/documentation phase that reviews post-cFp43 failure-mining artifacts and recommends the next narrow overinvestment patch or a pause for ratings/search.",
+    latestPhase: "cFp44",
+    latestSpecPath: "docs/spec/2026-05-20-cFp44-specs.md",
+    latestReportPath: "audit/reports/2026-05-20-cFp44-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
