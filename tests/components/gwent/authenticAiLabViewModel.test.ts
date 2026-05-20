@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp41.1",
-        latestSpecPath: "docs/spec/2026-05-19-cFp41.1-specs.md",
-        latestReportPath: "audit/reports/2026-05-19-cFp41.1-report.md",
+        latestPhase: "cFp41.2",
+        latestSpecPath: "docs/spec/2026-05-20-cFp41.2-specs.md",
+        latestReportPath: "audit/reports/2026-05-20-cFp41.2-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp41.1",
-        latestSpecPath: "docs/spec/2026-05-19-cFp41.1-specs.md",
-        latestReportPath: "audit/reports/2026-05-19-cFp41.1-report.md",
+        latestPhase: "cFp41.2",
+        latestSpecPath: "docs/spec/2026-05-20-cFp41.2-specs.md",
+        latestReportPath: "audit/reports/2026-05-20-cFp41.2-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -83,7 +83,7 @@ describe("authentic AI Lab view model", () => {
         }),
         expect.objectContaining({
           suiteId: "benchmark-v1-starter-matrix-expanded-v1",
-          result: "400 records, 0 policy failures (cFp41.1 guard)",
+          result: "310 win / 85 loss / 5 draw vs v0; 0 policy failures",
         }),
       ]),
     );

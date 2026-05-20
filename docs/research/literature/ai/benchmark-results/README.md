@@ -39,6 +39,14 @@ That profile writes a 400-record starter matrix and matching
 failure-mining artifacts for `benchmark-v1-starter-matrix-expanded-v1`.
 Use it for discovery; keep `v1-current` for quick regression.
 
+Latest committed expanded artifact refresh (cFp41.2):
+
+- starter matrix: 400 completed / 0 policy failures / 0 engine errors;
+  `legal-heuristic-v1` records 310 wins, 85 losses, and 5 draws against
+  `legal-heuristic-v0`;
+- failure mining: 964 findings, with `round_resource_exhaustion` ranked first
+  in the generated tuning queue.
+
 The [`alive-progress`](https://github.com/rsalmei/alive-progress)
 package is optional. Without it, the runner falls back to plain step
 progress. The runner writes ignored local run bundles under
