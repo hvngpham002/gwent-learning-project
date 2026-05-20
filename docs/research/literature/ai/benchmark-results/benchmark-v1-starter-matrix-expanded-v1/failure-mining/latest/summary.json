@@ -6,25 +6,25 @@
       "reason": "Current safe trace data does not expose consecutive legal leader availability by turn; keep this deferred until a public step-level leader-availability summary exists."
     }
   ],
-  "findingCount": 964,
+  "findingCount": 1135,
   "findingCountsByKind": {
-    "deck_skew": 1,
+    "deck_skew": 0,
     "engine_error": 0,
     "leader_underuse": 0,
-    "matchup_skew": 1,
+    "matchup_skew": 2,
     "max_steps": 0,
-    "medic_timing_risk": 11,
+    "medic_timing_risk": 7,
     "policy_failed": 0,
     "replay_failed": 0,
-    "round_one_overinvestment": 51,
-    "round_three_low_resource": 97,
-    "suspicious_pass": 717,
+    "round_one_overinvestment": 26,
+    "round_three_low_resource": 86,
+    "suspicious_pass": 928,
     "weathered_row_play": 86
   },
   "findingCountsBySeverity": {
     "info": 0,
-    "warning": 713,
-    "watch": 251
+    "warning": 894,
+    "watch": 241
   },
   "recordCount": 400,
   "schemaVersion": "benchmark-failure-mining-v1",
@@ -40,14 +40,14 @@
     "replay_failed": 0,
     "round_one_overinvestment": 0,
     "round_three_low_resource": 0,
-    "suspicious_pass": 298,
+    "suspicious_pass": 119,
     "weathered_row_play": 0
   },
   "suppressedSuspiciousPassCountsByCategory": {
-    "insufficient_context": 15,
-    "preserve_future_hand_pass": 204,
+    "insufficient_context": 18,
+    "preserve_future_hand_pass": 67,
     "sacrifice_round_pass": 0,
-    "stop_loss_pass": 79,
+    "stop_loss_pass": 34,
     "voluntary_safe_pass": 0
   },
   "topFindings": [
@@ -81,168 +81,6 @@
     {
       "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
       "count": 1,
-      "deckPresetId": "official-nilfgaard-starter",
-      "evidence": {
-        "bestReviveStrengthBucket": "none",
-        "bestReviveValueBucket": "none",
-        "decisionIndex": 10,
-        "medicPlayCandidateCount": 3,
-        "noTargetMedicRisk": true,
-        "ownDiscardReviveCandidateCount": 0,
-        "selectedKind": "play_card",
-        "selectedMedicWithNoTarget": true,
-        "selectedMoveIsMedic": true
-      },
-      "faction": "nilfgaard",
-      "findingId": "medic-timing-risk__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0__starter-matrix-expanded-004__1__seat-b__10",
-      "kind": "medic_timing_risk",
-      "matchupId": "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0",
-      "message": "legal-heuristic-v1 selected a play with weak Medic timing signals.",
-      "mirrorIndex": 1,
-      "policyId": "legal-heuristic-v1",
-      "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-expanded-004",
-      "severity": "warning",
-      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
-    },
-    {
-      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
-      "count": 1,
-      "deckPresetId": "official-nilfgaard-starter",
-      "evidence": {
-        "bestReviveStrengthBucket": "none",
-        "bestReviveValueBucket": "none",
-        "decisionIndex": 11,
-        "medicPlayCandidateCount": 1,
-        "noTargetMedicRisk": true,
-        "ownDiscardReviveCandidateCount": 0,
-        "selectedKind": "play_card",
-        "selectedMedicWithNoTarget": true,
-        "selectedMoveIsMedic": true
-      },
-      "faction": "nilfgaard",
-      "findingId": "medic-timing-risk__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0__starter-matrix-expanded-002__0__seat-a__11",
-      "kind": "medic_timing_risk",
-      "matchupId": "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0",
-      "message": "legal-heuristic-v1 selected a play with weak Medic timing signals.",
-      "mirrorIndex": 0,
-      "policyId": "legal-heuristic-v1",
-      "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-expanded-002",
-      "severity": "warning",
-      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
-    },
-    {
-      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
-      "count": 1,
-      "deckPresetId": "official-nilfgaard-starter",
-      "evidence": {
-        "bestReviveStrengthBucket": "none",
-        "bestReviveValueBucket": "none",
-        "decisionIndex": 10,
-        "medicPlayCandidateCount": 3,
-        "noTargetMedicRisk": true,
-        "ownDiscardReviveCandidateCount": 0,
-        "selectedKind": "play_card",
-        "selectedMedicWithNoTarget": true,
-        "selectedMoveIsMedic": true
-      },
-      "faction": "nilfgaard",
-      "findingId": "medic-timing-risk__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0__starter-matrix-expanded-004__1__seat-b__10",
-      "kind": "medic_timing_risk",
-      "matchupId": "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0",
-      "message": "legal-heuristic-v1 selected a play with weak Medic timing signals.",
-      "mirrorIndex": 1,
-      "policyId": "legal-heuristic-v1",
-      "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-expanded-004",
-      "severity": "warning",
-      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
-    },
-    {
-      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
-      "count": 1,
-      "deckPresetId": "official-nilfgaard-starter",
-      "evidence": {
-        "bestReviveStrengthBucket": "none",
-        "bestReviveValueBucket": "none",
-        "decisionIndex": 9,
-        "medicPlayCandidateCount": 3,
-        "noTargetMedicRisk": true,
-        "ownDiscardReviveCandidateCount": 0,
-        "selectedKind": "play_card",
-        "selectedMedicWithNoTarget": true,
-        "selectedMoveIsMedic": true
-      },
-      "faction": "nilfgaard",
-      "findingId": "medic-timing-risk__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1__starter-matrix-expanded-001__0__seat-b__9",
-      "kind": "medic_timing_risk",
-      "matchupId": "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
-      "message": "legal-heuristic-v1 selected a play with weak Medic timing signals.",
-      "mirrorIndex": 0,
-      "policyId": "legal-heuristic-v1",
-      "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-expanded-001",
-      "severity": "warning",
-      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
-    },
-    {
-      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
-      "count": 1,
-      "deckPresetId": "official-nilfgaard-starter",
-      "evidence": {
-        "bestReviveStrengthBucket": "none",
-        "bestReviveValueBucket": "none",
-        "decisionIndex": 9,
-        "medicPlayCandidateCount": 2,
-        "noTargetMedicRisk": true,
-        "ownDiscardReviveCandidateCount": 0,
-        "selectedKind": "play_card",
-        "selectedMedicWithNoTarget": true,
-        "selectedMoveIsMedic": true
-      },
-      "faction": "nilfgaard",
-      "findingId": "medic-timing-risk__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1__starter-matrix-expanded-002__1__seat-a__9",
-      "kind": "medic_timing_risk",
-      "matchupId": "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
-      "message": "legal-heuristic-v1 selected a play with weak Medic timing signals.",
-      "mirrorIndex": 1,
-      "policyId": "legal-heuristic-v1",
-      "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-expanded-002",
-      "severity": "warning",
-      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
-    },
-    {
-      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
-      "count": 1,
-      "deckPresetId": "official-nilfgaard-starter",
-      "evidence": {
-        "bestReviveStrengthBucket": "none",
-        "bestReviveValueBucket": "none",
-        "decisionIndex": 9,
-        "medicPlayCandidateCount": 3,
-        "noTargetMedicRisk": true,
-        "ownDiscardReviveCandidateCount": 0,
-        "selectedKind": "play_card",
-        "selectedMedicWithNoTarget": true,
-        "selectedMoveIsMedic": true
-      },
-      "faction": "nilfgaard",
-      "findingId": "medic-timing-risk__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1__starter-matrix-expanded-006__0__seat-b__9",
-      "kind": "medic_timing_risk",
-      "matchupId": "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
-      "message": "legal-heuristic-v1 selected a play with weak Medic timing signals.",
-      "mirrorIndex": 0,
-      "policyId": "legal-heuristic-v1",
-      "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-expanded-006",
-      "severity": "warning",
-      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
-    },
-    {
-      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
-      "count": 1,
       "deckPresetId": "official-scoiatael-starter",
       "evidence": {
         "matchOutcome": "loss",
@@ -251,14 +89,36 @@
         "seatId": "seat_a"
       },
       "faction": "scoiatael",
-      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1__starter-matrix-expanded-006__1__seat-a",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1__starter-matrix-expanded-010__1__seat-a",
       "kind": "round_one_overinvestment",
-      "matchupId": "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1",
+      "matchupId": "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1",
       "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
       "mirrorIndex": 1,
       "policyId": "legal-heuristic-v1",
       "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-expanded-006",
+      "seed": "starter-matrix-expanded-010",
+      "severity": "warning",
+      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
+    },
+    {
+      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
+      "count": 1,
+      "deckPresetId": "official-skellige-starter",
+      "evidence": {
+        "matchOutcome": "loss",
+        "resolvedRoundCount": 2,
+        "round1PlayCardCount": 8,
+        "seatId": "seat_b"
+      },
+      "faction": "skellige",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1__starter-matrix-expanded-001__0__seat-b",
+      "kind": "round_one_overinvestment",
+      "matchupId": "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1",
+      "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
+      "mirrorIndex": 0,
+      "policyId": "legal-heuristic-v1",
+      "schemaVersion": "benchmark-failure-mining-v1",
+      "seed": "starter-matrix-expanded-001",
       "severity": "warning",
       "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
     },
@@ -273,36 +133,146 @@
         "seatId": "seat_a"
       },
       "faction": "skellige",
-      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-monsters-heuristic-v0-vs-skellige-heuristic-v1__starter-matrix-expanded-005__1__seat-a",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1__starter-matrix-expanded-008__1__seat-a",
       "kind": "round_one_overinvestment",
-      "matchupId": "starter-monsters-heuristic-v0-vs-skellige-heuristic-v1",
+      "matchupId": "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1",
       "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
       "mirrorIndex": 1,
       "policyId": "legal-heuristic-v1",
       "schemaVersion": "benchmark-failure-mining-v1",
-      "seed": "starter-matrix-expanded-005",
+      "seed": "starter-matrix-expanded-008",
       "severity": "warning",
       "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
     },
     {
       "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
       "count": 1,
-      "deckPresetId": "official-monsters-starter",
+      "deckPresetId": "official-nilfgaard-starter",
+      "evidence": {
+        "matchOutcome": "loss",
+        "resolvedRoundCount": 3,
+        "round1PlayCardCount": 9,
+        "seatId": "seat_a"
+      },
+      "faction": "nilfgaard",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0__starter-matrix-expanded-007__0__seat-a",
+      "kind": "round_one_overinvestment",
+      "matchupId": "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0",
+      "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
+      "mirrorIndex": 0,
+      "policyId": "legal-heuristic-v1",
+      "schemaVersion": "benchmark-failure-mining-v1",
+      "seed": "starter-matrix-expanded-007",
+      "severity": "warning",
+      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
+    },
+    {
+      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
+      "count": 1,
+      "deckPresetId": "official-nilfgaard-starter",
       "evidence": {
         "matchOutcome": "loss",
         "resolvedRoundCount": 3,
         "round1PlayCardCount": 8,
         "seatId": "seat_b"
       },
-      "faction": "monsters",
-      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-monsters-heuristic-v1-vs-skellige-heuristic-v0__starter-matrix-expanded-001__1__seat-b",
+      "faction": "nilfgaard",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0__starter-matrix-expanded-008__1__seat-b",
       "kind": "round_one_overinvestment",
-      "matchupId": "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0",
+      "matchupId": "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0",
       "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
       "mirrorIndex": 1,
       "policyId": "legal-heuristic-v1",
       "schemaVersion": "benchmark-failure-mining-v1",
+      "seed": "starter-matrix-expanded-008",
+      "severity": "warning",
+      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
+    },
+    {
+      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
+      "count": 1,
+      "deckPresetId": "official-nilfgaard-starter",
+      "evidence": {
+        "matchOutcome": "loss",
+        "resolvedRoundCount": 3,
+        "round1PlayCardCount": 8,
+        "seatId": "seat_a"
+      },
+      "faction": "nilfgaard",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0__starter-matrix-expanded-001__0__seat-a",
+      "kind": "round_one_overinvestment",
+      "matchupId": "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0",
+      "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
+      "mirrorIndex": 0,
+      "policyId": "legal-heuristic-v1",
+      "schemaVersion": "benchmark-failure-mining-v1",
       "seed": "starter-matrix-expanded-001",
+      "severity": "warning",
+      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
+    },
+    {
+      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
+      "count": 1,
+      "deckPresetId": "official-nilfgaard-starter",
+      "evidence": {
+        "matchOutcome": "loss",
+        "resolvedRoundCount": 3,
+        "round1PlayCardCount": 8,
+        "seatId": "seat_a"
+      },
+      "faction": "nilfgaard",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0__starter-matrix-expanded-003__0__seat-a",
+      "kind": "round_one_overinvestment",
+      "matchupId": "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0",
+      "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
+      "mirrorIndex": 0,
+      "policyId": "legal-heuristic-v1",
+      "schemaVersion": "benchmark-failure-mining-v1",
+      "seed": "starter-matrix-expanded-003",
+      "severity": "warning",
+      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
+    },
+    {
+      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
+      "count": 1,
+      "deckPresetId": "official-nilfgaard-starter",
+      "evidence": {
+        "matchOutcome": "loss",
+        "resolvedRoundCount": 3,
+        "round1PlayCardCount": 9,
+        "seatId": "seat_a"
+      },
+      "faction": "nilfgaard",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0__starter-matrix-expanded-006__0__seat-a",
+      "kind": "round_one_overinvestment",
+      "matchupId": "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0",
+      "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
+      "mirrorIndex": 0,
+      "policyId": "legal-heuristic-v1",
+      "schemaVersion": "benchmark-failure-mining-v1",
+      "seed": "starter-matrix-expanded-006",
+      "severity": "warning",
+      "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
+    },
+    {
+      "benchmarkRunId": "benchmark-v1-starter-matrix-expanded-v1:latest",
+      "count": 1,
+      "deckPresetId": "official-nilfgaard-starter",
+      "evidence": {
+        "matchOutcome": "loss",
+        "resolvedRoundCount": 3,
+        "round1PlayCardCount": 9,
+        "seatId": "seat_a"
+      },
+      "faction": "nilfgaard",
+      "findingId": "round-one-overinvestment__legal-heuristic-v1__starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0__starter-matrix-expanded-007__0__seat-a",
+      "kind": "round_one_overinvestment",
+      "matchupId": "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0",
+      "message": "legal-heuristic-v1 spent many cards in round 1 and did not win the match.",
+      "mirrorIndex": 0,
+      "policyId": "legal-heuristic-v1",
+      "schemaVersion": "benchmark-failure-mining-v1",
+      "seed": "starter-matrix-expanded-007",
       "severity": "warning",
       "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
     }
@@ -346,7 +316,7 @@
         "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
       ],
       "clusterId": "round_resource_exhaustion",
-      "count": 148,
+      "count": 112,
       "findingKinds": [
         "round_one_overinvestment",
         "round_three_low_resource"
@@ -373,7 +343,6 @@
         "skellige"
       ],
       "affectedMatchups": [
-        "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1",
         "starter-monsters-heuristic-v0-vs-skellige-heuristic-v1",
         "starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0",
         "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0",
@@ -385,13 +354,11 @@
         "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1",
         "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
         "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1",
-        "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1",
         "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0",
         "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0",
         "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0",
         "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0",
-        "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1",
-        "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
+        "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1"
       ],
       "clusterId": "weathered_row_low_tempo",
       "count": 86,
@@ -418,15 +385,13 @@
       "affectedMatchups": [
         "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1",
         "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0",
-        "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0",
-        "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0",
         "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1",
         "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0",
         "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0",
         "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
       ],
       "clusterId": "medic_no_target_timing",
-      "count": 11,
+      "count": 7,
       "findingKinds": [
         "medic_timing_risk"
       ],
@@ -462,7 +427,7 @@
         "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
       ],
       "clusterId": "skellige_matchup_skew",
-      "count": 72,
+      "count": 55,
       "findingKinds": [
         "deck_skew",
         "matchup_skew",
@@ -513,7 +478,7 @@
         "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
       ],
       "clusterId": "remaining_suspicious_pass",
-      "count": 717,
+      "count": 928,
       "findingKinds": [
         "suspicious_pass"
       ],

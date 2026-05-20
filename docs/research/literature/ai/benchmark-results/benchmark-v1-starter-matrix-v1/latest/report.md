@@ -27,49 +27,49 @@
 
 | Policy | Results |
 |---|---|
-| legal-heuristic-v0 | 14 win / 104 loss / 2 draw / 0 none |
-| legal-heuristic-v1 | 104 win / 14 loss / 2 draw / 0 none |
+| legal-heuristic-v0 | 17 win / 102 loss / 1 draw / 0 none |
+| legal-heuristic-v1 | 102 win / 17 loss / 1 draw / 0 none |
 
 ## Result Counts By Deck
 
 | Deck preset | Results |
 |---|---|
-| official-monsters-starter | 24 win / 23 loss / 1 draw / 0 none |
-| official-nilfgaard-starter | 22 win / 26 loss / 0 draw / 0 none |
-| official-northern-realms-starter | 22 win / 25 loss / 1 draw / 0 none |
-| official-scoiatael-starter | 18 win / 28 loss / 2 draw / 0 none |
-| official-skellige-starter | 32 win / 16 loss / 0 draw / 0 none |
+| official-monsters-starter | 22 win / 25 loss / 1 draw / 0 none |
+| official-nilfgaard-starter | 21 win / 27 loss / 0 draw / 0 none |
+| official-northern-realms-starter | 21 win / 27 loss / 0 draw / 0 none |
+| official-scoiatael-starter | 19 win / 28 loss / 1 draw / 0 none |
+| official-skellige-starter | 36 win / 12 loss / 0 draw / 0 none |
 
 ## Averages
 
-- steps: 33.417
-- commands: 33.417
-- legal moves: 7.593
+- steps: 33.683
+- commands: 33.683
+- legal moves: 7.594
 
 ## Matchups
 
 | Matchup | Matches | Avg steps | Avg commands | Avg legal moves |
 |---|---:|---:|---:|---:|
-| starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1 | 6 | 30.167 | 30.167 | 7.523 |
-| starter-monsters-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 28.833 | 28.833 | 7.905 |
-| starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 30.333 | 30.333 | 7.201 |
-| starter-monsters-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 27.167 | 27.167 | 7.749 |
-| starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1 | 6 | 30.667 | 30.667 | 7.967 |
-| starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1 | 6 | 33.667 | 33.667 | 6.84 |
-| starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 34.167 | 34.167 | 6.904 |
-| starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0 | 6 | 34.833 | 34.833 | 8.142 |
-| starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 37 | 37 | 6.722 |
+| starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1 | 6 | 30.333 | 30.333 | 7.589 |
+| starter-monsters-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 29 | 29 | 7.867 |
+| starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 29.5 | 29.5 | 7.352 |
+| starter-monsters-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 28.5 | 28.5 | 7.642 |
+| starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1 | 6 | 30.5 | 30.5 | 7.888 |
+| starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1 | 6 | 34 | 34 | 6.912 |
+| starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 34.167 | 34.167 | 6.936 |
+| starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0 | 6 | 36.667 | 36.667 | 8.067 |
+| starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 36.833 | 36.833 | 6.735 |
 | starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 32.833 | 32.833 | 7.117 |
-| starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1 | 6 | 35 | 35 | 8.108 |
-| starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1 | 6 | 43.833 | 43.833 | 7.472 |
-| starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1 | 6 | 38.5 | 38.5 | 7.999 |
-| starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 32.167 | 32.167 | 7.894 |
-| starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0 | 6 | 33 | 33 | 8.74 |
-| starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0 | 6 | 37 | 37 | 8.151 |
-| starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 33.833 | 33.833 | 7.912 |
-| starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 32.833 | 32.833 | 8.121 |
-| starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 32.5 | 32.5 | 6.566 |
-| starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 30 | 30 | 6.827 |
+| starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1 | 6 | 34.167 | 34.167 | 8.086 |
+| starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1 | 6 | 46 | 46 | 7.521 |
+| starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1 | 6 | 40 | 40 | 7.923 |
+| starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 33.833 | 33.833 | 7.647 |
+| starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0 | 6 | 31.5 | 31.5 | 8.831 |
+| starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0 | 6 | 37.667 | 37.667 | 8.086 |
+| starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0 | 6 | 33.667 | 33.667 | 7.91 |
+| starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 31.167 | 31.167 | 8.321 |
+| starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1 | 6 | 32.5 | 32.5 | 6.594 |
+| starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0 | 6 | 30.833 | 30.833 | 6.85 |
 
 ## Diagnostics
 

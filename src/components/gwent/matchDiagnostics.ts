@@ -407,6 +407,11 @@ const ROUND_INVESTMENT_SAFE_STRINGS = new Set([
   "round_budget_exceeded", "thin_future_hand", "poor_future_hand", "last_useful_unit",
   "round_three_no_budget", "exception_card_advantage", "exception_last_gem",
   "exception_leader", "exception_match_winning_play",
+  // cFp43: Round-one overinvestment guard reasons
+  "round_one_board_limit", "round_one_low_future_hand",
+  "exception_not_round_one", "exception_opponent_passed",
+  "exception_non_play_card", "exception_single_move_catch_up",
+  "exception_single_card_hand",
 ]);
 
 /**

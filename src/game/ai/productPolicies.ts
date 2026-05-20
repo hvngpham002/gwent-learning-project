@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp41.1 with pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, and recursive-scoring guard; cFp42 adds a round-resource casebook over the committed expanded artifacts without changing behavior.",
-    latestPhase: "cFp42",
-    latestSpecPath: "docs/spec/2026-05-20-cFp42-specs.md",
-    latestReportPath: "audit/reports/2026-05-20-cFp42-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp43 with pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), and round-one overinvestment guard (cFp43).",
+    latestPhase: "cFp43",
+    latestSpecPath: "docs/spec/2026-05-20-cFp43-specs.md",
+    latestReportPath: "audit/reports/2026-05-20-cFp43-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
@@ -100,6 +100,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "expanded 400-record starter-matrix discovery suite",
       "non-recursive alternative-line scoring guard (cFp41.1)",
       "round-resource exhaustion casebook (cFp42)",
+      "round-one overinvestment guard (cFp43)",
     ],
   },
 ];

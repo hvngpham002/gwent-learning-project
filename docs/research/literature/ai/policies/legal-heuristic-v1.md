@@ -19,12 +19,12 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
-phase remains cFp39: Medic No-Target Timing Guard. The latest benchmark
+phase remains cFp43: Round-One Overinvestment Guard. The latest benchmark
 artifact refresh is cFp41.2: Expanded Benchmark Artifact Refresh, which commits
 the expanded 400-record discovery artifacts after the cFp41.1 recursive-scoring
 guard. The latest analysis phase is cFp42: Round Resource Exhaustion Casebook,
 which classifies the top expanded failure-mining queue before any new behavior
-tuning. The behavior stack builds on the cFp27 through cFp38 tuning and
+tuning. The behavior stack builds on the cFp27 through cFp43 tuning and
 diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone

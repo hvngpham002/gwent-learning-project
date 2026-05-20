@@ -520,7 +520,11 @@ const buildPlayingPhaseTrace = (
     // If reason is still empty after cFp28/cFp36 checks, handle bestMove
     // (stop-loss, pass resource exhaustion, weathered-row, generic best move).
     if (!reason && bestMove) {
-      if (move?.kind === "pass" && roundInvestmentAnalysis && roundInvestmentAnalysis.stopLossRecommended) {
+      // cFp43: Round-one overinvestment pass reason
+      if (move?.kind === "pass" && roundInvestmentAnalysis && roundInvestmentAnalysis.roundOneOverinvestmentRecommended) {
+        reason = "round-one overinvestment — preserve future hand";
+        reasonKind = "policy-round-investment";
+      } else if (move?.kind === "pass" && roundInvestmentAnalysis && roundInvestmentAnalysis.stopLossRecommended) {
           const slReason = roundInvestmentAnalysis.stopLossReason;
           if (slReason === "upper_bound_impossible") {
             reason = "stop-loss — sacrifice round — catch-up impossible — preserve cards";
@@ -575,6 +579,20 @@ const buildPlayingPhaseTrace = (
           }
         }
       } else {
+        // cFp43: Round-one overinvestment exception for selected play_card
+        if (move?.kind === "play_card" && roundInvestmentAnalysis) {
+          const ovReason = roundInvestmentAnalysis.roundOneOverinvestmentReason;
+          if (ovReason === "exception_card_advantage") {
+            reason = "round-one overinvestment ignored — card advantage move";
+            reasonKind = "policy-round-investment";
+          } else if (ovReason === "exception_match_winning_play") {
+            reason = "round-one overinvestment ignored — match-winning play";
+            reasonKind = "policy-round-investment";
+          } else if (ovReason === "exception_single_move_catch_up") {
+            reason = "round-one overinvestment ignored — single-move catch-up";
+            reasonKind = "policy-round-investment";
+          }
+        }
         // cFp39: No-target Medic delay reason strings
         if (medicTimingAnalysis?.selectedNoTargetMedicDelayRisk) {
           if (medicTimingAnalysis.noTargetMedicDelayPenaltyApplied) {

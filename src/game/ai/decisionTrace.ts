@@ -501,6 +501,23 @@ export type AiDecisionRoundResourceExhaustionReason =
   | "exception_leader"
   | "exception_match_winning_play";
 
+// ---------------------------------------------------------------------------
+// cFp43: Round-one overinvestment diagnostics
+// ---------------------------------------------------------------------------
+
+export type AiDecisionRoundOneOverinvestmentReason =
+  | "none"
+  | "round_one_board_limit"
+  | "round_one_low_future_hand"
+  | "exception_not_round_one"
+  | "exception_last_gem"
+  | "exception_opponent_passed"
+  | "exception_non_play_card"
+  | "exception_card_advantage"
+  | "exception_match_winning_play"
+  | "exception_single_move_catch_up"
+  | "exception_single_card_hand";
+
 export interface AiDecisionRoundInvestmentAnalysis {
   readonly ownBoardUnitCount: number;
   readonly ownBoardHeroCount: number;
@@ -529,6 +546,10 @@ export interface AiDecisionRoundInvestmentAnalysis {
   readonly roundResourcePressure: AiDecisionRoundResourcePressure;
   readonly resourceExhaustionRecommended: boolean;
   readonly resourceExhaustionReason: AiDecisionRoundResourceExhaustionReason;
+  // cFp43: Round-one overinvestment guard diagnostics
+  readonly roundOneBoardAfterSelectedMove: number;
+  readonly roundOneOverinvestmentRecommended: boolean;
+  readonly roundOneOverinvestmentReason: AiDecisionRoundOneOverinvestmentReason;
 }
 
 // ---------------------------------------------------------------------------

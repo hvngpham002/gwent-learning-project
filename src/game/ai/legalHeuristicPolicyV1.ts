@@ -295,6 +295,48 @@ export const shouldApplyNoTargetMedicDelayPenalty = (
 };
 
 // ---------------------------------------------------------------------------
+// cFp43: Round-one overinvestment guard helpers
+// ---------------------------------------------------------------------------
+
+/** cFp43: Floor for board card count after selected move to trigger guard. */
+export const ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR = 7;
+
+/** cFp43: Cap for estimated hand count after selected move to trigger guard. */
+export const ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP = 4;
+
+/**
+ * cFp43: Returns the overinvestment reason for round-one spending guard.
+ */
+export const buildRoundOneOverinvestmentDecision = (
+  features: LegalHeuristicV1Features,
+  analysis: import("./decisionTrace").AiDecisionRoundInvestmentAnalysis,
+  selectedMove: PlayCardMove | UseLeaderMove | null,
+): import("./decisionTrace").AiDecisionRoundOneOverinvestmentReason => {
+  if (!selectedMove || selectedMove.kind !== "play_card") return "exception_non_play_card";
+  if (features.round !== 1) return "exception_not_round_one";
+  if (features.ownGems <= 1) return "exception_last_gem";
+  if (features.opponentPassed) return "exception_opponent_passed";
+  if (analysis.selectedMoveIsCardAdvantage) return "exception_card_advantage";
+  if (features.opponentGems <= 1) {
+    const tempo = estimateImmediateTempo(features, selectedMove);
+    if (features.ownScore + tempo >= minimumScoreToWinRound(features)) return "exception_match_winning_play";
+  }
+  if (features.scoreDelta < 0) {
+    const candidateTempo = estimateImmediateTempo(features, selectedMove);
+    const catchesUp = features.ownScore + candidateTempo >= minimumScoreToWinRound(features);
+    const overkill = catchesUp ? Math.max(0, features.ownScore + candidateTempo - minimumScoreToWinRound(features)) : Infinity;
+    if (catchesUp && overkill <= 3 && !analysis.selectedMoveWouldLeaveNoUnitTempoCard) return "exception_single_move_catch_up";
+  }
+  if (features.ownHandCount <= 1) return "exception_single_card_hand";
+  const boardAfter = analysis.ownBoardCardCount + 1;
+  const handAfter = analysis.estimatedHandCountAfterSelectedMove;
+  if (boardAfter >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR && handAfter <= ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP) {
+    return boardAfter >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR ? "round_one_board_limit" : "round_one_low_future_hand";
+  }
+  return "none";
+};
+
+// ---------------------------------------------------------------------------
 // cFp38: Weathered row low-tempo penalty helpers
 // ---------------------------------------------------------------------------
 
@@ -1789,8 +1831,53 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
       roundResourcePressure: "none" as const,
       resourceExhaustionRecommended: false,
       resourceExhaustionReason: "none" as const,
+      roundOneBoardAfterSelectedMove: ownBoardCardCount + 1,
+      roundOneOverinvestmentRecommended: false,
+      roundOneOverinvestmentReason: "none" as const,
     },
   );
+  // ------------------------------------------------------------------
+  // cFp43: Round-one overinvestment guard
+  // ------------------------------------------------------------------
+  const roundOneBoardAfterSelectedMove = selectedMove?.kind === "play_card"
+    ? ownBoardCardCount + 1
+    : ownBoardCardCount;
+  const roundOneOverinvestmentReason = buildRoundOneOverinvestmentDecision(
+    features,
+    {
+      ownBoardUnitCount,
+      ownBoardHeroCount,
+      ownBoardNonHeroUnitCount: ownBoardUnitCount,
+      ownBoardHornCount,
+      ownBoardCardCount,
+      positiveFutureUnitMoveCount,
+      positiveFutureNonUnitMoveCount,
+      futureRoundHandQuality,
+      currentRoundHandCount,
+      estimatedHandCountAfterSelectedMove,
+      selectedMoveSpendsHandCard,
+      selectedMoveIsCardAdvantage,
+      selectedMoveWouldLeaveNoPositiveUnitMove,
+      selectedMoveWouldLeaveNoUnitTempoCard,
+      nonEliminationRound,
+      scoreDelta: features.scoreDelta,
+      risk,
+      recommendation,
+      catchUpStatus,
+      stopLossRecommended,
+      stopLossReason,
+      roundResourceBudget,
+      roundResourcePressure: "none" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "none" as const,
+      roundOneBoardAfterSelectedMove: ownBoardCardCount + 1,
+      roundOneOverinvestmentRecommended: false,
+      roundOneOverinvestmentReason: "none" as const,
+    },
+    selectedMove,
+  );
+ const roundOneOverinvestmentRecommended = roundOneOverinvestmentReason !== "none" && roundOneOverinvestmentReason !== "exception_not_round_one";
+
   const resourceExhaustionDecision = buildRoundResourceExhaustionDecision(
     features,
     {
@@ -1819,6 +1906,9 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
       roundResourcePressure: "none" as const,
       resourceExhaustionRecommended: false,
       resourceExhaustionReason: "none" as const,
+      roundOneBoardAfterSelectedMove: ownBoardCardCount + 1,
+      roundOneOverinvestmentRecommended: false,
+      roundOneOverinvestmentReason: "none" as const,
     },
     selectedMove,
     futureRoundHandQuality,
@@ -1858,6 +1948,10 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
     roundResourcePressure,
     resourceExhaustionRecommended,
     resourceExhaustionReason: resourceExhaustionDecision,
+    // cFp43: Round-one overinvestment guard diagnostics
+    roundOneBoardAfterSelectedMove,
+    roundOneOverinvestmentRecommended,
+    roundOneOverinvestmentReason,
   };
 };
 
@@ -1986,6 +2080,15 @@ export const shouldPassForRoundInvestment = (
   // recommendation already says preserve or sacrifice. Block pass when
   // recommendation says continue, fight_last_gem, or single-move catch-up exists.
   if (shouldPassForResourceExhaustion(features, candidate, analysis, passDiags)) {
+    return true;
+  }
+
+  // cFp43: Round-one overinvestment guard
+  if (analysis.roundOneOverinvestmentRecommended && candidate.kind === "play_card") {
+    if (candidate.kind === "play_card" && features.opponentGems <= 1) {
+      const tempo = estimateImmediateTempo(features, candidate);
+      if (features.ownScore + tempo >= minimumScoreToWinRound(features)) return false;
+    }
     return true;
   }
 

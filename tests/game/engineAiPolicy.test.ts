@@ -1678,6 +1678,298 @@ it("explanation trace for allowed resource-gate pass shows preserve-hand reason"
         expect(trace.reasonKind).toBe("policy-round-investment");
       });
     });
+
+    describe("cFp43: round-one overinvestment guard", () => {
+      it("passes when board>=7 and hand<=4 after play in round 1", () => {
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, playCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 42 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("pass");
+      });
+
+      it("exception: non-play-card move is not blocked", () => {
+        // cFp43: the guard only blocks play_card, so non-play-card moves are
+        // unaffected by the overinvestment pass logic.
+        // Fixture: opponent passed + AI ahead -> pass is correct (not affected by cFp43).
+        const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 10 });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const moves = [passMove(), playMove(unit)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, unit],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          opponentPassed: true,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 42 },
+          },
+        });
+
+        // cFp43 does not affect pass decisions (it only blocks play_card when pass would be selected)
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("pass");
+      });
+
+      it("exception: last gem (ownGems<=1) bypasses guard", () => {
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 10 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, playCard],
+          ownGems: 1,
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 30, seat_b: 20 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+      });
+
+      it("exception: opponent passed bypasses guard", () => {
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, playCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          opponentPassed: true,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 42 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("pass");
+      });
+
+      it("exception: card advantage (Spy) bypasses guard", () => {
+        const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const moves = [passMove(), playMove(spy)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, spy],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "spy" }));
+      });
+
+      it("exception: match-winning play (opponent on last gem) bypasses guard", () => {
+        const strong = testCard({ cardId: "strong", sourceId: "test.strong", printedStrength: 15 });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const moves = [passMove(), playMove(strong)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, strong],
+          opponentGems: 1,
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 10 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "strong" }));
+      });
+
+      it("exception: single-move catch-up with small overkill (<=3) bypasses guard", () => {
+        const catchUpCard = testCard({ cardId: "catchup", sourceId: "test.catchup", printedStrength: 12 });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const moves = [passMove(), playMove(catchUpCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, catchUpCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 10, seat_b: 0 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "catchup" }));
+      });
+
+      it("exception: round 2 bypasses guard (cFp43 is round-1-only)", () => {
+        // cFp43 only applies in round 1. Round 2 should behave normally.
+        // Fixture: behind + positive play -> policy selects play.
+        const unit = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 12 });
+        const moves = [passMove(), playMove(unit)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit],
+          round: 2,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 0 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+      });
+
+      it("exception: single-card hand bypasses guard (nothing to preserve)", () => {
+        // cFp43 exception: single-card hand means nothing meaningful to preserve.
+        // Fixture: opponent passed + AI behind -> catch-up logic selects play.
+        const singleCard = testCard({ cardId: "single", sourceId: "test.single", printedStrength: 5 });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const moves = [passMove(), playMove(singleCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, singleCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          opponentPassed: true,
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 5, seat_b: 0 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+      });
+
+      it("explanation parity: pass trace shows round-one overinvestment reason", () => {
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, playCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 42 },
+          },
+        });
+
+        const { trace, move } = explainLegalHeuristicV1Decision(input);
+        expect(move?.kind).toBe("pass");
+        expect(trace.reason).toContain("round-one");
+      });
+
+      it("v0 unchanged: does not have overinvestment guard", () => {
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, playCard],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 0, seat_b: 42 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV0.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+      });
+    });
   });
 
   it("converts every supported legal move kind into the exact command payload", () => {

@@ -2424,6 +2424,61 @@ describe("cFp31: round-investment scan", () => {
     expect(exportData.hiddenInfoSafetyScan.passed).toBe(true);
     expect(exportData.hiddenInfoSafetyScan.issues).toHaveLength(0);
   });
+
+  // cFp43: Round-one overinvestment safe fields in diagnostics
+  it("cFp43 safe roundInvestmentAnalysis with overinvestment fields passes scan", () => {
+    const cFp43Safe = {
+      risk: "watch",
+      recommendation: "continue",
+      ownBoardCardCount: 5,
+      scoreDelta: 5,
+      roundResourceBudget: 4,
+      roundResourcePressure: "watch" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "none" as const,
+      roundOneBoardAfterSelectedMove: 7,
+      roundOneOverinvestmentRecommended: true,
+      roundOneOverinvestmentReason: "round_one_board_limit" as const,
+    };
+    const issues = scanRoundInvestmentAnalysis(cFp43Safe);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("cFp43 unsafe card-name string in roundOneOverinvestmentReason fails scan", () => {
+    const cFp43Unsafe = {
+      risk: "watch",
+      recommendation: "continue",
+      ownBoardCardCount: 5,
+      scoreDelta: 5,
+      roundResourceBudget: 4,
+      roundResourcePressure: "watch" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "none" as const,
+      roundOneBoardAfterSelectedMove: 7,
+      roundOneOverinvestmentRecommended: true,
+      roundOneOverinvestmentReason: "test.card-name" as const,
+    };
+    const issues = scanRoundInvestmentAnalysis(cFp43Unsafe);
+    expect(issues.length).toBeGreaterThan(0);
+  });
+
+  it("cFp43 unsafe source-id string in roundOneOverinvestmentReason fails scan", () => {
+    const cFp43Unsafe = {
+      risk: "watch",
+      recommendation: "continue",
+      ownBoardCardCount: 5,
+      scoreDelta: 5,
+      roundResourceBudget: 4,
+      roundResourcePressure: "watch" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "none" as const,
+      roundOneBoardAfterSelectedMove: 7,
+      roundOneOverinvestmentRecommended: true,
+      roundOneOverinvestmentReason: "neutral.some-card" as const,
+    };
+    const issues = scanRoundInvestmentAnalysis(cFp43Unsafe);
+    expect(issues.length).toBeGreaterThan(0);
+  });
 });
 
 describe("cFp33: scoia'tael first-turn analysis scan", () => {

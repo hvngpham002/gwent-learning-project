@@ -7,7 +7,7 @@
     "report.md",
     "tuning-queue.md"
   ],
-  "findingCount": 296,
+  "findingCount": 365,
   "generatedAt": "benchmark-v1-starter-matrix-v1:latest",
   "hiddenInfoSafetyNote": "Failure-mining artifacts contain public benchmark IDs, aggregate counts, rates, bucketed diagnostics, and generated messages only. Raw engine/debug payloads and private zone contents are intentionally omitted.",
   "recordCount": 120,
