@@ -1876,7 +1876,9 @@ export const buildLegalHeuristicV1RoundInvestmentAnalysis = (
     },
     selectedMove,
   );
- const roundOneOverinvestmentRecommended = roundOneOverinvestmentReason !== "none" && roundOneOverinvestmentReason !== "exception_not_round_one";
+ const roundOneOverinvestmentRecommended =
+    roundOneOverinvestmentReason === "round_one_board_limit" ||
+    roundOneOverinvestmentReason === "round_one_low_future_hand";
 
   const resourceExhaustionDecision = buildRoundResourceExhaustionDecision(
     features,

@@ -27,6 +27,7 @@ export type BenchmarkSuspiciousPassSuppressionCategory =
   | "sacrifice_round_pass"
   | "voluntary_safe_pass"
   | "stop_loss_pass"
+  | "round_one_overinvestment_pass"
   | "insufficient_context";
 
 export interface BenchmarkFailureFinding {
@@ -130,6 +131,7 @@ const SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES: readonly BenchmarkSuspiciousPassSu
   "sacrifice_round_pass",
   "voluntary_safe_pass",
   "stop_loss_pass",
+  "round_one_overinvestment_pass",
   "insufficient_context",
 ];
 const SEVERITY_RANK: Record<BenchmarkFailureFindingSeverity, number> = {
@@ -546,10 +548,11 @@ const getPassScoreDelta = (trace: AiDecisionTrace) =>
   trace.passAnalysis?.scoreDelta ?? trace.roundInvestmentAnalysis?.scoreDelta ?? trace.publicState?.scoreDelta ?? null;
 
 const classifySuppressedPassCandidate = (trace: AiDecisionTrace): BenchmarkSuspiciousPassSuppressionCategory => {
-  const recommendation = trace.roundInvestmentAnalysis?.recommendation;
-  if (trace.roundInvestmentAnalysis?.stopLossRecommended === true) return "stop_loss_pass";
-  if (recommendation === "preserve_future_hand") return "preserve_future_hand_pass";
-  if (recommendation === "sacrifice_round") return "sacrifice_round_pass";
+  const roundInvestment = trace.roundInvestmentAnalysis;
+  if (roundInvestment?.roundOneOverinvestmentRecommended === true) return "round_one_overinvestment_pass";
+  if (roundInvestment?.stopLossRecommended === true) return "stop_loss_pass";
+  if (roundInvestment?.recommendation === "preserve_future_hand") return "preserve_future_hand_pass";
+  if (roundInvestment?.recommendation === "sacrifice_round") return "sacrifice_round_pass";
 
   const scoreDelta = getPassScoreDelta(trace);
   const opponentPassed = getPassOpponentPassed(trace);
@@ -582,6 +585,7 @@ const analyzeSuspiciousPassTrace = (
   const recommendation = roundInvestment?.recommendation;
   const opponentPassed = getPassOpponentPassed(trace);
   const stopLossRecommended = roundInvestment?.stopLossRecommended === true;
+  const roundOneOverinvestmentRecommended = roundInvestment?.roundOneOverinvestmentRecommended === true;
   const recommendationContinue = recommendation === "continue";
   const singleMoveCatchUpIgnored =
     passAnalysis?.hasSingleMoveCatchUp === true && !isSafePassRecommendation(recommendation);
@@ -596,10 +600,12 @@ const analyzeSuspiciousPassTrace = (
     passAnalysis?.isVoluntarilySafe === false ||
     recommendationContinue ||
     roundInvestment?.stopLossRecommended === false ||
-    passAnalysis?.hasSingleMoveCatchUp === true;
+    passAnalysis?.hasSingleMoveCatchUp === true ||
+    roundOneOverinvestmentRecommended;
 
   const shouldEmit =
     !stopLossRecommended &&
+    !roundOneOverinvestmentRecommended &&
     !isSafePassRecommendation(recommendation) &&
     (recommendationContinue || singleMoveCatchUpIgnored || fightLastGemUpperBoundCanWin || activeVoluntaryUnsafe);
 

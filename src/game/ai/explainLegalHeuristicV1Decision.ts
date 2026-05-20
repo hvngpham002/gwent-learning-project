@@ -404,6 +404,24 @@ const buildPlayingPhaseTrace = (
   if (move?.kind === "pass" && roundDecision.shouldPass && roundDecision.analysis) {
     roundInvestmentAnalysis = roundDecision.analysis;
   }
+  // cFp43: When the selected move is `pass`, also evaluate the round-one
+  // overinvestment guard against the best play_card candidate. This allows
+  // the explanation to surface the overinvestment recommendation even when
+  // the policy selected pass for other reasons (e.g. can't catch up).
+  if (move?.kind === "pass" && features.playMoves.length > 0 && roundDecision.candidate && roundDecision.candidate.kind === "play_card") {
+    const playCandidate = roundDecision.candidate as PlayCardMove;
+    const playCandidateAnalysis = buildLegalHeuristicV1RoundInvestmentAnalysis(
+      features,
+      playCandidate,
+      handShapeAnalysis,
+    );
+    // Merge the guard recommendation from the play_card analysis
+    roundInvestmentAnalysis = {
+      ...roundInvestmentAnalysis,
+      roundOneOverinvestmentRecommended: playCandidateAnalysis.roundOneOverinvestmentRecommended,
+      roundOneOverinvestmentReason: playCandidateAnalysis.roundOneOverinvestmentReason,
+    };
+  }
 
   const publicState = buildAiDecisionPublicState(input);
   const passAnalysis = features.passMove
@@ -580,7 +598,10 @@ const buildPlayingPhaseTrace = (
         }
       } else {
         // cFp43: Round-one overinvestment exception for selected play_card
-        if (move?.kind === "play_card" && roundInvestmentAnalysis) {
+        // Only apply cFp43 exception reasons when the cFp43 guard itself triggered the pass decision.
+        // When roundOneOverinvestmentRecommended is false, the pass was caused by other logic
+        // (e.g. cFp36 resource exhaustion), so cFp43 exception reasons should not apply.
+        if (move?.kind === "play_card" && roundInvestmentAnalysis && roundInvestmentAnalysis.roundOneOverinvestmentRecommended) {
           const ovReason = roundInvestmentAnalysis.roundOneOverinvestmentReason;
           if (ovReason === "exception_card_advantage") {
             reason = "round-one overinvestment ignored — card advantage move";
@@ -591,10 +612,13 @@ const buildPlayingPhaseTrace = (
           } else if (ovReason === "exception_single_move_catch_up") {
             reason = "round-one overinvestment ignored — single-move catch-up";
             reasonKind = "policy-round-investment";
+          } else if (ovReason === "exception_single_card_hand") {
+            reason = "round-one overinvestment ignored — single-card hand";
+            reasonKind = "policy-round-investment";
           }
         }
-        // cFp39: No-target Medic delay reason strings
-        if (medicTimingAnalysis?.selectedNoTargetMedicDelayRisk) {
+        // cFp39: No-target Medic delay reason strings (only when cFp43 did not set a reason)
+        if (!reason && medicTimingAnalysis?.selectedNoTargetMedicDelayRisk) {
           if (medicTimingAnalysis.noTargetMedicDelayPenaltyApplied) {
             reason = `no-target Medic penalty applied — still best visible line (score ${bestMove.score})`;
           } else if (medicTimingAnalysis.betterNonMedicAlternativeAvailable) {
@@ -602,7 +626,7 @@ const buildPlayingPhaseTrace = (
           } else {
             reason = `no-target Medic accepted — no useful non-Medic line (score ${bestMove.score})`;
           }
-        } else if (weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
+        } else if (!reason && weatherPlacementAnalysis?.selectedMoveIntoWeatheredRow && weatherPlacementAnalysis.selectedMoveSide !== "none") {
           if (weatherPlacementAnalysis.weatheredLowTempoPenaltyApplied) {
             reason = `weathered row penalty applied — still best visible line (score ${bestMove.score})`;
           } else if (weatherPlacementAnalysis.betterNonWeatheredAlternativeAvailable === false) {
@@ -610,7 +634,7 @@ const buildPlayingPhaseTrace = (
           } else {
             reason = `weathered row penalty accepted — best useful move (score ${bestMove.score})`;
           }
-        } else {
+        } else if (!reason) {
           reason = `best useful move (score ${bestMove.score})`;
         }
       }

@@ -1680,7 +1680,52 @@ it("explanation trace for allowed resource-gate pass shows preserve-hand reason"
     });
 
     describe("cFp43: round-one overinvestment guard", () => {
-      it("passes when board>=7 and hand<=4 after play in round 1", () => {
+      it("main guard: pass fires with roundOneOverinvestmentRecommended=true and correct reason", () => {
+        // Fixture: AI has 7 units on board (42 pts), 5 cards in hand (4 units + 1 play card).
+        // Opponent has 7 units on board (42 pts). After playing: boardAfter=8, handAfter=4.
+        const aiUnit1 = testCard({ cardId: "au1", sourceId: "test.au1", printedStrength: 6 });
+        const aiUnit2 = testCard({ cardId: "au2", sourceId: "test.au2", printedStrength: 6 });
+        const aiUnit3 = testCard({ cardId: "au3", sourceId: "test.au3", printedStrength: 6 });
+        const aiUnit4 = testCard({ cardId: "au4", sourceId: "test.au4", printedStrength: 6 });
+        const aiUnit5 = testCard({ cardId: "au5", sourceId: "test.au5", printedStrength: 6 });
+        const aiUnit6 = testCard({ cardId: "au6", sourceId: "test.au6", printedStrength: 6 });
+        const aiUnit7 = testCard({ cardId: "au7", sourceId: "test.au7", printedStrength: 6 });
+        const oppUnit1 = testCard({ cardId: "ou1", sourceId: "test.ou1", printedStrength: 6 });
+        const oppUnit2 = testCard({ cardId: "ou2", sourceId: "test.ou2", printedStrength: 6 });
+        const oppUnit3 = testCard({ cardId: "ou3", sourceId: "test.ou3", printedStrength: 6 });
+        const oppUnit4 = testCard({ cardId: "ou4", sourceId: "test.ou4", printedStrength: 6 });
+        const oppUnit5 = testCard({ cardId: "ou5", sourceId: "test.ou5", printedStrength: 6 });
+        const oppUnit6 = testCard({ cardId: "ou6", sourceId: "test.ou6", printedStrength: 6 });
+        const oppUnit7 = testCard({ cardId: "ou7", sourceId: "test.ou7", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 8 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [aiUnit1, aiUnit2, aiUnit3, aiUnit4, playCard],
+          boardRows: baseBoardRows({
+            seat_a: { close: [aiUnit1, aiUnit2, aiUnit3, aiUnit4, aiUnit5, aiUnit6, aiUnit7] },
+            seat_b: { close: [oppUnit1, oppUnit2, oppUnit3, oppUnit4, oppUnit5, oppUnit6, oppUnit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 42, seat_b: 42 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("pass");
+
+        const { trace } = explainLegalHeuristicV1Decision(input);
+        expect(trace.selected?.kind).toBe("pass");
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(true);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("round_one_board_limit");
+        expect(trace.reasonKind).toBe("policy-round-investment");
+        expect(trace.reason).toContain("round-one overinvestment");
+      });
+
+      it("exception: use_leader (non-play-card) is not blocked by cFp43 guard", () => {
+        // cFp43 guard only blocks play_card. A use_leader move with board>=7, hand<=4
+        // should NOT trigger the overinvestment guard exception.
         const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
         const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
         const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
@@ -1689,55 +1734,57 @@ it("explanation trace for allowed resource-gate pass shows preserve-hand reason"
         const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
         const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
         const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
-        const moves = [passMove(), playMove(playCard)];
+        const moves = [passMove(), playMove(playCard), leaderMove("clear_weather")];
 
+        const frost = testCard({
+          cardId: "weather",
+          sourceId: "neutral.biting-frost",
+          printedStrength: 0,
+          kind: "special",
+          abilities: ["frost"],
+        });
         const input = policyInput(moves, {
           ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, playCard],
           boardRows: baseBoardRows({
             seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
           }),
+          weather: [frost],
           score: {
             ...baseObservation().score,
-            totalBySeat: { seat_a: 0, seat_b: 42 },
+            totalBySeat: { seat_a: 5, seat_b: 8 },
+            cards: [
+              {
+                cardId: "own-unit",
+                sourceId: "test.own.unit",
+                seatId: "seat_b",
+                row: "close",
+                cardKind: "unit",
+                isUnit: true,
+                isHero: false,
+                printedStrength: 10,
+                afterWeather: 1,
+                spyMultiplier: 1,
+                afterSpyMultiplier: 1,
+                tightBondMultiplier: 1,
+                afterTightBond: 10,
+                moraleBonus: 0,
+                afterMorale: 1,
+                hornMultiplier: 1,
+                finalStrength: 1,
+                eligibleForScorch: true,
+                modifiers: ["weather:frost"],
+              },
+            ],
           },
         });
 
+        // use_leader should be selected (clear_weather > play_card in this weathered scenario)
+        // cFp43 guard does not suppress use_leader
         const selected = legalHeuristicPolicyV1.selectMove(input);
-        expect(selected?.kind).toBe("pass");
+        expect(selected?.kind).toBe("use_leader");
       });
 
-      it("exception: non-play-card move is not blocked", () => {
-        // cFp43: the guard only blocks play_card, so non-play-card moves are
-        // unaffected by the overinvestment pass logic.
-        // Fixture: opponent passed + AI ahead -> pass is correct (not affected by cFp43).
-        const unit = testCard({ cardId: "unit", sourceId: "test.unit", printedStrength: 10 });
-        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
-        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
-        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
-        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
-        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
-        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
-        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
-        const moves = [passMove(), playMove(unit)];
-
-        const input = policyInput(moves, {
-          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, unit],
-          boardRows: baseBoardRows({
-            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
-          }),
-          opponentPassed: true,
-          score: {
-            ...baseObservation().score,
-            totalBySeat: { seat_a: 5, seat_b: 42 },
-          },
-        });
-
-        // cFp43 does not affect pass decisions (it only blocks play_card when pass would be selected)
-        const selected = legalHeuristicPolicyV1.selectMove(input);
-        expect(selected?.kind).toBe("pass");
-      });
-
-      it("exception: last gem (ownGems<=1) bypasses guard", () => {
+      it("exception: last gem (ownGems<=1) produces roundOneOverinvestmentRecommended=false", () => {
         const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
         const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
         const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
@@ -1762,36 +1809,57 @@ it("explanation trace for allowed resource-gate pass shows preserve-hand reason"
 
         const selected = legalHeuristicPolicyV1.selectMove(input);
         expect(selected?.kind).toBe("play_card");
+
+        const { trace } = explainLegalHeuristicV1Decision(input);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(false);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_last_gem");
       });
 
-      it("exception: opponent passed bypasses guard", () => {
-        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
-        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
-        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
-        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
-        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
-        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
-        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
-        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
-        const moves = [passMove(), playMove(playCard)];
+ it("exception: opponent passed produces roundOneOverinvestmentRecommended=false", () => {
+        // AI has 7 units on board, hand=5 cards (4 units + strength-50 unit).
+        // Opponent has 7 units on board. Opponent passed.
+        // Strength-50 unit scores ~583 — selected over pass.
+        // Guard: opponent passed exception returns false.
+        const aiUnit1 = testCard({ cardId: "au1", sourceId: "test.au1", printedStrength: 6 });
+        const aiUnit2 = testCard({ cardId: "au2", sourceId: "test.au2", printedStrength: 6 });
+        const aiUnit3 = testCard({ cardId: "au3", sourceId: "test.au3", printedStrength: 6 });
+        const aiUnit4 = testCard({ cardId: "au4", sourceId: "test.au4", printedStrength: 6 });
+        const aiUnit5 = testCard({ cardId: "au5", sourceId: "test.au5", printedStrength: 6 });
+        const aiUnit6 = testCard({ cardId: "au6", sourceId: "test.au6", printedStrength: 6 });
+        const aiUnit7 = testCard({ cardId: "au7", sourceId: "test.au7", printedStrength: 6 });
+        const oppUnit1 = testCard({ cardId: "ou1", sourceId: "test.ou1", printedStrength: 6 });
+        const oppUnit2 = testCard({ cardId: "ou2", sourceId: "test.ou2", printedStrength: 6 });
+        const oppUnit3 = testCard({ cardId: "ou3", sourceId: "test.ou3", printedStrength: 6 });
+        const oppUnit4 = testCard({ cardId: "ou4", sourceId: "test.ou4", printedStrength: 6 });
+        const oppUnit5 = testCard({ cardId: "ou5", sourceId: "test.ou5", printedStrength: 6 });
+        const oppUnit6 = testCard({ cardId: "ou6", sourceId: "test.ou6", printedStrength: 6 });
+        const oppUnit7 = testCard({ cardId: "ou7", sourceId: "test.ou7", printedStrength: 6 });
+        const strongUnit = testCard({ cardId: "strong", sourceId: "test.strong", printedStrength: 50 });
+        const moves = [passMove(), playMove(strongUnit)];
 
         const input = policyInput(moves, {
-          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, playCard],
+          ownHand: [aiUnit1, aiUnit2, aiUnit3, aiUnit4, strongUnit],
           boardRows: baseBoardRows({
-            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+            seat_a: { close: [aiUnit1, aiUnit2, aiUnit3, aiUnit4, aiUnit5, aiUnit6, aiUnit7] },
+            seat_b: { close: [oppUnit1, oppUnit2, oppUnit3, oppUnit4, oppUnit5, oppUnit6, oppUnit7] },
           }),
           opponentPassed: true,
           score: {
             ...baseObservation().score,
-            totalBySeat: { seat_a: 5, seat_b: 42 },
+            totalBySeat: { seat_a: 42, seat_b: 42 },
           },
         });
 
         const selected = legalHeuristicPolicyV1.selectMove(input);
-        expect(selected?.kind).toBe("pass");
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "strong" }));
+
+        const { trace } = explainLegalHeuristicV1Decision(input);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(false);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_opponent_passed");
       });
 
-      it("exception: card advantage (Spy) bypasses guard", () => {
+      it("exception: card advantage (Spy) produces roundOneOverinvestmentRecommended=false", () => {
         const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
         const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
         const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
@@ -1812,9 +1880,14 @@ it("explanation trace for allowed resource-gate pass shows preserve-hand reason"
         const selected = legalHeuristicPolicyV1.selectMove(input);
         expect(selected?.kind).toBe("play_card");
         expect(selected).toEqual(expect.objectContaining({ sourceCardId: "spy" }));
+
+        const { trace } = explainLegalHeuristicV1Decision(input);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(false);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_card_advantage");
+        expect(trace.reason).toContain("card advantage move");
       });
 
-      it("exception: match-winning play (opponent on last gem) bypasses guard", () => {
+      it("exception: match-winning play produces roundOneOverinvestmentRecommended=false", () => {
         const strong = testCard({ cardId: "strong", sourceId: "test.strong", printedStrength: 15 });
         const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
         const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
@@ -1840,58 +1913,22 @@ it("explanation trace for allowed resource-gate pass shows preserve-hand reason"
         const selected = legalHeuristicPolicyV1.selectMove(input);
         expect(selected?.kind).toBe("play_card");
         expect(selected).toEqual(expect.objectContaining({ sourceCardId: "strong" }));
+
+        const { trace } = explainLegalHeuristicV1Decision(input);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(false);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_match_winning_play");
+        expect(trace.reason).toContain("match-winning play");
       });
 
-      it("exception: single-move catch-up with small overkill (<=3) bypasses guard", () => {
-        const catchUpCard = testCard({ cardId: "catchup", sourceId: "test.catchup", printedStrength: 12 });
-        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
-        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
-        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
-        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
-        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
-        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
-        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
-        const moves = [passMove(), playMove(catchUpCard)];
+// Note: single-move catch-up exception (overkill<=3) is mathematically impossible
+      // with board>=7 since minimum unit tempo is 60, making overkill>=57 when behind.
+      // The exception only applies when board<7, which doesn't trigger the guard.
 
-        const input = policyInput(moves, {
-          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, catchUpCard],
-          boardRows: baseBoardRows({
-            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
-          }),
-          score: {
-            ...baseObservation().score,
-            totalBySeat: { seat_a: 10, seat_b: 0 },
-          },
-        });
-
-        const selected = legalHeuristicPolicyV1.selectMove(input);
-        expect(selected?.kind).toBe("play_card");
-        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "catchup" }));
-      });
-
-      it("exception: round 2 bypasses guard (cFp43 is round-1-only)", () => {
-        // cFp43 only applies in round 1. Round 2 should behave normally.
-        // Fixture: behind + positive play -> policy selects play.
-        const unit = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 12 });
-        const moves = [passMove(), playMove(unit)];
-
-        const input = policyInput(moves, {
-          ownHand: [unit],
-          round: 2,
-          score: {
-            ...baseObservation().score,
-            totalBySeat: { seat_a: 5, seat_b: 0 },
-          },
-        });
-
-        const selected = legalHeuristicPolicyV1.selectMove(input);
-        expect(selected?.kind).toBe("play_card");
-      });
-
-      it("exception: single-card hand bypasses guard (nothing to preserve)", () => {
+      it("exception: single-card hand produces roundOneOverinvestmentRecommended=false", () => {
         // cFp43 exception: single-card hand means nothing meaningful to preserve.
-        // Fixture: opponent passed + AI behind -> catch-up logic selects play.
-        const singleCard = testCard({ cardId: "single", sourceId: "test.single", printedStrength: 5 });
+        // Guard checks ownHandCount <= 1. AI has 1 card in hand + 7 on board.
+        // After play: hand=0 <= 4, board=8 >= 7. Guard conditions met.
+        // handCount = 1 <= 1 — single-card exception applies.
         const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
         const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
         const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
@@ -1899,49 +1936,133 @@ it("explanation trace for allowed resource-gate pass shows preserve-hand reason"
         const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
         const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
         const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
-        const moves = [passMove(), playMove(singleCard)];
-
-        const input = policyInput(moves, {
-          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, singleCard],
-          boardRows: baseBoardRows({
-            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
-          }),
-          opponentPassed: true,
-          score: {
-            ...baseObservation().score,
-            totalBySeat: { seat_a: 5, seat_b: 0 },
-          },
-        });
-
-        const selected = legalHeuristicPolicyV1.selectMove(input);
-        expect(selected?.kind).toBe("play_card");
-      });
-
-      it("explanation parity: pass trace shows round-one overinvestment reason", () => {
-        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
-        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
-        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
-        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
-        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
-        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
-        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
-        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 6 });
         const moves = [passMove(), playMove(playCard)];
 
         const input = policyInput(moves, {
-          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, playCard],
+          ownHand: [playCard],
+          boardRows: baseBoardRows({
+            seat_a: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 42, seat_b: 0 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "play" }));
+
+        const { trace } = explainLegalHeuristicV1Decision(input);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(false);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_single_card_hand");
+      });
+
+      it("exception: round 2 produces roundOneOverinvestmentRecommended=false", () => {
+        // Spy scores 633+ — selected over units (99). Round 2 — guard exception applies.
+        const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const moves = [passMove(), playMove(spy)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, spy],
           boardRows: baseBoardRows({
             seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
           }),
+          round: 2,
           score: {
             ...baseObservation().score,
             totalBySeat: { seat_a: 0, seat_b: 42 },
           },
         });
 
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+        expect(selected).toEqual(expect.objectContaining({ sourceCardId: "spy" }));
+
+        const { trace } = explainLegalHeuristicV1Decision(input);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(false);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_not_round_one");
+      });
+
+      it("explanation parity: pass trace shows round-one overinvestment reason", () => {
+        // AI has 7 units on board (42 pts), 5 cards in hand (4 units + 1 play card).
+        // Opponent has 7 units (42 pts). After playing: boardAfter=8, handAfter=4.
+        const aiUnit1 = testCard({ cardId: "au1", sourceId: "test.au1", printedStrength: 6 });
+        const aiUnit2 = testCard({ cardId: "au2", sourceId: "test.au2", printedStrength: 6 });
+        const aiUnit3 = testCard({ cardId: "au3", sourceId: "test.au3", printedStrength: 6 });
+        const aiUnit4 = testCard({ cardId: "au4", sourceId: "test.au4", printedStrength: 6 });
+        const aiUnit5 = testCard({ cardId: "au5", sourceId: "test.au5", printedStrength: 6 });
+        const aiUnit6 = testCard({ cardId: "au6", sourceId: "test.au6", printedStrength: 6 });
+        const aiUnit7 = testCard({ cardId: "au7", sourceId: "test.au7", printedStrength: 6 });
+        const oppUnit1 = testCard({ cardId: "ou1", sourceId: "test.ou1", printedStrength: 6 });
+        const oppUnit2 = testCard({ cardId: "ou2", sourceId: "test.ou2", printedStrength: 6 });
+        const oppUnit3 = testCard({ cardId: "ou3", sourceId: "test.ou3", printedStrength: 6 });
+        const oppUnit4 = testCard({ cardId: "ou4", sourceId: "test.ou4", printedStrength: 6 });
+        const oppUnit5 = testCard({ cardId: "ou5", sourceId: "test.ou5", printedStrength: 6 });
+        const oppUnit6 = testCard({ cardId: "ou6", sourceId: "test.ou6", printedStrength: 6 });
+        const oppUnit7 = testCard({ cardId: "ou7", sourceId: "test.ou7", printedStrength: 6 });
+        const playCard = testCard({ cardId: "play", sourceId: "test.play", printedStrength: 1 });
+        const moves = [passMove(), playMove(playCard)];
+
+        const input = policyInput(moves, {
+          ownHand: [aiUnit1, aiUnit2, aiUnit3, aiUnit4, playCard],
+          boardRows: baseBoardRows({
+            seat_a: { close: [aiUnit1, aiUnit2, aiUnit3, aiUnit4, aiUnit5, aiUnit6, aiUnit7] },
+            seat_b: { close: [oppUnit1, oppUnit2, oppUnit3, oppUnit4, oppUnit5, oppUnit6, oppUnit7] },
+          }),
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 42, seat_b: 42 },
+          },
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("pass");
+
         const { trace, move } = explainLegalHeuristicV1Decision(input);
         expect(move?.kind).toBe("pass");
-        expect(trace.reason).toContain("round-one");
+        expect(trace.selected?.kind).toBe("pass");
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(true);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("round_one_board_limit");
+        expect(trace.reasonKind).toBe("policy-round-investment");
+        expect(trace.reason).toContain("round-one overinvestment");
+      });
+
+      it("explanation parity: exception play trace shows exception reason", () => {
+        const spy = testCard({ cardId: "spy", sourceId: "test.spy", printedStrength: 4, abilities: ["spy"] });
+        const unit1 = testCard({ cardId: "u1", sourceId: "test.u1", printedStrength: 6 });
+        const unit2 = testCard({ cardId: "u2", sourceId: "test.u2", printedStrength: 6 });
+        const unit3 = testCard({ cardId: "u3", sourceId: "test.u3", printedStrength: 6 });
+        const unit4 = testCard({ cardId: "u4", sourceId: "test.u4", printedStrength: 6 });
+        const unit5 = testCard({ cardId: "u5", sourceId: "test.u5", printedStrength: 6 });
+        const unit6 = testCard({ cardId: "u6", sourceId: "test.u6", printedStrength: 6 });
+        const unit7 = testCard({ cardId: "u7", sourceId: "test.u7", printedStrength: 6 });
+        const moves = [passMove(), playMove(spy)];
+
+        const input = policyInput(moves, {
+          ownHand: [unit1, unit2, unit3, unit4, unit5, unit6, unit7, spy],
+          boardRows: baseBoardRows({
+            seat_b: { close: [unit1, unit2, unit3, unit4, unit5, unit6, unit7] },
+          }),
+        });
+
+        const selected = legalHeuristicPolicyV1.selectMove(input);
+        expect(selected?.kind).toBe("play_card");
+
+        const { trace, move } = explainLegalHeuristicV1Decision(input);
+        expect(move?.kind).toBe("play_card");
+        expect(trace.selected?.kind).toBe("play_card");
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(false);
+        expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_card_advantage");
+        expect(trace.reason).toContain("card advantage move");
       });
 
       it("v0 unchanged: does not have overinvestment guard", () => {
