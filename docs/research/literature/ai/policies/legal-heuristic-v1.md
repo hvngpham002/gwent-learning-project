@@ -19,13 +19,12 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
-phase remains cFp43: Round-One Overinvestment Guard. The latest benchmark
-artifact refresh is cFp41.2: Expanded Benchmark Artifact Refresh, which commits
-the expanded 400-record discovery artifacts after the cFp41.1 recursive-scoring
-guard. The latest analysis phase is cFp42: Round Resource Exhaustion Casebook,
-which classifies the top expanded failure-mining queue before any new behavior
-tuning. The behavior stack builds on the cFp27 through cFp43 tuning and
-diagnostics chain:
+phase is cFp43: Round-One Overinvestment Guard. The latest committed benchmark
+artifact refresh is the cFp43 post-implementation run for the current
+120-record and expanded 400-record starter matrices. The latest analysis phase
+is cFp42: Round Resource Exhaustion Casebook, which classified the top expanded
+failure-mining queue before cFp43 behavior tuning. The behavior stack builds on
+the cFp27 through cFp43 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -55,25 +54,26 @@ diagnostics chain:
   round-investment analysis prevents timing penalty from distorting non-Medic
   decisions.
 
-Current cFp41.2 benchmark totals:
+Current cFp43 benchmark totals:
 
 - `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
-- `benchmark-v1-starter-matrix-v1`: 104 win / 14 loss / 2 draw vs v0.
-- Current 120-record failure mining: 296 findings (`suspicious_pass=225`,
-  `round_three_low_resource=34`, `weathered_row_play=22`,
-  `round_one_overinvestment=9`, `medic_timing_risk=3`).
+- `benchmark-v1-starter-matrix-v1`: 102 win / 17 loss / 1 draw vs v0.
+- Current 120-record failure mining: 300 findings (`suspicious_pass=234`,
+  `round_three_low_resource=36`, `weathered_row_play=18`,
+  `round_one_overinvestment=6`, `medic_timing_risk=0`), with
+  `round_one_overinvestment_pass=81` suppressed as intentional cFp43 passes.
 - `benchmark-v1-starter-matrix-expanded-v1`: 400 completed / 0 policy failures /
-  0 engine errors, with v1 recording 310 wins, 85 losses, and 5 draws against
+  0 engine errors, with v1 recording 305 wins, 90 losses, and 5 draws against
   v0.
-- Expanded failure mining: 964 findings
-  (`suspicious_pass=717`, `round_three_low_resource=97`,
-  `weathered_row_play=86`, `round_one_overinvestment=51`,
-  `medic_timing_risk=11`), with 298 broad suspicious-pass candidates suppressed
-  as analyzer noise.
+- Expanded failure mining: 878 findings
+  (`suspicious_pass=671`, `round_three_low_resource=86`,
+  `weathered_row_play=86`, `round_one_overinvestment=26`,
+  `medic_timing_risk=7`), with `round_one_overinvestment_pass=290` suppressed
+  as intentional cFp43 passes.
 
-The next active behavior handoff should target deterministic round-one
-overinvestment loss fixtures from the cFp42 casebook rather than broad
-suspicious-pass or broad resource-exhaustion tuning.
+The next behavior decision should monitor the remaining round-one
+overinvestment and suspicious-pass signals through the next benchmark refresh
+cycle rather than immediately broadening the guard beyond round 1.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -263,9 +263,10 @@ broad-pass candidates recorded only as aggregate analyzer-noise counts.
 
 The cFp35 tuning queue ranked `round_resource_exhaustion`,
 `weathered_row_low_tempo`, `medic_no_target_timing`, `skellige_matchup_skew`,
-and `remaining_suspicious_pass`. cFp36/cFp37 completed the
-round-resource/pass-priority work, and cFp38 completed weathered-row low-tempo
-tuning, so the next active behavior handoff is `cFp39` Medic no-target timing.
+and `remaining_suspicious_pass`. That queue has since been partially worked
+through by cFp36 through cFp43: round-resource/pass-priority, weathered-row
+low-tempo, Medic timing, expanded failure-mining, the cFp42 casebook, and the
+cFp43 round-one overinvestment guard are all now recorded as completed phases.
 `leader_underuse` remains deferred until a safe public leader-availability
 summary exists. H100/Slurm is still not involved; the command is CPU/Node
 benchmark infrastructure.
@@ -1029,3 +1030,33 @@ broad suspicious-pass rewrite and not a broad resource-exhaustion constant
 tuning pass. cFp42 does not change `legal-heuristic-v1` behavior, engine rules,
 legal moves, benchmark suite shape, UI behavior, catalog data, deck presets,
 ratings, search, training, or product difficulty.
+
+### Round-One Overinvestment Guard (cFp43)
+
+cFp43 adds a narrow round-1-only overinvestment guard to
+`legal-heuristic-v1`. The guard can choose pass instead of another
+hand-spending `play_card` when the selected play would push the AI to at least
+7 own board cards in round 1 while leaving 4 or fewer hand cards for later
+rounds. It does not change engine rules, legal moves, v0 behavior, UI behavior,
+catalog data, deck presets, benchmark suite shape, ratings, search, training, or
+product difficulty.
+
+The guard preserves tactical exceptions for last-gem fights, opponent-passed
+states, non-play-card/free actions such as leader use, card-advantage plays,
+match-winning plays, cheap single-move catch-up, and single-card hands.
+Diagnostics add `roundOneBoardAfterSelectedMove`,
+`roundOneOverinvestmentRecommended`, and `roundOneOverinvestmentReason` to
+`AiDecisionRoundInvestmentAnalysis`. `roundOneOverinvestmentRecommended` is
+true only for actual guard-pass recommendations; exception reasons stay false.
+The trace enum still reserves `round_one_low_future_hand`, but the current
+helper emits `round_one_board_limit` for the active geometry because the guard
+requires both board and hand thresholds simultaneously.
+
+cFp43 also updates failure mining with the
+`round_one_overinvestment_pass` suppression category so intentional cFp43 passes
+do not inflate the remaining `suspicious_pass` queue. Post-cFp43 current
+failure mining reports 300 findings, and expanded failure mining reports 878
+findings. The expanded round-one overinvestment signal drops from 51 to 26; the
+starter-matrix strength regresses from the cFp41.2 expanded artifact
+(`310/85/5`) to `305/90/5`, so future changes should watch whether the reduced
+failure-mining signal is worth that tradeoff.
