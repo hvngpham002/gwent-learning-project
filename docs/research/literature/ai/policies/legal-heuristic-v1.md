@@ -22,7 +22,9 @@ The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase remains cFp39: Medic No-Target Timing Guard. The latest benchmark
 artifact refresh is cFp41.2: Expanded Benchmark Artifact Refresh, which commits
 the expanded 400-record discovery artifacts after the cFp41.1 recursive-scoring
-guard. The behavior stack builds on the cFp27 through cFp38 tuning and
+guard. The latest analysis phase is cFp42: Round Resource Exhaustion Casebook,
+which classifies the top expanded failure-mining queue before any new behavior
+tuning. The behavior stack builds on the cFp27 through cFp38 tuning and
 diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
@@ -69,8 +71,9 @@ Current cFp41.2 benchmark totals:
   `medic_timing_risk=11`), with 298 broad suspicious-pass candidates suppressed
   as analyzer noise.
 
-The next active behavior handoff should be scoped from a larger automated
-playtest volume rather than one-off manual logs.
+The next active behavior handoff should target deterministic round-one
+overinvestment loss fixtures from the cFp42 casebook rather than broad
+suspicious-pass or broad resource-exhaustion tuning.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -1000,3 +1003,29 @@ catalog data, deck presets, benchmark suite shape, ratings, search, training, or
 product difficulty. It updates committed artifacts plus AI Lab/product metadata
 so `/ai-lab` shows the exact expanded result instead of the earlier cFp41.1
 guard-only status string.
+
+### Round Resource Exhaustion Casebook (cFp42)
+
+cFp42 reads the committed cFp41.2 public expanded artifacts and creates the
+decision note:
+
+```text
+docs/research/literature/ai/decisions/2026-05-20-cfp42-round-resource-casebook.md
+```
+
+The casebook splits the broad `round_resource_exhaustion` queue into two
+sub-signals:
+
+- `round_one_overinvestment`: 51 findings, 38 warning / 13 watch, and
+  48 loss / 3 draw / 0 win. This is the behavior-actionable signal because it
+  points at early round-1 hand depletion before later match loss.
+- `round_three_low_resource`: 97 findings, 12 warning / 85 watch, and
+  81 win / 12 loss / 4 draw. This is mostly a watch/noise signal because all 97
+  selected `pass`, most had no positive unit tempo available, and the finding
+  appears mostly in v1 wins.
+
+The decision is to use cFp43 for narrow round-one overinvestment fixtures, not a
+broad suspicious-pass rewrite and not a broad resource-exhaustion constant
+tuning pass. cFp42 does not change `legal-heuristic-v1` behavior, engine rules,
+legal moves, benchmark suite shape, UI behavior, catalog data, deck presets,
+ratings, search, training, or product difficulty.

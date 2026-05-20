@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp41.2",
-        latestSpecPath: "docs/spec/2026-05-20-cFp41.2-specs.md",
-        latestReportPath: "audit/reports/2026-05-20-cFp41.2-report.md",
+        latestPhase: "cFp42",
+        latestSpecPath: "docs/spec/2026-05-20-cFp42-specs.md",
+        latestReportPath: "audit/reports/2026-05-20-cFp42-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp41.2",
-        latestSpecPath: "docs/spec/2026-05-20-cFp41.2-specs.md",
-        latestReportPath: "audit/reports/2026-05-20-cFp41.2-report.md",
+        latestPhase: "cFp42",
+        latestSpecPath: "docs/spec/2026-05-20-cFp42-specs.md",
+        latestReportPath: "audit/reports/2026-05-20-cFp42-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -103,6 +103,7 @@ describe("authentic AI Lab view model", () => {
         "weathered-row low-tempo scoring guard",
         "expanded 400-record starter-matrix discovery suite",
         "non-recursive alternative-line scoring guard (cFp41.1)",
+        "round-resource exhaustion casebook (cFp42)",
       ]),
     );
   });
