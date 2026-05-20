@@ -166,6 +166,98 @@ PROFILES: dict[str, tuple[BenchmarkStep, ...]] = {
             ),
         ),
     ),
+    "v1-post-cfp43": (
+        BenchmarkStep(
+            name="v1 smoke comparison",
+            command="npm run benchmark:v1-smoke",
+            artifacts=(f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-smoke-v1/latest",),
+        ),
+        BenchmarkStep(
+            name="v1 starter matrix",
+            command="npm run benchmark:v1-starter-matrix",
+            artifacts=(f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-v1/latest",),
+        ),
+        BenchmarkStep(
+            name="v1 failure mining",
+            command="npm run benchmark:v1-failure-mining",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-v1/failure-mining/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded starter matrix",
+            command="npm run benchmark:v1-starter-matrix-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded failure mining",
+            command="npm run benchmark:v1-failure-mining-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest",
+            ),
+        ),
+    ),
+    "v1-post-cfp43-repeat": (
+        BenchmarkStep(
+            name="v1 smoke comparison",
+            command="npm run benchmark:v1-smoke",
+            artifacts=(f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-smoke-v1/latest",),
+        ),
+        BenchmarkStep(
+            name="v1 starter matrix",
+            command="npm run benchmark:v1-starter-matrix",
+            artifacts=(f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-v1/latest",),
+        ),
+        BenchmarkStep(
+            name="v1 failure mining",
+            command="npm run benchmark:v1-failure-mining",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-v1/failure-mining/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded starter matrix",
+            command="npm run benchmark:v1-starter-matrix-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded failure mining",
+            command="npm run benchmark:v1-failure-mining-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 starter matrix repeat",
+            command="npm run benchmark:v1-starter-matrix",
+            artifacts=(f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-v1/latest",),
+        ),
+        BenchmarkStep(
+            name="v1 failure mining repeat",
+            command="npm run benchmark:v1-failure-mining",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-v1/failure-mining/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded starter matrix repeat",
+            command="npm run benchmark:v1-starter-matrix-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 expanded failure mining repeat",
+            command="npm run benchmark:v1-failure-mining-expanded",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest",
+            ),
+        ),
+    ),
     "all-current": (
         BenchmarkStep(
             name="baseline smoke",

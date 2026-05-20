@@ -39,13 +39,30 @@ That profile writes a 400-record starter matrix and matching
 failure-mining artifacts for `benchmark-v1-starter-matrix-expanded-v1`.
 Use it for discovery; keep `v1-current` for quick regression.
 
-Latest committed expanded artifact refresh (cFp41.2):
+Run the post-cFp43 observation bundle when checking whether the current and
+expanded artifacts still support another tuning phase:
+
+```bash
+npm run benchmark:long -- --profile v1-post-cfp43
+```
+
+That profile runs the current v1 smoke, current starter matrix, current failure
+mining, expanded starter matrix, and expanded failure mining in one terminal
+session. Use the repeat variant when you want an immediate deterministic
+rerun of both current and expanded artifacts:
+
+```bash
+npm run benchmark:long -- --profile v1-post-cfp43-repeat
+```
+
+Latest committed expanded artifact refresh (cFp43):
 
 - starter matrix: 400 completed / 0 policy failures / 0 engine errors;
-  `legal-heuristic-v1` records 310 wins, 85 losses, and 5 draws against
+  `legal-heuristic-v1` records 305 wins, 90 losses, and 5 draws against
   `legal-heuristic-v0`;
-- failure mining: 964 findings, with `round_resource_exhaustion` ranked first
-  in the generated tuning queue.
+- failure mining: 878 findings, with `suspicious_pass=671`,
+  `round_three_low_resource=86`, `weathered_row_play=86`,
+  `round_one_overinvestment=26`, and `medic_timing_risk=7`.
 
 The [`alive-progress`](https://github.com/rsalmei/alive-progress)
 package is optional. Without it, the runner falls back to plain step
