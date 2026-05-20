@@ -1069,7 +1069,7 @@ benchmark artifacts and the expanded failure-mining findings to decide whether
 the remaining `round_one_overinvestment` cases justify another behavior patch
 or whether v1 heuristic tuning should pause for ratings/search.
 
-Post-cFp43 findings:
+Post-cFp43 findings (parsed from committed `findings.jsonl`):
 - Current (120 records): 300 findings
   (`suspicious_pass=234`, `round_three_low_resource=36`,
   `weathered_row_play=18`, `round_one_overinvestment=6`, `medic_timing_risk=0`),
@@ -1079,12 +1079,24 @@ Post-cFp43 findings:
   `round_one_overinvestment=26`, `medic_timing_risk=7`),
   with `round_one_overinvestment_pass=290` suppressed.
 
-Key findings:
-- The remaining 26 expanded `round_one_overinvestment` cases are 100% loss-correlated,
-  meaning the cFp43 guard still has coverage gaps in its geometry (board >= 7, hand <= 4).
-- `round_three_low_resource` (86) is watch/noise — all cases have zero positive unit tempo.
-- `weathered_row_play` (86) is stable since cFp41.2; cFp38 guard is in place.
-- `medic_timing_risk` (7) is low confidence; cFp39's -260 delay covers most.
+Key findings (exact JSONL values):
+- Expanded `round_one_overinvestment`: 26 total, 25 loss / 1 draw.
+  Faction split: nilfgaard=10, northern_realms=11, scoiatael=3, skellige=2, monsters=0.
+  Loss rate: 25/26 ≈ 96.2%. The cFp43 guard has coverage gaps in its geometry
+  (board >= 7, hand <= 4).
+- Expanded `round_three_low_resource`: 86 total, 75 win / 6 loss / 5 draw.
+  84/86 have positiveUnitMoveCount=0, 2 have positiveUnitMoveCount=1.
+  Win rate: 75/86 ≈ 87.2%. Watch/noise — not actionable.
+- Current `round_three_low_resource`: 36 total, 32 win / 4 loss.
+  35/36 have positiveUnitMoveCount=0, 1 has positiveUnitMoveCount=1.
+  Win rate: 32/36 ≈ 88.9%. Watch/noise — not actionable.
+- Expanded `weathered_row_play`: 86 total, faction split nilfgaard=40,
+  northern_realms=22, monsters=19, skellige=3, scoiatael=2. Stable since cFp41.2.
+  cFp38 guard is in place.
+- Expanded `medic_timing_risk`: 7 total. 1 is true no-target Medic
+  (ownDiscardReviveCandidateCount=0); 6 have revive candidates.
+  Faction split: nilfgaard=3, scoiatael=2, northern_realms=2.
+  cFp39's -260 delay covers the no-target case. Low confidence signal.
 - Broad `suspicious_pass` (671) is too large for direct tuning and needs a classifier pass.
 
 Recommendation: The next behavior spec should target the remaining
