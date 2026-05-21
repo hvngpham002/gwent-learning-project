@@ -455,6 +455,8 @@ test("cCp32.1 Scoia'tael chooses first turn after mulligan", async ({ page }) =>
   await expect(page.getByTestId("authentic-mulligan-screen")).toBeVisible();
   await expect(page.locator(".authentic-mulligan__seed")).toContainText(/Seed ccp321-scoiatael-e2e/i);
   await page.getByTestId("authentic-confirm-mulligan").click();
+  await expect(page.getByTestId("authentic-start-match-confirmation")).toBeVisible({ timeout: 10000 });
+  await page.getByTestId("authentic-start-match-confirm").click();
 
   const firstTurnPrompt = page.getByTestId("authentic-prompt");
   await expect(firstTurnPrompt).toBeVisible({ timeout: 15000 });
@@ -561,7 +563,7 @@ test("authentic AI Lab route mounts a read-only benchmark dashboard (cEp17)", as
 
   await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
   await expect(page.getByRole("heading", { name: "AI Lab" })).toBeVisible();
-  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-smoke-v1");
+  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-v1-starter-matrix-expanded-v1");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-heuristic-v0");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-heuristic-v1");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("implemented · experimental/playtest");
@@ -620,7 +622,7 @@ test("pre-game opens the AI Lab through the setup tool cluster (cEp17)", async (
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
   await page.getByTestId("authentic-pregame-ai-lab").click();
   await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
-  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-smoke-v1");
+  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-v1-starter-matrix-expanded-v1");
   await expect(page.getByTestId("engine-shell")).toHaveCount(0);
 });
 
