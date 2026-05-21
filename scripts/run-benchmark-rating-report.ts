@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, relative, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
@@ -49,25 +49,13 @@ const readOptionValue = (args: readonly string[], index: number, flag: string) =
 };
 
 const toRepoRelativePath = (absolutePath: string): string => {
-  try {
-    const relativePath = relative(rootDir, absolutePath);
-    // If relative path starts with ".." or is absolute, it's outside repo root
-    if (relativePath.startsWith("..") || resolve(relativePath).startsWith(rootDir.replace(/\\/g, "/"))) {
-      // Check more carefully: if the resolved relative path doesn't start with rootDir
-      const resolvedRelative = resolve(rootDir, relativePath);
-      if (!resolvedRelative.startsWith(rootDir)) {
-        throw new CliUsageError(
-          `--records path resolves outside the repository root. Path must be inside the project: ${relativePath}`
-        );
-      }
-    }
-    // Normalize to forward slashes for cross-platform determinism
-    return relativePath.replace(/\\/g, "/");
-  } catch {
+  const relativePath = relative(rootDir, absolutePath);
+  if (relativePath === "" || relativePath.startsWith("..") || isAbsolute(relativePath)) {
     throw new CliUsageError(
       `--records path resolves outside the repository root and cannot produce a portable path.`
     );
   }
+  return relativePath.replace(/\\/g, "/");
 };
 
 const parseArgs = (args: readonly string[]): CliOptions => {
@@ -133,8 +121,7 @@ const run = async () => {
   const options = parseArgs(process.argv.slice(2));
 
   console.log(`reading records: ${options.sourceRecordsPath}`);
-  // Resolve the actual file path from repo-relative path for reading
-  const actualRecordsPath = resolve(rootDir, options.sourceRecordsPath.replace(/\//g, "\\") as string);
+  const actualRecordsPath = resolve(rootDir, options.sourceRecordsPath);
   const records = await readRecords(actualRecordsPath);
   console.log(`loaded ${records.length} records for suite ${options.suiteId}`);
 

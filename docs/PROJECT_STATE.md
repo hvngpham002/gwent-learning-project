@@ -457,26 +457,25 @@ Latest Engine Rule implementation:
 ## Next Recommended Step
 
 Cluster F has a playable product-facing `legal-heuristic-v1`, hidden-info-safe
-decision diagnostics, deterministic benchmark artifacts, and calibrated
-failure-mining artifacts for the v1 starter matrix. Batch A and Batch B remain
-the controlling research notes for search and evaluation-ladder work:
+decision diagnostics, deterministic benchmark artifacts, calibrated
+failure-mining artifacts, and a deterministic Glicko-1 rating layer for the v1
+starter matrices. Batch A and Batch B remain the controlling research notes for
+search and evaluation-ladder work:
 `docs/research/literature/ai/decisions/2026-05-09-batch-a-search-baseline.md`
 and
 `docs/research/literature/ai/decisions/2026-05-09-batch-b-evaluation-ladder.md`.
-The benchmark stack still does not implement ratings, search, self-play, model
-training, robustness probes, or product difficulty.
+The benchmark stack still does not implement multi-period ratings, search,
+self-play, model training, robustness probes, or product difficulty.
 
 Next recommended sequence:
 
-1. implement the active `cFp46` Glicko rating layer at
-   `docs/spec/2026-05-21-cFp46-specs.md`, consuming existing public benchmark
-   `records.jsonl` artifacts and producing deterministic rating/RD reports
-   without changing AI behavior or suite shape;
+1. extend the post-cFp46 evaluation ladder with either multi-period rating
+   carry-forward, robustness probes, or raw match-ledger comparison reports;
 2. keep hand-tuned `legal-heuristic-v1` threshold tuning paused unless a future
    trace-telemetry phase first records per-play guard evaluations for the
    remaining overinvestment cases;
-3. after cFp46, use the Batch B evaluation-ladder path to add raw match ledger
-   comparisons, robustness probes, and eventually TrueSkill-compatible schema;
+3. keep TrueSkill-compatible schema as a later evaluation-layer option after
+   Glicko-1 artifact semantics are stable across more benchmark refreshes;
 4. keep approximate best-response probes,
    ISMCTS/determinized search, OSFP, NFSP, Deep CFR, ReBeL, and model
    training deferred until they consume the existing ledger/artifact foundation.
