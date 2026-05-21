@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp48",
-        latestSpecPath: "docs/spec/2026-05-21-cFp48-specs.md",
-        latestReportPath: "audit/reports/2026-05-21-cFp48-report.md",
+        latestPhase: "cFp49",
+        latestSpecPath: "docs/spec/2026-05-21-cFp49-specs.md",
+        latestReportPath: "audit/reports/2026-05-21-cFp49-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp48",
-        latestSpecPath: "docs/spec/2026-05-21-cFp48-specs.md",
-        latestReportPath: "audit/reports/2026-05-21-cFp48-report.md",
+        latestPhase: "cFp49",
+        latestSpecPath: "docs/spec/2026-05-21-cFp49-specs.md",
+        latestReportPath: "audit/reports/2026-05-21-cFp49-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -113,6 +113,7 @@ describe("authentic AI Lab view model", () => {
           "Glicko rating layer for benchmark artifacts (cFp46)",
           "deterministic rating snapshot and comparison ledger (cFp47)",
           "robust 1000-record starter-matrix evaluation suite (cFp48)",
+          "robust failure-mining casebook over the 1000-record starter matrix, classifying round-resource, weather, Medic timing, matchup skew, and pass-diagnostic signals before the next behavior patch (cFp49)",
         ]),
       );
   });

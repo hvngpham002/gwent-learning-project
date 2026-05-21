@@ -20,10 +20,13 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
-cFp45: Remaining Round-One Overinvestment Calibration. The latest infrastructure
-phase is cFp48: Robust Starter Matrix Evaluation Suite, which adds a
-25-seed / 1000-record starter matrix, robust failure-mining artifacts, robust
-Glicko ratings, a suite-local `cFp48` snapshot, and a deterministic
+cFp49: Robust Failure-Mining Casebook. cFp49 analyzes the cFp48 1000-record
+robust failure-mining boundary, classifies round-resource, weather, Medic
+timing, matchup-skew, and suspicious-pass clusters, and recommends cFp50
+trace-level guard-state telemetry before any new behavior patch. The latest
+infrastructure phase is cFp48: Robust Starter Matrix Evaluation Suite, which
+adds a 25-seed / 1000-record starter matrix, robust failure-mining artifacts,
+robust Glicko ratings, a suite-local `cFp48` snapshot, and a deterministic
 `cFp48-vs-latest` comparison boundary. cFp47 freezes cFp46 rating artifacts as
 named `cFp46` snapshots, adds `ledger.json` per suite, and generates
 deterministic `cFp46-vs-latest` comparison artifacts with delta/signal
@@ -84,9 +87,12 @@ Current cFp43 benchmark totals:
   `round_one_overinvestment=71`, `medic_timing_risk=11`,
   `matchup_skew=1`), with 920 suspicious-pass findings suppressed.
 
-The next behavior decision should monitor the remaining round-one
-overinvestment and suspicious-pass signals through the next benchmark refresh
-cycle rather than immediately broadening the guard beyond round 1.
+The next behavior decision should not broaden the round-one guard from aggregate
+finding counts alone. The cFp49 casebook confirms the robust
+`round_one_overinvestment` signal is durable and loss-correlated (71 findings,
+69 losses, 2 draws), but the public findings do not expose cFp43 guard-state or
+exception data. The recommended cFp50 scope is hidden-info-safe failure-mining
+guard-state telemetry before another v1 behavior patch.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -1205,3 +1211,29 @@ exploitability, human difficulty, or a behavior change.
 No AI policy behavior, engine rule, legal move, UI gameplay behavior, catalog
 data, deck preset, Glicko formula, comparison threshold, search, training, or
 product difficulty behavior changed.
+
+### Robust Failure-Mining Casebook (cFp49)
+
+cFp49 reviews only committed public artifacts from the cFp48 robust suite and
+does not change policy behavior. The casebook classifies the robust
+failure-mining queue as follows:
+
+- `round_resource_exhaustion`: needs trace instrumentation. The robust
+  `round_one_overinvestment` sub-signal has 71 findings with 69 losses and 2
+  draws, but findings do not expose cFp43 guard-state or exception fields.
+  `round_three_low_resource` has 226 findings but mostly appears in v1 wins
+  with zero positive unit tempo.
+- `weathered_row_low_tempo`: analyzer noise or broad signal. cFp30/cFp38
+  behavior already exists, but findings do not expose penalty/exemption state.
+- `medic_no_target_timing`: watch-only at 11 findings.
+- `skellige_matchup_skew`: watch-only at one break-even matchup aggregate.
+- `remaining_suspicious_pass`: broad analyzer signal, not a direct behavior
+  patch target.
+
+Recommended cFp50 scope: hidden-info-safe failure-mining guard-state telemetry,
+centered on remaining round-one overinvestment, before another v1 behavior
+patch.
+
+No AI policy behavior, engine rule, legal move, benchmark suite definition,
+failure-mining classifier, rating formula, catalog data, deck preset, product
+gameplay UI, search, training, or product difficulty behavior changed.
