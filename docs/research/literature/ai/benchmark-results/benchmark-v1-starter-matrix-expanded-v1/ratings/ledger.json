@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "rating-ledger-v1",
+  "snapshots": [
+    {
+      "createdByPhase": "cFp47",
+      "eligibleRecordCount": 400,
+      "ignoredRecordCount": 0,
+      "label": "cFp46 snapshot",
+      "notes": "Frozen cFp46 rating snapshot for suite benchmark-v1-starter-matrix-expanded-v1.",
+      "ratingsJsonHash": "4b576cfe026c4170d1d8bbdc1bfb625f475ba7d5701ee78fed6dab7a76e4d326",
+      "reportMdHash": "",
+      "snapshotId": "cFp46",
+      "sourceRecordCount": 400,
+      "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/latest/records.jsonl"
+    },
+    {
+      "createdByPhase": "cFp47",
+      "eligibleRecordCount": 400,
+      "ignoredRecordCount": 0,
+      "label": "latest snapshot",
+      "notes": "Frozen cFp46 rating snapshot for suite benchmark-v1-starter-matrix-expanded-v1.",
+      "ratingsJsonHash": "4b576cfe026c4170d1d8bbdc1bfb625f475ba7d5701ee78fed6dab7a76e4d326",
+      "reportMdHash": "",
+      "snapshotId": "latest",
+      "sourceRecordCount": 400,
+      "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/latest/records.jsonl"
+    }
+  ],
+  "suiteId": "benchmark-v1-starter-matrix-expanded-v1"
+}

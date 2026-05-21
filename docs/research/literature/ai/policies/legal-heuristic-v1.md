@@ -21,11 +21,14 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
 cFp45: Remaining Round-One Overinvestment Calibration. The latest infrastructure
-phase is cFp46: Glicko Rating Layer For Benchmark Artifacts, which adds
-deterministic rating/RD reports over existing public benchmark records. The
-latest committed benchmark artifact refresh is the cFp43 post-implementation run
-for the current 120-record and expanded 400-record starter matrices. The
-behavior stack builds on the cFp27 through cFp43 tuning and diagnostics chain:
+phase is cFp47: Rating Snapshot And Comparison Ledger, which freezes cFp46
+rating artifacts as named `cFp46` snapshots, adds `ledger.json` per suite,
+and generates deterministic `cFp46-vs-latest` comparison artifacts with
+delta/signal computation. cFp46 added deterministic rating/RD reports over
+existing public benchmark records. The latest committed benchmark artifact
+refresh is the cFp43 post-implementation run for the current 120-record and
+expanded 400-record starter matrices. The behavior stack builds on the cFp27
+through cFp43 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.

@@ -76,10 +76,16 @@ Matchup matrix:
 
 Rating layer:
 
-- deferred in cFp21;
-- future Glicko/TrueSkill work should consume ledger records only;
+- cFp46 adds a deterministic Glicko-1 rating layer that consumes
+  `benchmark-match-v1` records and produces rating/RD/conservative-rating
+  reports per suite;
+- cFp47 adds a snapshot/ledger/comparison layer: named `cFp46` snapshots,
+  `ledger.json` per suite, and `cFp46-vs-latest` comparison artifacts with
+  delta and signal computation;
 - ratings must remain stratified by suite, matchup, policy, deck, and
-  sample count.
+  sample count;
+- future TrueSkill or Elo work should consume ledger records only and
+  follow the same hidden-info and determinism contracts.
 
 Robustness probe:
 

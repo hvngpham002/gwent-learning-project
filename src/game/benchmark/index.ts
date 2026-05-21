@@ -10,3 +10,5 @@ export * from './failureMining';
 export * from './failureMiningArtifacts';
 export * from './ratings';
 export * from './ratingArtifacts';
+export * from './ratingComparisons';
+export * from './ratingComparisonArtifacts';

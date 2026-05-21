@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp46",
-        latestSpecPath: "docs/spec/2026-05-21-cFp46-specs.md",
-        latestReportPath: "audit/reports/2026-05-21-cFp46-report.md",
+        latestPhase: "cFp47",
+        latestSpecPath: "docs/spec/2026-05-21-cFp47-specs.md",
+        latestReportPath: "audit/reports/2026-05-21-cFp47-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp46",
-        latestSpecPath: "docs/spec/2026-05-21-cFp46-specs.md",
-        latestReportPath: "audit/reports/2026-05-21-cFp46-report.md",
+        latestPhase: "cFp47",
+        latestSpecPath: "docs/spec/2026-05-21-cFp47-specs.md",
+        latestReportPath: "audit/reports/2026-05-21-cFp47-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -88,27 +88,28 @@ describe("authentic AI Lab view model", () => {
        ]),
      );
     expect(v1?.capabilities).toEqual(
-       expect.arrayContaining([
-         "linked-card mulligan diagnostics",
-         "tie-aware and pass diagnostics",
-         "hand-quality pass calibration",
-         "Medic timing calibration",
-         "no-target Medic delay guard",
-         "weather-aware unit placement",
-         "round-investment preservation",
-         "stop-loss round sacrifice",
-         "Scoia'tael first-turn choice strategy",
-         "round-resource exhaustion diagnostics and budget gate",
-         "pass-decision alignment — resource-gate scope-down",
-         "weathered-row low-tempo scoring guard",
-         "expanded 400-record starter-matrix discovery suite",
-         "non-recursive alternative-line scoring guard (cFp41.1)",
-         "round-resource exhaustion casebook (cFp42)",
-         "round-one overinvestment guard (cFp43)",
-         "remaining overinvestment calibration decision note (cFp45)",
-         "Glicko rating layer for benchmark artifacts (cFp46)",
-       ]),
-     );
+        expect.arrayContaining([
+          "linked-card mulligan diagnostics",
+          "tie-aware and pass diagnostics",
+          "hand-quality pass calibration",
+          "Medic timing calibration",
+          "no-target Medic delay guard",
+          "weather-aware unit placement",
+          "round-investment preservation",
+          "stop-loss round sacrifice",
+          "Scoia'tael first-turn choice strategy",
+          "round-resource exhaustion diagnostics and budget gate",
+          "pass-decision alignment — resource-gate scope-down",
+          "weathered-row low-tempo scoring guard",
+          "expanded 400-record starter-matrix discovery suite",
+          "non-recursive alternative-line scoring guard (cFp41.1)",
+          "round-resource exhaustion casebook (cFp42)",
+          "round-one overinvestment guard (cFp43)",
+          "remaining overinvestment calibration decision note (cFp45)",
+          "Glicko rating layer for benchmark artifacts (cFp46)",
+          "deterministic rating snapshot and comparison ledger (cFp47)",
+        ]),
+      );
   });
 
   it("does not mark registered product policies as not implemented or omit them", () => {
