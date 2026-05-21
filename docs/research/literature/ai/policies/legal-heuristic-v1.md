@@ -20,11 +20,15 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
-cFp49: Robust Failure-Mining Casebook. The latest evaluation-infrastructure
-phase is cFp50: Round-One Overinvestment Guard-State Telemetry. cFp50 adds
-hidden-info-safe scalar cFp43 guard-state counts to existing
-`round_one_overinvestment` failure-mining findings and regenerates the current,
-expanded, and robust failure-mining artifacts without changing policy behavior.
+cFp51: Round-One Guard Telemetry Casebook. The latest
+evaluation-infrastructure phase is cFp50: Round-One Overinvestment Guard-State
+Telemetry. cFp51 reads the cFp50 scalar telemetry from committed public
+failure-mining artifacts, classifies robust `round_one_overinvestment` findings,
+and recommends cFp52 reproduce/debug the two guard-recommended play cases before
+any behavior patch. cFp50 adds hidden-info-safe scalar cFp43 guard-state counts
+to existing `round_one_overinvestment` failure-mining findings and regenerates
+the current, expanded, and robust failure-mining artifacts without changing
+policy behavior.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -92,10 +96,11 @@ Current cFp43 benchmark totals:
 The next behavior decision should not broaden the round-one guard from aggregate
 finding counts alone. The cFp49 casebook confirms the robust
 `round_one_overinvestment` signal is durable and loss-correlated (71 findings,
-69 losses, 2 draws). cFp50 now exposes the missing scalar guard-state telemetry
-at the failure-mining boundary so the next casebook can distinguish threshold
-misses, exceptions, and intentional suppressed passes before another v1 behavior
-patch.
+69 losses, 2 draws). cFp50 exposes the missing scalar guard-state telemetry at
+the failure-mining boundary. cFp51 shows the remaining robust signal is mostly
+late suppressed passes and board-floor misses, with only two direct
+guard-recommended play-selected cases. Those two cases need reproduction/debug
+before another v1 behavior patch.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -1261,6 +1266,30 @@ write card names, source IDs, runtime card instance IDs, move IDs, action refs,
 hand/deck/discard arrays, raw traces, raw match states, command logs, or event
 logs. Finding-kind counts, tuning-queue ranking, benchmark suite definitions,
 rating formulas, and policy behavior are unchanged by this phase.
+
+No AI policy behavior, engine rule, legal move, benchmark suite definition,
+failure-mining classifier, rating formula, catalog data, deck preset, product
+gameplay UI, search, training, or product difficulty behavior changed.
+
+### Round-One Guard Telemetry Casebook (cFp51)
+
+cFp51 is analysis-only over the cFp50 failure-mining artifacts. It classifies
+the 71 robust `round_one_overinvestment` findings into public telemetry
+categories:
+
+- 44 `guard_suppressed_late_pass_no_play_recommendation` rows;
+- 20 `board_floor_never_reached` rows;
+- 4 `guard_base_geometry_exception_or_non_recommendation` rows;
+- 2 `guard_recommended_play_selected` rows;
+- 1 `hand_cap_never_reached` row;
+- 0 `other_no_base_geometry` and 0 `telemetry_unavailable` rows.
+
+Decision: do not tune `legal-heuristic-v1` thresholds from cFp51 alone. Most
+rows are already-late cFp43 interventions, board-floor artifacts, or tactical
+exception/non-recommendation cases. The only potential direct policy
+contradictions are two guard-recommended play-selected rows, so the recommended
+cFp52 scope is a reproduction/debug phase for those exact robust fixtures before
+any behavior repair.
 
 No AI policy behavior, engine rule, legal move, benchmark suite definition,
 failure-mining classifier, rating formula, catalog data, deck preset, product

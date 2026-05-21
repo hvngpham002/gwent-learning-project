@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp50",
-        latestSpecPath: "docs/spec/2026-05-22-cFp50-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp50-report.md",
+        latestPhase: "cFp51",
+        latestSpecPath: "docs/spec/2026-05-22-cFp51-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp51-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,58 +65,59 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp50",
-        latestSpecPath: "docs/spec/2026-05-22-cFp50-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp50-report.md",
+        latestPhase: "cFp51",
+        latestSpecPath: "docs/spec/2026-05-22-cFp51-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp51-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
- expect(v1?.latestBenchmarkSummaries).toEqual(
-       expect.arrayContaining([
-         expect.objectContaining({
-           suiteId: "benchmark-v1-smoke-v1",
-           result: "10 win / 2 loss / 0 draw vs v0",
-         }),
-         expect.objectContaining({
-           suiteId: "benchmark-v1-starter-matrix-v1",
-           result: "102 win / 17 loss / 1 draw vs v0",
-         }),
-         expect.objectContaining({
-           suiteId: "benchmark-v1-starter-matrix-expanded-v1",
-           result: "305 win / 90 loss / 5 draw vs v0; 0 policy failures",
-         }),
-         expect.objectContaining({
-           suiteId: "benchmark-v1-starter-matrix-robust-v1",
-           result: "776 win / 206 loss / 18 draw vs v0; 0 policy failures",
-         }),
-       ]),
-     );
+    expect(v1?.latestBenchmarkSummaries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          suiteId: "benchmark-v1-smoke-v1",
+          result: "10 win / 2 loss / 0 draw vs v0",
+        }),
+        expect.objectContaining({
+          suiteId: "benchmark-v1-starter-matrix-v1",
+          result: "102 win / 17 loss / 1 draw vs v0",
+        }),
+        expect.objectContaining({
+          suiteId: "benchmark-v1-starter-matrix-expanded-v1",
+          result: "305 win / 90 loss / 5 draw vs v0; 0 policy failures",
+        }),
+        expect.objectContaining({
+          suiteId: "benchmark-v1-starter-matrix-robust-v1",
+          result: "776 win / 206 loss / 18 draw vs v0; 0 policy failures",
+        }),
+      ]),
+    );
     expect(v1?.capabilities).toEqual(
-        expect.arrayContaining([
-          "linked-card mulligan diagnostics",
-          "tie-aware and pass diagnostics",
-          "hand-quality pass calibration",
-          "Medic timing calibration",
-          "no-target Medic delay guard",
-          "weather-aware unit placement",
-          "round-investment preservation",
-          "stop-loss round sacrifice",
-          "Scoia'tael first-turn choice strategy",
-          "round-resource exhaustion diagnostics and budget gate",
-          "pass-decision alignment — resource-gate scope-down",
-          "weathered-row low-tempo scoring guard",
-          "expanded 400-record starter-matrix discovery suite",
-          "non-recursive alternative-line scoring guard (cFp41.1)",
-          "round-resource exhaustion casebook (cFp42)",
-          "round-one overinvestment guard (cFp43)",
-          "remaining overinvestment calibration decision note (cFp45)",
-          "Glicko rating layer for benchmark artifacts (cFp46)",
-          "deterministic rating snapshot and comparison ledger (cFp47)",
-          "robust 1000-record starter-matrix evaluation suite (cFp48)",
-          "robust failure-mining casebook over the 1000-record starter matrix, classifying round-resource, weather, Medic timing, matchup skew, and pass-diagnostic signals before the next behavior patch (cFp49)",
-          "hidden-info-safe round-one overinvestment guard-state telemetry in failure-mining artifacts (cFp50)",
-        ]),
-      );
+      expect.arrayContaining([
+        "linked-card mulligan diagnostics",
+        "tie-aware and pass diagnostics",
+        "hand-quality pass calibration",
+        "Medic timing calibration",
+        "no-target Medic delay guard",
+        "weather-aware unit placement",
+        "round-investment preservation",
+        "stop-loss round sacrifice",
+        "Scoia'tael first-turn choice strategy",
+        "round-resource exhaustion diagnostics and budget gate",
+        "pass-decision alignment — resource-gate scope-down",
+        "weathered-row low-tempo scoring guard",
+        "expanded 400-record starter-matrix discovery suite",
+        "non-recursive alternative-line scoring guard (cFp41.1)",
+        "round-resource exhaustion casebook (cFp42)",
+        "round-one overinvestment guard (cFp43)",
+        "remaining overinvestment calibration decision note (cFp45)",
+        "Glicko rating layer for benchmark artifacts (cFp46)",
+        "deterministic rating snapshot and comparison ledger (cFp47)",
+        "robust 1000-record starter-matrix evaluation suite (cFp48)",
+        "robust failure-mining casebook over the 1000-record starter matrix, classifying round-resource, weather, Medic timing, matchup skew, and pass-diagnostic signals before the next behavior patch (cFp49)",
+        "hidden-info-safe round-one overinvestment guard-state telemetry in failure-mining artifacts (cFp50)",
+        "round-one guard telemetry casebook over cFp50 failure-mining artifacts (cFp51)",
+      ]),
+    );
   });
 
   it("does not mark registered product policies as not implemented or omit them", () => {
