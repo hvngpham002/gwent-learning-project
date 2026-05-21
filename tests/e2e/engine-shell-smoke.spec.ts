@@ -563,7 +563,7 @@ test("authentic AI Lab route mounts a read-only benchmark dashboard (cEp17)", as
 
   await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
   await expect(page.getByRole("heading", { name: "AI Lab" })).toBeVisible();
-  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-v1-starter-matrix-expanded-v1");
+  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-v1-starter-matrix-robust-v1");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-heuristic-v0");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("legal-heuristic-v1");
   await expect(page.getByTestId("authentic-ai-lab-policies")).toContainText("implemented · experimental/playtest");
@@ -622,7 +622,7 @@ test("pre-game opens the AI Lab through the setup tool cluster (cEp17)", async (
   await expect(page.getByTestId("authentic-pregame")).toBeVisible();
   await page.getByTestId("authentic-pregame-ai-lab").click();
   await expect(page.getByTestId("authentic-ai-lab")).toBeVisible();
-  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-v1-starter-matrix-expanded-v1");
+  await expect(page.getByTestId("authentic-ai-lab-suite-id")).toHaveText("benchmark-v1-starter-matrix-robust-v1");
   await expect(page.getByTestId("engine-shell")).toHaveCount(0);
 });
 

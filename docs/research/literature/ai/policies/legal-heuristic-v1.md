@@ -1,6 +1,6 @@
 # Legal Heuristic v1
 
-Date: 2026-05-20
+Date: 2026-05-21
 
 ## Purpose
 
@@ -21,13 +21,15 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
 cFp45: Remaining Round-One Overinvestment Calibration. The latest infrastructure
-phase is cFp47: Rating Snapshot And Comparison Ledger, which freezes cFp46
-rating artifacts as named `cFp46` snapshots, adds `ledger.json` per suite,
-and generates deterministic `cFp46-vs-latest` comparison artifacts with
-delta/signal computation. cFp46 added deterministic rating/RD reports over
-existing public benchmark records. The latest committed benchmark artifact
-refresh is the cFp43 post-implementation run for the current 120-record and
-expanded 400-record starter matrices. The behavior stack builds on the cFp27
+phase is cFp48: Robust Starter Matrix Evaluation Suite, which adds a
+25-seed / 1000-record starter matrix, robust failure-mining artifacts, robust
+Glicko ratings, a suite-local `cFp48` snapshot, and a deterministic
+`cFp48-vs-latest` comparison boundary. cFp47 freezes cFp46 rating artifacts as
+named `cFp46` snapshots, adds `ledger.json` per suite, and generates
+deterministic `cFp46-vs-latest` comparison artifacts with delta/signal
+computation. cFp46 added deterministic rating/RD reports over existing public
+benchmark records. The latest committed benchmark artifact refresh is the cFp48
+robust 1000-record starter matrix. The behavior stack builds on the cFp27
 through cFp43 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
@@ -69,11 +71,18 @@ Current cFp43 benchmark totals:
 - `benchmark-v1-starter-matrix-expanded-v1`: 400 completed / 0 policy failures /
   0 engine errors, with v1 recording 305 wins, 90 losses, and 5 draws against
   v0.
+- `benchmark-v1-starter-matrix-robust-v1`: 1000 completed / 0 policy failures /
+  0 engine errors / 0 replay failures, with v1 recording 776 wins, 206 losses,
+  and 18 draws against v0.
 - Expanded failure mining: 878 findings
   (`suspicious_pass=671`, `round_three_low_resource=86`,
   `weathered_row_play=86`, `round_one_overinvestment=26`,
   `medic_timing_risk=7`), with `round_one_overinvestment_pass=290` suppressed
   as intentional cFp43 passes.
+- Robust failure mining: 2301 findings (`suspicious_pass=1752`,
+  `weathered_row_play=240`, `round_three_low_resource=226`,
+  `round_one_overinvestment=71`, `medic_timing_risk=11`,
+  `matchup_skew=1`), with 920 suspicious-pass findings suppressed.
 
 The next behavior decision should monitor the remaining round-one
 overinvestment and suspicious-pass signals through the next benchmark refresh
@@ -1172,3 +1181,27 @@ Rating artifacts generated:
 - `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/ratings/latest/`
 
 No AI policy, engine rule, UI, or difficulty behavior changed.
+
+### Robust Starter Matrix Evaluation Suite (cFp48)
+
+cFp48 adds `benchmark-v1-starter-matrix-robust-v1`, a deterministic
+25-seed / 20-matchup / mirrored starter matrix that produces 1000 public
+records. It reuses the same five official starter deck descriptors and the same
+v1-vs-v0 matchup builder as the current and expanded starter-matrix suites.
+
+Generated robust artifacts:
+
+- `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/latest/`
+- `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/failure-mining/latest/`
+- `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/latest/`
+- `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/snapshots/cFp48/`
+- `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/comparisons/cFp48-vs-latest/`
+
+The robust policy-level rating report has `legal-heuristic-v1` at rating
+1795.34 / RD 30 over 1000 games and `legal-heuristic-v0` at rating 1204.66 /
+RD 30 over the same suite. These are suite-local fixed-matrix ratings, not
+exploitability, human difficulty, or a behavior change.
+
+No AI policy behavior, engine rule, legal move, UI gameplay behavior, catalog
+data, deck preset, Glicko formula, comparison threshold, search, training, or
+product difficulty behavior changed.

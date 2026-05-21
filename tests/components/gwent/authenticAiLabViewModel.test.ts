@@ -14,15 +14,15 @@ const forbiddenHiddenInfoStrings = [
 ];
 
 describe("authentic AI Lab view model", () => {
-  it("describes the current expanded benchmark suite without runtime output", () => {
+  it("describes the current robust benchmark suite without runtime output", () => {
     const viewModel = buildAuthenticAiLabViewModel();
 
-    expect(viewModel.benchmarkSuite.id).toBe("benchmark-v1-starter-matrix-expanded-v1");
+    expect(viewModel.benchmarkSuite.id).toBe("benchmark-v1-starter-matrix-robust-v1");
     expect(viewModel.benchmarkSuite.stats).toEqual(
       expect.arrayContaining([
-        { label: "seeds", value: "10" },
+        { label: "seeds", value: "25" },
         { label: "mirroring", value: "enabled" },
-        { label: "expected records", value: "400" },
+        { label: "expected records", value: "1000" },
         { label: "matchup", value: "all official starter deck pairs" },
       ]),
     );
@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp47",
-        latestSpecPath: "docs/spec/2026-05-21-cFp47-specs.md",
-        latestReportPath: "audit/reports/2026-05-21-cFp47-report.md",
+        latestPhase: "cFp48",
+        latestSpecPath: "docs/spec/2026-05-21-cFp48-specs.md",
+        latestReportPath: "audit/reports/2026-05-21-cFp48-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp47",
-        latestSpecPath: "docs/spec/2026-05-21-cFp47-specs.md",
-        latestReportPath: "audit/reports/2026-05-21-cFp47-report.md",
+        latestPhase: "cFp48",
+        latestSpecPath: "docs/spec/2026-05-21-cFp48-specs.md",
+        latestReportPath: "audit/reports/2026-05-21-cFp48-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -84,6 +84,10 @@ describe("authentic AI Lab view model", () => {
          expect.objectContaining({
            suiteId: "benchmark-v1-starter-matrix-expanded-v1",
            result: "305 win / 90 loss / 5 draw vs v0; 0 policy failures",
+         }),
+         expect.objectContaining({
+           suiteId: "benchmark-v1-starter-matrix-robust-v1",
+           result: "776 win / 206 loss / 18 draw vs v0; 0 policy failures",
          }),
        ]),
      );
@@ -108,6 +112,7 @@ describe("authentic AI Lab view model", () => {
           "remaining overinvestment calibration decision note (cFp45)",
           "Glicko rating layer for benchmark artifacts (cFp46)",
           "deterministic rating snapshot and comparison ledger (cFp47)",
+          "robust 1000-record starter-matrix evaluation suite (cFp48)",
         ]),
       );
   });

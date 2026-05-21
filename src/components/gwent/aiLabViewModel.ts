@@ -58,15 +58,15 @@ export interface AiLabViewModel {
 }
 
 const benchmarkSuite: AiLabBenchmarkSuite = {
-  id: "benchmark-v1-starter-matrix-expanded-v1",
-  label: "Benchmark legal heuristic v1 starter matrix expanded",
+  id: "benchmark-v1-starter-matrix-robust-v1",
+  label: "Benchmark legal heuristic v1 starter matrix robust",
   status: "headless/user-run available, browser run deferred",
   summary:
-    "Expanded deterministic starter-deck discovery suite comparing legal-heuristic-v1 with legal-heuristic-v0 before the next tuning patch.",
+    "Robust deterministic starter-deck evaluation suite comparing legal-heuristic-v1 with legal-heuristic-v0 without changing policy behavior.",
   stats: [
-    { label: "seeds", value: "10" },
+    { label: "seeds", value: "25" },
     { label: "mirroring", value: "enabled" },
-    { label: "expected records", value: "400" },
+    { label: "expected records", value: "1000" },
     { label: "matchup", value: "all official starter deck pairs" },
   ],
 };
@@ -114,13 +114,13 @@ const evaluationLayers: readonly AiLabEvaluationLayer[] = [
   },
   {
     label: "fixed-suite matchup matrices",
-    status: "deferred",
-    description: "Broader seeded matchup tables come before ratings or training claims.",
+    status: "current",
+    description: "Broader seeded matchup tables now include the cFp48 1000-record robust starter matrix.",
   },
   {
     label: "ratings",
-    status: "deferred",
-    description: "Glicko and TrueSkill-style summaries should consume completed ledgers only.",
+    status: "current",
+    description: "Glicko reports and suite-local snapshot comparisons consume completed public ledgers only.",
   },
   {
     label: "robustness/search probes",
@@ -174,7 +174,7 @@ const futureActions: readonly AiLabFutureAction[] = [
     id: "ratings",
     label: "ratings",
     disabled: true,
-    reason: "Rating layers need larger completed matchup matrices first.",
+    reason: "Browser rating generation remains deferred; use the headless rating commands.",
   },
   {
     id: "search-prototype",

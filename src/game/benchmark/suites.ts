@@ -22,6 +22,34 @@ const STARTER_MATRIX_EXPANDED_SEEDS = [
   'starter-matrix-expanded-010',
 ] as const;
 
+const STARTER_MATRIX_ROBUST_SEEDS = [
+  'starter-matrix-robust-001',
+  'starter-matrix-robust-002',
+  'starter-matrix-robust-003',
+  'starter-matrix-robust-004',
+  'starter-matrix-robust-005',
+  'starter-matrix-robust-006',
+  'starter-matrix-robust-007',
+  'starter-matrix-robust-008',
+  'starter-matrix-robust-009',
+  'starter-matrix-robust-010',
+  'starter-matrix-robust-011',
+  'starter-matrix-robust-012',
+  'starter-matrix-robust-013',
+  'starter-matrix-robust-014',
+  'starter-matrix-robust-015',
+  'starter-matrix-robust-016',
+  'starter-matrix-robust-017',
+  'starter-matrix-robust-018',
+  'starter-matrix-robust-019',
+  'starter-matrix-robust-020',
+  'starter-matrix-robust-021',
+  'starter-matrix-robust-022',
+  'starter-matrix-robust-023',
+  'starter-matrix-robust-024',
+  'starter-matrix-robust-025',
+] as const;
+
 const factionSlug = (descriptor: BenchmarkDeckDescriptor) => descriptor.faction.replace(/_/g, '-');
 
 const seatForDescriptor = (
@@ -195,12 +223,31 @@ export const benchmarkV1StarterMatrixExpandedSuiteV1: BenchmarkSuite = {
   }),
 };
 
+export const benchmarkV1StarterMatrixRobustSuiteV1: BenchmarkSuite = {
+  id: 'benchmark-v1-starter-matrix-robust-v1',
+  label: 'Benchmark legal heuristic v1 starter matrix robust',
+  description:
+    'Robust deterministic evaluation suite over all five official starter presets comparing legal-heuristic-v1 against legal-heuristic-v0 across twenty-five fixed seeds.',
+  seeds: STARTER_MATRIX_ROBUST_SEEDS,
+  defaultMaxSteps: currentSimulationSmokeSuite.defaultMaxSteps,
+  deckDescriptors: benchmarkStarterDeckDescriptors,
+  matchups: buildStarterMatrixMatchups({
+    firstPolicyId: 'legal-heuristic-v1',
+    secondPolicyId: 'legal-heuristic-v0',
+    firstPolicyLeftSlug: 'heuristic-v1',
+    firstPolicyRightSlug: 'heuristic-v1',
+    secondPolicyLeftSlug: 'heuristic-v0',
+    secondPolicyRightSlug: 'heuristic-v0',
+  }),
+};
+
 export const benchmarkSuites = {
   [benchmarkSmokeSuiteV1.id]: benchmarkSmokeSuiteV1,
   [benchmarkStarterMatrixSuiteV1.id]: benchmarkStarterMatrixSuiteV1,
   [benchmarkV1SmokeSuiteV1.id]: benchmarkV1SmokeSuiteV1,
   [benchmarkV1StarterMatrixSuiteV1.id]: benchmarkV1StarterMatrixSuiteV1,
   [benchmarkV1StarterMatrixExpandedSuiteV1.id]: benchmarkV1StarterMatrixExpandedSuiteV1,
+  [benchmarkV1StarterMatrixRobustSuiteV1.id]: benchmarkV1StarterMatrixRobustSuiteV1,
 } as const;
 
 export const getBenchmarkSuite = (id: string): BenchmarkSuite | null =>

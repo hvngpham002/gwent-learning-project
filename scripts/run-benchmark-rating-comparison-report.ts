@@ -120,7 +120,14 @@ const fileExists = async (path: string): Promise<boolean> => {
   }
 };
 
-const ensureCfp46Snapshot = async (suiteId: string, snapshotId: string): Promise<void> => {
+const canAutoCreateSnapshot = (snapshotId: string, createdByPhase: string) =>
+  snapshotId === createdByPhase || (snapshotId === "cFp46" && createdByPhase === "cFp47");
+
+const ensureSnapshotExists = async (
+  suiteId: string,
+  snapshotId: string,
+  createdByPhase: string,
+): Promise<void> => {
   if (snapshotId === "latest") {
     return;
   }
@@ -133,9 +140,9 @@ const ensureCfp46Snapshot = async (suiteId: string, snapshotId: string): Promise
     return;
   }
 
-  if (snapshotId !== "cFp46") {
+  if (!canAutoCreateSnapshot(snapshotId, createdByPhase)) {
     throw new CliUsageError(
-      `Snapshot "${snapshotId}" does not exist. cFp47 only auto-creates the cFp46 baseline from latest.`,
+      `Snapshot "${snapshotId}" does not exist for suite "${suiteId}". Missing snapshots can only be auto-created from latest when snapshot id matches --phase, or for the cFp47 cFp46 baseline compatibility path.`,
     );
   }
 
@@ -181,10 +188,10 @@ const loadExistingSnapshots = async (
 const run = async () => {
   const options = parseArgs(process.argv.slice(2));
 
-  console.log(`cFp47 comparison: suite=${options.suiteId} base=${options.baseSnapshot} candidate=${options.candidateSnapshot}`);
+  console.log(`rating comparison: suite=${options.suiteId} base=${options.baseSnapshot} candidate=${options.candidateSnapshot} phase=${options.createdByPhase}`);
 
-  await ensureCfp46Snapshot(options.suiteId, options.baseSnapshot);
-  await ensureCfp46Snapshot(options.suiteId, options.candidateSnapshot);
+  await ensureSnapshotExists(options.suiteId, options.baseSnapshot, options.createdByPhase);
+  await ensureSnapshotExists(options.suiteId, options.candidateSnapshot, options.createdByPhase);
 
   // Step 1: Read base snapshot info
   const baseSnapshotInfo = await readSnapshotInfo(
@@ -272,6 +279,6 @@ const run = async () => {
 
 run().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`cFp47 comparison failed: ${message}`);
+  console.error(`rating comparison failed: ${message}`);
   process.exitCode = 1;
 });

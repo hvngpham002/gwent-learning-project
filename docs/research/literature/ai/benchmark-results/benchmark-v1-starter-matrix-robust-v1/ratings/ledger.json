@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "rating-ledger-v1",
+  "snapshots": [
+    {
+      "createdByPhase": "cFp48",
+      "eligibleRecordCount": 1000,
+      "ignoredRecordCount": 0,
+      "label": "cFp48 snapshot",
+      "notes": "Frozen cFp48 rating snapshot for suite benchmark-v1-starter-matrix-robust-v1.",
+      "ratingsJsonHash": "3ac619026f1664e6a5c1bf0fee234da78d560d77c792d1b36bfc12f957579aca",
+      "reportMdHash": "bf11d87cdf07538d122b1bbacb6209ddbeef80aa213a7dac5b5588f7564c92e9",
+      "snapshotId": "cFp48",
+      "sourceRecordCount": 1000,
+      "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/latest/records.jsonl"
+    },
+    {
+      "createdByPhase": "cFp48",
+      "eligibleRecordCount": 1000,
+      "ignoredRecordCount": 0,
+      "label": "latest snapshot",
+      "notes": "Current latest rating artifact for suite benchmark-v1-starter-matrix-robust-v1.",
+      "ratingsJsonHash": "3ac619026f1664e6a5c1bf0fee234da78d560d77c792d1b36bfc12f957579aca",
+      "reportMdHash": "bf11d87cdf07538d122b1bbacb6209ddbeef80aa213a7dac5b5588f7564c92e9",
+      "snapshotId": "latest",
+      "sourceRecordCount": 1000,
+      "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/latest/records.jsonl"
+    }
+  ],
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1"
+}

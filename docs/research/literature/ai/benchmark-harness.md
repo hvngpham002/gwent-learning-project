@@ -82,6 +82,9 @@ Rating layer:
 - cFp47 adds a snapshot/ledger/comparison layer: named `cFp46` snapshots,
   `ledger.json` per suite, and `cFp46-vs-latest` comparison artifacts with
   delta and signal computation;
+- cFp48 adds `benchmark-v1-starter-matrix-robust-v1`, a 25-seed / 1000-record
+  deterministic starter-matrix evaluation suite, plus its first suite-local
+  `cFp48` rating snapshot and `cFp48-vs-latest` comparison boundary;
 - ratings must remain stratified by suite, matchup, policy, deck, and
   sample count;
 - future TrueSkill or Elo work should consume ledger records only and
@@ -131,6 +134,11 @@ The built-in suites are:
   `legal-heuristic-v0` over the same 10 unordered starter pairs and
   policy assignments, but with 10 deterministic seeds. It produces 400
   records and should be run through the cFp40 long-run wrapper.
+- `benchmark-v1-starter-matrix-robust-v1`: the cFp48 robust
+  starter-deck evaluation shape, comparing `legal-heuristic-v1` against
+  `legal-heuristic-v0` over the same 10 unordered starter pairs and
+  policy assignments, but with 25 deterministic seeds. It produces 1000
+  records and is evaluation infrastructure, not a policy behavior change.
 
 The harness supports explicit catalog deck presets per seat. It still
 uses `currentCatalogCards` and `currentCatalogLeaders`. cFp23 adds no
@@ -199,6 +207,15 @@ npm run benchmark:v1-starter-matrix-expanded
 npm run benchmark:v1-failure-mining-expanded
 ```
 
+Write the robust v1 starter-matrix artifact sets:
+
+```bash
+npm run benchmark:v1-starter-matrix-robust
+npm run benchmark:v1-failure-mining-robust
+npm run benchmark:ratings:v1-robust
+npm run benchmark:ratings:compare:v1-robust
+```
+
 For longer local runs that should not be tied to an agent turn, use the
 cFp40 progress runner. It orchestrates existing npm commands, writes a
 local run log bundle under `.local/benchmark-runs/`, and uses
@@ -218,7 +235,8 @@ npm run benchmark:v1-starter-matrix
 npm run benchmark:v1-failure-mining
 ```
 
-Other profiles are `smoke`, `v1-current-repeat`, and `all-current`.
+Other profiles are `smoke`, `v1-current-repeat`, `v1-expanded`,
+`v1-expanded-repeat`, `v1-robust`, `v1-robust-repeat`, and `all-current`.
 Future agents should ask the user to run this command for long benchmark
 jobs, then inspect the resulting `summary.md` or `run.json`, rather than
 running multi-minute or multi-hour jobs inside the agent runtime.
@@ -233,6 +251,18 @@ For determinism checks, use:
 
 ```bash
 npm run benchmark:long -- --profile v1-expanded-repeat
+```
+
+cFp48 adds the robust evaluation profile:
+
+```bash
+npm run benchmark:long -- --profile v1-robust
+```
+
+For robust determinism checks, use:
+
+```bash
+npm run benchmark:long -- --profile v1-robust-repeat
 ```
 
 The command writes:
@@ -281,6 +311,34 @@ docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expand
   findings.jsonl
   report.md
   tuning-queue.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/latest/
+  manifest.json
+  summary.json
+  records.jsonl
+  report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/failure-mining/latest/
+  manifest.json
+  summary.json
+  findings.jsonl
+  report.md
+  tuning-queue.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/latest/
+  manifest.json
+  ratings.json
+  report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/snapshots/cFp48/
+  manifest.json
+  ratings.json
+  report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/comparisons/cFp48-vs-latest/
+  manifest.json
+  comparison.json
+  report.md
 ```
 
 The default run id is `<suite-id>:latest`. Each `latest/` path is
@@ -371,9 +429,29 @@ Generated artifact suites:
 
 - `benchmark-v1-starter-matrix-v1/ratings/latest/`
 - `benchmark-v1-starter-matrix-expanded-v1/ratings/latest/`
+- `benchmark-v1-starter-matrix-robust-v1/ratings/latest/`
 
 CLI: `tsx scripts/run-benchmark-rating-report.ts --suite <suiteId>`
-NPM: `npm run benchmark:ratings:v1-starter-matrix` / `npm run benchmark:ratings:v1-expanded`
+NPM: `npm run benchmark:ratings:v1-starter-matrix` / `npm run benchmark:ratings:v1-expanded` / `npm run benchmark:ratings:v1-robust`
+
+## Rating Snapshot Comparisons (cFp47/cFp48)
+
+cFp47 adds suite-local snapshot ledgers and rating comparisons. cFp48 extends
+the same comparison pipeline to the robust suite and allows the comparison CLI
+to create the first baseline snapshot when the requested snapshot id matches
+`--phase` (`cFp48` for the robust suite), while preserving the cFp47 cFp46
+bootstrap behavior for older commands.
+
+The robust comparison command writes:
+
+```text
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/snapshots/cFp48/
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/ledger.json
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/comparisons/cFp48-vs-latest/
+```
+
+`cFp48-vs-latest` is an initial baseline comparison, so all 22 common entries
+have zero deltas and `signal: "no_change"`.
 
 ## Deferred Work
 

@@ -13,6 +13,7 @@ import type { EnginePolicy } from '@/game/ai';
 import {
   benchmarkStarterMatrixSuiteV1,
   benchmarkV1StarterMatrixExpandedSuiteV1,
+  benchmarkV1StarterMatrixRobustSuiteV1,
   benchmarkV1SmokeSuiteV1,
   benchmarkV1StarterMatrixSuiteV1,
   benchmarkSmokeSuiteV1,
@@ -184,6 +185,48 @@ describe('benchmark harness', () => {
         benchmarkV1StarterMatrixExpandedSuiteV1.matchups.length *
         2
     ).toBe(400);
+  });
+
+  it('registers the robust legal-heuristic-v1 starter matrix evaluation suite', () => {
+    const suite = getBenchmarkSuite('benchmark-v1-starter-matrix-robust-v1');
+
+    expect(suite).toBe(benchmarkV1StarterMatrixRobustSuiteV1);
+    expect(benchmarkV1StarterMatrixRobustSuiteV1.seeds).toHaveLength(25);
+    expect(benchmarkV1StarterMatrixRobustSuiteV1.matchups).toHaveLength(20);
+    expect(
+      new Set(benchmarkV1StarterMatrixRobustSuiteV1.matchups.map((matchup) => matchup.matchupId))
+        .size
+    ).toBe(20);
+    expect(
+      benchmarkV1StarterMatrixRobustSuiteV1.matchups.every((matchup) => matchup.mirror === true)
+    ).toBe(true);
+    expect(
+      benchmarkV1StarterMatrixRobustSuiteV1.deckDescriptors
+        ?.map((descriptor) => descriptor.deckPresetId)
+        .sort()
+    ).toEqual(officialStarterPresetIds);
+    expect(
+      benchmarkV1StarterMatrixRobustSuiteV1.seeds.every((seed) =>
+        String(seed).startsWith('starter-matrix-robust-')
+      )
+    ).toBe(true);
+    expect(
+      benchmarkV1StarterMatrixRobustSuiteV1.seeds.length *
+        benchmarkV1StarterMatrixRobustSuiteV1.matchups.length *
+        2
+    ).toBe(1000);
+
+    const filteredSuite: BenchmarkSuite = {
+      ...benchmarkV1StarterMatrixRobustSuiteV1,
+      seeds: [benchmarkV1StarterMatrixRobustSuiteV1.seeds[0]],
+      matchups: [benchmarkV1StarterMatrixRobustSuiteV1.matchups[0]],
+    };
+    const filteredRun = runBenchmarkSuite({ suite: filteredSuite });
+
+    expect(filteredRun.records).toHaveLength(2);
+    expect(filteredRun.summary.totalMatches).toBe(2);
+    expect(filteredRun.summary.statusCounts.policy_failed).toBe(0);
+    expect(filteredRun.summary.replayFailedCount).toBe(0);
   });
 
   it('cFp41.1 expanded-run regression: starter-nilfgaard-vs-monsters seed-010 mirror-0 does not stack overflow', () => {

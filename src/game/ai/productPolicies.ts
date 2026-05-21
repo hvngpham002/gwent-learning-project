@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp43 with post-cFp43 casebook/decision analysis through cFp45. Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43), post-cFp43 casebook (cFp44), and remaining-overinvestment calibration review (cFp45). cFp45 is analysis-only: aggregate public artifacts did not support a safe narrow behavior patch. Benchmark rating infrastructure added in cFp46. cFp47 adds deterministic rating snapshot and comparison ledger for longitudinal rating tracking. The recommendation is to pause hand-tuned heuristic work for ratings/search, or first add trace-level guard telemetry before another pass.",
-    latestPhase: "cFp47",
-    latestSpecPath: "docs/spec/2026-05-21-cFp47-specs.md",
-    latestReportPath: "audit/reports/2026-05-21-cFp47-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp43 with post-cFp43 casebook/decision analysis through cFp45. Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43), post-cFp43 casebook (cFp44), and remaining-overinvestment calibration review (cFp45). cFp45 is analysis-only: aggregate public artifacts did not support a safe narrow behavior patch. Benchmark rating infrastructure added in cFp46. cFp47 adds deterministic rating snapshot and comparison ledger for longitudinal rating tracking. cFp48 adds a robust 1000-record starter-matrix evaluation suite and first suite-local cFp48 rating baseline without changing policy behavior. The recommendation is to pause hand-tuned heuristic work for ratings/search, or first add trace-level guard telemetry before another pass.",
+    latestPhase: "cFp48",
+    latestSpecPath: "docs/spec/2026-05-21-cFp48-specs.md",
+    latestReportPath: "audit/reports/2026-05-21-cFp48-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
@@ -82,6 +82,11 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
         suiteId: "benchmark-v1-starter-matrix-expanded-v1",
         label: "v1 expanded starter matrix",
         result: "305 win / 90 loss / 5 draw vs v0; 0 policy failures",
+      },
+      {
+        suiteId: "benchmark-v1-starter-matrix-robust-v1",
+        label: "v1 robust starter matrix",
+        result: "776 win / 206 loss / 18 draw vs v0; 0 policy failures",
       },
     ],
     capabilities: [
@@ -104,6 +109,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "remaining overinvestment calibration decision note (cFp45)",
       "Glicko rating layer for benchmark artifacts (cFp46)",
       "deterministic rating snapshot and comparison ledger (cFp47)",
+      "robust 1000-record starter-matrix evaluation suite (cFp48)",
     ],
   },
 ];

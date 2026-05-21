@@ -166,6 +166,100 @@ PROFILES: dict[str, tuple[BenchmarkStep, ...]] = {
             ),
         ),
     ),
+    "v1-robust": (
+        BenchmarkStep(
+            name="v1 robust starter matrix",
+            command="npm run benchmark:v1-starter-matrix-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust failure mining",
+            command="npm run benchmark:v1-failure-mining-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/failure-mining/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust ratings",
+            command="npm run benchmark:ratings:v1-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust rating comparison",
+            command="npm run benchmark:ratings:compare:v1-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/snapshots/cFp48",
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/ledger.json",
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/comparisons/cFp48-vs-latest",
+            ),
+        ),
+    ),
+    "v1-robust-repeat": (
+        BenchmarkStep(
+            name="v1 robust starter matrix",
+            command="npm run benchmark:v1-starter-matrix-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust failure mining",
+            command="npm run benchmark:v1-failure-mining-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/failure-mining/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust ratings",
+            command="npm run benchmark:ratings:v1-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust rating comparison",
+            command="npm run benchmark:ratings:compare:v1-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/snapshots/cFp48",
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/ledger.json",
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/comparisons/cFp48-vs-latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust starter matrix repeat",
+            command="npm run benchmark:v1-starter-matrix-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust failure mining repeat",
+            command="npm run benchmark:v1-failure-mining-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/failure-mining/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust ratings repeat",
+            command="npm run benchmark:ratings:v1-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/latest",
+            ),
+        ),
+        BenchmarkStep(
+            name="v1 robust rating comparison repeat",
+            command="npm run benchmark:ratings:compare:v1-robust",
+            artifacts=(
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/snapshots/cFp48",
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/ledger.json",
+                f"{BENCHMARK_RESULT_ROOT}/benchmark-v1-starter-matrix-robust-v1/ratings/comparisons/cFp48-vs-latest",
+            ),
+        ),
+    ),
     "v1-post-cfp43": (
         BenchmarkStep(
             name="v1 smoke comparison",
