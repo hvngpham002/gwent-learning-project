@@ -8,3 +8,5 @@ export * from './runBenchmark';
 export * from './artifacts';
 export * from './failureMining';
 export * from './failureMiningArtifacts';
+export * from './ratings';
+export * from './ratingArtifacts';

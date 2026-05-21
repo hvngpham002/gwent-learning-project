@@ -338,11 +338,40 @@ and does not include card identities, hand arrays, or instance IDs.
 It is excluded from default benchmark output, preserving backward
 compatibility for existing consumers.
 
+## Rating Layer (cFp46)
+
+cFp46 adds a deterministic Glicko-1 rating layer that consumes existing public
+benchmark `records.jsonl` artifacts and produces rating/RD reports. It does not
+change AI behavior, engine rules, legal moves, UI behavior, benchmark suite
+definitions, failure-mining classifiers, or product difficulty.
+
+Rating artifacts are written under:
+
+```text
+docs/research/literature/ai/benchmark-results/<suiteId>/ratings/latest/
+  manifest.json
+  ratings.json
+  report.md
+```
+
+Three required scopes are produced: `policy`, `policy_deck`, `policy_faction`.
+An optional `policy_matchup` scope is also available.
+
+Each rating entry includes: rating, RD, 95% CI, conservative rating (rating - 2*RD),
+games played, wins, losses, draws. High RD signals uncertain estimates based on
+few games.
+
+Generated artifact suites:
+
+- `benchmark-v1-starter-matrix-v1/ratings/latest/`
+- `benchmark-v1-starter-matrix-expanded-v1/ratings/latest/`
+
+CLI: `tsx scripts/run-benchmark-rating-report.ts --suite <suiteId>`
+NPM: `npm run benchmark:ratings:v1-starter-matrix` / `npm run benchmark:ratings:v1-expanded`
+
 ## Deferred Work
 
-Glicko and TrueSkill are deferred because cFp21 establishes the ledger
-and fixed-suite substrate they should consume. Approximate best response
-is deferred because Batch B treats it as a later robustness probe, not as
-the first evaluation layer. Search policies, v1.1/v2 policy tuning, ML
-exports, Python notebooks, mechanics/competitive deck suites, browser
-benchmark execution, and product difficulty tiers remain future work.
+TrueSkill is deferred; cFp46 implements only Glicko-1. Approximate best response
+is deferred because Batch B treats it as a later robustness probe. Search policies,
+v1.1/v2 policy tuning, ML exports, Python notebooks, mechanics/competitive deck
+suites, browser benchmark execution, and product difficulty tiers remain future work.

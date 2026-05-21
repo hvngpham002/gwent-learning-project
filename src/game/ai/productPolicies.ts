@@ -62,10 +62,10 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp43 with post-cFp43 casebook/decision analysis through cFp45. Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43), post-cFp43 casebook (cFp44), and remaining-overinvestment calibration review (cFp45). cFp45 is analysis-only: aggregate public artifacts did not support a safe narrow behavior patch, so the recommendation is to pause heuristic tuning or add trace-level guard telemetry before another pass.",
-    latestPhase: "cFp45",
-    latestSpecPath: "docs/spec/2026-05-21-cFp45-specs.md",
-    latestReportPath: "audit/reports/2026-05-21-cFp45-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp43 with post-cFp43 casebook/decision analysis through cFp45. Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43), post-cFp43 casebook (cFp44), and remaining-overinvestment calibration review (cFp45). cFp45 is analysis-only: aggregate public artifacts did not support a safe narrow behavior patch. Benchmark rating infrastructure added in cFp46. The recommendation is to pause hand-tuned heuristic work for ratings/search, or first add trace-level guard telemetry before another pass.",
+    latestPhase: "cFp46",
+    latestSpecPath: "docs/spec/2026-05-21-cFp46-specs.md",
+    latestReportPath: "audit/reports/2026-05-21-cFp46-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
@@ -102,6 +102,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "round-resource exhaustion casebook (cFp42)",
       "round-one overinvestment guard (cFp43)",
       "remaining overinvestment calibration decision note (cFp45)",
+      "Glicko rating layer for benchmark artifacts (cFp46)",
     ],
   },
 ];

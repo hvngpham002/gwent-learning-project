@@ -20,13 +20,12 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
-cFp45: Remaining Round-One Overinvestment Calibration, which reviewed the 26
-remaining expanded overinvestment cases after cFp44 and concluded that the
-available aggregate public artifacts do not support a safe narrow behavior
-patch. The latest committed benchmark artifact refresh is the cFp43
-post-implementation run for the current 120-record and expanded 400-record
-starter matrices. The behavior stack builds on
-the cFp27 through cFp43 tuning and diagnostics chain:
+cFp45: Remaining Round-One Overinvestment Calibration. The latest infrastructure
+phase is cFp46: Glicko Rating Layer For Benchmark Artifacts, which adds
+deterministic rating/RD reports over existing public benchmark records. The
+latest committed benchmark artifact refresh is the cFp43 post-implementation run
+for the current 120-record and expanded 400-record starter matrices. The
+behavior stack builds on the cFp27 through cFp43 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -1140,3 +1139,33 @@ cFp45 updates AI Lab/product metadata so `/ai-lab` points at the latest analysis
 phase. It does not change AI behavior, engine rules, legal moves, UI behavior,
 catalog data, deck presets, benchmark suite shape, failure-mining classifiers,
 ratings, search, training, or product difficulty.
+
+### Glicko Rating Layer For Benchmark Artifacts (cFp46)
+
+cFp46 adds a deterministic, research-local Glicko-style rating layer over
+existing public benchmark `records.jsonl` artifacts. It does not change AI
+behavior, engine rules, legal moves, UI behavior, catalog data, deck presets,
+benchmark suite definitions, failure-mining classifiers, search, training, or
+product difficulty.
+
+The rating layer:
+
+- Reads `BenchmarkMatchRecord` rows from the committed records.jsonl files.
+- Filters to eligible records (status=`completed`, winner not null, both seat
+  results not `none`, replayStatus not `failed`).
+- Treats each artifact as one rating period per scope.
+- Initializes entities to rating=1500, RD=350, then computes Glicko-1 updates
+  using pre-period ratings for all opponents.
+- Produces three required scopes: `policy`, `policy_deck`, `policy_faction`
+  (plus optional `policy_matchup`).
+- Writes rating artifacts under `benchmark-results/<suiteId>/ratings/latest/`
+  including manifest.json, ratings.json, and report.md.
+- Includes interpretation warnings: ratings are not exploitability, high RD
+  means uncertain, do not compare across suite pools, research-local only.
+
+Rating artifacts generated:
+
+- `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/ratings/latest/`
+- `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/ratings/latest/`
+
+No AI policy, engine rule, UI, or difficulty behavior changed.
