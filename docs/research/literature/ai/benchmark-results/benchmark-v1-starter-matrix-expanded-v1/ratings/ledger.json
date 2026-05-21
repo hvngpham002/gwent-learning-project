@@ -7,8 +7,8 @@
       "ignoredRecordCount": 0,
       "label": "cFp46 snapshot",
       "notes": "Frozen cFp46 rating snapshot for suite benchmark-v1-starter-matrix-expanded-v1.",
-      "ratingsJsonHash": "4b576cfe026c4170d1d8bbdc1bfb625f475ba7d5701ee78fed6dab7a76e4d326",
-      "reportMdHash": "",
+      "ratingsJsonHash": "070a9a9a3a9385d2b30353421040078b544d48b4eff27b857f6fabe0af4657c4",
+      "reportMdHash": "2c5509d3b56cc7f8e67ee02f3640af479919876d9ff7eb5c750666362fd20f79",
       "snapshotId": "cFp46",
       "sourceRecordCount": 400,
       "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/latest/records.jsonl"
@@ -18,9 +18,9 @@
       "eligibleRecordCount": 400,
       "ignoredRecordCount": 0,
       "label": "latest snapshot",
-      "notes": "Frozen cFp46 rating snapshot for suite benchmark-v1-starter-matrix-expanded-v1.",
-      "ratingsJsonHash": "4b576cfe026c4170d1d8bbdc1bfb625f475ba7d5701ee78fed6dab7a76e4d326",
-      "reportMdHash": "",
+      "notes": "Current latest rating artifact for suite benchmark-v1-starter-matrix-expanded-v1.",
+      "ratingsJsonHash": "070a9a9a3a9385d2b30353421040078b544d48b4eff27b857f6fabe0af4657c4",
+      "reportMdHash": "2c5509d3b56cc7f8e67ee02f3640af479919876d9ff7eb5c750666362fd20f79",
       "snapshotId": "latest",
       "sourceRecordCount": 400,
       "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/latest/records.jsonl"

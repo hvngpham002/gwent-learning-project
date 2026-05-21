@@ -7,12 +7,11 @@ import type { BenchmarkRatingOutput } from "./ratings";
 import type {
   RatingComparisonManifest,
   RatingComparisonOutput,
-  RatingComparisonEntry,
   RatingLedger,
-  RatingLedgerSnapshot,
   RatingSnapshotInfo,
 } from "./ratingComparisons";
 import {
+  compareRatingOutputs,
   scanComparisonOutputForAbsolutePaths,
   scanComparisonOutputSafety,
 } from "./ratingComparisons";
@@ -76,7 +75,7 @@ export function buildSnapshotBundle(
   return {
     manifestJson: stablePrettyJson(manifest),
     ratingsJson: info.ratingsJson,
-    reportMarkdown: "",
+    reportMarkdown: info.reportMarkdown,
   };
 }
 
@@ -268,15 +267,11 @@ export async function writeComparisonBundle(
 // ─── Full pipeline: snapshot + ledger + comparison ──────────────────────────
 
 export interface ComparisonPipelineOptions {
-  suiteId: string;
   baseSnapshotId: string;
   candidateSnapshotId: string;
-  comparisonDirName: string;
   createdByPhase: string;
   baseRatingsJson: string;
   candidateRatingsJson: string;
-  candidateOutput: BenchmarkRatingOutput;
-  existingSnapshots: RatingLedgerSnapshot[];
 }
 
 export async function runComparisonPipeline(
@@ -285,152 +280,14 @@ export async function runComparisonPipeline(
   comparison: RatingComparisonOutput;
   bundle: ComparisonArtifactBundle;
 }> {
-  type ParsedScope = { scope: string; entries: Array<{ key: string; label: string; rating: number; rd: number; conservativeRating: number; games: number }> };
-  type ParsedOutput = { scopes: ParsedScope[]; suiteId: string };
-
-  // Parse base and candidate outputs from JSON strings
-  const baseParsed = JSON.parse(opts.baseRatingsJson) as ParsedOutput;
-  const candidateParsed = JSON.parse(opts.candidateRatingsJson) as ParsedOutput;
-
-  // Build comparison entries from the parsed scopes
-  const baseMap = new Map<string, {
-    scope: string;
-    key: string;
-    label: string;
-    rating: number;
-    rd: number;
-    conservativeRating: number;
-    games: number;
-  }>();
-
-  for (const scope of baseParsed.scopes) {
-    for (const entry of scope.entries) {
-      baseMap.set(entry.key, { scope: scope.scope, ...entry });
-    }
-  }
-
-  const candidateMap = new Map<string, {
-    scope: string;
-    key: string;
-    label: string;
-    rating: number;
-    rd: number;
-    conservativeRating: number;
-    games: number;
-  }>();
-
-  for (const scope of candidateParsed.scopes) {
-    for (const entry of scope.entries) {
-      candidateMap.set(entry.key, { scope: scope.scope, ...entry });
-    }
-  }
-
-  const allKeys = new Set<string>();
-  for (const key of baseMap.keys()) allKeys.add(key);
-  for (const key of candidateMap.keys()) allKeys.add(key);
-
-  const entries: RatingComparisonEntry[] = [];
-
-  for (const key of allKeys) {
-    const base = baseMap.get(key);
-    const candidate = candidateMap.get(key);
-
-    let status: "common" | "new" | "removed";
-    if (base && candidate) status = "common";
-    else if (candidate && !base) status = "new";
-    else status = "removed";
-
-    const baseRating = base?.rating ?? 0;
-    const candidateRating = candidate?.rating ?? 0;
-    const baseRd = base?.rd ?? 0;
-    const candidateRd = candidate?.rd ?? 0;
-    const baseConservative = base?.conservativeRating ?? 0;
-    const candidateConservative = candidate?.conservativeRating ?? 0;
-    const baseGames = base?.games ?? 0;
-    const candidateGames = candidate?.games ?? 0;
-
-    const deltaRating = Math.round((candidateRating - baseRating) * 100) / 100;
-    const deltaRd = Math.round((candidateRd - baseRd) * 100) / 100;
-    const deltaConservative = Math.round((candidateConservative - baseConservative) * 100) / 100;
-    const deltaGames = candidateGames - baseGames;
-
-    const combinedRd = Math.round(
-      Math.sqrt(baseRd * baseRd + candidateRd * candidateRd) * 100
-    ) / 100;
-
-    let deltaOverCombinedRd: number | null = null;
-    if (status === "common" && combinedRd > 0) {
-      deltaOverCombinedRd = Math.round(((candidateRating - baseRating) / combinedRd) * 10000) / 10000;
-    }
-
-    const scope = base?.scope ?? candidate!.scope;
-    const label = base?.label ?? candidate!.label;
-
-    // Derive signal
-    let signal: typeof entries[0]["signal"];
-    if (status === "new") signal = "new_entry";
-    else if (status === "removed") signal = "removed_entry";
-    else if (deltaRating === 0 && deltaRd === 0 && deltaConservative === 0 && deltaGames === 0) signal = "no_change";
-    else if (deltaOverCombinedRd !== null && deltaConservative > 0 && deltaOverCombinedRd >= 0.5) signal = "directional_gain";
-    else if (deltaOverCombinedRd !== null && deltaConservative < 0 && deltaOverCombinedRd <= -0.5) signal = "directional_regression";
-    else signal = "uncertain";
-
-    let note: string;
-    if (status === "new") note = "Entry present in candidate only. No baseline to compare against.";
-    else if (status === "removed") note = "Entry present in baseline only. No candidate data to compare against.";
-    else if (signal === "no_change") note = "No rating or game-count change detected between baseline and candidate.";
-    else if (signal === "directional_gain") note = "Heuristic comparison label only: conservative rating increased with sufficient combined RD signal. Not exploitability or product difficulty.";
-    else if (signal === "directional_regression") note = "Heuristic comparison label only: conservative rating decreased with sufficient combined RD signal. Not exploitability or product difficulty.";
-    else note = "Rating movement detected but combined-RD signal is weak. Interpret cautiously.";
-
-    entries.push({
-      scope,
-      key,
-      label,
-      status,
-      baseRating: base ? baseRating : null,
-      baseRd: base ? baseRd : null,
-      baseConservativeRating: base ? baseConservative : null,
-      baseGames: base ? baseGames : null,
-      candidateRating: candidate ? candidateRating : null,
-      candidateRd: candidate ? candidateRd : null,
-      candidateConservativeRating: candidate ? candidateConservative : null,
-      candidateGames: candidate ? candidateGames : null,
-      deltaRating,
-      deltaRd,
-      deltaConservativeRating: deltaConservative,
-      deltaGames,
-      combinedRd: status === "common" ? combinedRd : 0,
-      deltaOverCombinedRd: deltaOverCombinedRd !== null ? deltaOverCombinedRd : null,
-      signal,
-      note,
-    });
-  }
-
-  entries.sort((a, b) => {
-    const scopeCmp = a.scope.localeCompare(b.scope);
-    if (scopeCmp !== 0) return scopeCmp;
-    if (a.status !== b.status) {
-      const order = { common: 0, new: 1, removed: 2 };
-      return order[a.status] - order[b.status];
-    }
-    return a.key.localeCompare(b.key);
-  });
-
-  const comparison: RatingComparisonOutput = {
-    schemaVersion: "rating-comparison-v1",
-    suiteId: opts.suiteId,
-    baseSnapshotId: opts.baseSnapshotId,
-    candidateSnapshotId: opts.candidateSnapshotId,
-    entries,
-  };
-
-  // Validate suite match
-  if (baseParsed.suiteId !== candidateParsed.suiteId) {
-    throw new Error(
-      `Suite mismatch: cannot compare base suite "${baseParsed.suiteId}" against candidate suite "${candidateParsed.suiteId}".`
-    );
-  }
+  const baseOutput = JSON.parse(opts.baseRatingsJson) as BenchmarkRatingOutput;
+  const candidateOutput = JSON.parse(opts.candidateRatingsJson) as BenchmarkRatingOutput;
+  const comparison = compareRatingOutputs(
+    baseOutput,
+    candidateOutput,
+    opts.baseSnapshotId,
+    opts.candidateSnapshotId,
+  );
 
   // Safety checks
   const safetyIssues = scanComparisonOutputSafety(comparison);
@@ -472,8 +329,17 @@ export async function readSnapshotInfo(
     ratingsSubdir,
     "manifest.json"
   );
+  const reportPath = resolve(
+    rootDir,
+    "docs/research/literature/ai/benchmark-results",
+    suiteId,
+    "ratings",
+    ratingsSubdir,
+    "report.md"
+  );
 
   const ratingsJson = await readFile(ratingsPath, "utf8");
+  const reportMarkdown = await readFile(reportPath, "utf8");
   const manifestContent = await readFile(manifestPath, "utf8");
   const manifest = JSON.parse(manifestContent) as {
     sourceRecordsPath: string;
@@ -486,13 +352,16 @@ export async function readSnapshotInfo(
     suiteId,
     snapshotId: snapshotDir,
     ratingsJson,
+    reportMarkdown,
     ratingsJsonHash: computeHash(ratingsJson),
-    reportMdHash: "",
+    reportMdHash: computeHash(reportMarkdown),
     sourceRecordsPath: manifest.sourceRecordsPath,
     sourceRecordCount: manifest.sourceRecordCount,
     eligibleRecordCount: manifest.eligibleRecordCount,
     ignoredRecordCount: manifest.ignoredRecordCount,
     createdByPhase: phaseLabel,
-    notes: `Frozen cFp46 rating snapshot for suite ${suiteId}.`,
+    notes: snapshotDir === "latest"
+      ? `Current latest rating artifact for suite ${suiteId}.`
+      : `Frozen ${snapshotDir} rating snapshot for suite ${suiteId}.`,
   };
 }

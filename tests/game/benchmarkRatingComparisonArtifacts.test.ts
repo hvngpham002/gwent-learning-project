@@ -240,6 +240,7 @@ describe("comparison artifacts: deterministic output", () => {
       suiteId: "test-suite",
       snapshotId: "cFp46",
       ratingsJson: JSON.stringify({ schemaVersion: "benchmark-rating-v1" }),
+      reportMarkdown: "# Test Report\n",
       ratingsJsonHash: "abc123",
       reportMdHash: "def456",
       sourceRecordsPath: "docs/research/literature/ai/benchmark-results/test/records.jsonl",
@@ -264,6 +265,7 @@ describe("comparison artifacts: deterministic output", () => {
     expect(manifest.reportMdHash).toBe("def456");
     expect(manifest.createdByPhase).toBe("cFp47");
     expect(manifest.notes).toBe("test snapshot");
+    expect(bundle.reportMarkdown).toBe("# Test Report\n");
   });
 });
 
@@ -333,6 +335,16 @@ describe("comparison artifacts: integration with existing ratings", () => {
     });
     expect(pathHazards).toHaveLength(0);
 
+    const bundle = buildComparisonBundle(
+      {
+        schemaVersion: "rating-comparison-v1",
+        suiteId: "suite-a",
+        baseSnapshotId: "cFp46",
+        candidateSnapshotId: "latest",
+        entries: [],
+      },
+      "cFp47"
+    );
     const combined = [bundle.manifestJson, bundle.comparisonJson, bundle.reportMarkdown].join("\n");
     expect(combined).not.toContain("C:\\");
     expect(combined).not.toContain("/Users/");

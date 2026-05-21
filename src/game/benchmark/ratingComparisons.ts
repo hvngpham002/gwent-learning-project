@@ -65,6 +65,7 @@ export interface RatingSnapshotInfo {
   suiteId: string;
   snapshotId: string;
   ratingsJson: string;
+  reportMarkdown: string;
   ratingsJsonHash: string;
   reportMdHash: string;
   sourceRecordsPath: string;

@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, copyFile, mkdir, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -95,6 +95,69 @@ const readJsonFile = async (path: string): Promise<string> => {
   return content;
 };
 
+const ratingArtifactPath = (
+  suiteId: string,
+  snapshotId: string,
+  filename: "manifest.json" | "ratings.json" | "report.md",
+): string => {
+  const subdir = snapshotId === "latest" ? "latest" : `snapshots/${snapshotId}`;
+  return resolve(
+    rootDir,
+    "docs/research/literature/ai/benchmark-results",
+    suiteId,
+    "ratings",
+    subdir,
+    filename,
+  );
+};
+
+const fileExists = async (path: string): Promise<boolean> => {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const ensureCfp46Snapshot = async (suiteId: string, snapshotId: string): Promise<void> => {
+  if (snapshotId === "latest") {
+    return;
+  }
+
+  const requiredFiles = ["manifest.json", "ratings.json", "report.md"] as const;
+  const snapshotFilesExist = await Promise.all(
+    requiredFiles.map((filename) => fileExists(ratingArtifactPath(suiteId, snapshotId, filename))),
+  );
+  if (snapshotFilesExist.every(Boolean)) {
+    return;
+  }
+
+  if (snapshotId !== "cFp46") {
+    throw new CliUsageError(
+      `Snapshot "${snapshotId}" does not exist. cFp47 only auto-creates the cFp46 baseline from latest.`,
+    );
+  }
+
+  const snapshotDir = resolve(
+    rootDir,
+    "docs/research/literature/ai/benchmark-results",
+    suiteId,
+    "ratings",
+    "snapshots",
+    snapshotId,
+  );
+  await mkdir(snapshotDir, { recursive: true });
+  await Promise.all(
+    requiredFiles.map((filename) =>
+      copyFile(
+        ratingArtifactPath(suiteId, "latest", filename),
+        ratingArtifactPath(suiteId, snapshotId, filename),
+      )
+    ),
+  );
+};
+
 const loadExistingSnapshots = async (
   suiteId: string
 ): Promise<RatingLedgerSnapshot[]> => {
@@ -120,6 +183,9 @@ const run = async () => {
 
   console.log(`cFp47 comparison: suite=${options.suiteId} base=${options.baseSnapshot} candidate=${options.candidateSnapshot}`);
 
+  await ensureCfp46Snapshot(options.suiteId, options.baseSnapshot);
+  await ensureCfp46Snapshot(options.suiteId, options.candidateSnapshot);
+
   // Step 1: Read base snapshot info
   const baseSnapshotInfo = await readSnapshotInfo(
     options.suiteId,
@@ -140,49 +206,35 @@ const run = async () => {
   const existingSnapshots = await loadExistingSnapshots(options.suiteId);
 
   // Step 4: Build/update ledger with both snapshots
-  const ledgerSnapshots: RatingLedgerSnapshot[] = [];
-  const seenIds = new Set<string>();
+  const ledgerSnapshotsById = new Map<string, RatingLedgerSnapshot>();
 
   for (const snap of existingSnapshots) {
-    if (!seenIds.has(snap.snapshotId)) {
-      ledgerSnapshots.push(snap);
-      seenIds.add(snap.snapshotId);
-    }
+    ledgerSnapshotsById.set(snap.snapshotId, snap);
   }
 
-  // Add base snapshot to ledger
-  if (!seenIds.has(baseSnapshotInfo.snapshotId)) {
-    ledgerSnapshots.push({
-      snapshotId: baseSnapshotInfo.snapshotId,
-      label: `${baseSnapshotInfo.snapshotId} snapshot`,
-      sourceRecordsPath: baseSnapshotInfo.sourceRecordsPath,
-      sourceRecordCount: baseSnapshotInfo.sourceRecordCount,
-      eligibleRecordCount: baseSnapshotInfo.eligibleRecordCount,
-      ignoredRecordCount: baseSnapshotInfo.ignoredRecordCount,
-      ratingsJsonHash: baseSnapshotInfo.ratingsJsonHash,
-      reportMdHash: baseSnapshotInfo.reportMdHash,
-      createdByPhase: baseSnapshotInfo.createdByPhase,
-      notes: baseSnapshotInfo.notes,
+  const upsertSnapshot = (snapshot: typeof baseSnapshotInfo) => {
+    ledgerSnapshotsById.set(snapshot.snapshotId, {
+      snapshotId: snapshot.snapshotId,
+      label: `${snapshot.snapshotId} snapshot`,
+      sourceRecordsPath: snapshot.sourceRecordsPath,
+      sourceRecordCount: snapshot.sourceRecordCount,
+      eligibleRecordCount: snapshot.eligibleRecordCount,
+      ignoredRecordCount: snapshot.ignoredRecordCount,
+      ratingsJsonHash: snapshot.ratingsJsonHash,
+      reportMdHash: snapshot.reportMdHash,
+      createdByPhase: snapshot.createdByPhase,
+      notes: snapshot.notes,
     });
-    seenIds.add(baseSnapshotInfo.snapshotId);
+  };
+
+  upsertSnapshot(baseSnapshotInfo);
+  if (options.candidateSnapshot !== options.baseSnapshot) {
+    upsertSnapshot(candidateSnapshotInfo);
   }
 
-  // Add candidate snapshot to ledger (only if different from base)
-  if (options.candidateSnapshot !== options.baseSnapshot && !seenIds.has(candidateSnapshotInfo.snapshotId)) {
-    ledgerSnapshots.push({
-      snapshotId: candidateSnapshotInfo.snapshotId,
-      label: `${candidateSnapshotInfo.snapshotId} snapshot`,
-      sourceRecordsPath: candidateSnapshotInfo.sourceRecordsPath,
-      sourceRecordCount: candidateSnapshotInfo.sourceRecordCount,
-      eligibleRecordCount: candidateSnapshotInfo.eligibleRecordCount,
-      ignoredRecordCount: candidateSnapshotInfo.ignoredRecordCount,
-      ratingsJsonHash: candidateSnapshotInfo.ratingsJsonHash,
-      reportMdHash: candidateSnapshotInfo.reportMdHash,
-      createdByPhase: candidateSnapshotInfo.createdByPhase,
-      notes: candidateSnapshotInfo.notes,
-    });
-    seenIds.add(candidateSnapshotInfo.snapshotId);
-  }
+  const ledgerSnapshots: RatingLedgerSnapshot[] = [...ledgerSnapshotsById.values()].sort((a, b) =>
+    a.snapshotId.localeCompare(b.snapshotId)
+  );
 
   // Write ledger
   const ledger: RatingLedger = {
@@ -196,15 +248,11 @@ const run = async () => {
 
   // Step 5: Run comparison pipeline
   const { bundle } = await runComparisonPipeline({
-    suiteId: options.suiteId,
     baseSnapshotId: baseSnapshotInfo.snapshotId,
     candidateSnapshotId: candidateSnapshotInfo.snapshotId,
-    comparisonDirName: options.comparisonDir,
     createdByPhase: options.createdByPhase,
     baseRatingsJson: baseSnapshotInfo.ratingsJson,
     candidateRatingsJson: candidateSnapshotInfo.ratingsJson,
-    candidateOutput: null as never,
-    existingSnapshots: ledgerSnapshots,
   });
 
   // Step 6: Write comparison artifacts
