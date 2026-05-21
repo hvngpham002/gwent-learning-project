@@ -4,10 +4,10 @@
   "hiddenInfoSafetyNote": "Rating artifacts contain only public benchmark match records processed through a Glicko-1 rating layer. They do not include raw engine state, command logs, event logs, hand arrays, deck order, observations, or runtime card instance IDs.",
   "ignoredRecordCount": 0,
   "ratingSchemaVersion": "benchmark-rating-v1",
-  "ratingsJsonHash": "a63428cfc0851ce6d06e8e9d8921aad302d165080c345f7ebbf2dea652ac7cfe",
-  "reportMdHash": "edda88a6028eaba2e3306b90867e938c5503c5fcd19594c1aeef073c1d22a39b",
+  "ratingsJsonHash": "b18875fd66b84f69dc993bfeb66464201c5025a8f67eee012142b0bc543d48e8",
+  "reportMdHash": "cae93d1ad52e88c57f6c416578597b7b9b5351078e6d46be774f41cf2e45eaf5",
   "schemaVersion": "benchmark-rating-artifact-v1",
   "sourceRecordCount": 120,
-  "sourceRecordsPath": "C:\\Users\\User\\Documents\\Work\\gwent-learning-project\\docs\\research\\literature\\ai\\benchmark-results\\benchmark-v1-starter-matrix-v1\\latest\\records.jsonl",
+  "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/latest/records.jsonl",
   "suiteId": "benchmark-v1-starter-matrix-v1"
 }

@@ -217,4 +217,78 @@ describe("benchmark rating artifacts: report content", () => {
     expect(Array.isArray(ratings.scopes)).toBe(true);
     expect(Array.isArray(ratings.topEntriesByScope)).toBe(true);
   });
+
+  it("ratings.json is self-describing with top-level metadata fields", () => {
+    const records = [
+      makeRecord({
+        seats: {
+          seat_a: { seatId: "seat_a", policyId: "policy-a", playerId: "a", faction: "nilfgaard", deckPresetId: "deck-a" },
+          seat_b: { seatId: "seat_b", policyId: "policy-b", playerId: "b", faction: "scoiatael", deckPresetId: "deck-b" },
+        },
+      }),
+    ];
+    const output = computeRatings(records, "my-suite", "docs/research/literature/ai/benchmark-results/my-suite/latest/records.jsonl");
+    const bundle = buildRatingArtifactBundle(output);
+    const ratings = JSON.parse(bundle.ratingsJson);
+
+    expect(ratings.schemaVersion).toBe("benchmark-rating-v1");
+    expect(ratings.ratingSchemaVersion).toBe("benchmark-rating-v1");
+    expect(ratings.suiteId).toBe("my-suite");
+    expect(ratings.sourceRecordsPath).toBe("docs/research/literature/ai/benchmark-results/my-suite/latest/records.jsonl");
+    expect(typeof ratings.config).toBe("object");
+    expect(typeof ratings.summary).toBe("object");
+    expect(Array.isArray(ratings.topEntriesByScope)).toBe(true);
+    expect(Array.isArray(ratings.scopes)).toBe(true);
+    expect(Array.isArray(ratings.warnings)).toBe(true);
+  });
+
+  it("no Windows or absolute paths appear in rating artifacts", () => {
+    const records = [
+      makeRecord({
+        seats: {
+          seat_a: { seatId: "seat_a", policyId: "policy-a", playerId: "a", faction: "nilfgaard", deckPresetId: "deck-a" },
+          seat_b: { seatId: "seat_b", policyId: "policy-b", playerId: "b", faction: "scoiatael", deckPresetId: "deck-b" },
+        },
+      }),
+    ];
+    const output = computeRatings(records, "test", "docs/research/literature/ai/benchmark-results/test/latest/records.jsonl");
+    const bundle = buildRatingArtifactBundle(output);
+    const combined = [bundle.manifestJson, bundle.ratingsJson, bundle.reportMarkdown].join("\n");
+
+    // Should not contain absolute Windows paths
+    expect(combined).not.toContain("C:\\");
+    expect(combined).not.toContain("D:\\");
+    // Should not contain /Users/ (Unix absolute paths)
+    expect(combined).not.toContain("/Users/");
+    // Should not contain absolute repo paths
+    expect(combined).not.toMatch(/^[A-Z]:\\/);
+    // Should not contain backslashes (Windows separators)
+    expect(combined).not.toContain("\\");
+    // Source path should use forward slashes
+    const manifest = JSON.parse(bundle.manifestJson);
+    expect(manifest.sourceRecordsPath).toMatch(/^[\w/.-]+$/);
+    expect(manifest.sourceRecordsPath).not.toMatch(/[A-Z]:/);
+    expect(manifest.sourceRecordsPath).not.toMatch(/^\/Users/);
+  });
+
+  it("portable repo-relative source paths are stored in all artifact outputs", () => {
+    const records = [
+      makeRecord({
+        seats: {
+          seat_a: { seatId: "seat_a", policyId: "policy-a", playerId: "a", faction: "nilfgaard", deckPresetId: "deck-a" },
+          seat_b: { seatId: "seat_b", policyId: "policy-b", playerId: "b", faction: "scoiatael", deckPresetId: "deck-b" },
+        },
+      }),
+    ];
+    const repoPath = "docs/research/literature/ai/benchmark-results/my-suite/latest/records.jsonl";
+    const output = computeRatings(records, "my-suite", repoPath);
+    const bundle = buildRatingArtifactBundle(output);
+
+    const manifest = JSON.parse(bundle.manifestJson);
+    const ratings = JSON.parse(bundle.ratingsJson);
+
+    expect(manifest.sourceRecordsPath).toBe(repoPath);
+    expect(ratings.sourceRecordsPath).toBe(repoPath);
+    expect(bundle.reportMarkdown).toContain(repoPath);
+  });
 });

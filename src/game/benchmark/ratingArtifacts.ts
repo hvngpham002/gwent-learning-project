@@ -90,6 +90,10 @@ const buildRatingsJson = (output: BenchmarkRatingOutput): string => {
   });
 
   return stablePrettyJson({
+    schemaVersion: "benchmark-rating-v1",
+    ratingSchemaVersion: output.ratingSchemaVersion,
+    suiteId: output.suiteId,
+    sourceRecordsPath: output.sourceRecordsPath,
     config: {
       defaultRating: output.config.defaultRating,
       defaultRd: output.config.defaultRd,

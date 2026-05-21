@@ -3,7 +3,7 @@
 ## Source
 
 - suite id: benchmark-v1-starter-matrix-v1
-- source records path: C:\Users\User\Documents\Work\gwent-learning-project\docs\research\literature\ai\benchmark-results\benchmark-v1-starter-matrix-v1\latest\records.jsonl
+- source records path: docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/latest/records.jsonl
 - total records: 120
 - eligible records: 120
 - ignored records: 0

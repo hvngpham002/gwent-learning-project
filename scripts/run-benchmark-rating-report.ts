@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 
@@ -10,7 +10,7 @@ import { buildRatingArtifactBundle } from "../src/game/benchmark/ratingArtifacts
 interface CliOptions {
   suiteId: string;
   outDir: string;
-  recordsPath: string;
+  sourceRecordsPath: string;
 }
 
 class CliUsageError extends Error {
@@ -48,6 +48,28 @@ const readOptionValue = (args: readonly string[], index: number, flag: string) =
   return value;
 };
 
+const toRepoRelativePath = (absolutePath: string): string => {
+  try {
+    const relativePath = relative(rootDir, absolutePath);
+    // If relative path starts with ".." or is absolute, it's outside repo root
+    if (relativePath.startsWith("..") || resolve(relativePath).startsWith(rootDir.replace(/\\/g, "/"))) {
+      // Check more carefully: if the resolved relative path doesn't start with rootDir
+      const resolvedRelative = resolve(rootDir, relativePath);
+      if (!resolvedRelative.startsWith(rootDir)) {
+        throw new CliUsageError(
+          `--records path resolves outside the repository root. Path must be inside the project: ${relativePath}`
+        );
+      }
+    }
+    // Normalize to forward slashes for cross-platform determinism
+    return relativePath.replace(/\\/g, "/");
+  } catch {
+    throw new CliUsageError(
+      `--records path resolves outside the repository root and cannot produce a portable path.`
+    );
+  }
+};
+
 const parseArgs = (args: readonly string[]): CliOptions => {
   let suiteId = "";
   let outDir: string | undefined;
@@ -82,7 +104,10 @@ const parseArgs = (args: readonly string[]): CliOptions => {
   const resolvedOutDir = outDir ?? defaultOutputDir(suiteId);
   const resolvedRecordsPath = recordsPath ?? defaultRecordsPath(suiteId);
 
-  return { suiteId, outDir: resolvedOutDir, recordsPath: resolvedRecordsPath };
+  // Convert to repo-relative portable path
+  const sourceRecordsPath = toRepoRelativePath(resolvedRecordsPath);
+
+  return { suiteId, outDir: resolvedOutDir, sourceRecordsPath };
 };
 
 const readRecords = async (path: string): Promise<BenchmarkMatchRecord[]> => {
@@ -107,11 +132,13 @@ const writeRatingFiles = async (outDir: string, bundle: ReturnType<typeof buildR
 const run = async () => {
   const options = parseArgs(process.argv.slice(2));
 
-  console.log(`reading records: ${options.recordsPath}`);
-  const records = await readRecords(options.recordsPath);
+  console.log(`reading records: ${options.sourceRecordsPath}`);
+  // Resolve the actual file path from repo-relative path for reading
+  const actualRecordsPath = resolve(rootDir, options.sourceRecordsPath.replace(/\//g, "\\") as string);
+  const records = await readRecords(actualRecordsPath);
   console.log(`loaded ${records.length} records for suite ${options.suiteId}`);
 
-  const output = computeRatings(records, options.suiteId, options.recordsPath);
+  const output = computeRatings(records, options.suiteId, options.sourceRecordsPath);
   const bundle = buildRatingArtifactBundle(output);
 
   await writeRatingFiles(options.outDir, bundle);
