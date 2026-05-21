@@ -165,6 +165,71 @@ const passTrace = (
   } as unknown as AiDecisionTrace;
 };
 
+const roundOneInvestmentAnalysis = (
+  overrides: Partial<NonNullable<AiDecisionTrace["roundInvestmentAnalysis"]>> = {},
+): NonNullable<AiDecisionTrace["roundInvestmentAnalysis"]> => ({
+  ownBoardUnitCount: 5,
+  ownBoardHeroCount: 1,
+  ownBoardNonHeroUnitCount: 5,
+  ownBoardHornCount: 0,
+  ownBoardCardCount: 6,
+  positiveFutureUnitMoveCount: 2,
+  positiveFutureNonUnitMoveCount: 0,
+  futureRoundHandQuality: "thin",
+  currentRoundHandCount: 5,
+  estimatedHandCountAfterSelectedMove: 4,
+  selectedMoveSpendsHandCard: true,
+  selectedMoveIsCardAdvantage: false,
+  selectedMoveWouldLeaveNoPositiveUnitMove: false,
+  selectedMoveWouldLeaveNoUnitTempoCard: false,
+  nonEliminationRound: true,
+  scoreDelta: -2,
+  risk: "watch",
+  recommendation: "continue",
+  catchUpStatus: "upper_bound_possible",
+  stopLossRecommended: false,
+  stopLossReason: "none",
+  roundResourceBudget: 6,
+  roundResourcePressure: "watch",
+  resourceExhaustionRecommended: false,
+  resourceExhaustionReason: "none",
+  roundOneBoardAfterSelectedMove: 7,
+  roundOneOverinvestmentRecommended: false,
+  roundOneOverinvestmentReason: "none",
+  ...overrides,
+});
+
+const roundOneTrace = (
+  decisionIndex: number,
+  selectedKind: "play_card" | "pass",
+  analysisOverrides: Partial<NonNullable<AiDecisionTrace["roundInvestmentAnalysis"]>> = {},
+): AiDecisionTrace => {
+  const analysis = roundOneInvestmentAnalysis(analysisOverrides);
+  return {
+    policyId: "legal-heuristic-v1",
+    seatId: "seat_a" as SeatId,
+    decisionIndex,
+    phase: "playing",
+    round: 1,
+    publicState: {
+      ...publicState({ scoreDelta: analysis.scoreDelta }),
+      round: 1,
+      ownHandCount: analysis.currentRoundHandCount,
+    },
+    selected: { kind: selectedKind },
+    passAnalysis: selectedKind === "pass" ? { scoreDelta: analysis.scoreDelta } : null,
+    mulliganAnalysis: null,
+    roundInvestmentAnalysis: analysis,
+    handShapeAnalysis: null,
+    weatherPlacementAnalysis: null,
+    medicTimingAnalysis: null,
+    scoiataelFirstTurnAnalysis: null,
+    candidates: [],
+    reasonKind: "policy-round-investment",
+    reason: "synthetic round-one trace",
+  } as unknown as AiDecisionTrace;
+};
+
 const weatherTrace = (decisionIndex: number): AiDecisionTrace =>
   ({
     policyId: "legal-heuristic-v1",
@@ -238,6 +303,17 @@ const buildDebugResultWithTraces = (decisionTraces: readonly AiDecisionTrace[]):
     decisionTraces,
   }) as unknown as HeadlessMatchSimulationResult;
 
+const buildRoundOneDebugResult = (decisionTraces: readonly AiDecisionTrace[]): HeadlessMatchSimulationResult =>
+  ({
+    seed: "synthetic-0",
+    status: "completed",
+    steps: Array.from({ length: 8 }, (_, index) => roundOnePlayStep(index + 1)),
+    summary: {
+      roundsResolved: 3,
+    },
+    decisionTraces,
+  }) as unknown as HeadlessMatchSimulationResult;
+
 const buildSyntheticMiningResult = () =>
   buildBenchmarkFailureMiningReport({
     suiteId: SUITE_ID,
@@ -253,6 +329,21 @@ const buildPassMiningResult = (decisionTraces: readonly AiDecisionTrace[]) =>
     records: [buildRecord(0)],
     debugResults: [buildDebugResultWithTraces(decisionTraces)],
   });
+
+const buildRoundOneTelemetryMiningResult = (decisionTraces: readonly AiDecisionTrace[]) =>
+  buildBenchmarkFailureMiningReport({
+    suiteId: SUITE_ID,
+    benchmarkRunId: RUN_ID,
+    records: [buildRecord(0)],
+    debugResults: [buildRoundOneDebugResult(decisionTraces)],
+  });
+
+const getRoundOneOverinvestmentFinding = (decisionTraces: readonly AiDecisionTrace[]) => {
+  const result = buildRoundOneTelemetryMiningResult(decisionTraces);
+  const finding = result.findings.find((candidate) => candidate.kind === "round_one_overinvestment");
+  expect(finding).toBeTruthy();
+  return { result, finding: finding! };
+};
 
 describe("benchmark failure mining", () => {
   it("does not emit suspicious_pass solely because stopLossRecommended is false", () => {
@@ -361,6 +452,126 @@ describe("benchmark failure mining", () => {
     expect(result.summary.suppressedSuspiciousPassCountsByCategory.preserve_future_hand_pass).toBe(1);
     expect(artifacts.findingsJsonl).not.toContain("preserve_future_hand_pass");
     expect(result.findings.some((finding) => finding.kind === "suspicious_pass")).toBe(false);
+  });
+
+  it("adds scalar round-one guard telemetry to overinvestment findings", () => {
+    const { finding } = getRoundOneOverinvestmentFinding([
+      roundOneTrace(0, "play_card", {
+        roundOneBoardAfterSelectedMove: 6,
+        estimatedHandCountAfterSelectedMove: 5,
+        scoreDelta: -3,
+        roundOneOverinvestmentReason: "none",
+        recommendation: "continue",
+      }),
+      roundOneTrace(1, "play_card", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 4,
+        scoreDelta: 0,
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+        recommendation: "preserve_future_hand",
+      }),
+      roundOneTrace(2, "play_card", {
+        roundOneBoardAfterSelectedMove: 8,
+        estimatedHandCountAfterSelectedMove: 4,
+        scoreDelta: 5,
+        selectedMoveIsCardAdvantage: true,
+        roundOneOverinvestmentReason: "exception_card_advantage",
+        recommendation: "continue",
+      }),
+      roundOneTrace(3, "play_card", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 3,
+        scoreDelta: -1,
+        catchUpStatus: "single_move_catch_up",
+        roundOneOverinvestmentReason: "exception_single_move_catch_up",
+        recommendation: "continue",
+      }),
+      roundOneTrace(4, "pass", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 4,
+        scoreDelta: 2,
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+        recommendation: "preserve_future_hand",
+      }),
+    ]);
+
+    expect(finding.evidence).toEqual(
+      expect.objectContaining({
+        roundOneGuardTelemetryAvailable: true,
+        roundOneTraceDecisionCount: 5,
+        roundOnePlayCardTraceCount: 4,
+        roundOneGuardBaseGeometryCount: 3,
+        roundOneBoardFloorReachedCount: 3,
+        roundOneHandCapReachedCount: 3,
+        roundOneRecommendedCount: 1,
+        roundOneSuppressedPassCount: 1,
+        roundOneMaxBoardAfterSelectedMove: 8,
+        roundOneMinHandAfterSelectedMove: 3,
+        roundOneFirstBaseGeometryDecisionIndex: 1,
+        roundOneFirstRecommendedDecisionIndex: 1,
+        roundOneScoreDeltaBehindCount: 2,
+        roundOneScoreDeltaTiedCount: 1,
+        roundOneScoreDeltaAheadCount: 2,
+        roundOneReasonNoneCount: 1,
+        roundOneReasonBoardLimitCount: 2,
+        roundOneExceptionCardAdvantageCount: 1,
+        roundOneExceptionSingleMoveCatchUpCount: 1,
+        roundOneSelectedCardAdvantageCount: 1,
+        roundOneCatchUpSingleMoveCount: 1,
+        roundOneRecommendationPreserveFutureHandCount: 2,
+        roundOneRecommendationContinueCount: 3,
+      }),
+    );
+  });
+
+  it("marks round-one guard telemetry unavailable when trace evidence is missing", () => {
+    const { finding } = getRoundOneOverinvestmentFinding([]);
+
+    expect(finding.evidence).toEqual(
+      expect.objectContaining({
+        roundOneGuardTelemetryAvailable: false,
+        roundOneTraceDecisionCount: 0,
+        roundOnePlayCardTraceCount: 0,
+        roundOneGuardBaseGeometryCount: 0,
+        roundOneBoardFloorReachedCount: 0,
+        roundOneHandCapReachedCount: 0,
+        roundOneRecommendedCount: 0,
+        roundOneSuppressedPassCount: 0,
+        roundOneMaxBoardAfterSelectedMove: null,
+        roundOneMinHandAfterSelectedMove: null,
+        roundOneFirstBaseGeometryDecisionIndex: null,
+        roundOneFirstRecommendedDecisionIndex: null,
+        roundOneReasonNoneCount: 0,
+        roundOneExceptionCardAdvantageCount: 0,
+        roundOneRecommendationContinueCount: 0,
+      }),
+    );
+  });
+
+  it("keeps telemetry artifacts deterministic and hidden-info safe", () => {
+    const traces = [
+      roundOneTrace(0, "play_card", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 4,
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+      }),
+    ];
+    const first = buildRoundOneTelemetryMiningResult(traces);
+    const second = buildRoundOneTelemetryMiningResult(traces);
+    const artifacts = serializeBenchmarkFailureMiningArtifacts(first);
+    const combined = combinedBenchmarkFailureMiningArtifactText(artifacts);
+
+    expect(second).toEqual(first);
+    expect(first.summary.findingCountsByKind.round_one_overinvestment).toBe(1);
+    expect(first.summary.tuningQueue.map((item) => item.clusterId)).toEqual(["round_resource_exhaustion"]);
+    expect(scanBenchmarkFailureMiningArtifactsForHiddenInfo(artifacts)).toEqual([]);
+    expect(combined).toContain("roundOneGuardTelemetryAvailable");
+    hiddenInfoHazards.forEach((hazard) => {
+      expect(combined).not.toContain(hazard);
+    });
   });
 
   it("emits deterministic safe findings from synthetic records and in-memory traces", () => {

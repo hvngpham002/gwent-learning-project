@@ -1,6 +1,6 @@
 # Legal Heuristic v1
 
-Date: 2026-05-21
+Date: 2026-05-22
 
 ## Purpose
 
@@ -20,20 +20,22 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
-cFp49: Robust Failure-Mining Casebook. cFp49 analyzes the cFp48 1000-record
-robust failure-mining boundary, classifies round-resource, weather, Medic
-timing, matchup-skew, and suspicious-pass clusters, and recommends cFp50
-trace-level guard-state telemetry before any new behavior patch. The latest
-infrastructure phase is cFp48: Robust Starter Matrix Evaluation Suite, which
-adds a 25-seed / 1000-record starter matrix, robust failure-mining artifacts,
-robust Glicko ratings, a suite-local `cFp48` snapshot, and a deterministic
-`cFp48-vs-latest` comparison boundary. cFp47 freezes cFp46 rating artifacts as
-named `cFp46` snapshots, adds `ledger.json` per suite, and generates
-deterministic `cFp46-vs-latest` comparison artifacts with delta/signal
-computation. cFp46 added deterministic rating/RD reports over existing public
-benchmark records. The latest committed benchmark artifact refresh is the cFp48
-robust 1000-record starter matrix. The behavior stack builds on the cFp27
-through cFp43 tuning and diagnostics chain:
+cFp49: Robust Failure-Mining Casebook. The latest evaluation-infrastructure
+phase is cFp50: Round-One Overinvestment Guard-State Telemetry. cFp50 adds
+hidden-info-safe scalar cFp43 guard-state counts to existing
+`round_one_overinvestment` failure-mining findings and regenerates the current,
+expanded, and robust failure-mining artifacts without changing policy behavior.
+The latest suite infrastructure phase is cFp48: Robust Starter Matrix
+Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
+failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
+snapshot, and a deterministic `cFp48-vs-latest` comparison boundary. cFp47
+freezes cFp46 rating artifacts as named `cFp46` snapshots, adds `ledger.json`
+per suite, and generates deterministic `cFp46-vs-latest` comparison artifacts
+with delta/signal computation. cFp46 added deterministic rating/RD reports over
+existing public benchmark records. The latest committed benchmark record
+artifact refresh remains the cFp48 robust 1000-record starter matrix; the
+latest committed failure-mining artifact refresh is cFp50. The behavior stack
+builds on the cFp27 through cFp43 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -90,9 +92,10 @@ Current cFp43 benchmark totals:
 The next behavior decision should not broaden the round-one guard from aggregate
 finding counts alone. The cFp49 casebook confirms the robust
 `round_one_overinvestment` signal is durable and loss-correlated (71 findings,
-69 losses, 2 draws), but the public findings do not expose cFp43 guard-state or
-exception data. The recommended cFp50 scope is hidden-info-safe failure-mining
-guard-state telemetry before another v1 behavior patch.
+69 losses, 2 draws). cFp50 now exposes the missing scalar guard-state telemetry
+at the failure-mining boundary so the next casebook can distinguish threshold
+misses, exceptions, and intentional suppressed passes before another v1 behavior
+patch.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -1233,6 +1236,31 @@ failure-mining queue as follows:
 Recommended cFp50 scope: hidden-info-safe failure-mining guard-state telemetry,
 centered on remaining round-one overinvestment, before another v1 behavior
 patch.
+
+No AI policy behavior, engine rule, legal move, benchmark suite definition,
+failure-mining classifier, rating formula, catalog data, deck preset, product
+gameplay UI, search, training, or product difficulty behavior changed.
+
+### Round-One Guard-State Telemetry (cFp50)
+
+cFp50 adds hidden-info-safe scalar telemetry to existing
+`round_one_overinvestment` failure-mining findings. The new evidence summarizes
+round-one cFp43 guard geometry, recommendation counts, exception reason counts,
+score-delta direction counts, selected-card-advantage counts, catch-up status
+counts, and intentional overinvestment pass counts using only public
+`AiDecisionRoundInvestmentAnalysis` fields from in-memory decision traces.
+
+The regenerated failure-mining artifact boundary covers:
+
+- `benchmark-v1-starter-matrix-v1/failure-mining/latest/`
+- `benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest/`
+- `benchmark-v1-starter-matrix-robust-v1/failure-mining/latest/`
+
+The telemetry fields are scalar `number | boolean | null` values. They do not
+write card names, source IDs, runtime card instance IDs, move IDs, action refs,
+hand/deck/discard arrays, raw traces, raw match states, command logs, or event
+logs. Finding-kind counts, tuning-queue ranking, benchmark suite definitions,
+rating formulas, and policy behavior are unchanged by this phase.
 
 No AI policy behavior, engine rule, legal move, benchmark suite definition,
 failure-mining classifier, rating formula, catalog data, deck preset, product

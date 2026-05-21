@@ -14,7 +14,7 @@
 
 | Rank | Cluster | Severity | Finding count | Affected factions | Recommendation |
 |---:|---|---|---:|---|---|
-| 1 | round_resource_exhaustion | warning | 112 | monsters, nilfgaard, northern_realms, scoiatael, skellige | Tune round investment and future-hand valuation before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
+| 1 | round_resource_exhaustion | warning | 112 | monsters, nilfgaard, northern_realms, scoiatael, skellige | Analyze round-one guard telemetry and weak round-three resources before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
 | 2 | weathered_row_low_tempo | warning | 86 | monsters, nilfgaard, northern_realms, scoiatael, skellige | Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo. |
 | 3 | medic_no_target_timing | warning | 7 | nilfgaard, northern_realms, scoiatael | Review Medic timing thresholds where no-target or weak-target diagnostics still allow a Medic play. |
 | 4 | skellige_matchup_skew | warning | 55 | monsters, nilfgaard, northern_realms, scoiatael, skellige | Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes. |
@@ -33,7 +33,7 @@
 
 ## Recommended Next Scope
 
-Next behavior phase should tune round-resource exhaustion first, not suspicious-pass broadly.
+Next behavior phase should analyze round-resource exhaustion evidence before behavior tuning, not suspicious-pass broadly.
 
 ## Hidden-Info Boundary
 

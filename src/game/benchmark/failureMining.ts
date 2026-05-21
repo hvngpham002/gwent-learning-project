@@ -1,4 +1,8 @@
 import type { AiDecisionTrace } from "@/game/ai";
+import {
+  ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR,
+  ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP,
+} from "@/game/ai/legalHeuristicPolicyV1";
 import type { SeatId } from "@/game/core";
 import type { HeadlessMatchSimulationResult } from "@/game/sim";
 
@@ -538,6 +542,223 @@ const incrementCount = <T extends string>(counts: Record<T, number>, key: T) => 
   counts[key] = (counts[key] ?? 0) + 1;
 };
 
+const ROUND_ONE_GUARD_TELEMETRY_UNAVAILABLE = {
+  roundOneGuardTelemetryAvailable: false,
+  roundOneTraceDecisionCount: 0,
+  roundOnePlayCardTraceCount: 0,
+  roundOneGuardBaseGeometryCount: 0,
+  roundOneBoardFloorReachedCount: 0,
+  roundOneHandCapReachedCount: 0,
+  roundOneRecommendedCount: 0,
+  roundOneSuppressedPassCount: 0,
+  roundOneMaxBoardAfterSelectedMove: null,
+  roundOneMinHandAfterSelectedMove: null,
+  roundOneFirstBaseGeometryDecisionIndex: null,
+  roundOneFirstRecommendedDecisionIndex: null,
+  roundOneScoreDeltaBehindCount: 0,
+  roundOneScoreDeltaTiedCount: 0,
+  roundOneScoreDeltaAheadCount: 0,
+  roundOneReasonNoneCount: 0,
+  roundOneReasonBoardLimitCount: 0,
+  roundOneReasonLowFutureHandCount: 0,
+  roundOneExceptionNotRoundOneCount: 0,
+  roundOneExceptionLastGemCount: 0,
+  roundOneExceptionOpponentPassedCount: 0,
+  roundOneExceptionNonPlayCardCount: 0,
+  roundOneExceptionCardAdvantageCount: 0,
+  roundOneExceptionMatchWinningPlayCount: 0,
+  roundOneExceptionSingleMoveCatchUpCount: 0,
+  roundOneExceptionSingleCardHandCount: 0,
+  roundOneSelectedCardAdvantageCount: 0,
+  roundOneSelectedWouldLeaveNoPositiveUnitMoveCount: 0,
+  roundOneSelectedWouldLeaveNoUnitTempoCardCount: 0,
+  roundOneCatchUpSingleMoveCount: 0,
+  roundOneCatchUpImpossibleCount: 0,
+  roundOneRecommendationPreserveFutureHandCount: 0,
+  roundOneRecommendationSacrificeRoundCount: 0,
+  roundOneRecommendationContinueCount: 0,
+} satisfies Evidence;
+
+const buildRoundOneGuardTelemetry = (
+  result: HeadlessMatchSimulationResult | undefined,
+  seatId: SeatId,
+): Evidence => {
+  const traces =
+    result?.decisionTraces?.filter(
+      (trace) =>
+        trace.policyId === "legal-heuristic-v1" &&
+        trace.seatId === seatId &&
+        trace.phase === "playing" &&
+        trace.round === 1 &&
+        trace.roundInvestmentAnalysis,
+    ) ?? [];
+
+  if (traces.length === 0) {
+    return { ...ROUND_ONE_GUARD_TELEMETRY_UNAVAILABLE };
+  }
+
+  let roundOnePlayCardTraceCount = 0;
+  let roundOneGuardBaseGeometryCount = 0;
+  let roundOneBoardFloorReachedCount = 0;
+  let roundOneHandCapReachedCount = 0;
+  let roundOneRecommendedCount = 0;
+  let roundOneSuppressedPassCount = 0;
+  let roundOneMaxBoardAfterSelectedMove: number | null = null;
+  let roundOneMinHandAfterSelectedMove: number | null = null;
+  let roundOneFirstBaseGeometryDecisionIndex: number | null = null;
+  let roundOneFirstRecommendedDecisionIndex: number | null = null;
+  let roundOneScoreDeltaBehindCount = 0;
+  let roundOneScoreDeltaTiedCount = 0;
+  let roundOneScoreDeltaAheadCount = 0;
+  let roundOneReasonNoneCount = 0;
+  let roundOneReasonBoardLimitCount = 0;
+  let roundOneReasonLowFutureHandCount = 0;
+  let roundOneExceptionNotRoundOneCount = 0;
+  let roundOneExceptionLastGemCount = 0;
+  let roundOneExceptionOpponentPassedCount = 0;
+  let roundOneExceptionNonPlayCardCount = 0;
+  let roundOneExceptionCardAdvantageCount = 0;
+  let roundOneExceptionMatchWinningPlayCount = 0;
+  let roundOneExceptionSingleMoveCatchUpCount = 0;
+  let roundOneExceptionSingleCardHandCount = 0;
+  let roundOneSelectedCardAdvantageCount = 0;
+  let roundOneSelectedWouldLeaveNoPositiveUnitMoveCount = 0;
+  let roundOneSelectedWouldLeaveNoUnitTempoCardCount = 0;
+  let roundOneCatchUpSingleMoveCount = 0;
+  let roundOneCatchUpImpossibleCount = 0;
+  let roundOneRecommendationPreserveFutureHandCount = 0;
+  let roundOneRecommendationSacrificeRoundCount = 0;
+  let roundOneRecommendationContinueCount = 0;
+
+  traces.forEach((trace) => {
+    const analysis = trace.roundInvestmentAnalysis;
+    if (!analysis) return;
+
+    if (analysis.scoreDelta < 0) roundOneScoreDeltaBehindCount += 1;
+    else if (analysis.scoreDelta === 0) roundOneScoreDeltaTiedCount += 1;
+    else roundOneScoreDeltaAheadCount += 1;
+
+    switch (analysis.roundOneOverinvestmentReason) {
+      case "none":
+        roundOneReasonNoneCount += 1;
+        break;
+      case "round_one_board_limit":
+        roundOneReasonBoardLimitCount += 1;
+        break;
+      case "round_one_low_future_hand":
+        roundOneReasonLowFutureHandCount += 1;
+        break;
+      case "exception_not_round_one":
+        roundOneExceptionNotRoundOneCount += 1;
+        break;
+      case "exception_last_gem":
+        roundOneExceptionLastGemCount += 1;
+        break;
+      case "exception_opponent_passed":
+        roundOneExceptionOpponentPassedCount += 1;
+        break;
+      case "exception_non_play_card":
+        roundOneExceptionNonPlayCardCount += 1;
+        break;
+      case "exception_card_advantage":
+        roundOneExceptionCardAdvantageCount += 1;
+        break;
+      case "exception_match_winning_play":
+        roundOneExceptionMatchWinningPlayCount += 1;
+        break;
+      case "exception_single_move_catch_up":
+        roundOneExceptionSingleMoveCatchUpCount += 1;
+        break;
+      case "exception_single_card_hand":
+        roundOneExceptionSingleCardHandCount += 1;
+        break;
+    }
+
+    if (analysis.selectedMoveIsCardAdvantage) roundOneSelectedCardAdvantageCount += 1;
+    if (analysis.selectedMoveWouldLeaveNoPositiveUnitMove) {
+      roundOneSelectedWouldLeaveNoPositiveUnitMoveCount += 1;
+    }
+    if (analysis.selectedMoveWouldLeaveNoUnitTempoCard) {
+      roundOneSelectedWouldLeaveNoUnitTempoCardCount += 1;
+    }
+    if (analysis.catchUpStatus === "single_move_catch_up") roundOneCatchUpSingleMoveCount += 1;
+    if (analysis.catchUpStatus === "upper_bound_impossible") roundOneCatchUpImpossibleCount += 1;
+    if (analysis.recommendation === "preserve_future_hand") roundOneRecommendationPreserveFutureHandCount += 1;
+    if (analysis.recommendation === "sacrifice_round") roundOneRecommendationSacrificeRoundCount += 1;
+    if (analysis.recommendation === "continue") roundOneRecommendationContinueCount += 1;
+
+    if (trace.selected?.kind === "pass" && analysis.roundOneOverinvestmentRecommended) {
+      roundOneSuppressedPassCount += 1;
+    }
+
+    if (trace.selected?.kind !== "play_card") return;
+
+    roundOnePlayCardTraceCount += 1;
+    roundOneMaxBoardAfterSelectedMove = Math.max(
+      roundOneMaxBoardAfterSelectedMove ?? analysis.roundOneBoardAfterSelectedMove,
+      analysis.roundOneBoardAfterSelectedMove,
+    );
+    roundOneMinHandAfterSelectedMove = Math.min(
+      roundOneMinHandAfterSelectedMove ?? analysis.estimatedHandCountAfterSelectedMove,
+      analysis.estimatedHandCountAfterSelectedMove,
+    );
+
+    const boardFloorReached =
+      analysis.roundOneBoardAfterSelectedMove >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR;
+    const handCapReached =
+      analysis.estimatedHandCountAfterSelectedMove <= ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP;
+    const baseGeometryReached = boardFloorReached && handCapReached;
+
+    if (boardFloorReached) roundOneBoardFloorReachedCount += 1;
+    if (handCapReached) roundOneHandCapReachedCount += 1;
+    if (baseGeometryReached) {
+      roundOneGuardBaseGeometryCount += 1;
+      roundOneFirstBaseGeometryDecisionIndex ??= trace.decisionIndex;
+    }
+    if (analysis.roundOneOverinvestmentRecommended) {
+      roundOneRecommendedCount += 1;
+      roundOneFirstRecommendedDecisionIndex ??= trace.decisionIndex;
+    }
+  });
+
+  return {
+    roundOneGuardTelemetryAvailable: true,
+    roundOneTraceDecisionCount: traces.length,
+    roundOnePlayCardTraceCount,
+    roundOneGuardBaseGeometryCount,
+    roundOneBoardFloorReachedCount,
+    roundOneHandCapReachedCount,
+    roundOneRecommendedCount,
+    roundOneSuppressedPassCount,
+    roundOneMaxBoardAfterSelectedMove,
+    roundOneMinHandAfterSelectedMove,
+    roundOneFirstBaseGeometryDecisionIndex,
+    roundOneFirstRecommendedDecisionIndex,
+    roundOneScoreDeltaBehindCount,
+    roundOneScoreDeltaTiedCount,
+    roundOneScoreDeltaAheadCount,
+    roundOneReasonNoneCount,
+    roundOneReasonBoardLimitCount,
+    roundOneReasonLowFutureHandCount,
+    roundOneExceptionNotRoundOneCount,
+    roundOneExceptionLastGemCount,
+    roundOneExceptionOpponentPassedCount,
+    roundOneExceptionNonPlayCardCount,
+    roundOneExceptionCardAdvantageCount,
+    roundOneExceptionMatchWinningPlayCount,
+    roundOneExceptionSingleMoveCatchUpCount,
+    roundOneExceptionSingleCardHandCount,
+    roundOneSelectedCardAdvantageCount,
+    roundOneSelectedWouldLeaveNoPositiveUnitMoveCount,
+    roundOneSelectedWouldLeaveNoUnitTempoCardCount,
+    roundOneCatchUpSingleMoveCount,
+    roundOneCatchUpImpossibleCount,
+    roundOneRecommendationPreserveFutureHandCount,
+    roundOneRecommendationSacrificeRoundCount,
+    roundOneRecommendationContinueCount,
+  };
+};
+
 const isSafePassRecommendation = (recommendation: string | undefined) =>
   recommendation === "preserve_future_hand" || recommendation === "sacrifice_round";
 
@@ -811,6 +1032,7 @@ const buildRoundOneOverinvestmentFindings = ({
             round1PlayCardCount,
             matchOutcome,
             resolvedRoundCount: result.summary.roundsResolved,
+            ...buildRoundOneGuardTelemetry(result, seatId),
           },
           idParts: [seatPolicy(record, seatId), record.matchupId, record.seed, record.mirrorIndex, seatId],
         }),
@@ -896,7 +1118,7 @@ const buildTuningQueue = (findings: readonly BenchmarkFailureFinding[]): readonl
       findingKinds: ["round_one_overinvestment", "round_three_low_resource"],
       findings: resourceFindings,
       recommendation:
-        "Tune round investment and future-hand valuation before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources.",
+        "Analyze round-one guard telemetry and weak round-three resources before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources.",
     }),
     buildTuningQueueItem({
       rank: 2,
@@ -1024,7 +1246,7 @@ ${deferredRows}
 
 ## Hidden-Info Boundary
 
-This report is derived from public benchmark records plus in-memory headless diagnostics. It writes only public IDs, aggregate counts, rates, booleans, and bucket labels; raw engine/debug payloads and private zone contents are not part of this artifact contract.
+This report is derived from public benchmark records plus in-memory headless diagnostics. It writes only public IDs, aggregate counts, rates, booleans, bucket labels, and scalar round-one guard-state telemetry; raw engine/debug payloads and private zone contents are not part of this artifact contract.
 `;
 };
 
@@ -1044,7 +1266,7 @@ const buildTuningQueueMarkdown = (summary: BenchmarkFailureMiningSummary) => {
   const topCluster = summary.tuningQueue[0]?.clusterId ?? "none";
   const recommendedScope =
     topCluster === "round_resource_exhaustion"
-      ? "Next behavior phase should tune round-resource exhaustion first, not suspicious-pass broadly."
+      ? "Next behavior phase should analyze round-resource exhaustion evidence before behavior tuning, not suspicious-pass broadly."
       : topCluster === "none"
         ? "Next behavior phase should further improve evaluator signals before behavior tuning because no ranked cluster was produced."
         : `Next behavior phase should tune ${topCluster} first, while keeping suppressed pass categories out of behavior-tuning scope.`;

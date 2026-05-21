@@ -64,7 +64,7 @@
 
 | Rank | Cluster | Severity | Count | Recommendation |
 |---:|---|---|---:|---|
-| 1 | round_resource_exhaustion | warning | 112 | Tune round investment and future-hand valuation before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
+| 1 | round_resource_exhaustion | warning | 112 | Analyze round-one guard telemetry and weak round-three resources before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
 | 2 | weathered_row_low_tempo | warning | 86 | Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo. |
 | 3 | medic_no_target_timing | warning | 7 | Review Medic timing thresholds where no-target or weak-target diagnostics still allow a Medic play. |
 | 4 | skellige_matchup_skew | warning | 55 | Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes. |
@@ -78,4 +78,4 @@
 
 ## Hidden-Info Boundary
 
-This report is derived from public benchmark records plus in-memory headless diagnostics. It writes only public IDs, aggregate counts, rates, booleans, and bucket labels; raw engine/debug payloads and private zone contents are not part of this artifact contract.
+This report is derived from public benchmark records plus in-memory headless diagnostics. It writes only public IDs, aggregate counts, rates, booleans, bucket labels, and scalar round-one guard-state telemetry; raw engine/debug payloads and private zone contents are not part of this artifact contract.

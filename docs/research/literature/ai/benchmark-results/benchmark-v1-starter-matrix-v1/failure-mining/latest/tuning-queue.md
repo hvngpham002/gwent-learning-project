@@ -14,7 +14,7 @@
 
 | Rank | Cluster | Severity | Finding count | Affected factions | Recommendation |
 |---:|---|---|---:|---|---|
-| 1 | round_resource_exhaustion | warning | 42 | monsters, nilfgaard, northern_realms, scoiatael, skellige | Tune round investment and future-hand valuation before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
+| 1 | round_resource_exhaustion | warning | 42 | monsters, nilfgaard, northern_realms, scoiatael, skellige | Analyze round-one guard telemetry and weak round-three resources before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
 | 2 | weathered_row_low_tempo | watch | 18 | monsters, nilfgaard, northern_realms, skellige | Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo. |
 | 3 | skellige_matchup_skew | warning | 31 | monsters, nilfgaard, northern_realms, scoiatael, skellige | Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes. |
 | 4 | remaining_suspicious_pass | warning | 234 | monsters, nilfgaard, northern_realms, scoiatael, skellige | Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes. |
@@ -32,7 +32,7 @@
 
 ## Recommended Next Scope
 
-Next behavior phase should tune round-resource exhaustion first, not suspicious-pass broadly.
+Next behavior phase should analyze round-resource exhaustion evidence before behavior tuning, not suspicious-pass broadly.
 
 ## Hidden-Info Boundary
 
