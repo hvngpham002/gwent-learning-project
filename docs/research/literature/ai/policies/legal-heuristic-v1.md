@@ -20,11 +20,12 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
-cFp44: Post-cFp43 Failure-Mining Casebook, which reviewed the stable post-cFp43
-public benchmark artifacts and recommended the next narrow overinvestment patch
-or a pause for ratings/search. The latest committed benchmark artifact refresh
-is the cFp43 post-implementation run for the current 120-record and expanded
-400-record starter matrices. The behavior stack builds on
+cFp45: Remaining Round-One Overinvestment Calibration, which reviewed the 26
+remaining expanded overinvestment cases after cFp44 and concluded that the
+available aggregate public artifacts do not support a safe narrow behavior
+patch. The latest committed benchmark artifact refresh is the cFp43
+post-implementation run for the current 120-record and expanded 400-record
+starter matrices. The behavior stack builds on
 the cFp27 through cFp43 tuning and diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
@@ -1104,5 +1105,38 @@ Recommendation: The next behavior spec should target the remaining
 complexity, pause v1 heuristic tuning and move toward ratings/search.
 
 cFp44 does not change AI behavior, engine rules, legal moves, UI behavior,
+catalog data, deck presets, benchmark suite shape, failure-mining classifiers,
+ratings, search, training, or product difficulty.
+
+### Remaining Round-One Overinvestment Calibration (cFp45)
+
+cFp45 is an analysis-only follow-up to cFp44. It reads the 26 remaining
+expanded `round_one_overinvestment` findings from the committed public
+failure-mining artifact and creates the decision note:
+
+```text
+docs/research/literature/ai/decisions/2026-05-21-cfp45-round-one-overinvestment-calibration.md
+```
+
+Because the existing `findings.jsonl` artifact exposes only aggregate public
+fields, not per-play `AiDecisionTrace` guard evaluation data, cFp45 treats the
+case split as a proxy classification rather than a definitive trace-level
+diagnosis:
+
+- 15/26 cases look like `handAfter <= 4` was not reached early enough to stop
+  cumulative round-1 spending.
+- 11/26 cases look like `boardAfter >= 7` was not reached until the final or
+  near-final round-1 play.
+- No exception-specific pattern can be proven from the current artifact.
+
+Decision: no behavior change. The two proxy groups do not support a single safe
+one-step threshold calibration, and cFp43 already produced a +5 loss tradeoff
+while reducing the expanded signal from 51 to 26. The recommended next step is
+to pause hand-tuned v1 heuristic work for ratings/search, or first add
+trace-level guard telemetry to failure mining before attempting another
+round-investment patch.
+
+cFp45 updates AI Lab/product metadata so `/ai-lab` points at the latest analysis
+phase. It does not change AI behavior, engine rules, legal moves, UI behavior,
 catalog data, deck presets, benchmark suite shape, failure-mining classifiers,
 ratings, search, training, or product difficulty.

@@ -107,6 +107,8 @@ The classification below is constrained by the limited public data available in 
 
 **Critical limitation**: Without per-play `AiDecisionTrace` data, it is impossible to determine definitively whether the guard geometry was never reached or whether an exception always applied. The classification below uses probabilistic reasoning based on `round1PlayCardCount`, `resolvedRoundCount`, and faction/matchup patterns.
 
+The labels below are proxy classifications, not definitive per-play guard outcomes. For any future behavior patch, all 26 cases should be treated as `needs_manual_trace_review` until failure mining records per-play cFp43/cFp45 guard evaluations.
+
 | # | faction | round1PlayCardCount | resolvedRounds | classification | rationale |
 |---|---|---:|---:|---|---|
 | 1 | scoiatael | 8 | 2 | `guard_never_reached_board_below_floor` | 8 plays in 2 rounds; early-round board likely still building. No trace data confirms guard geometry was met. |
@@ -152,7 +154,7 @@ The classification below is constrained by the limited public data available in 
 | `loss_not_clearly_round_one_resource_related` | 0 | 0% |
 | `needs_manual_trace_review` | 0 | 0% |
 
-**Majority pattern: `guard_never_reached_hand_above_cap` (15/26, 57.7%).**
+**Proxy majority pattern: `guard_never_reached_hand_above_cap` (15/26, 57.7%).**
 
 The dominant miss pattern is that the cFp43 guard's `handAfter <= 4` condition was not met during the plays that caused the overinvestment. These cases involve AI seats that played 7-10 cards in round 1, but the guard only evaluates **per-play**. On early plays in the round (plays 1-4), `estimatedHandCountAfterSelectedMove` was still > 4 because the AI had many cards remaining in hand.
 
@@ -217,7 +219,7 @@ The next phase should either:
 
 - `docs/research/literature/ai/decisions/2026-05-21-cfp45-round-one-overinvestment-calibration.md` — Created (this decision note).
 
-No behavior changes. No code edits. No new test files. No benchmark regeneration required.
+No behavior changes. No policy-code edits. No new engine or benchmark tests. No benchmark regeneration required.
 
 ## Benchmarks Before/After
 
@@ -246,7 +248,7 @@ None.
 
 ## Project State Update
 
-`docs/PROJECT_STATE.md` was updated to record cFp45 as a completed analysis-only phase. AI Lab/product policy metadata was not updated (cFp44 remains the latest phase since no behavior changed). The active spec handoff is cleared (no active spec).
+`docs/PROJECT_STATE.md` was updated to record cFp45 as a completed analysis-only phase. AI Lab/product policy metadata now points at cFp45 so the `/ai-lab` page stays current with the latest completed spec. The active spec handoff is cleared (no active spec).
 
 ## Recommended Next Step
 

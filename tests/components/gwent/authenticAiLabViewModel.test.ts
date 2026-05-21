@@ -43,13 +43,13 @@ describe("authentic AI Lab view model", () => {
     expect(viewModel.policies.find((policy) => policy.id === "legal-heuristic-v0")).toEqual(
       expect.objectContaining({ role: "stable/default product policy", status: "implemented · stable/default" }),
     );
-      expect(viewModel.policies.find((policy) => policy.id === "legal-heuristic-v1")).toEqual(
+    expect(viewModel.policies.find((policy) => policy.id === "legal-heuristic-v1")).toEqual(
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp44",
-        latestSpecPath: "docs/spec/2026-05-20-cFp44-specs.md",
-        latestReportPath: "audit/reports/2026-05-20-cFp44-report.md",
+        latestPhase: "cFp45",
+        latestSpecPath: "docs/spec/2026-05-21-cFp45-specs.md",
+        latestReportPath: "audit/reports/2026-05-21-cFp45-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp44",
-        latestSpecPath: "docs/spec/2026-05-20-cFp44-specs.md",
-        latestReportPath: "audit/reports/2026-05-20-cFp44-report.md",
+        latestPhase: "cFp45",
+        latestSpecPath: "docs/spec/2026-05-21-cFp45-specs.md",
+        latestReportPath: "audit/reports/2026-05-21-cFp45-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -105,6 +105,7 @@ describe("authentic AI Lab view model", () => {
         "non-recursive alternative-line scoring guard (cFp41.1)",
         "round-resource exhaustion casebook (cFp42)",
         "round-one overinvestment guard (cFp43)",
+        "remaining overinvestment calibration decision note (cFp45)",
       ]),
     );
   });
