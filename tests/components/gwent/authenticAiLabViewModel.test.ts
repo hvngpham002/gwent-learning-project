@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp57",
-        latestSpecPath: "docs/spec/2026-05-22-cFp57-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp57-report.md",
+        latestPhase: "cFp58",
+        latestSpecPath: "docs/spec/2026-05-22-cFp58-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp58-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp57",
-        latestSpecPath: "docs/spec/2026-05-22-cFp57-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp57-report.md",
+        latestPhase: "cFp58",
+        latestSpecPath: "docs/spec/2026-05-22-cFp58-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp58-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -94,6 +94,8 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
+    expect(v1?.description).toContain("cFp58 change no policy behavior");
+    expect(v1?.description).toContain("research planning only");
     expect(v1?.capabilities).toEqual(
       expect.arrayContaining([
         "linked-card mulligan diagnostics",
@@ -125,6 +127,7 @@ describe("authentic AI Lab view model", () => {
         "round-one temporal/cumulative spend instrumentation in failure-mining evidence (cFp55)",
         "temporal round-one overinvestment casebook over cFp55 robust findings (cFp56)",
         "multi-period rating ledger snapshots and suite-local comparisons (cFp57)",
+        "search-readiness and ISMCTS probe design guardrails without gameplay policy changes (cFp58)",
       ])
     );
   });

@@ -93,6 +93,18 @@ Rating layer:
 - future TrueSkill or Elo work should consume ledger records only and
   follow the same hidden-info and determinism contracts.
 
+Search-readiness:
+
+- cFp58 is a design/readiness boundary, not a search implementation;
+- future search variants must be labeled separately as safe, sampler-required,
+  or unsafe oracle/debug;
+- cFp59 should add only hidden-info-safe root-state branching and budget
+  profiling over existing headless benchmark runs;
+- profiler artifacts should contain scalar counts, deterministic seeds, public
+  root fingerprints, suite/policy/faction/deck metadata, and elapsed profiling
+  time, not raw moves, command logs, event logs, final states, or hidden card
+  payloads.
+
 Robustness probe:
 
 - deferred in cFp21;
@@ -480,6 +492,8 @@ across different benchmark pools or treat rating deltas as product difficulty.
 ## Deferred Work
 
 TrueSkill is deferred; cFp46 implements only Glicko-1. Approximate best response
-is deferred because Batch B treats it as a later robustness probe. Search policies,
-v1.1/v2 policy tuning, ML exports, Python notebooks, mechanics/competitive deck
-suites, browser benchmark execution, and product difficulty tiers remain future work.
+is deferred because Batch B treats it as a later robustness probe. cFp58 recommends
+that cFp59 implement a search-readiness profiler before any PIMC/ISMCTS rollout
+search. Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
+mechanics/competitive deck suites, browser benchmark execution, and product
+difficulty tiers remain future work.
