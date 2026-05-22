@@ -23,8 +23,12 @@ phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
 The latest analysis phase is cFp56: Temporal Round-One Overinvestment
 Casebook. The latest rating-ledger phase is cFp57: Multi-Period Rating Ledger.
-The latest instrumentation phase is cFp55: Round-One Temporal Spend
-Instrumentation. cFp53 repairs the selected-play
+The latest search-readiness profiler phase is cFp59: Search-Readiness Root
+Profiler. The latest instrumentation phase is cFp55: Round-One Temporal Spend
+Instrumentation. cFp59 adds benchmark-only hidden-info-safe root-profiler
+artifacts and AI Lab metadata; it does not change `legal-heuristic-v1`
+gameplay, search behavior, engine rules, legal moves, or product difficulty.
+cFp53 repairs the selected-play
 path that cFp52 proved: when the exact selected `play_card` has cFp43 base
 geometry and `roundOneOverinvestmentRecommended === true`, the final
 playing-phase decision is converted to pass unless an existing tactical
@@ -57,6 +61,11 @@ cFp57 freezes the current committed `ratings/latest` artifacts as named
 them against the established cFp46/cFp48 baselines, and verifies that each
 `cFp57` snapshot matches current `latest`. This is rating-ledger infrastructure
 only and does not change policy behavior.
+cFp58 records search-readiness and ISMCTS probe design guardrails as research
+planning only. cFp59 implements the recommended benchmark-only profiler by
+emitting public root scalar/count artifacts for the current and robust starter
+matrix suites. This is evaluation infrastructure only and does not make search
+available in product play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -116,6 +125,8 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
 - cFp57: evaluation-only rating ledger update; freezes current `ratings/latest`
   as `cFp57` snapshots, compares against cFp46/cFp48 baselines, and confirms
   `cFp57-vs-latest` consistency without changing policy behavior.
+- cFp59: evaluation-only search-readiness root profiler; writes public
+  scalar/count artifacts for benchmark roots and does not add search gameplay.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

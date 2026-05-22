@@ -1,0 +1,21 @@
+{
+  "artifactHashes": {
+    "report.md": "0755ede912bf329dae27c91270cf9c5c4410c45ecd7887de05ab76c30147dc9c",
+    "roots.jsonl": "5f77d5af5c342eef87442afcfc0e0fbe489b0fda0bebec4a58e54dc35c5e54b0",
+    "summary.json": "52bffb60cab7f77d1b0b4f3b9adf05cfbc572b4dd812817fcb586e51eaea4273"
+  },
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "roots.jsonl",
+    "report.md"
+  ],
+  "hiddenInfoSafetyNote": "Search-readiness artifacts contain public root metadata and scalar/count summaries only. They exclude raw state, private card payloads, command/event payloads, action payloads, and runtime card identifiers.",
+  "profileRunId": "benchmark-v1-starter-matrix-v1:search-readiness:cFp59",
+  "rootRecordCount": 4042,
+  "rootSchemaVersion": "search-readiness-root-v1",
+  "schemaVersion": "search-readiness-artifact-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "search-readiness-summary-v1"
+}

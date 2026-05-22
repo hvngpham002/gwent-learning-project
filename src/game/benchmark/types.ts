@@ -1,7 +1,7 @@
 import type { EnginePolicy } from '@/game/ai';
 import type { CatalogDeckPreset, CatalogFaction } from '@/game/catalog';
 import type { SeatId } from '@/game/core';
-import type { HeadlessMatchSimulationResult, SimulationTerminalStatus } from '@/game/sim';
+import type { HeadlessMatchSimulationResult, HeadlessRootObserverInput, SimulationTerminalStatus } from '@/game/sim';
 
 export type BenchmarkMatchRecordSchemaVersion = 'benchmark-match-v1';
 export type BenchmarkSummarySchemaVersion = 'benchmark-summary-v1';
@@ -111,9 +111,21 @@ export interface BenchmarkRunInput {
   // Default artifact shape is unchanged when this is false or omitted.
   includeDecisionTraces?: boolean;
   policies?: BenchmarkPolicyRegistry;
+  rootObserver?: BenchmarkRootObserver;
 }
 
 export type BenchmarkPolicyRegistry = Record<string, EnginePolicy>;
+
+export interface BenchmarkRootObserverInput extends HeadlessRootObserverInput {
+  suiteId: string;
+  matchupId: string;
+  seed: string | number;
+  mirrorGroupId?: string;
+  mirrorIndex?: 0 | 1;
+  seats: Record<SeatId, BenchmarkSeatDescriptor>;
+}
+
+export type BenchmarkRootObserver = (input: BenchmarkRootObserverInput) => void;
 
 export interface BenchmarkRunDiagnostic {
   suiteId: string;

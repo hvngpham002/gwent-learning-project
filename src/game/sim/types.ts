@@ -1,5 +1,5 @@
 import type { CatalogDeckPreset, CatalogFaction } from "@/game/catalog";
-import type { EngineCommand, GameEvent, LegalMoveKind, MatchPhase, MatchState, SeatId } from "@/game/core";
+import type { EngineCommand, GameEvent, LegalMove, LegalMoveKind, MatchPhase, MatchState, SeatId } from "@/game/core";
 import type { AiDecisionTrace, EnginePolicy } from "@/game/ai";
 
 export type SimulationTerminalStatus = "completed" | "max_steps_exceeded" | "policy_failed" | "engine_error";
@@ -19,12 +19,24 @@ export interface HeadlessSeatSimulationConfigs {
   seat_b: HeadlessSeatSimulationConfig;
 }
 
+export interface HeadlessRootObserverInput {
+  state: MatchState;
+  seatId: SeatId;
+  legalMoves: readonly LegalMove[];
+  step: number;
+  decisionIndex: number;
+  policyId: string;
+}
+
+export type HeadlessRootObserver = (input: HeadlessRootObserverInput) => void;
+
 export interface HeadlessMatchSimulationInput {
   seed: string | number;
   maxSteps?: number;
   policies?: Partial<Record<SeatId, EnginePolicy>>;
   seats?: HeadlessSeatSimulationConfigs;
   collectDecisionTraces?: boolean;
+  rootObserver?: HeadlessRootObserver;
 }
 
 export interface SimulationStepLog {

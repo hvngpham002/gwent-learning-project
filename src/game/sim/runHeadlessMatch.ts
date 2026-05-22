@@ -28,6 +28,7 @@ import type {
 
 const DEFAULT_MAX_STEPS = 300;
 const SEATS: readonly SeatId[] = ["seat_a", "seat_b"];
+const ROUND_END_POLICY_ID = "headless-round-end-auto-resolver";
 
 const createDefaultSeatConfigs = (): HeadlessSeatSimulationConfigs => ({
   seat_a: {
@@ -211,6 +212,16 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
     }
 
     const legalMoves = getLegalMoves({ state, seatId, catalogCards: currentCatalogCards, catalogLeaders: currentCatalogLeaders });
+    const policyId = state.phase === "round_end" ? ROUND_END_POLICY_ID : policyForSeat(input, seatId).id;
+    input.rootObserver?.({
+      state,
+      seatId,
+      legalMoves,
+      step,
+      decisionIndex: steps.length,
+      policyId,
+    });
+
     let chosenMove: LegalMove | null;
     let decisionTrace: AiDecisionTrace | undefined;
     try {
@@ -283,7 +294,7 @@ export const runHeadlessMatchSimulation = (input: HeadlessMatchSimulationInput):
         phase: phaseBeforeCommand,
         round: phaseBeforeCommand === "round_end" ? state.lastResolvedRound ?? state.round : state.round,
         seatId,
-        policyId: phaseBeforeCommand === "round_end" ? "headless-round-end-auto-resolver" : policyForSeat(input, seatId).id,
+        policyId: phaseBeforeCommand === "round_end" ? ROUND_END_POLICY_ID : policyForSeat(input, seatId).id,
         legalMoveCount: legalMoves.length,
         chosenMoveId: chosenMove.moveId,
         chosenMoveKind: chosenMove.kind,

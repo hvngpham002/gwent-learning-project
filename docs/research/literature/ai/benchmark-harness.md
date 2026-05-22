@@ -98,12 +98,19 @@ Search-readiness:
 - cFp58 is a design/readiness boundary, not a search implementation;
 - future search variants must be labeled separately as safe, sampler-required,
   or unsafe oracle/debug;
-- cFp59 should add only hidden-info-safe root-state branching and budget
-  profiling over existing headless benchmark runs;
-- profiler artifacts should contain scalar counts, deterministic seeds, public
-  root fingerprints, suite/policy/faction/deck metadata, and elapsed profiling
-  time, not raw moves, command logs, event logs, final states, or hidden card
-  payloads.
+- cFp59 adds an opt-in benchmark-only root profiler over existing headless
+  benchmark runs. It observes roots after legal moves are generated and before
+  policy selection, then writes deterministic public scalar/count artifacts
+  under `<suiteId>/search-readiness/cFp59/`;
+- cFp59 profiler artifacts contain deterministic seeds, suite/matchup/mirror
+  metadata, policy/faction/deck metadata, legal-move counts, move-kind counts,
+  target-kind/side counts, play-card source/target-expansion counts, prompt and
+  mulligan counts, public root fingerprints, and summaries only. They do not
+  contain raw moves, command/event payloads, terminal state payloads, or hidden
+  card payloads;
+- cFp59 deliberately omits committed wall-clock per-root timing so repeated
+  artifact hashes stay stable. Runtime timing should be collected in a future
+  separated local timing profile.
 
 Robustness probe:
 
@@ -229,6 +236,13 @@ npm run benchmark:v1-starter-matrix-robust
 npm run benchmark:v1-failure-mining-robust
 npm run benchmark:ratings:v1-robust
 npm run benchmark:ratings:compare:v1-robust
+```
+
+Write cFp59 search-readiness root-profiler artifact sets:
+
+```bash
+npm run benchmark:search-readiness:v1-starter-matrix
+npm run benchmark:search-readiness:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the
@@ -489,11 +503,34 @@ The cFp57-to-latest consistency comparisons must remain zero-delta and
 `no_change` only. Baseline comparisons are suite-local; do not compare ratings
 across different benchmark pools or treat rating deltas as product difficulty.
 
+## Search-Readiness Root Profiler (cFp59)
+
+cFp59 adds deterministic profiler artifacts under:
+
+```text
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-readiness/cFp59/
+  manifest.json
+  summary.json
+  roots.jsonl
+  report.md
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-readiness/cFp59/
+  manifest.json
+  summary.json
+  roots.jsonl
+  report.md
+```
+
+These artifacts are evaluation infrastructure, not search gameplay. They do
+not rewrite benchmark `latest`, failure-mining, rating, or comparison artifacts.
+The robust cFp59 command was repeated with identical committed hashes.
+
 ## Deferred Work
 
 TrueSkill is deferred; cFp46 implements only Glicko-1. Approximate best response
 is deferred because Batch B treats it as a later robustness probe. cFp58 recommends
 that cFp59 implement a search-readiness profiler before any PIMC/ISMCTS rollout
-search. Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
+search; cFp59 completes that profiler without adding a search policy. Search
+policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product
 difficulty tiers remain future work.

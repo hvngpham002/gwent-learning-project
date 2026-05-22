@@ -1,0 +1,157 @@
+{
+  "deckPresetIds": [
+    "official-monsters-starter",
+    "official-nilfgaard-starter",
+    "official-northern-realms-starter",
+    "official-scoiatael-starter",
+    "official-skellige-starter"
+  ],
+  "factions": [
+    "monsters",
+    "nilfgaard",
+    "northern_realms",
+    "scoiatael",
+    "skellige"
+  ],
+  "legalMoveCountStats": {
+    "average": 7.611,
+    "count": 4042,
+    "max": 32,
+    "min": 1,
+    "p50": 8,
+    "p90": 13,
+    "p95": 15
+  },
+  "matchCount": 120,
+  "maxLegalMoveRoot": {
+    "deckPresetId": "official-monsters-starter",
+    "faction": "monsters",
+    "legalMoveCount": 32,
+    "matchupId": "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0",
+    "mirrorIndex": 1,
+    "phase": "playing",
+    "policyId": "legal-heuristic-v0",
+    "rootPublicFingerprint": "9ba56e11168d46927ba9ac5b186b422ed5157770b543ecae337f56bdb5d83b15",
+    "round": 1,
+    "seatId": "seat_a",
+    "seed": "starter-matrix-002",
+    "step": 13,
+    "suiteId": "benchmark-v1-starter-matrix-v1"
+  },
+  "maxTargetExpansionRoot": {
+    "deckPresetId": "official-monsters-starter",
+    "faction": "monsters",
+    "matchupId": "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0",
+    "mirrorIndex": 1,
+    "phase": "playing",
+    "playCardTargetExpansionCount": 26,
+    "policyId": "legal-heuristic-v0",
+    "rootPublicFingerprint": "9ba56e11168d46927ba9ac5b186b422ed5157770b543ecae337f56bdb5d83b15",
+    "round": 1,
+    "seatId": "seat_a",
+    "seed": "starter-matrix-002",
+    "step": 13,
+    "suiteId": "benchmark-v1-starter-matrix-v1"
+  },
+  "mulliganOptionCountStats": {
+    "average": 0.816,
+    "count": 4042,
+    "max": 11,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 11
+  },
+  "playCardMoveCountStats": {
+    "average": 5.285,
+    "count": 4042,
+    "max": 30,
+    "min": 0,
+    "p50": 5,
+    "p90": 12,
+    "p95": 13
+  },
+  "playCardSourceCountStats": {
+    "average": 4.045,
+    "count": 4042,
+    "max": 13,
+    "min": 0,
+    "p50": 4,
+    "p90": 9,
+    "p95": 10
+  },
+  "playCardTargetExpansionStats": {
+    "average": 1.24,
+    "count": 4042,
+    "max": 26,
+    "min": 0,
+    "p50": 0,
+    "p90": 4,
+    "p95": 5
+  },
+  "policyIds": [
+    "headless-round-end-auto-resolver",
+    "legal-heuristic-v0",
+    "legal-heuristic-v1"
+  ],
+  "profileRunId": "benchmark-v1-starter-matrix-v1:search-readiness:cFp59",
+  "promptOptionCountStats": {
+    "average": 0.211,
+    "count": 4042,
+    "max": 18,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "rootCountsByDeckPreset": {
+    "official-monsters-starter": 699,
+    "official-nilfgaard-starter": 918,
+    "official-northern-realms-starter": 895,
+    "official-scoiatael-starter": 808,
+    "official-skellige-starter": 722
+  },
+  "rootCountsByFaction": {
+    "monsters": 699,
+    "nilfgaard": 918,
+    "northern_realms": 895,
+    "scoiatael": 808,
+    "skellige": 722
+  },
+  "rootCountsByMoveKindPresence": {
+    "choose_mulligan": 300,
+    "choose_prompt_option": 188,
+    "pass": 3217,
+    "play_card": 2932,
+    "resolve_round_end": 337,
+    "use_leader": 1528
+  },
+  "rootCountsByPhase": {
+    "mulligan": 348,
+    "playing": 3357,
+    "round_end": 337
+  },
+  "rootCountsByPolicy": {
+    "headless-round-end-auto-resolver": 337,
+    "legal-heuristic-v0": 1890,
+    "legal-heuristic-v1": 1815
+  },
+  "rootRecordCount": 4042,
+  "schemaVersion": "search-readiness-summary-v1",
+  "statusCounts": {
+    "completed": 120,
+    "engine_error": 0,
+    "max_steps_exceeded": 0,
+    "policy_failed": 0
+  },
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "targetedMoveCountStats": {
+    "average": 5.221,
+    "count": 4042,
+    "max": 31,
+    "min": 0,
+    "p50": 5,
+    "p90": 11,
+    "p95": 13
+  }
+}

@@ -154,6 +154,18 @@ export const runBenchmarkSuite = (input: BenchmarkRunInput = {}): BenchmarkRunRe
               seat_b: policies[seats.seat_b.policyId],
             },
             collectDecisionTraces: input.includeDecisionTraces,
+            rootObserver: input.rootObserver
+              ? (root) =>
+                  input.rootObserver?.({
+                    ...root,
+                    suiteId: suite.id,
+                    matchupId: matchup.matchupId,
+                    seed,
+                    mirrorGroupId,
+                    mirrorIndex,
+                    seats: descriptors,
+                  })
+              : undefined,
           });
           if (input.includeDebugResults) {
             unsafeDebugResults.push(result);
