@@ -3,6 +3,7 @@
 ## Last Updated
 
 - Date: 2026-05-22
+- Active spec handoff: `cFp53` Round-One Overinvestment Selected-Play Guard Repair (`docs/spec/2026-05-22-cFp53-specs.md`) is ready for implementation. It scopes a narrow behavior fix for the exact cFp52 reproduced shape: round 1 selected `play_card`, base cFp43 geometry reached, and `roundOneOverinvestmentRecommended === true`. The spec explicitly preserves the committed cFp52 debug artifacts as historical before-fix evidence and requires new cFp53 post-repair artifacts instead of overwriting cFp52.
 - Completed reproduction/debug phase: `cFp52` Round-One Guard Fixture Reproduction Debug (`docs/spec/2026-05-22-cFp52-specs.md`, `docs/research/literature/ai/decisions/2026-05-22-cfp52-round-one-guard-fixture-debug.md`, `audit/reports/2026-05-22-cFp52-report.md`). Replays only the two cFp51 robust `guard_recommended_play_selected` fixtures with hidden-info-safe per-decision debug artifacts under `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/round-one-guard-debug/cFp52/`. Both fixtures confirm selected-play contradictions: Fixture A has 3 selected `play_card` rows with base geometry and `roundOneOverinvestmentRecommended === true`; Fixture B has 1 selected-play contradiction plus 1 later suppressed pass. Decision: cFp53 should be a narrow behavior-repair spec for the exact reproduced public state shape, not threshold widening, cumulative-spend tuning, or analyzer calibration. AI Lab/product policy metadata now points at cFp52. No AI policy behavior, scoring constants, engine rules, legal moves, catalog/deck data, benchmark suite definitions, failure-mining classifiers, ratings, search/training code, product gameplay UI, or product difficulty changed.
 - Completed analysis phase: `cFp51` Round-One Guard Telemetry Casebook (`docs/spec/2026-05-22-cFp51-specs.md`, `docs/research/literature/ai/decisions/2026-05-22-cfp51-round-one-guard-telemetry-casebook.md`, `audit/reports/2026-05-22-cFp51-report.md`). Reads only committed public cFp50 failure-mining artifacts and classifies the 71 robust `round_one_overinvestment` findings as 44 suppressed-late-pass cases, 20 board-floor misses, 4 base-geometry exception/non-recommendation cases, 2 guard-recommended play-selected cases, 1 hand-cap miss, and 0 telemetry-unavailable/other cases. Decision: no cFp51 behavior patch. Recommended cFp52 scope is reproduction/debug for the two guard-recommended play-selected robust fixtures before any threshold, cumulative-spend, or analyzer-calibration change. AI Lab/product policy metadata now points at cFp51. No AI policy behavior, engine rules, legal moves, benchmark suite definitions, failure-mining classifiers, rating formulas, catalog data, deck presets, product gameplay UI, search, training, or product difficulty changed.
 - Completed evaluation-infrastructure phase: `cFp50` Round-One Overinvestment Guard-State Telemetry (`docs/spec/2026-05-22-cFp50-specs.md`, `audit/reports/2026-05-22-cFp50-report.md`). Adds hidden-info-safe scalar cFp43 guard-state telemetry to existing `round_one_overinvestment` failure-mining findings: trace/play-card counts, board/hand geometry counts, recommendation and suppressed-pass counts, first decision indices, score-delta direction counts, reason/exception counts, selected card-advantage and no-future-unit counts, catch-up counts, and recommendation counts. Regenerates only the current, expanded, and robust failure-mining artifact sets; finding counts remain stable (current 300 with `round_one_overinvestment=6`, expanded 878 with `round_one_overinvestment=26`, robust 2301 with `round_one_overinvestment=71`). Robust failure-mining was repeated with identical hashes. AI Lab/product policy metadata now points at cFp50. No AI policy behavior, engine rules, legal moves, benchmark suite definitions, failure-mining classifiers, rating formulas, catalog data, deck presets, product gameplay UI, search, training, or product difficulty changed.
@@ -484,16 +485,19 @@ difficulty.
 
 Next recommended sequence:
 
-1. write cFp53 as a narrow behavior-repair spec for the exact cFp52 reproduced
-   public state shape: round 1 selected `play_card`, base geometry reached, and
+1. implement cFp53 from `docs/spec/2026-05-22-cFp53-specs.md` as a narrow
+   selected-play guard repair for the exact cFp52 reproduced public state shape:
+   round 1 selected `play_card`, base geometry reached, and
    `roundOneOverinvestmentRecommended === true`;
-2. keep threshold widening, cumulative-spend tuning, and analyzer-calibration
+2. preserve committed cFp52 debug artifacts as before-fix evidence and write
+   post-repair artifacts under the cFp53 debug path;
+3. keep threshold widening, cumulative-spend tuning, and analyzer-calibration
    changes out of the immediate cFp53 scope unless the repair investigation
    proves they are required without reintroducing the cFp36 broad-resource-gate
    regression;
-3. keep TrueSkill-compatible schema as a later evaluation-layer option after
+4. keep TrueSkill-compatible schema as a later evaluation-layer option after
    Glicko-1 artifact semantics are stable across more benchmark refreshes;
-4. keep approximate best-response probes,
+5. keep approximate best-response probes,
    ISMCTS/determinized search, OSFP, NFSP, Deep CFR, ReBeL, and model
    training deferred until they consume the existing ledger/artifact foundation.
 
