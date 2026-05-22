@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp53",
-        latestSpecPath: "docs/spec/2026-05-22-cFp53-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp53-report.md",
+        latestPhase: "cFp54",
+        latestSpecPath: "docs/spec/2026-05-22-cFp54-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp54-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp53",
-        latestSpecPath: "docs/spec/2026-05-22-cFp53-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp53-report.md",
+        latestPhase: "cFp54",
+        latestSpecPath: "docs/spec/2026-05-22-cFp54-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp54-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -118,6 +118,7 @@ describe("authentic AI Lab view model", () => {
         "round-one guard telemetry casebook over cFp50 failure-mining artifacts (cFp51)",
         "round-one guard fixture reproduction/debug over the two cFp51 direct candidates (cFp52)",
         "round-one selected-play overinvestment guard repair for the cFp52 direct candidates (cFp53)",
+        "post-cFp53 robust round-one overinvestment casebook classifying the remaining 70 findings (cFp54)",
       ]),
     );
   });

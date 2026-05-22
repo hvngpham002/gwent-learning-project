@@ -21,17 +21,22 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
-The latest analysis phase is cFp51: Round-One Guard Telemetry Casebook. The
-latest evaluation-infrastructure phase is cFp50: Round-One Overinvestment
-Guard-State Telemetry. cFp53 repairs the selected-play path that cFp52 proved:
-when the exact selected `play_card` has cFp43 base geometry and
-`roundOneOverinvestmentRecommended === true`, the final playing-phase decision
-is converted to pass unless an existing tactical exception applies. cFp52
-replays only the two cFp51 robust `guard_recommended_play_selected` fixtures and
-preserves those before-fix artifacts as historical evidence. cFp51 reads the
-cFp50 scalar telemetry from committed public failure-mining artifacts,
-classifies robust `round_one_overinvestment` findings, and recommends cFp52
-reproduce/debug the two guard-recommended play cases before any behavior patch.
+The latest analysis phase is cFp54: Post-cFp53 Robust Round-One
+Overinvestment Casebook. The latest evaluation-infrastructure phase is cFp50:
+Round-One Overinvestment Guard-State Telemetry. cFp53 repairs the selected-play
+path that cFp52 proved: when the exact selected `play_card` has cFp43 base
+geometry and `roundOneOverinvestmentRecommended === true`, the final
+playing-phase decision is converted to pass unless an existing tactical
+exception applies. cFp54 classifies the 70 remaining cFp53 robust
+`round_one_overinvestment` findings as 48 already-guarded suppressed-pass rows,
+20 board-floor misses, 1 hand-cap miss, 1 base-geometry exception/non-
+recommendation row, and 0 cumulative-spend candidates under the required
+bucket precedence. cFp52 replays only the two cFp51 robust
+`guard_recommended_play_selected` fixtures and preserves those before-fix
+artifacts as historical evidence. cFp51 reads the cFp50 scalar telemetry from
+committed public failure-mining artifacts, classifies robust
+`round_one_overinvestment` findings, and recommends cFp52 reproduce/debug the
+two guard-recommended play cases before any behavior patch.
 cFp50 adds hidden-info-safe scalar cFp43 guard-state counts to existing
 `round_one_overinvestment` failure-mining findings and regenerates the current,
 expanded, and robust failure-mining artifacts without changing policy behavior.
@@ -44,8 +49,7 @@ per suite, and generates deterministic `cFp46-vs-latest` comparison artifacts
 with delta/signal computation. cFp46 added deterministic rating/RD reports over
 existing public benchmark records. The latest committed benchmark record,
 failure-mining, round-one guard debug, and ratings/latest artifact refresh is
-cFp53. The behavior stack builds on the cFp27 through cFp53 tuning and
-diagnostics chain:
+cFp53. The policy and diagnostics stack builds on the cFp27 through cFp54 chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -81,8 +85,11 @@ diagnostics chain:
 - cFp53: final selected-play guard repair so all playing-phase `play_card`
   return paths honor the existing cFp43 recommendation for the exact selected
   candidate.
+- cFp54: analysis-only post-cFp53 casebook over the 70 remaining robust
+  `round_one_overinvestment` findings; recommends instrumentation/debug rather
+  than behavior from aggregate counts alone.
 
-Current cFp53 benchmark totals:
+Current cFp53 artifact totals, unchanged by cFp54:
 
 - `benchmark-v1-smoke-v1`: 11 win / 1 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 17 loss / 1 draw vs v0.
@@ -116,10 +123,14 @@ the failure-mining boundary. cFp51 shows the remaining robust signal is mostly
 late suppressed passes and board-floor misses, with only two direct
 guard-recommended play-selected cases. cFp52 confirms those two direct cases as
 real selected-play contradictions, and cFp53 converts those selected-play
-contradictions into selected passes in the post-repair debug artifacts. Future
-round-one work should classify the remaining 70 robust
-`round_one_overinvestment` findings before considering any new behavior patch;
-cFp53 does not justify threshold widening or cumulative-spend tuning.
+contradictions into selected passes in the post-repair debug artifacts. cFp54
+classifies the remaining 70 robust findings and finds no new behavior-ready
+bucket: the dominant 48-row group is already guarded by suppressed-pass
+telemetry, 20 rows never reached the board floor, and no row reaches the
+cumulative-spend candidate bucket after required precedence. Future round-one
+work should add hidden-info-safe temporal/cumulative spend instrumentation
+before considering any new behavior patch; cFp54 does not justify threshold
+widening or cumulative-spend tuning.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -1359,3 +1370,30 @@ The cFp53 artifacts preserve the cFp52 before-fix bundle and show both fixtures
 completed with zero selected-play contradictions. Fixture A and Fixture B each
 produce one selected pass carrying the active round-one overinvestment
 recommendation as a suppressed-pass diagnostic.
+
+### Post-cFp53 Round-One Overinvestment Casebook (cFp54)
+
+cFp54 is analysis-only over the committed cFp53 robust failure-mining artifact.
+It classifies exactly the 70 remaining robust `round_one_overinvestment`
+findings using only public scalar guard telemetry:
+
+- 48 `already_guarded_suppressed_pass` rows.
+- 20 `board_floor_never_reached` rows.
+- 1 `hand_cap_never_reached` row.
+- 1 `base_geometry_exception_or_nonrecommendation` row, sub-labeled
+  `exception_single_move_catch_up`.
+- 0 `cumulative_spend_candidate` rows.
+- 0 `telemetry_unavailable_or_other` rows.
+
+The decision note is:
+
+```text
+docs/research/literature/ai/decisions/2026-05-22-cfp54-post-cfp53-round-one-overinvestment-casebook.md
+```
+
+cFp54 recommends no behavior patch. If round-one tuning continues, the next
+phase should instrument hidden-info-safe temporal/cumulative spend evidence:
+first guard-geometry index, first suppressed-pass index, play-card count before
+the first suppressed pass, board/hand counts immediately before the first
+suppressed pass, selected plays after first base geometry and before selected
+pass, and exception sequence counts before the first guard-visible pass.
