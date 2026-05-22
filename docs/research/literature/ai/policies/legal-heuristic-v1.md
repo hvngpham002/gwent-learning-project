@@ -22,7 +22,8 @@ The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
 The latest analysis phase is cFp56: Temporal Round-One Overinvestment
-Casebook. The latest instrumentation phase is cFp55: Round-One Temporal Spend
+Casebook. The latest rating-ledger phase is cFp57: Multi-Period Rating Ledger.
+The latest instrumentation phase is cFp55: Round-One Temporal Spend
 Instrumentation. cFp53 repairs the selected-play
 path that cFp52 proved: when the exact selected `play_card` has cFp43 base
 geometry and `roundOneOverinvestmentRecommended === true`, the final
@@ -51,13 +52,20 @@ and 1 no-suppressed-pass selected-base-geometry-present debug candidate. It
 recommends pausing hand-tuned v1 round-one heuristic tuning rather than writing
 a cFp57 behavior patch from broad late/missing-geometry/catch-up-heavy
 evidence.
+cFp57 freezes the current committed `ratings/latest` artifacts as named
+`cFp57` snapshots for the current, expanded, and robust starter suites, compares
+them against the established cFp46/cFp48 baselines, and verifies that each
+`cFp57` snapshot matches current `latest`. This is rating-ledger infrastructure
+only and does not change policy behavior.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
 snapshot, and a deterministic `cFp48-vs-latest` comparison boundary. cFp47
 freezes cFp46 rating artifacts as named `cFp46` snapshots, adds `ledger.json`
 per suite, and generates deterministic `cFp46-vs-latest` comparison artifacts
-with delta/signal computation. cFp46 added deterministic rating/RD reports over
+with delta/signal computation. cFp57 extends the ledger across all three current
+starter suites with `cFp46-vs-cFp57`, `cFp48-vs-cFp57`, and `cFp57-vs-latest`
+comparison artifacts. cFp46 added deterministic rating/RD reports over
 existing public benchmark records. The latest committed benchmark record,
 round-one guard debug, and ratings/latest artifact refresh remains cFp53. The
 latest committed failure-mining artifact refresh is cFp55. The policy and
@@ -105,6 +113,9 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
 - cFp56: analysis-only temporal casebook over the 70 cFp55 robust
   `round_one_overinvestment` findings; recommends pausing v1 round-one tuning
   for ratings/search/evaluation-ladder depth rather than changing behavior.
+- cFp57: evaluation-only rating ledger update; freezes current `ratings/latest`
+  as `cFp57` snapshots, compares against cFp46/cFp48 baselines, and confirms
+  `cFp57-vs-latest` consistency without changing policy behavior.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

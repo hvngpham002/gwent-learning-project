@@ -1,0 +1,12 @@
+{
+  "baseSnapshotId": "cFp57",
+  "candidateSnapshotId": "latest",
+  "commonCount": 22,
+  "comparisonJsonHash": "3c2160293f607227a3baaf5eea4018813c658c24781c345486dcc30bc1f40d89",
+  "createdByPhase": "cFp57",
+  "entryCount": 22,
+  "newCount": 0,
+  "removedCount": 0,
+  "schemaVersion": "rating-comparison-manifest-v1",
+  "suiteId": "benchmark-v1-starter-matrix-v1"
+}

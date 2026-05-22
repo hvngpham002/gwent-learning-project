@@ -85,6 +85,9 @@ Rating layer:
 - cFp48 adds `benchmark-v1-starter-matrix-robust-v1`, a 25-seed / 1000-record
   deterministic starter-matrix evaluation suite, plus its first suite-local
   `cFp48` rating snapshot and `cFp48-vs-latest` comparison boundary;
+- cFp57 freezes current committed `ratings/latest` artifacts as named `cFp57`
+  snapshots for the current, expanded, and robust starter suites, then writes
+  suite-local baseline-to-cFp57 and cFp57-to-latest comparison artifacts;
 - ratings must remain stratified by suite, matchup, policy, deck, and
   sample count;
 - future TrueSkill or Elo work should consume ledger records only and
@@ -434,7 +437,7 @@ Generated artifact suites:
 CLI: `tsx scripts/run-benchmark-rating-report.ts --suite <suiteId>`
 NPM: `npm run benchmark:ratings:v1-starter-matrix` / `npm run benchmark:ratings:v1-expanded` / `npm run benchmark:ratings:v1-robust`
 
-## Rating Snapshot Comparisons (cFp47/cFp48)
+## Rating Snapshot Comparisons (cFp47/cFp48/cFp57)
 
 cFp47 adds suite-local snapshot ledgers and rating comparisons. cFp48 extends
 the same comparison pipeline to the robust suite and allows the comparison CLI
@@ -452,6 +455,27 @@ docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust
 
 `cFp48-vs-latest` is an initial baseline comparison, so all 22 common entries
 have zero deltas and `signal: "no_change"`.
+
+cFp57 extends the ledger across all committed starter rating suites without
+changing rating formulas or benchmark records. It writes:
+
+```text
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/ratings/snapshots/cFp57/
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/ratings/comparisons/cFp46-vs-cFp57/
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/ratings/comparisons/cFp57-vs-latest/
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/ratings/snapshots/cFp57/
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/ratings/comparisons/cFp46-vs-cFp57/
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/ratings/comparisons/cFp57-vs-latest/
+
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/snapshots/cFp57/
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/comparisons/cFp48-vs-cFp57/
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/ratings/comparisons/cFp57-vs-latest/
+```
+
+The cFp57-to-latest consistency comparisons must remain zero-delta and
+`no_change` only. Baseline comparisons are suite-local; do not compare ratings
+across different benchmark pools or treat rating deltas as product difficulty.
 
 ## Deferred Work
 

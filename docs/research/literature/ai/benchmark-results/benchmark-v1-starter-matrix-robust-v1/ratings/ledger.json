@@ -14,13 +14,25 @@
       "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/latest/records.jsonl"
     },
     {
-      "createdByPhase": "cFp48",
+      "createdByPhase": "cFp57",
+      "eligibleRecordCount": 1000,
+      "ignoredRecordCount": 0,
+      "label": "cFp57 snapshot",
+      "notes": "Frozen cFp57 rating snapshot for suite benchmark-v1-starter-matrix-robust-v1.",
+      "ratingsJsonHash": "a51ba2600cae2fb73b0a149a86c118981243399d2deeef37532a3e6e40f8520c",
+      "reportMdHash": "b73e27e2a1db63c2df1658a35135818cd04a015103108a7c184922a3d243726a",
+      "snapshotId": "cFp57",
+      "sourceRecordCount": 1000,
+      "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/latest/records.jsonl"
+    },
+    {
+      "createdByPhase": "cFp57",
       "eligibleRecordCount": 1000,
       "ignoredRecordCount": 0,
       "label": "latest snapshot",
       "notes": "Current latest rating artifact for suite benchmark-v1-starter-matrix-robust-v1.",
-      "ratingsJsonHash": "3ac619026f1664e6a5c1bf0fee234da78d560d77c792d1b36bfc12f957579aca",
-      "reportMdHash": "bf11d87cdf07538d122b1bbacb6209ddbeef80aa213a7dac5b5588f7564c92e9",
+      "ratingsJsonHash": "a51ba2600cae2fb73b0a149a86c118981243399d2deeef37532a3e6e40f8520c",
+      "reportMdHash": "b73e27e2a1db63c2df1658a35135818cd04a015103108a7c184922a3d243726a",
       "snapshotId": "latest",
       "sourceRecordCount": 1000,
       "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/latest/records.jsonl"

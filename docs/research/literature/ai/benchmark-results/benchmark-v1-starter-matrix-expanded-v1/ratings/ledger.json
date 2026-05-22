@@ -14,7 +14,19 @@
       "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/latest/records.jsonl"
     },
     {
-      "createdByPhase": "cFp47",
+      "createdByPhase": "cFp57",
+      "eligibleRecordCount": 400,
+      "ignoredRecordCount": 0,
+      "label": "cFp57 snapshot",
+      "notes": "Frozen cFp57 rating snapshot for suite benchmark-v1-starter-matrix-expanded-v1.",
+      "ratingsJsonHash": "070a9a9a3a9385d2b30353421040078b544d48b4eff27b857f6fabe0af4657c4",
+      "reportMdHash": "2c5509d3b56cc7f8e67ee02f3640af479919876d9ff7eb5c750666362fd20f79",
+      "snapshotId": "cFp57",
+      "sourceRecordCount": 400,
+      "sourceRecordsPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-expanded-v1/latest/records.jsonl"
+    },
+    {
+      "createdByPhase": "cFp57",
       "eligibleRecordCount": 400,
       "ignoredRecordCount": 0,
       "label": "latest snapshot",

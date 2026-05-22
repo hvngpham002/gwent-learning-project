@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp56",
-        latestSpecPath: "docs/spec/2026-05-22-cFp56-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp56-report.md",
+        latestPhase: "cFp57",
+        latestSpecPath: "docs/spec/2026-05-22-cFp57-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp57-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp56",
-        latestSpecPath: "docs/spec/2026-05-22-cFp56-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp56-report.md",
+        latestPhase: "cFp57",
+        latestSpecPath: "docs/spec/2026-05-22-cFp57-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp57-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -124,6 +124,7 @@ describe("authentic AI Lab view model", () => {
         "post-cFp53 robust round-one overinvestment casebook classifying the remaining 70 findings (cFp54)",
         "round-one temporal/cumulative spend instrumentation in failure-mining evidence (cFp55)",
         "temporal round-one overinvestment casebook over cFp55 robust findings (cFp56)",
+        "multi-period rating ledger snapshots and suite-local comparisons (cFp57)",
       ])
     );
   });
