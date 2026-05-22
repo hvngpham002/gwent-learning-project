@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp55",
-        latestSpecPath: "docs/spec/2026-05-22-cFp55-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp55-report.md",
+        latestPhase: "cFp56",
+        latestSpecPath: "docs/spec/2026-05-22-cFp56-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp56-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp55",
-        latestSpecPath: "docs/spec/2026-05-22-cFp55-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp55-report.md",
+        latestPhase: "cFp56",
+        latestSpecPath: "docs/spec/2026-05-22-cFp56-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp56-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -123,6 +123,7 @@ describe("authentic AI Lab view model", () => {
         "round-one selected-play overinvestment guard repair for the cFp52 direct candidates (cFp53)",
         "post-cFp53 robust round-one overinvestment casebook classifying the remaining 70 findings (cFp54)",
         "round-one temporal/cumulative spend instrumentation in failure-mining evidence (cFp55)",
+        "temporal round-one overinvestment casebook over cFp55 robust findings (cFp56)",
       ])
     );
   });

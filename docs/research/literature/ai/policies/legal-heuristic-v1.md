@@ -21,9 +21,9 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
-The latest analysis phase is cFp54: Post-cFp53 Robust Round-One
-Overinvestment Casebook. The latest instrumentation phase is cFp55: Round-One
-Temporal Spend Instrumentation. cFp53 repairs the selected-play
+The latest analysis phase is cFp56: Temporal Round-One Overinvestment
+Casebook. The latest instrumentation phase is cFp55: Round-One Temporal Spend
+Instrumentation. cFp53 repairs the selected-play
 path that cFp52 proved: when the exact selected `play_card` has cFp43 base
 geometry and `roundOneOverinvestmentRecommended === true`, the final
 playing-phase decision is converted to pass unless an existing tactical
@@ -45,6 +45,12 @@ temporal/cumulative fields: first play/board-floor/hand-cap/suppressed-pass
 indexes, first suppressed-pass context, first-event gaps, continue-play and
 post-geometry spend counts, score-delta sequence counts, and exception sequence
 counts before the first suppressed pass.
+cFp56 classifies the 70 cFp55 robust rows into 48 late-guard-intervention rows,
+21 no-suppressed-pass cumulative candidates with selected base geometry absent,
+and 1 no-suppressed-pass selected-base-geometry-present debug candidate. It
+recommends pausing hand-tuned v1 round-one heuristic tuning rather than writing
+a cFp57 behavior patch from broad late/missing-geometry/catch-up-heavy
+evidence.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -55,7 +61,7 @@ with delta/signal computation. cFp46 added deterministic rating/RD reports over
 existing public benchmark records. The latest committed benchmark record,
 round-one guard debug, and ratings/latest artifact refresh remains cFp53. The
 latest committed failure-mining artifact refresh is cFp55. The policy and
-diagnostics stack builds on the cFp27 through cFp55 chain:
+diagnostics stack builds on the cFp27 through cFp56 chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -96,6 +102,9 @@ diagnostics stack builds on the cFp27 through cFp55 chain:
   than behavior from aggregate counts alone.
 - cFp55: instrumentation/debug-only temporal and cumulative round-one spend
   fields in failure-mining evidence.
+- cFp56: analysis-only temporal casebook over the 70 cFp55 robust
+  `round_one_overinvestment` findings; recommends pausing v1 round-one tuning
+  for ratings/search/evaluation-ladder depth rather than changing behavior.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 
@@ -136,9 +145,10 @@ classifies the remaining 70 robust findings and finds no new behavior-ready
 bucket: the dominant 48-row group is already guarded by suppressed-pass
 telemetry, 20 rows never reached the board floor, and no row reaches the
 cumulative-spend candidate bucket after required precedence. Future round-one
-work should use the cFp55 temporal/cumulative spend fields before considering
-any new behavior patch; cFp54 does not justify threshold widening or
-cumulative-spend tuning.
+cFp56 uses the cFp55 temporal/cumulative spend fields and still finds no narrow
+public behavior rule: most rows are late-guard, missing selected play-card base
+geometry, or catch-up/card-advantage/exception heavy. It does not justify
+threshold widening, cumulative-spend tuning, or exception weakening.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -1454,3 +1464,38 @@ pre-pass sequences without reading raw traces or private state. cFp55 changes
 no AI policy behavior, engine rules, legal moves, benchmark suite definitions,
 benchmark records, ratings, debug artifacts, UI gameplay behavior, catalog data,
 deck presets, search/training code, or product difficulty.
+
+### Temporal Round-One Overinvestment Casebook (cFp56)
+
+cFp56 is analysis-only over the committed cFp55 robust failure-mining artifact.
+It classifies exactly the 70 robust `round_one_overinvestment` findings using
+only public scalar temporal/cumulative evidence:
+
+- 48 `late_guard_intervention` rows.
+- 21 `no_suppressed_pass_cumulative_continue_candidate` rows.
+- 1 `no_suppressed_pass_selected_base_geometry_present` row, sub-labeled
+  `recommendation_absent`.
+- 0 `no_suppressed_pass_geometry_absent_low_confidence` rows.
+- 0 `telemetry_unavailable_or_other` rows.
+
+The decision note is:
+
+```text
+docs/research/literature/ai/decisions/2026-05-22-cfp56-temporal-round-one-overinvestment-casebook.md
+```
+
+The largest bucket is late guard intervention (48/70), but only 3 of those rows
+show selected play-card base geometry before the suppressed pass. Across all 70
+rows, 66 are missing selected base geometry, 62 carry catch-up pressure, 54
+carry selected-card-advantage pressure, and 27 carry exception sequence
+pressure. The 21-row cumulative bucket is also mostly board-floor-never-reached
+and is not dominant.
+
+cFp56 recommends pausing hand-tuned v1 round-one heuristic tuning and moving
+the next Cluster F work toward ratings/search/evaluation-ladder depth, such as
+multi-period rating snapshots or search-readiness/ISMCTS probe design. If
+round-one tuning is reopened later, the single Bucket B public fixture should
+be replayed before any behavior change. cFp56 changes no AI policy behavior,
+engine rules, legal moves, benchmark definitions, generated benchmark
+artifacts, ratings, UI gameplay behavior, catalog data, deck presets,
+search/training code, or product difficulty.
