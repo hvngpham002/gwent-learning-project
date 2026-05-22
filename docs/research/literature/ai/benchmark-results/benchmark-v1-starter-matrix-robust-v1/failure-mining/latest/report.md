@@ -13,8 +13,8 @@
 
 | Severity | Count |
 |---|---:|
-| warning | 1659 |
-| watch | 642 |
+| warning | 1657 |
+| watch | 644 |
 | info | 0 |
 
 ## Finding Counts By Kind
@@ -23,10 +23,10 @@
 |---|---:|
 | matchup_skew | 1 |
 | deck_skew | 0 |
-| round_one_overinvestment | 71 |
+| round_one_overinvestment | 70 |
 | round_three_low_resource | 226 |
-| suspicious_pass | 1752 |
-| weathered_row_play | 240 |
+| suspicious_pass | 1754 |
+| weathered_row_play | 239 |
 | medic_timing_risk | 11 |
 | leader_underuse | 0 |
 | max_steps | 0 |
@@ -53,22 +53,22 @@
 
 | Suspicious-pass suppression category | Count |
 |---|---:|
-| preserve_future_hand_pass | 145 |
+| preserve_future_hand_pass | 142 |
 | sacrifice_round_pass | 0 |
 | voluntary_safe_pass | 0 |
 | stop_loss_pass | 51 |
-| round_one_overinvestment_pass | 703 |
+| round_one_overinvestment_pass | 705 |
 | insufficient_context | 21 |
 
 ## Tuning Queue
 
 | Rank | Cluster | Severity | Count | Recommendation |
 |---:|---|---|---:|---|
-| 1 | round_resource_exhaustion | warning | 297 | Analyze round-one guard telemetry and weak round-three resources before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
-| 2 | weathered_row_low_tempo | warning | 240 | Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo. |
+| 1 | round_resource_exhaustion | warning | 296 | Analyze round-one guard telemetry and weak round-three resources before changing broad pass behavior; this cluster has direct policy implications across early overinvestment and weak round-three resources. |
+| 2 | weathered_row_low_tempo | warning | 239 | Review weather-adjusted unit placement for cases where printed medium/high strength collapses to low or no effective tempo. |
 | 3 | medic_no_target_timing | warning | 11 | Review Medic timing thresholds where no-target or weak-target diagnostics still allow a Medic play. |
 | 4 | skellige_matchup_skew | warning | 129 | Keep Skellige matchup and deck skew visible, but require behavior evidence before making faction-specific policy changes. |
-| 5 | remaining_suspicious_pass | warning | 1752 | Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes. |
+| 5 | remaining_suspicious_pass | warning | 1754 | Inspect only calibrated pass contradictions; do not tune against suppressed preserve-future-hand, sacrifice, stop-loss, or voluntary-safe passes. |
 
 ## Deferred Signals
 

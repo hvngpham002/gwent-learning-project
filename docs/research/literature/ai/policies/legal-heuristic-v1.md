@@ -19,16 +19,16 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
-phase is cFp43: Round-One Overinvestment Guard. The latest reproduction/debug
-phase is cFp52: Round-One Guard Fixture Reproduction Debug. The latest analysis
-phase is cFp51: Round-One Guard Telemetry Casebook. The latest
-evaluation-infrastructure phase is cFp50: Round-One Overinvestment Guard-State
-Telemetry. cFp52 replays only the two cFp51 robust
-`guard_recommended_play_selected` fixtures and confirms selected-play
-contradictions without changing policy behavior: Fixture A reproduces three
-selected play-card rows where base geometry and
-`roundOneOverinvestmentRecommended === true` coincide, and Fixture B reproduces
-one such selected play-card row plus one later suppressed pass. cFp51 reads the
+phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
+reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
+The latest analysis phase is cFp51: Round-One Guard Telemetry Casebook. The
+latest evaluation-infrastructure phase is cFp50: Round-One Overinvestment
+Guard-State Telemetry. cFp53 repairs the selected-play path that cFp52 proved:
+when the exact selected `play_card` has cFp43 base geometry and
+`roundOneOverinvestmentRecommended === true`, the final playing-phase decision
+is converted to pass unless an existing tactical exception applies. cFp52
+replays only the two cFp51 robust `guard_recommended_play_selected` fixtures and
+preserves those before-fix artifacts as historical evidence. cFp51 reads the
 cFp50 scalar telemetry from committed public failure-mining artifacts,
 classifies robust `round_one_overinvestment` findings, and recommends cFp52
 reproduce/debug the two guard-recommended play cases before any behavior patch.
@@ -42,10 +42,10 @@ snapshot, and a deterministic `cFp48-vs-latest` comparison boundary. cFp47
 freezes cFp46 rating artifacts as named `cFp46` snapshots, adds `ledger.json`
 per suite, and generates deterministic `cFp46-vs-latest` comparison artifacts
 with delta/signal computation. cFp46 added deterministic rating/RD reports over
-existing public benchmark records. The latest committed benchmark record
-artifact refresh remains the cFp48 robust 1000-record starter matrix; the
-latest committed failure-mining artifact refresh is cFp50. The behavior stack
-builds on the cFp27 through cFp43 tuning and diagnostics chain:
+existing public benchmark records. The latest committed benchmark record,
+failure-mining, round-one guard debug, and ratings/latest artifact refresh is
+cFp53. The behavior stack builds on the cFp27 through cFp53 tuning and
+diagnostics chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -74,15 +74,23 @@ builds on the cFp27 through cFp43 tuning and diagnostics chain:
   emergency Medic plays. Three new trace booleans. Medic score adjustment in
   round-investment analysis prevents timing penalty from distorting non-Medic
   decisions.
+- cFp43: round-one overinvestment guard for round-1 selected plays that reach
+  the board and hand thresholds, with Spy/card-advantage, last-gem,
+  opponent-passed, match-winning, cheap catch-up, use-leader/non-play-card, and
+  single-card-hand exceptions.
+- cFp53: final selected-play guard repair so all playing-phase `play_card`
+  return paths honor the existing cFp43 recommendation for the exact selected
+  candidate.
 
-Current cFp43 benchmark totals:
+Current cFp53 benchmark totals:
 
-- `benchmark-v1-smoke-v1`: 10 win / 2 loss / 0 draw vs v0.
+- `benchmark-v1-smoke-v1`: 11 win / 1 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 17 loss / 1 draw vs v0.
 - Current 120-record failure mining: 300 findings (`suspicious_pass=234`,
   `round_three_low_resource=36`, `weathered_row_play=18`,
   `round_one_overinvestment=6`, `medic_timing_risk=0`), with
-  `round_one_overinvestment_pass=81` suppressed as intentional cFp43 passes.
+  103 suppressed suspicious-pass findings, including
+  `round_one_overinvestment_pass=81`.
 - `benchmark-v1-starter-matrix-expanded-v1`: 400 completed / 0 policy failures /
   0 engine errors, with v1 recording 305 wins, 90 losses, and 5 draws against
   v0.
@@ -92,12 +100,13 @@ Current cFp43 benchmark totals:
 - Expanded failure mining: 878 findings
   (`suspicious_pass=671`, `round_three_low_resource=86`,
   `weathered_row_play=86`, `round_one_overinvestment=26`,
-  `medic_timing_risk=7`), with `round_one_overinvestment_pass=290` suppressed
-  as intentional cFp43 passes.
-- Robust failure mining: 2301 findings (`suspicious_pass=1752`,
-  `weathered_row_play=240`, `round_three_low_resource=226`,
-  `round_one_overinvestment=71`, `medic_timing_risk=11`,
-  `matchup_skew=1`), with 920 suspicious-pass findings suppressed.
+  `medic_timing_risk=7`), with 376 suppressed suspicious-pass findings,
+  including `round_one_overinvestment_pass=290`.
+- Robust failure mining: 2301 findings (`suspicious_pass=1754`,
+  `weathered_row_play=239`, `round_three_low_resource=226`,
+  `round_one_overinvestment=70`, `medic_timing_risk=11`,
+  `matchup_skew=1`), with 919 suspicious-pass findings suppressed, including
+  `round_one_overinvestment_pass=705`.
 
 The next behavior decision should not broaden the round-one guard from aggregate
 finding counts alone. The cFp49 casebook confirms the robust
@@ -106,9 +115,11 @@ finding counts alone. The cFp49 casebook confirms the robust
 the failure-mining boundary. cFp51 shows the remaining robust signal is mostly
 late suppressed passes and board-floor misses, with only two direct
 guard-recommended play-selected cases. cFp52 confirms those two direct cases as
-real selected-play contradictions, so the recommended next step is a narrow
-cFp53 behavior-repair spec for the exact reproduced public state shape, not
-threshold widening or cumulative-spend tuning.
+real selected-play contradictions, and cFp53 converts those selected-play
+contradictions into selected passes in the post-repair debug artifacts. Future
+round-one work should classify the remaining 70 robust
+`round_one_overinvestment` findings before considering any new behavior patch;
+cFp53 does not justify threshold widening or cumulative-spend tuning.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -1302,3 +1313,49 @@ any behavior repair.
 No AI policy behavior, engine rule, legal move, benchmark suite definition,
 failure-mining classifier, rating formula, catalog data, deck preset, product
 gameplay UI, search, training, or product difficulty behavior changed.
+
+### Round-One Guard Fixture Reproduction Debug (cFp52)
+
+cFp52 replays only the two cFp51 robust
+`guard_recommended_play_selected` fixtures with hidden-info-safe per-decision
+debug artifacts under:
+
+```text
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/round-one-guard-debug/cFp52/
+```
+
+The before-fix artifacts confirm real selected-play contradictions: Fixture A
+has three selected `play_card` rows with base geometry and
+`roundOneOverinvestmentRecommended === true`, and Fixture B has one selected
+`play_card` contradiction plus one later suppressed pass. cFp52 does not change
+policy behavior and rejects threshold widening, cumulative-spend tuning, and
+analyzer calibration as unsupported direct fixes for those two rows.
+
+### Round-One Selected-Play Guard Repair (cFp53)
+
+cFp53 adds a shared selected-play finalization guard in
+`legalHeuristicPolicyV1.ts`. Every playing-phase return path that can select a
+`play_card` now checks the exact selected candidate against
+`buildLegalHeuristicV1RoundInvestmentAnalysis(...)`; if the candidate is a
+round-1 hand-spending play, pass is legal, the AI has more than one gem, the
+opponent has not passed, and the candidate reports
+`roundOneOverinvestmentRecommended === true` for `round_one_board_limit` or
+`round_one_low_future_hand`, the final selected move becomes `pass`.
+
+The repair preserves existing exceptions for Spy/card-advantage plays,
+match-winning plays, cheap single-move catch-up, use-leader/non-play-card
+actions, opponent-passed states, last gem, single-card hand, and
+`exception_*` cFp43 reasons. `explainLegalHeuristicV1Decision(...)` now surfaces
+the same round-one overinvestment / future-hand reason for cFp53 pass cases that
+the policy selects.
+
+Post-repair debug artifacts are written separately under:
+
+```text
+docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/round-one-guard-debug/cFp53/
+```
+
+The cFp53 artifacts preserve the cFp52 before-fix bundle and show both fixtures
+completed with zero selected-play contradictions. Fixture A and Fixture B each
+produce one selected pass carrying the active round-one overinvestment
+recommendation as a suppressed-pass diagnostic.

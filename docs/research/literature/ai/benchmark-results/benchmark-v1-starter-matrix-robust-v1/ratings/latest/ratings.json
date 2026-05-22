@@ -45,18 +45,18 @@
     {
       "entries": [
         {
-          "conservativeRating": 1771.09,
+          "conservativeRating": 1765.96,
           "draws": 2,
           "games": 200,
-          "interval95High": 1915.71,
-          "interval95Low": 1772.56,
+          "interval95High": 1910.57,
+          "interval95Low": 1767.42,
           "key": "policy_deck:legal-heuristic-v1|official-monsters-starter",
           "label": "legal-heuristic-v1 / official-monsters-starter",
-          "losses": 32,
-          "rating": 1844.13,
+          "losses": 33,
+          "rating": 1838.99,
           "rd": 36.52,
           "scope": "policy_deck",
-          "wins": 166
+          "wins": 165
         },
         {
           "conservativeRating": 1753.12,
@@ -101,18 +101,18 @@
           "wins": 155
         },
         {
-          "conservativeRating": 1650.39,
+          "conservativeRating": 1655.53,
           "draws": 13,
           "games": 200,
-          "interval95High": 1795,
-          "interval95Low": 1651.85,
+          "interval95High": 1800.14,
+          "interval95Low": 1656.99,
           "key": "policy_deck:legal-heuristic-v1|official-scoiatael-starter",
           "label": "legal-heuristic-v1 / official-scoiatael-starter",
-          "losses": 50,
-          "rating": 1723.43,
+          "losses": 49,
+          "rating": 1728.56,
           "rd": 36.52,
           "scope": "policy_deck",
-          "wins": 137
+          "wins": 138
         },
         {
           "conservativeRating": 1365.33,
@@ -190,18 +190,18 @@
     {
       "entries": [
         {
-          "conservativeRating": 1771.09,
+          "conservativeRating": 1765.96,
           "draws": 2,
           "games": 200,
-          "interval95High": 1915.71,
-          "interval95Low": 1772.56,
+          "interval95High": 1910.57,
+          "interval95Low": 1767.42,
           "key": "policy_faction:legal-heuristic-v1|monsters",
           "label": "legal-heuristic-v1 / monsters",
-          "losses": 32,
-          "rating": 1844.13,
+          "losses": 33,
+          "rating": 1838.99,
           "rd": 36.52,
           "scope": "policy_faction",
-          "wins": 166
+          "wins": 165
         },
         {
           "conservativeRating": 1753.12,
@@ -246,18 +246,18 @@
           "wins": 155
         },
         {
-          "conservativeRating": 1650.39,
+          "conservativeRating": 1655.53,
           "draws": 13,
           "games": 200,
-          "interval95High": 1795,
-          "interval95Low": 1651.85,
+          "interval95High": 1800.14,
+          "interval95Low": 1656.99,
           "key": "policy_faction:legal-heuristic-v1|scoiatael",
           "label": "legal-heuristic-v1 / scoiatael",
-          "losses": 50,
-          "rating": 1723.43,
+          "losses": 49,
+          "rating": 1728.56,
           "rd": 36.52,
           "scope": "policy_faction",
-          "wins": 137
+          "wins": 138
         },
         {
           "conservativeRating": 1365.33,
@@ -379,18 +379,18 @@
       "scope": "policy_deck",
       "topEntries": [
         {
-          "conservativeRating": 1771.09,
+          "conservativeRating": 1765.96,
           "draws": 2,
           "games": 200,
-          "interval95High": 1915.71,
-          "interval95Low": 1772.56,
+          "interval95High": 1910.57,
+          "interval95Low": 1767.42,
           "key": "policy_deck:legal-heuristic-v1|official-monsters-starter",
           "label": "legal-heuristic-v1 / official-monsters-starter",
-          "losses": 32,
-          "rating": 1844.13,
+          "losses": 33,
+          "rating": 1838.99,
           "rd": 36.52,
           "scope": "policy_deck",
-          "wins": 166
+          "wins": 165
         },
         {
           "conservativeRating": 1753.12,
@@ -435,18 +435,18 @@
           "wins": 155
         },
         {
-          "conservativeRating": 1650.39,
+          "conservativeRating": 1655.53,
           "draws": 13,
           "games": 200,
-          "interval95High": 1795,
-          "interval95Low": 1651.85,
+          "interval95High": 1800.14,
+          "interval95Low": 1656.99,
           "key": "policy_deck:legal-heuristic-v1|official-scoiatael-starter",
           "label": "legal-heuristic-v1 / official-scoiatael-starter",
-          "losses": 50,
-          "rating": 1723.43,
+          "losses": 49,
+          "rating": 1728.56,
           "rd": 36.52,
           "scope": "policy_deck",
-          "wins": 137
+          "wins": 138
         }
       ]
     },
@@ -454,18 +454,18 @@
       "scope": "policy_faction",
       "topEntries": [
         {
-          "conservativeRating": 1771.09,
+          "conservativeRating": 1765.96,
           "draws": 2,
           "games": 200,
-          "interval95High": 1915.71,
-          "interval95Low": 1772.56,
+          "interval95High": 1910.57,
+          "interval95Low": 1767.42,
           "key": "policy_faction:legal-heuristic-v1|monsters",
           "label": "legal-heuristic-v1 / monsters",
-          "losses": 32,
-          "rating": 1844.13,
+          "losses": 33,
+          "rating": 1838.99,
           "rd": 36.52,
           "scope": "policy_faction",
-          "wins": 166
+          "wins": 165
         },
         {
           "conservativeRating": 1753.12,
@@ -510,18 +510,18 @@
           "wins": 155
         },
         {
-          "conservativeRating": 1650.39,
+          "conservativeRating": 1655.53,
           "draws": 13,
           "games": 200,
-          "interval95High": 1795,
-          "interval95Low": 1651.85,
+          "interval95High": 1800.14,
+          "interval95Low": 1656.99,
           "key": "policy_faction:legal-heuristic-v1|scoiatael",
           "label": "legal-heuristic-v1 / scoiatael",
-          "losses": 50,
-          "rating": 1723.43,
+          "losses": 49,
+          "rating": 1728.56,
           "rd": 36.52,
           "scope": "policy_faction",
-          "wins": 137
+          "wins": 138
         }
       ]
     }

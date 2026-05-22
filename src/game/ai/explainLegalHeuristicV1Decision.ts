@@ -481,7 +481,10 @@ const buildPlayingPhaseTrace = (
     const passSafetyBuffer = features.scoreDelta - requiredLead;
     const extraBuffer = getFutureHandExtraBuffer(handShapeAnalysis.futureRoundHandQuality);
     const handQualityBlockedPass = extraBuffer > 0 && passSafetyBuffer < extraBuffer;
-    if (passAnalysis && passAnalysis.isVoluntarilySafe && handQualityBlockedPass) {
+    if (move?.kind === "pass" && roundInvestmentAnalysis && roundInvestmentAnalysis.roundOneOverinvestmentRecommended) {
+      reason = "round-one overinvestment — preserve future hand";
+      reasonKind = "policy-round-investment";
+    } else if (passAnalysis && passAnalysis.isVoluntarilySafe && handQualityBlockedPass) {
       // Baseline pass is safe, but cFp28 buffering made the margin insufficient.
       if (move.kind !== "pass" && bestMove && bestMove.score > 0) {
         reason = `future hand ${handShapeAnalysis.futureRoundHandQuality}, pass margin too small — play useful card`;

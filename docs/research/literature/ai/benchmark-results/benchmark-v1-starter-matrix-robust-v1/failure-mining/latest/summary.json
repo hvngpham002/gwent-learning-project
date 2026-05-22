@@ -16,15 +16,15 @@
     "medic_timing_risk": 11,
     "policy_failed": 0,
     "replay_failed": 0,
-    "round_one_overinvestment": 71,
+    "round_one_overinvestment": 70,
     "round_three_low_resource": 226,
-    "suspicious_pass": 1752,
-    "weathered_row_play": 240
+    "suspicious_pass": 1754,
+    "weathered_row_play": 239
   },
   "findingCountsBySeverity": {
     "info": 0,
-    "warning": 1659,
-    "watch": 642
+    "warning": 1657,
+    "watch": 644
   },
   "recordCount": 1000,
   "schemaVersion": "benchmark-failure-mining-v1",
@@ -40,13 +40,13 @@
     "replay_failed": 0,
     "round_one_overinvestment": 0,
     "round_three_low_resource": 0,
-    "suspicious_pass": 920,
+    "suspicious_pass": 919,
     "weathered_row_play": 0
   },
   "suppressedSuspiciousPassCountsByCategory": {
     "insufficient_context": 21,
-    "preserve_future_hand_pass": 145,
-    "round_one_overinvestment_pass": 703,
+    "preserve_future_hand_pass": 142,
+    "round_one_overinvestment_pass": 705,
     "sacrifice_round_pass": 0,
     "stop_loss_pass": 51,
     "voluntary_safe_pass": 0
@@ -449,7 +449,7 @@
         "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
       ],
       "clusterId": "round_resource_exhaustion",
-      "count": 297,
+      "count": 296,
       "findingKinds": [
         "round_one_overinvestment",
         "round_three_low_resource"
@@ -496,7 +496,7 @@
         "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1"
       ],
       "clusterId": "weathered_row_low_tempo",
-      "count": 240,
+      "count": 239,
       "findingKinds": [
         "weathered_row_play"
       ],
@@ -613,7 +613,7 @@
         "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0"
       ],
       "clusterId": "remaining_suspicious_pass",
-      "count": 1752,
+      "count": 1754,
       "findingKinds": [
         "suspicious_pass"
       ],

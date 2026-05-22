@@ -37,10 +37,10 @@ Scope: `policy`
 Scope: `policy_deck`
 
 - **legal-heuristic-v1 / official-monsters-starter**
-  - Rating: 1844.13 ± 36.52 RD
-  - 95% CI: [1772.56, 1915.71]
-  - Conservative: 1771.09
-  - Record: 166W / 32L / 2D (200 games)
+  - Rating: 1838.99 ± 36.52 RD
+  - 95% CI: [1767.42, 1910.57]
+  - Conservative: 1765.96
+  - Record: 165W / 33L / 2D (200 games)
 
 - **legal-heuristic-v1 / official-northern-realms-starter**
   - Rating: 1826.15 ± 36.52 RD
@@ -61,10 +61,10 @@ Scope: `policy_deck`
   - Record: 155W / 45L / 0D (200 games)
 
 - **legal-heuristic-v1 / official-scoiatael-starter**
-  - Rating: 1723.43 ± 36.52 RD
-  - 95% CI: [1651.85, 1795.00]
-  - Conservative: 1650.39
-  - Record: 137W / 50L / 13D (200 games)
+  - Rating: 1728.56 ± 36.52 RD
+  - 95% CI: [1656.99, 1800.14]
+  - Conservative: 1655.53
+  - Record: 138W / 49L / 13D (200 games)
 
 - **legal-heuristic-v0 / official-skellige-starter**
   - Rating: 1438.36 ± 36.52 RD
@@ -102,10 +102,10 @@ Scope: `policy_deck`
 Scope: `policy_faction`
 
 - **legal-heuristic-v1 / monsters**
-  - Rating: 1844.13 ± 36.52 RD
-  - 95% CI: [1772.56, 1915.71]
-  - Conservative: 1771.09
-  - Record: 166W / 32L / 2D (200 games)
+  - Rating: 1838.99 ± 36.52 RD
+  - 95% CI: [1767.42, 1910.57]
+  - Conservative: 1765.96
+  - Record: 165W / 33L / 2D (200 games)
 
 - **legal-heuristic-v1 / northern_realms**
   - Rating: 1826.15 ± 36.52 RD
@@ -126,10 +126,10 @@ Scope: `policy_faction`
   - Record: 155W / 45L / 0D (200 games)
 
 - **legal-heuristic-v1 / scoiatael**
-  - Rating: 1723.43 ± 36.52 RD
-  - 95% CI: [1651.85, 1795.00]
-  - Conservative: 1650.39
-  - Record: 137W / 50L / 13D (200 games)
+  - Rating: 1728.56 ± 36.52 RD
+  - 95% CI: [1656.99, 1800.14]
+  - Conservative: 1655.53
+  - Record: 138W / 49L / 13D (200 games)
 
 - **legal-heuristic-v0 / skellige**
   - Rating: 1438.36 ± 36.52 RD

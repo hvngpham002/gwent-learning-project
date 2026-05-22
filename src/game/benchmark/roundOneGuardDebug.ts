@@ -11,11 +11,11 @@ import { getBenchmarkSuite } from "./suites";
 import type { BenchmarkMatchRecord, BenchmarkMatchupDefinition, BenchmarkSuite } from "./types";
 
 export const ROUND_ONE_GUARD_DEBUG_SCHEMA_VERSION = "round-one-guard-debug-v1" as const;
-export const CFP52_ROUND_ONE_GUARD_DEBUG_PHASE = "cFp52" as const;
-export const CFP52_ROUND_ONE_GUARD_DEBUG_SUITE_ID = "benchmark-v1-starter-matrix-robust-v1" as const;
+export const ROUND_ONE_GUARD_DEBUG_PHASE = "cFp53" as const;
+export const ROUND_ONE_GUARD_DEBUG_SUITE_ID = "benchmark-v1-starter-matrix-robust-v1" as const;
 
 export interface RoundOneGuardDebugFixture {
-  readonly suiteId: typeof CFP52_ROUND_ONE_GUARD_DEBUG_SUITE_ID;
+  readonly suiteId: typeof ROUND_ONE_GUARD_DEBUG_SUITE_ID;
   readonly matchupId: string;
   readonly seed: string;
   readonly mirrorIndex: 0 | 1;
@@ -95,11 +95,11 @@ export interface SerializedRoundOneGuardDebugArtifacts {
 export const roundOneGuardDebugArtifactFiles = ["manifest.json", "cases.json", "report.md"] as const;
 
 const HIDDEN_INFO_SAFETY_NOTE =
-  "cFp52 round-one guard debug artifacts contain public fixture IDs, target-seat public metadata, scalar decision diagnostics, coarse target labels, and derived booleans only. Raw traces, raw engine state, commands, events, legal moves, private zones, card IDs, source IDs, instance IDs, action refs, and card names are intentionally omitted.";
+  "cFp53 round-one guard debug artifacts contain public fixture IDs, target-seat public metadata, scalar decision diagnostics, coarse target labels, and derived booleans only. Raw traces, raw engine state, commands, events, legal moves, private zones, card IDs, source IDs, instance IDs, action refs, and card names are intentionally omitted.";
 
-export const CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES: readonly RoundOneGuardDebugFixture[] = [
+export const ROUND_ONE_GUARD_DEBUG_FIXTURES: readonly RoundOneGuardDebugFixture[] = [
   {
-    suiteId: CFP52_ROUND_ONE_GUARD_DEBUG_SUITE_ID,
+    suiteId: ROUND_ONE_GUARD_DEBUG_SUITE_ID,
     matchupId: "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1",
     seed: "starter-matrix-robust-017",
     mirrorIndex: 1,
@@ -108,7 +108,7 @@ export const CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES: readonly RoundOneGuardDebugFi
       "round-one-overinvestment__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1__starter-matrix-robust-017__1__seat-a",
   },
   {
-    suiteId: CFP52_ROUND_ONE_GUARD_DEBUG_SUITE_ID,
+    suiteId: ROUND_ONE_GUARD_DEBUG_SUITE_ID,
     matchupId: "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1",
     seed: "starter-matrix-robust-008",
     mirrorIndex: 0,
@@ -117,6 +117,8 @@ export const CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES: readonly RoundOneGuardDebugFi
       "round-one-overinvestment__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1__starter-matrix-robust-008__0__seat-b",
   },
 ];
+
+export const CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES = ROUND_ONE_GUARD_DEBUG_FIXTURES;
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
@@ -327,7 +329,7 @@ const runFixture = (fixture: RoundOneGuardDebugFixture): RoundOneGuardDebugCase 
 
   const result = runBenchmarkSuite({
     suite: buildMirroredFixtureSuite(suite, matchup, fixture),
-    benchmarkRunId: `${fixture.suiteId}:cFp52-round-one-guard-debug`,
+    benchmarkRunId: `${fixture.suiteId}:cFp53-round-one-guard-debug`,
     includeDecisionTraces: true,
     includeDebugResults: true,
   });
@@ -353,7 +355,7 @@ const runFixture = (fixture: RoundOneGuardDebugFixture): RoundOneGuardDebugCase 
 
 export const runRoundOneGuardDebugCases = (): RoundOneGuardDebugResult => ({
   schemaVersion: ROUND_ONE_GUARD_DEBUG_SCHEMA_VERSION,
-  cases: CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES.map(runFixture),
+  cases: ROUND_ONE_GUARD_DEBUG_FIXTURES.map(runFixture),
 });
 
 const caseSummaries = (cases: readonly RoundOneGuardDebugCase[]) =>
@@ -399,20 +401,20 @@ const decisionRowsTable = (debugCase: RoundOneGuardDebugCase) => {
   return `${header}${rows}\n`;
 };
 
-const recommendationForCases = (cases: readonly RoundOneGuardDebugCase[]) => {
+const postRepairAssessmentForCases = (cases: readonly RoundOneGuardDebugCase[]) => {
   const confirmedCount = cases.filter((debugCase) => debugCase.verdict === "confirmed_policy_contradiction").length;
-  if (confirmedCount === cases.length && cases.length > 0) {
-    return "cFp53 should be a narrow behavior-repair spec for the exact selected-play contradiction shape reproduced here: round 1, selected play_card, base geometry reached, and roundOneOverinvestmentRecommended true. Do not broaden thresholds or add cumulative-spend tuning from cFp52.";
+  if (confirmedCount === 0 && cases.length > 0 && cases.every((debugCase) => debugCase.status === "completed")) {
+    return "cFp53 post-repair artifacts show zero selected-play contradictions for the two cFp52 fixtures. Any active round-one guard intervention is represented as a selected pass/suppressed-pass diagnostic instead of an overinvesting selected play.";
   }
   if (confirmedCount > 0) {
-    return "cFp53 should inspect the confirmed contradiction for a simple code-path bug before any behavior patch; otherwise prefer analyzer calibration. Do not broaden thresholds or add cumulative-spend tuning from this mixed cFp52 evidence.";
+    return "cFp53 repair is incomplete: at least one selected-play contradiction remains for the cFp52 fixture set. Do not broaden thresholds or add cumulative-spend tuning to mask this selected-play path.";
   }
-  return "cFp53 should calibrate the analyzer/debug classification and keep behavior tuning paused. These fixtures do not prove a selected-play contradiction, and cFp52 does not support broad threshold or cumulative-spend changes.";
+  return "cFp53 debug reproduction did not complete for every fixture. Inspect fixture status before interpreting post-repair behavior.";
 };
 
 const buildMarkdownReport = (result: RoundOneGuardDebugResult) => {
   const lines: string[] = [
-    "# cFp52 Round-One Guard Fixture Debug",
+    "# cFp53 Round-One Guard Fixture Debug",
     "",
     "## Summary",
     "",
@@ -452,9 +454,9 @@ const buildMarkdownReport = (result: RoundOneGuardDebugResult) => {
   });
 
   lines.push(
-    "## cFp53 Recommendation",
+    "## Post-Repair Assessment",
     "",
-    recommendationForCases(result.cases),
+    postRepairAssessmentForCases(result.cases),
     "",
     "## Hidden-Info Boundary",
     "",
@@ -469,9 +471,9 @@ export const serializeRoundOneGuardDebugArtifacts = (
 ): SerializedRoundOneGuardDebugArtifacts => {
   const manifest = {
     schemaVersion: ROUND_ONE_GUARD_DEBUG_SCHEMA_VERSION,
-    generatedPhase: CFP52_ROUND_ONE_GUARD_DEBUG_PHASE,
-    sourceSuiteId: CFP52_ROUND_ONE_GUARD_DEBUG_SUITE_ID,
-    fixtureCount: CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES.length,
+    generatedPhase: ROUND_ONE_GUARD_DEBUG_PHASE,
+    sourceSuiteId: ROUND_ONE_GUARD_DEBUG_SUITE_ID,
+    fixtureCount: ROUND_ONE_GUARD_DEBUG_FIXTURES.length,
     caseCount: result.cases.length,
     statusCounts: statusCounts(result.cases),
     hiddenInfoSafetyNote: HIDDEN_INFO_SAFETY_NOTE,
@@ -479,7 +481,7 @@ export const serializeRoundOneGuardDebugArtifacts = (
   };
   const cases = {
     schemaVersion: ROUND_ONE_GUARD_DEBUG_SCHEMA_VERSION,
-    fixtures: CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES,
+    fixtures: ROUND_ONE_GUARD_DEBUG_FIXTURES,
     caseSummaries: caseSummaries(result.cases),
     cases: result.cases,
   };

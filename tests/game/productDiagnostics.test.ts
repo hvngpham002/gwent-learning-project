@@ -2444,6 +2444,24 @@ describe("cFp31: round-investment scan", () => {
     expect(issues).toHaveLength(0);
   });
 
+  it("cFp53 safe low-future-hand overinvestment reason passes scan", () => {
+    const cFp53Safe = {
+      risk: "watch",
+      recommendation: "continue",
+      ownBoardCardCount: 5,
+      scoreDelta: 5,
+      roundResourceBudget: 4,
+      roundResourcePressure: "watch" as const,
+      resourceExhaustionRecommended: false,
+      resourceExhaustionReason: "none" as const,
+      roundOneBoardAfterSelectedMove: 7,
+      roundOneOverinvestmentRecommended: true,
+      roundOneOverinvestmentReason: "round_one_low_future_hand" as const,
+    };
+    const issues = scanRoundInvestmentAnalysis(cFp53Safe);
+    expect(issues).toHaveLength(0);
+  });
+
   it("cFp43 unsafe card-name string in roundOneOverinvestmentReason fails scan", () => {
     const cFp43Unsafe = {
       risk: "watch",

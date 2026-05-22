@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 import {
-  CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES,
+  ROUND_ONE_GUARD_DEBUG_FIXTURES,
   combinedRoundOneGuardDebugArtifactText,
   runRoundOneGuardDebugCases,
   scanRoundOneGuardDebugArtifactsForHiddenInfo,
@@ -56,12 +58,12 @@ const getResult = () => {
 
 describe("round-one guard debug", () => {
   it("lists the two exact cFp51 guard-recommended fixtures", () => {
-    expect(CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES).toHaveLength(2);
-    expect(CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES.map((fixture) => fixture.findingId)).toEqual([
+    expect(ROUND_ONE_GUARD_DEBUG_FIXTURES).toHaveLength(2);
+    expect(ROUND_ONE_GUARD_DEBUG_FIXTURES.map((fixture) => fixture.findingId)).toEqual([
       fixtureAFindingId,
       fixtureBFindingId,
     ]);
-    expect(CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES.map((fixture) => fixture.suiteId)).toEqual([
+    expect(ROUND_ONE_GUARD_DEBUG_FIXTURES.map((fixture) => fixture.suiteId)).toEqual([
       "benchmark-v1-starter-matrix-robust-v1",
       "benchmark-v1-starter-matrix-robust-v1",
     ]);
@@ -90,32 +92,40 @@ describe("round-one guard debug", () => {
 
     expect(result.cases.every((debugCase) => debugCase.status === "completed")).toBe(true);
     expect(result.cases.every((debugCase) => debugCase.decisionRows.length > 0)).toBe(true);
-    expect(result.cases.map((debugCase) => debugCase.summary.playCardTraceCount)).toEqual([10, 9]);
+    expect(result.cases.map((debugCase) => debugCase.summary.playCardTraceCount)).toEqual([5, 7]);
   });
 
-  it("confirms the current selected-play contradiction counts", () => {
+  it("reports zero cFp53 selected-play contradictions for both repaired fixtures", () => {
     const [fixtureA, fixtureB] = getResult().cases;
 
-    expect(fixtureA.verdict).toBe("confirmed_policy_contradiction");
+    expect(fixtureA.verdict).toBe("suppressed_pass_after_overinvestment");
     expect(fixtureA.summary).toEqual(
       expect.objectContaining({
-        baseGeometryCount: 3,
-        recommendedPlayContradictionCount: 3,
-        suppressedPassCount: 0,
-        firstBaseGeometryDecisionIndex: 7,
-        firstRecommendedPlayContradictionDecisionIndex: 7,
+        recommendedPlayContradictionCount: 0,
+        suppressedPassCount: 1,
+        firstRecommendedPlayContradictionDecisionIndex: null,
       }),
     );
-    expect(fixtureB.verdict).toBe("confirmed_policy_contradiction");
+    expect(fixtureB.verdict).toBe("suppressed_pass_after_overinvestment");
     expect(fixtureB.summary).toEqual(
       expect.objectContaining({
-        baseGeometryCount: 2,
-        recommendedPlayContradictionCount: 1,
+        recommendedPlayContradictionCount: 0,
         suppressedPassCount: 1,
-        firstBaseGeometryDecisionIndex: 8,
-        firstRecommendedPlayContradictionDecisionIndex: 8,
+        firstRecommendedPlayContradictionDecisionIndex: null,
       }),
     );
+  });
+
+  it("keeps the historical cFp52 before-fix artifacts readable", () => {
+    const historicalManifest = readFileSync(
+      resolve(
+        process.cwd(),
+        "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/round-one-guard-debug/cFp52/manifest.json",
+      ),
+      "utf8",
+    );
+
+    expect(historicalManifest).toContain('"generatedPhase": "cFp52"');
   });
 
   it("serializes hidden-info-safe artifacts without raw traces or private identifiers", () => {
@@ -128,6 +138,14 @@ describe("round-one guard debug", () => {
     });
     expect(combined).toContain("official-scoiatael-starter");
     expect(combined).toContain("official-skellige-starter");
+  });
+
+  it("serializes cFp53 output without absolute local or Windows paths", () => {
+    const artifacts = serializeRoundOneGuardDebugArtifacts(getResult());
+    const combined = combinedRoundOneGuardDebugArtifactText(artifacts);
+
+    expect(combined).not.toMatch(/\/Users\//);
+    expect(combined).not.toMatch(/[A-Z]:\\/);
   });
 
   it("rejects a synthetic unsafe artifact containing a card source id", () => {

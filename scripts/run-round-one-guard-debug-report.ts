@@ -40,7 +40,7 @@ const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const defaultOutputDir = () =>
   resolve(
     rootDir,
-    "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/round-one-guard-debug/cFp52",
+    "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/round-one-guard-debug/cFp53",
   );
 
 const readOptionValue = (args: readonly string[], index: number, flag: string) => {
@@ -116,7 +116,7 @@ const run = async () => {
   const hashes = artifactHashes(artifacts);
   console.log(
     [
-      "round-one guard debug complete: phase=cFp52",
+      "round-one guard debug complete: phase=cFp53",
       `cases=${result.cases.length}`,
       `verdicts=${JSON.stringify(verdictCounts(result))}`,
       `out=${options.outDir}`,

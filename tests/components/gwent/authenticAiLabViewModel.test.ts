@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp52",
-        latestSpecPath: "docs/spec/2026-05-22-cFp52-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp52-report.md",
+        latestPhase: "cFp53",
+        latestSpecPath: "docs/spec/2026-05-22-cFp53-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp53-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp52",
-        latestSpecPath: "docs/spec/2026-05-22-cFp52-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp52-report.md",
+        latestPhase: "cFp53",
+        latestSpecPath: "docs/spec/2026-05-22-cFp53-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp53-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -75,7 +75,7 @@ describe("authentic AI Lab view model", () => {
       expect.arrayContaining([
         expect.objectContaining({
           suiteId: "benchmark-v1-smoke-v1",
-          result: "10 win / 2 loss / 0 draw vs v0",
+          result: "11 win / 1 loss / 0 draw vs v0",
         }),
         expect.objectContaining({
           suiteId: "benchmark-v1-starter-matrix-v1",
@@ -117,6 +117,7 @@ describe("authentic AI Lab view model", () => {
         "hidden-info-safe round-one overinvestment guard-state telemetry in failure-mining artifacts (cFp50)",
         "round-one guard telemetry casebook over cFp50 failure-mining artifacts (cFp51)",
         "round-one guard fixture reproduction/debug over the two cFp51 direct candidates (cFp52)",
+        "round-one selected-play overinvestment guard repair for the cFp52 direct candidates (cFp53)",
       ]),
     );
   });

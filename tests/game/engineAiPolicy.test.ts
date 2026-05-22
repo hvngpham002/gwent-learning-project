@@ -2176,6 +2176,258 @@ it("explanation trace for allowed resource-gate pass shows preserve-hand reason"
     });
   });
 
+  describe("cFp53: round-one selected-play guard repair", () => {
+    const unit = (cardId: string, printedStrength = 6) =>
+      testCard({ cardId, sourceId: `test.cfp53.${cardId}`, printedStrength, kind: "unit" });
+    const special = (cardId: string) =>
+      testCard({ cardId, sourceId: `test.cfp53.${cardId}`, printedStrength: 0, kind: "special" });
+    const boardUnits = (prefix: string, count = 6) =>
+      Array.from({ length: count }, (_, index) => unit(`${prefix}${index + 1}`, 6));
+    const cFp53Input = ({
+      moves,
+      ownHand,
+      ownBoard = boardUnits("board"),
+      overrides = {},
+      ownScore = 52,
+      opponentScore = 24,
+    }: {
+      readonly moves: LegalMove[];
+      readonly ownHand: SeatCardSummary[];
+      readonly ownBoard?: SeatCardSummary[];
+      readonly overrides?: Partial<SeatObservation>;
+      readonly ownScore?: number;
+      readonly opponentScore?: number;
+    }) =>
+      policyInput(moves, {
+        ownHand,
+        opponentHandCount: 4,
+        ownGems: 2,
+        opponentGems: 2,
+        round: 1,
+        boardRows: baseBoardRows({
+          seat_b: { close: ownBoard },
+        }),
+        score: {
+          ...baseObservation().score,
+          totalBySeat: { seat_a: opponentScore, seat_b: ownScore },
+        },
+        ...overrides,
+      });
+
+    it("Fixture A style selected overinvestment becomes pass", () => {
+      const selectedPlay = unit("fixture-a-play", 8);
+      const hand = [selectedPlay, special("a-weather-1"), special("a-weather-2"), special("a-weather-3"), special("a-weather-4")];
+      const input = cFp53Input({
+        moves: [passMove(), playMove(selectedPlay)],
+        ownHand: hand,
+        ownScore: 52,
+        opponentScore: 24,
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected?.kind).toBe("pass");
+
+      const { trace } = explainLegalHeuristicV1Decision(input);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(true);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("round_one_board_limit");
+      expect(trace.reason).toContain("round-one overinvestment");
+    });
+
+    it("Fixture B style selected overinvestment becomes pass", () => {
+      const selectedPlay = unit("fixture-b-play", 7);
+      const hand = [selectedPlay, special("b-weather-1"), special("b-weather-2")];
+      const input = cFp53Input({
+        moves: [passMove(), playMove(selectedPlay, { kind: "board_row", side: "own", seatId: "seat_b", row: "ranged" })],
+        ownHand: hand,
+        ownBoard: boardUnits("fixture-b-board", 7),
+        ownScore: 56,
+        opponentScore: 24,
+        overrides: { opponentHandCount: 2 },
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected?.kind).toBe("pass");
+
+      const { trace } = explainLegalHeuristicV1Decision(input);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(true);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("round_one_board_limit");
+    });
+
+    it("does not block a card-advantage Spy play", () => {
+      const spy = testCard({
+        cardId: "cfp53-spy",
+        sourceId: "test.cfp53.spy",
+        printedStrength: 4,
+        abilities: ["spy"],
+      });
+      const hand = [spy, special("spy-weather-1"), special("spy-weather-2")];
+      const input = cFp53Input({
+        moves: [
+          passMove(),
+          playMove(spy, { kind: "board_row", side: "opponent", seatId: "seat_a", row: "close" }),
+        ],
+        ownHand: hand,
+        overrides: { ownDeckCount: 5 },
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: "cfp53-spy" }));
+
+      const { trace } = explainLegalHeuristicV1Decision(input);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentRecommended).toBe(false);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_card_advantage");
+    });
+
+    it("does not block a match-winning play", () => {
+      const winner = unit("match-winning", 10);
+      const input = cFp53Input({
+        moves: [passMove(), playMove(winner)],
+        ownHand: [winner, special("mw1"), special("mw2"), special("mw3"), special("mw4")],
+        ownScore: 0,
+        opponentScore: 5,
+        overrides: { opponentGems: 1 },
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: "match-winning" }));
+
+      const { trace } = explainLegalHeuristicV1Decision(input);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_match_winning_play");
+    });
+
+    it("does not block a cheap single-move catch-up exception", () => {
+      const catchUp = unit("cheap-catch-up", 2);
+      const futureUnit = unit("future-unit", 5);
+      const input = cFp53Input({
+        moves: [passMove(), playMove(catchUp)],
+        ownHand: [catchUp, futureUnit, special("cu1"), special("cu2"), special("cu3")],
+        ownScore: 8,
+        opponentScore: 10,
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: "cheap-catch-up" }));
+
+      const { trace } = explainLegalHeuristicV1Decision(input);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_single_move_catch_up");
+    });
+
+    it("does not block use_leader", () => {
+      const frost = testCard({
+        cardId: "cfp53-weather",
+        sourceId: "neutral.biting-frost",
+        printedStrength: 0,
+        kind: "special",
+        abilities: ["frost"],
+      });
+      const weakPlay = unit("leader-competing-play", 1);
+      const input = cFp53Input({
+        moves: [passMove(), leaderMove("clear_weather"), playMove(weakPlay)],
+        ownHand: [weakPlay, special("leader-1"), special("leader-2"), special("leader-3"), special("leader-4")],
+        overrides: {
+          weather: [frost],
+          score: {
+            ...baseObservation().score,
+            totalBySeat: { seat_a: 24, seat_b: 52 },
+            cards: [
+              {
+                cardId: "cfp53-weathered-unit",
+                sourceId: "test.cfp53.weathered-unit",
+                seatId: "seat_b",
+                row: "close",
+                cardKind: "unit",
+                isUnit: true,
+                isHero: false,
+                printedStrength: 10,
+                afterWeather: 1,
+                spyMultiplier: 1,
+                afterSpyMultiplier: 1,
+                tightBondMultiplier: 1,
+                afterTightBond: 10,
+                moraleBonus: 0,
+                afterMorale: 1,
+                hornMultiplier: 1,
+                finalStrength: 1,
+                eligibleForScorch: true,
+                modifiers: ["weather:frost"],
+              },
+            ],
+          },
+        },
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected?.kind).toBe("use_leader");
+    });
+
+    it("does not apply the guard when opponent has passed", () => {
+      const catchUp = unit("opponent-passed-catch-up", 5);
+      const input = cFp53Input({
+        moves: [passMove(), playMove(catchUp)],
+        ownHand: [catchUp, special("opp-passed-1"), special("opp-passed-2"), special("opp-passed-3"), special("opp-passed-4")],
+        ownScore: 8,
+        opponentScore: 10,
+        overrides: { opponentPassed: true },
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: "opponent-passed-catch-up" }));
+
+      const { trace } = explainLegalHeuristicV1Decision(input);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_opponent_passed");
+    });
+
+    it("does not apply the guard on last gem", () => {
+      const catchUp = unit("last-gem-catch-up", 5);
+      const input = cFp53Input({
+        moves: [passMove(), playMove(catchUp)],
+        ownHand: [catchUp, special("last-gem-1"), special("last-gem-2"), special("last-gem-3"), special("last-gem-4")],
+        ownScore: 8,
+        opponentScore: 10,
+        overrides: { ownGems: 1 },
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: "last-gem-catch-up" }));
+
+      const { trace } = explainLegalHeuristicV1Decision(input);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_last_gem");
+    });
+
+    it("does not block the only card in hand", () => {
+      const onlyCard = unit("only-card", 8);
+      const input = cFp53Input({
+        moves: [passMove(), playMove(onlyCard)],
+        ownHand: [onlyCard],
+        ownScore: 8,
+        opponentScore: 10,
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      expect(selected).toEqual(expect.objectContaining({ kind: "play_card", sourceCardId: "only-card" }));
+
+      const { trace } = explainLegalHeuristicV1Decision(input);
+      expect(trace.roundInvestmentAnalysis?.roundOneOverinvestmentReason).toBe("exception_single_card_hand");
+    });
+
+    it("keeps explainLegalHeuristicV1Decision in parity for a cFp53 pass case", () => {
+      const selectedPlay = unit("parity-play", 8);
+      const input = cFp53Input({
+        moves: [passMove(), playMove(selectedPlay)],
+        ownHand: [selectedPlay, special("parity-1"), special("parity-2"), special("parity-3"), special("parity-4")],
+      });
+
+      const selected = legalHeuristicPolicyV1.selectMove(input);
+      const explanation = explainLegalHeuristicV1Decision(input);
+
+      expect(explanation.move).toEqual(selected);
+      expect(explanation.move?.kind).toBe("pass");
+      expect(explanation.trace.selected?.kind).toBe("pass");
+      expect(explanation.trace.reason).toContain("round-one overinvestment");
+      expect(explanation.trace.reason).toContain("preserve future hand");
+    });
+  });
+
   it("converts every supported legal move kind into the exact command payload", () => {
     const moves: LegalMove[] = [
       {

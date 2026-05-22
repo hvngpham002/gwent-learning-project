@@ -2134,6 +2134,40 @@ export const shouldPassForRoundInvestment = (
   return false;
 };
 
+export const shouldPassInsteadOfSelectedPlayForRoundOneOverinvestment = (
+  features: LegalHeuristicV1Features,
+  candidate: LegalMove | null,
+): boolean => {
+  if (!features.passMove) return false;
+  if (features.round !== 1) return false;
+  if (features.ownGems <= 1) return false;
+  if (features.opponentPassed) return false;
+  if (features.ownHandCount <= 1) return false;
+  if (!candidate || candidate.kind !== "play_card") return false;
+
+  const handShape = buildLegalHeuristicV1HandShapeAnalysis(features);
+  const analysis = buildLegalHeuristicV1RoundInvestmentAnalysis(features, candidate, handShape);
+
+  if (!analysis.selectedMoveSpendsHandCard) return false;
+  if (!analysis.roundOneOverinvestmentRecommended) return false;
+  if (analysis.roundOneOverinvestmentReason.startsWith("exception_")) return false;
+
+  return (
+    analysis.roundOneOverinvestmentReason === "round_one_board_limit" ||
+    analysis.roundOneOverinvestmentReason === "round_one_low_future_hand"
+  );
+};
+
+const finalizePlayingMove = <T extends LegalMove | null>(
+  features: LegalHeuristicV1Features,
+  candidate: T,
+): T | PassMove => {
+  if (shouldPassInsteadOfSelectedPlayForRoundOneOverinvestment(features, candidate)) {
+    return features.passMove!;
+  }
+  return candidate;
+};
+
 const estimateOpponentHandPressure = (features: LegalHeuristicV1Features) => {
   const perCardPressure = features.ownGems <= 1 ? 8 : 6;
   return features.opponentHandCount * perCardPressure;
@@ -2251,7 +2285,7 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
 
     const catchUp = chooseCatchUpMove(features);
     if (catchUp) {
-      return catchUp;
+      return finalizePlayingMove(features, catchUp);
     }
 
     const upperBound = features.ownScore + uniqueCardTempoUpperBound(features);
@@ -2259,7 +2293,7 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
       return passMove;
     }
 
-    return bestUsefulMove(features) ?? passMove;
+    return finalizePlayingMove(features, bestUsefulMove(features)) ?? passMove;
   }
 
   if (features.ownGems <= 1 && features.scoreDelta < 0 && passMove) {
@@ -2279,7 +2313,7 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
       // Hand quality requires extra safety margin — prefer useful play.
       const useful = bestUsefulMove(features);
       if (useful) {
-        return useful;
+        return finalizePlayingMove(features, useful);
       }
     }
     return passMove;
@@ -2295,11 +2329,11 @@ export const choosePlayingMove = (features: LegalHeuristicV1Features) => {
       }
     }
     if (roundDecision.candidate) {
-      return roundDecision.candidate;
+      return finalizePlayingMove(features, roundDecision.candidate);
     }
   }
 
-  return bestUsefulMove(features) ?? passMove;
+  return finalizePlayingMove(features, bestUsefulMove(features)) ?? passMove;
 };
 
 // ---------------------------------------------------------------------------

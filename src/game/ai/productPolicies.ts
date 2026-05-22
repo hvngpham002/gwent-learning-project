@@ -62,16 +62,16 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp43 with post-cFp43 casebook/decision analysis through cFp52. Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43), post-cFp43 casebook (cFp44), and remaining-overinvestment calibration review (cFp45). cFp45, cFp49, cFp51, and cFp52 change no policy behavior. Benchmark rating infrastructure added in cFp46. cFp47 adds deterministic rating snapshot and comparison ledger for longitudinal rating tracking. cFp48 adds a robust 1000-record starter-matrix evaluation suite and first suite-local cFp48 rating baseline without changing policy behavior. cFp50 adds hidden-info-safe scalar round-one guard-state telemetry to failure-mining artifacts only, cFp51 classifies that telemetry, and cFp52 replays the two direct cFp51 guard candidates for hidden-info-safe reproduction/debug.",
-    latestPhase: "cFp52",
-    latestSpecPath: "docs/spec/2026-05-22-cFp52-specs.md",
-    latestReportPath: "audit/reports/2026-05-22-cFp52-report.md",
+    description: "Experimental deterministic legal heuristic tuned through cFp53. Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43), post-cFp43 casebook (cFp44), and remaining-overinvestment calibration review (cFp45). cFp45, cFp49, cFp51, and cFp52 change no policy behavior. Benchmark rating infrastructure added in cFp46. cFp47 adds deterministic rating snapshot and comparison ledger for longitudinal rating tracking. cFp48 adds a robust 1000-record starter-matrix evaluation suite and first suite-local cFp48 rating baseline without changing policy behavior. cFp50 adds hidden-info-safe scalar round-one guard-state telemetry to failure-mining artifacts only, cFp51 classifies that telemetry, cFp52 replays the two direct cFp51 guard candidates for hidden-info-safe reproduction/debug, and cFp53 repairs the selected-play path so active round-one overinvestment recommendations convert to pass.",
+    latestPhase: "cFp53",
+    latestSpecPath: "docs/spec/2026-05-22-cFp53-specs.md",
+    latestReportPath: "audit/reports/2026-05-22-cFp53-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
         suiteId: "benchmark-v1-smoke-v1",
         label: "v1 smoke",
-        result: "10 win / 2 loss / 0 draw vs v0",
+        result: "11 win / 1 loss / 0 draw vs v0",
       },
       {
         suiteId: "benchmark-v1-starter-matrix-v1",
@@ -114,6 +114,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "hidden-info-safe round-one overinvestment guard-state telemetry in failure-mining artifacts (cFp50)",
       "round-one guard telemetry casebook over cFp50 failure-mining artifacts (cFp51)",
       "round-one guard fixture reproduction/debug over the two cFp51 direct candidates (cFp52)",
+      "round-one selected-play overinvestment guard repair for the cFp52 direct candidates (cFp53)",
     ],
   },
 ];

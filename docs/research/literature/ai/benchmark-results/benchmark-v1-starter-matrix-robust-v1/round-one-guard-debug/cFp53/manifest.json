@@ -1,0 +1,20 @@
+{
+  "caseCount": 2,
+  "files": [
+    "manifest.json",
+    "cases.json",
+    "report.md"
+  ],
+  "fixtureCount": 2,
+  "generatedPhase": "cFp53",
+  "hiddenInfoSafetyNote": "cFp53 round-one guard debug artifacts contain public fixture IDs, target-seat public metadata, scalar decision diagnostics, coarse target labels, and derived booleans only. Raw traces, raw engine state, commands, events, legal moves, private zones, card IDs, source IDs, instance IDs, action refs, and card names are intentionally omitted.",
+  "schemaVersion": "round-one-guard-debug-v1",
+  "sourceSuiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "statusCounts": {
+    "completed": 2,
+    "engine_error": 0,
+    "not_found": 0,
+    "policy_failed": 0,
+    "replay_failed": 0
+  }
+}
