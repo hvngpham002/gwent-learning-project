@@ -110,7 +110,7 @@
         "roundOneCatchUpSingleMoveBeforeFirstSuppressedPassCount": 2,
         "roundOneCatchUpSingleMoveCount": 2,
         "roundOneContinuePlayCardTraceCount": 8,
-        "roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass": 8,
+        "roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass": null,
         "roundOneExceptionCardAdvantageBeforeFirstSuppressedPassCount": 0,
         "roundOneExceptionCardAdvantageCount": 0,
         "roundOneExceptionLastGemCount": 0,

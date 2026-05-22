@@ -887,7 +887,8 @@ const buildRoundOneGuardTelemetry = (result: HeadlessMatchSimulationResult | und
       roundOneFirstBaseGeometryDecisionIndex
     ),
     roundOneContinuePlayCardTraceCount,
-    roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass,
+    roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass:
+      roundOneFirstSuppressedPassDecisionIndex === null ? null : roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass,
     roundOnePlayCardCountAfterFirstBaseGeometryBeforeFirstSuppressedPass:
       roundOneFirstBaseGeometryDecisionIndex === null
         ? null

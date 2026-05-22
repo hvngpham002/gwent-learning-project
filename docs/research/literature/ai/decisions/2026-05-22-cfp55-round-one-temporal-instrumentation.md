@@ -74,6 +74,11 @@ private-zone payloads.
 Telemetry-unavailable rows keep the existing unavailable evidence and expose
 safe `null` defaults for first-event, first-pass context, gap, and
 count-before-style fields where a count would be misleading without trace data.
+Rows with no first suppressed pass also use `null` for first-suppressed-pass
+count-style fields such as `roundOnePlayCardCountBeforeFirstSuppressedPass` and
+`roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass`. Score-delta
+before counts and exception-before counts intentionally still cover all
+round-one traces when no first suppressed pass exists.
 
 ## Regenerated Artifacts
 
@@ -94,8 +99,8 @@ Robust repeated hashes matched:
 | File | SHA-256 |
 |---|---|
 | `manifest.json` | `fa98fde885e26edad42b27c4a1a787f5fe97b556db54b6c4d2b6fad891a8fc7e` |
-| `summary.json` | `d0711cc49835ca4beeb6d02e0306649b9f96c918933cb6c023e21d13f85975a9` |
-| `findings.jsonl` | `2e89ede738c169a5f302c48c9c9ba438cfdd39fe0011dbb9712147dedc0bf1e4` |
+| `summary.json` | `fa3975dba5686e280ee8c79d61e4fca31d21fd814fbd6a03bfdf39b92f3d337e` |
+| `findings.jsonl` | `0e7efee5556ed77921efcdb1fbc690a902d678844c26ae7a427d4bc35cefd1b9` |
 | `report.md` | `c862b0eced54c1b0759caeb04e45c3565855cd43a7e6f34f52b7772d5485fa4e` |
 | `tuning-queue.md` | `3497ae323abf880f07c8dc1e2d8afaf4590320f9a9a7582902884e7dd603e93c` |
 
@@ -109,6 +114,7 @@ New temporal/cumulative readout:
 | Metric | Value |
 |---|---:|
 | Rows with first suppressed overinvestment pass | 48 |
+| Rows without first suppressed overinvestment pass | 22 |
 | Rows missing selected play-card board-floor index | 57 |
 | Rows missing selected play-card hand-cap index | 24 |
 | Rows missing selected play-card base-geometry index | 66 |
@@ -119,7 +125,10 @@ New temporal/cumulative readout:
 | Rows with base-geometry-to-first-suppressed-pass gap | 3 |
 | Avg base-geometry-to-first-suppressed-pass gap | 1.33 |
 | Base-geometry-to-first-suppressed-pass gap range | 1-2 |
-| Avg continue play-card count before first suppressed pass | 8.09 |
+| Avg total continue play-card count | 8.09 |
+| Total continue play-card count range | 6-11 |
+| Rows with continue play-card count before first suppressed pass | 48 |
+| Avg continue play-card count before first suppressed pass | 7.83 |
 | Continue play-card count before first suppressed pass range | 6-11 |
 | Total play cards after first base geometry before first suppressed pass | 1 |
 

@@ -633,6 +633,49 @@ describe("benchmark failure mining", () => {
     );
   });
 
+  it("keeps before-first-suppressed-pass count-style fields null when no suppressed pass exists", () => {
+    const { finding } = getRoundOneOverinvestmentFinding([
+      roundOneTrace(10, "play_card", {
+        scoreDelta: -1,
+        selectedMoveIsCardAdvantage: true,
+        roundOneOverinvestmentReason: "exception_card_advantage",
+        recommendation: "continue",
+      }),
+      roundOneTrace(11, "play_card", {
+        scoreDelta: 0,
+        catchUpStatus: "single_move_catch_up",
+        roundOneOverinvestmentReason: "exception_single_move_catch_up",
+        recommendation: "continue",
+      }),
+      roundOneTrace(12, "pass", {
+        scoreDelta: 4,
+        roundOneOverinvestmentRecommended: false,
+        roundOneOverinvestmentReason: "exception_non_play_card",
+        recommendation: "continue",
+      }),
+    ]);
+
+    expect(finding.evidence).toEqual(
+      expect.objectContaining({
+        roundOneFirstSuppressedPassDecisionIndex: null,
+        roundOnePlayCardCountBeforeFirstSuppressedPass: null,
+        roundOneContinuePlayCardTraceCount: 2,
+        roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass: null,
+        roundOneScoreDeltaBehindBeforeFirstSuppressedPassCount: 1,
+        roundOneScoreDeltaTiedBeforeFirstSuppressedPassCount: 1,
+        roundOneScoreDeltaAheadBeforeFirstSuppressedPassCount: 1,
+        roundOneScoreDeltaBehindAfterFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaTiedAfterFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaAheadAfterFirstSuppressedPassCount: 0,
+        roundOneExceptionCardAdvantageBeforeFirstSuppressedPassCount: 1,
+        roundOneExceptionSingleMoveCatchUpBeforeFirstSuppressedPassCount: 1,
+        roundOneExceptionNonPlayCardBeforeFirstSuppressedPassCount: 1,
+        roundOneSelectedCardAdvantageBeforeFirstSuppressedPassCount: 1,
+        roundOneCatchUpSingleMoveBeforeFirstSuppressedPassCount: 1,
+      })
+    );
+  });
+
   it("splits score-delta direction counts before and after the first suppressed pass", () => {
     const { finding } = getRoundOneOverinvestmentFinding([
       roundOneTrace(10, "play_card", {
