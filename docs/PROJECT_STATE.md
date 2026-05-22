@@ -3,6 +3,7 @@
 ## Last Updated
 
 - Date: 2026-05-22
+- Active spec handoff: `cFp55` Round-One Temporal Spend Instrumentation (`docs/spec/2026-05-22-cFp55-specs.md`) is ready for implementation. It should add hidden-info-safe scalar temporal/cumulative fields to round-one overinvestment failure-mining evidence and regenerate failure-mining artifacts only, with no AI policy behavior change.
 - Completed analysis phase: `cFp54` Post-cFp53 Robust Round-One Overinvestment Casebook (`docs/spec/2026-05-22-cFp54-specs.md`, `docs/research/literature/ai/decisions/2026-05-22-cfp54-post-cfp53-round-one-overinvestment-casebook.md`, `audit/reports/2026-05-22-cFp54-report.md`). Reads only committed cFp53 public robust failure-mining artifacts and classifies exactly the 70 remaining robust `round_one_overinvestment` findings as 48 `already_guarded_suppressed_pass`, 20 `board_floor_never_reached`, 1 `hand_cap_never_reached`, 1 `base_geometry_exception_or_nonrecommendation` (`exception_single_move_catch_up`), 0 `cumulative_spend_candidate`, and 0 `telemetry_unavailable_or_other`. Decision: no cFp54 behavior patch. If round-one tuning continues, cFp55 should be hidden-info-safe instrumentation/debug for temporal/cumulative spend evidence before any threshold widening or cumulative-budget behavior change. AI Lab/product policy metadata now points at cFp54. No AI policy behavior, engine rules, legal moves, failure-mining classifiers, benchmark definitions, generated benchmark artifacts, rating formulas, UI gameplay behavior, catalog data, deck presets, search/training code, or product difficulty changed.
 - Completed implementation phase: `cFp53` Round-One Overinvestment Selected-Play Guard Repair (`docs/spec/2026-05-22-cFp53-specs.md`, `audit/reports/2026-05-22-cFp53-report.md`). Repairs the selected `play_card` path in `legal-heuristic-v1` so the exact selected play honors existing cFp43 `roundOneOverinvestmentRecommended === true` results for `round_one_board_limit` / `round_one_low_future_hand` and converts to pass when no existing exception applies. Preserves the committed cFp52 before-fix debug artifacts and adds post-repair artifacts under `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/round-one-guard-debug/cFp53/`: both fixtures completed with 0 selected-play contradictions and 1 selected overinvestment pass each. Refreshed current, expanded, and robust benchmark/failure-mining artifacts plus ratings/latest. Results: smoke 11/1/0, starter 102/17/1, expanded 305/90/5, robust 776/206/18 vs v0; robust failure mining remains 2301 findings with `round_one_overinvestment=70`, `suspicious_pass=1754`, `round_three_low_resource=226`, `weathered_row_play=239`, `medic_timing_risk=11`, and `matchup_skew=1`. AI Lab/product policy metadata now points at cFp53. No thresholds, cumulative budgeting, engine rules, UI behavior, catalog/deck data, rating formulas, search/training code, or product difficulty changed.
 - Completed reproduction/debug phase: `cFp52` Round-One Guard Fixture Reproduction Debug (`docs/spec/2026-05-22-cFp52-specs.md`, `docs/research/literature/ai/decisions/2026-05-22-cfp52-round-one-guard-fixture-debug.md`, `audit/reports/2026-05-22-cFp52-report.md`). Replays only the two cFp51 robust `guard_recommended_play_selected` fixtures with hidden-info-safe per-decision debug artifacts under `docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/round-one-guard-debug/cFp52/`. Both fixtures confirm selected-play contradictions: Fixture A has 3 selected `play_card` rows with base geometry and `roundOneOverinvestmentRecommended === true`; Fixture B has 1 selected-play contradiction plus 1 later suppressed pass. Decision: cFp53 should be a narrow behavior-repair spec for the exact reproduced public state shape, not threshold widening, cumulative-spend tuning, or analyzer calibration. AI Lab/product policy metadata now points at cFp52. No AI policy behavior, scoring constants, engine rules, legal moves, catalog/deck data, benchmark suite definitions, failure-mining classifiers, ratings, search/training code, product gameplay UI, or product difficulty changed.
@@ -492,17 +493,17 @@ difficulty.
 
 Next recommended sequence:
 
-1. if round-one tuning continues, scope cFp55 as hidden-info-safe
-   instrumentation/debug for temporal and cumulative round-one spend evidence:
-   first base-geometry index, first suppressed-pass index, play-card count
-   before first suppressed pass, board/hand counts before first suppressed pass,
-   and exception sequence counts before the first guard-visible pass;
-2. keep threshold widening and cumulative-spend behavior tuning out of the
+1. implement cFp55 from `docs/spec/2026-05-22-cFp55-specs.md` as
+   hidden-info-safe instrumentation/debug for temporal and cumulative round-one
+   spend evidence;
+2. regenerate failure-mining artifacts only, then use the new scalar evidence
+   for a future cFp56 casebook before considering any behavior patch;
+3. keep threshold widening and cumulative-spend behavior tuning out of the
    immediate next phase unless cFp55 instrumentation proves a narrow public rule
    without reintroducing the cFp36 broad-resource-gate regression;
-3. preserve the cFp52 before-fix debug artifacts and cFp53 post-repair debug
+4. preserve the cFp52 before-fix debug artifacts and cFp53 post-repair debug
    artifacts as paired historical evidence;
-4. keep TrueSkill-compatible schema as a later evaluation-layer option after
+5. keep TrueSkill-compatible schema as a later evaluation-layer option after
    Glicko-1 artifact semantics are stable across more benchmark refreshes;
 5. keep approximate best-response probes,
    ISMCTS/determinized search, OSFP, NFSP, Deep CFR, ReBeL, and model
