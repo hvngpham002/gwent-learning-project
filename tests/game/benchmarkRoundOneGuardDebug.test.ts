@@ -1,0 +1,161 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES,
+  combinedRoundOneGuardDebugArtifactText,
+  runRoundOneGuardDebugCases,
+  scanRoundOneGuardDebugArtifactsForHiddenInfo,
+  serializeRoundOneGuardDebugArtifacts,
+} from "@/game/benchmark";
+
+const fixtureAFindingId =
+  "round-one-overinvestment__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1__starter-matrix-robust-017__1__seat-a";
+const fixtureBFindingId =
+  "round-one-overinvestment__legal-heuristic-v1__starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1__starter-matrix-robust-008__0__seat-b";
+
+const hiddenInfoHazards = [
+  "cardsById",
+  "finalState",
+  "commandLog",
+  "unsafeDebugResults",
+  "decisionTraces",
+  "legalMoves",
+  "candidates",
+  '"ownHand":',
+  '"opponentHand":',
+  '"hand":',
+  '"deck":',
+  '"discard":',
+  "seat_a:",
+  "seat_b:",
+  "sourceId",
+  "sourceIds",
+  "cardId",
+  "cardIds",
+  "instanceId",
+  "actionRef",
+  "Yennefer",
+  "Geralt",
+  "Gaunter",
+  "O'Dimm",
+  "Draug",
+  "neutral.",
+  "northern-realms.",
+  "nilfgaard.",
+  "monsters.",
+  "scoiatael.",
+  "skellige.",
+];
+
+let cachedResult: ReturnType<typeof runRoundOneGuardDebugCases> | null = null;
+
+const getResult = () => {
+  cachedResult ??= runRoundOneGuardDebugCases();
+  return cachedResult;
+};
+
+describe("round-one guard debug", () => {
+  it("lists the two exact cFp51 guard-recommended fixtures", () => {
+    expect(CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES).toHaveLength(2);
+    expect(CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES.map((fixture) => fixture.findingId)).toEqual([
+      fixtureAFindingId,
+      fixtureBFindingId,
+    ]);
+    expect(CFP52_ROUND_ONE_GUARD_DEBUG_FIXTURES.map((fixture) => fixture.suiteId)).toEqual([
+      "benchmark-v1-starter-matrix-robust-v1",
+      "benchmark-v1-starter-matrix-robust-v1",
+    ]);
+  });
+
+  it("replays exactly two cases and keeps the mirror-1 target on the expected v1 seat", () => {
+    const result = getResult();
+    const [fixtureA, fixtureB] = result.cases;
+
+    expect(result.schemaVersion).toBe("round-one-guard-debug-v1");
+    expect(result.cases).toHaveLength(2);
+    expect(fixtureA.fixture.mirrorIndex).toBe(1);
+    expect(fixtureA.fixture.targetSeatId).toBe("seat_a");
+    expect(fixtureA.targetPolicyId).toBe("legal-heuristic-v1");
+    expect(fixtureA.targetFaction).toBe("scoiatael");
+    expect(fixtureA.targetDeckPresetId).toBe("official-scoiatael-starter");
+    expect(fixtureB.fixture.mirrorIndex).toBe(0);
+    expect(fixtureB.fixture.targetSeatId).toBe("seat_b");
+    expect(fixtureB.targetPolicyId).toBe("legal-heuristic-v1");
+    expect(fixtureB.targetFaction).toBe("skellige");
+    expect(fixtureB.targetDeckPresetId).toBe("official-skellige-starter");
+  });
+
+  it("produces non-empty round-one v1 decision rows for both fixtures", () => {
+    const result = getResult();
+
+    expect(result.cases.every((debugCase) => debugCase.status === "completed")).toBe(true);
+    expect(result.cases.every((debugCase) => debugCase.decisionRows.length > 0)).toBe(true);
+    expect(result.cases.map((debugCase) => debugCase.summary.playCardTraceCount)).toEqual([10, 9]);
+  });
+
+  it("confirms the current selected-play contradiction counts", () => {
+    const [fixtureA, fixtureB] = getResult().cases;
+
+    expect(fixtureA.verdict).toBe("confirmed_policy_contradiction");
+    expect(fixtureA.summary).toEqual(
+      expect.objectContaining({
+        baseGeometryCount: 3,
+        recommendedPlayContradictionCount: 3,
+        suppressedPassCount: 0,
+        firstBaseGeometryDecisionIndex: 7,
+        firstRecommendedPlayContradictionDecisionIndex: 7,
+      }),
+    );
+    expect(fixtureB.verdict).toBe("confirmed_policy_contradiction");
+    expect(fixtureB.summary).toEqual(
+      expect.objectContaining({
+        baseGeometryCount: 2,
+        recommendedPlayContradictionCount: 1,
+        suppressedPassCount: 1,
+        firstBaseGeometryDecisionIndex: 8,
+        firstRecommendedPlayContradictionDecisionIndex: 8,
+      }),
+    );
+  });
+
+  it("serializes hidden-info-safe artifacts without raw traces or private identifiers", () => {
+    const artifacts = serializeRoundOneGuardDebugArtifacts(getResult());
+    const combined = combinedRoundOneGuardDebugArtifactText(artifacts);
+
+    expect(scanRoundOneGuardDebugArtifactsForHiddenInfo(artifacts)).toEqual([]);
+    hiddenInfoHazards.forEach((hazard) => {
+      expect(combined).not.toContain(hazard);
+    });
+    expect(combined).toContain("official-scoiatael-starter");
+    expect(combined).toContain("official-skellige-starter");
+  });
+
+  it("rejects a synthetic unsafe artifact containing a card source id", () => {
+    const artifacts = serializeRoundOneGuardDebugArtifacts(getResult());
+
+    expect(
+      scanRoundOneGuardDebugArtifactsForHiddenInfo({
+        ...artifacts,
+        casesJson: `${artifacts.casesJson}\n{"sourceId":"scoiatael.example-card"}`,
+      }),
+    ).toEqual(expect.arrayContaining(["raw source id key", "card source namespace"]));
+  });
+
+  it("rejects a synthetic unsafe artifact containing a raw card name with punctuation", () => {
+    const artifacts = serializeRoundOneGuardDebugArtifacts(getResult());
+
+    expect(
+      scanRoundOneGuardDebugArtifactsForHiddenInfo({
+        ...artifacts,
+        reportMarkdown: `${artifacts.reportMarkdown}\nGaunter O'Dimm: Darkness`,
+      }),
+    ).toEqual(expect.arrayContaining(["raw card name Gaunter", "raw card name O'Dimm"]));
+  });
+
+  it("serializes byte-identical artifacts across repeated debug runs", () => {
+    const first = serializeRoundOneGuardDebugArtifacts(runRoundOneGuardDebugCases());
+    const second = serializeRoundOneGuardDebugArtifacts(runRoundOneGuardDebugCases());
+
+    expect(second).toEqual(first);
+  });
+});

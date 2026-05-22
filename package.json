@@ -20,6 +20,7 @@
     "benchmark:v1-failure-mining-expanded": "tsx scripts/run-benchmark-failure-mining-report.ts --suite benchmark-v1-starter-matrix-expanded-v1",
     "benchmark:v1-starter-matrix-robust": "tsx scripts/run-benchmark-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
     "benchmark:v1-failure-mining-robust": "tsx scripts/run-benchmark-failure-mining-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
+    "benchmark:v1-round-one-guard-debug": "tsx scripts/run-round-one-guard-debug-report.ts",
     "benchmark:ratings:v1-starter-matrix": "tsx scripts/run-benchmark-rating-report.ts --suite benchmark-v1-starter-matrix-v1",
     "benchmark:ratings:v1-expanded": "tsx scripts/run-benchmark-rating-report.ts --suite benchmark-v1-starter-matrix-expanded-v1",
     "benchmark:ratings:v1-robust": "tsx scripts/run-benchmark-rating-report.ts --suite benchmark-v1-starter-matrix-robust-v1",

@@ -47,9 +47,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp51",
-        latestSpecPath: "docs/spec/2026-05-22-cFp51-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp51-report.md",
+        latestPhase: "cFp52",
+        latestSpecPath: "docs/spec/2026-05-22-cFp52-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp52-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -65,9 +65,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp51",
-        latestSpecPath: "docs/spec/2026-05-22-cFp51-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp51-report.md",
+        latestPhase: "cFp52",
+        latestSpecPath: "docs/spec/2026-05-22-cFp52-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp52-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       }),
     );
@@ -116,6 +116,7 @@ describe("authentic AI Lab view model", () => {
         "robust failure-mining casebook over the 1000-record starter matrix, classifying round-resource, weather, Medic timing, matchup skew, and pass-diagnostic signals before the next behavior patch (cFp49)",
         "hidden-info-safe round-one overinvestment guard-state telemetry in failure-mining artifacts (cFp50)",
         "round-one guard telemetry casebook over cFp50 failure-mining artifacts (cFp51)",
+        "round-one guard fixture reproduction/debug over the two cFp51 direct candidates (cFp52)",
       ]),
     );
   });

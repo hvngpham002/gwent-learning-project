@@ -19,16 +19,22 @@ policy` selector or deep-link it with `?ai=legal-heuristic-v1` on `/` or
 ## Current State
 
 The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
-phase is cFp43: Round-One Overinvestment Guard. The latest analysis phase is
-cFp51: Round-One Guard Telemetry Casebook. The latest
+phase is cFp43: Round-One Overinvestment Guard. The latest reproduction/debug
+phase is cFp52: Round-One Guard Fixture Reproduction Debug. The latest analysis
+phase is cFp51: Round-One Guard Telemetry Casebook. The latest
 evaluation-infrastructure phase is cFp50: Round-One Overinvestment Guard-State
-Telemetry. cFp51 reads the cFp50 scalar telemetry from committed public
-failure-mining artifacts, classifies robust `round_one_overinvestment` findings,
-and recommends cFp52 reproduce/debug the two guard-recommended play cases before
-any behavior patch. cFp50 adds hidden-info-safe scalar cFp43 guard-state counts
-to existing `round_one_overinvestment` failure-mining findings and regenerates
-the current, expanded, and robust failure-mining artifacts without changing
-policy behavior.
+Telemetry. cFp52 replays only the two cFp51 robust
+`guard_recommended_play_selected` fixtures and confirms selected-play
+contradictions without changing policy behavior: Fixture A reproduces three
+selected play-card rows where base geometry and
+`roundOneOverinvestmentRecommended === true` coincide, and Fixture B reproduces
+one such selected play-card row plus one later suppressed pass. cFp51 reads the
+cFp50 scalar telemetry from committed public failure-mining artifacts,
+classifies robust `round_one_overinvestment` findings, and recommends cFp52
+reproduce/debug the two guard-recommended play cases before any behavior patch.
+cFp50 adds hidden-info-safe scalar cFp43 guard-state counts to existing
+`round_one_overinvestment` failure-mining findings and regenerates the current,
+expanded, and robust failure-mining artifacts without changing policy behavior.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -99,8 +105,10 @@ finding counts alone. The cFp49 casebook confirms the robust
 69 losses, 2 draws). cFp50 exposes the missing scalar guard-state telemetry at
 the failure-mining boundary. cFp51 shows the remaining robust signal is mostly
 late suppressed passes and board-floor misses, with only two direct
-guard-recommended play-selected cases. Those two cases need reproduction/debug
-before another v1 behavior patch.
+guard-recommended play-selected cases. cFp52 confirms those two direct cases as
+real selected-play contradictions, so the recommended next step is a narrow
+cFp53 behavior-repair spec for the exact reproduced public state shape, not
+threshold widening or cumulative-spend tuning.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck

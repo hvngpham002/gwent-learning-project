@@ -12,3 +12,4 @@ export * from './ratings';
 export * from './ratingArtifacts';
 export * from './ratingComparisons';
 export * from './ratingComparisonArtifacts';
+export * from './roundOneGuardDebug';
