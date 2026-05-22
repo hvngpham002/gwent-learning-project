@@ -24,7 +24,7 @@ describe("authentic AI Lab view model", () => {
         { label: "mirroring", value: "enabled" },
         { label: "expected records", value: "1000" },
         { label: "matchup", value: "all official starter deck pairs" },
-      ]),
+      ])
     );
     expect(viewModel.benchmarkSuite.status).toContain("browser run deferred");
   });
@@ -37,24 +37,27 @@ describe("authentic AI Lab view model", () => {
         expect.objectContaining({
           label: productPolicy.label,
           productSelectable: true,
-        }),
+        })
       );
     }
     expect(viewModel.policies.find((policy) => policy.id === "legal-heuristic-v0")).toEqual(
-      expect.objectContaining({ role: "stable/default product policy", status: "implemented · stable/default" }),
+      expect.objectContaining({
+        role: "stable/default product policy",
+        status: "implemented · stable/default",
+      })
     );
     expect(viewModel.policies.find((policy) => policy.id === "legal-heuristic-v1")).toEqual(
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp54",
-        latestSpecPath: "docs/spec/2026-05-22-cFp54-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp54-report.md",
+        latestPhase: "cFp55",
+        latestSpecPath: "docs/spec/2026-05-22-cFp55-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp55-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
-      }),
+      })
     );
     expect(viewModel.policies.find((policy) => policy.id === "legal-first-v0")).toEqual(
-      expect.objectContaining({ role: "benchmark-only comparator", productSelectable: false }),
+      expect.objectContaining({ role: "benchmark-only comparator", productSelectable: false })
     );
     expect(PRODUCT_AI_POLICIES.map((policy) => policy.id)).not.toContain("legal-first-v0" as never);
   });
@@ -65,11 +68,11 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp54",
-        latestSpecPath: "docs/spec/2026-05-22-cFp54-specs.md",
-        latestReportPath: "audit/reports/2026-05-22-cFp54-report.md",
+        latestPhase: "cFp55",
+        latestSpecPath: "docs/spec/2026-05-22-cFp55-specs.md",
+        latestReportPath: "audit/reports/2026-05-22-cFp55-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
-      }),
+      })
     );
     expect(v1?.latestBenchmarkSummaries).toEqual(
       expect.arrayContaining([
@@ -89,7 +92,7 @@ describe("authentic AI Lab view model", () => {
           suiteId: "benchmark-v1-starter-matrix-robust-v1",
           result: "776 win / 206 loss / 18 draw vs v0; 0 policy failures",
         }),
-      ]),
+      ])
     );
     expect(v1?.capabilities).toEqual(
       expect.arrayContaining([
@@ -119,7 +122,8 @@ describe("authentic AI Lab view model", () => {
         "round-one guard fixture reproduction/debug over the two cFp51 direct candidates (cFp52)",
         "round-one selected-play overinvestment guard repair for the cFp52 direct candidates (cFp53)",
         "post-cFp53 robust round-one overinvestment casebook classifying the remaining 70 findings (cFp54)",
-      ]),
+        "round-one temporal/cumulative spend instrumentation in failure-mining evidence (cFp55)",
+      ])
     );
   });
 

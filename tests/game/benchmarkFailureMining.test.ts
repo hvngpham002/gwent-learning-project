@@ -125,7 +125,7 @@ const passTrace = (
     readonly policyUpperBoundCanWinRound?: boolean;
     readonly recommendation?: string;
     readonly stopLossRecommended?: boolean;
-  } = {},
+  } = {}
 ): AiDecisionTrace => {
   const scoreDelta = overrides.scoreDelta ?? -4;
   const opponentPassed = overrides.opponentPassed ?? false;
@@ -166,7 +166,7 @@ const passTrace = (
 };
 
 const roundOneInvestmentAnalysis = (
-  overrides: Partial<NonNullable<AiDecisionTrace["roundInvestmentAnalysis"]>> = {},
+  overrides: Partial<NonNullable<AiDecisionTrace["roundInvestmentAnalysis"]>> = {}
 ): NonNullable<AiDecisionTrace["roundInvestmentAnalysis"]> => ({
   ownBoardUnitCount: 5,
   ownBoardHeroCount: 1,
@@ -202,7 +202,7 @@ const roundOneInvestmentAnalysis = (
 const roundOneTrace = (
   decisionIndex: number,
   selectedKind: "play_card" | "pass",
-  analysisOverrides: Partial<NonNullable<AiDecisionTrace["roundInvestmentAnalysis"]>> = {},
+  analysisOverrides: Partial<NonNullable<AiDecisionTrace["roundInvestmentAnalysis"]>> = {}
 ): AiDecisionTrace => {
   const analysis = roundOneInvestmentAnalysis(analysisOverrides);
   return {
@@ -413,7 +413,7 @@ describe("benchmark failure mining", () => {
           roundInvestmentRecommendation: "continue",
           recommendationContinue: true,
         }),
-      }),
+      })
     );
   });
 
@@ -435,7 +435,7 @@ describe("benchmark failure mining", () => {
           fightLastGemUpperBoundCanWin: true,
           policyUpperBoundCanWinRound: true,
         }),
-      }),
+      })
     );
   });
 
@@ -522,7 +522,188 @@ describe("benchmark failure mining", () => {
         roundOneCatchUpSingleMoveCount: 1,
         roundOneRecommendationPreserveFutureHandCount: 2,
         roundOneRecommendationContinueCount: 3,
+      })
+    );
+  });
+
+  it("populates temporal first-event indexes and first suppressed-pass context", () => {
+    const { finding } = getRoundOneOverinvestmentFinding([
+      roundOneTrace(10, "play_card", {
+        roundOneBoardAfterSelectedMove: 6,
+        estimatedHandCountAfterSelectedMove: 5,
+        scoreDelta: -3,
+        recommendation: "continue",
       }),
+      roundOneTrace(11, "play_card", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 5,
+        scoreDelta: 0,
+        recommendation: "continue",
+      }),
+      roundOneTrace(12, "play_card", {
+        roundOneBoardAfterSelectedMove: 6,
+        estimatedHandCountAfterSelectedMove: 4,
+        scoreDelta: 4,
+        recommendation: "continue",
+      }),
+      roundOneTrace(13, "play_card", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 4,
+        scoreDelta: -1,
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+        recommendation: "preserve_future_hand",
+      }),
+      roundOneTrace(14, "pass", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 4,
+        scoreDelta: 2,
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+        recommendation: "preserve_future_hand",
+      }),
+    ]);
+
+    expect(finding.evidence).toEqual(
+      expect.objectContaining({
+        roundOneFirstPlayCardDecisionIndex: 10,
+        roundOneFirstBoardFloorDecisionIndex: 11,
+        roundOneFirstHandCapDecisionIndex: 12,
+        roundOneFirstBaseGeometryDecisionIndex: 13,
+        roundOneFirstRecommendedDecisionIndex: 13,
+        roundOneFirstSuppressedPassDecisionIndex: 14,
+        roundOnePlayCardCountBeforeFirstSuppressedPass: 4,
+        roundOneBoardAfterSelectedMoveAtFirstSuppressedPass: 7,
+        roundOneHandAfterSelectedMoveAtFirstSuppressedPass: 4,
+        roundOneScoreDeltaAtFirstSuppressedPass: 2,
+        roundOneFirstPlayToFirstSuppressedPassDecisionGap: 4,
+        roundOneFirstBoardFloorToFirstSuppressedPassDecisionGap: 3,
+        roundOneFirstHandCapToFirstSuppressedPassDecisionGap: 2,
+        roundOneFirstBaseGeometryToFirstSuppressedPassDecisionGap: 1,
+      })
+    );
+  });
+
+  it("counts continue-phase and post-geometry round-one spend before the first suppressed pass", () => {
+    const { finding } = getRoundOneOverinvestmentFinding([
+      roundOneTrace(10, "play_card", {
+        roundOneBoardAfterSelectedMove: 6,
+        estimatedHandCountAfterSelectedMove: 5,
+        recommendation: "continue",
+      }),
+      roundOneTrace(11, "play_card", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 5,
+        recommendation: "continue",
+      }),
+      roundOneTrace(12, "play_card", {
+        roundOneBoardAfterSelectedMove: 6,
+        estimatedHandCountAfterSelectedMove: 4,
+        recommendation: "continue",
+      }),
+      roundOneTrace(13, "play_card", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 4,
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+        recommendation: "preserve_future_hand",
+      }),
+      roundOneTrace(14, "pass", {
+        roundOneBoardAfterSelectedMove: 7,
+        estimatedHandCountAfterSelectedMove: 4,
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+        recommendation: "preserve_future_hand",
+      }),
+      roundOneTrace(15, "play_card", {
+        roundOneBoardAfterSelectedMove: 8,
+        estimatedHandCountAfterSelectedMove: 3,
+        recommendation: "continue",
+      }),
+    ]);
+
+    expect(finding.evidence).toEqual(
+      expect.objectContaining({
+        roundOneContinuePlayCardTraceCount: 4,
+        roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass: 3,
+        roundOnePlayCardCountAfterFirstBaseGeometryBeforeFirstSuppressedPass: 0,
+        roundOnePlayCardCountAfterFirstBoardFloorBeforeFirstSuppressedPass: 2,
+        roundOnePlayCardCountAfterFirstHandCapBeforeFirstSuppressedPass: 1,
+      })
+    );
+  });
+
+  it("splits score-delta direction counts before and after the first suppressed pass", () => {
+    const { finding } = getRoundOneOverinvestmentFinding([
+      roundOneTrace(10, "play_card", {
+        scoreDelta: -1,
+      }),
+      roundOneTrace(11, "pass", {
+        scoreDelta: 0,
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+        recommendation: "preserve_future_hand",
+      }),
+      roundOneTrace(12, "play_card", {
+        scoreDelta: 5,
+      }),
+      roundOneTrace(13, "pass", {
+        scoreDelta: -4,
+      }),
+    ]);
+
+    expect(finding.evidence).toEqual(
+      expect.objectContaining({
+        roundOneScoreDeltaBehindCount: 2,
+        roundOneScoreDeltaTiedCount: 1,
+        roundOneScoreDeltaAheadCount: 1,
+        roundOneScoreDeltaBehindBeforeFirstSuppressedPassCount: 1,
+        roundOneScoreDeltaTiedBeforeFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaAheadBeforeFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaBehindAfterFirstSuppressedPassCount: 1,
+        roundOneScoreDeltaTiedAfterFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaAheadAfterFirstSuppressedPassCount: 1,
+      })
+    );
+  });
+
+  it("counts exception and selected-card-advantage sequence fields before the first suppressed pass", () => {
+    const { finding } = getRoundOneOverinvestmentFinding([
+      roundOneTrace(10, "play_card", {
+        selectedMoveIsCardAdvantage: true,
+        roundOneOverinvestmentReason: "exception_card_advantage",
+      }),
+      roundOneTrace(11, "pass", {
+        roundOneOverinvestmentReason: "exception_non_play_card",
+      }),
+      roundOneTrace(12, "play_card", {
+        catchUpStatus: "single_move_catch_up",
+        roundOneOverinvestmentReason: "exception_single_move_catch_up",
+      }),
+      roundOneTrace(13, "pass", {
+        roundOneOverinvestmentRecommended: true,
+        roundOneOverinvestmentReason: "round_one_board_limit",
+        recommendation: "preserve_future_hand",
+      }),
+      roundOneTrace(14, "play_card", {
+        selectedMoveIsCardAdvantage: true,
+        roundOneOverinvestmentReason: "exception_card_advantage",
+      }),
+    ]);
+
+    expect(finding.evidence).toEqual(
+      expect.objectContaining({
+        roundOneExceptionCardAdvantageCount: 2,
+        roundOneExceptionSingleMoveCatchUpCount: 1,
+        roundOneExceptionNonPlayCardCount: 1,
+        roundOneSelectedCardAdvantageCount: 2,
+        roundOneCatchUpSingleMoveCount: 1,
+        roundOneExceptionCardAdvantageBeforeFirstSuppressedPassCount: 1,
+        roundOneExceptionSingleMoveCatchUpBeforeFirstSuppressedPassCount: 1,
+        roundOneExceptionNonPlayCardBeforeFirstSuppressedPassCount: 1,
+        roundOneSelectedCardAdvantageBeforeFirstSuppressedPassCount: 1,
+        roundOneCatchUpSingleMoveBeforeFirstSuppressedPassCount: 1,
+      })
     );
   });
 
@@ -541,12 +722,40 @@ describe("benchmark failure mining", () => {
         roundOneSuppressedPassCount: 0,
         roundOneMaxBoardAfterSelectedMove: null,
         roundOneMinHandAfterSelectedMove: null,
+        roundOneFirstPlayCardDecisionIndex: null,
+        roundOneFirstBoardFloorDecisionIndex: null,
+        roundOneFirstHandCapDecisionIndex: null,
         roundOneFirstBaseGeometryDecisionIndex: null,
         roundOneFirstRecommendedDecisionIndex: null,
+        roundOneFirstSuppressedPassDecisionIndex: null,
+        roundOnePlayCardCountBeforeFirstSuppressedPass: null,
+        roundOneBoardAfterSelectedMoveAtFirstSuppressedPass: null,
+        roundOneHandAfterSelectedMoveAtFirstSuppressedPass: null,
+        roundOneScoreDeltaAtFirstSuppressedPass: null,
+        roundOneFirstPlayToFirstSuppressedPassDecisionGap: null,
+        roundOneFirstBoardFloorToFirstSuppressedPassDecisionGap: null,
+        roundOneFirstHandCapToFirstSuppressedPassDecisionGap: null,
+        roundOneFirstBaseGeometryToFirstSuppressedPassDecisionGap: null,
+        roundOneContinuePlayCardTraceCount: 0,
+        roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass: null,
+        roundOnePlayCardCountAfterFirstBaseGeometryBeforeFirstSuppressedPass: null,
+        roundOnePlayCardCountAfterFirstBoardFloorBeforeFirstSuppressedPass: null,
+        roundOnePlayCardCountAfterFirstHandCapBeforeFirstSuppressedPass: null,
+        roundOneScoreDeltaBehindBeforeFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaTiedBeforeFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaAheadBeforeFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaBehindAfterFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaTiedAfterFirstSuppressedPassCount: 0,
+        roundOneScoreDeltaAheadAfterFirstSuppressedPassCount: 0,
         roundOneReasonNoneCount: 0,
         roundOneExceptionCardAdvantageCount: 0,
+        roundOneExceptionCardAdvantageBeforeFirstSuppressedPassCount: 0,
+        roundOneExceptionSingleMoveCatchUpBeforeFirstSuppressedPassCount: 0,
+        roundOneExceptionNonPlayCardBeforeFirstSuppressedPassCount: 0,
+        roundOneSelectedCardAdvantageBeforeFirstSuppressedPassCount: 0,
+        roundOneCatchUpSingleMoveBeforeFirstSuppressedPassCount: 0,
         roundOneRecommendationContinueCount: 0,
-      }),
+      })
     );
   });
 
@@ -569,6 +778,7 @@ describe("benchmark failure mining", () => {
     expect(first.summary.tuningQueue.map((item) => item.clusterId)).toEqual(["round_resource_exhaustion"]);
     expect(scanBenchmarkFailureMiningArtifactsForHiddenInfo(artifacts)).toEqual([]);
     expect(combined).toContain("roundOneGuardTelemetryAvailable");
+    expect(combined).toContain("roundOneFirstSuppressedPassDecisionIndex");
     hiddenInfoHazards.forEach((hazard) => {
       expect(combined).not.toContain(hazard);
     });
@@ -590,14 +800,10 @@ describe("benchmark failure mining", () => {
         "suspicious_pass",
         "weathered_row_play",
         "medic_timing_risk",
-      ]),
+      ])
     );
     expect(first.summary.tuningQueue.map((item) => item.clusterId)).toEqual(
-      expect.arrayContaining([
-        "round_resource_exhaustion",
-        "weathered_row_low_tempo",
-        "medic_no_target_timing",
-      ]),
+      expect.arrayContaining(["round_resource_exhaustion", "weathered_row_low_tempo", "medic_no_target_timing"])
     );
   });
 
@@ -611,15 +817,13 @@ describe("benchmark failure mining", () => {
         schemaVersion: "benchmark-failure-mining-v1",
         suiteId: SUITE_ID,
         files: benchmarkFailureMiningArtifactFiles,
-      }),
+      })
     );
     expect(first.tuningQueueMarkdown).toContain("# Benchmark Failure-Mining Tuning Queue");
     const lines = first.findingsJsonl.trim().split("\n");
     expect(lines.length).toBeGreaterThanOrEqual(7);
     lines.forEach((line) => {
-      expect(JSON.parse(line)).toEqual(
-        expect.objectContaining({ schemaVersion: "benchmark-failure-mining-v1" }),
-      );
+      expect(JSON.parse(line)).toEqual(expect.objectContaining({ schemaVersion: "benchmark-failure-mining-v1" }));
     });
   });
 
@@ -640,10 +844,8 @@ describe("benchmark failure mining", () => {
       scanBenchmarkFailureMiningArtifactsForHiddenInfo({
         ...artifacts,
         tuningQueueMarkdown: '{"finalState":{"seat_a:test":"leak"},"commandLog":[]}',
-      }),
-    ).toEqual(
-      expect.arrayContaining(["raw terminal state", "raw command log", "runtime seat instance id"]),
-    );
+      })
+    ).toEqual(expect.arrayContaining(["raw terminal state", "raw command log", "runtime seat instance id"]));
   });
 
   it("defers trace-dependent signals when traces are unavailable", () => {
@@ -660,7 +862,7 @@ describe("benchmark failure mining", () => {
         "suspicious_pass",
         "weathered_row_play",
         "medic_timing_risk",
-      ]),
+      ])
     );
   });
 });

@@ -62,10 +62,11 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
     benchmarkStatus: "benchmark artifacts available",
     productSelectable: true,
     isDefault: false,
-    description: "Experimental deterministic legal heuristic tuned through cFp53. Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43), post-cFp43 casebook (cFp44), and remaining-overinvestment calibration review (cFp45). cFp45, cFp49, cFp51, cFp52, and cFp54 change no policy behavior. Benchmark rating infrastructure added in cFp46. cFp47 adds deterministic rating snapshot and comparison ledger for longitudinal rating tracking. cFp48 adds a robust 1000-record starter-matrix evaluation suite and first suite-local cFp48 rating baseline without changing policy behavior. cFp50 adds hidden-info-safe scalar round-one guard-state telemetry to failure-mining artifacts only, cFp51 classifies that telemetry, cFp52 replays the two direct cFp51 guard candidates for hidden-info-safe reproduction/debug, cFp53 repairs the selected-play path so active round-one overinvestment recommendations convert to pass, and cFp54 classifies the remaining cFp53 robust round-one overinvestment findings.",
-    latestPhase: "cFp54",
-    latestSpecPath: "docs/spec/2026-05-22-cFp54-specs.md",
-    latestReportPath: "audit/reports/2026-05-22-cFp54-report.md",
+    description:
+      "Experimental deterministic legal heuristic tuned through cFp53. Includes pass-decision alignment, weather-aware placement, weathered-row low-tempo guard, no-target Medic delay guard, recursive-scoring guard, round-resource casebook (cFp42), round-one overinvestment guard (cFp43), post-cFp43 casebook (cFp44), and remaining-overinvestment calibration review (cFp45). cFp45, cFp49, cFp51, cFp52, cFp54, and cFp55 change no policy behavior. Benchmark rating infrastructure added in cFp46. cFp47 adds deterministic rating snapshot and comparison ledger for longitudinal rating tracking. cFp48 adds a robust 1000-record starter-matrix evaluation suite and first suite-local cFp48 rating baseline without changing policy behavior. cFp50 adds hidden-info-safe scalar round-one guard-state telemetry to failure-mining artifacts only, cFp51 classifies that telemetry, cFp52 replays the two direct cFp51 guard candidates for hidden-info-safe reproduction/debug, cFp53 repairs the selected-play path so active round-one overinvestment recommendations convert to pass, cFp54 classifies the remaining cFp53 robust round-one overinvestment findings, and cFp55 adds hidden-info-safe temporal/cumulative round-one spend instrumentation to failure-mining evidence only.",
+    latestPhase: "cFp55",
+    latestSpecPath: "docs/spec/2026-05-22-cFp55-specs.md",
+    latestReportPath: "audit/reports/2026-05-22-cFp55-report.md",
     latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
     latestBenchmarkSummaries: [
       {
@@ -116,6 +117,7 @@ export const PRODUCT_AI_POLICIES: readonly ProductAiPolicyMetadata[] = [
       "round-one guard fixture reproduction/debug over the two cFp51 direct candidates (cFp52)",
       "round-one selected-play overinvestment guard repair for the cFp52 direct candidates (cFp53)",
       "post-cFp53 robust round-one overinvestment casebook classifying the remaining 70 findings (cFp54)",
+      "round-one temporal/cumulative spend instrumentation in failure-mining evidence (cFp55)",
     ],
   },
 ];
@@ -133,8 +135,7 @@ export const isProductAiPolicyId = (value: unknown): value is ProductAiPolicyId 
 export const resolveProductAiPolicyId = (value: unknown): ProductAiPolicyId =>
   isProductAiPolicyId(value) ? value : DEFAULT_PRODUCT_AI_POLICY_ID;
 
-export const getProductAiPolicy = (policyId: unknown): EnginePolicy =>
-  policiesById[resolveProductAiPolicyId(policyId)];
+export const getProductAiPolicy = (policyId: unknown): EnginePolicy => policiesById[resolveProductAiPolicyId(policyId)];
 
 export const aiPolicyIdFromSearch = (search = ""): ProductAiPolicyId => {
   const params = new URLSearchParams(search.startsWith("?") ? search : `?${search}`);

@@ -22,8 +22,8 @@ The policy ID remains `legal-heuristic-v1`. The latest behavior implementation
 phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
 The latest analysis phase is cFp54: Post-cFp53 Robust Round-One
-Overinvestment Casebook. The latest evaluation-infrastructure phase is cFp50:
-Round-One Overinvestment Guard-State Telemetry. cFp53 repairs the selected-play
+Overinvestment Casebook. The latest instrumentation phase is cFp55: Round-One
+Temporal Spend Instrumentation. cFp53 repairs the selected-play
 path that cFp52 proved: when the exact selected `play_card` has cFp43 base
 geometry and `roundOneOverinvestmentRecommended === true`, the final
 playing-phase decision is converted to pass unless an existing tactical
@@ -40,6 +40,11 @@ two guard-recommended play cases before any behavior patch.
 cFp50 adds hidden-info-safe scalar cFp43 guard-state counts to existing
 `round_one_overinvestment` failure-mining findings and regenerates the current,
 expanded, and robust failure-mining artifacts without changing policy behavior.
+cFp55 extends those same `round_one_overinvestment` findings with scalar
+temporal/cumulative fields: first play/board-floor/hand-cap/suppressed-pass
+indexes, first suppressed-pass context, first-event gaps, continue-play and
+post-geometry spend counts, score-delta sequence counts, and exception sequence
+counts before the first suppressed pass.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -48,8 +53,9 @@ freezes cFp46 rating artifacts as named `cFp46` snapshots, adds `ledger.json`
 per suite, and generates deterministic `cFp46-vs-latest` comparison artifacts
 with delta/signal computation. cFp46 added deterministic rating/RD reports over
 existing public benchmark records. The latest committed benchmark record,
-failure-mining, round-one guard debug, and ratings/latest artifact refresh is
-cFp53. The policy and diagnostics stack builds on the cFp27 through cFp54 chain:
+round-one guard debug, and ratings/latest artifact refresh remains cFp53. The
+latest committed failure-mining artifact refresh is cFp55. The policy and
+diagnostics stack builds on the cFp27 through cFp55 chain:
 
 - cFp27: linked-card mulligan diagnostics and conservative low-standalone
   redraw scoring.
@@ -88,8 +94,10 @@ cFp53. The policy and diagnostics stack builds on the cFp27 through cFp54 chain:
 - cFp54: analysis-only post-cFp53 casebook over the 70 remaining robust
   `round_one_overinvestment` findings; recommends instrumentation/debug rather
   than behavior from aggregate counts alone.
+- cFp55: instrumentation/debug-only temporal and cumulative round-one spend
+  fields in failure-mining evidence.
 
-Current cFp53 artifact totals, unchanged by cFp54:
+Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 
 - `benchmark-v1-smoke-v1`: 11 win / 1 loss / 0 draw vs v0.
 - `benchmark-v1-starter-matrix-v1`: 102 win / 17 loss / 1 draw vs v0.
@@ -128,9 +136,9 @@ classifies the remaining 70 robust findings and finds no new behavior-ready
 bucket: the dominant 48-row group is already guarded by suppressed-pass
 telemetry, 20 rows never reached the board floor, and no row reaches the
 cumulative-spend candidate bucket after required precedence. Future round-one
-work should add hidden-info-safe temporal/cumulative spend instrumentation
-before considering any new behavior patch; cFp54 does not justify threshold
-widening or cumulative-spend tuning.
+work should use the cFp55 temporal/cumulative spend fields before considering
+any new behavior patch; cFp54 does not justify threshold widening or
+cumulative-spend tuning.
 
 cFp41 adds that expanded discovery surface without changing policy behavior:
 `benchmark-v1-starter-matrix-expanded-v1` runs the official starter-deck
@@ -1397,3 +1405,52 @@ first guard-geometry index, first suppressed-pass index, play-card count before
 the first suppressed pass, board/hand counts immediately before the first
 suppressed pass, selected plays after first base geometry and before selected
 pass, and exception sequence counts before the first guard-visible pass.
+
+### Round-One Temporal Spend Instrumentation (cFp55)
+
+cFp55 is instrumentation/debug-only. It extends
+`round_one_overinvestment` failure-mining evidence with hidden-info-safe scalar
+temporal and cumulative fields. The added field groups are:
+
+- first-event indexes for the first round-one play-card trace, first board-floor
+  trace, first hand-cap trace, first base-geometry trace, first selected
+  play-card recommendation, and first suppressed overinvestment pass;
+- first suppressed-pass context for play-card count before the pass, public
+  board/hand/score-delta scalars at the pass, and first-event-to-pass decision
+  gaps;
+- continue-phase and post-geometry spend counts before the first suppressed
+  pass;
+- score-delta direction counts before and after the first suppressed pass;
+- exception, selected-card-advantage, and single-move-catch-up sequence counts
+  before the first suppressed pass.
+
+The regenerated failure-mining artifact boundary covers:
+
+- `benchmark-v1-starter-matrix-v1/failure-mining/latest/`
+- `benchmark-v1-starter-matrix-expanded-v1/failure-mining/latest/`
+- `benchmark-v1-starter-matrix-robust-v1/failure-mining/latest/`
+
+Finding counts remain unchanged: current 300 findings with
+`round_one_overinvestment=6`, expanded 878 findings with
+`round_one_overinvestment=26`, and robust 2301 findings with
+`round_one_overinvestment=70`. The robust repeated run produced identical
+failure-mining hashes.
+
+First robust readout from the new fields: the 70 robust
+`round_one_overinvestment` rows contain 48 rows with a first suppressed
+overinvestment pass. Those 48 rows average 7.85 play-card traces before that
+pass (range 7-11), with first-play-to-first-suppressed-pass gaps averaging 8.15
+decisions (range 7-13). Only three rows expose a base-geometry-to-suppressed-pass
+gap, averaging 1.33 decisions (range 1-2); 66 rows have no selected play-card
+base-geometry index under the strict play-card definition. Before the first
+suppressed pass, robust rows aggregate 469 behind, 51 tied, and 91 ahead
+score-delta trace buckets, plus 5 single-move-catch-up exception reasons, 26
+non-play-card exception reasons, 73 selected card-advantage traces, and 264
+single-move catch-up traces.
+
+cFp56 can use this telemetry to distinguish late intervention, missing
+play-card geometry, cumulative continue-phase spend, and exception-heavy
+pre-pass sequences without reading raw traces or private state. cFp55 changes
+no AI policy behavior, engine rules, legal moves, benchmark suite definitions,
+benchmark records, ratings, debug artifacts, UI gameplay behavior, catalog data,
+deck presets, search/training code, or product difficulty.

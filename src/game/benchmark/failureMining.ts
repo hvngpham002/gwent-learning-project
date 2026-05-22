@@ -176,13 +176,10 @@ const compareOptional = (left?: string | number, right?: string | number) =>
 
 const sortUnique = (values: readonly (string | undefined)[]) =>
   [...new Set(values.filter((value): value is string => Boolean(value)))].sort((left, right) =>
-    left.localeCompare(right),
+    left.localeCompare(right)
   );
 
-export const compareBenchmarkFailureFindings = (
-  left: BenchmarkFailureFinding,
-  right: BenchmarkFailureFinding,
-) =>
+export const compareBenchmarkFailureFindings = (left: BenchmarkFailureFinding, right: BenchmarkFailureFinding) =>
   SEVERITY_RANK[left.severity] - SEVERITY_RANK[right.severity] ||
   left.kind.localeCompare(right.kind) ||
   compareOptional(left.policyId, right.policyId) ||
@@ -196,7 +193,7 @@ const shouldConsumeDebugResult = (record: BenchmarkMatchRecord) =>
 
 const alignDebugResults = (
   records: readonly BenchmarkMatchRecord[],
-  debugResults: readonly HeadlessMatchSimulationResult[] | undefined,
+  debugResults: readonly HeadlessMatchSimulationResult[] | undefined
 ) => {
   let debugIndex = 0;
   return records.map((record) => {
@@ -287,7 +284,7 @@ const buildPublicStatusFindings = ({
           severity: "warning",
           message: "Benchmark record reached the configured step limit.",
           idParts: [record.matchupId, record.seed, record.mirrorIndex],
-        }),
+        })
       );
     }
     if (record.status === "policy_failed") {
@@ -298,7 +295,7 @@ const buildPublicStatusFindings = ({
           severity: "warning",
           message: "Benchmark record ended with a policy failure.",
           idParts: [record.matchupId, record.seed, record.mirrorIndex],
-        }),
+        })
       );
     }
     if (record.status === "engine_error") {
@@ -309,7 +306,7 @@ const buildPublicStatusFindings = ({
           severity: "warning",
           message: "Benchmark record ended with an engine error.",
           idParts: [record.matchupId, record.seed, record.mirrorIndex],
-        }),
+        })
       );
     }
     if (record.replayStatus === "failed") {
@@ -320,7 +317,7 @@ const buildPublicStatusFindings = ({
           severity: "warning",
           message: "Benchmark replay verification failed.",
           idParts: [record.matchupId, record.seed, record.mirrorIndex],
-        }),
+        })
       );
     }
   });
@@ -338,13 +335,20 @@ const buildMatchupSkewFindings = ({
   records: readonly BenchmarkMatchRecord[];
 }) => {
   const statsByKey = new Map<string, { matchupId: string; policyId: string; stats: SeatStats }>();
-  const mirrorStatsByKey = new Map<string, { matchupId: string; policyId: string; mirrorIndex: number; stats: SeatStats }>();
+  const mirrorStatsByKey = new Map<
+    string,
+    { matchupId: string; policyId: string; mirrorIndex: number; stats: SeatStats }
+  >();
 
   records.forEach((record) => {
     SEATS.forEach((seatId) => {
       const policyId = seatPolicy(record, seatId);
       const key = `${record.matchupId}\u0000${policyId}`;
-      const existing = statsByKey.get(key) ?? { matchupId: record.matchupId, policyId, stats: emptyStats() };
+      const existing = statsByKey.get(key) ?? {
+        matchupId: record.matchupId,
+        policyId,
+        stats: emptyStats(),
+      };
       addOutcome(existing.stats, record.resultBySeat[seatId]);
       statsByKey.set(key, existing);
 
@@ -389,7 +393,7 @@ const buildMatchupSkewFindings = ({
             policyId,
           },
           idParts: [policyId, matchupId, "low-win-rate"],
-        }),
+        })
       );
     } else if (winRate <= 0.5) {
       findings.push(
@@ -412,7 +416,7 @@ const buildMatchupSkewFindings = ({
             policyId,
           },
           idParts: [policyId, matchupId, "watch-win-rate"],
-        }),
+        })
       );
     }
 
@@ -442,7 +446,7 @@ const buildMatchupSkewFindings = ({
               mirror1RecordCount: mirror1.recordCount,
             },
             idParts: [policyId, matchupId, "mirror-split"],
-          }),
+          })
         );
       }
     }
@@ -508,7 +512,7 @@ const buildDeckSkewFindings = ({
           direction,
         },
         idParts: [deckPresetId, faction, direction],
-      }),
+      })
     );
   });
 
@@ -553,11 +557,34 @@ const ROUND_ONE_GUARD_TELEMETRY_UNAVAILABLE = {
   roundOneSuppressedPassCount: 0,
   roundOneMaxBoardAfterSelectedMove: null,
   roundOneMinHandAfterSelectedMove: null,
+  roundOneFirstPlayCardDecisionIndex: null,
+  roundOneFirstBoardFloorDecisionIndex: null,
+  roundOneFirstHandCapDecisionIndex: null,
   roundOneFirstBaseGeometryDecisionIndex: null,
   roundOneFirstRecommendedDecisionIndex: null,
+  roundOneFirstSuppressedPassDecisionIndex: null,
+  roundOnePlayCardCountBeforeFirstSuppressedPass: null,
+  roundOneBoardAfterSelectedMoveAtFirstSuppressedPass: null,
+  roundOneHandAfterSelectedMoveAtFirstSuppressedPass: null,
+  roundOneScoreDeltaAtFirstSuppressedPass: null,
+  roundOneFirstPlayToFirstSuppressedPassDecisionGap: null,
+  roundOneFirstBoardFloorToFirstSuppressedPassDecisionGap: null,
+  roundOneFirstHandCapToFirstSuppressedPassDecisionGap: null,
+  roundOneFirstBaseGeometryToFirstSuppressedPassDecisionGap: null,
+  roundOneContinuePlayCardTraceCount: 0,
+  roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass: null,
+  roundOnePlayCardCountAfterFirstBaseGeometryBeforeFirstSuppressedPass: null,
+  roundOnePlayCardCountAfterFirstBoardFloorBeforeFirstSuppressedPass: null,
+  roundOnePlayCardCountAfterFirstHandCapBeforeFirstSuppressedPass: null,
   roundOneScoreDeltaBehindCount: 0,
   roundOneScoreDeltaTiedCount: 0,
   roundOneScoreDeltaAheadCount: 0,
+  roundOneScoreDeltaBehindBeforeFirstSuppressedPassCount: 0,
+  roundOneScoreDeltaTiedBeforeFirstSuppressedPassCount: 0,
+  roundOneScoreDeltaAheadBeforeFirstSuppressedPassCount: 0,
+  roundOneScoreDeltaBehindAfterFirstSuppressedPassCount: 0,
+  roundOneScoreDeltaTiedAfterFirstSuppressedPassCount: 0,
+  roundOneScoreDeltaAheadAfterFirstSuppressedPassCount: 0,
   roundOneReasonNoneCount: 0,
   roundOneReasonBoardLimitCount: 0,
   roundOneReasonLowFutureHandCount: 0,
@@ -570,32 +597,87 @@ const ROUND_ONE_GUARD_TELEMETRY_UNAVAILABLE = {
   roundOneExceptionSingleMoveCatchUpCount: 0,
   roundOneExceptionSingleCardHandCount: 0,
   roundOneSelectedCardAdvantageCount: 0,
+  roundOneExceptionCardAdvantageBeforeFirstSuppressedPassCount: 0,
+  roundOneExceptionSingleMoveCatchUpBeforeFirstSuppressedPassCount: 0,
+  roundOneExceptionNonPlayCardBeforeFirstSuppressedPassCount: 0,
+  roundOneSelectedCardAdvantageBeforeFirstSuppressedPassCount: 0,
   roundOneSelectedWouldLeaveNoPositiveUnitMoveCount: 0,
   roundOneSelectedWouldLeaveNoUnitTempoCardCount: 0,
   roundOneCatchUpSingleMoveCount: 0,
+  roundOneCatchUpSingleMoveBeforeFirstSuppressedPassCount: 0,
   roundOneCatchUpImpossibleCount: 0,
   roundOneRecommendationPreserveFutureHandCount: 0,
   roundOneRecommendationSacrificeRoundCount: 0,
   roundOneRecommendationContinueCount: 0,
 } satisfies Evidence;
 
-const buildRoundOneGuardTelemetry = (
-  result: HeadlessMatchSimulationResult | undefined,
-  seatId: SeatId,
-): Evidence => {
-  const traces =
+const buildRoundOneGuardTelemetry = (result: HeadlessMatchSimulationResult | undefined, seatId: SeatId): Evidence => {
+  const traces = (
     result?.decisionTraces?.filter(
       (trace) =>
         trace.policyId === "legal-heuristic-v1" &&
         trace.seatId === seatId &&
         trace.phase === "playing" &&
         trace.round === 1 &&
-        trace.roundInvestmentAnalysis,
-    ) ?? [];
+        trace.roundInvestmentAnalysis
+    ) ?? []
+  ).sort((left, right) => left.decisionIndex - right.decisionIndex);
 
   if (traces.length === 0) {
     return { ...ROUND_ONE_GUARD_TELEMETRY_UNAVAILABLE };
   }
+
+  let roundOneFirstPlayCardDecisionIndex: number | null = null;
+  let roundOneFirstBoardFloorDecisionIndex: number | null = null;
+  let roundOneFirstHandCapDecisionIndex: number | null = null;
+  let roundOneFirstBaseGeometryDecisionIndex: number | null = null;
+  let roundOneFirstRecommendedDecisionIndex: number | null = null;
+  let roundOneFirstSuppressedPassDecisionIndex: number | null = null;
+  let roundOneBoardAfterSelectedMoveAtFirstSuppressedPass: number | null = null;
+  let roundOneHandAfterSelectedMoveAtFirstSuppressedPass: number | null = null;
+  let roundOneScoreDeltaAtFirstSuppressedPass: number | null = null;
+
+  traces.forEach((trace) => {
+    const analysis = trace.roundInvestmentAnalysis;
+    if (!analysis) return;
+
+    if (
+      roundOneFirstSuppressedPassDecisionIndex === null &&
+      trace.selected?.kind === "pass" &&
+      analysis.roundOneOverinvestmentRecommended
+    ) {
+      roundOneFirstSuppressedPassDecisionIndex = trace.decisionIndex;
+      roundOneBoardAfterSelectedMoveAtFirstSuppressedPass = analysis.roundOneBoardAfterSelectedMove;
+      roundOneHandAfterSelectedMoveAtFirstSuppressedPass = analysis.estimatedHandCountAfterSelectedMove;
+      roundOneScoreDeltaAtFirstSuppressedPass = analysis.scoreDelta;
+    }
+
+    if (trace.selected?.kind !== "play_card") return;
+
+    roundOneFirstPlayCardDecisionIndex ??= trace.decisionIndex;
+
+    const boardFloorReached = analysis.roundOneBoardAfterSelectedMove >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR;
+    const handCapReached = analysis.estimatedHandCountAfterSelectedMove <= ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP;
+    const baseGeometryReached = boardFloorReached && handCapReached;
+
+    if (boardFloorReached) roundOneFirstBoardFloorDecisionIndex ??= trace.decisionIndex;
+    if (handCapReached) roundOneFirstHandCapDecisionIndex ??= trace.decisionIndex;
+    if (baseGeometryReached) roundOneFirstBaseGeometryDecisionIndex ??= trace.decisionIndex;
+    if (analysis.roundOneOverinvestmentRecommended) {
+      roundOneFirstRecommendedDecisionIndex ??= trace.decisionIndex;
+    }
+  });
+
+  const isBeforeFirstSuppressedPass = (decisionIndex: number) =>
+    roundOneFirstSuppressedPassDecisionIndex === null || decisionIndex < roundOneFirstSuppressedPassDecisionIndex;
+  const isAfterFirstSuppressedPass = (decisionIndex: number) =>
+    roundOneFirstSuppressedPassDecisionIndex !== null && decisionIndex > roundOneFirstSuppressedPassDecisionIndex;
+  const isAfterFirstIndexBeforeFirstSuppressedPass = (decisionIndex: number, firstIndex: number | null) =>
+    firstIndex !== null && decisionIndex > firstIndex && isBeforeFirstSuppressedPass(decisionIndex);
+  const decisionGapToFirstSuppressedPass = (firstIndex: number | null) =>
+    roundOneFirstSuppressedPassDecisionIndex === null || firstIndex === null
+      ? null
+      : roundOneFirstSuppressedPassDecisionIndex - firstIndex;
 
   let roundOnePlayCardTraceCount = 0;
   let roundOneGuardBaseGeometryCount = 0;
@@ -605,11 +687,21 @@ const buildRoundOneGuardTelemetry = (
   let roundOneSuppressedPassCount = 0;
   let roundOneMaxBoardAfterSelectedMove: number | null = null;
   let roundOneMinHandAfterSelectedMove: number | null = null;
-  let roundOneFirstBaseGeometryDecisionIndex: number | null = null;
-  let roundOneFirstRecommendedDecisionIndex: number | null = null;
+  let roundOnePlayCardCountBeforeFirstSuppressedPass = 0;
+  let roundOneContinuePlayCardTraceCount = 0;
+  let roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass = 0;
+  let roundOnePlayCardCountAfterFirstBaseGeometryBeforeFirstSuppressedPass = 0;
+  let roundOnePlayCardCountAfterFirstBoardFloorBeforeFirstSuppressedPass = 0;
+  let roundOnePlayCardCountAfterFirstHandCapBeforeFirstSuppressedPass = 0;
   let roundOneScoreDeltaBehindCount = 0;
   let roundOneScoreDeltaTiedCount = 0;
   let roundOneScoreDeltaAheadCount = 0;
+  let roundOneScoreDeltaBehindBeforeFirstSuppressedPassCount = 0;
+  let roundOneScoreDeltaTiedBeforeFirstSuppressedPassCount = 0;
+  let roundOneScoreDeltaAheadBeforeFirstSuppressedPassCount = 0;
+  let roundOneScoreDeltaBehindAfterFirstSuppressedPassCount = 0;
+  let roundOneScoreDeltaTiedAfterFirstSuppressedPassCount = 0;
+  let roundOneScoreDeltaAheadAfterFirstSuppressedPassCount = 0;
   let roundOneReasonNoneCount = 0;
   let roundOneReasonBoardLimitCount = 0;
   let roundOneReasonLowFutureHandCount = 0;
@@ -622,9 +714,14 @@ const buildRoundOneGuardTelemetry = (
   let roundOneExceptionSingleMoveCatchUpCount = 0;
   let roundOneExceptionSingleCardHandCount = 0;
   let roundOneSelectedCardAdvantageCount = 0;
+  let roundOneExceptionCardAdvantageBeforeFirstSuppressedPassCount = 0;
+  let roundOneExceptionSingleMoveCatchUpBeforeFirstSuppressedPassCount = 0;
+  let roundOneExceptionNonPlayCardBeforeFirstSuppressedPassCount = 0;
+  let roundOneSelectedCardAdvantageBeforeFirstSuppressedPassCount = 0;
   let roundOneSelectedWouldLeaveNoPositiveUnitMoveCount = 0;
   let roundOneSelectedWouldLeaveNoUnitTempoCardCount = 0;
   let roundOneCatchUpSingleMoveCount = 0;
+  let roundOneCatchUpSingleMoveBeforeFirstSuppressedPassCount = 0;
   let roundOneCatchUpImpossibleCount = 0;
   let roundOneRecommendationPreserveFutureHandCount = 0;
   let roundOneRecommendationSacrificeRoundCount = 0;
@@ -634,9 +731,22 @@ const buildRoundOneGuardTelemetry = (
     const analysis = trace.roundInvestmentAnalysis;
     if (!analysis) return;
 
-    if (analysis.scoreDelta < 0) roundOneScoreDeltaBehindCount += 1;
-    else if (analysis.scoreDelta === 0) roundOneScoreDeltaTiedCount += 1;
-    else roundOneScoreDeltaAheadCount += 1;
+    const beforeFirstSuppressedPass = isBeforeFirstSuppressedPass(trace.decisionIndex);
+    const afterFirstSuppressedPass = isAfterFirstSuppressedPass(trace.decisionIndex);
+
+    if (analysis.scoreDelta < 0) {
+      roundOneScoreDeltaBehindCount += 1;
+      if (beforeFirstSuppressedPass) roundOneScoreDeltaBehindBeforeFirstSuppressedPassCount += 1;
+      if (afterFirstSuppressedPass) roundOneScoreDeltaBehindAfterFirstSuppressedPassCount += 1;
+    } else if (analysis.scoreDelta === 0) {
+      roundOneScoreDeltaTiedCount += 1;
+      if (beforeFirstSuppressedPass) roundOneScoreDeltaTiedBeforeFirstSuppressedPassCount += 1;
+      if (afterFirstSuppressedPass) roundOneScoreDeltaTiedAfterFirstSuppressedPassCount += 1;
+    } else {
+      roundOneScoreDeltaAheadCount += 1;
+      if (beforeFirstSuppressedPass) roundOneScoreDeltaAheadBeforeFirstSuppressedPassCount += 1;
+      if (afterFirstSuppressedPass) roundOneScoreDeltaAheadAfterFirstSuppressedPassCount += 1;
+    }
 
     switch (analysis.roundOneOverinvestmentReason) {
       case "none":
@@ -659,29 +769,38 @@ const buildRoundOneGuardTelemetry = (
         break;
       case "exception_non_play_card":
         roundOneExceptionNonPlayCardCount += 1;
+        if (beforeFirstSuppressedPass) roundOneExceptionNonPlayCardBeforeFirstSuppressedPassCount += 1;
         break;
       case "exception_card_advantage":
         roundOneExceptionCardAdvantageCount += 1;
+        if (beforeFirstSuppressedPass) roundOneExceptionCardAdvantageBeforeFirstSuppressedPassCount += 1;
         break;
       case "exception_match_winning_play":
         roundOneExceptionMatchWinningPlayCount += 1;
         break;
       case "exception_single_move_catch_up":
         roundOneExceptionSingleMoveCatchUpCount += 1;
+        if (beforeFirstSuppressedPass) roundOneExceptionSingleMoveCatchUpBeforeFirstSuppressedPassCount += 1;
         break;
       case "exception_single_card_hand":
         roundOneExceptionSingleCardHandCount += 1;
         break;
     }
 
-    if (analysis.selectedMoveIsCardAdvantage) roundOneSelectedCardAdvantageCount += 1;
+    if (analysis.selectedMoveIsCardAdvantage) {
+      roundOneSelectedCardAdvantageCount += 1;
+      if (beforeFirstSuppressedPass) roundOneSelectedCardAdvantageBeforeFirstSuppressedPassCount += 1;
+    }
     if (analysis.selectedMoveWouldLeaveNoPositiveUnitMove) {
       roundOneSelectedWouldLeaveNoPositiveUnitMoveCount += 1;
     }
     if (analysis.selectedMoveWouldLeaveNoUnitTempoCard) {
       roundOneSelectedWouldLeaveNoUnitTempoCardCount += 1;
     }
-    if (analysis.catchUpStatus === "single_move_catch_up") roundOneCatchUpSingleMoveCount += 1;
+    if (analysis.catchUpStatus === "single_move_catch_up") {
+      roundOneCatchUpSingleMoveCount += 1;
+      if (beforeFirstSuppressedPass) roundOneCatchUpSingleMoveBeforeFirstSuppressedPassCount += 1;
+    }
     if (analysis.catchUpStatus === "upper_bound_impossible") roundOneCatchUpImpossibleCount += 1;
     if (analysis.recommendation === "preserve_future_hand") roundOneRecommendationPreserveFutureHandCount += 1;
     if (analysis.recommendation === "sacrifice_round") roundOneRecommendationSacrificeRoundCount += 1;
@@ -694,30 +813,42 @@ const buildRoundOneGuardTelemetry = (
     if (trace.selected?.kind !== "play_card") return;
 
     roundOnePlayCardTraceCount += 1;
+    if (roundOneFirstSuppressedPassDecisionIndex !== null && beforeFirstSuppressedPass) {
+      roundOnePlayCardCountBeforeFirstSuppressedPass += 1;
+    }
+    if (analysis.recommendation === "continue") {
+      roundOneContinuePlayCardTraceCount += 1;
+      if (beforeFirstSuppressedPass) roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass += 1;
+    }
+    if (isAfterFirstIndexBeforeFirstSuppressedPass(trace.decisionIndex, roundOneFirstBaseGeometryDecisionIndex)) {
+      roundOnePlayCardCountAfterFirstBaseGeometryBeforeFirstSuppressedPass += 1;
+    }
+    if (isAfterFirstIndexBeforeFirstSuppressedPass(trace.decisionIndex, roundOneFirstBoardFloorDecisionIndex)) {
+      roundOnePlayCardCountAfterFirstBoardFloorBeforeFirstSuppressedPass += 1;
+    }
+    if (isAfterFirstIndexBeforeFirstSuppressedPass(trace.decisionIndex, roundOneFirstHandCapDecisionIndex)) {
+      roundOnePlayCardCountAfterFirstHandCapBeforeFirstSuppressedPass += 1;
+    }
     roundOneMaxBoardAfterSelectedMove = Math.max(
       roundOneMaxBoardAfterSelectedMove ?? analysis.roundOneBoardAfterSelectedMove,
-      analysis.roundOneBoardAfterSelectedMove,
+      analysis.roundOneBoardAfterSelectedMove
     );
     roundOneMinHandAfterSelectedMove = Math.min(
       roundOneMinHandAfterSelectedMove ?? analysis.estimatedHandCountAfterSelectedMove,
-      analysis.estimatedHandCountAfterSelectedMove,
+      analysis.estimatedHandCountAfterSelectedMove
     );
 
-    const boardFloorReached =
-      analysis.roundOneBoardAfterSelectedMove >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR;
-    const handCapReached =
-      analysis.estimatedHandCountAfterSelectedMove <= ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP;
+    const boardFloorReached = analysis.roundOneBoardAfterSelectedMove >= ROUND_ONE_OVERINVESTMENT_BOARD_AFTER_FLOOR;
+    const handCapReached = analysis.estimatedHandCountAfterSelectedMove <= ROUND_ONE_OVERINVESTMENT_HAND_AFTER_CAP;
     const baseGeometryReached = boardFloorReached && handCapReached;
 
     if (boardFloorReached) roundOneBoardFloorReachedCount += 1;
     if (handCapReached) roundOneHandCapReachedCount += 1;
     if (baseGeometryReached) {
       roundOneGuardBaseGeometryCount += 1;
-      roundOneFirstBaseGeometryDecisionIndex ??= trace.decisionIndex;
     }
     if (analysis.roundOneOverinvestmentRecommended) {
       roundOneRecommendedCount += 1;
-      roundOneFirstRecommendedDecisionIndex ??= trace.decisionIndex;
     }
   });
 
@@ -732,11 +863,52 @@ const buildRoundOneGuardTelemetry = (
     roundOneSuppressedPassCount,
     roundOneMaxBoardAfterSelectedMove,
     roundOneMinHandAfterSelectedMove,
+    roundOneFirstPlayCardDecisionIndex,
+    roundOneFirstBoardFloorDecisionIndex,
+    roundOneFirstHandCapDecisionIndex,
     roundOneFirstBaseGeometryDecisionIndex,
     roundOneFirstRecommendedDecisionIndex,
+    roundOneFirstSuppressedPassDecisionIndex,
+    roundOnePlayCardCountBeforeFirstSuppressedPass:
+      roundOneFirstSuppressedPassDecisionIndex === null ? null : roundOnePlayCardCountBeforeFirstSuppressedPass,
+    roundOneBoardAfterSelectedMoveAtFirstSuppressedPass,
+    roundOneHandAfterSelectedMoveAtFirstSuppressedPass,
+    roundOneScoreDeltaAtFirstSuppressedPass,
+    roundOneFirstPlayToFirstSuppressedPassDecisionGap: decisionGapToFirstSuppressedPass(
+      roundOneFirstPlayCardDecisionIndex
+    ),
+    roundOneFirstBoardFloorToFirstSuppressedPassDecisionGap: decisionGapToFirstSuppressedPass(
+      roundOneFirstBoardFloorDecisionIndex
+    ),
+    roundOneFirstHandCapToFirstSuppressedPassDecisionGap: decisionGapToFirstSuppressedPass(
+      roundOneFirstHandCapDecisionIndex
+    ),
+    roundOneFirstBaseGeometryToFirstSuppressedPassDecisionGap: decisionGapToFirstSuppressedPass(
+      roundOneFirstBaseGeometryDecisionIndex
+    ),
+    roundOneContinuePlayCardTraceCount,
+    roundOneContinuePlayCardTraceCountBeforeFirstSuppressedPass,
+    roundOnePlayCardCountAfterFirstBaseGeometryBeforeFirstSuppressedPass:
+      roundOneFirstBaseGeometryDecisionIndex === null
+        ? null
+        : roundOnePlayCardCountAfterFirstBaseGeometryBeforeFirstSuppressedPass,
+    roundOnePlayCardCountAfterFirstBoardFloorBeforeFirstSuppressedPass:
+      roundOneFirstBoardFloorDecisionIndex === null
+        ? null
+        : roundOnePlayCardCountAfterFirstBoardFloorBeforeFirstSuppressedPass,
+    roundOnePlayCardCountAfterFirstHandCapBeforeFirstSuppressedPass:
+      roundOneFirstHandCapDecisionIndex === null
+        ? null
+        : roundOnePlayCardCountAfterFirstHandCapBeforeFirstSuppressedPass,
     roundOneScoreDeltaBehindCount,
     roundOneScoreDeltaTiedCount,
     roundOneScoreDeltaAheadCount,
+    roundOneScoreDeltaBehindBeforeFirstSuppressedPassCount,
+    roundOneScoreDeltaTiedBeforeFirstSuppressedPassCount,
+    roundOneScoreDeltaAheadBeforeFirstSuppressedPassCount,
+    roundOneScoreDeltaBehindAfterFirstSuppressedPassCount,
+    roundOneScoreDeltaTiedAfterFirstSuppressedPassCount,
+    roundOneScoreDeltaAheadAfterFirstSuppressedPassCount,
     roundOneReasonNoneCount,
     roundOneReasonBoardLimitCount,
     roundOneReasonLowFutureHandCount,
@@ -749,9 +921,14 @@ const buildRoundOneGuardTelemetry = (
     roundOneExceptionSingleMoveCatchUpCount,
     roundOneExceptionSingleCardHandCount,
     roundOneSelectedCardAdvantageCount,
+    roundOneExceptionCardAdvantageBeforeFirstSuppressedPassCount,
+    roundOneExceptionSingleMoveCatchUpBeforeFirstSuppressedPassCount,
+    roundOneExceptionNonPlayCardBeforeFirstSuppressedPassCount,
+    roundOneSelectedCardAdvantageBeforeFirstSuppressedPassCount,
     roundOneSelectedWouldLeaveNoPositiveUnitMoveCount,
     roundOneSelectedWouldLeaveNoUnitTempoCardCount,
     roundOneCatchUpSingleMoveCount,
+    roundOneCatchUpSingleMoveBeforeFirstSuppressedPassCount,
     roundOneCatchUpImpossibleCount,
     roundOneRecommendationPreserveFutureHandCount,
     roundOneRecommendationSacrificeRoundCount,
@@ -788,7 +965,7 @@ const classifySuppressedPassCandidate = (trace: AiDecisionTrace): BenchmarkSuspi
 };
 
 const analyzeSuspiciousPassTrace = (
-  trace: AiDecisionTrace,
+  trace: AiDecisionTrace
 ):
   | {
       readonly shouldEmit: true;
@@ -906,8 +1083,15 @@ const buildTraceFindings = ({
               specialOnlyHand: trace.handShapeAnalysis?.specialOnlyHand ?? null,
               futureRoundHandQuality: trace.handShapeAnalysis?.futureRoundHandQuality ?? null,
             },
-            idParts: [descriptor.policyId, record.matchupId, record.seed, record.mirrorIndex, trace.seatId, trace.decisionIndex],
-          }),
+            idParts: [
+              descriptor.policyId,
+              record.matchupId,
+              record.seed,
+              record.mirrorIndex,
+              trace.seatId,
+              trace.decisionIndex,
+            ],
+          })
         );
       }
 
@@ -922,8 +1106,15 @@ const buildTraceFindings = ({
               count: 1,
               message: `${descriptor.policyId} passed in a state that merits review.`,
               evidence: suspiciousPass.evidence,
-              idParts: [descriptor.policyId, record.matchupId, record.seed, record.mirrorIndex, trace.seatId, trace.decisionIndex],
-            }),
+              idParts: [
+                descriptor.policyId,
+                record.matchupId,
+                record.seed,
+                record.mirrorIndex,
+                trace.seatId,
+                trace.decisionIndex,
+              ],
+            })
           );
         } else if (suspiciousPass.suppressionCategory) {
           incrementCount(suppressedSuspiciousPassCountsByCategory, suspiciousPass.suppressionCategory);
@@ -952,8 +1143,15 @@ const buildTraceFindings = ({
               candidateWeatheredOwnRowPlayCount: weather.candidateWeatheredOwnRowPlayCount,
               candidateWeatheredOpponentRowPlayCount: weather.candidateWeatheredOpponentRowPlayCount,
             },
-            idParts: [descriptor.policyId, record.matchupId, record.seed, record.mirrorIndex, trace.seatId, trace.decisionIndex],
-          }),
+            idParts: [
+              descriptor.policyId,
+              record.matchupId,
+              record.seed,
+              record.mirrorIndex,
+              trace.seatId,
+              trace.decisionIndex,
+            ],
+          })
         );
       }
 
@@ -980,8 +1178,15 @@ const buildTraceFindings = ({
               bestReviveValueBucket: medic.bestReviveValueBucket,
               medicPlayCandidateCount: medic.medicPlayCandidateCount,
             },
-            idParts: [descriptor.policyId, record.matchupId, record.seed, record.mirrorIndex, trace.seatId, trace.decisionIndex],
-          }),
+            idParts: [
+              descriptor.policyId,
+              record.matchupId,
+              record.seed,
+              record.mirrorIndex,
+              trace.seatId,
+              trace.decisionIndex,
+            ],
+          })
         );
       }
     });
@@ -1006,7 +1211,8 @@ const buildRoundOneOverinvestmentFindings = ({
     SEATS.forEach((seatId) => {
       if (seatPolicy(record, seatId) !== "legal-heuristic-v1") return;
       const round1PlayCardCount = result.steps.filter(
-        (step) => step.phase === "playing" && step.round === 1 && step.seatId === seatId && step.chosenMoveKind === "play_card",
+        (step) =>
+          step.phase === "playing" && step.round === 1 && step.seatId === seatId && step.chosenMoveKind === "play_card"
       ).length;
       const matchOutcome = record.resultBySeat[seatId];
       const shouldWarn = round1PlayCardCount >= 8 && matchOutcome === "loss";
@@ -1035,7 +1241,7 @@ const buildRoundOneOverinvestmentFindings = ({
             ...buildRoundOneGuardTelemetry(result, seatId),
           },
           idParts: [seatPolicy(record, seatId), record.matchupId, record.seed, record.mirrorIndex, seatId],
-        }),
+        })
       );
     });
   });
@@ -1096,7 +1302,7 @@ const buildTuningQueueItem = ({
 
 const buildTuningQueue = (findings: readonly BenchmarkFailureFinding[]): readonly BenchmarkFailureTuningQueueItem[] => {
   const resourceFindings = findings.filter(
-    (finding) => finding.kind === "round_one_overinvestment" || finding.kind === "round_three_low_resource",
+    (finding) => finding.kind === "round_one_overinvestment" || finding.kind === "round_three_low_resource"
   );
   const weatherFindings = findings.filter((finding) => finding.kind === "weathered_row_play");
   const medicFindings = findings.filter((finding) => finding.kind === "medic_timing_risk");
@@ -1106,7 +1312,7 @@ const buildTuningQueue = (findings: readonly BenchmarkFailureFinding[]): readonl
       (finding.kind === "deck_skew" ||
         finding.kind === "matchup_skew" ||
         finding.kind === "round_one_overinvestment" ||
-        finding.kind === "round_three_low_resource"),
+        finding.kind === "round_three_low_resource")
   );
   const suspiciousPassFindings = findings.filter((finding) => finding.kind === "suspicious_pass");
 
@@ -1166,18 +1372,16 @@ const formatList = (values: readonly string[]) => (values.length === 0 ? "none" 
 
 const buildMarkdownReport = (summary: BenchmarkFailureMiningSummary) => {
   const severityRows = FINDING_SEVERITIES.map(
-    (severity) => `| ${severity} | ${summary.findingCountsBySeverity[severity] ?? 0} |`,
+    (severity) => `| ${severity} | ${summary.findingCountsBySeverity[severity] ?? 0} |`
   ).join("\n");
-  const kindRows = FINDING_KINDS.map(
-    (kind) => `| ${kind} | ${summary.findingCountsByKind[kind] ?? 0} |`,
-  ).join("\n");
+  const kindRows = FINDING_KINDS.map((kind) => `| ${kind} | ${summary.findingCountsByKind[kind] ?? 0} |`).join("\n");
   const topRows =
     summary.topFindings.length === 0
       ? "| none | none | none | 0 | none |"
       : summary.topFindings
           .map(
             (finding) =>
-              `| ${finding.severity} | ${finding.kind} | ${finding.policyId ?? finding.deckPresetId ?? "suite"} | ${finding.count} | ${finding.message} |`,
+              `| ${finding.severity} | ${finding.kind} | ${finding.policyId ?? finding.deckPresetId ?? "suite"} | ${finding.count} | ${finding.message} |`
           )
           .join("\n");
   const deferredRows =
@@ -1185,15 +1389,14 @@ const buildMarkdownReport = (summary: BenchmarkFailureMiningSummary) => {
       ? "| none | none |"
       : summary.deferredSignals.map((signal) => `| ${signal.kind} | ${signal.reason} |`).join("\n");
   const suppressedRows = SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES.map(
-    (category) => `| ${category} | ${summary.suppressedSuspiciousPassCountsByCategory[category] ?? 0} |`,
+    (category) => `| ${category} | ${summary.suppressedSuspiciousPassCountsByCategory[category] ?? 0} |`
   ).join("\n");
   const queueRows =
     summary.tuningQueue.length === 0
       ? "| none | none | none | 0 | none |"
       : summary.tuningQueue
           .map(
-            (item) =>
-              `| ${item.rank} | ${item.clusterId} | ${item.severity} | ${item.count} | ${item.recommendation} |`,
+            (item) => `| ${item.rank} | ${item.clusterId} | ${item.severity} | ${item.count} | ${item.recommendation} |`
           )
           .join("\n");
 
@@ -1257,11 +1460,11 @@ const buildTuningQueueMarkdown = (summary: BenchmarkFailureMiningSummary) => {
       : summary.tuningQueue
           .map(
             (item) =>
-              `| ${item.rank} | ${item.clusterId} | ${item.severity} | ${item.count} | ${formatList(item.affectedFactions)} | ${item.recommendation} |`,
+              `| ${item.rank} | ${item.clusterId} | ${item.severity} | ${item.count} | ${formatList(item.affectedFactions)} | ${item.recommendation} |`
           )
           .join("\n");
   const suppressedRows = SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES.map(
-    (category) => `| ${category} | ${summary.suppressedSuspiciousPassCountsByCategory[category] ?? 0} |`,
+    (category) => `| ${category} | ${summary.suppressedSuspiciousPassCountsByCategory[category] ?? 0} |`
   ).join("\n");
   const topCluster = summary.tuningQueue[0]?.clusterId ?? "none";
   const recommendedScope =
@@ -1306,7 +1509,7 @@ This queue is derived from public benchmark IDs and aggregate failure-mining fin
 };
 
 export function buildBenchmarkFailureMiningReport(
-  input: BuildBenchmarkFailureMiningInput,
+  input: BuildBenchmarkFailureMiningInput
 ): BenchmarkFailureMiningResult {
   const contexts = alignDebugResults(input.records, input.debugResults);
   const traceResult = buildTraceFindings({ ...input, contexts });
@@ -1319,7 +1522,7 @@ export function buildBenchmarkFailureMiningReport(
   ].sort(compareBenchmarkFailureFindings);
   const suppressedSuspiciousPassCount = SUSPICIOUS_PASS_SUPPRESSION_CATEGORIES.reduce(
     (total, category) => total + (traceResult.suppressedSuspiciousPassCountsByCategory[category] ?? 0),
-    0,
+    0
   );
   const suppressedFindingCountsByKind = buildZeroCounts(FINDING_KINDS);
   suppressedFindingCountsByKind.suspicious_pass = suppressedSuspiciousPassCount;
@@ -1336,7 +1539,8 @@ export function buildBenchmarkFailureMiningReport(
       : ([
           {
             kind: "round_three_low_resource",
-            reason: "Decision traces were not collected for this run, so round-3 hand-quality signals were unavailable.",
+            reason:
+              "Decision traces were not collected for this run, so round-3 hand-quality signals were unavailable.",
           },
           {
             kind: "suspicious_pass",
@@ -1344,7 +1548,8 @@ export function buildBenchmarkFailureMiningReport(
           },
           {
             kind: "weathered_row_play",
-            reason: "Decision traces were not collected for this run, so weather-placement diagnostics were unavailable.",
+            reason:
+              "Decision traces were not collected for this run, so weather-placement diagnostics were unavailable.",
           },
           {
             kind: "medic_timing_risk",
@@ -1361,11 +1566,11 @@ export function buildBenchmarkFailureMiningReport(
     findingCount: findings.length,
     findingCountsByKind: buildCounts(
       findings.map((finding) => finding.kind),
-      FINDING_KINDS,
+      FINDING_KINDS
     ),
     findingCountsBySeverity: buildCounts(
       findings.map((finding) => finding.severity),
-      FINDING_SEVERITIES,
+      FINDING_SEVERITIES
     ),
     suppressedFindingCountsByKind,
     suppressedSuspiciousPassCountsByCategory: traceResult.suppressedSuspiciousPassCountsByCategory,
