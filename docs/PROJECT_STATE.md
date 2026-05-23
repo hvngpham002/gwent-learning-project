@@ -2,7 +2,8 @@
 
 ## Last Updated
 
-- Date: 2026-05-22
+- Date: 2026-05-23
+- Active Cluster F handoff: `cFp60` Known-Preset Sampler Contract And Public Action Abstraction (`docs/spec/2026-05-23-cFp60-specs.md`). This is a sampler-readiness infrastructure spec, not a search-playing policy. It asks for a benchmark-only `known_preset_decklist_prior`, sampled-world validation summaries, hidden-info-safe public action abstraction, deterministic sampler-readiness artifacts for the current and robust v1 starter suites, AI Lab/product metadata updates after implementation, and a cFp60 report/decision note. It explicitly forbids PIMC/ISMCTS/rollouts/oracle search/product search AI, AI behavior changes, engine rule/legal-move changes, benchmark suite-definition changes, failure-mining/rating changes, catalog/deck changes, product gameplay UI changes, and hidden payload serialization.
 - Completed evaluation-infrastructure phase: `cFp59` Search-Readiness Root Profiler (`docs/spec/2026-05-22-cFp59-specs.md`, `docs/research/literature/ai/decisions/2026-05-22-cfp59-search-readiness-root-profiler.md`, `audit/reports/2026-05-22-cFp59-report.md`). Adds opt-in benchmark-only root observer plumbing that records public scalar/count metrics after legal moves are generated and before policy selection, without influencing selected moves. Adds deterministic search-readiness artifact serialization, hidden-info scanning, and npm commands `benchmark:search-readiness:v1-starter-matrix` / `benchmark:search-readiness:v1-robust`. Generated committed cFp59 artifacts under `benchmark-v1-starter-matrix-v1/search-readiness/cFp59/` (120 matches, 4,042 roots, max legal moves 32, max target expansion 26) and `benchmark-v1-starter-matrix-robust-v1/search-readiness/cFp59/` (1,000 matches, 32,487 roots, max legal moves 32, max target expansion 26). Robust repeat hashes matched, and targeted hidden-info scanning passed. AI Lab/product policy metadata now points at cFp59 as profiler/evaluation infrastructure, not search gameplay. No PIMC, ISMCTS, rollout search, oracle/debug search, product-selectable search AI, AI policy behavior, engine rules, legal moves, benchmark suite definitions, benchmark match records, failure-mining classifiers/artifacts, rating formulas/artifacts, UI gameplay behavior, catalog/deck data, product difficulty, or browser benchmark execution changed. Next recommended step: a benchmark-only sampler-first `determinized-pimc-probe-v0` path if it first adds `known_preset_decklist_prior`, sampled-world validation, and public action abstraction; otherwise stop at sampler/profiler refinement.
 - Completed search-readiness/design phase: `cFp58` Search-Readiness And ISMCTS Probe Design (`docs/spec/2026-05-22-cFp58-specs.md`, `docs/research/literature/ai/decisions/2026-05-22-cfp58-search-readiness-ismcts-probe-design.md`, `audit/reports/2026-05-22-cFp58-report.md`). Maps the current deterministic engine, legal moves, `SeatObservation`, headless simulation, batch benchmark, safe export/action encoding, decision diagnostics, failure mining, and rating ledger substrate to Batch A/B search guardrails. Defines future variant labels `random-rollout-probe-v0`, `determinized-pimc-probe-v0`, `so-ismcts-probe-v0`, and `oracle-pimc-debug-v0`; separates safe, sampler-required, and unsafe oracle/debug classes; documents the observation/determinization contract and named decklist priors; specifies branching/budget and Long-style determinization-risk metrics; and recommends `cFp59` implement a hidden-info-safe search-readiness profiler, not a search-playing policy. AI Lab/product policy metadata now points at cFp58 as research/search-readiness planning. No AI policy behavior, engine rules, legal moves, benchmark records/artifacts, failure mining, rating formulas/artifacts, UI gameplay behavior, catalog/deck data, search implementation, training, or product difficulty changed.
 - Completed evaluation-infrastructure phase: `cFp57` Multi-Period Rating Ledger (`docs/spec/2026-05-22-cFp57-specs.md`, `docs/research/literature/ai/decisions/2026-05-22-cfp57-multi-period-rating-ledger.md`, `audit/reports/2026-05-22-cFp57-report.md`). Freezes current committed `ratings/latest` artifacts as named `cFp57` snapshots for `benchmark-v1-starter-matrix-v1`, `benchmark-v1-starter-matrix-expanded-v1`, and `benchmark-v1-starter-matrix-robust-v1`; updates each rating ledger; generates `cFp46-vs-cFp57` for current/expanded, `cFp48-vs-cFp57` for robust, and `cFp57-vs-latest` consistency comparisons for all three suites. Current and expanded baseline comparisons remain zero-delta/no-change; robust has 18 no-change and 4 uncertain entries with max abs `deltaOverCombinedRd=0.0995`, below the directional threshold. All cFp57-vs-latest comparisons are 22/22 `no_change` with zero deltas. AI Lab/product policy metadata now points at cFp57 as evaluation infrastructure. No AI policy behavior, engine rules, legal moves, benchmark record generation, failure-mining classifiers, rating formulas, UI gameplay behavior, catalog/deck data, search/training code, or product difficulty changed. Next recommended step: search-readiness/ISMCTS probe design unless a future named rating comparison shows a clear directional regression tied to a narrow public failure cluster.
@@ -486,38 +487,37 @@ Latest Engine Rule implementation:
 Cluster F has a playable product-facing `legal-heuristic-v1`, hidden-info-safe
 decision diagnostics, deterministic benchmark artifacts, calibrated
 failure-mining artifacts, a deterministic Glicko-1 rating layer for the v1
-starter matrices, the cFp51 casebook over cFp50 round-one guard telemetry, the
-cFp53 selected-play repair that converts the two cFp52 direct guard-recommended
-contradictions into selected overinvestment passes while preserving the
-historical cFp52 before-fix artifacts, the cFp54 casebook over the 70
-remaining robust round-one overinvestment findings, the cFp55 temporal spend
-instrumentation, and the cFp56 temporal casebook over those 70 robust rows.
-Batch A and Batch B remain the controlling research notes for search and
-evaluation-ladder work:
+starter matrices, multi-period rating snapshots/comparisons, robust
+failure-mining casebooks through cFp56, cFp58 search-readiness design, and cFp59
+root-profiler artifacts showing tractable benchmark root branching (robust max
+legal moves 32, max target expansion 26). Batch A and Batch B remain the
+controlling research notes for search and evaluation-ladder work:
 `docs/research/literature/ai/decisions/2026-05-09-batch-a-search-baseline.md`
 and
 `docs/research/literature/ai/decisions/2026-05-09-batch-b-evaluation-ladder.md`.
-The benchmark stack still does not implement multi-period ratings, search,
+The benchmark stack still does not implement safe sampled-world construction,
+public action abstraction across sampled worlds, PIMC, ISMCTS, rollout search,
 self-play, model training, mechanics/competitive robustness probes, or product
 difficulty.
 
 Next recommended sequence:
 
-1. pause hand-tuned `legal-heuristic-v1` round-one tuning; cFp56 did not find a
-   narrow public behavior rule and does not justify threshold widening,
-   cumulative-spend tuning, or exception weakening;
-2. move the next Cluster F phase toward ratings/search/evaluation-ladder depth,
-   such as multi-period rating snapshots or search-readiness/ISMCTS probe
-   design grounded in the existing Batch A and Batch B notes;
-3. if round-one heuristic tuning is reopened later, replay the single cFp56
-   Bucket B public fixture before any behavior change;
-4. preserve the cFp52 before-fix debug artifacts and cFp53 post-repair debug
-   artifacts as paired historical evidence;
+1. implement cFp60 as sampler-readiness infrastructure only:
+   `known_preset_decklist_prior`, sampled-world validation summaries, and
+   hidden-info-safe public action abstraction over the current/robust starter
+   suites;
+2. keep hand-tuned `legal-heuristic-v1` round-one tuning paused unless a future
+   public fixture justifies a narrow repair;
+3. after cFp60, choose between sampler repair, random-rollout sanity checking,
+   or a first benchmark-only `determinized-pimc-probe-v0` based on validation
+   status and public-action collision readout;
+4. preserve cFp52 before-fix and cFp53 post-repair debug artifacts as paired
+   historical evidence;
 5. keep TrueSkill-compatible schema as a later evaluation-layer option after
    Glicko-1 artifact semantics are stable across more benchmark refreshes;
-6. keep approximate best-response probes,
-   ISMCTS/determinized search, OSFP, NFSP, Deep CFR, ReBeL, and model
-   training deferred until they consume the existing ledger/artifact foundation.
+6. keep ISMCTS, OSFP, NFSP, Deep CFR, ReBeL, approximate best-response probes,
+   model training, and product difficulty tiers deferred until they consume the
+   existing ledger/artifact foundation and the sampler/action contracts.
 
 Pre-AI Cluster E and Cluster C follow-ups remain open and can run in
 parallel with the research-foundation work:
