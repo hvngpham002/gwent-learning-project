@@ -3,7 +3,7 @@
 **Date:** 2026-05-23
 **Spec:** `docs/spec/2026-05-23-cFp60-specs.md`
 **Branch:** `codex/cFp60-known-preset-sampler-contract`
-**Commits:** `2f9c2aa` (initial), `7d26e25` (Repair 1: MatchState counts), `37471bb` (Repair 2: opponent-seat prior), `<REPAIR3_SHA>` (Repair 3: deferred zero-sample counts)
+**Commits:** `2f9c2aa` (initial), `7d26e25` (Repair 1: MatchState counts), `37471bb` (Repair 2: opponent-seat prior), `f72e61c` (Repair 3: deferred zero-sample counts)
 
 ## Summary
 
