@@ -114,10 +114,10 @@ describe("benchmark sampler readiness - known_preset_decklist_prior", () => {
       prior2!.priorRemainingCardCount,
     );
     expect(prior1!.priorRemainingCardCount).toBe(
-      prior1!.totalDeckCardCount - 5,
+      prior1!.mainDeckCardCount - 5,
     );
     expect(prior2!.priorRemainingCardCount).toBe(
-      prior2!.totalDeckCardCount - 10,
+      prior2!.mainDeckCardCount - 10,
     );
   });
 
@@ -137,9 +137,9 @@ describe("benchmark sampler readiness - known_preset_decklist_prior", () => {
 });
 
 describe("benchmark sampler readiness - sampled-world validation", () => {
-  it("returns deferred for reasonable opponent counts (no real sampled multisets)", () => {
+  it("returns deferred for reasonable opponent counts against known opponent prior", () => {
     const result = buildSampledWorldValidation({
-      deckPresetId: "official-monsters-starter",
+      deckPresetId: "official-northern-realms-starter",
       opponentHandCount: 10,
       opponentDeckCount: 12,
       sampleCount: 8,
@@ -153,6 +153,33 @@ describe("benchmark sampler readiness - sampled-world validation", () => {
     expect(result.opponentHandCount).toBe(10);
     expect(result.opponentDeckCount).toBe(12);
     expect(result.invalidReasonCounts).toEqual({});
+  });
+
+  it("returns deferred for Northern Realms vs Nilfgaard root where opponent has 10 hand + 24 deck = 34 against Nilfgaard prior with 24 main deck cards", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-northern-realms-starter",
+      opponentHandCount: 10,
+      opponentDeckCount: 24,
+      sampleCount: 8,
+      priorTotalCardCount: 24,
+    });
+
+    expect(result.rootValidationStatus).toBe("invalid");
+    expect(result.sampleCountInvalid).toBeGreaterThan(0);
+  });
+
+  it("returns deferred when opponent prior has sufficient main deck cards to cover observed counts", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-northern-realms-starter",
+      opponentHandCount: 10,
+      opponentDeckCount: 24,
+      sampleCount: 8,
+      priorTotalCardCount: 34,
+    });
+
+    expect(result.rootValidationStatus).toBe("deferred");
+    expect(result.sampleCountInvalid).toBe(0);
+    expect(result.sampleCountValid).toBe(8);
   });
 
   it("returns invalid when observed cards exceed prior total", () => {
@@ -195,6 +222,20 @@ describe("benchmark sampler readiness - sampled-world validation", () => {
     expect(result.rootValidationStatus).toBe("invalid");
     expect(result.sampleCountInvalid).toBeGreaterThan(0);
     expect(result.invalidReasonCounts["opponent_hand_exceeds_prior"]).toBe(1);
+  });
+
+  it("returns deferred for consistent counts (no real sampled multisets implemented)", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 5,
+      opponentDeckCount: 15,
+      sampleCount: 8,
+      priorTotalCardCount: 25,
+    });
+
+    expect(result.rootValidationStatus).toBe("deferred");
+    expect(result.sampleCountValid).toBe(8);
+    expect(result.sampleCountInvalid).toBe(0);
   });
 
   it("produces scalar bucket outputs", () => {

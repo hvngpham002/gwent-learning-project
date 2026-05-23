@@ -628,21 +628,23 @@ export const buildSamplerReadinessRootRecord = ({
 
   const opponentSeatId: SeatId =
     seatId === "seat_a" ? "seat_b" : "seat_a";
+  const opponentSeat = seats[opponentSeatId];
+  const opponentDeckPresetId = opponentSeat.deckPresetId;
+  const opponentFaction = opponentSeat.faction;
 
-  const ownHandCount = state.seats[seatId].hand.length;
   const opponentHandCount = state.seats[opponentSeatId].hand.length;
   const opponentDeckCount = state.seats[opponentSeatId].deck.length;
 
-  const priorInfo =
+  const opponentPriorInfo =
     buildKnownPresetDecklistPrior({
-      deckPresetId,
-      faction,
-      visibleHandCount: ownHandCount,
+      deckPresetId: opponentDeckPresetId,
+      faction: opponentFaction,
+      visibleHandCount: opponentHandCount,
     }) ?? {
       priorId: KNOWN_PRESET_DECKLIST_PRIOR_ID,
       priorStatus: "prior_unavailable" as const,
-      deckPresetId,
-      faction,
+      deckPresetId: opponentDeckPresetId,
+      faction: opponentFaction,
       mainDeckCardCount: 0,
       sideDeckCardCount: 0,
       totalDeckCardCount: 0,
@@ -655,7 +657,7 @@ export const buildSamplerReadinessRootRecord = ({
     opponentHandCount,
     opponentDeckCount,
     sampleCount: DEFAULT_SAMPLE_COUNT,
-    priorTotalCardCount: priorInfo.mainDeckCardCount,
+    priorTotalCardCount: opponentPriorInfo.mainDeckCardCount,
   });
 
   const abstractionMap = new Map<string, PublicSearchActionAbstraction>();
@@ -727,8 +729,8 @@ export const buildSamplerReadinessRootRecord = ({
     policyId,
     faction,
     deckPresetId,
-    priorId: priorInfo.priorId,
-    priorStatus: priorInfo.priorStatus,
+    priorId: opponentPriorInfo.priorId,
+    priorStatus: opponentPriorInfo.priorStatus,
     sampleCountRequested: validation.sampleCountRequested,
     sampleCountGenerated: validation.sampleCountGenerated,
     sampleCountValid: validation.sampleCountValid,

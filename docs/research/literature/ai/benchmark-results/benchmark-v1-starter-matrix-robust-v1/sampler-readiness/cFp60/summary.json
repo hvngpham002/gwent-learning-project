@@ -24,9 +24,7 @@
     "skellige"
   ],
   "hiddenInfoSafetyNote": "Sampler-readiness artifacts contain public root metadata, scalar/count summaries, and action-abstraction statistics only. They exclude raw state, private card payloads, command/event payloads, runtime card identifiers, and sampled hidden identities.",
-  "invalidReasonCounts": {
-    "observed_exceeds_prior_total": 2297
-  },
+  "invalidReasonCounts": {},
   "largestBucketStats": {
     "average": 3.387,
     "count": 32487,
@@ -119,10 +117,10 @@
   },
   "rootRecordCount": 32487,
   "sampleCountStats": {
-    "average": 7.434,
+    "average": 8,
     "count": 32487,
     "max": 8,
-    "min": 0,
+    "min": 8,
     "p50": 8,
     "p90": 8,
     "p95": 8
@@ -137,7 +135,6 @@
   },
   "suiteId": "benchmark-v1-starter-matrix-robust-v1",
   "validationStatusCounts": {
-    "deferred": 30190,
-    "invalid": 2297
+    "deferred": 32487
   }
 }

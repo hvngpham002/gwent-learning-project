@@ -62,18 +62,17 @@
 
 | Validation status | Count |
 |---|---:|
-| deferred | 30190 |
-| invalid | 2297 |
+| deferred | 32487 |
 
 ## Invalid Reason Counts
 
 | Reason | Count |
 |---|---:|
-| observed_exceeds_prior_total | 2297 |
+
 
 ## Sample Count Stats
 
-- samples: count 32487, min 0, max 8, avg 7.434, p50 8, p90 8, p95 8
+- samples: count 32487, min 8, max 8, avg 8, p50 8, p90 8, p95 8
 
 ## Public Action Count Stats
 
