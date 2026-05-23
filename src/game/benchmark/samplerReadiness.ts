@@ -382,8 +382,10 @@ export const buildSampledWorldValidation = (
     sampleCountInvalid += 1;
   }
 
+  // Real hidden multisets are not implemented; deferred roots report zero samples.
+  // Invalid roots keep their mismatch counts from the early checks above.
   if (sampleCountInvalid === 0) {
-    sampleCountValid = sampleCount;
+    sampleCountValid = 0;
   }
 
   let opponentHiddenPoolSizeBucket = "empty";

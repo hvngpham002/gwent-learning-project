@@ -1,9 +1,9 @@
-# Cluster F cFp60: Known-Preset Sampler Contract Decision Note (Repair 2)
+# Cluster F cFp60: Known-Preset Sampler Contract Decision Note (Repair 3)
 
 **Date:** 2026-05-23
 **Spec:** `docs/spec/2026-05-23-cFp60-specs.md`
 **Branch:** `codex/cFp60-known-preset-sampler-contract`
-**Commits:** `2f9c2aa` (initial), `7d26e25` (Repair 1: MatchState counts), `b8c3d3f` (Repair 2: opponent-seat prior)
+**Commits:** `2f9c2aa` (initial), `7d26e25` (Repair 1: MatchState counts), `37471bb` (Repair 2: opponent-seat prior), `<REPAIR3_SHA>` (Repair 3: deferred zero-sample counts)
 
 ## Summary
 
@@ -30,7 +30,7 @@ cFp60 implements the sampler-readiness contract layer for the Gwent AI benchmark
 ## Stop Conditions Check
 
 - No true hidden opponent hand identity or deck order required in safe artifact paths.
-- Sampled worlds validated without serializing hidden identities.
+- Public count/prior consistency checked; hidden-multiset materialization deferred. No hidden identities serialized.
 - Action abstraction works without raw move ids, source ids, card names, or option ids.
 - Robust sampler-readiness artifacts are deterministic (identical hashes on repeat run).
 - No selected moves, command execution, policy behavior, or legal move generation changed.

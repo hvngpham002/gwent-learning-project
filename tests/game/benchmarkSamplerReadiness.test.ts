@@ -148,7 +148,8 @@ describe("benchmark sampler readiness - sampled-world validation", () => {
 
     expect(result.rootValidationStatus).toBe("deferred");
     expect(result.sampleCountRequested).toBe(8);
-    expect(result.sampleCountValid).toBe(8);
+    expect(result.sampleCountGenerated).toBe(0);
+    expect(result.sampleCountValid).toBe(0);
     expect(result.sampleCountInvalid).toBe(0);
     expect(result.opponentHandCount).toBe(10);
     expect(result.opponentDeckCount).toBe(12);
@@ -178,8 +179,9 @@ describe("benchmark sampler readiness - sampled-world validation", () => {
     });
 
     expect(result.rootValidationStatus).toBe("deferred");
+    expect(result.sampleCountGenerated).toBe(0);
     expect(result.sampleCountInvalid).toBe(0);
-    expect(result.sampleCountValid).toBe(8);
+    expect(result.sampleCountValid).toBe(0);
   });
 
   it("returns invalid when observed cards exceed prior total", () => {
@@ -234,8 +236,41 @@ describe("benchmark sampler readiness - sampled-world validation", () => {
     });
 
     expect(result.rootValidationStatus).toBe("deferred");
-    expect(result.sampleCountValid).toBe(8);
+    expect(result.sampleCountGenerated).toBe(0);
+    expect(result.sampleCountValid).toBe(0);
     expect(result.sampleCountInvalid).toBe(0);
+  });
+
+  it("deferred roots report zero generated/valid samples while keeping requested count", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-northern-realms-starter",
+      opponentHandCount: 5,
+      opponentDeckCount: 15,
+      sampleCount: 8,
+      priorTotalCardCount: 25,
+    });
+
+    expect(result.rootValidationStatus).toBe("deferred");
+    expect(result.sampleCountRequested).toBe(8);
+    expect(result.sampleCountGenerated).toBe(0);
+    expect(result.sampleCountValid).toBe(0);
+    expect(result.sampleCountInvalid).toBe(0);
+    expect(result.invalidReasonCounts).toEqual({});
+  });
+
+  it("invalid roots still report invalid status and reason counts", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 20,
+      opponentDeckCount: 15,
+      sampleCount: 8,
+      priorTotalCardCount: 25,
+    });
+
+    expect(result.rootValidationStatus).toBe("invalid");
+    expect(result.sampleCountInvalid).toBeGreaterThan(0);
+    expect(result.invalidReasonCounts["observed_exceeds_prior_total"]).toBe(1);
+    expect(result.sampleCountGenerated).toBeGreaterThan(0);
   });
 
   it("produces scalar bucket outputs", () => {

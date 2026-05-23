@@ -72,7 +72,7 @@
 
 ## Sample Count Stats
 
-- samples: count 4042, min 8, max 8, avg 8, p50 8, p90 8, p95 8
+- samples: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
 
 ## Public Action Count Stats
 
@@ -88,7 +88,7 @@
 
 ## Largest Public Action Root
 
-- root fingerprint: b8eb086c9b882efdc5ee2a6f2b407c4c3bcb6b3091ffe38c7054b574fb5cd701
+- root fingerprint: d3e0414a0e52813cd830e76d86595371c7cad4ddfdf3512bbdf06f3e1afb8f13
 - matchup: starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0
 - seed: starter-matrix-001
 - mirror index: 1
@@ -103,7 +103,7 @@
 
 ## Largest Collision Root
 
-- root fingerprint: 0925f3a459adc909c62ca004a7d4093bfd39c2d0778d087928e09850b8eddab0
+- root fingerprint: 7c00e3c1a7297bca13d48f3e7ab43728cbee24808887cec806dc6bd7bb5df5ce
 - matchup: starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0
 - seed: starter-matrix-002
 - mirror index: 1
