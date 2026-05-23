@@ -1,0 +1,22 @@
+{
+  "artifactHashes": {
+    "report.md": "0c03d9f1e2ec30e53a7a4d0476b8b216b578b40d5c2a46f1c31105fc1425b4f9",
+    "roots.jsonl": "c198ab1e91df68f3ff4045034fb27fed9a27a0ed8c254e2ba1420a8824b9c293",
+    "summary.json": "a4c45d2f0d965297d848ffebf968709bb9f2441db6357e8870539fdb01b6e643"
+  },
+  "explicitNonSearchWarning": "cFp60 sampler-readiness artifacts are evaluation infrastructure only. No rollout, search, action-evaluation, or policy-behavior change occurred. These artifacts do not constitute search strength, a new gameplay policy, or product difficulty.",
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "roots.jsonl",
+    "report.md"
+  ],
+  "hiddenInfoSafetyNote": "Sampler-readiness artifacts contain public root metadata, scalar/count summaries, and action-abstraction statistics only. They exclude raw state, private card payloads, command/event payloads, runtime card identifiers, and sampled hidden identities.",
+  "rootRecordCount": 4042,
+  "rootSchemaVersion": "sampler-readiness-root-v1",
+  "samplerRunId": "benchmark-v1-starter-matrix-v1:sampler-readiness:cFp60",
+  "schemaVersion": "sampler-readiness-artifact-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "sampler-readiness-summary-v1"
+}

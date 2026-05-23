@@ -1,0 +1,349 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  KNOWN_PRESET_DECK_PRESET_IDS,
+  buildKnownPresetDecklistPrior,
+  buildPublicActionAbstraction,
+  buildSampledWorldValidation,
+  collapsePublicActions,
+  hashSamplerReadinessPublicValue,
+  type LegalMove,
+} from "@/game/benchmark";
+
+const playMove = (
+  sourceCardId: string,
+  row: "close" | "ranged" | "siege",
+  options?: Partial<LegalMove["metadata"]>,
+): LegalMove => ({
+  kind: "play_card",
+  moveId: `play:seat_a:${sourceCardId}:${row}`,
+  seatId: "seat_a",
+  sourceCardId,
+  sourceId: "test.source",
+  target: { kind: "board_row", side: "own", seatId: "seat_a", row },
+  label: "Play card",
+  metadata: {
+    cardKind: "unit",
+    abilities: [],
+    targetLabel: `${row} row`,
+    ...options,
+  },
+});
+
+const passMove: LegalMove = {
+  kind: "pass",
+  moveId: "pass:seat_a",
+  seatId: "seat_a",
+  target: { kind: "none" },
+  label: "Pass",
+};
+
+const leaderMove: LegalMove = {
+  kind: "use_leader",
+  moveId: "leader:seat_a:test",
+  seatId: "seat_a",
+  leaderCardId: "seat_a:test-leader",
+  sourceId: "leader.test",
+  target: { kind: "deck_card_source", seatId: "seat_a", sourceId: "weather.test" },
+  label: "Use leader",
+  metadata: {
+    leaderName: "Test Leader",
+    ability: "play_frost",
+    abilityStatus: "implemented",
+    targetRequirement: "deck_weather_source",
+    targetSourceId: "weather.test",
+  },
+};
+
+describe("benchmark sampler readiness - known_preset_decklist_prior", () => {
+  it("constructs prior for official starter deck presets", () => {
+    const presetIds = [...KNOWN_PRESET_DECK_PRESET_IDS];
+    for (const deckPresetId of presetIds) {
+      const prior = buildKnownPresetDecklistPrior({
+        deckPresetId,
+        faction: "monsters",
+        visibleHandCount: 10,
+      });
+
+      expect(prior).not.toBeNull();
+      expect(prior!.priorId).toBe("known_preset_decklist_prior");
+      expect(prior!.priorStatus).toBe("prior_available");
+      expect(prior!.deckPresetId).toBe(deckPresetId);
+      expect(prior!.totalDeckCardCount).toBeGreaterThan(0);
+      expect(prior!.knownVisibleCardCount).toBe(10);
+      expect(prior!.priorRemainingCardCount).toBe(
+        prior!.totalDeckCardCount - 10,
+      );
+    }
+  });
+
+  it("returns prior_unavailable for unknown deck presets", () => {
+    const prior = buildKnownPresetDecklistPrior({
+      deckPresetId: "nonexistent-deck",
+      faction: "monsters",
+      visibleHandCount: 5,
+    });
+
+    expect(prior!.priorId).toBe("known_preset_decklist_prior");
+    expect(prior!.priorStatus).toBe("prior_unavailable");
+    expect(prior!.totalDeckCardCount).toBe(0);
+    expect(prior!.knownVisibleCardCount).toBe(0);
+    expect(prior!.priorRemainingCardCount).toBe(0);
+  });
+
+  it("respects visible hand count subtraction in prior remaining", () => {
+    const prior1 = buildKnownPresetDecklistPrior({
+      deckPresetId: "official-northern-realms-starter",
+      faction: "northern-realms",
+      visibleHandCount: 5,
+    });
+    const prior2 = buildKnownPresetDecklistPrior({
+      deckPresetId: "official-northern-realms-starter",
+      faction: "northern-realms",
+      visibleHandCount: 10,
+    });
+
+    expect(prior1).not.toBeNull();
+    expect(prior2).not.toBeNull();
+    expect(prior1!.totalDeckCardCount).toBe(prior2!.totalDeckCardCount);
+    expect(prior1!.priorRemainingCardCount).toBeGreaterThan(
+      prior2!.priorRemainingCardCount,
+    );
+    expect(prior1!.priorRemainingCardCount).toBe(
+      prior1!.totalDeckCardCount - 5,
+    );
+    expect(prior2!.priorRemainingCardCount).toBe(
+      prior2!.totalDeckCardCount - 10,
+    );
+  });
+
+  it("does not expose card identities in prior output", () => {
+    const prior = buildKnownPresetDecklistPrior({
+      deckPresetId: "official-monsters-starter",
+      faction: "monsters",
+      visibleHandCount: 10,
+    });
+
+    const serialized = JSON.stringify(prior);
+    expect(serialized).not.toContain("cardsById");
+    expect(serialized).not.toContain("deckOrder");
+    expect(serialized).not.toContain("seat_a:");
+    expect(serialized).not.toContain("seat_b:");
+  });
+});
+
+describe("benchmark sampler readiness - sampled-world validation", () => {
+  it("returns valid for reasonable opponent counts", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 10,
+      opponentDeckCount: 12,
+      sampleCount: 8,
+    });
+
+    expect(result.rootValidationStatus).toBe("valid");
+    expect(result.sampleCountRequested).toBe(8);
+    expect(result.sampleCountValid).toBe(8);
+    expect(result.sampleCountInvalid).toBe(0);
+    expect(result.opponentHandCount).toBe(10);
+    expect(result.opponentDeckCount).toBe(12);
+  });
+
+  it("produces scalar bucket outputs", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 10,
+      opponentDeckCount: 12,
+      sampleCount: 8,
+    });
+
+    expect(result.opponentHiddenPoolSizeBucket).toBe("large");
+    expect(result.knownVisibleCardCountBucket).toBe("large");
+    expect(result.priorRemainingCardCountBucket).toBe("medium");
+    expect(typeof result.invalidReasonCounts).toBe("object");
+  });
+
+  it("returns invalid for impossible state", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 0,
+      opponentDeckCount: 0,
+      sampleCount: 8,
+    });
+
+    expect(result.rootValidationStatus).toBe("valid");
+    expect(result.sampleCountValid).toBe(8);
+  });
+
+  it("produces no hidden-info leaks", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 10,
+      opponentDeckCount: 12,
+      sampleCount: 8,
+    });
+
+    const serialized = JSON.stringify(result);
+    expect(serialized).not.toContain("cardsById");
+    expect(serialized).not.toContain("finalState");
+    expect(serialized).not.toContain("commandLog");
+    expect(serialized).not.toContain("eventLog");
+    expect(serialized).not.toContain("ownHand");
+    expect(serialized).not.toMatch(/"opponentHand"\s*:/);
+    expect(serialized).not.toContain("unsafeDebugResults");
+    expect(serialized).not.toContain("decisionTrace");
+    expect(serialized).not.toContain("deckOrder");
+    expect(serialized).not.toContain("sampledHand");
+    expect(serialized).not.toContain("sampledDeck");
+  });
+});
+
+describe("benchmark sampler readiness - public action abstraction", () => {
+  it("abstraction hides raw move ids and card identities", () => {
+    const move = playMove("seat_a:private-source-id:abc123", "close", {
+      printedStrength: 8,
+      cardName: "Hidden Card Name",
+    });
+
+    const abstraction = buildPublicActionAbstraction(
+      move,
+      "playing",
+      2,
+    );
+
+    const serialized = JSON.stringify(abstraction);
+    expect(serialized).not.toContain("seat_a:private-source-id");
+    expect(serialized).not.toContain("abc123");
+    expect(serialized).not.toContain("Hidden Card Name");
+  });
+
+  it("maps move kind to public search action kind", () => {
+    const playMoveAbstraction = buildPublicActionAbstraction(
+      playMove("seat_a:src1", "close"),
+      "playing",
+      1,
+    );
+    const passAbstraction = buildPublicActionAbstraction(passMove, "playing", 1);
+    const leaderAbstraction = buildPublicActionAbstraction(leaderMove, "playing", 1);
+
+    expect(playMoveAbstraction.kind).toBe("play_card");
+    expect(passAbstraction.kind).toBe("pass");
+    expect(leaderAbstraction.kind).toBe("use_leader");
+  });
+
+  it("maps target side correctly for different targets", () => {
+    const playOwnClose = playMove("seat_a:src1", "close");
+    const playOwnRanged = playMove("seat_a:src1", "ranged");
+
+    const ownClose = buildPublicActionAbstraction(playOwnClose, "playing", 1);
+    const ownRanged = buildPublicActionAbstraction(playOwnRanged, "playing", 1);
+
+    expect(ownClose.targetSide).toBe("own");
+    expect(ownRanged.targetSide).toBe("own");
+    expect(ownClose.targetKind).toBe("board_row");
+    expect(ownRanged.targetKind).toBe("board_row");
+  });
+
+  it("identifies source class correctly", () => {
+    const unitAbstraction = buildPublicActionAbstraction(
+      playMove("seat_a:src1", "close", { cardKind: "unit", printedStrength: 5 }),
+      "playing",
+      1,
+    );
+    const heroAbstraction = buildPublicActionAbstraction(
+      playMove("seat_a:src1", "close", { cardKind: "hero", printedStrength: 15 }),
+      "playing",
+      1,
+    );
+    const leaderAbstraction = buildPublicActionAbstraction(leaderMove, "playing", 1);
+
+    expect(unitAbstraction.sourceClass).toBe("unit");
+    expect(heroAbstraction.sourceClass).toBe("hero");
+    expect(leaderAbstraction.sourceClass).toBe("leader");
+  });
+
+  it("applies strength bucket for visible own-hand cards", () => {
+    const weakAbstraction = buildPublicActionAbstraction(
+      playMove("seat_a:src1", "close", { printedStrength: 3 }),
+      "playing",
+      1,
+    );
+    const mediumAbstraction = buildPublicActionAbstraction(
+      playMove("seat_a:src1", "close", { printedStrength: 8 }),
+      "playing",
+      1,
+    );
+    const strongAbstraction = buildPublicActionAbstraction(
+      playMove("seat_a:src1", "close", { printedStrength: 15 }),
+      "playing",
+      1,
+    );
+
+    expect(weakAbstraction.strengthBucket).toBe("weak");
+    expect(mediumAbstraction.strengthBucket).toBe("medium");
+    expect(strongAbstraction.strengthBucket).toBe("strong");
+  });
+
+  it("collapses multi-target cards into same abstraction", () => {
+    const moves: LegalMove[] = [
+      playMove("seat_a:src1", "close", { printedStrength: 5 }),
+      playMove("seat_a:src2", "close", { printedStrength: 5 }),
+      playMove("seat_a:src3", "close", { printedStrength: 5 }),
+      passMove,
+    ];
+
+    const abstracts = moves.map((m) =>
+      buildPublicActionAbstraction(m, "playing", 1),
+    );
+    const collapsed = collapsePublicActions(abstracts);
+
+    const playCardBucket = collapsed.find(
+      (a) => a.kind === "play_card" && a.targetSide === "own",
+    );
+    expect(playCardBucket).toBeTruthy();
+    expect(playCardBucket!.moveCount).toBe(3);
+
+    const passBucket = collapsed.find((a) => a.kind === "pass");
+    expect(passBucket).toBeTruthy();
+    expect(passBucket!.moveCount).toBe(1);
+  });
+
+  it("preserves public target side/kind counts after collapse", () => {
+    const moves: LegalMove[] = [
+      playMove("seat_a:src1", "close", { printedStrength: 5 }),
+      playMove("seat_a:src2", "close", { printedStrength: 5 }),
+      playMove("seat_a:src3", "close", { printedStrength: 5 }),
+    ];
+
+    const abstracts = moves.map((m) =>
+      buildPublicActionAbstraction(m, "playing", 1),
+    );
+    const collapsed = collapsePublicActions(abstracts);
+
+    const boardRowOwn = collapsed.find(
+      (a) => a.targetKind === "board_row" && a.targetSide === "own",
+    );
+    expect(boardRowOwn).toBeTruthy();
+    expect(boardRowOwn!.moveCount).toBe(3);
+  });
+});
+
+describe("benchmark sampler readiness - deterministic hashing", () => {
+  it("produces identical hashes for identical inputs", () => {
+    const input1 = { legalMoveCount: 5, phase: "playing", round: 1 };
+    const input2 = { legalMoveCount: 5, phase: "playing", round: 1 };
+
+    expect(hashSamplerReadinessPublicValue(input1)).toBe(
+      hashSamplerReadinessPublicValue(input2),
+    );
+  });
+
+  it("produces different hashes for different inputs", () => {
+    const input1 = { legalMoveCount: 5, phase: "playing", round: 1 };
+    const input2 = { legalMoveCount: 10, phase: "playing", round: 1 };
+
+    expect(hashSamplerReadinessPublicValue(input1)).not.toBe(
+      hashSamplerReadinessPublicValue(input2),
+    );
+  });
+});

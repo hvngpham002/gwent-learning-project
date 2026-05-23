@@ -29,6 +29,8 @@
     "benchmark:ratings:compare:v1-robust": "tsx scripts/run-benchmark-rating-comparison-report.ts --suite benchmark-v1-starter-matrix-robust-v1 --base-snapshot cFp48 --comparison-dir cFp48-vs-latest --phase cFp48",
     "benchmark:search-readiness:v1-starter-matrix": "tsx scripts/run-benchmark-search-readiness-report.ts --suite benchmark-v1-starter-matrix-v1",
     "benchmark:search-readiness:v1-robust": "tsx scripts/run-benchmark-search-readiness-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
+    "benchmark:sampler-readiness:v1-starter-matrix": "tsx scripts/run-benchmark-sampler-readiness-report.ts --suite benchmark-v1-starter-matrix-v1",
+    "benchmark:sampler-readiness:v1-robust": "tsx scripts/run-benchmark-sampler-readiness-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
     "benchmark:long": "node scripts/run-long-benchmark.mjs",
     "check:forbidden-imports": "node scripts/check-forbidden-imports.mjs",
     "check:project-state": "node scripts/check-project-state-update.mjs",

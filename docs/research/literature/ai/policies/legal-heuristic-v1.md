@@ -23,10 +23,17 @@ phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
 The latest analysis phase is cFp56: Temporal Round-One Overinvestment
 Casebook. The latest rating-ledger phase is cFp57: Multi-Period Rating Ledger.
-The latest search-readiness profiler phase is cFp59: Search-Readiness Root
-Profiler. The latest instrumentation phase is cFp55: Round-One Temporal Spend
-Instrumentation. cFp59 adds benchmark-only hidden-info-safe root-profiler
-artifacts and AI Lab metadata; it does not change `legal-heuristic-v1`
+The latest sampler-readiness phase is cFp60: Known-Preset Sampler Contract And
+Public Action Abstraction. The latest search-readiness profiler phase is cFp59:
+Search-Readiness Root Profiler. The latest instrumentation phase is cFp55:
+Round-One Temporal Spend Instrumentation. cFp60 adds benchmark-only
+`known_preset_decklist_prior`, sampled-world validation summaries, hidden-info-safe
+public action abstraction, and deterministic sampler-readiness artifacts without
+changing `legal-heuristic-v1` gameplay, search behavior, engine rules, legal moves,
+or product difficulty. cFp59 adds benchmark-only hidden-info-safe root-profiler
+artifacts and AI Lab metadata. cFp60 adds `known_preset_decklist_prior`,
+sampled-world validation, and public action abstraction as sampler-readiness
+infrastructure only. Neither cFp59 nor cFp60 changes `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
 path that cFp52 proved: when the exact selected `play_card` has cFp43 base
@@ -64,8 +71,10 @@ only and does not change policy behavior.
 cFp58 records search-readiness and ISMCTS probe design guardrails as research
 planning only. cFp59 implements the recommended benchmark-only profiler by
 emitting public root scalar/count artifacts for the current and robust starter
-matrix suites. This is evaluation infrastructure only and does not make search
-available in product play.
+matrix suites. cFp60 adds `known_preset_decklist_prior`, sampled-world validation
+summaries, and public action abstraction for the current and robust starter
+matrix suites. Both cFp59 and cFp60 are evaluation infrastructure only and do not
+make search available in product play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -126,7 +135,11 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   as `cFp57` snapshots, compares against cFp46/cFp48 baselines, and confirms
   `cFp57-vs-latest` consistency without changing policy behavior.
 - cFp59: evaluation-only search-readiness root profiler; writes public
-  scalar/count artifacts for benchmark roots and does not add search gameplay.
+   scalar/count artifacts for benchmark roots and does not add search gameplay.
+- cFp60: evaluation-only sampler-readiness infrastructure; adds
+   `known_preset_decklist_prior`, sampled-world validation summaries, hidden-info-safe
+   public action abstraction, and deterministic sampler-readiness artifacts for starter
+   (4,042 roots) and robust (32,487 roots) suites without changing policy behavior.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

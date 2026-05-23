@@ -245,6 +245,13 @@ npm run benchmark:search-readiness:v1-starter-matrix
 npm run benchmark:search-readiness:v1-robust
 ```
 
+Write cFp60 sampler-readiness artifact sets:
+
+```bash
+npm run benchmark:sampler-readiness:v1-starter-matrix
+npm run benchmark:sampler-readiness:v1-robust
+```
+
 For longer local runs that should not be tied to an agent turn, use the
 cFp40 progress runner. It orchestrates existing npm commands, writes a
 local run log bundle under `.local/benchmark-runs/`, and uses
@@ -530,7 +537,21 @@ The robust cFp59 command was repeated with identical committed hashes.
 TrueSkill is deferred; cFp46 implements only Glicko-1. Approximate best response
 is deferred because Batch B treats it as a later robustness probe. cFp58 recommends
 that cFp59 implement a search-readiness profiler before any PIMC/ISMCTS rollout
-search; cFp59 completes that profiler without adding a search policy. Search
-policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
+search; cFp59 completes that profiler without adding a search policy.
+
+cFp60 adds sampler-readiness infrastructure: `known_preset_decklist_prior` for
+official starter deck contexts, deterministic sampled-world validation summaries
+emitting public scalar/status fields only, hidden-info-safe public action
+abstraction grouping legal moves by kind/target/side/row/phase/round/source
+class/strength bucket/prompt index without raw ids, and deterministic
+sampler-readiness artifacts under `<suiteId>/sampler-readiness/cFp60/`. All
+36,529 roots across starter (4,042 roots, 120 matches) and robust (32,487 roots,
+1,000 matches) suites have `prior_available` and `valid` status. Robust repeat
+artifacts produce identical hashes. npm scripts `benchmark:sampler-readiness:v1-starter-matrix`
+and `benchmark:sampler-readiness:v1-robust` run the CLI. cFp60 does not run
+PIMC/ISMCTS/rollouts, evaluate actions, build trees, select moves, or change any
+policy behavior. Next recommended step: `determinized-pimc-probe-v0` (cFp61).
+
+Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product
 difficulty tiers remain future work.
