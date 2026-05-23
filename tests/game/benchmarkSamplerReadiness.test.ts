@@ -69,10 +69,14 @@ describe("benchmark sampler readiness - known_preset_decklist_prior", () => {
       expect(prior!.priorId).toBe("known_preset_decklist_prior");
       expect(prior!.priorStatus).toBe("prior_available");
       expect(prior!.deckPresetId).toBe(deckPresetId);
-      expect(prior!.totalDeckCardCount).toBeGreaterThan(0);
+      expect(prior!.mainDeckCardCount).toBeGreaterThan(0);
+      expect(prior!.sideDeckCardCount).toBeGreaterThanOrEqual(0);
+      expect(prior!.totalDeckCardCount).toBe(
+        prior!.mainDeckCardCount + prior!.sideDeckCardCount,
+      );
       expect(prior!.knownVisibleCardCount).toBe(10);
       expect(prior!.priorRemainingCardCount).toBe(
-        prior!.totalDeckCardCount - 10,
+        prior!.mainDeckCardCount - 10,
       );
     }
   });
@@ -133,20 +137,64 @@ describe("benchmark sampler readiness - known_preset_decklist_prior", () => {
 });
 
 describe("benchmark sampler readiness - sampled-world validation", () => {
-  it("returns valid for reasonable opponent counts", () => {
+  it("returns deferred for reasonable opponent counts (no real sampled multisets)", () => {
     const result = buildSampledWorldValidation({
       deckPresetId: "official-monsters-starter",
       opponentHandCount: 10,
       opponentDeckCount: 12,
       sampleCount: 8,
+      priorTotalCardCount: 25,
     });
 
-    expect(result.rootValidationStatus).toBe("valid");
+    expect(result.rootValidationStatus).toBe("deferred");
     expect(result.sampleCountRequested).toBe(8);
     expect(result.sampleCountValid).toBe(8);
     expect(result.sampleCountInvalid).toBe(0);
     expect(result.opponentHandCount).toBe(10);
     expect(result.opponentDeckCount).toBe(12);
+    expect(result.invalidReasonCounts).toEqual({});
+  });
+
+  it("returns invalid when observed cards exceed prior total", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 20,
+      opponentDeckCount: 15,
+      sampleCount: 8,
+      priorTotalCardCount: 25,
+    });
+
+    expect(result.rootValidationStatus).toBe("invalid");
+    expect(result.sampleCountInvalid).toBeGreaterThan(0);
+    expect(result.invalidReasonCounts["observed_exceeds_prior_total"]).toBe(1);
+  });
+
+  it("returns invalid when opponent deck exceeds prior", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 5,
+      opponentDeckCount: 30,
+      sampleCount: 8,
+      priorTotalCardCount: 25,
+    });
+
+    expect(result.rootValidationStatus).toBe("invalid");
+    expect(result.sampleCountInvalid).toBeGreaterThan(0);
+    expect(result.invalidReasonCounts["opponent_deck_exceeds_prior"]).toBe(1);
+  });
+
+  it("returns invalid when opponent hand exceeds prior", () => {
+    const result = buildSampledWorldValidation({
+      deckPresetId: "official-monsters-starter",
+      opponentHandCount: 30,
+      opponentDeckCount: 5,
+      sampleCount: 8,
+      priorTotalCardCount: 25,
+    });
+
+    expect(result.rootValidationStatus).toBe("invalid");
+    expect(result.sampleCountInvalid).toBeGreaterThan(0);
+    expect(result.invalidReasonCounts["opponent_hand_exceeds_prior"]).toBe(1);
   });
 
   it("produces scalar bucket outputs", () => {
@@ -155,6 +203,7 @@ describe("benchmark sampler readiness - sampled-world validation", () => {
       opponentHandCount: 10,
       opponentDeckCount: 12,
       sampleCount: 8,
+      priorTotalCardCount: 25,
     });
 
     expect(result.opponentHiddenPoolSizeBucket).toBe("large");
@@ -163,24 +212,13 @@ describe("benchmark sampler readiness - sampled-world validation", () => {
     expect(typeof result.invalidReasonCounts).toBe("object");
   });
 
-  it("returns invalid for impossible state", () => {
-    const result = buildSampledWorldValidation({
-      deckPresetId: "official-monsters-starter",
-      opponentHandCount: 0,
-      opponentDeckCount: 0,
-      sampleCount: 8,
-    });
-
-    expect(result.rootValidationStatus).toBe("valid");
-    expect(result.sampleCountValid).toBe(8);
-  });
-
   it("produces no hidden-info leaks", () => {
     const result = buildSampledWorldValidation({
       deckPresetId: "official-monsters-starter",
       opponentHandCount: 10,
       opponentDeckCount: 12,
       sampleCount: 8,
+      priorTotalCardCount: 25,
     });
 
     const serialized = JSON.stringify(result);

@@ -1,8 +1,8 @@
 {
   "artifactHashes": {
-    "report.md": "aa5b7dff141212acc8e20df26e3a0c27fc5564da8e0ebf08aefd031caa75c6ad",
-    "roots.jsonl": "47ffaf552bafa214344e87167e71265a5710b7014d6d1a8bfd0feeb4a6ff9e4c",
-    "summary.json": "b93a0192a6660c33f2addf5a695a785aac955f8f8febcc52c8ad7ee088ac0039"
+    "report.md": "004025f956343bff1a4fe5c8f48df66a5f7dcf149d718b72cc4c9f68ee37c114",
+    "roots.jsonl": "197e0c8b5267b9137496e329f34fce83daac02aec4020779f61407c0b3ec99a1",
+    "summary.json": "c2e2c5ac7bfd07f8691c8f7dfbae8f3fb614fcaeb87c226e93424928c72a4617"
   },
   "explicitNonSearchWarning": "cFp60 sampler-readiness artifacts are evaluation infrastructure only. No rollout, search, action-evaluation, or policy-behavior change occurred. These artifacts do not constitute search strength, a new gameplay policy, or product difficulty.",
   "files": [

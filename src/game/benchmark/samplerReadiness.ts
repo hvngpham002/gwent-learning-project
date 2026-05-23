@@ -41,6 +41,8 @@ export interface SamplerReadinessPriorInfo {
   priorStatus: SamplerReadinessPriorStatus;
   deckPresetId: string;
   faction: string;
+  mainDeckCardCount: number;
+  sideDeckCardCount: number;
   totalDeckCardCount: number;
   knownVisibleCardCount: number;
   priorRemainingCardCount: number;
@@ -245,6 +247,7 @@ export interface SampledWorldValidationInput {
   opponentHandCount: number;
   opponentDeckCount: number;
   sampleCount: number;
+  priorTotalCardCount: number;
 }
 
 export interface PriorConstructionInput {
@@ -289,6 +292,8 @@ export const buildKnownPresetDecklistPrior = ({
       priorStatus: "prior_unavailable",
       deckPresetId,
       faction,
+      mainDeckCardCount: 0,
+      sideDeckCardCount: 0,
       totalDeckCardCount: 0,
       knownVisibleCardCount: 0,
       priorRemainingCardCount: 0,
@@ -302,21 +307,25 @@ export const buildKnownPresetDecklistPrior = ({
       priorStatus: "prior_unavailable",
       deckPresetId,
       faction,
+      mainDeckCardCount: 0,
+      sideDeckCardCount: 0,
       totalDeckCardCount: 0,
       knownVisibleCardCount: 0,
       priorRemainingCardCount: 0,
     };
   }
 
-  const totalDeckCardCount =
-    descriptor.deckPreset.mainDeck.reduce((sum, entry) => sum + entry.count, 0) +
+  const mainDeckCardCount =
+    descriptor.deckPreset.mainDeck.reduce((sum, entry) => sum + entry.count, 0);
+  const sideDeckCardCount =
     descriptor.deckPreset.sideDeck.reduce((sum, entry) => sum + entry.count, 0);
+  const totalDeckCardCount = mainDeckCardCount + sideDeckCardCount;
 
   const knownVisibleCardCount = visibleHandCount;
 
   const priorRemainingCardCount = Math.max(
     0,
-    totalDeckCardCount - knownVisibleCardCount,
+    mainDeckCardCount - knownVisibleCardCount,
   );
 
   return {
@@ -324,6 +333,8 @@ export const buildKnownPresetDecklistPrior = ({
     priorStatus: "prior_available",
     deckPresetId,
     faction,
+    mainDeckCardCount,
+    sideDeckCardCount,
     totalDeckCardCount,
     knownVisibleCardCount,
     priorRemainingCardCount,
@@ -337,24 +348,47 @@ export const buildSampledWorldValidation = (
     opponentHandCount,
     opponentDeckCount,
     sampleCount,
+    priorTotalCardCount,
   } = input;
 
   const invalidReasonCounts: Record<string, number> = {};
   let sampleCountValid = 0;
   let sampleCountInvalid = 0;
 
-  const totalDeckSize = opponentHandCount + opponentDeckCount;
+  const totalObservedCards = opponentHandCount + opponentDeckCount;
 
-  if (totalDeckSize < 0) {
-    invalidReasonCounts["negative_total_size"] = 1;
+  if (opponentHandCount < 0) {
+    invalidReasonCounts["negative_opponent_hand_count"] = 1;
     sampleCountInvalid += 1;
-  } else {
+  }
+
+  if (opponentDeckCount < 0) {
+    invalidReasonCounts["negative_opponent_deck_count"] = 1;
+    sampleCountInvalid += 1;
+  }
+
+  if (priorTotalCardCount > 0 && totalObservedCards > priorTotalCardCount) {
+    invalidReasonCounts["observed_exceeds_prior_total"] = 1;
+    sampleCountInvalid += 1;
+  }
+
+  if (priorTotalCardCount > 0 && opponentDeckCount > priorTotalCardCount) {
+    invalidReasonCounts["opponent_deck_exceeds_prior"] = 1;
+    sampleCountInvalid += 1;
+  }
+
+  if (priorTotalCardCount > 0 && opponentHandCount > priorTotalCardCount) {
+    invalidReasonCounts["opponent_hand_exceeds_prior"] = 1;
+    sampleCountInvalid += 1;
+  }
+
+  if (sampleCountInvalid === 0) {
     sampleCountValid = sampleCount;
   }
 
   let opponentHiddenPoolSizeBucket = "empty";
-  if (totalDeckSize <= 10) opponentHiddenPoolSizeBucket = "small";
-  else if (totalDeckSize <= 15) opponentHiddenPoolSizeBucket = "medium";
+  if (totalObservedCards <= 10) opponentHiddenPoolSizeBucket = "small";
+  else if (totalObservedCards <= 15) opponentHiddenPoolSizeBucket = "medium";
   else opponentHiddenPoolSizeBucket = "large";
 
   let knownVisibleCardCountBucket = "none";
@@ -368,13 +402,17 @@ export const buildSampledWorldValidation = (
   if (remaining >= 10) priorRemainingCardCountBucket = "medium";
   if (remaining >= 15) priorRemainingCardCountBucket = "large";
 
+  const rootValidationStatus: SamplerReadinessRootValidationStatus =
+    sampleCountInvalid > 0
+      ? "invalid"
+      : "deferred";
+
   return {
     sampleCountRequested: sampleCount,
     sampleCountGenerated: sampleCountValid + sampleCountInvalid,
     sampleCountValid,
     sampleCountInvalid,
-    rootValidationStatus:
-      sampleCountInvalid === 0 ? "valid" : "invalid",
+    rootValidationStatus,
     invalidReasonCounts,
     opponentHiddenPoolSizeBucket,
     opponentHandCount,
@@ -588,16 +626,25 @@ export const buildSamplerReadinessRootRecord = ({
   const faction = seat.faction;
   const deckPresetId = seat.deckPresetId;
 
+  const opponentSeatId: SeatId =
+    seatId === "seat_a" ? "seat_b" : "seat_a";
+
+  const ownHandCount = state.seats[seatId].hand.length;
+  const opponentHandCount = state.seats[opponentSeatId].hand.length;
+  const opponentDeckCount = state.seats[opponentSeatId].deck.length;
+
   const priorInfo =
     buildKnownPresetDecklistPrior({
       deckPresetId,
       faction,
-      visibleHandCount: 0,
+      visibleHandCount: ownHandCount,
     }) ?? {
       priorId: KNOWN_PRESET_DECKLIST_PRIOR_ID,
       priorStatus: "prior_unavailable" as const,
       deckPresetId,
       faction,
+      mainDeckCardCount: 0,
+      sideDeckCardCount: 0,
       totalDeckCardCount: 0,
       knownVisibleCardCount: 0,
       priorRemainingCardCount: 0,
@@ -605,9 +652,10 @@ export const buildSamplerReadinessRootRecord = ({
 
   const validation = buildSampledWorldValidation({
     deckPresetId,
-    opponentHandCount: 0,
-    opponentDeckCount: 0,
+    opponentHandCount,
+    opponentDeckCount,
     sampleCount: DEFAULT_SAMPLE_COUNT,
+    priorTotalCardCount: priorInfo.mainDeckCardCount,
   });
 
   const abstractionMap = new Map<string, PublicSearchActionAbstraction>();

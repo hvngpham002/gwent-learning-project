@@ -62,17 +62,18 @@
 
 | Validation status | Count |
 |---|---:|
-| valid | 4042 |
+| deferred | 3768 |
+| invalid | 274 |
 
 ## Invalid Reason Counts
 
 | Reason | Count |
 |---|---:|
-
+| observed_exceeds_prior_total | 274 |
 
 ## Sample Count Stats
 
-- samples: count 4042, min 8, max 8, avg 8, p50 8, p90 8, p95 8
+- samples: count 4042, min 0, max 8, avg 7.458, p50 8, p90 8, p95 8
 
 ## Public Action Count Stats
 
@@ -88,7 +89,7 @@
 
 ## Largest Public Action Root
 
-- root fingerprint: c40361c87d37820a971da0c247961ed09f9c2176d6982a148fd3d48bcb83b932
+- root fingerprint: b8eb086c9b882efdc5ee2a6f2b407c4c3bcb6b3091ffe38c7054b574fb5cd701
 - matchup: starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0
 - seed: starter-matrix-001
 - mirror index: 1
@@ -103,7 +104,7 @@
 
 ## Largest Collision Root
 
-- root fingerprint: 31f180734cc7b554d74e204fca1fe99568c34446435725b547ddb30c9ef59548
+- root fingerprint: 0925f3a459adc909c62ca004a7d4093bfd39c2d0778d087928e09850b8eddab0
 - matchup: starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0
 - seed: starter-matrix-002
 - mirror index: 1

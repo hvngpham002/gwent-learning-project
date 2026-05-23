@@ -24,7 +24,9 @@
     "skellige"
   ],
   "hiddenInfoSafetyNote": "Sampler-readiness artifacts contain public root metadata, scalar/count summaries, and action-abstraction statistics only. They exclude raw state, private card payloads, command/event payloads, runtime card identifiers, and sampled hidden identities.",
-  "invalidReasonCounts": {},
+  "invalidReasonCounts": {
+    "observed_exceeds_prior_total": 274
+  },
   "largestBucketStats": {
     "average": 3.171,
     "count": 4042,
@@ -52,7 +54,7 @@
     "phase": "playing",
     "policyId": "legal-heuristic-v0",
     "publicActionCollisionCount": 25,
-    "rootPublicFingerprint": "31f180734cc7b554d74e204fca1fe99568c34446435725b547ddb30c9ef59548",
+    "rootPublicFingerprint": "0925f3a459adc909c62ca004a7d4093bfd39c2d0778d087928e09850b8eddab0",
     "round": 1,
     "seatId": "seat_a",
     "seed": "starter-matrix-002",
@@ -67,7 +69,7 @@
     "phase": "playing",
     "policyId": "legal-heuristic-v0",
     "publicActionCount": 13,
-    "rootPublicFingerprint": "c40361c87d37820a971da0c247961ed09f9c2176d6982a148fd3d48bcb83b932",
+    "rootPublicFingerprint": "b8eb086c9b882efdc5ee2a6f2b407c4c3bcb6b3091ffe38c7054b574fb5cd701",
     "round": 1,
     "seatId": "seat_a",
     "seed": "starter-matrix-001",
@@ -117,10 +119,10 @@
   },
   "rootRecordCount": 4042,
   "sampleCountStats": {
-    "average": 8,
+    "average": 7.458,
     "count": 4042,
     "max": 8,
-    "min": 8,
+    "min": 0,
     "p50": 8,
     "p90": 8,
     "p95": 8
@@ -135,6 +137,7 @@
   },
   "suiteId": "benchmark-v1-starter-matrix-v1",
   "validationStatusCounts": {
-    "valid": 4042
+    "deferred": 3768,
+    "invalid": 274
   }
 }

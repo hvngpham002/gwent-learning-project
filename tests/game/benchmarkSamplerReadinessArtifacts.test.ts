@@ -32,7 +32,7 @@ const root = (overrides: Partial<SamplerReadinessRootRecord> = {}): SamplerReadi
   sampleCountGenerated: 8,
   sampleCountValid: 8,
   sampleCountInvalid: 0,
-  rootValidationStatus: "valid",
+  rootValidationStatus: "deferred",
   invalidReasonCounts: {},
   opponentHiddenPoolSizeBucket: "large",
   opponentHandCount: 10,
@@ -206,7 +206,7 @@ describe("benchmark sampler readiness artifacts", () => {
       prior_available: 2,
     });
     expect(result.summary.validationStatusCounts).toEqual({
-      valid: 2,
+      deferred: 2,
     });
     expect(result.summary.legalMoveCountStats).toEqual(
       expect.objectContaining({ count: 2, min: 11, max: 17, average: 14 }),
