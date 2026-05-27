@@ -62,50 +62,51 @@
 
 | Materialization status | Count |
 |---|---:|
-| valid | 32487 |
+| invalid | 341 |
+| valid | 32146 |
 
 ## Invalid Reason Counts
 
 | Reason | Count |
 |---|---:|
-| none | 0 |
+| insufficient_prior_remaining | 341 |
 
 ## Sample Counts
 
 - requested: count 32487, min 8, max 8, avg 8, p50 8, p90 8, p95 8
-- generated: count 32487, min 8, max 8, avg 8, p50 8, p90 8, p95 8
-- valid: count 32487, min 8, max 8, avg 8, p50 8, p90 8, p95 8
+- generated: count 32487, min 0, max 8, avg 7.916, p50 8, p90 8, p95 8
+- valid: count 32487, min 0, max 8, avg 7.916, p50 8, p90 8, p95 8
 - invalid: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
 
 ## Aggregate Sample Stats
 
-- hand unique average: count 32487, min 0, max 11.5, avg 4.742, p50 4.75, p90 8.75, p95 9
-- deck unique average: count 32487, min 5.25, max 20, avg 15.726, p50 16, p90 17.75, p95 18
+- hand unique average: count 32487, min 0, max 11.5, avg 4.701, p50 4.75, p90 8.75, p95 9
+- deck unique average: count 32487, min 0, max 20, avg 15.56, p50 16, p90 17.625, p95 18
 
 ### Hand Duplicate Pressure
 
 | Bucket | Count |
 |---|---:|
-| none | 165394 |
-| pair | 87208 |
-| triple_plus | 7294 |
+| none | 163313 |
+| pair | 86594 |
+| triple_plus | 7261 |
 
 ### Deck Duplicate Pressure
 
 | Bucket | Count |
 |---|---:|
-| none | 901 |
-| pair | 51801 |
-| triple_plus | 207194 |
+| none | 899 |
+| pair | 51236 |
+| triple_plus | 205033 |
 
 ### Hand Deck Overlap
 
 | Bucket | Count |
 |---|---:|
-| four_plus | 72459 |
-| none | 54886 |
-| one | 36676 |
-| two_to_three | 95875 |
+| four_plus | 72182 |
+| none | 54369 |
+| one | 35887 |
+| two_to_three | 94730 |
 
 ## Interpretation Warning
 

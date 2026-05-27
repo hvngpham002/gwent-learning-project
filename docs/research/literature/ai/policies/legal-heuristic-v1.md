@@ -151,8 +151,9 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
 - cFp61: evaluation-only sampler-materialization infrastructure; adds real
   in-memory hidden opponent hand/deck source-multiset sampling from the cFp60
   opponent-seat known preset prior and aggregate-only artifacts for starter
-  (4,042 roots) and robust (32,487 roots) suites, with every root reporting
-  8 requested, 8 generated, 8 valid, and 0 invalid samples.
+  (4,042 roots) and robust (32,487 roots) suites. Valid roots report 8
+  requested, 8 generated, 8 valid, and 0 invalid samples; safe invalid roots
+  report `insufficient_prior_remaining` with zero generated samples.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

@@ -1,8 +1,8 @@
 {
   "deckDuplicatePressureBucketCounts": {
-    "none": 37,
-    "pair": 5926,
-    "triple_plus": 26373
+    "none": 33,
+    "pair": 5739,
+    "triple_plus": 26060
   },
   "deckPresetIds": [
     "official-monsters-starter",
@@ -12,10 +12,10 @@
     "official-skellige-starter"
   ],
   "deckUniqueSourceCountAverageStats": {
-    "average": 15.535,
+    "average": 15.297,
     "count": 4042,
     "max": 19.375,
-    "min": 3.625,
+    "min": 0,
     "p50": 15.75,
     "p90": 17.625,
     "p95": 18
@@ -29,30 +29,33 @@
     "skellige"
   ],
   "handDeckOverlapBucketCounts": {
-    "four_plus": 8544,
-    "none": 7239,
-    "one": 4531,
-    "two_to_three": 12022
+    "four_plus": 8512,
+    "none": 7121,
+    "one": 4371,
+    "two_to_three": 11828
   },
   "handDuplicatePressureBucketCounts": {
-    "none": 20869,
-    "pair": 10575,
-    "triple_plus": 892
+    "none": 20459,
+    "pair": 10485,
+    "triple_plus": 888
   },
   "handUniqueSourceCountAverageStats": {
-    "average": 4.56,
+    "average": 4.506,
     "count": 4042,
     "max": 10.75,
     "min": 0,
-    "p50": 4.75,
+    "p50": 4.625,
     "p90": 8.625,
     "p95": 9
   },
   "hiddenInfoSafetyNote": "Sampler-materialization artifacts contain only public root metadata, scalar counts, status distributions, and aggregate sample statistics. They exclude sampled hand maps, sampled deck maps, deck order, raw state, raw moves, runtime card identifiers, and card identity strings.",
-  "invalidReasonCounts": {},
+  "invalidReasonCounts": {
+    "insufficient_prior_remaining": 63
+  },
   "matchCount": 120,
   "materializationStatusCounts": {
-    "valid": 4042
+    "invalid": 63,
+    "valid": 3979
   },
   "policyIds": [
     "headless-round-end-auto-resolver",
@@ -89,10 +92,10 @@
   "rootRecordCount": 4042,
   "sampleCountStats": {
     "generated": {
-      "average": 8,
+      "average": 7.875,
       "count": 4042,
       "max": 8,
-      "min": 8,
+      "min": 0,
       "p50": 8,
       "p90": 8,
       "p95": 8
@@ -116,10 +119,10 @@
       "p95": 8
     },
     "valid": {
-      "average": 8,
+      "average": 7.875,
       "count": 4042,
       "max": 8,
-      "min": 8,
+      "min": 0,
       "p50": 8,
       "p90": 8,
       "p95": 8

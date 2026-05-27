@@ -687,9 +687,10 @@ export const materializeHiddenMultisets = (
   }
   if (hiddenHandDrawCount < 0) {
     addCount(invalidReasonCounts, "public_known_hand_exceeds_opponent_hand_count");
-  }
-  if (remainingCount < requiredDrawCount) {
+  } else if (remainingCount < requiredDrawCount) {
     addCount(invalidReasonCounts, "insufficient_prior_remaining");
+  } else if (remainingCount > requiredDrawCount) {
+    addCount(invalidReasonCounts, "prior_remaining_exceeds_observed_hidden_count");
   }
 
   if (Object.keys(invalidReasonCounts).length > 0) {
@@ -828,19 +829,24 @@ export const buildSamplerMaterializationRootRecord = ({
   });
 
   const preMaterializationInvalidReasons: MutableCounts = {};
-  let priorOwnedOpponentHandCount = opponentHandCount;
   if (prior.priorStatus === "prior_available") {
-    if (opponentDeckCount > publicKnown.priorRemainingCardCount) {
-      addCount(preMaterializationInvalidReasons, "opponent_deck_exceeds_prior_remaining");
-    } else {
-      priorOwnedOpponentHandCount =
-        publicKnown.priorRemainingCardCount - opponentDeckCount;
-      if (priorOwnedOpponentHandCount > opponentHandCount) {
-        addCount(
-          preMaterializationInvalidReasons,
-          "observed_opponent_hand_below_prior_remaining",
-        );
-      }
+    const unknownOpponentHandCount =
+      opponentHandCount - publicKnown.fixedKnownHandCardCount;
+    const expectedRemainingHiddenCount =
+      unknownOpponentHandCount + opponentDeckCount;
+
+    if (publicKnown.fixedKnownHandCardCount > opponentHandCount) {
+      addCount(
+        preMaterializationInvalidReasons,
+        "public_known_hand_exceeds_opponent_hand_count",
+      );
+    } else if (publicKnown.priorRemainingCardCount < expectedRemainingHiddenCount) {
+      addCount(preMaterializationInvalidReasons, "insufficient_prior_remaining");
+    } else if (publicKnown.priorRemainingCardCount > expectedRemainingHiddenCount) {
+      addCount(
+        preMaterializationInvalidReasons,
+        "prior_remaining_exceeds_observed_hidden_count",
+      );
     }
   }
 
@@ -853,7 +859,7 @@ export const buildSamplerMaterializationRootRecord = ({
           priorSourceCounts: prior.mainDeckSourceCounts,
           remainingSourceCounts: publicKnown.remainingSourceCounts,
           fixedKnownHandSourceCounts: publicKnown.fixedKnownHandSourceCounts,
-          opponentHandCount: priorOwnedOpponentHandCount,
+          opponentHandCount,
           opponentDeckCount,
           sampleCount,
         })
@@ -864,7 +870,7 @@ export const buildSamplerMaterializationRootRecord = ({
             sampleCountGenerated: 0,
             sampleCountValid: 0,
             sampleCountInvalid: 0,
-            invalidReasonCounts: sortEntries(preMaterializationInvalidReasons),
+            invalidReasonCounts: {},
             samples: [],
             sampleAggregateStats: buildSampleAggregateStats([]),
           }

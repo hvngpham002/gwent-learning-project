@@ -566,15 +566,18 @@ and `benchmark:sampler-readiness:v1-robust` run the CLI.
 cFp61 adds sampler-materialization infrastructure under
 `<suiteId>/sampler-materialization/cFp61/`. It samples opponent hidden
 hand/deck source multisets in memory from the cFp60 opponent-seat known preset
-prior, validates those samples against public counts and duplicate limits, and
+prior, counts prompt-revealed opponent hand cards once as fixed known hand
+cards, validates those samples against public counts and duplicate limits, and
 serializes only aggregate sample statistics. Starter and robust suites produce
-4,042 and 32,487 roots respectively; all are `prior_available`, all are
-`valid`, and every root reports 8 requested, generated, and valid samples with
-0 invalid samples. Robust repeat artifacts produce identical hashes.
+4,042 and 32,487 roots respectively; all are `prior_available`, no roots are
+`deferred`, valid roots report 8 requested, generated, and valid samples with
+0 invalid samples, and safe invalid roots report `insufficient_prior_remaining`
+with zero generated samples. Robust repeat artifacts produce identical hashes.
 
 cFp60 and cFp61 do not run PIMC/ISMCTS/rollouts, evaluate actions, build trees,
-select moves, or change any policy behavior. Next recommended step:
-benchmark-only `determinized-pimc-probe-v0`.
+select moves, or change any policy behavior. Next recommended step: refine the
+sampler for non-prior hidden hand cards or run benchmark-only
+`determinized-pimc-probe-v0` over valid roots with skip accounting.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

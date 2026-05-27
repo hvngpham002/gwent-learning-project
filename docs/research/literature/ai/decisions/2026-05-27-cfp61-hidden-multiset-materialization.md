@@ -22,9 +22,13 @@ product difficulty changes.
 
 ### 1. Did materialization succeed for all cFp60 official starter roots?
 
-Yes. The current starter suite produced 4,042 roots and the robust starter suite
-produced 32,487 roots. All 36,529 roots are `prior_available` and
-`materializationStatus: "valid"`.
+Partially. The current starter suite produced 4,042 roots and the robust starter
+suite produced 32,487 roots. All 36,529 roots are `prior_available`.
+
+After the prompt-reveal repair, valid roots are:
+
+- current starter suite: 3,979 valid roots;
+- robust starter suite: 32,146 valid roots.
 
 Every valid root reports:
 
@@ -33,16 +37,20 @@ Every valid root reports:
 - `sampleCountValid: 8`
 - `sampleCountInvalid: 0`
 
+Invalid roots are kept in the artifact with safe reason counts and zero
+generated samples.
+
 ### 2. What invalid reason counts remain?
 
-None. Both required suites have empty invalid reason counts.
+The repaired contract leaves safe `insufficient_prior_remaining` counts:
 
-During implementation, the first local current-suite run exposed
-`insufficient_prior_remaining` roots. The fix was not a behavior change: public
-known subtraction now covers public board/discard rows on both sides, acting-seat
-visible hand cards that belong to the opponent preset, and removed-from-game
-cards that left public play through visible transforms. The materializer still
-does not inspect opponent hidden hand/deck identities.
+- current starter suite: 63 roots;
+- robust starter suite: 341 roots.
+
+These roots are states where public known subtraction plus observed hidden counts
+cannot be reconciled to the opponent-seat known preset prior without peeking at
+hidden hand/deck identities. The materializer records the invalid reason and
+does not fabricate samples for those roots.
 
 ### 3. Are sampled hidden multisets deterministic across repeat runs?
 
@@ -51,19 +59,19 @@ hashes:
 
 | File | Hash |
 |---|---|
-| `manifest.json` | `301314e27394c0eeecf5cc29d75d3a95f14e0abbaa722072afd5190b58de4391` |
-| `summary.json` | `24bac4933e378063ca170c367db1e4e5ca0ee2e2c55dd89ffdb281b8126fd21c` |
-| `roots.jsonl` | `963c1cec7e895147bfef14782d44866bcad1aff9df1f97a1a2f68154d472397f` |
-| `report.md` | `d99b5483c83a54d964f22618894f9c74f69dcac38f09aad8901f7cfcec42a148` |
+| `manifest.json` | `4734054121cab2ab44a491016d313b85ad001fe5b940c4156f341893e79813e0` |
+| `summary.json` | `09508114efac409e0e705f92e84cc3d49c9727e6cf1d151ccfe0d3063fc88ca2` |
+| `roots.jsonl` | `c42b4cd4d43d1bfe539f30b8f812ea0c00d3fd8db2bb743bcbe07629d19a620c` |
+| `report.md` | `739e21df95bd1c69242f5b3d03ff02057c16381e4236cd2c3f31e0a26efc61c6` |
 
 The current suite hashes are:
 
 | File | Hash |
 |---|---|
-| `manifest.json` | `65ea38eadefbc3fceb9535b5bee976fe41b39c63df45f45ca1e4d49c807f2ea6` |
-| `summary.json` | `7b05a5875719707aef594d96322b710caa87257ebb8f388442516b5b66b5191c` |
-| `roots.jsonl` | `9ea59eec18ec1e4e5c5838581bdc7c9fb3d8affc4676679b69b8e1a71d97f0ae` |
-| `report.md` | `12197fc436a708e8854874d5f060edfe7a2654cf3f38294c79485489c462b10e` |
+| `manifest.json` | `dce47b639ad740e16da0577b8a20230cb629d47f48cd9c3a5819ba38dd8bf77f` |
+| `summary.json` | `5e6aa42c623bd7852ea5bceb3ba0d67a128fa6c67cd46978372c5ef98225b7a4` |
+| `roots.jsonl` | `1ee53a81182dcc24c77083d0cf5ebfd02082f2d40176676b28b695c82af86061` |
+| `report.md` | `f44bfe59c537ab7c5f219a2e4a328a2fd3141783d160c3696e0e32f1796bb027` |
 
 ### 4. Are sample aggregate stats plausible and hidden-info-safe?
 
@@ -79,14 +87,17 @@ fields, and representative catalog-like card identity strings.
 
 ### 5. Is the project ready for a first `determinized-pimc-probe-v0`?
 
-Yes, with the cFp58/cFp60 guardrails still in force. The next phase can build a
-benchmark-only `determinized-pimc-probe-v0` on top of cFp61 samples, but it must
+Not for all roots. The valid-root sampler path is ready for a first
+benchmark-only probe, but the invalid roots should either be skipped with safe
+reason accounting or receive a narrower sampler refinement for non-prior hidden
+hand cards before any broad `determinized-pimc-probe-v0` run. Any probe must
 remain separate from product AI, serialize no hidden sample identities, and
 report determinization-risk metrics before making strength claims.
 
 ## Recommended Next Step
 
-Implement the first benchmark-only `determinized-pimc-probe-v0` prototype using
-the cFp61 materialized samples and the cFp60 public action abstraction. Keep it
-out of product gameplay and do not interpret it as a fair hidden-information
-agent until Long-style determinization-risk metrics are measured.
+Either add a small sampler refinement for non-prior hidden hand cards, or build
+the first benchmark-only `determinized-pimc-probe-v0` only over valid cFp61
+roots with explicit invalid-root skip accounting. Keep it out of product
+gameplay and do not interpret it as a fair hidden-information agent until
+Long-style determinization-risk metrics are measured.

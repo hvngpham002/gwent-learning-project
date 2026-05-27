@@ -4,6 +4,7 @@ import {
   buildKnownPresetSourceMultisetPrior,
   buildOpponentKnownPresetSourceMultisetPrior,
   buildPublicKnownSourceSubtraction,
+  buildSamplerMaterializationRootRecord,
   materializeHiddenMultisetSample,
   materializeHiddenMultisets,
   type MaterializedHiddenMultisetSample,
@@ -223,6 +224,24 @@ describe("benchmark sampler materialization", () => {
     expect(result.samples).toEqual([]);
   });
 
+  it("marks excess remaining prior as invalid with a safe reason", () => {
+    const result = materializeHiddenMultisets({
+      samplerRunId: "test-run",
+      rootPublicFingerprint: "public-root",
+      priorSourceCounts: { a: 2 },
+      remainingSourceCounts: { a: 2 },
+      opponentHandCount: 1,
+      opponentDeckCount: 0,
+      sampleCount: 8,
+    });
+
+    expect(result.materializationStatus).toBe("invalid");
+    expect(result.invalidReasonCounts).toEqual({
+      prior_remaining_exceeds_observed_hidden_count: 1,
+    });
+    expect(result.samples).toEqual([]);
+  });
+
   it("generates deterministic samples by public root and sample index", () => {
     const input = {
       samplerRunId: "test-run",
@@ -241,7 +260,7 @@ describe("benchmark sampler materialization", () => {
   });
 
   it("valid samples have exact hand/deck counts and respect duplicate limits", () => {
-    const duplicateLimits = { a: 2, b: 2, c: 2, d: 2, e: 2 };
+    const duplicateLimits = { a: 2, b: 2, c: 1, d: 1, e: 1 };
     const result = materializeHiddenMultisets({
       samplerRunId: "test-run",
       rootPublicFingerprint: "public-root",
@@ -266,6 +285,115 @@ describe("benchmark sampler materialization", () => {
           duplicateLimits[source as keyof typeof duplicateLimits],
         );
       }
+    }
+  });
+
+  it("counts prompt-revealed opponent hand cards once while preserving real hand count", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-nilfgaard-starter",
+      faction: "nilfgaard",
+    });
+    const [revealedSource, hiddenSource] = Object.keys(prior.mainDeckSourceCounts);
+    const opponentHand = ["revealed-hand", "hidden-hand-one", "hidden-hand-two"];
+    const opponentDeck = Array.from(
+      { length: prior.mainDeckCardCount - opponentHand.length },
+      (_, index) => `hidden-deck-${index}`,
+    );
+    const state = baseState(
+      {
+        "revealed-hand": card("revealed-hand", revealedSource, {
+          kind: "hand",
+          seat: "seat_b",
+        }),
+        "hidden-hand-one": card("hidden-hand-one", hiddenSource, {
+          kind: "hand",
+          seat: "seat_b",
+        }),
+        "hidden-hand-two": card("hidden-hand-two", hiddenSource, {
+          kind: "hand",
+          seat: "seat_b",
+        }),
+      },
+      {
+        pendingPrompt: {
+          promptId: "prompt:reveal",
+          seatId: "seat_a",
+          kind: "choose_option",
+          abilityId: "look_three_cards",
+          stage: "opponent_hand_reveal",
+          context: {
+            revealedCardIds: ["revealed-hand"],
+          },
+          options: [
+            {
+              optionId: "ack",
+              label: "acknowledge",
+              target: { kind: "none" },
+            },
+          ],
+        },
+      },
+    );
+    state.seats.seat_b.hand = opponentHand;
+    state.seats.seat_b.deck = opponentDeck;
+
+    const root = buildSamplerMaterializationRootRecord({
+      samplerRunId: "test-run",
+      suiteId: "benchmark-v1-starter-matrix-v1",
+      matchupId: "prompt-reveal-regression",
+      seed: "prompt-reveal-seed",
+      step: 1,
+      decisionIndex: 0,
+      state,
+      seatId: "seat_a",
+      policyId: "legal-heuristic-v1",
+      legalMoves: [],
+      seats: {
+        seat_a: {
+          seatId: "seat_a",
+          policyId: "legal-heuristic-v1",
+          playerId: "a",
+          faction: "northern_realms",
+          deckPresetId: "official-northern-realms-starter",
+        },
+        seat_b: {
+          seatId: "seat_b",
+          policyId: "legal-heuristic-v0",
+          playerId: "b",
+          faction: "nilfgaard",
+          deckPresetId: "official-nilfgaard-starter",
+        },
+      },
+      sampleCount: 8,
+    });
+
+    expect(root.materializationStatus).toBe("valid");
+    expect(root.opponentHandCount).toBe(opponentHand.length);
+    expect(root.sampleCountGenerated).toBe(8);
+    expect(root.sampleCountValid).toBe(8);
+
+    const publicKnown = buildPublicKnownSourceSubtraction({
+      state,
+      actingSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      priorSourceCounts: prior.mainDeckSourceCounts,
+    });
+    const materialization = materializeHiddenMultisets({
+      samplerRunId: "test-run",
+      rootPublicFingerprint: root.rootPublicFingerprint,
+      priorSourceCounts: prior.mainDeckSourceCounts,
+      remainingSourceCounts: publicKnown.remainingSourceCounts,
+      fixedKnownHandSourceCounts: publicKnown.fixedKnownHandSourceCounts,
+      opponentHandCount: opponentHand.length,
+      opponentDeckCount: opponentDeck.length,
+      sampleCount: 8,
+    });
+
+    expect(publicKnown.fixedKnownHandCardCount).toBe(1);
+    expect(materialization.materializationStatus).toBe("valid");
+    for (const sample of materialization.samples) {
+      expect(total(sample.handSourceCounts)).toBe(opponentHand.length);
+      expect(sample.handSourceCounts[revealedSource]).toBeGreaterThanOrEqual(1);
     }
   });
 

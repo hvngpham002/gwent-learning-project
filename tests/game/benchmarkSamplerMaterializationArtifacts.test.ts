@@ -210,13 +210,28 @@ describe("benchmark sampler materialization artifacts", () => {
     );
   });
 
-  it("committed current and robust artifacts have valid 8/8 samples and no deferred roots", () => {
+  it("committed current and robust artifacts have valid 8/8 samples and safe invalid roots", () => {
     const expectations = [
-      { suiteId: "benchmark-v1-starter-matrix-v1", roots: 4042 },
-      { suiteId: "benchmark-v1-starter-matrix-robust-v1", roots: 32487 },
+      {
+        suiteId: "benchmark-v1-starter-matrix-v1",
+        roots: 4042,
+        valid: 3979,
+        invalid: 63,
+      },
+      {
+        suiteId: "benchmark-v1-starter-matrix-robust-v1",
+        roots: 32487,
+        valid: 32146,
+        invalid: 341,
+      },
     ];
 
-    for (const { suiteId, roots: expectedRootCount } of expectations) {
+    for (const {
+      suiteId,
+      roots: expectedRootCount,
+      valid,
+      invalid,
+    } of expectations) {
       const summary = readArtifactJson<{
         rootRecordCount: number;
         priorStatusCounts: Record<string, number>;
@@ -230,18 +245,35 @@ describe("benchmark sampler materialization artifacts", () => {
         prior_available: expectedRootCount,
       });
       expect(summary.materializationStatusCounts).toEqual({
-        valid: expectedRootCount,
+        invalid,
+        valid,
       });
-      expect(summary.invalidReasonCounts).toEqual({});
+      expect(summary.invalidReasonCounts).toEqual({
+        insufficient_prior_remaining: invalid,
+      });
       expect(roots).toHaveLength(expectedRootCount);
       expect(roots.some((entry) => entry.materializationStatus === "deferred")).toBe(false);
       expect(
-        roots.every(
+        roots
+          .filter((entry) => entry.materializationStatus === "valid")
+          .every(
           (entry) =>
             entry.sampleCountRequested === 8 &&
             entry.sampleCountGenerated === 8 &&
             entry.sampleCountValid === 8 &&
             entry.sampleCountInvalid === 0,
+          ),
+      ).toBe(true);
+      expect(
+        roots
+          .filter((entry) => entry.materializationStatus === "invalid")
+          .every(
+            (entry) =>
+              entry.sampleCountRequested === 8 &&
+              entry.sampleCountGenerated === 0 &&
+              entry.sampleCountValid === 0 &&
+              entry.sampleCountInvalid === 0 &&
+              entry.invalidReasonCounts.insufficient_prior_remaining === 1,
         ),
       ).toBe(true);
     }
