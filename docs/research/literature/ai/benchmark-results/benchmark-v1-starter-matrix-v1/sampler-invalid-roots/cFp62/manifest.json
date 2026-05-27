@@ -1,0 +1,25 @@
+{
+  "artifactHashes": {
+    "invalid-roots.jsonl": "eafb0710ed80bb76a639f97a5262e92e39fa83e46869d52bbed8e3fdb4773874",
+    "report.md": "179dd71fd0605c5ba6c39584425fab5d306736cdf2fbbcdbfc7a4567daaaf256",
+    "summary.json": "712b24c3cc429b4f1795024c79067d314292d1e79abb78eda4b209404f0565c5"
+  },
+  "explicitNonSearchWarning": "cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.",
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "invalid-roots.jsonl",
+    "report.md"
+  ],
+  "hiddenInfoSafetyNote": "Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.",
+  "invalidRootCount": 63,
+  "recommendedNextStep": "cFp63 should implement a narrow sampler-public-count repair before any determinized probe, then regenerate sampler materialization and invalid-root artifacts before search.",
+  "rootSchemaVersion": "sampler-invalid-root-v1",
+  "samplerRunId": "benchmark-v1-starter-matrix-v1:sampler-invalid-roots:cFp62",
+  "schemaVersion": "sampler-invalid-root-artifact-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "sampler-invalid-root-summary-v1",
+  "totalRootCount": 4042,
+  "validRootCount": 3979
+}

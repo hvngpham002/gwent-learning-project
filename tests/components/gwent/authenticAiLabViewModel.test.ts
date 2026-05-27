@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp61",
-        latestSpecPath: "docs/spec/2026-05-27-cFp61-specs.md",
-        latestReportPath: "audit/reports/2026-05-27-cFp61-report.md",
+        latestPhase: "cFp62",
+        latestSpecPath: "docs/spec/2026-05-27-cFp62-specs.md",
+        latestReportPath: "audit/reports/2026-05-27-cFp62-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
      expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp61",
-        latestSpecPath: "docs/spec/2026-05-27-cFp61-specs.md",
-        latestReportPath: "audit/reports/2026-05-27-cFp61-report.md",
+        latestPhase: "cFp62",
+        latestSpecPath: "docs/spec/2026-05-27-cFp62-specs.md",
+        latestReportPath: "audit/reports/2026-05-27-cFp62-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -94,10 +94,10 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp61");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-05-27-cFp61-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-05-27-cFp61-report.md");
-    expect(v1?.description).toContain("cFp61 change no policy behavior");
+    expect(v1?.latestPhase).toBe("cFp62");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-05-27-cFp62-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-05-27-cFp62-report.md");
+    expect(v1?.description).toContain("cFp62 change no policy behavior");
     expect(v1?.description).toContain("evaluation infrastructure only, not search gameplay");
     expect(v1?.capabilities).toEqual(
       expect.arrayContaining([
@@ -134,6 +134,7 @@ describe("authentic AI Lab view model", () => {
         "search-readiness root profiler artifacts for evaluation infrastructure, not search gameplay (cFp59)",
         "known-preset sampler contract, sampled-world validation, and public action abstraction as sampler-readiness infrastructure only (cFp60)",
         "hidden-multiset materialization sampler artifacts with aggregate-only sample proof, not search gameplay (cFp61)",
+        "sampler invalid-root casebook artifacts with scalar-only classifications, not search gameplay (cFp62)",
       ])
     );
   });

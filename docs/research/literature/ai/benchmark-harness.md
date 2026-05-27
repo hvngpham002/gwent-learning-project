@@ -114,9 +114,13 @@ Search-readiness:
 - cFp60 adds a benchmark-only known-preset sampler contract and public action
   abstraction; cFp61 materializes deterministic in-memory hidden opponent
   hand/deck source-multiset samples from that prior and writes only aggregate
-  sampler-materialization artifacts under `<suiteId>/sampler-materialization/cFp61/`.
-  Neither phase evaluates actions, runs rollouts/search, changes policy
-  behavior, or wires product gameplay.
+  sampler-materialization artifacts under `<suiteId>/sampler-materialization/cFp61/`;
+- cFp62 adds a benchmark-only sampler invalid-root casebook under
+  `<suiteId>/sampler-invalid-roots/cFp62/`. It reruns the cFp61 materialization
+  path, emits scalar/count evidence only for invalid roots, and classifies all
+  404 current/robust invalid roots as `public_zone_count_deficit`.
+  These phases do not evaluate actions, run rollouts/search, change policy
+  behavior, or wire product gameplay.
 
 Robustness probe:
 
@@ -263,6 +267,13 @@ Write cFp61 sampler-materialization artifact sets:
 ```bash
 npm run benchmark:sampler-materialization:v1-starter-matrix
 npm run benchmark:sampler-materialization:v1-robust
+```
+
+Write cFp62 sampler invalid-root casebook artifact sets:
+
+```bash
+npm run benchmark:sampler-invalid-roots:v1-starter-matrix
+npm run benchmark:sampler-invalid-roots:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the

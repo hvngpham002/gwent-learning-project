@@ -19,3 +19,5 @@ export * from './samplerReadiness';
 export * from './samplerReadinessArtifacts';
 export * from './samplerMaterialization';
 export * from './samplerMaterializationArtifacts';
+export * from './samplerInvalidRoots';
+export * from './samplerInvalidRootArtifacts';
