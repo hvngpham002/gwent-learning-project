@@ -1,0 +1,22 @@
+{
+  "artifactHashes": {
+    "report.md": "d99b5483c83a54d964f22618894f9c74f69dcac38f09aad8901f7cfcec42a148",
+    "roots.jsonl": "963c1cec7e895147bfef14782d44866bcad1aff9df1f97a1a2f68154d472397f",
+    "summary.json": "24bac4933e378063ca170c367db1e4e5ca0ee2e2c55dd89ffdb281b8126fd21c"
+  },
+  "explicitNonSearchWarning": "cFp61 sampler-materialization artifacts are infrastructure only. No rollout, PIMC, ISMCTS, MCTS, action evaluation, action ranking, policy behavior, or product difficulty changed.",
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "roots.jsonl",
+    "report.md"
+  ],
+  "hiddenInfoSafetyNote": "Sampler-materialization artifacts contain only public root metadata, scalar counts, status distributions, and aggregate sample statistics. They exclude sampled hand maps, sampled deck maps, deck order, raw state, raw moves, runtime card identifiers, and card identity strings.",
+  "rootRecordCount": 32487,
+  "rootSchemaVersion": "sampler-materialization-root-v1",
+  "samplerRunId": "benchmark-v1-starter-matrix-robust-v1:sampler-materialization:cFp61",
+  "schemaVersion": "sampler-materialization-artifact-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "summarySchemaVersion": "sampler-materialization-summary-v1"
+}

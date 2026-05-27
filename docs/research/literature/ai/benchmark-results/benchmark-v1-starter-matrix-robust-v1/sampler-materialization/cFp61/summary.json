@@ -1,0 +1,138 @@
+{
+  "deckDuplicatePressureBucketCounts": {
+    "none": 901,
+    "pair": 51801,
+    "triple_plus": 207194
+  },
+  "deckPresetIds": [
+    "official-monsters-starter",
+    "official-nilfgaard-starter",
+    "official-northern-realms-starter",
+    "official-scoiatael-starter",
+    "official-skellige-starter"
+  ],
+  "deckUniqueSourceCountAverageStats": {
+    "average": 15.726,
+    "count": 32487,
+    "max": 20,
+    "min": 5.25,
+    "p50": 16,
+    "p90": 17.75,
+    "p95": 18
+  },
+  "explicitNonSearchWarning": "cFp61 sampler-materialization artifacts are infrastructure only. No rollout, PIMC, ISMCTS, MCTS, action evaluation, action ranking, policy behavior, or product difficulty changed.",
+  "factions": [
+    "monsters",
+    "nilfgaard",
+    "northern_realms",
+    "scoiatael",
+    "skellige"
+  ],
+  "handDeckOverlapBucketCounts": {
+    "four_plus": 72459,
+    "none": 54886,
+    "one": 36676,
+    "two_to_three": 95875
+  },
+  "handDuplicatePressureBucketCounts": {
+    "none": 165394,
+    "pair": 87208,
+    "triple_plus": 7294
+  },
+  "handUniqueSourceCountAverageStats": {
+    "average": 4.742,
+    "count": 32487,
+    "max": 11.5,
+    "min": 0,
+    "p50": 4.75,
+    "p90": 8.75,
+    "p95": 9
+  },
+  "hiddenInfoSafetyNote": "Sampler-materialization artifacts contain only public root metadata, scalar counts, status distributions, and aggregate sample statistics. They exclude sampled hand maps, sampled deck maps, deck order, raw state, raw moves, runtime card identifiers, and card identity strings.",
+  "invalidReasonCounts": {},
+  "matchCount": 1000,
+  "materializationStatusCounts": {
+    "valid": 32487
+  },
+  "policyIds": [
+    "headless-round-end-auto-resolver",
+    "legal-heuristic-v0",
+    "legal-heuristic-v1"
+  ],
+  "priorStatusCounts": {
+    "prior_available": 32487
+  },
+  "rootCountsByDeckPreset": {
+    "official-monsters-starter": 5651,
+    "official-nilfgaard-starter": 7555,
+    "official-northern-realms-starter": 7220,
+    "official-scoiatael-starter": 6433,
+    "official-skellige-starter": 5628
+  },
+  "rootCountsByFaction": {
+    "monsters": 5651,
+    "nilfgaard": 7555,
+    "northern_realms": 7220,
+    "scoiatael": 6433,
+    "skellige": 5628
+  },
+  "rootCountsByPhase": {
+    "mulligan": 2948,
+    "playing": 26866,
+    "round_end": 2673
+  },
+  "rootCountsByPolicy": {
+    "headless-round-end-auto-resolver": 2673,
+    "legal-heuristic-v0": 15369,
+    "legal-heuristic-v1": 14445
+  },
+  "rootRecordCount": 32487,
+  "sampleCountStats": {
+    "generated": {
+      "average": 8,
+      "count": 32487,
+      "max": 8,
+      "min": 8,
+      "p50": 8,
+      "p90": 8,
+      "p95": 8
+    },
+    "invalid": {
+      "average": 0,
+      "count": 32487,
+      "max": 0,
+      "min": 0,
+      "p50": 0,
+      "p90": 0,
+      "p95": 0
+    },
+    "requested": {
+      "average": 8,
+      "count": 32487,
+      "max": 8,
+      "min": 8,
+      "p50": 8,
+      "p90": 8,
+      "p95": 8
+    },
+    "valid": {
+      "average": 8,
+      "count": 32487,
+      "max": 8,
+      "min": 8,
+      "p50": 8,
+      "p90": 8,
+      "p95": 8
+    }
+  },
+  "samplerRunId": "benchmark-v1-starter-matrix-robust-v1:sampler-materialization:cFp61",
+  "schemaVersion": "sampler-materialization-summary-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "statusCounts": {
+    "completed": 1000,
+    "engine_error": 0,
+    "max_steps_exceeded": 0,
+    "policy_failed": 0
+  },
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1"
+}

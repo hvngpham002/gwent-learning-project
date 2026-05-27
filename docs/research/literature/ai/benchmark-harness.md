@@ -111,6 +111,12 @@ Search-readiness:
 - cFp59 deliberately omits committed wall-clock per-root timing so repeated
   artifact hashes stay stable. Runtime timing should be collected in a future
   separated local timing profile.
+- cFp60 adds a benchmark-only known-preset sampler contract and public action
+  abstraction; cFp61 materializes deterministic in-memory hidden opponent
+  hand/deck source-multiset samples from that prior and writes only aggregate
+  sampler-materialization artifacts under `<suiteId>/sampler-materialization/cFp61/`.
+  Neither phase evaluates actions, runs rollouts/search, changes policy
+  behavior, or wires product gameplay.
 
 Robustness probe:
 
@@ -250,6 +256,13 @@ Write cFp60 sampler-readiness artifact sets:
 ```bash
 npm run benchmark:sampler-readiness:v1-starter-matrix
 npm run benchmark:sampler-readiness:v1-robust
+```
+
+Write cFp61 sampler-materialization artifact sets:
+
+```bash
+npm run benchmark:sampler-materialization:v1-starter-matrix
+npm run benchmark:sampler-materialization:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the
@@ -542,15 +555,26 @@ search; cFp59 completes that profiler without adding a search policy.
 cFp60 adds sampler-readiness infrastructure: `known_preset_decklist_prior` for
 official starter deck contexts, deterministic sampled-world validation summaries
 emitting public scalar/status fields only, hidden-info-safe public action
-abstraction grouping legal moves by kind/target/side/row/phase/round/source
-class/strength bucket/prompt index without raw ids, and deterministic
-sampler-readiness artifacts under `<suiteId>/sampler-readiness/cFp60/`. All
-36,529 roots across starter (4,042 roots, 120 matches) and robust (32,487 roots,
-1,000 matches) suites have `prior_available` and `valid` status. Robust repeat
+abstraction grouping legal moves by public shape without raw ids, and
+deterministic sampler-readiness artifacts under `<suiteId>/sampler-readiness/cFp60/`.
+All 36,529 roots across starter (4,042 roots, 120 matches) and robust (32,487
+roots, 1,000 matches) suites have `prior_available` and `deferred` status
+because cFp60 intentionally did not materialize hidden multisets. Robust repeat
 artifacts produce identical hashes. npm scripts `benchmark:sampler-readiness:v1-starter-matrix`
-and `benchmark:sampler-readiness:v1-robust` run the CLI. cFp60 does not run
-PIMC/ISMCTS/rollouts, evaluate actions, build trees, select moves, or change any
-policy behavior. Next recommended step: `determinized-pimc-probe-v0` (cFp61).
+and `benchmark:sampler-readiness:v1-robust` run the CLI.
+
+cFp61 adds sampler-materialization infrastructure under
+`<suiteId>/sampler-materialization/cFp61/`. It samples opponent hidden
+hand/deck source multisets in memory from the cFp60 opponent-seat known preset
+prior, validates those samples against public counts and duplicate limits, and
+serializes only aggregate sample statistics. Starter and robust suites produce
+4,042 and 32,487 roots respectively; all are `prior_available`, all are
+`valid`, and every root reports 8 requested, generated, and valid samples with
+0 invalid samples. Robust repeat artifacts produce identical hashes.
+
+cFp60 and cFp61 do not run PIMC/ISMCTS/rollouts, evaluate actions, build trees,
+select moves, or change any policy behavior. Next recommended step:
+benchmark-only `determinized-pimc-probe-v0`.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

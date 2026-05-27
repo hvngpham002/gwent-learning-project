@@ -23,17 +23,23 @@ phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
 The latest analysis phase is cFp56: Temporal Round-One Overinvestment
 Casebook. The latest rating-ledger phase is cFp57: Multi-Period Rating Ledger.
-The latest sampler-readiness phase is cFp60: Known-Preset Sampler Contract And
-Public Action Abstraction. The latest search-readiness profiler phase is cFp59:
+The latest sampler-materialization phase is cFp61: Hidden-Multiset
+Materialization Sampler. The latest sampler-readiness phase is cFp60:
+Known-Preset Sampler Contract And Public Action Abstraction. The latest
+search-readiness profiler phase is cFp59:
 Search-Readiness Root Profiler. The latest instrumentation phase is cFp55:
 Round-One Temporal Spend Instrumentation. cFp60 adds benchmark-only
 `known_preset_decklist_prior`, sampled-world validation summaries, hidden-info-safe
 public action abstraction, and deterministic sampler-readiness artifacts without
 changing `legal-heuristic-v1` gameplay, search behavior, engine rules, legal moves,
-or product difficulty. cFp59 adds benchmark-only hidden-info-safe root-profiler
-artifacts and AI Lab metadata. cFp60 adds `known_preset_decklist_prior`,
-sampled-world validation, and public action abstraction as sampler-readiness
-infrastructure only. Neither cFp59 nor cFp60 changes `legal-heuristic-v1`
+or product difficulty. cFp61 materializes hidden opponent hand/deck
+source-multiset samples in memory from the cFp60 known preset prior and writes
+aggregate-only sampler-materialization artifacts with no sampled identities.
+cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
+metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
+and public action abstraction as sampler-readiness infrastructure only. cFp61 is
+sampler-materialization infrastructure only. cFp59, cFp60, and cFp61 do not change
+`legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
 path that cFp52 proved: when the exact selected `play_card` has cFp43 base
@@ -73,8 +79,10 @@ planning only. cFp59 implements the recommended benchmark-only profiler by
 emitting public root scalar/count artifacts for the current and robust starter
 matrix suites. cFp60 adds `known_preset_decklist_prior`, sampled-world validation
 summaries, and public action abstraction for the current and robust starter
-matrix suites. Both cFp59 and cFp60 are evaluation infrastructure only and do not
-make search available in product play.
+matrix suites. cFp61 adds the first real in-memory hidden opponent source-multiset
+materializer for those same suites and writes aggregate-only proof artifacts.
+cFp59, cFp60, and cFp61 are evaluation infrastructure only and do not make search
+available in product play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -140,6 +148,11 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
    `known_preset_decklist_prior`, sampled-world validation summaries, hidden-info-safe
    public action abstraction, and deterministic sampler-readiness artifacts for starter
    (4,042 roots) and robust (32,487 roots) suites without changing policy behavior.
+- cFp61: evaluation-only sampler-materialization infrastructure; adds real
+  in-memory hidden opponent hand/deck source-multiset sampling from the cFp60
+  opponent-seat known preset prior and aggregate-only artifacts for starter
+  (4,042 roots) and robust (32,487 roots) suites, with every root reporting
+  8 requested, 8 generated, 8 valid, and 0 invalid samples.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

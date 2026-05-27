@@ -17,3 +17,5 @@ export * from './searchReadiness';
 export * from './searchReadinessArtifacts';
 export * from './samplerReadiness';
 export * from './samplerReadinessArtifacts';
+export * from './samplerMaterialization';
+export * from './samplerMaterializationArtifacts';
