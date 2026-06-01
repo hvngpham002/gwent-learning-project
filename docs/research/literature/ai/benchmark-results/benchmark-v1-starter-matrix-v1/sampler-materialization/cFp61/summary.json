@@ -1,8 +1,8 @@
 {
   "deckDuplicatePressureBucketCounts": {
-    "none": 33,
-    "pair": 5739,
-    "triple_plus": 26060
+    "none": 36,
+    "pair": 5811,
+    "triple_plus": 25985
   },
   "deckPresetIds": [
     "official-monsters-starter",
@@ -12,14 +12,34 @@
     "official-skellige-starter"
   ],
   "deckUniqueSourceCountAverageStats": {
-    "average": 15.297,
+    "average": 15.317,
     "count": 4042,
-    "max": 19.375,
+    "max": 19.625,
     "min": 0,
     "p50": 15.75,
-    "p90": 17.625,
+    "p90": 17.75,
     "p95": 18
   },
+  "duplicateFixedKnownHandReferenceCountStats": {
+    "average": 0,
+    "count": 4042,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "duplicateFixedKnownHandReferenceTotal": 0,
+  "duplicatePublicReferenceCountStats": {
+    "average": 0,
+    "count": 4042,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "duplicatePublicReferenceTotal": 0,
   "explicitNonSearchWarning": "cFp61 sampler-materialization artifacts are infrastructure only. No rollout, PIMC, ISMCTS, MCTS, action evaluation, action ranking, policy behavior, or product difficulty changed.",
   "factions": [
     "monsters",
@@ -29,20 +49,20 @@
     "skellige"
   ],
   "handDeckOverlapBucketCounts": {
-    "four_plus": 8512,
-    "none": 7121,
-    "one": 4371,
-    "two_to_three": 11828
+    "four_plus": 8699,
+    "none": 7124,
+    "one": 4264,
+    "two_to_three": 11745
   },
   "handDuplicatePressureBucketCounts": {
-    "none": 20459,
-    "pair": 10485,
-    "triple_plus": 888
+    "none": 20432,
+    "pair": 10574,
+    "triple_plus": 826
   },
   "handUniqueSourceCountAverageStats": {
-    "average": 4.506,
+    "average": 4.504,
     "count": 4042,
-    "max": 10.75,
+    "max": 11.375,
     "min": 0,
     "p50": 4.625,
     "p90": 8.625,
@@ -137,5 +157,23 @@
     "max_steps_exceeded": 0,
     "policy_failed": 0
   },
-  "suiteId": "benchmark-v1-starter-matrix-v1"
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "uniqueFixedKnownHandCardCountStats": {
+    "average": 0,
+    "count": 4042,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "uniquePublicKnownCardCountStats": {
+    "average": 7.403,
+    "count": 4042,
+    "max": 21,
+    "min": 0,
+    "p50": 7,
+    "p90": 14,
+    "p95": 15
+  }
 }

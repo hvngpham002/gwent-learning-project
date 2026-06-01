@@ -1,8 +1,8 @@
 {
   "deckDuplicatePressureBucketCounts": {
-    "none": 899,
-    "pair": 51236,
-    "triple_plus": 205033
+    "none": 887,
+    "pair": 50943,
+    "triple_plus": 205338
   },
   "deckPresetIds": [
     "official-monsters-starter",
@@ -12,7 +12,7 @@
     "official-skellige-starter"
   ],
   "deckUniqueSourceCountAverageStats": {
-    "average": 15.56,
+    "average": 15.556,
     "count": 32487,
     "max": 20,
     "min": 0,
@@ -20,6 +20,26 @@
     "p90": 17.625,
     "p95": 18
   },
+  "duplicateFixedKnownHandReferenceCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "duplicateFixedKnownHandReferenceTotal": 0,
+  "duplicatePublicReferenceCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "duplicatePublicReferenceTotal": 0,
   "explicitNonSearchWarning": "cFp61 sampler-materialization artifacts are infrastructure only. No rollout, PIMC, ISMCTS, MCTS, action evaluation, action ranking, policy behavior, or product difficulty changed.",
   "factions": [
     "monsters",
@@ -29,20 +49,20 @@
     "skellige"
   ],
   "handDeckOverlapBucketCounts": {
-    "four_plus": 72182,
-    "none": 54369,
-    "one": 35887,
-    "two_to_three": 94730
+    "four_plus": 71772,
+    "none": 54283,
+    "one": 36302,
+    "two_to_three": 94811
   },
   "handDuplicatePressureBucketCounts": {
-    "none": 163313,
-    "pair": 86594,
-    "triple_plus": 7261
+    "none": 162932,
+    "pair": 86872,
+    "triple_plus": 7364
   },
   "handUniqueSourceCountAverageStats": {
-    "average": 4.701,
+    "average": 4.7,
     "count": 32487,
-    "max": 11.5,
+    "max": 11.125,
     "min": 0,
     "p50": 4.75,
     "p90": 8.75,
@@ -137,5 +157,23 @@
     "max_steps_exceeded": 0,
     "policy_failed": 0
   },
-  "suiteId": "benchmark-v1-starter-matrix-robust-v1"
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "uniqueFixedKnownHandCardCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "uniquePublicKnownCardCountStats": {
+    "average": 7.093,
+    "count": 32487,
+    "max": 22,
+    "min": 0,
+    "p50": 7,
+    "p90": 13,
+    "p95": 15
+  }
 }

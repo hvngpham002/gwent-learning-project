@@ -1,8 +1,8 @@
 {
   "artifactHashes": {
-    "invalid-roots.jsonl": "1d7eb6c240888aed04d96b3e0ce670612bc8d69495de6509776be59adeb8aab5",
-    "report.md": "7dce6c67e10c03cbae79fc2a7e376fd4bf8f2c8256a8a536ef950cae6de4452e",
-    "summary.json": "749264498c4960f843fca92cd45bef8cde40573810320aa59dee8699b7e8567f"
+    "invalid-roots.jsonl": "c5ebaab719cf892f6b4841048933b76503095317793fa50890abb4ce1fb165bc",
+    "report.md": "3e0090243ef8366045f9f768802ea7c78b866a8ef9f75b776dd31cf7c027e0af",
+    "summary.json": "60edd6f4da74d856709951e9d2ef2c953b649e97577ec657cb13c2801961e2ad"
   },
   "explicitNonSearchWarning": "cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.",
   "files": [
@@ -13,7 +13,7 @@
   ],
   "hiddenInfoSafetyNote": "Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.",
   "invalidRootCount": 341,
-  "recommendedNextStep": "cFp63 should implement a narrow sampler-public-count repair before any determinized probe, then regenerate sampler materialization and invalid-root artifacts before search.",
+  "recommendedNextStep": "cFp64 should add a scalar-only public-zone provenance casebook for the remaining public-zone count deficits before any determinized probe.",
   "rootSchemaVersion": "sampler-invalid-root-v1",
   "samplerRunId": "benchmark-v1-starter-matrix-robust-v1:sampler-invalid-roots:cFp62",
   "schemaVersion": "sampler-invalid-root-artifact-v1",

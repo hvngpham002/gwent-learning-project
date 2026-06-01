@@ -55,6 +55,8 @@ export interface PublicKnownSourceSubtractionResult {
   fixedKnownHandSourceCounts: Record<string, number>;
   publicKnownCardCount: number;
   fixedKnownHandCardCount: number;
+  duplicatePublicReferenceCount: number;
+  duplicateFixedKnownHandReferenceCount: number;
   remainingSourceCounts: Record<string, number>;
   priorRemainingCardCount: number;
   invalidReasonCounts: Record<string, number>;
@@ -128,6 +130,10 @@ export interface SamplerMaterializationRootRecord {
   opponentHiddenPoolSizeBucket: string;
   opponentHandCount: number;
   opponentDeckCount: number;
+  duplicatePublicReferenceCount: number;
+  duplicateFixedKnownHandReferenceCount: number;
+  uniquePublicKnownCardCount: number;
+  uniqueFixedKnownHandCardCount: number;
   availableHiddenPoolSizeBucket: string;
   publicKnownCardCountBucket: string;
   priorRemainingCardCountBucket: string;
@@ -161,6 +167,12 @@ export interface SamplerMaterializationSummary {
   priorStatusCounts: Record<string, number>;
   materializationStatusCounts: Record<string, number>;
   invalidReasonCounts: Record<string, number>;
+  duplicatePublicReferenceTotal: number;
+  duplicateFixedKnownHandReferenceTotal: number;
+  duplicatePublicReferenceCountStats: SamplerReadinessCountStats;
+  duplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
+  uniquePublicKnownCardCountStats: SamplerReadinessCountStats;
+  uniqueFixedKnownHandCardCountStats: SamplerReadinessCountStats;
   sampleCountStats: SamplerMaterializationSampleCountStats;
   handUniqueSourceCountAverageStats: SamplerReadinessCountStats;
   deckUniqueSourceCountAverageStats: SamplerReadinessCountStats;
@@ -196,6 +208,15 @@ export interface BuildSamplerMaterializationRootRecordInput
 }
 
 type MutableCounts = Record<string, number>;
+
+interface PublicKnownCollectionState {
+  publicKnownSourceCounts: MutableCounts;
+  fixedKnownHandSourceCounts: MutableCounts;
+  seenPublicCardIds: Set<CardInstanceId>;
+  seenFixedKnownHandCardIds: Set<CardInstanceId>;
+  duplicatePublicReferenceCount: number;
+  duplicateFixedKnownHandReferenceCount: number;
+}
 
 const emptyDuplicatePressureCounts = (): Record<DuplicatePressureBucket, number> => ({
   none: 0,
@@ -405,25 +426,37 @@ const collectPublicCard = ({
   state,
   opponentSeatId,
   priorSourceCounts,
-  publicKnownSourceCounts,
-  fixedKnownHandSourceCounts,
+  collection,
   markFixedHand,
 }: {
   cardId: CardInstanceId | null | undefined;
   state: MatchState;
   opponentSeatId: SeatId;
   priorSourceCounts: Record<string, number>;
-  publicKnownSourceCounts: MutableCounts;
-  fixedKnownHandSourceCounts: MutableCounts;
+  collection: PublicKnownCollectionState;
   markFixedHand?: boolean;
 }) => {
   if (!cardId) return;
   const card = state.cardsById[cardId];
   if (!card || card.owner !== opponentSeatId) return;
-  if (!(card.sourceId in priorSourceCounts)) return;
-  addCount(publicKnownSourceCounts, card.sourceId);
+  if (!Object.prototype.hasOwnProperty.call(priorSourceCounts, card.sourceId)) {
+    return;
+  }
+
+  if (collection.seenPublicCardIds.has(cardId)) {
+    collection.duplicatePublicReferenceCount += 1;
+  } else {
+    collection.seenPublicCardIds.add(cardId);
+    addCount(collection.publicKnownSourceCounts, card.sourceId);
+  }
+
   if (markFixedHand && card.zone.kind === "hand" && card.zone.seat === opponentSeatId) {
-    addCount(fixedKnownHandSourceCounts, card.sourceId);
+    if (collection.seenFixedKnownHandCardIds.has(cardId)) {
+      collection.duplicateFixedKnownHandReferenceCount += 1;
+    } else {
+      collection.seenFixedKnownHandCardIds.add(cardId);
+      addCount(collection.fixedKnownHandSourceCounts, card.sourceId);
+    }
   }
 };
 
@@ -438,8 +471,14 @@ export const buildPublicKnownSourceSubtraction = ({
   opponentSeatId: SeatId;
   priorSourceCounts: Record<string, number>;
 }): PublicKnownSourceSubtractionResult => {
-  const publicKnownSourceCounts: MutableCounts = {};
-  const fixedKnownHandSourceCounts: MutableCounts = {};
+  const collection: PublicKnownCollectionState = {
+    publicKnownSourceCounts: {},
+    fixedKnownHandSourceCounts: {},
+    seenPublicCardIds: new Set<CardInstanceId>(),
+    seenFixedKnownHandCardIds: new Set<CardInstanceId>(),
+    duplicatePublicReferenceCount: 0,
+    duplicateFixedKnownHandReferenceCount: 0,
+  };
 
   (["seat_a", "seat_b"] as const).forEach((publicSeatId) => {
     const publicSeat = state.seats[publicSeatId];
@@ -450,8 +489,7 @@ export const buildPublicKnownSourceSubtraction = ({
           state,
           opponentSeatId,
           priorSourceCounts,
-          publicKnownSourceCounts,
-          fixedKnownHandSourceCounts,
+          collection,
         });
       });
       collectPublicCard({
@@ -459,8 +497,7 @@ export const buildPublicKnownSourceSubtraction = ({
         state,
         opponentSeatId,
         priorSourceCounts,
-        publicKnownSourceCounts,
-        fixedKnownHandSourceCounts,
+        collection,
       });
     });
 
@@ -470,8 +507,7 @@ export const buildPublicKnownSourceSubtraction = ({
         state,
         opponentSeatId,
         priorSourceCounts,
-        publicKnownSourceCounts,
-        fixedKnownHandSourceCounts,
+        collection,
       });
     });
 
@@ -481,8 +517,7 @@ export const buildPublicKnownSourceSubtraction = ({
         state,
         opponentSeatId,
         priorSourceCounts,
-        publicKnownSourceCounts,
-        fixedKnownHandSourceCounts,
+        collection,
       });
     });
   });
@@ -493,8 +528,7 @@ export const buildPublicKnownSourceSubtraction = ({
       state,
       opponentSeatId,
       priorSourceCounts,
-      publicKnownSourceCounts,
-      fixedKnownHandSourceCounts,
+      collection,
     });
   });
 
@@ -504,8 +538,7 @@ export const buildPublicKnownSourceSubtraction = ({
       state,
       opponentSeatId,
       priorSourceCounts,
-      publicKnownSourceCounts,
-      fixedKnownHandSourceCounts,
+      collection,
     });
   });
 
@@ -516,15 +549,14 @@ export const buildPublicKnownSourceSubtraction = ({
         state,
         opponentSeatId,
         priorSourceCounts,
-        publicKnownSourceCounts,
-        fixedKnownHandSourceCounts,
+        collection,
         markFixedHand: true,
       });
     });
   }
 
   const invalidReasonCounts: MutableCounts = {};
-  Object.entries(publicKnownSourceCounts).forEach(([source, count]) => {
+  Object.entries(collection.publicKnownSourceCounts).forEach(([source, count]) => {
     const priorCount = priorSourceCounts[source] ?? 0;
     if (count > priorCount) {
       addCount(invalidReasonCounts, "public_known_exceeds_prior_copy_count");
@@ -533,14 +565,17 @@ export const buildPublicKnownSourceSubtraction = ({
 
   const remainingSourceCounts = subtractCounts(
     priorSourceCounts,
-    publicKnownSourceCounts,
+    collection.publicKnownSourceCounts,
   );
 
   return {
-    publicKnownSourceCounts: sortEntries(publicKnownSourceCounts),
-    fixedKnownHandSourceCounts: sortEntries(fixedKnownHandSourceCounts),
-    publicKnownCardCount: sumCounts(publicKnownSourceCounts),
-    fixedKnownHandCardCount: sumCounts(fixedKnownHandSourceCounts),
+    publicKnownSourceCounts: sortEntries(collection.publicKnownSourceCounts),
+    fixedKnownHandSourceCounts: sortEntries(collection.fixedKnownHandSourceCounts),
+    publicKnownCardCount: sumCounts(collection.publicKnownSourceCounts),
+    fixedKnownHandCardCount: sumCounts(collection.fixedKnownHandSourceCounts),
+    duplicatePublicReferenceCount: collection.duplicatePublicReferenceCount,
+    duplicateFixedKnownHandReferenceCount:
+      collection.duplicateFixedKnownHandReferenceCount,
     remainingSourceCounts,
     priorRemainingCardCount: sumCounts(remainingSourceCounts),
     invalidReasonCounts: sortEntries(invalidReasonCounts),
@@ -800,6 +835,8 @@ export const buildSamplerMaterializationRootRecord = ({
           fixedKnownHandSourceCounts: {},
           publicKnownCardCount: 0,
           fixedKnownHandCardCount: 0,
+          duplicatePublicReferenceCount: 0,
+          duplicateFixedKnownHandReferenceCount: 0,
           remainingSourceCounts: {},
           priorRemainingCardCount: 0,
           invalidReasonCounts: {},
@@ -825,6 +862,9 @@ export const buildSamplerMaterializationRootRecord = ({
     opponentHandCount,
     opponentDeckCount,
     publicKnownCardCount: publicKnown.publicKnownCardCount,
+    duplicatePublicReferenceCount: publicKnown.duplicatePublicReferenceCount,
+    duplicateFixedKnownHandReferenceCount:
+      publicKnown.duplicateFixedKnownHandReferenceCount,
     priorRemainingCardCount: publicKnown.priorRemainingCardCount,
   });
 
@@ -930,6 +970,11 @@ export const buildSamplerMaterializationRootRecord = ({
     opponentHiddenPoolSizeBucket: bucketCardCount(hiddenPoolSize),
     opponentHandCount,
     opponentDeckCount,
+    duplicatePublicReferenceCount: publicKnown.duplicatePublicReferenceCount,
+    duplicateFixedKnownHandReferenceCount:
+      publicKnown.duplicateFixedKnownHandReferenceCount,
+    uniquePublicKnownCardCount: publicKnown.publicKnownCardCount,
+    uniqueFixedKnownHandCardCount: publicKnown.fixedKnownHandCardCount,
     availableHiddenPoolSizeBucket: bucketCardCount(publicKnown.priorRemainingCardCount),
     publicKnownCardCountBucket: bucketCardCount(publicKnown.publicKnownCardCount),
     priorRemainingCardCountBucket: bucketCardCount(publicKnown.priorRemainingCardCount),
@@ -1000,6 +1045,26 @@ export const buildSamplerMaterializationSummary = ({
           Array.from({ length: count }, () => reason),
         ),
       ),
+    ),
+    duplicatePublicReferenceTotal: roots.reduce(
+      (sum, root) => sum + root.duplicatePublicReferenceCount,
+      0,
+    ),
+    duplicateFixedKnownHandReferenceTotal: roots.reduce(
+      (sum, root) => sum + root.duplicateFixedKnownHandReferenceCount,
+      0,
+    ),
+    duplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.duplicatePublicReferenceCount),
+    ),
+    duplicateFixedKnownHandReferenceCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.duplicateFixedKnownHandReferenceCount),
+    ),
+    uniquePublicKnownCardCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.uniquePublicKnownCardCount),
+    ),
+    uniqueFixedKnownHandCardCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.uniqueFixedKnownHandCardCount),
     ),
     sampleCountStats: {
       requested: buildSamplerReadinessCountStats(

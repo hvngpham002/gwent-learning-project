@@ -145,6 +145,17 @@
 - prior remaining count: count 63, min 17, max 30, avg 23.714, p50 24, p90 28, p95 29
 - prior deficit count: count 63, min 1, max 1, avg 1, p50 1, p90 1, p95 1
 
+## Public Reference Diagnostics
+
+- duplicate public references across all roots: 0
+- duplicate fixed-known-hand references across all roots: 0
+- duplicate public reference count: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- duplicate fixed-known-hand reference count: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- unique public known card count: count 4042, min 0, max 21, avg 7.403, p50 7, p90 14, p95 15
+- unique fixed-known-hand card count: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root duplicate public reference count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root duplicate fixed-known-hand reference count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+
 ## Hidden-Info Safety
 
 Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.
@@ -153,6 +164,6 @@ Sampler invalid-root artifacts contain only public root metadata, scalar counts,
 
 cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.
 
-## Recommendation For cFp63
+## Recommendation For Next Phase
 
-cFp63 should implement a narrow sampler-public-count repair before any determinized probe, then regenerate sampler materialization and invalid-root artifacts before search.
+cFp64 should add a scalar-only public-zone provenance casebook for the remaining public-zone count deficits before any determinized probe.

@@ -206,6 +206,55 @@ describe("benchmark sampler materialization", () => {
     });
   });
 
+  it("counts a duplicate public card instance once and records scalar diagnostics", () => {
+    const state = baseState({
+      duplicate: card("duplicate", "test.copy", {
+        kind: "board_row",
+        seat: "seat_b",
+        row: "close",
+      }),
+    });
+    state.seats.seat_b.board.close.units = ["duplicate"];
+    state.seats.seat_b.discard = ["duplicate"];
+
+    const result = buildPublicKnownSourceSubtraction({
+      state,
+      actingSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      priorSourceCounts: { "test.copy": 1 },
+    });
+
+    expect(result.publicKnownCardCount).toBe(1);
+    expect(result.publicKnownSourceCounts).toEqual({ "test.copy": 1 });
+    expect(result.duplicatePublicReferenceCount).toBe(1);
+    expect(result.invalidReasonCounts).toEqual({});
+  });
+
+  it("counts distinct public copies with the same source separately", () => {
+    const state = baseState({
+      one: card("one", "test.copy", {
+        kind: "board_row",
+        seat: "seat_b",
+        row: "close",
+      }),
+      two: card("two", "test.copy", { kind: "discard", seat: "seat_b" }),
+    });
+    state.seats.seat_b.board.close.units = ["one"];
+    state.seats.seat_b.discard = ["two"];
+
+    const result = buildPublicKnownSourceSubtraction({
+      state,
+      actingSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      priorSourceCounts: { "test.copy": 2 },
+    });
+
+    expect(result.publicKnownCardCount).toBe(2);
+    expect(result.publicKnownSourceCounts).toEqual({ "test.copy": 2 });
+    expect(result.duplicatePublicReferenceCount).toBe(0);
+    expect(result.invalidReasonCounts).toEqual({});
+  });
+
   it("marks insufficient remaining prior as invalid with a safe reason", () => {
     const result = materializeHiddenMultisets({
       samplerRunId: "test-run",
@@ -322,7 +371,7 @@ describe("benchmark sampler materialization", () => {
           abilityId: "look_three_cards",
           stage: "opponent_hand_reveal",
           context: {
-            revealedCardIds: ["revealed-hand"],
+            revealedCardIds: ["revealed-hand", "revealed-hand"],
           },
           options: [
             {
@@ -389,7 +438,10 @@ describe("benchmark sampler materialization", () => {
       sampleCount: 8,
     });
 
+    expect(publicKnown.publicKnownCardCount).toBe(1);
     expect(publicKnown.fixedKnownHandCardCount).toBe(1);
+    expect(publicKnown.duplicatePublicReferenceCount).toBe(1);
+    expect(publicKnown.duplicateFixedKnownHandReferenceCount).toBe(1);
     expect(materialization.materializationStatus).toBe("valid");
     for (const sample of materialization.samples) {
       expect(total(sample.handSourceCounts)).toBe(opponentHand.length);

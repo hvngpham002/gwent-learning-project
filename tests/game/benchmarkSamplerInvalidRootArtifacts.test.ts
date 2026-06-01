@@ -43,6 +43,10 @@ const publicKnownByZone = {
   opponentWeatherCount: 0,
   actingHandKnownOpponentOwnedCount: 0,
   promptRevealedOpponentHandCount: 0,
+  duplicatePublicReferenceCount: 1,
+  duplicateFixedKnownHandReferenceCount: 0,
+  uniquePublicKnownCardCount: 3,
+  uniqueFixedKnownHandCardCount: 0,
   otherPublicKnownCount: 0,
 };
 
@@ -76,6 +80,10 @@ const invalidRoot = (
   priorRemainingCardCount: 22,
   publicKnownCardCount: 3,
   fixedKnownHandCardCount: 0,
+  duplicatePublicReferenceCount: 1,
+  duplicateFixedKnownHandReferenceCount: 0,
+  uniquePublicKnownCardCount: 3,
+  uniqueFixedKnownHandCardCount: 0,
   hiddenHandDrawCount: 3,
   requiredHiddenDrawCount: 25,
   priorDeficitCount: 3,
@@ -120,6 +128,10 @@ const materializationRoot = (
   opponentHiddenPoolSizeBucket: "large",
   opponentHandCount: 3,
   opponentDeckCount: 22,
+  duplicatePublicReferenceCount: 1,
+  duplicateFixedKnownHandReferenceCount: 0,
+  uniquePublicKnownCardCount: 3,
+  uniqueFixedKnownHandCardCount: 0,
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "small",
   priorRemainingCardCountBucket: "large",
@@ -235,7 +247,7 @@ describe("benchmark sampler invalid-root artifacts", () => {
       }),
     );
     expect(first.reportMarkdown).toContain("Sampler Invalid-Root Casebook");
-    expect(first.reportMarkdown).toContain("Recommendation For cFp63");
+    expect(first.reportMarkdown).toContain("Recommendation For Next Phase");
     expect(scanSamplerInvalidRootArtifactsForHiddenInfo(first)).toEqual([]);
   });
 
@@ -245,7 +257,7 @@ describe("benchmark sampler invalid-root artifacts", () => {
     );
     const unsafeArtifacts = {
       ...artifacts,
-      invalidRootsJsonl: `${artifacts.invalidRootsJsonl}{"moveId":"x","sourceCardId":"seat_a:abc","sourceId":"hidden","cardId":"seat_b:def","actionRef":"raw","rawMove":true,"rawLabel":"bad","deckOrder":[1],"sampledHand":["a"],"sampledDeck":["b"],"handSourceCounts":{},"deckSourceCounts":{},"sampledSource":"x","materializedSource":"y","card":"neutral.geralt-of-rivia"}\n`,
+      invalidRootsJsonl: `${artifacts.invalidRootsJsonl}{"moveId":"x","sourceCardId":"seat_a:abc","sourceId":"hidden","cardId":"seat_b:def","actionRef":"raw","rawMove":true,"rawLabel":"bad","deckOrder":[1],"sampledHand":["a"],"sampledDeck":["b"],"handSourceCounts":{},"deckSourceCounts":{},"publicKnownSourceCounts":{},"fixedKnownHandSourceCounts":{},"remainingSourceCounts":{},"priorSourceCounts":{},"sampledSource":"x","materializedSource":"y","card":"neutral.geralt-of-rivia"}\n`,
       reportMarkdown: `${artifacts.reportMarkdown}\ncardsById finalState commandLog eventLog ownHand opponentHand unsafeDebugResults decisionTrace Geralt of Rivia Gaunter O'Dimm: Darkness northern-realms.philippa-eilhart monsters.crone-brewess scoiatael.iorveth skellige.cerys`,
     };
 
@@ -271,6 +283,10 @@ describe("benchmark sampler invalid-root artifacts", () => {
         "sampledDeck",
         "handSourceCounts",
         "deckSourceCounts",
+        "publicKnownSourceCounts",
+        "fixedKnownHandSourceCounts",
+        "remainingSourceCounts",
+        "priorSourceCounts",
         "sampledSource",
         "materializedSource",
         "runtime seat_a prefix",

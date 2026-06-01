@@ -208,6 +208,17 @@ ${formatCountRows(summary.invalidRootCountsByHiddenCountDeficitBucket)}
 - prior remaining count: ${formatStats(summary.priorRemainingCardCountStats)}
 - prior deficit count: ${formatStats(summary.priorDeficitCountStats)}
 
+## Public Reference Diagnostics
+
+- duplicate public references across all roots: ${summary.duplicatePublicReferenceTotal}
+- duplicate fixed-known-hand references across all roots: ${summary.duplicateFixedKnownHandReferenceTotal}
+- duplicate public reference count: ${formatStats(summary.duplicatePublicReferenceCountStats)}
+- duplicate fixed-known-hand reference count: ${formatStats(summary.duplicateFixedKnownHandReferenceCountStats)}
+- unique public known card count: ${formatStats(summary.uniquePublicKnownCardCountStats)}
+- unique fixed-known-hand card count: ${formatStats(summary.uniqueFixedKnownHandCardCountStats)}
+- invalid-root duplicate public reference count: ${formatStats(summary.invalidRootDuplicatePublicReferenceCountStats)}
+- invalid-root duplicate fixed-known-hand reference count: ${formatStats(summary.invalidRootDuplicateFixedKnownHandReferenceCountStats)}
+
 ## Hidden-Info Safety
 
 ${summary.hiddenInfoSafetyNote}
@@ -216,7 +227,7 @@ ${summary.hiddenInfoSafetyNote}
 
 ${summary.explicitNonSearchWarning}
 
-## Recommendation For cFp63
+## Recommendation For Next Phase
 
 ${summary.recommendedNextStep}
 `;
@@ -325,6 +336,13 @@ const hiddenInfoHazards: readonly { label: string; pattern: RegExp }[] = [
   { label: "sampledDeck", pattern: /\bsampledDeck\b/ },
   { label: "handSourceCounts", pattern: /\bhandSourceCounts\b/ },
   { label: "deckSourceCounts", pattern: /\bdeckSourceCounts\b/ },
+  { label: "publicKnownSourceCounts", pattern: /\bpublicKnownSourceCounts\b/ },
+  {
+    label: "fixedKnownHandSourceCounts",
+    pattern: /\bfixedKnownHandSourceCounts\b/,
+  },
+  { label: "remainingSourceCounts", pattern: /\bremainingSourceCounts\b/ },
+  { label: "priorSourceCounts", pattern: /\bpriorSourceCounts\b/ },
   { label: "sampledSource", pattern: /\bsampledSource\b/ },
   { label: "materializedSource", pattern: /\bmaterializedSource\b/ },
   { label: "runtime seat_a prefix", pattern: /\bseat_a:/ },

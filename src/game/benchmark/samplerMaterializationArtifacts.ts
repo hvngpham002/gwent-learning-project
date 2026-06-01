@@ -153,6 +153,15 @@ ${formatCountRows(summary.materializationStatusCounts)}
 |---|---:|
 ${formatCountRows(summary.invalidReasonCounts)}
 
+## Public Reference Diagnostics
+
+- duplicate public references: ${summary.duplicatePublicReferenceTotal}
+- duplicate fixed-known-hand references: ${summary.duplicateFixedKnownHandReferenceTotal}
+- duplicate public reference count: ${formatStats(summary.duplicatePublicReferenceCountStats)}
+- duplicate fixed-known-hand reference count: ${formatStats(summary.duplicateFixedKnownHandReferenceCountStats)}
+- unique public known card count: ${formatStats(summary.uniquePublicKnownCardCountStats)}
+- unique fixed-known-hand card count: ${formatStats(summary.uniqueFixedKnownHandCardCountStats)}
+
 ## Sample Counts
 
 - requested: ${formatStats(summary.sampleCountStats.requested)}
@@ -293,10 +302,22 @@ const hiddenInfoHazards: readonly { label: string; pattern: RegExp }[] = [
   { label: "sampledDeck", pattern: /\bsampledDeck\b/ },
   { label: "handSourceCounts", pattern: /\bhandSourceCounts\b/ },
   { label: "deckSourceCounts", pattern: /\bdeckSourceCounts\b/ },
+  { label: "publicKnownSourceCounts", pattern: /\bpublicKnownSourceCounts\b/ },
+  {
+    label: "fixedKnownHandSourceCounts",
+    pattern: /\bfixedKnownHandSourceCounts\b/,
+  },
+  { label: "remainingSourceCounts", pattern: /\bremainingSourceCounts\b/ },
+  { label: "priorSourceCounts", pattern: /\bpriorSourceCounts\b/ },
   { label: "sampledSource", pattern: /\bsampledSource\b/ },
   { label: "materializedSource", pattern: /\bmaterializedSource\b/ },
   { label: "runtime seat_a prefix", pattern: /\bseat_a:/ },
   { label: "runtime seat_b prefix", pattern: /\bseat_b:/ },
+  { label: "Geralt of Rivia", pattern: /\bGeralt of Rivia\b/ },
+  {
+    label: "Gaunter O'Dimm: Darkness",
+    pattern: /\bGaunter O'Dimm: Darkness\b/,
+  },
   { label: "neutral source id", pattern: /\bneutral\.geralt-of-rivia\b/ },
   {
     label: "northern-realms source id",

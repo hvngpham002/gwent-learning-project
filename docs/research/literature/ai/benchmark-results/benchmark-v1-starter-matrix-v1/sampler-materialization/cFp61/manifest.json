@@ -1,8 +1,8 @@
 {
   "artifactHashes": {
-    "report.md": "f44bfe59c537ab7c5f219a2e4a328a2fd3141783d160c3696e0e32f1796bb027",
-    "roots.jsonl": "1ee53a81182dcc24c77083d0cf5ebfd02082f2d40176676b28b695c82af86061",
-    "summary.json": "5e6aa42c623bd7852ea5bceb3ba0d67a128fa6c67cd46978372c5ef98225b7a4"
+    "report.md": "fa210aa574ef94aaa16f9491b73ed998743f910d4b7ed38b787a723b2fdc33f9",
+    "roots.jsonl": "96b73f6dc5fdbbaf018d550198376d0e0b7eac5569c7827b557c95fd599c2e98",
+    "summary.json": "40a272f736dc78aa60f5b20b06a52ab6a745ae2dc1880734a9ea490b52be88d8"
   },
   "explicitNonSearchWarning": "cFp61 sampler-materialization artifacts are infrastructure only. No rollout, PIMC, ISMCTS, MCTS, action evaluation, action ranking, policy behavior, or product difficulty changed.",
   "files": [

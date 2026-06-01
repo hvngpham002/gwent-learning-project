@@ -252,6 +252,10 @@ describe("benchmark sampler invalid-root analyzer", () => {
         priorMainDeckCardCount: prior.mainDeckCardCount,
         publicKnownCardCount: 2,
         fixedKnownHandCardCount: 0,
+        duplicatePublicReferenceCount: 0,
+        duplicateFixedKnownHandReferenceCount: 0,
+        uniquePublicKnownCardCount: 2,
+        uniqueFixedKnownHandCardCount: 0,
         hiddenHandDrawCount: opponentHandCount,
         requiredHiddenDrawCount: opponentHandCount + opponentDeckCount,
         priorRemainingCardCount: prior.mainDeckCardCount - 2,
@@ -345,9 +349,60 @@ describe("benchmark sampler invalid-root analyzer", () => {
       opponentWeatherCount: 1,
       actingHandKnownOpponentOwnedCount: 1,
       promptRevealedOpponentHandCount: 1,
+      duplicatePublicReferenceCount: 0,
+      duplicateFixedKnownHandReferenceCount: 0,
+      uniquePublicKnownCardCount: 8,
+      uniqueFixedKnownHandCardCount: 1,
       otherPublicKnownCount: 0,
     });
     expect(JSON.stringify(summary)).not.toContain("test.");
     expect(JSON.stringify(summary)).not.toContain("seat_b:");
+  });
+
+  it("adds scalar duplicate-reference diagnostics to public-zone summaries", () => {
+    const priorSourceCounts = { "test.duplicate": 1 };
+    const state = baseState(
+      {
+        duplicate: card("duplicate", "test.duplicate", {
+          kind: "hand",
+          seat: "seat_b",
+        }),
+      },
+      {
+        pendingPrompt: {
+          promptId: "prompt:reveal",
+          seatId: "seat_a",
+          kind: "choose_option",
+          abilityId: "look_three_cards",
+          stage: "opponent_hand_reveal",
+          context: { revealedCardIds: ["duplicate", "duplicate"] },
+          options: [
+            {
+              optionId: "ack",
+              label: "acknowledge",
+              target: { kind: "none" },
+            },
+          ],
+        },
+      },
+    );
+    state.seats.seat_b.hand = ["duplicate"];
+
+    const summary = buildPublicKnownZoneCountSummary({
+      state,
+      actingSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      priorSourceCounts,
+    });
+
+    expect(summary).toEqual(
+      expect.objectContaining({
+        promptRevealedOpponentHandCount: 2,
+        duplicatePublicReferenceCount: 1,
+        duplicateFixedKnownHandReferenceCount: 1,
+        uniquePublicKnownCardCount: 1,
+        uniqueFixedKnownHandCardCount: 1,
+      }),
+    );
   });
 });

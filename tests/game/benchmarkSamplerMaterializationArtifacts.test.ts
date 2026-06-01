@@ -65,6 +65,10 @@ const root = (
   opponentHiddenPoolSizeBucket: "large",
   opponentHandCount: 10,
   opponentDeckCount: 12,
+  duplicatePublicReferenceCount: 1,
+  duplicateFixedKnownHandReferenceCount: 0,
+  uniquePublicKnownCardCount: 2,
+  uniqueFixedKnownHandCardCount: 0,
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "none",
   priorRemainingCardCountBucket: "large",
@@ -171,8 +175,8 @@ describe("benchmark sampler materialization artifacts", () => {
     const artifacts = serializeSamplerMaterializationArtifacts(profileResult([root()]));
     const unsafeArtifacts = {
       ...artifacts,
-      rootsJsonl: `${artifacts.rootsJsonl}{"moveId":"x","sourceCardId":"seat_a:abc","sourceId":"hidden","cardId":"seat_b:def","actionRef":"raw","rawMove":true,"rawLabel":"bad","deckOrder":[1],"sampledHand":["a"],"sampledDeck":["b"],"handSourceCounts":{},"deckSourceCounts":{},"sampledSource":"x","materializedSource":"y","card":"neutral.geralt-of-rivia"}\n`,
-      reportMarkdown: `${artifacts.reportMarkdown}\ncardsById finalState commandLog eventLog ownHand opponentHand unsafeDebugResults decisionTrace northern-realms.philippa-eilhart monsters.crone-brewess scoiatael.iorveth skellige.cerys`,
+      rootsJsonl: `${artifacts.rootsJsonl}{"moveId":"x","sourceCardId":"seat_a:abc","sourceId":"hidden","cardId":"seat_b:def","actionRef":"raw","rawMove":true,"rawLabel":"bad","deckOrder":[1],"sampledHand":["a"],"sampledDeck":["b"],"handSourceCounts":{},"deckSourceCounts":{},"publicKnownSourceCounts":{},"fixedKnownHandSourceCounts":{},"remainingSourceCounts":{},"priorSourceCounts":{},"sampledSource":"x","materializedSource":"y","card":"neutral.geralt-of-rivia"}\n`,
+      reportMarkdown: `${artifacts.reportMarkdown}\ncardsById finalState commandLog eventLog ownHand opponentHand unsafeDebugResults decisionTrace Geralt of Rivia Gaunter O'Dimm: Darkness northern-realms.philippa-eilhart monsters.crone-brewess scoiatael.iorveth skellige.cerys`,
     };
 
     expect(scanSamplerMaterializationArtifactsForHiddenInfo(unsafeArtifacts)).toEqual(
@@ -197,10 +201,16 @@ describe("benchmark sampler materialization artifacts", () => {
         "sampledDeck",
         "handSourceCounts",
         "deckSourceCounts",
+        "publicKnownSourceCounts",
+        "fixedKnownHandSourceCounts",
+        "remainingSourceCounts",
+        "priorSourceCounts",
         "sampledSource",
         "materializedSource",
         "runtime seat_a prefix",
         "runtime seat_b prefix",
+        "Geralt of Rivia",
+        "Gaunter O'Dimm: Darkness",
         "neutral source id",
         "northern-realms source id",
         "monsters source id",

@@ -48,6 +48,10 @@ export interface PublicKnownZoneCountSummary {
   opponentWeatherCount: number;
   actingHandKnownOpponentOwnedCount: number;
   promptRevealedOpponentHandCount: number;
+  duplicatePublicReferenceCount: number;
+  duplicateFixedKnownHandReferenceCount: number;
+  uniquePublicKnownCardCount: number;
+  uniqueFixedKnownHandCardCount: number;
   otherPublicKnownCount: number;
 }
 
@@ -78,6 +82,10 @@ export interface SamplerInvalidRootRecord {
   priorRemainingCardCount: number;
   publicKnownCardCount: number;
   fixedKnownHandCardCount: number;
+  duplicatePublicReferenceCount: number;
+  duplicateFixedKnownHandReferenceCount: number;
+  uniquePublicKnownCardCount: number;
+  uniqueFixedKnownHandCardCount: number;
   hiddenHandDrawCount: number;
   requiredHiddenDrawCount: number;
   priorDeficitCount: number;
@@ -122,6 +130,14 @@ export interface SamplerInvalidRootSummary {
   requiredHiddenDrawCountStats: SamplerReadinessCountStats;
   priorRemainingCardCountStats: SamplerReadinessCountStats;
   priorDeficitCountStats: SamplerReadinessCountStats;
+  duplicatePublicReferenceTotal: number;
+  duplicateFixedKnownHandReferenceTotal: number;
+  duplicatePublicReferenceCountStats: SamplerReadinessCountStats;
+  duplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
+  uniquePublicKnownCardCountStats: SamplerReadinessCountStats;
+  uniqueFixedKnownHandCardCountStats: SamplerReadinessCountStats;
+  invalidRootDuplicatePublicReferenceCountStats: SamplerReadinessCountStats;
+  invalidRootDuplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
   hiddenInfoSafetyNote: string;
   explicitNonSearchWarning: string;
   recommendedNextStep: string;
@@ -316,6 +332,10 @@ export const buildPublicKnownZoneCountSummary = ({
     opponentWeatherCount: 0,
     actingHandKnownOpponentOwnedCount: 0,
     promptRevealedOpponentHandCount: 0,
+    duplicatePublicReferenceCount: 0,
+    duplicateFixedKnownHandReferenceCount: 0,
+    uniquePublicKnownCardCount: 0,
+    uniqueFixedKnownHandCardCount: 0,
     otherPublicKnownCount: 0,
   };
 
@@ -376,6 +396,19 @@ export const buildPublicKnownZoneCountSummary = ({
       }
     });
   }
+
+  const publicKnown = buildPublicKnownSourceSubtraction({
+    state,
+    actingSeatId,
+    opponentSeatId,
+    priorSourceCounts,
+  });
+  summary.duplicatePublicReferenceCount =
+    publicKnown.duplicatePublicReferenceCount;
+  summary.duplicateFixedKnownHandReferenceCount =
+    publicKnown.duplicateFixedKnownHandReferenceCount;
+  summary.uniquePublicKnownCardCount = publicKnown.publicKnownCardCount;
+  summary.uniqueFixedKnownHandCardCount = publicKnown.fixedKnownHandCardCount;
 
   return summary;
 };
@@ -455,6 +488,11 @@ const buildInvalidRootRecord = ({
     priorRemainingCardCount: publicKnown.priorRemainingCardCount,
     publicKnownCardCount: publicKnown.publicKnownCardCount,
     fixedKnownHandCardCount: publicKnown.fixedKnownHandCardCount,
+    duplicatePublicReferenceCount: publicKnown.duplicatePublicReferenceCount,
+    duplicateFixedKnownHandReferenceCount:
+      publicKnown.duplicateFixedKnownHandReferenceCount,
+    uniquePublicKnownCardCount: publicKnown.publicKnownCardCount,
+    uniqueFixedKnownHandCardCount: publicKnown.fixedKnownHandCardCount,
     hiddenHandDrawCount,
     requiredHiddenDrawCount,
     priorDeficitCount,
@@ -492,6 +530,8 @@ export const buildSamplerInvalidRootAnalysis = (
           fixedKnownHandSourceCounts: {},
           publicKnownCardCount: 0,
           fixedKnownHandCardCount: 0,
+          duplicatePublicReferenceCount: 0,
+          duplicateFixedKnownHandReferenceCount: 0,
           remainingSourceCounts: {},
           priorRemainingCardCount: 0,
           invalidReasonCounts: {},
@@ -512,10 +552,24 @@ export const buildSamplerInvalidRootAnalysis = (
 };
 
 export const buildSamplerInvalidRootsRecommendation = (
-  summary: Pick<SamplerInvalidRootSummary, "invalidRootCount" | "classificationCounts">,
+  summary: Pick<
+    SamplerInvalidRootSummary,
+    | "invalidRootCount"
+    | "classificationCounts"
+    | "duplicatePublicReferenceTotal"
+    | "duplicateFixedKnownHandReferenceTotal"
+  >,
 ) => {
   if (summary.invalidRootCount === 0) {
-    return "cFp63 should run benchmark-only determinized-pimc-probe-v0 over all cFp61 roots, with zero invalid-root skips reported.";
+    return "cFp64 may implement benchmark-only determinized-pimc-probe-v0 over all cFp61 roots, with zero invalid-root skips reported.";
+  }
+
+  if (
+    summary.classificationCounts.public_zone_count_deficit > 0 &&
+    summary.duplicatePublicReferenceTotal === 0 &&
+    summary.duplicateFixedKnownHandReferenceTotal === 0
+  ) {
+    return "cFp64 should add a scalar-only public-zone provenance casebook for the remaining public-zone count deficits before any determinized probe.";
   }
 
   const repairClassifications: SamplerInvalidRootClassification[] = [
@@ -532,17 +586,17 @@ export const buildSamplerInvalidRootsRecommendation = (
   );
 
   if (repairCount > 0) {
-    return "cFp63 should implement a narrow sampler-public-count repair before any determinized probe, then regenerate sampler materialization and invalid-root artifacts before search.";
+    return "cFp64 should implement the next narrow sampler-count repair before any determinized probe, then regenerate sampler materialization and invalid-root artifacts before search.";
   }
 
   if (
     (summary.classificationCounts.raw_hidden_count_exceeds_prior ?? 0) ===
     summary.invalidRootCount
   ) {
-    return "cFp63 should run benchmark-only determinized-pimc-probe-v0 over valid cFp61 roots only, reporting invalid-root skips by suite, reason, classification, phase, round, matchup, policy, faction, and deck.";
+    return "cFp64 may run benchmark-only determinized-pimc-probe-v0 over valid cFp61 roots only, reporting invalid-root skips by suite, reason, classification, phase, round, matchup, policy, faction, and deck.";
   }
 
-  return "cFp63 should add another scalar-only sampler instrumentation pass because the invalid-root evidence remains mixed or ambiguous.";
+  return "cFp64 should add another scalar-only sampler instrumentation pass because the invalid-root evidence remains mixed or ambiguous.";
 };
 
 export const buildSamplerInvalidRootSummary = ({
@@ -569,9 +623,19 @@ export const buildSamplerInvalidRootSummary = ({
     materializationRoots.map((root) => root.materializationStatus),
   );
   const invalidRootCount = invalidRoots.length;
+  const duplicatePublicReferenceTotal = materializationRoots.reduce(
+    (sum, root) => sum + root.duplicatePublicReferenceCount,
+    0,
+  );
+  const duplicateFixedKnownHandReferenceTotal = materializationRoots.reduce(
+    (sum, root) => sum + root.duplicateFixedKnownHandReferenceCount,
+    0,
+  );
   const summaryBase = {
     invalidRootCount,
     classificationCounts,
+    duplicatePublicReferenceTotal,
+    duplicateFixedKnownHandReferenceTotal,
   };
 
   return {
@@ -629,6 +693,27 @@ export const buildSamplerInvalidRootSummary = ({
     priorDeficitCountStats: buildSamplerReadinessCountStats(
       invalidRoots.map((root) => root.priorDeficitCount),
     ),
+    duplicatePublicReferenceTotal,
+    duplicateFixedKnownHandReferenceTotal,
+    duplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
+      materializationRoots.map((root) => root.duplicatePublicReferenceCount),
+    ),
+    duplicateFixedKnownHandReferenceCountStats: buildSamplerReadinessCountStats(
+      materializationRoots.map((root) => root.duplicateFixedKnownHandReferenceCount),
+    ),
+    uniquePublicKnownCardCountStats: buildSamplerReadinessCountStats(
+      materializationRoots.map((root) => root.uniquePublicKnownCardCount),
+    ),
+    uniqueFixedKnownHandCardCountStats: buildSamplerReadinessCountStats(
+      materializationRoots.map((root) => root.uniqueFixedKnownHandCardCount),
+    ),
+    invalidRootDuplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.duplicatePublicReferenceCount),
+    ),
+    invalidRootDuplicateFixedKnownHandReferenceCountStats:
+      buildSamplerReadinessCountStats(
+        invalidRoots.map((root) => root.duplicateFixedKnownHandReferenceCount),
+      ),
     hiddenInfoSafetyNote:
       "Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.",
     explicitNonSearchWarning:

@@ -71,6 +71,15 @@
 |---|---:|
 | insufficient_prior_remaining | 341 |
 
+## Public Reference Diagnostics
+
+- duplicate public references: 0
+- duplicate fixed-known-hand references: 0
+- duplicate public reference count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- duplicate fixed-known-hand reference count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- unique public known card count: count 32487, min 0, max 22, avg 7.093, p50 7, p90 13, p95 15
+- unique fixed-known-hand card count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+
 ## Sample Counts
 
 - requested: count 32487, min 8, max 8, avg 8, p50 8, p90 8, p95 8
@@ -80,33 +89,33 @@
 
 ## Aggregate Sample Stats
 
-- hand unique average: count 32487, min 0, max 11.5, avg 4.701, p50 4.75, p90 8.75, p95 9
-- deck unique average: count 32487, min 0, max 20, avg 15.56, p50 16, p90 17.625, p95 18
+- hand unique average: count 32487, min 0, max 11.125, avg 4.7, p50 4.75, p90 8.75, p95 9
+- deck unique average: count 32487, min 0, max 20, avg 15.556, p50 16, p90 17.625, p95 18
 
 ### Hand Duplicate Pressure
 
 | Bucket | Count |
 |---|---:|
-| none | 163313 |
-| pair | 86594 |
-| triple_plus | 7261 |
+| none | 162932 |
+| pair | 86872 |
+| triple_plus | 7364 |
 
 ### Deck Duplicate Pressure
 
 | Bucket | Count |
 |---|---:|
-| none | 899 |
-| pair | 51236 |
-| triple_plus | 205033 |
+| none | 887 |
+| pair | 50943 |
+| triple_plus | 205338 |
 
 ### Hand Deck Overlap
 
 | Bucket | Count |
 |---|---:|
-| four_plus | 72182 |
-| none | 54369 |
-| one | 35887 |
-| two_to_three | 94730 |
+| four_plus | 71772 |
+| none | 54283 |
+| one | 36302 |
+| two_to_three | 94811 |
 
 ## Interpretation Warning
 

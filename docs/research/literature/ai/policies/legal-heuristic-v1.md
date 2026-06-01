@@ -23,8 +23,9 @@ phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
 The latest analysis phase is cFp56: Temporal Round-One Overinvestment
 Casebook. The latest rating-ledger phase is cFp57: Multi-Period Rating Ledger.
-The latest sampler invalid-root casebook phase is cFp62: Sampler Invalid-Root
-Casebook.
+The latest sampler public-count repair phase is cFp63: Sampler Public-Count
+Repair. The latest sampler invalid-root casebook phase is cFp62: Sampler
+Invalid-Root Casebook.
 The latest sampler-materialization phase is cFp61: Hidden-Multiset
 Materialization Sampler. The latest sampler-readiness phase is cFp60:
 Known-Preset Sampler Contract And Public Action Abstraction. The latest
@@ -39,12 +40,17 @@ source-multiset samples in memory from the cFp60 known preset prior and writes
 aggregate-only sampler-materialization artifacts with no sampled identities.
 cFp62 reruns that materialization path for invalid roots only, writes
 scalar-only invalid-root casebook artifacts, and classifies all 404 current and
-robust invalid roots as `public_zone_count_deficit`.
+robust invalid roots as `public_zone_count_deficit`. cFp63 repairs
+public-known duplicate-card accounting defensively and adds scalar
+duplicate-reference diagnostics; both current and robust suites report zero
+duplicate public references and zero duplicate fixed-known-hand references, so
+the same 404 strict invalid roots remain.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
 sampler-materialization infrastructure only. cFp62 is invalid-root casebook
-infrastructure only. cFp59, cFp60, cFp61, and cFp62 do not change
+infrastructure only. cFp63 is sampler repair infrastructure only. cFp59, cFp60,
+cFp61, cFp62, and cFp63 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -88,8 +94,10 @@ summaries, and public action abstraction for the current and robust starter
 matrix suites. cFp61 adds the first real in-memory hidden opponent source-multiset
 materializer for those same suites and writes aggregate-only proof artifacts.
 cFp62 adds scalar-only invalid-root evidence for the remaining cFp61 invalid
-roots and recommends a narrow sampler-public-count repair before search. cFp59,
-cFp60, cFp61, and cFp62 are evaluation infrastructure only and do not make search
+roots and recommends a narrow sampler-public-count repair before search. cFp63
+implements that duplicate-reference repair path and shows the invalid-root
+family is not explained by duplicate public references; cFp59, cFp60, cFp61,
+cFp62, and cFp63 are evaluation infrastructure only and do not make search
 available in product play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
@@ -167,6 +175,14 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   (63 invalid roots) and robust (341 invalid roots) suites. All 404 invalid
   roots classify as `public_zone_count_deficit`, with no prompt-reveal,
   raw-hidden, excess-prior, public-overcopy, or incoherent-count cases.
+- cFp63: evaluation-only sampler public-count repair; counts each public
+  runtime card instance at most once in public-known subtraction, counts
+  prompt-revealed opponent hand cards at most once as fixed known hand, and
+  adds scalar duplicate-reference diagnostics to the regenerated cFp61/cFp62
+  artifacts. Duplicate public and fixed-known-hand references are both 0 across
+  current and robust suites, so all 404 invalid roots remain
+  `public_zone_count_deficit`. cFp64 should add a scalar public-zone provenance
+  casebook before search.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

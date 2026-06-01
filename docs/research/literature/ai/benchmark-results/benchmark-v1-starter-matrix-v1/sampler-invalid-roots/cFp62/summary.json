@@ -9,6 +9,26 @@
     "public_zone_count_deficit": 63,
     "raw_hidden_count_exceeds_prior": 0
   },
+  "duplicateFixedKnownHandReferenceCountStats": {
+    "average": 0,
+    "count": 4042,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "duplicateFixedKnownHandReferenceTotal": 0,
+  "duplicatePublicReferenceCountStats": {
+    "average": 0,
+    "count": 4042,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "duplicatePublicReferenceTotal": 0,
   "explicitNonSearchWarning": "cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.",
   "fixedKnownHandCardCountStats": {
     "average": 0,
@@ -78,6 +98,24 @@
     "2": 28,
     "3": 7
   },
+  "invalidRootDuplicateFixedKnownHandReferenceCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "invalidRootDuplicatePublicReferenceCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
   "matchCount": 120,
   "materializationStatusCounts": {
     "invalid": 63,
@@ -140,7 +178,7 @@
     "p90": 13,
     "p95": 15
   },
-  "recommendedNextStep": "cFp63 should implement a narrow sampler-public-count repair before any determinized probe, then regenerate sampler materialization and invalid-root artifacts before search.",
+  "recommendedNextStep": "cFp64 should add a scalar-only public-zone provenance casebook for the remaining public-zone count deficits before any determinized probe.",
   "requiredHiddenDrawCountStats": {
     "average": 24.714,
     "count": 63,
@@ -161,5 +199,23 @@
   },
   "suiteId": "benchmark-v1-starter-matrix-v1",
   "totalRootCount": 4042,
+  "uniqueFixedKnownHandCardCountStats": {
+    "average": 0,
+    "count": 4042,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "uniquePublicKnownCardCountStats": {
+    "average": 7.403,
+    "count": 4042,
+    "max": 21,
+    "min": 0,
+    "p50": 7,
+    "p90": 14,
+    "p95": 15
+  },
   "validRootCount": 3979
 }
