@@ -25,6 +25,8 @@ The latest analysis phase is cFp56: Temporal Round-One Overinvestment
 Casebook. The latest rating-ledger phase is cFp57: Multi-Period Rating Ledger.
 The latest sampler public-transfer memory phase is cFp66: Sampler
 Public-Transfer Memory.
+The latest post-cFp66 invalid-root casebook phase is cFp67: Post-cFp66
+Invalid-Root Casebook.
 The latest sampler public-zone accounting phase is cFp65: Sampler Public-Zone
 Accounting Repair Probe. The latest sampler public-zone provenance phase is
 cFp64: Sampler Public-Zone Provenance Casebook. The latest sampler public-count
@@ -66,13 +68,24 @@ hidden cards in cFp61 materialization, and serializes only scalar diagnostics.
 Current counts remain 3,979 valid / 63 invalid roots; robust improves from
 32,146 valid / 341 invalid to 32,147 valid / 340 invalid. Remaining cFp62
 invalid roots still classify as `public_zone_count_deficit`.
+cFp67 reads the committed post-cFp66 cFp61/cFp62/cFp64 artifacts and writes a
+scalar-only invalid-root decision casebook. Current has 4,042 total roots,
+3,979 valid, 63 invalid, and 1.559% invalid; robust has 32,487 total roots,
+32,147 valid, 340 invalid, and 1.047% invalid. Every remaining invalid root is
+classified exactly once as `candidate_valid_root_only_skip`; there are 0
+`candidate_deeper_reconstruction` and 0 `classification_unavailable` roots.
+All remaining invalid roots are `public_transfer_memory_not_applicable` and
+`persistent_public_zone_count_deficit`; current has 63 one-card deficits, while
+robust has 339 one-card and 1 multi-card deficit. cFp67 recommends cFp68
+proceed only with valid roots and explicit skip counters.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
 sampler-materialization infrastructure only. cFp62 is invalid-root casebook
 infrastructure only. cFp63 is sampler repair infrastructure only. cFp66 is
-sampler public-transfer memory infrastructure only. cFp59, cFp60, cFp61,
-cFp62, cFp63, cFp64, cFp65, and cFp66 do not change
+sampler public-transfer memory infrastructure only. cFp67 is post-cFp66
+invalid-root casebook infrastructure only. cFp59, cFp60, cFp61,
+cFp62, cFp63, cFp64, cFp65, cFp66, and cFp67 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -119,9 +132,12 @@ cFp62 adds scalar-only invalid-root evidence for the remaining cFp61 invalid
 roots and recommends a narrow sampler-public-count repair before search. cFp63
 implements that duplicate-reference repair path and shows the invalid-root
 family is not explained by duplicate public references. cFp66 public-transfer
-memory repairs one robust root but leaves current unchanged; cFp59, cFp60,
-cFp61, cFp62, cFp63, cFp64, cFp65, and cFp66 are evaluation infrastructure only
-and do not make search available in product play.
+memory repairs one robust root but leaves current unchanged. cFp67 classifies
+the remaining 63 current and 340 robust invalid roots as valid-root-only skip
+candidates and requires explicit skip counters before any probe result is
+reported; cFp59, cFp60, cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, and cFp67
+are evaluation infrastructure only and do not make search available in product
+play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -230,6 +246,13 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   `public_zone_count_deficit`, so a future spec must explicitly choose
   valid-root-only skip accounting or deeper public-state reconstruction before
   any determinized probe.
+- cFp67: evaluation-only post-cFp66 invalid-root decision casebook; reads
+  committed cFp61/cFp62/cFp64 artifacts and writes scalar-only cFp67 casebook
+  artifacts for current and robust suites. Current has 63 invalid roots
+  (1.559%) and robust has 340 invalid roots (1.047%). Every remaining invalid
+  root is classified exactly once as `candidate_valid_root_only_skip`, with no
+  deeper-reconstruction or unavailable classifications. cFp68 should proceed
+  only with valid roots and explicit skip counters.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

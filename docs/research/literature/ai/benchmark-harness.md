@@ -143,6 +143,10 @@ Search-readiness:
   to the perspective seat before later moving into hidden opponent hand/deck
   zones, accounts for those known hidden cards without scanning never-seen
   hidden identities, and serializes scalar public-transfer diagnostics only.
+- cFp67 adds a benchmark-only post-cFp66 invalid-root decision casebook under
+  `<suiteId>/sampler-post-cfp66-invalid-root-casebook/cFp67/`. It reads the
+  committed cFp61/cFp62/cFp64 artifacts, classifies every remaining invalid root
+  exactly once, and recommends valid-root-only skip accounting for cFp68.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -305,6 +309,13 @@ Write cFp64 sampler public-zone provenance casebook artifact sets:
 ```bash
 npm run benchmark:sampler-public-zone-provenance:v1-starter-matrix
 npm run benchmark:sampler-public-zone-provenance:v1-robust
+```
+
+Write cFp67 post-cFp66 invalid-root decision casebook artifact sets:
+
+```bash
+npm run benchmark:sampler-post-cfp66-invalid-root-casebook:v1-starter-matrix
+npm run benchmark:sampler-post-cfp66-invalid-root-casebook:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the
@@ -616,7 +627,7 @@ serializes only aggregate sample statistics. Starter and robust suites produce
 0 invalid samples, and safe invalid roots report `insufficient_prior_remaining`
 with zero generated samples. Robust repeat artifacts produce identical hashes.
 
-cFp60, cFp61, cFp62, cFp63, cFp64, cFp65, and cFp66 do not run
+cFp60, cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, and cFp67 do not run
 PIMC/ISMCTS/rollouts, evaluate actions, build trees, select moves, or change
 any policy behavior.
 
@@ -654,6 +665,18 @@ public-transfer hand card. Remaining invalid roots still classify as
 `public_zone_count_deficit`, so the next spec should define explicit
 valid-root-only skip accounting or require deeper public-state reconstruction
 before any determinized probe.
+
+cFp67 makes that decision casebook explicit. It reads committed post-cFp66
+cFp61/cFp62/cFp64 artifacts and writes deterministic scalar-only artifacts under
+`<suiteId>/sampler-post-cfp66-invalid-root-casebook/cFp67/`. Current remains
+3,979 valid / 63 invalid roots (1.559% invalid), and robust remains 32,147 valid
+/ 340 invalid roots (1.047% invalid). Every remaining invalid root is classified
+exactly once as `candidate_valid_root_only_skip`; deeper-reconstruction and
+unavailable classifications are 0. Current has 63 one-card deficits. Robust has
+339 one-card deficits and 1 multi-card deficit. cFp68 should proceed only with
+valid roots and explicit skip counters by suite, phase, round, matchup, policy,
+faction, deck preset, provenance label, invalid reason, and skipped-root
+percentage.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

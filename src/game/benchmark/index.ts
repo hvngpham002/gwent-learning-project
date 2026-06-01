@@ -23,3 +23,5 @@ export * from './samplerInvalidRoots';
 export * from './samplerInvalidRootArtifacts';
 export * from './samplerPublicZoneProvenance';
 export * from './samplerPublicZoneProvenanceArtifacts';
+export * from './samplerPostCfp66InvalidRootCasebook';
+export * from './samplerPostCfp66InvalidRootCasebookArtifacts';

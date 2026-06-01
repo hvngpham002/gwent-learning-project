@@ -1,0 +1,29 @@
+{
+  "artifactHashes": {
+    "invalid-roots.jsonl": "f0f582ae6f80c403fab1c70aeb34d82f6f6635d03ccf7fed3c834fe72d3c2538",
+    "report.md": "5196fb37901112a4f91f87b95026656d47597f7f4eb0684c808bf79c69d82494",
+    "summary.json": "8e9b1540209af6471e30fda7b290a7d415ac7298250ea3ee9c19d2197608d73d"
+  },
+  "casebookRunId": "benchmark-v1-starter-matrix-v1:sampler-post-cfp66-invalid-root-casebook:cFp67",
+  "explicitNonSearchWarning": "cFp67 is analysis and evaluation infrastructure only. It does not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, sampler behavior changes, or product difficulty changes.",
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "invalid-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "omitted from committed artifacts so cFp67 hashes remain deterministic",
+  "hiddenInfoSafetyNote": "cFp67 sampler post-cFp66 invalid-root casebook artifacts contain only suite metadata, scalar counts, enum-like classifications, and public benchmark dimensions. They exclude private identity payloads, sampled hidden payloads, engine logs, final payloads, action references, and debug payloads.",
+  "invalidRootCount": 63,
+  "invalidRootPercentage": 1.559,
+  "recommendation": "cFp68 should define a valid-root-only determinized probe contract. It must skip invalid sampler roots explicitly, count skipped roots by suite, phase, round, matchup, policy, faction, deck preset, provenance label, and invalid reason, and report skipped-root percentages next to every search-readiness/probe result. It must not treat skipped roots as wins, losses, or draws, and must not silently drop them.",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/sampler-post-cfp66-invalid-root-casebook/cFp67",
+  "rootSchemaVersion": "sampler-post-cfp66-invalid-root-casebook-root-v1",
+  "schemaVersion": "sampler-post-cfp66-invalid-root-casebook-artifact-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "sampler-post-cfp66-invalid-root-casebook-summary-v1",
+  "totalRootCount": 4042,
+  "validRootCount": 3979,
+  "validRootOnlySkipRootCount": 63
+}
