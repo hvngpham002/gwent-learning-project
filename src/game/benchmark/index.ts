@@ -21,3 +21,5 @@ export * from './samplerMaterialization';
 export * from './samplerMaterializationArtifacts';
 export * from './samplerInvalidRoots';
 export * from './samplerInvalidRootArtifacts';
+export * from './samplerPublicZoneProvenance';
+export * from './samplerPublicZoneProvenanceArtifacts';

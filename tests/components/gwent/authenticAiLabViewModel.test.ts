@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp63",
-        latestSpecPath: "docs/spec/2026-05-27-cFp63-specs.md",
-        latestReportPath: "audit/reports/2026-05-27-cFp63-report.md",
+        latestPhase: "cFp64",
+        latestSpecPath: "docs/spec/2026-06-01-cFp64-specs.md",
+        latestReportPath: "audit/reports/2026-06-01-cFp64-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp63",
-        latestSpecPath: "docs/spec/2026-05-27-cFp63-specs.md",
-        latestReportPath: "audit/reports/2026-05-27-cFp63-report.md",
+        latestPhase: "cFp64",
+        latestSpecPath: "docs/spec/2026-06-01-cFp64-specs.md",
+        latestReportPath: "audit/reports/2026-06-01-cFp64-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -94,11 +94,11 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp63");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-05-27-cFp63-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-05-27-cFp63-report.md");
-    expect(v1?.description).toContain("cFp63 change no policy behavior");
-    expect(v1?.description).toContain("sampler repair infrastructure, not search gameplay");
+    expect(v1?.latestPhase).toBe("cFp64");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-01-cFp64-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-01-cFp64-report.md");
+    expect(v1?.description).toContain("cFp64 change no policy behavior");
+    expect(v1?.description).toContain("provenance casebook infrastructure, not search gameplay");
     expect(v1?.capabilities).toEqual(
       expect.arrayContaining([
         "linked-card mulligan diagnostics",
@@ -136,6 +136,7 @@ describe("authentic AI Lab view model", () => {
         "hidden-multiset materialization sampler artifacts with aggregate-only sample proof, not search gameplay (cFp61)",
         "sampler invalid-root casebook artifacts with scalar-only classifications, not search gameplay (cFp62)",
         "sampler public-count de-duplication repair diagnostics with scalar-only evidence, not search gameplay (cFp63)",
+        "sampler public-zone provenance casebook artifacts with scalar-only labels, not search gameplay (cFp64)",
       ])
     );
   });

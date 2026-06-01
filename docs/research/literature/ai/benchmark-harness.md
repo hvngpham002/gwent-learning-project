@@ -127,6 +127,12 @@ Search-readiness:
   robust suites, so the same 404 strict `public_zone_count_deficit` roots
   remain and cFp64 should add a scalar public-zone provenance casebook before
   any determinized probe.
+- cFp64 adds that benchmark-only scalar public-zone provenance casebook under
+  `<suiteId>/sampler-public-zone-provenance/cFp64/`. It represents each of the
+  404 cFp62 `public_zone_count_deficit` roots exactly once, assigns one
+  scalar-safe provenance label per root, keeps duplicate public/fixed-known-hand
+  reference totals at zero, and recommends a narrow cFp65 sampler accounting
+  repair before any search probe.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -282,6 +288,13 @@ Write cFp62 sampler invalid-root casebook artifact sets:
 ```bash
 npm run benchmark:sampler-invalid-roots:v1-starter-matrix
 npm run benchmark:sampler-invalid-roots:v1-robust
+```
+
+Write cFp64 sampler public-zone provenance casebook artifact sets:
+
+```bash
+npm run benchmark:sampler-public-zone-provenance:v1-starter-matrix
+npm run benchmark:sampler-public-zone-provenance:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the
@@ -593,7 +606,7 @@ serializes only aggregate sample statistics. Starter and robust suites produce
 0 invalid samples, and safe invalid roots report `insufficient_prior_remaining`
 with zero generated samples. Robust repeat artifacts produce identical hashes.
 
-cFp60, cFp61, cFp62, and cFp63 do not run PIMC/ISMCTS/rollouts, evaluate
+cFp60, cFp61, cFp62, cFp63, and cFp64 do not run PIMC/ISMCTS/rollouts, evaluate
 actions, build trees, select moves, or change any policy behavior.
 
 cFp63 repairs the public-known duplicate-reference path defensively and adds
@@ -603,6 +616,14 @@ zero duplicate fixed-known-hand references, and unchanged invalid-root counts:
 63 current and 341 robust, all still `public_zone_count_deficit`. Next
 recommended step: cFp64 should add a scalar-only public-zone provenance casebook
 before any determinized probe.
+
+cFp64 adds that provenance casebook under
+`<suiteId>/sampler-public-zone-provenance/cFp64/`. Starter current labels are
+42 mixed public zones, 6 round-end, 6 board-only, and 9 discard-only. Robust
+labels are 230 mixed public zones, 28 round-end, 54 board-only, and 29
+discard-only. No roots are ambiguous or zero-zone, duplicate-reference totals
+remain zero, and cFp65 should implement a narrow sampler accounting repair
+before any search probe.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

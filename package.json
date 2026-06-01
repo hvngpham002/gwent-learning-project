@@ -35,6 +35,8 @@
     "benchmark:sampler-materialization:v1-robust": "tsx scripts/run-benchmark-sampler-materialization-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
     "benchmark:sampler-invalid-roots:v1-starter-matrix": "tsx scripts/run-benchmark-sampler-invalid-roots-report.ts --suite benchmark-v1-starter-matrix-v1",
     "benchmark:sampler-invalid-roots:v1-robust": "tsx scripts/run-benchmark-sampler-invalid-roots-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
+    "benchmark:sampler-public-zone-provenance:v1-starter-matrix": "tsx scripts/run-benchmark-sampler-public-zone-provenance-report.ts --suite benchmark-v1-starter-matrix-v1",
+    "benchmark:sampler-public-zone-provenance:v1-robust": "tsx scripts/run-benchmark-sampler-public-zone-provenance-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
     "benchmark:long": "node scripts/run-long-benchmark.mjs",
     "check:forbidden-imports": "node scripts/check-forbidden-imports.mjs",
     "check:project-state": "node scripts/check-project-state-update.mjs",
