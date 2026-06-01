@@ -69,6 +69,12 @@ const root = (
   duplicateFixedKnownHandReferenceCount: 0,
   uniquePublicKnownCardCount: 2,
   uniqueFixedKnownHandCardCount: 0,
+  mainDeckAttributablePublicCount: 2,
+  sideDeckOnlyPublicCount: 1,
+  offPriorPublicCount: 0,
+  publicAdjustmentCount: 1,
+  uncoveredPriorDeficitCount: 0,
+  publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "none",
   priorRemainingCardCountBucket: "large",
@@ -168,6 +174,7 @@ describe("benchmark sampler materialization artifacts", () => {
       }),
     );
     expect(first.reportMarkdown).toContain("sampler-materialization infrastructure");
+    expect(first.reportMarkdown).toContain("Public Adjustment Diagnostics");
     expect(scanSamplerMaterializationArtifactsForHiddenInfo(first)).toEqual([]);
   });
 

@@ -72,11 +72,30 @@
   "invalidReasonCounts": {
     "insufficient_prior_remaining": 341
   },
+  "mainDeckAttributablePublicCountStats": {
+    "average": 7.093,
+    "count": 32487,
+    "max": 22,
+    "min": 0,
+    "p50": 7,
+    "p90": 13,
+    "p95": 15
+  },
   "matchCount": 1000,
   "materializationStatusCounts": {
     "invalid": 341,
     "valid": 32146
   },
+  "offPriorPublicCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "offPriorPublicTotal": 0,
   "policyIds": [
     "headless-round-end-auto-resolver",
     "legal-heuristic-v0",
@@ -85,6 +104,19 @@
   "priorStatusCounts": {
     "prior_available": 32487
   },
+  "publicAdjustmentCountStats": {
+    "average": 0.029,
+    "count": 32487,
+    "max": 3,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicAdjustmentReasonCounts": {
+    "side_deck_only_public": 946
+  },
+  "publicAdjustmentTotal": 946,
   "rootCountsByDeckPreset": {
     "official-monsters-starter": 5651,
     "official-nilfgaard-starter": 7555,
@@ -150,6 +182,16 @@
   },
   "samplerRunId": "benchmark-v1-starter-matrix-robust-v1:sampler-materialization:cFp61",
   "schemaVersion": "sampler-materialization-summary-v1",
+  "sideDeckOnlyPublicCountStats": {
+    "average": 0.029,
+    "count": 32487,
+    "max": 3,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "sideDeckOnlyPublicTotal": 946,
   "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-robust-v1",
   "statusCounts": {
     "completed": 1000,
@@ -158,6 +200,16 @@
     "policy_failed": 0
   },
   "suiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "uncoveredPriorDeficitCountStats": {
+    "average": 0.011,
+    "count": 32487,
+    "max": 2,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "uncoveredPriorDeficitTotal": 342,
   "uniqueFixedKnownHandCardCountStats": {
     "average": 0,
     "count": 32487,

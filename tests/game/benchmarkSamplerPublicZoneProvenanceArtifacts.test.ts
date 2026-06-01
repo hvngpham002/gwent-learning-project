@@ -68,6 +68,12 @@ const materializationRoot = (
   duplicateFixedKnownHandReferenceCount: 0,
   uniquePublicKnownCardCount: 3,
   uniqueFixedKnownHandCardCount: 0,
+  mainDeckAttributablePublicCount: 3,
+  sideDeckOnlyPublicCount: 1,
+  offPriorPublicCount: 0,
+  publicAdjustmentCount: 1,
+  uncoveredPriorDeficitCount: 1,
+  publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "small",
   priorRemainingCardCountBucket: "large",
@@ -114,6 +120,12 @@ const provenanceRoot = (
   fixedKnownHandCardCount: 0,
   requiredHiddenDrawCount: 25,
   priorRemainingCardCount: 24,
+  mainDeckAttributablePublicCount: 3,
+  sideDeckOnlyPublicCount: 1,
+  offPriorPublicCount: 0,
+  publicAdjustmentCount: 1,
+  uncoveredPriorDeficitCount: 1,
+  publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
   duplicatePublicReferenceCount: 0,
   duplicateFixedKnownHandReferenceCount: 0,
   publicZoneFamilyCounts: {
@@ -202,6 +214,12 @@ const profileResult = (
       root.duplicateFixedKnownHandReferenceCount,
     uniquePublicKnownCardCount: root.publicKnownCardCount,
     uniqueFixedKnownHandCardCount: root.fixedKnownHandCardCount,
+    mainDeckAttributablePublicCount: root.mainDeckAttributablePublicCount,
+    sideDeckOnlyPublicCount: root.sideDeckOnlyPublicCount,
+    offPriorPublicCount: root.offPriorPublicCount,
+    publicAdjustmentCount: root.publicAdjustmentCount,
+    uncoveredPriorDeficitCount: root.uncoveredPriorDeficitCount,
+    publicAdjustmentReasonCounts: root.publicAdjustmentReasonCounts,
     hiddenHandDrawCount: root.opponentHandCount,
     requiredHiddenDrawCount: root.requiredHiddenDrawCount,
     priorDeficitCount: root.priorDeficitCount,
@@ -302,6 +320,7 @@ describe("benchmark sampler public-zone provenance artifacts", () => {
       "Sampler Public-Zone Provenance Casebook",
     );
     expect(first.reportMarkdown).toContain("Recommendation For Next Phase");
+    expect(first.reportMarkdown).toContain("Public Adjustment Diagnostics");
     expect(scanSamplerPublicZoneProvenanceArtifactsForHiddenInfo(first)).toEqual(
       [],
     );

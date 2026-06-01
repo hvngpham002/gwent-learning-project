@@ -80,6 +80,22 @@
 - unique public known card count: count 32487, min 0, max 22, avg 7.093, p50 7, p90 13, p95 15
 - unique fixed-known-hand card count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
 
+## Public Adjustment Diagnostics
+
+- side-deck-only public cards: 946
+- off-prior public cards: 0
+- public adjustment count: 946
+- uncovered prior deficit count: 342
+- main-deck-attributable public count: count 32487, min 0, max 22, avg 7.093, p50 7, p90 13, p95 15
+- side-deck-only public count: count 32487, min 0, max 3, avg 0.029, p50 0, p90 0, p95 0
+- off-prior public count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- public adjustment count: count 32487, min 0, max 3, avg 0.029, p50 0, p90 0, p95 0
+- uncovered prior deficit count: count 32487, min 0, max 2, avg 0.011, p50 0, p90 0, p95 0
+
+| Adjustment reason | Count |
+|---|---:|
+| side_deck_only_public | 946 |
+
 ## Sample Counts
 
 - requested: count 32487, min 8, max 8, avg 8, p50 8, p90 8, p95 8

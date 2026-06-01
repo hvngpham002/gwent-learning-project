@@ -1,8 +1,8 @@
 {
   "artifactHashes": {
-    "invalid-roots.jsonl": "c5ebaab719cf892f6b4841048933b76503095317793fa50890abb4ce1fb165bc",
-    "report.md": "3e0090243ef8366045f9f768802ea7c78b866a8ef9f75b776dd31cf7c027e0af",
-    "summary.json": "60edd6f4da74d856709951e9d2ef2c953b649e97577ec657cb13c2801961e2ad"
+    "invalid-roots.jsonl": "ff8cef1e0d508fe60f3f3ded49afca35360d3751adc4ae8648be7c51342780d4",
+    "report.md": "43b37d717974d136475c0d76f7152e90c5c832022fc648b6a28525d2122283c8",
+    "summary.json": "7560336492743c4c8c2f341908344d4b7a52284fb724d20f33b05542b0a13aae"
   },
   "explicitNonSearchWarning": "cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.",
   "files": [
@@ -13,7 +13,7 @@
   ],
   "hiddenInfoSafetyNote": "Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.",
   "invalidRootCount": 341,
-  "recommendedNextStep": "cFp64 should add a scalar-only public-zone provenance casebook for the remaining public-zone count deficits before any determinized probe.",
+  "recommendedNextStep": "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone count deficits before any determinized probe.",
   "rootSchemaVersion": "sampler-invalid-root-v1",
   "samplerRunId": "benchmark-v1-starter-matrix-robust-v1:sampler-invalid-roots:cFp62",
   "schemaVersion": "sampler-invalid-root-artifact-v1",

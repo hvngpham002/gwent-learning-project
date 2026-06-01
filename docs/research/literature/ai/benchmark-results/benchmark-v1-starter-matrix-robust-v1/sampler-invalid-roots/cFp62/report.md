@@ -159,6 +159,22 @@
 - invalid-root duplicate public reference count: count 341, min 0, max 0, avg 0, p50 0, p90 0, p95 0
 - invalid-root duplicate fixed-known-hand reference count: count 341, min 0, max 0, avg 0, p50 0, p90 0, p95 0
 
+## Public Adjustment Diagnostics
+
+- invalid-root side-deck-only public cards: 1
+- invalid-root off-prior public cards: 0
+- invalid-root public adjustment count: 1
+- invalid-root uncovered prior deficit count: 342
+- invalid-root main-deck-attributable public count: count 341, min 1, max 18, avg 8.067, p50 8, p90 11, p95 12
+- invalid-root side-deck-only public count: count 341, min 0, max 1, avg 0.003, p50 0, p90 0, p95 0
+- invalid-root off-prior public count: count 341, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root public adjustment count: count 341, min 0, max 1, avg 0.003, p50 0, p90 0, p95 0
+- invalid-root uncovered prior deficit count: count 341, min 1, max 2, avg 1.003, p50 1, p90 1, p95 1
+
+| Adjustment reason | Count |
+|---|---:|
+| side_deck_only_public | 1 |
+
 ## Hidden-Info Safety
 
 Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.
@@ -169,4 +185,4 @@ cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do
 
 ## Recommendation For Next Phase
 
-cFp64 should add a scalar-only public-zone provenance casebook for the remaining public-zone count deficits before any determinized probe.
+A next non-search phase should add event-history/public-transfer memory for the remaining public-zone count deficits before any determinized probe.

@@ -94,6 +94,12 @@ export interface SamplerPublicZoneProvenanceRecord {
   fixedKnownHandCardCount: number;
   requiredHiddenDrawCount: number;
   priorRemainingCardCount: number;
+  mainDeckAttributablePublicCount: number;
+  sideDeckOnlyPublicCount: number;
+  offPriorPublicCount: number;
+  publicAdjustmentCount: number;
+  uncoveredPriorDeficitCount: number;
+  publicAdjustmentReasonCounts: Record<string, number>;
   duplicatePublicReferenceCount: number;
   duplicateFixedKnownHandReferenceCount: number;
   publicZoneFamilyCounts: Record<PublicZoneFamily, number>;
@@ -139,8 +145,18 @@ export interface SamplerPublicZoneProvenanceSummary {
   fixedKnownHandCardCountStats: SamplerReadinessCountStats;
   duplicatePublicReferenceTotal: number;
   duplicateFixedKnownHandReferenceTotal: number;
+  sideDeckOnlyPublicTotal: number;
+  offPriorPublicTotal: number;
+  publicAdjustmentTotal: number;
+  uncoveredPriorDeficitTotal: number;
+  publicAdjustmentReasonCounts: Record<string, number>;
   duplicatePublicReferenceCountStats: SamplerReadinessCountStats;
   duplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
+  mainDeckAttributablePublicCountStats: SamplerReadinessCountStats;
+  sideDeckOnlyPublicCountStats: SamplerReadinessCountStats;
+  offPriorPublicCountStats: SamplerReadinessCountStats;
+  publicAdjustmentCountStats: SamplerReadinessCountStats;
+  uncoveredPriorDeficitCountStats: SamplerReadinessCountStats;
   hiddenInfoSafetyNote: string;
   explicitNonSearchWarning: string;
   recommendedNextStep: string;
@@ -385,6 +401,13 @@ export const buildSamplerPublicZoneProvenanceRecord = ({
     fixedKnownHandCardCount: invalidRoot.fixedKnownHandCardCount,
     requiredHiddenDrawCount: invalidRoot.requiredHiddenDrawCount,
     priorRemainingCardCount: invalidRoot.priorRemainingCardCount,
+    mainDeckAttributablePublicCount:
+      invalidRoot.mainDeckAttributablePublicCount,
+    sideDeckOnlyPublicCount: invalidRoot.sideDeckOnlyPublicCount,
+    offPriorPublicCount: invalidRoot.offPriorPublicCount,
+    publicAdjustmentCount: invalidRoot.publicAdjustmentCount,
+    uncoveredPriorDeficitCount: invalidRoot.uncoveredPriorDeficitCount,
+    publicAdjustmentReasonCounts: invalidRoot.publicAdjustmentReasonCounts,
     duplicatePublicReferenceCount: invalidRoot.duplicatePublicReferenceCount,
     duplicateFixedKnownHandReferenceCount:
       invalidRoot.duplicateFixedKnownHandReferenceCount,
@@ -434,24 +457,24 @@ export const buildSamplerPublicZoneProvenanceRecommendation = (
   >,
 ) => {
   if (summary.invalidProvenanceRootCount === 0) {
-    return "cFp65 may define a valid-root-only determinized-pimc-probe-v0 with explicit zero public-zone-deficit skip accounting, while keeping it benchmark-only.";
+    return "A future benchmark-only determinized probe may cover all cFp61 roots with zero public-zone-deficit skips, if separately specified.";
   }
 
   if (
     summary.provenanceLabelCounts.provenance_ambiguous > 0 ||
     summary.provenanceLabelCounts.zero_public_zone_unexpected > 0
   ) {
-    return "cFp65 should add another scalar instrumentation pass because at least one public-zone deficit remains ambiguous or has zero public-zone evidence.";
+    return "A next scalar instrumentation pass should run because at least one public-zone deficit remains ambiguous or has zero public-zone evidence.";
   }
 
   if (
     summary.duplicatePublicReferenceTotal === 0 &&
     summary.duplicateFixedKnownHandReferenceTotal === 0
   ) {
-    return "cFp65 should implement a narrow sampler accounting repair targeted at the observed public-zone provenance labels before any search probe.";
+    return "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone deficits before any determinized probe.";
   }
 
-  return "cFp65 should keep sampler repair work first, then regenerate sampler artifacts before any benchmark-only search probe.";
+  return "A next sampler repair phase should run before any benchmark-only search probe.";
 };
 
 export const buildSamplerPublicZoneProvenanceSummary = ({
@@ -492,6 +515,13 @@ export const buildSamplerPublicZoneProvenanceSummary = ({
     (sum, root) => sum + root.duplicateFixedKnownHandReferenceCount,
     0,
   );
+  const publicAdjustmentReasonCounts: Record<string, number> = {};
+  provenanceRoots.forEach((root) => {
+    Object.entries(root.publicAdjustmentReasonCounts).forEach(([reason, count]) => {
+      publicAdjustmentReasonCounts[reason] =
+        (publicAdjustmentReasonCounts[reason] ?? 0) + count;
+    });
+  });
   const summaryBase = {
     invalidProvenanceRootCount: provenanceRoots.length,
     provenanceLabelCounts,
@@ -557,11 +587,43 @@ export const buildSamplerPublicZoneProvenanceSummary = ({
     ),
     duplicatePublicReferenceTotal,
     duplicateFixedKnownHandReferenceTotal,
+    sideDeckOnlyPublicTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.sideDeckOnlyPublicCount,
+      0,
+    ),
+    offPriorPublicTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.offPriorPublicCount,
+      0,
+    ),
+    publicAdjustmentTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicAdjustmentCount,
+      0,
+    ),
+    uncoveredPriorDeficitTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.uncoveredPriorDeficitCount,
+      0,
+    ),
+    publicAdjustmentReasonCounts: sortEntries(publicAdjustmentReasonCounts),
     duplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
       materializationRoots.map((root) => root.duplicatePublicReferenceCount),
     ),
     duplicateFixedKnownHandReferenceCountStats: buildSamplerReadinessCountStats(
       materializationRoots.map((root) => root.duplicateFixedKnownHandReferenceCount),
+    ),
+    mainDeckAttributablePublicCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.mainDeckAttributablePublicCount),
+    ),
+    sideDeckOnlyPublicCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.sideDeckOnlyPublicCount),
+    ),
+    offPriorPublicCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.offPriorPublicCount),
+    ),
+    publicAdjustmentCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.publicAdjustmentCount),
+    ),
+    uncoveredPriorDeficitCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.uncoveredPriorDeficitCount),
     ),
     hiddenInfoSafetyNote:
       "Sampler public-zone provenance artifacts contain only public metadata, scalar counts, deterministic buckets, and one safe provenance label per public-zone-deficit root. They exclude private card identity payloads, identity maps, sampled maps, engine logs, final payloads, action references, and debug payloads.",

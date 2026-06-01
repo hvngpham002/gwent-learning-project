@@ -116,11 +116,30 @@
     "p90": 0,
     "p95": 0
   },
+  "mainDeckAttributablePublicCountStats": {
+    "average": 9.317,
+    "count": 63,
+    "max": 16,
+    "min": 4,
+    "p50": 9,
+    "p90": 13,
+    "p95": 15
+  },
   "matchCount": 120,
   "materializationStatusCounts": {
     "invalid": 63,
     "valid": 3979
   },
+  "offPriorPublicCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "offPriorPublicTotal": 0,
   "opponentDeckCountStats": {
     "average": 20.032,
     "count": 63,
@@ -169,6 +188,19 @@
   "priorStatusCounts": {
     "prior_available": 4042
   },
+  "publicAdjustmentCountStats": {
+    "average": 0.032,
+    "count": 63,
+    "max": 1,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicAdjustmentReasonCounts": {
+    "side_deck_only_public": 2
+  },
+  "publicAdjustmentTotal": 2,
   "publicKnownCardCountStats": {
     "average": 9.317,
     "count": 63,
@@ -178,7 +210,7 @@
     "p90": 13,
     "p95": 15
   },
-  "recommendedNextStep": "cFp64 should add a scalar-only public-zone provenance casebook for the remaining public-zone count deficits before any determinized probe.",
+  "recommendedNextStep": "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone count deficits before any determinized probe.",
   "requiredHiddenDrawCountStats": {
     "average": 24.714,
     "count": 63,
@@ -190,6 +222,16 @@
   },
   "samplerRunId": "benchmark-v1-starter-matrix-v1:sampler-invalid-roots:cFp62",
   "schemaVersion": "sampler-invalid-root-summary-v1",
+  "sideDeckOnlyPublicCountStats": {
+    "average": 0.032,
+    "count": 63,
+    "max": 1,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "sideDeckOnlyPublicTotal": 2,
   "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
   "statusCounts": {
     "completed": 120,
@@ -199,6 +241,16 @@
   },
   "suiteId": "benchmark-v1-starter-matrix-v1",
   "totalRootCount": 4042,
+  "uncoveredPriorDeficitCountStats": {
+    "average": 1,
+    "count": 63,
+    "max": 1,
+    "min": 1,
+    "p50": 1,
+    "p90": 1,
+    "p95": 1
+  },
+  "uncoveredPriorDeficitTotal": 63,
   "uniqueFixedKnownHandCardCountStats": {
     "average": 0,
     "count": 4042,

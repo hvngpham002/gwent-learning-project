@@ -42,6 +42,7 @@ export interface KnownPresetSourceMultisetPrior {
   sideDeckCardCount: number;
   totalDeckCardCount: number;
   mainDeckSourceCounts: Record<string, number>;
+  sideDeckSourceCounts: Record<string, number>;
 }
 
 export interface MaterializedHiddenMultisetSample {
@@ -53,6 +54,12 @@ export interface MaterializedHiddenMultisetSample {
 export interface PublicKnownSourceSubtractionResult {
   publicKnownSourceCounts: Record<string, number>;
   fixedKnownHandSourceCounts: Record<string, number>;
+  mainDeckAttributablePublicCount: number;
+  sideDeckOnlyPublicCount: number;
+  offPriorPublicCount: number;
+  publicAdjustmentCount: number;
+  uncoveredPriorDeficitCount: number;
+  publicAdjustmentReasonCounts: Record<string, number>;
   publicKnownCardCount: number;
   fixedKnownHandCardCount: number;
   duplicatePublicReferenceCount: number;
@@ -134,6 +141,12 @@ export interface SamplerMaterializationRootRecord {
   duplicateFixedKnownHandReferenceCount: number;
   uniquePublicKnownCardCount: number;
   uniqueFixedKnownHandCardCount: number;
+  mainDeckAttributablePublicCount: number;
+  sideDeckOnlyPublicCount: number;
+  offPriorPublicCount: number;
+  publicAdjustmentCount: number;
+  uncoveredPriorDeficitCount: number;
+  publicAdjustmentReasonCounts: Record<string, number>;
   availableHiddenPoolSizeBucket: string;
   publicKnownCardCountBucket: string;
   priorRemainingCardCountBucket: string;
@@ -169,10 +182,20 @@ export interface SamplerMaterializationSummary {
   invalidReasonCounts: Record<string, number>;
   duplicatePublicReferenceTotal: number;
   duplicateFixedKnownHandReferenceTotal: number;
+  sideDeckOnlyPublicTotal: number;
+  offPriorPublicTotal: number;
+  publicAdjustmentTotal: number;
+  uncoveredPriorDeficitTotal: number;
+  publicAdjustmentReasonCounts: Record<string, number>;
   duplicatePublicReferenceCountStats: SamplerReadinessCountStats;
   duplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
   uniquePublicKnownCardCountStats: SamplerReadinessCountStats;
   uniqueFixedKnownHandCardCountStats: SamplerReadinessCountStats;
+  mainDeckAttributablePublicCountStats: SamplerReadinessCountStats;
+  sideDeckOnlyPublicCountStats: SamplerReadinessCountStats;
+  offPriorPublicCountStats: SamplerReadinessCountStats;
+  publicAdjustmentCountStats: SamplerReadinessCountStats;
+  uncoveredPriorDeficitCountStats: SamplerReadinessCountStats;
   sampleCountStats: SamplerMaterializationSampleCountStats;
   handUniqueSourceCountAverageStats: SamplerReadinessCountStats;
   deckUniqueSourceCountAverageStats: SamplerReadinessCountStats;
@@ -210,7 +233,7 @@ export interface BuildSamplerMaterializationRootRecordInput
 type MutableCounts = Record<string, number>;
 
 interface PublicKnownCollectionState {
-  publicKnownSourceCounts: MutableCounts;
+  publicSourceCounts: MutableCounts;
   fixedKnownHandSourceCounts: MutableCounts;
   seenPublicCardIds: Set<CardInstanceId>;
   seenFixedKnownHandCardIds: Set<CardInstanceId>;
@@ -366,6 +389,7 @@ export const buildKnownPresetSourceMultisetPrior = ({
       sideDeckCardCount: 0,
       totalDeckCardCount: 0,
       mainDeckSourceCounts: {},
+      sideDeckSourceCounts: {},
     };
   }
 
@@ -380,6 +404,7 @@ export const buildKnownPresetSourceMultisetPrior = ({
       sideDeckCardCount: 0,
       totalDeckCardCount: 0,
       mainDeckSourceCounts: {},
+      sideDeckSourceCounts: {},
     };
   }
 
@@ -387,12 +412,13 @@ export const buildKnownPresetSourceMultisetPrior = ({
   descriptor.deckPreset.mainDeck.forEach((entry) => {
     addCount(mainDeckSourceCounts, entry.sourceId, entry.count);
   });
+  const sideDeckSourceCounts: MutableCounts = {};
+  descriptor.deckPreset.sideDeck.forEach((entry) => {
+    addCount(sideDeckSourceCounts, entry.sourceId, entry.count);
+  });
 
   const mainDeckCardCount = sumCounts(mainDeckSourceCounts);
-  const sideDeckCardCount = descriptor.deckPreset.sideDeck.reduce(
-    (sum, entry) => sum + entry.count,
-    0,
-  );
+  const sideDeckCardCount = sumCounts(sideDeckSourceCounts);
 
   return {
     priorId: KNOWN_PRESET_DECKLIST_PRIOR_ID,
@@ -403,6 +429,7 @@ export const buildKnownPresetSourceMultisetPrior = ({
     sideDeckCardCount,
     totalDeckCardCount: mainDeckCardCount + sideDeckCardCount,
     mainDeckSourceCounts: sortEntries(mainDeckSourceCounts),
+    sideDeckSourceCounts: sortEntries(sideDeckSourceCounts),
   };
 };
 
@@ -419,6 +446,77 @@ export const buildOpponentKnownPresetSourceMultisetPrior = ({
     deckPresetId: opponentSeat.deckPresetId,
     faction: opponentSeat.faction,
   });
+};
+
+export const buildSamplerPublicZoneAccountingAdjustment = ({
+  publicSourceCounts,
+  mainDeckSourceCounts,
+  sideDeckSourceCounts = {},
+  duplicatePublicReferenceCount = 0,
+  requiredHiddenDrawCount = 0,
+}: {
+  publicSourceCounts: Record<string, number>;
+  mainDeckSourceCounts: Record<string, number>;
+  sideDeckSourceCounts?: Record<string, number>;
+  duplicatePublicReferenceCount?: number;
+  requiredHiddenDrawCount?: number;
+}) => {
+  const mainDeckAttributablePublicSourceCounts: MutableCounts = {};
+  const adjustmentReasonCounts: MutableCounts = {};
+  let sideDeckOnlyPublicCount = 0;
+  let offPriorPublicCount = 0;
+
+  Object.entries(publicSourceCounts).forEach(([source, count]) => {
+    if (Object.prototype.hasOwnProperty.call(mainDeckSourceCounts, source)) {
+      addCount(mainDeckAttributablePublicSourceCounts, source, count);
+      return;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(sideDeckSourceCounts, source)) {
+      sideDeckOnlyPublicCount += count;
+      addCount(adjustmentReasonCounts, "side_deck_only_public", count);
+      return;
+    }
+
+    offPriorPublicCount += count;
+    addCount(adjustmentReasonCounts, "off_prior_public", count);
+  });
+
+  const invalidReasonCounts: MutableCounts = {};
+  Object.entries(mainDeckAttributablePublicSourceCounts).forEach(
+    ([source, count]) => {
+      const priorCount = mainDeckSourceCounts[source] ?? 0;
+      if (count > priorCount) {
+        addCount(invalidReasonCounts, "public_known_exceeds_prior_copy_count");
+      }
+    },
+  );
+
+  const remainingSourceCounts = subtractCounts(
+    mainDeckSourceCounts,
+    mainDeckAttributablePublicSourceCounts,
+  );
+  const priorRemainingCardCount = sumCounts(remainingSourceCounts);
+  const publicAdjustmentCount = sideDeckOnlyPublicCount + offPriorPublicCount;
+
+  return {
+    publicKnownSourceCounts: sortEntries(mainDeckAttributablePublicSourceCounts),
+    mainDeckAttributablePublicCount: sumCounts(
+      mainDeckAttributablePublicSourceCounts,
+    ),
+    sideDeckOnlyPublicCount,
+    offPriorPublicCount,
+    duplicatePublicReferenceCount,
+    publicAdjustmentCount,
+    uncoveredPriorDeficitCount: Math.max(
+      0,
+      requiredHiddenDrawCount - priorRemainingCardCount,
+    ),
+    publicAdjustmentReasonCounts: sortEntries(adjustmentReasonCounts),
+    remainingSourceCounts,
+    priorRemainingCardCount,
+    invalidReasonCounts: sortEntries(invalidReasonCounts),
+  };
 };
 
 const collectPublicCard = ({
@@ -439,18 +537,20 @@ const collectPublicCard = ({
   if (!cardId) return;
   const card = state.cardsById[cardId];
   if (!card || card.owner !== opponentSeatId) return;
-  if (!Object.prototype.hasOwnProperty.call(priorSourceCounts, card.sourceId)) {
-    return;
-  }
 
   if (collection.seenPublicCardIds.has(cardId)) {
     collection.duplicatePublicReferenceCount += 1;
   } else {
     collection.seenPublicCardIds.add(cardId);
-    addCount(collection.publicKnownSourceCounts, card.sourceId);
+    addCount(collection.publicSourceCounts, card.sourceId);
   }
 
-  if (markFixedHand && card.zone.kind === "hand" && card.zone.seat === opponentSeatId) {
+  if (
+    markFixedHand &&
+    card.zone.kind === "hand" &&
+    card.zone.seat === opponentSeatId &&
+    Object.prototype.hasOwnProperty.call(priorSourceCounts, card.sourceId)
+  ) {
     if (collection.seenFixedKnownHandCardIds.has(cardId)) {
       collection.duplicateFixedKnownHandReferenceCount += 1;
     } else {
@@ -465,14 +565,20 @@ export const buildPublicKnownSourceSubtraction = ({
   actingSeatId,
   opponentSeatId,
   priorSourceCounts,
+  sideDeckSourceCounts = {},
+  opponentHandCount,
+  opponentDeckCount,
 }: {
   state: MatchState;
   actingSeatId: SeatId;
   opponentSeatId: SeatId;
   priorSourceCounts: Record<string, number>;
+  sideDeckSourceCounts?: Record<string, number>;
+  opponentHandCount?: number;
+  opponentDeckCount?: number;
 }): PublicKnownSourceSubtractionResult => {
   const collection: PublicKnownCollectionState = {
-    publicKnownSourceCounts: {},
+    publicSourceCounts: {},
     fixedKnownHandSourceCounts: {},
     seenPublicCardIds: new Set<CardInstanceId>(),
     seenFixedKnownHandCardIds: new Set<CardInstanceId>(),
@@ -555,30 +661,37 @@ export const buildPublicKnownSourceSubtraction = ({
     });
   }
 
-  const invalidReasonCounts: MutableCounts = {};
-  Object.entries(collection.publicKnownSourceCounts).forEach(([source, count]) => {
-    const priorCount = priorSourceCounts[source] ?? 0;
-    if (count > priorCount) {
-      addCount(invalidReasonCounts, "public_known_exceeds_prior_copy_count");
-    }
+  const fixedKnownHandCardCount = sumCounts(collection.fixedKnownHandSourceCounts);
+  const requiredHiddenDrawCount =
+    opponentHandCount === undefined || opponentDeckCount === undefined
+      ? 0
+      : opponentHandCount - fixedKnownHandCardCount + opponentDeckCount;
+  const accounting = buildSamplerPublicZoneAccountingAdjustment({
+    publicSourceCounts: collection.publicSourceCounts,
+    mainDeckSourceCounts: priorSourceCounts,
+    sideDeckSourceCounts,
+    duplicatePublicReferenceCount: collection.duplicatePublicReferenceCount,
+    requiredHiddenDrawCount,
   });
 
-  const remainingSourceCounts = subtractCounts(
-    priorSourceCounts,
-    collection.publicKnownSourceCounts,
-  );
-
   return {
-    publicKnownSourceCounts: sortEntries(collection.publicKnownSourceCounts),
+    publicKnownSourceCounts: accounting.publicKnownSourceCounts,
     fixedKnownHandSourceCounts: sortEntries(collection.fixedKnownHandSourceCounts),
-    publicKnownCardCount: sumCounts(collection.publicKnownSourceCounts),
-    fixedKnownHandCardCount: sumCounts(collection.fixedKnownHandSourceCounts),
+    mainDeckAttributablePublicCount:
+      accounting.mainDeckAttributablePublicCount,
+    sideDeckOnlyPublicCount: accounting.sideDeckOnlyPublicCount,
+    offPriorPublicCount: accounting.offPriorPublicCount,
+    publicAdjustmentCount: accounting.publicAdjustmentCount,
+    uncoveredPriorDeficitCount: accounting.uncoveredPriorDeficitCount,
+    publicAdjustmentReasonCounts: accounting.publicAdjustmentReasonCounts,
+    publicKnownCardCount: accounting.mainDeckAttributablePublicCount,
+    fixedKnownHandCardCount,
     duplicatePublicReferenceCount: collection.duplicatePublicReferenceCount,
     duplicateFixedKnownHandReferenceCount:
       collection.duplicateFixedKnownHandReferenceCount,
-    remainingSourceCounts,
-    priorRemainingCardCount: sumCounts(remainingSourceCounts),
-    invalidReasonCounts: sortEntries(invalidReasonCounts),
+    remainingSourceCounts: accounting.remainingSourceCounts,
+    priorRemainingCardCount: accounting.priorRemainingCardCount,
+    invalidReasonCounts: accounting.invalidReasonCounts,
   };
 };
 
@@ -829,10 +942,19 @@ export const buildSamplerMaterializationRootRecord = ({
           actingSeatId: seatId,
           opponentSeatId,
           priorSourceCounts: prior.mainDeckSourceCounts,
+          sideDeckSourceCounts: prior.sideDeckSourceCounts,
+          opponentHandCount,
+          opponentDeckCount,
         })
       : {
           publicKnownSourceCounts: {},
           fixedKnownHandSourceCounts: {},
+          mainDeckAttributablePublicCount: 0,
+          sideDeckOnlyPublicCount: 0,
+          offPriorPublicCount: 0,
+          publicAdjustmentCount: 0,
+          uncoveredPriorDeficitCount: 0,
+          publicAdjustmentReasonCounts: {},
           publicKnownCardCount: 0,
           fixedKnownHandCardCount: 0,
           duplicatePublicReferenceCount: 0,
@@ -975,6 +1097,13 @@ export const buildSamplerMaterializationRootRecord = ({
       publicKnown.duplicateFixedKnownHandReferenceCount,
     uniquePublicKnownCardCount: publicKnown.publicKnownCardCount,
     uniqueFixedKnownHandCardCount: publicKnown.fixedKnownHandCardCount,
+    mainDeckAttributablePublicCount:
+      publicKnown.mainDeckAttributablePublicCount,
+    sideDeckOnlyPublicCount: publicKnown.sideDeckOnlyPublicCount,
+    offPriorPublicCount: publicKnown.offPriorPublicCount,
+    publicAdjustmentCount: publicKnown.publicAdjustmentCount,
+    uncoveredPriorDeficitCount: publicKnown.uncoveredPriorDeficitCount,
+    publicAdjustmentReasonCounts: publicKnown.publicAdjustmentReasonCounts,
     availableHiddenPoolSizeBucket: bucketCardCount(publicKnown.priorRemainingCardCount),
     publicKnownCardCountBucket: bucketCardCount(publicKnown.publicKnownCardCount),
     priorRemainingCardCountBucket: bucketCardCount(publicKnown.priorRemainingCardCount),
@@ -1007,6 +1136,7 @@ export const buildSamplerMaterializationSummary = ({
   const handDuplicatePressureBucketCounts = emptyDuplicatePressureCounts();
   const deckDuplicatePressureBucketCounts = emptyDuplicatePressureCounts();
   const handDeckOverlapBucketCounts = emptyOverlapCounts();
+  const publicAdjustmentReasonCounts: MutableCounts = {};
 
   roots.forEach((root) => {
     addRecordCounts(
@@ -1018,6 +1148,9 @@ export const buildSamplerMaterializationSummary = ({
       root.deckDuplicatePressureBucketCounts,
     );
     addRecordCounts(handDeckOverlapBucketCounts, root.handDeckOverlapBucketCounts);
+    Object.entries(root.publicAdjustmentReasonCounts).forEach(([reason, count]) => {
+      addCount(publicAdjustmentReasonCounts, reason, count);
+    });
   });
 
   return {
@@ -1054,6 +1187,23 @@ export const buildSamplerMaterializationSummary = ({
       (sum, root) => sum + root.duplicateFixedKnownHandReferenceCount,
       0,
     ),
+    sideDeckOnlyPublicTotal: roots.reduce(
+      (sum, root) => sum + root.sideDeckOnlyPublicCount,
+      0,
+    ),
+    offPriorPublicTotal: roots.reduce(
+      (sum, root) => sum + root.offPriorPublicCount,
+      0,
+    ),
+    publicAdjustmentTotal: roots.reduce(
+      (sum, root) => sum + root.publicAdjustmentCount,
+      0,
+    ),
+    uncoveredPriorDeficitTotal: roots.reduce(
+      (sum, root) => sum + root.uncoveredPriorDeficitCount,
+      0,
+    ),
+    publicAdjustmentReasonCounts: sortEntries(publicAdjustmentReasonCounts),
     duplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
       roots.map((root) => root.duplicatePublicReferenceCount),
     ),
@@ -1065,6 +1215,21 @@ export const buildSamplerMaterializationSummary = ({
     ),
     uniqueFixedKnownHandCardCountStats: buildSamplerReadinessCountStats(
       roots.map((root) => root.uniqueFixedKnownHandCardCount),
+    ),
+    mainDeckAttributablePublicCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.mainDeckAttributablePublicCount),
+    ),
+    sideDeckOnlyPublicCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.sideDeckOnlyPublicCount),
+    ),
+    offPriorPublicCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.offPriorPublicCount),
+    ),
+    publicAdjustmentCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.publicAdjustmentCount),
+    ),
+    uncoveredPriorDeficitCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.uncoveredPriorDeficitCount),
     ),
     sampleCountStats: {
       requested: buildSamplerReadinessCountStats(

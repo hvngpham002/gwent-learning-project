@@ -219,6 +219,22 @@ ${formatCountRows(summary.invalidRootCountsByHiddenCountDeficitBucket)}
 - invalid-root duplicate public reference count: ${formatStats(summary.invalidRootDuplicatePublicReferenceCountStats)}
 - invalid-root duplicate fixed-known-hand reference count: ${formatStats(summary.invalidRootDuplicateFixedKnownHandReferenceCountStats)}
 
+## Public Adjustment Diagnostics
+
+- invalid-root side-deck-only public cards: ${summary.sideDeckOnlyPublicTotal}
+- invalid-root off-prior public cards: ${summary.offPriorPublicTotal}
+- invalid-root public adjustment count: ${summary.publicAdjustmentTotal}
+- invalid-root uncovered prior deficit count: ${summary.uncoveredPriorDeficitTotal}
+- invalid-root main-deck-attributable public count: ${formatStats(summary.mainDeckAttributablePublicCountStats)}
+- invalid-root side-deck-only public count: ${formatStats(summary.sideDeckOnlyPublicCountStats)}
+- invalid-root off-prior public count: ${formatStats(summary.offPriorPublicCountStats)}
+- invalid-root public adjustment count: ${formatStats(summary.publicAdjustmentCountStats)}
+- invalid-root uncovered prior deficit count: ${formatStats(summary.uncoveredPriorDeficitCountStats)}
+
+| Adjustment reason | Count |
+|---|---:|
+${formatCountRows(summary.publicAdjustmentReasonCounts)}
+
 ## Hidden-Info Safety
 
 ${summary.hiddenInfoSafetyNote}

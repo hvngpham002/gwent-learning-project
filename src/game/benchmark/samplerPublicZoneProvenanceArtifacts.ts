@@ -225,6 +225,22 @@ ${formatCountRows(summary.publicZoneShapeCounts)}
 - duplicate public reference count: ${formatStats(summary.duplicatePublicReferenceCountStats)}
 - duplicate fixed-known-hand reference count: ${formatStats(summary.duplicateFixedKnownHandReferenceCountStats)}
 
+## Public Adjustment Diagnostics
+
+- provenance-root side-deck-only public cards: ${summary.sideDeckOnlyPublicTotal}
+- provenance-root off-prior public cards: ${summary.offPriorPublicTotal}
+- provenance-root public adjustment count: ${summary.publicAdjustmentTotal}
+- provenance-root uncovered prior deficit count: ${summary.uncoveredPriorDeficitTotal}
+- provenance-root main-deck-attributable public count: ${formatStats(summary.mainDeckAttributablePublicCountStats)}
+- provenance-root side-deck-only public count: ${formatStats(summary.sideDeckOnlyPublicCountStats)}
+- provenance-root off-prior public count: ${formatStats(summary.offPriorPublicCountStats)}
+- provenance-root public adjustment count: ${formatStats(summary.publicAdjustmentCountStats)}
+- provenance-root uncovered prior deficit count: ${formatStats(summary.uncoveredPriorDeficitCountStats)}
+
+| Adjustment reason | Count |
+|---|---:|
+${formatCountRows(summary.publicAdjustmentReasonCounts)}
+
 ## Hidden-Info Safety
 
 ${summary.hiddenInfoSafetyNote}

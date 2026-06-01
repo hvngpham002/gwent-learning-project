@@ -162,6 +162,22 @@ ${formatCountRows(summary.invalidReasonCounts)}
 - unique public known card count: ${formatStats(summary.uniquePublicKnownCardCountStats)}
 - unique fixed-known-hand card count: ${formatStats(summary.uniqueFixedKnownHandCardCountStats)}
 
+## Public Adjustment Diagnostics
+
+- side-deck-only public cards: ${summary.sideDeckOnlyPublicTotal}
+- off-prior public cards: ${summary.offPriorPublicTotal}
+- public adjustment count: ${summary.publicAdjustmentTotal}
+- uncovered prior deficit count: ${summary.uncoveredPriorDeficitTotal}
+- main-deck-attributable public count: ${formatStats(summary.mainDeckAttributablePublicCountStats)}
+- side-deck-only public count: ${formatStats(summary.sideDeckOnlyPublicCountStats)}
+- off-prior public count: ${formatStats(summary.offPriorPublicCountStats)}
+- public adjustment count: ${formatStats(summary.publicAdjustmentCountStats)}
+- uncovered prior deficit count: ${formatStats(summary.uncoveredPriorDeficitCountStats)}
+
+| Adjustment reason | Count |
+|---|---:|
+${formatCountRows(summary.publicAdjustmentReasonCounts)}
+
 ## Sample Counts
 
 - requested: ${formatStats(summary.sampleCountStats.requested)}

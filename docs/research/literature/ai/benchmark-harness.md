@@ -133,6 +133,11 @@ Search-readiness:
   scalar-safe provenance label per root, keeps duplicate public/fixed-known-hand
   reference totals at zero, and recommends a narrow cFp65 sampler accounting
   repair before any search probe.
+- cFp65 adds explicit scalar public-zone prior accounting to regenerated
+  cFp61/cFp62/cFp64 sampler artifacts. Public cards are separated into
+  main-deck-attributable, side-deck-only, and off-prior counts using only public
+  zones and the known preset prior. Strict conservation remains enforced: roots
+  stay invalid unless a public-only adjustment covers the deficit.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -606,8 +611,9 @@ serializes only aggregate sample statistics. Starter and robust suites produce
 0 invalid samples, and safe invalid roots report `insufficient_prior_remaining`
 with zero generated samples. Robust repeat artifacts produce identical hashes.
 
-cFp60, cFp61, cFp62, cFp63, and cFp64 do not run PIMC/ISMCTS/rollouts, evaluate
-actions, build trees, select moves, or change any policy behavior.
+cFp60, cFp61, cFp62, cFp63, cFp64, and cFp65 do not run
+PIMC/ISMCTS/rollouts, evaluate actions, build trees, select moves, or change
+any policy behavior.
 
 cFp63 repairs the public-known duplicate-reference path defensively and adds
 scalar duplicate diagnostics to the regenerated cFp61/cFp62 artifacts. The
@@ -624,6 +630,13 @@ labels are 230 mixed public zones, 28 round-end, 54 board-only, and 29
 discard-only. No roots are ambiguous or zero-zone, duplicate-reference totals
 remain zero, and cFp65 should implement a narrow sampler accounting repair
 before any search probe.
+
+cFp65 implements that narrow accounting probe by making the public adjustment
+surface explicit in cFp61/cFp62/cFp64 artifacts: main-deck-attributable public
+cards still consume the main-deck prior, side-deck-only and off-prior public
+cards are counted as scalar public adjustments, and uncovered prior deficits
+remain invalid. If invalid roots remain after cFp65, the next prerequisite is
+event-history/public-transfer memory before any determinized probe.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

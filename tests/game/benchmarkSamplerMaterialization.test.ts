@@ -4,6 +4,7 @@ import {
   buildKnownPresetSourceMultisetPrior,
   buildOpponentKnownPresetSourceMultisetPrior,
   buildPublicKnownSourceSubtraction,
+  buildSamplerPublicZoneAccountingAdjustment,
   buildSamplerMaterializationRootRecord,
   materializeHiddenMultisetSample,
   materializeHiddenMultisets,
@@ -103,6 +104,38 @@ const maxCombinedCopyCount = (sample: MaterializedHiddenMultisetSample) => {
 };
 
 describe("benchmark sampler materialization", () => {
+  it("builds scalar public-zone prior accounting without exposing identities", () => {
+    const result = buildSamplerPublicZoneAccountingAdjustment({
+      publicSourceCounts: {
+        "main.deck": 2,
+        "side.deck": 1,
+        "external.card": 1,
+      },
+      mainDeckSourceCounts: { "main.deck": 3 },
+      sideDeckSourceCounts: { "side.deck": 1 },
+      duplicatePublicReferenceCount: 1,
+      requiredHiddenDrawCount: 2,
+    });
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        mainDeckAttributablePublicCount: 2,
+        sideDeckOnlyPublicCount: 1,
+        offPriorPublicCount: 1,
+        duplicatePublicReferenceCount: 1,
+        publicAdjustmentCount: 2,
+        uncoveredPriorDeficitCount: 1,
+        publicAdjustmentReasonCounts: {
+          off_prior_public: 1,
+          side_deck_only_public: 1,
+        },
+        priorRemainingCardCount: 1,
+        invalidReasonCounts: {},
+      }),
+    );
+    expect(JSON.stringify(result)).not.toContain("seat_b:");
+  });
+
   it("uses the opponent deck preset for the known preset prior", () => {
     const prior = buildOpponentKnownPresetSourceMultisetPrior({
       actingSeatId: "seat_a",
@@ -152,16 +185,21 @@ describe("benchmark sampler materialization", () => {
       actingSeatId: "seat_a",
       opponentSeatId: "seat_b",
       priorSourceCounts: prior.mainDeckSourceCounts,
+      sideDeckSourceCounts: prior.sideDeckSourceCounts,
     });
 
     expect(result.publicKnownCardCount).toBe(2);
+    expect(result.mainDeckAttributablePublicCount).toBe(2);
+    expect(result.sideDeckOnlyPublicCount).toBe(0);
+    expect(result.offPriorPublicCount).toBe(0);
+    expect(result.publicAdjustmentCount).toBe(0);
     expect(result.publicKnownSourceCounts[firstSource]).toBe(1);
     expect(result.publicKnownSourceCounts[secondSource]).toBe(1);
     expect(result.priorRemainingCardCount).toBe(prior.mainDeckCardCount - 2);
     expect(result.invalidReasonCounts).toEqual({});
   });
 
-  it("does not subtract side-deck-only or generated public cards from the main-deck prior", () => {
+  it("does not subtract off-prior public cards from the main-deck prior", () => {
     const prior = buildKnownPresetSourceMultisetPrior({
       deckPresetId: "official-monsters-starter",
       faction: "monsters",
@@ -180,9 +218,52 @@ describe("benchmark sampler materialization", () => {
       actingSeatId: "seat_a",
       opponentSeatId: "seat_b",
       priorSourceCounts: prior.mainDeckSourceCounts,
+      sideDeckSourceCounts: prior.sideDeckSourceCounts,
     });
 
     expect(result.publicKnownCardCount).toBe(0);
+    expect(result.mainDeckAttributablePublicCount).toBe(0);
+    expect(result.offPriorPublicCount).toBe(1);
+    expect(result.publicAdjustmentCount).toBe(1);
+    expect(result.publicAdjustmentReasonCounts).toEqual({
+      off_prior_public: 1,
+    });
+    expect(result.priorRemainingCardCount).toBe(prior.mainDeckCardCount);
+    expect(result.invalidReasonCounts).toEqual({});
+  });
+
+  it("does not subtract side-deck-only public cards from the main-deck prior when proven by the known preset", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-skellige-starter",
+      faction: "skellige",
+    });
+    const sideDeckSource = "skellige.vildkaarl";
+    expect(prior.sideDeckSourceCounts[sideDeckSource]).toBeGreaterThan(0);
+    expect(prior.mainDeckSourceCounts[sideDeckSource]).toBeUndefined();
+    const state = baseState({
+      generated: card("generated", sideDeckSource, {
+        kind: "board_row",
+        seat: "seat_b",
+        row: "close",
+      }),
+    });
+    state.seats.seat_b.board.close.units = ["generated"];
+
+    const result = buildPublicKnownSourceSubtraction({
+      state,
+      actingSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      priorSourceCounts: prior.mainDeckSourceCounts,
+      sideDeckSourceCounts: prior.sideDeckSourceCounts,
+    });
+
+    expect(result.publicKnownCardCount).toBe(0);
+    expect(result.mainDeckAttributablePublicCount).toBe(0);
+    expect(result.sideDeckOnlyPublicCount).toBe(1);
+    expect(result.publicAdjustmentCount).toBe(1);
+    expect(result.publicAdjustmentReasonCounts).toEqual({
+      side_deck_only_public: 1,
+    });
     expect(result.priorRemainingCardCount).toBe(prior.mainDeckCardCount);
     expect(result.invalidReasonCounts).toEqual({});
   });
@@ -204,6 +285,8 @@ describe("benchmark sampler materialization", () => {
     expect(result.invalidReasonCounts).toEqual({
       public_known_exceeds_prior_copy_count: 1,
     });
+    expect(result.mainDeckAttributablePublicCount).toBe(2);
+    expect(result.publicAdjustmentCount).toBe(0);
   });
 
   it("counts a duplicate public card instance once and records scalar diagnostics", () => {
@@ -227,6 +310,9 @@ describe("benchmark sampler materialization", () => {
     expect(result.publicKnownCardCount).toBe(1);
     expect(result.publicKnownSourceCounts).toEqual({ "test.copy": 1 });
     expect(result.duplicatePublicReferenceCount).toBe(1);
+    expect(result.mainDeckAttributablePublicCount).toBe(1);
+    expect(result.publicAdjustmentCount).toBe(0);
+    expect(result.uncoveredPriorDeficitCount).toBe(0);
     expect(result.invalidReasonCounts).toEqual({});
   });
 
@@ -252,7 +338,132 @@ describe("benchmark sampler materialization", () => {
     expect(result.publicKnownCardCount).toBe(2);
     expect(result.publicKnownSourceCounts).toEqual({ "test.copy": 2 });
     expect(result.duplicatePublicReferenceCount).toBe(0);
+    expect(result.mainDeckAttributablePublicCount).toBe(2);
+    expect(result.publicAdjustmentCount).toBe(0);
     expect(result.invalidReasonCounts).toEqual({});
+  });
+
+  it("keeps a one-card public-zone deficit invalid when no public-safe adjustment exists", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-nilfgaard-starter",
+      faction: "nilfgaard",
+    });
+    const [publicSource] = Object.keys(prior.mainDeckSourceCounts);
+    const state = baseState({
+      public: card("public", publicSource, {
+        kind: "board_row",
+        seat: "seat_b",
+        row: "close",
+      }),
+    });
+    state.seats.seat_b.board.close.units = ["public"];
+    state.seats.seat_b.hand = [];
+    state.seats.seat_b.deck = Array.from(
+      { length: prior.mainDeckCardCount },
+      (_, index) => `hidden-deck-${index}`,
+    );
+
+    const root = buildSamplerMaterializationRootRecord({
+      samplerRunId: "test-run",
+      suiteId: "benchmark-v1-starter-matrix-v1",
+      matchupId: "one-card-public-deficit",
+      seed: "public-deficit-seed",
+      step: 1,
+      decisionIndex: 0,
+      state,
+      seatId: "seat_a",
+      policyId: "legal-heuristic-v1",
+      legalMoves: [],
+      seats: {
+        seat_a: {
+          seatId: "seat_a",
+          policyId: "legal-heuristic-v1",
+          playerId: "a",
+          faction: "northern_realms",
+          deckPresetId: "official-northern-realms-starter",
+        },
+        seat_b: {
+          seatId: "seat_b",
+          policyId: "legal-heuristic-v0",
+          playerId: "b",
+          faction: "nilfgaard",
+          deckPresetId: "official-nilfgaard-starter",
+        },
+      },
+      sampleCount: 8,
+    });
+
+    expect(root.materializationStatus).toBe("invalid");
+    expect(root.invalidReasonCounts).toEqual({
+      insufficient_prior_remaining: 1,
+    });
+    expect(root.mainDeckAttributablePublicCount).toBe(1);
+    expect(root.publicAdjustmentCount).toBe(0);
+    expect(root.uncoveredPriorDeficitCount).toBe(1);
+    expect(root.sampleCountGenerated).toBe(0);
+  });
+
+  it("does not use hidden hand or deck identities to repair an invalid root", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-nilfgaard-starter",
+      faction: "nilfgaard",
+    });
+    const state = baseState({
+      "hidden-hand": card("hidden-hand", "external.hidden-hand-card", {
+        kind: "hand",
+        seat: "seat_b",
+      }),
+      "hidden-deck": card("hidden-deck", "external.hidden-deck-card", {
+        kind: "deck",
+        seat: "seat_b",
+      }),
+    });
+    state.seats.seat_b.hand = ["hidden-hand"];
+    state.seats.seat_b.deck = [
+      "hidden-deck",
+      ...Array.from(
+        { length: prior.mainDeckCardCount },
+        (_, index) => `hidden-deck-extra-${index}`,
+      ),
+    ];
+
+    const root = buildSamplerMaterializationRootRecord({
+      samplerRunId: "test-run",
+      suiteId: "benchmark-v1-starter-matrix-v1",
+      matchupId: "hidden-identity-guard",
+      seed: "hidden-identity-seed",
+      step: 1,
+      decisionIndex: 0,
+      state,
+      seatId: "seat_a",
+      policyId: "legal-heuristic-v1",
+      legalMoves: [],
+      seats: {
+        seat_a: {
+          seatId: "seat_a",
+          policyId: "legal-heuristic-v1",
+          playerId: "a",
+          faction: "northern_realms",
+          deckPresetId: "official-northern-realms-starter",
+        },
+        seat_b: {
+          seatId: "seat_b",
+          policyId: "legal-heuristic-v0",
+          playerId: "b",
+          faction: "nilfgaard",
+          deckPresetId: "official-nilfgaard-starter",
+        },
+      },
+      sampleCount: 8,
+    });
+
+    expect(root.materializationStatus).toBe("invalid");
+    expect(root.invalidReasonCounts).toEqual({
+      insufficient_prior_remaining: 1,
+    });
+    expect(root.uniquePublicKnownCardCount).toBe(0);
+    expect(root.publicAdjustmentCount).toBe(0);
+    expect(root.uncoveredPriorDeficitCount).toBe(2);
   });
 
   it("marks insufficient remaining prior as invalid with a safe reason", () => {
@@ -426,6 +637,9 @@ describe("benchmark sampler materialization", () => {
       actingSeatId: "seat_a",
       opponentSeatId: "seat_b",
       priorSourceCounts: prior.mainDeckSourceCounts,
+      sideDeckSourceCounts: prior.sideDeckSourceCounts,
+      opponentHandCount: opponentHand.length,
+      opponentDeckCount: opponentDeck.length,
     });
     const materialization = materializeHiddenMultisets({
       samplerRunId: "test-run",

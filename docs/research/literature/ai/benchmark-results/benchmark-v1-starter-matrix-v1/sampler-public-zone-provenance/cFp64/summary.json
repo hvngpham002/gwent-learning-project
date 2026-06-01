@@ -49,11 +49,30 @@
     "raw_hidden_count_exceeds_prior": 0
   },
   "invalidRootCount": 63,
+  "mainDeckAttributablePublicCountStats": {
+    "average": 9.317,
+    "count": 63,
+    "max": 16,
+    "min": 4,
+    "p50": 9,
+    "p90": 13,
+    "p95": 15
+  },
   "matchCount": 120,
   "materializationStatusCounts": {
     "invalid": 63,
     "valid": 3979
   },
+  "offPriorPublicCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "offPriorPublicTotal": 0,
   "priorDeficitBucketCounts": {
     "one": 63
   },
@@ -126,6 +145,19 @@
     "2": 28,
     "3": 7
   },
+  "publicAdjustmentCountStats": {
+    "average": 0.032,
+    "count": 63,
+    "max": 1,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicAdjustmentReasonCounts": {
+    "side_deck_only_public": 2
+  },
+  "publicAdjustmentTotal": 2,
   "publicKnownCardCountStats": {
     "average": 9.317,
     "count": 63,
@@ -158,9 +190,19 @@
     "three_plus_zones": 13,
     "two_zones": 35
   },
-  "recommendedNextStep": "cFp65 should implement a narrow sampler accounting repair targeted at the observed public-zone provenance labels before any search probe.",
+  "recommendedNextStep": "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone deficits before any determinized probe.",
   "samplerRunId": "benchmark-v1-starter-matrix-v1:sampler-public-zone-provenance:cFp64",
   "schemaVersion": "sampler-public-zone-provenance-summary-v1",
+  "sideDeckOnlyPublicCountStats": {
+    "average": 0.032,
+    "count": 63,
+    "max": 1,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "sideDeckOnlyPublicTotal": 2,
   "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
   "statusCounts": {
     "completed": 120,
@@ -170,5 +212,15 @@
   },
   "suiteId": "benchmark-v1-starter-matrix-v1",
   "totalRootCount": 4042,
+  "uncoveredPriorDeficitCountStats": {
+    "average": 1,
+    "count": 63,
+    "max": 1,
+    "min": 1,
+    "p50": 1,
+    "p90": 1,
+    "p95": 1
+  },
+  "uncoveredPriorDeficitTotal": 63,
   "validRootCount": 3979
 }

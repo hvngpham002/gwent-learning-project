@@ -1,8 +1,8 @@
 {
   "artifactHashes": {
-    "provenance-roots.jsonl": "958bb62d47ddd37acb4dff636a29b59d8b6291c8cc90ba40d8db1ede4e4a045f",
-    "report.md": "90300683b088f058f82156eeeafce3e2d5901215f56efe8eb1179dd5cf62661c",
-    "summary.json": "c57ec48722290b6f74a81897776963153f539570cddd292cdd928c41abdf8aaf"
+    "provenance-roots.jsonl": "f23922d210a0674a62831a56ea8075c66838af8c10551a3d67e1b01908369d31",
+    "report.md": "349764a8f980000eb7269fe2e190dc053b6aa82a5d026c80e732abcca44ef6ae",
+    "summary.json": "8fa4d0b76db72e9dad2b2c378eab3ef5ac2193c469f0e1903f2d37c1195100e9"
   },
   "explicitNonSearchWarning": "cFp64 sampler public-zone provenance artifacts are casebook infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.",
   "files": [
@@ -15,7 +15,7 @@
   "hiddenInfoSafetyNote": "Sampler public-zone provenance artifacts contain only public metadata, scalar counts, deterministic buckets, and one safe provenance label per public-zone-deficit root. They exclude private card identity payloads, identity maps, sampled maps, engine logs, final payloads, action references, and debug payloads.",
   "invalidProvenanceRootCount": 63,
   "invalidRootCount": 63,
-  "recommendedNextStep": "cFp65 should implement a narrow sampler accounting repair targeted at the observed public-zone provenance labels before any search probe.",
+  "recommendedNextStep": "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone deficits before any determinized probe.",
   "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/sampler-public-zone-provenance/cFp64",
   "rootSchemaVersion": "sampler-public-zone-provenance-root-v1",
   "samplerRunId": "benchmark-v1-starter-matrix-v1:sampler-public-zone-provenance:cFp64",

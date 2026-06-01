@@ -170,6 +170,22 @@
 - duplicate public reference count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
 - duplicate fixed-known-hand reference count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
 
+## Public Adjustment Diagnostics
+
+- provenance-root side-deck-only public cards: 1
+- provenance-root off-prior public cards: 0
+- provenance-root public adjustment count: 1
+- provenance-root uncovered prior deficit count: 342
+- provenance-root main-deck-attributable public count: count 341, min 1, max 18, avg 8.067, p50 8, p90 11, p95 12
+- provenance-root side-deck-only public count: count 341, min 0, max 1, avg 0.003, p50 0, p90 0, p95 0
+- provenance-root off-prior public count: count 341, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- provenance-root public adjustment count: count 341, min 0, max 1, avg 0.003, p50 0, p90 0, p95 0
+- provenance-root uncovered prior deficit count: count 341, min 1, max 2, avg 1.003, p50 1, p90 1, p95 1
+
+| Adjustment reason | Count |
+|---|---:|
+| side_deck_only_public | 1 |
+
 ## Hidden-Info Safety
 
 Sampler public-zone provenance artifacts contain only public metadata, scalar counts, deterministic buckets, and one safe provenance label per public-zone-deficit root. They exclude private card identity payloads, identity maps, sampled maps, engine logs, final payloads, action references, and debug payloads.
@@ -180,4 +196,4 @@ cFp64 sampler public-zone provenance artifacts are casebook infrastructure only.
 
 ## Recommendation For Next Phase
 
-cFp65 should implement a narrow sampler accounting repair targeted at the observed public-zone provenance labels before any search probe.
+A next non-search phase should add event-history/public-transfer memory for the remaining public-zone deficits before any determinized probe.

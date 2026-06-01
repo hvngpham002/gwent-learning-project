@@ -23,9 +23,11 @@ phase is cFp53: Round-One Overinvestment Selected-Play Guard Repair. The latest
 reproduction/debug phase is cFp52: Round-One Guard Fixture Reproduction Debug.
 The latest analysis phase is cFp56: Temporal Round-One Overinvestment
 Casebook. The latest rating-ledger phase is cFp57: Multi-Period Rating Ledger.
-The latest sampler public-zone provenance phase is cFp64: Sampler Public-Zone
-Provenance Casebook. The latest sampler public-count repair phase is cFp63:
-Sampler Public-Count Repair. The latest sampler invalid-root casebook phase is cFp62: Sampler
+The latest sampler public-zone accounting phase is cFp65: Sampler Public-Zone
+Accounting Repair Probe. The latest sampler public-zone provenance phase is
+cFp64: Sampler Public-Zone Provenance Casebook. The latest sampler public-count
+repair phase is cFp63: Sampler Public-Count Repair. The latest sampler
+invalid-root casebook phase is cFp62: Sampler
 Invalid-Root Casebook.
 The latest sampler-materialization phase is cFp61: Hidden-Multiset
 Materialization Sampler. The latest sampler-readiness phase is cFp60:
@@ -50,14 +52,17 @@ cFp64 labels those 404 roots in a scalar-only public-zone provenance casebook:
 current has 42 mixed public-zone, 6 round-end, 6 board-only, and 9 discard-only
 roots; robust has 230 mixed public-zone, 28 round-end, 54 board-only, and 29
 discard-only roots. No cFp64 root is ambiguous or zero-zone, duplicate
-public/fixed-known-hand references remain zero, and cFp65 should implement a
-narrow sampler accounting repair before any search probe.
+public/fixed-known-hand references remain zero. cFp65 makes that public-zone
+accounting explicit by separating main-deck-attributable, side-deck-only, and
+off-prior public cards with scalar diagnostics, keeps strict conservation, and
+keeps unresolved roots invalid when no public-only adjustment covers the
+deficit.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
 sampler-materialization infrastructure only. cFp62 is invalid-root casebook
 infrastructure only. cFp63 is sampler repair infrastructure only. cFp59, cFp60,
-cFp61, cFp62, cFp63, and cFp64 do not change
+cFp61, cFp62, cFp63, cFp64, and cFp65 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -104,8 +109,8 @@ cFp62 adds scalar-only invalid-root evidence for the remaining cFp61 invalid
 roots and recommends a narrow sampler-public-count repair before search. cFp63
 implements that duplicate-reference repair path and shows the invalid-root
 family is not explained by duplicate public references; cFp59, cFp60, cFp61,
-cFp62, cFp63, and cFp64 are evaluation infrastructure only and do not make search
-available in product play.
+cFp62, cFp63, cFp64, and cFp65 are evaluation infrastructure only and do not
+make search available in product play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
 Evaluation Suite, which adds a 25-seed / 1000-record starter matrix, robust
 failure-mining artifacts, robust Glicko ratings, a suite-local `cFp48`
@@ -199,6 +204,13 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   and discard-only 29. No ambiguous or zero-zone rows appear, duplicate
   reference totals remain 0, and the recommended next step is a narrow cFp65
   sampler accounting repair before search.
+- cFp65: evaluation-only sampler public-zone accounting repair probe; records
+  explicit scalar main-deck-attributable, side-deck-only, off-prior public, and
+  uncovered-deficit counts in regenerated cFp61/cFp62/cFp64 sampler artifacts.
+  It does not inspect hidden opponent hand/deck identities, add placeholders,
+  weaken conservation, or make search gameplay available. If public-only
+  accounting cannot cover remaining deficits, the roots remain invalid and the
+  next prerequisite is event-history/public-transfer memory before search.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

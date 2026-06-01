@@ -82,6 +82,12 @@ const materializationRoot = (
   duplicateFixedKnownHandReferenceCount: 0,
   uniquePublicKnownCardCount: 3,
   uniqueFixedKnownHandCardCount: 0,
+  mainDeckAttributablePublicCount: 3,
+  sideDeckOnlyPublicCount: 1,
+  offPriorPublicCount: 0,
+  publicAdjustmentCount: 1,
+  uncoveredPriorDeficitCount: 1,
+  publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "small",
   priorRemainingCardCountBucket: "large",
@@ -139,6 +145,12 @@ const invalidRoot = (
     duplicateFixedKnownHandReferenceCount: 0,
     uniquePublicKnownCardCount: publicKnownCardCount,
     uniqueFixedKnownHandCardCount: 0,
+    mainDeckAttributablePublicCount: publicKnownCardCount,
+    sideDeckOnlyPublicCount: 1,
+    offPriorPublicCount: 0,
+    publicAdjustmentCount: 1,
+    uncoveredPriorDeficitCount: 1,
+    publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
     hiddenHandDrawCount: 3,
     requiredHiddenDrawCount: 25,
     priorDeficitCount: 1,
@@ -285,6 +297,8 @@ describe("benchmark sampler public-zone provenance analyzer", () => {
         publicZoneShape: "two_zones",
         duplicatePublicReferenceCount: 0,
         duplicateFixedKnownHandReferenceCount: 0,
+        publicAdjustmentCount: 1,
+        uncoveredPriorDeficitCount: 1,
         materializationInvalidReasonCounts: { insufficient_prior_remaining: 1 },
       }),
     );
@@ -375,6 +389,8 @@ describe("benchmark sampler public-zone provenance analyzer", () => {
       single_zone: 1,
       two_zones: 1,
     });
-    expect(summary.recommendedNextStep).toContain("narrow sampler accounting repair");
+    expect(summary.recommendedNextStep).toContain(
+      "event-history/public-transfer memory",
+    );
   });
 });

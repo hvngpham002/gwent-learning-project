@@ -86,6 +86,12 @@ export interface SamplerInvalidRootRecord {
   duplicateFixedKnownHandReferenceCount: number;
   uniquePublicKnownCardCount: number;
   uniqueFixedKnownHandCardCount: number;
+  mainDeckAttributablePublicCount: number;
+  sideDeckOnlyPublicCount: number;
+  offPriorPublicCount: number;
+  publicAdjustmentCount: number;
+  uncoveredPriorDeficitCount: number;
+  publicAdjustmentReasonCounts: Record<string, number>;
   hiddenHandDrawCount: number;
   requiredHiddenDrawCount: number;
   priorDeficitCount: number;
@@ -132,10 +138,20 @@ export interface SamplerInvalidRootSummary {
   priorDeficitCountStats: SamplerReadinessCountStats;
   duplicatePublicReferenceTotal: number;
   duplicateFixedKnownHandReferenceTotal: number;
+  sideDeckOnlyPublicTotal: number;
+  offPriorPublicTotal: number;
+  publicAdjustmentTotal: number;
+  uncoveredPriorDeficitTotal: number;
+  publicAdjustmentReasonCounts: Record<string, number>;
   duplicatePublicReferenceCountStats: SamplerReadinessCountStats;
   duplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
   uniquePublicKnownCardCountStats: SamplerReadinessCountStats;
   uniqueFixedKnownHandCardCountStats: SamplerReadinessCountStats;
+  mainDeckAttributablePublicCountStats: SamplerReadinessCountStats;
+  sideDeckOnlyPublicCountStats: SamplerReadinessCountStats;
+  offPriorPublicCountStats: SamplerReadinessCountStats;
+  publicAdjustmentCountStats: SamplerReadinessCountStats;
+  uncoveredPriorDeficitCountStats: SamplerReadinessCountStats;
   invalidRootDuplicatePublicReferenceCountStats: SamplerReadinessCountStats;
   invalidRootDuplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
   hiddenInfoSafetyNote: string;
@@ -493,6 +509,13 @@ const buildInvalidRootRecord = ({
       publicKnown.duplicateFixedKnownHandReferenceCount,
     uniquePublicKnownCardCount: publicKnown.publicKnownCardCount,
     uniqueFixedKnownHandCardCount: publicKnown.fixedKnownHandCardCount,
+    mainDeckAttributablePublicCount:
+      publicKnown.mainDeckAttributablePublicCount,
+    sideDeckOnlyPublicCount: publicKnown.sideDeckOnlyPublicCount,
+    offPriorPublicCount: publicKnown.offPriorPublicCount,
+    publicAdjustmentCount: publicKnown.publicAdjustmentCount,
+    uncoveredPriorDeficitCount: publicKnown.uncoveredPriorDeficitCount,
+    publicAdjustmentReasonCounts: publicKnown.publicAdjustmentReasonCounts,
     hiddenHandDrawCount,
     requiredHiddenDrawCount,
     priorDeficitCount,
@@ -524,10 +547,19 @@ export const buildSamplerInvalidRootAnalysis = (
           actingSeatId: input.seatId,
           opponentSeatId,
           priorSourceCounts: prior.mainDeckSourceCounts,
+          sideDeckSourceCounts: prior.sideDeckSourceCounts,
+          opponentHandCount: input.state.seats[opponentSeatId].hand.length,
+          opponentDeckCount: input.state.seats[opponentSeatId].deck.length,
         })
       : {
           publicKnownSourceCounts: {},
           fixedKnownHandSourceCounts: {},
+          mainDeckAttributablePublicCount: 0,
+          sideDeckOnlyPublicCount: 0,
+          offPriorPublicCount: 0,
+          publicAdjustmentCount: 0,
+          uncoveredPriorDeficitCount: 0,
+          publicAdjustmentReasonCounts: {},
           publicKnownCardCount: 0,
           fixedKnownHandCardCount: 0,
           duplicatePublicReferenceCount: 0,
@@ -561,7 +593,7 @@ export const buildSamplerInvalidRootsRecommendation = (
   >,
 ) => {
   if (summary.invalidRootCount === 0) {
-    return "cFp64 may implement benchmark-only determinized-pimc-probe-v0 over all cFp61 roots, with zero invalid-root skips reported.";
+    return "A future benchmark-only determinized probe may cover all cFp61 roots with zero invalid-root skips, if separately specified.";
   }
 
   if (
@@ -569,7 +601,7 @@ export const buildSamplerInvalidRootsRecommendation = (
     summary.duplicatePublicReferenceTotal === 0 &&
     summary.duplicateFixedKnownHandReferenceTotal === 0
   ) {
-    return "cFp64 should add a scalar-only public-zone provenance casebook for the remaining public-zone count deficits before any determinized probe.";
+    return "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone count deficits before any determinized probe.";
   }
 
   const repairClassifications: SamplerInvalidRootClassification[] = [
@@ -586,17 +618,17 @@ export const buildSamplerInvalidRootsRecommendation = (
   );
 
   if (repairCount > 0) {
-    return "cFp64 should implement the next narrow sampler-count repair before any determinized probe, then regenerate sampler materialization and invalid-root artifacts before search.";
+    return "A next narrow sampler-count repair should run before any determinized probe, then regenerate sampler materialization and invalid-root artifacts before search.";
   }
 
   if (
     (summary.classificationCounts.raw_hidden_count_exceeds_prior ?? 0) ===
     summary.invalidRootCount
   ) {
-    return "cFp64 may run benchmark-only determinized-pimc-probe-v0 over valid cFp61 roots only, reporting invalid-root skips by suite, reason, classification, phase, round, matchup, policy, faction, and deck.";
+    return "A future benchmark-only determinized probe may cover valid cFp61 roots only, reporting invalid-root skips by suite, reason, classification, phase, round, matchup, policy, faction, and deck.";
   }
 
-  return "cFp64 should add another scalar-only sampler instrumentation pass because the invalid-root evidence remains mixed or ambiguous.";
+  return "A next scalar-only sampler instrumentation pass should run because the invalid-root evidence remains mixed or ambiguous.";
 };
 
 export const buildSamplerInvalidRootSummary = ({
@@ -631,6 +663,13 @@ export const buildSamplerInvalidRootSummary = ({
     (sum, root) => sum + root.duplicateFixedKnownHandReferenceCount,
     0,
   );
+  const publicAdjustmentReasonCounts: Record<string, number> = {};
+  invalidRoots.forEach((root) => {
+    Object.entries(root.publicAdjustmentReasonCounts).forEach(([reason, count]) => {
+      publicAdjustmentReasonCounts[reason] =
+        (publicAdjustmentReasonCounts[reason] ?? 0) + count;
+    });
+  });
   const summaryBase = {
     invalidRootCount,
     classificationCounts,
@@ -695,6 +734,23 @@ export const buildSamplerInvalidRootSummary = ({
     ),
     duplicatePublicReferenceTotal,
     duplicateFixedKnownHandReferenceTotal,
+    sideDeckOnlyPublicTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.sideDeckOnlyPublicCount,
+      0,
+    ),
+    offPriorPublicTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.offPriorPublicCount,
+      0,
+    ),
+    publicAdjustmentTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicAdjustmentCount,
+      0,
+    ),
+    uncoveredPriorDeficitTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.uncoveredPriorDeficitCount,
+      0,
+    ),
+    publicAdjustmentReasonCounts: sortEntries(publicAdjustmentReasonCounts),
     duplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
       materializationRoots.map((root) => root.duplicatePublicReferenceCount),
     ),
@@ -706,6 +762,21 @@ export const buildSamplerInvalidRootSummary = ({
     ),
     uniqueFixedKnownHandCardCountStats: buildSamplerReadinessCountStats(
       materializationRoots.map((root) => root.uniqueFixedKnownHandCardCount),
+    ),
+    mainDeckAttributablePublicCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.mainDeckAttributablePublicCount),
+    ),
+    sideDeckOnlyPublicCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.sideDeckOnlyPublicCount),
+    ),
+    offPriorPublicCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.offPriorPublicCount),
+    ),
+    publicAdjustmentCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.publicAdjustmentCount),
+    ),
+    uncoveredPriorDeficitCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.uncoveredPriorDeficitCount),
     ),
     invalidRootDuplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
       invalidRoots.map((root) => root.duplicatePublicReferenceCount),

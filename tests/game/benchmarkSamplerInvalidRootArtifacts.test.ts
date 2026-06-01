@@ -84,6 +84,12 @@ const invalidRoot = (
   duplicateFixedKnownHandReferenceCount: 0,
   uniquePublicKnownCardCount: 3,
   uniqueFixedKnownHandCardCount: 0,
+  mainDeckAttributablePublicCount: 3,
+  sideDeckOnlyPublicCount: 1,
+  offPriorPublicCount: 0,
+  publicAdjustmentCount: 1,
+  uncoveredPriorDeficitCount: 3,
+  publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
   hiddenHandDrawCount: 3,
   requiredHiddenDrawCount: 25,
   priorDeficitCount: 3,
@@ -132,6 +138,12 @@ const materializationRoot = (
   duplicateFixedKnownHandReferenceCount: 0,
   uniquePublicKnownCardCount: 3,
   uniqueFixedKnownHandCardCount: 0,
+  mainDeckAttributablePublicCount: 3,
+  sideDeckOnlyPublicCount: 1,
+  offPriorPublicCount: 0,
+  publicAdjustmentCount: 1,
+  uncoveredPriorDeficitCount: 3,
+  publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "small",
   priorRemainingCardCountBucket: "large",
@@ -248,6 +260,7 @@ describe("benchmark sampler invalid-root artifacts", () => {
     );
     expect(first.reportMarkdown).toContain("Sampler Invalid-Root Casebook");
     expect(first.reportMarkdown).toContain("Recommendation For Next Phase");
+    expect(first.reportMarkdown).toContain("Public Adjustment Diagnostics");
     expect(scanSamplerInvalidRootArtifactsForHiddenInfo(first)).toEqual([]);
   });
 
