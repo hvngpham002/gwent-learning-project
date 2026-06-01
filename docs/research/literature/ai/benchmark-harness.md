@@ -138,6 +138,11 @@ Search-readiness:
   main-deck-attributable, side-deck-only, and off-prior counts using only public
   zones and the known preset prior. Strict conservation remains enforced: roots
   stay invalid unless a public-only adjustment covers the deficit.
+- cFp66 adds benchmark-only, perspective-specific public-transfer memory to
+  those sampler paths. It tracks only cards that were public or prompt-revealed
+  to the perspective seat before later moving into hidden opponent hand/deck
+  zones, accounts for those known hidden cards without scanning never-seen
+  hidden identities, and serializes scalar public-transfer diagnostics only.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -611,7 +616,7 @@ serializes only aggregate sample statistics. Starter and robust suites produce
 0 invalid samples, and safe invalid roots report `insufficient_prior_remaining`
 with zero generated samples. Robust repeat artifacts produce identical hashes.
 
-cFp60, cFp61, cFp62, cFp63, cFp64, and cFp65 do not run
+cFp60, cFp61, cFp62, cFp63, cFp64, cFp65, and cFp66 do not run
 PIMC/ISMCTS/rollouts, evaluate actions, build trees, select moves, or change
 any policy behavior.
 
@@ -637,6 +642,18 @@ cards still consume the main-deck prior, side-deck-only and off-prior public
 cards are counted as scalar public adjustments, and uncovered prior deficits
 remain invalid. If invalid roots remain after cFp65, the next prerequisite is
 event-history/public-transfer memory before any determinized probe.
+
+cFp66 implements that public-transfer memory prerequisite. It adds
+benchmark-only, perspective-specific memory for cards previously public or
+prompt-revealed to the seat and later hidden in opponent hand/deck zones. It
+does not inspect never-seen hidden hand/deck identities, add placeholders, or
+relax conservation. Current remains 3,979 valid / 63 invalid roots. Robust
+improves from 32,146 valid / 341 invalid to 32,147 valid / 340 invalid, with
+the one repaired robust root coming from a main-deck-attributable
+public-transfer hand card. Remaining invalid roots still classify as
+`public_zone_count_deficit`, so the next spec should define explicit
+valid-root-only skip accounting or require deeper public-state reconstruction
+before any determinized probe.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

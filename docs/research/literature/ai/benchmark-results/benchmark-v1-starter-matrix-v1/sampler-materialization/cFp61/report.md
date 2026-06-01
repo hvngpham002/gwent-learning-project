@@ -96,6 +96,31 @@
 |---|---:|
 | side_deck_only_public | 82 |
 
+## Public Transfer Memory Diagnostics
+
+- visible public-memory cards: 30004
+- known hidden hand cards: 51
+- known hidden deck cards: 0
+- main-deck-attributable known hidden cards: 51
+- side-deck-only known hidden cards: 0
+- off-prior known hidden cards: 0
+- public-transfer adjustment count: 0
+- public-transfer uncovered deficit count: 63
+- public-transfer incoherent count: 0
+- visible public-memory card count: count 4042, min 0, max 21, avg 7.423, p50 7, p90 14, p95 15
+- known hidden hand count: count 4042, min 0, max 1, avg 0.013, p50 0, p90 0, p95 0
+- known hidden deck count: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- main-deck-attributable known hidden count: count 4042, min 0, max 1, avg 0.013, p50 0, p90 0, p95 0
+- side-deck-only known hidden count: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- off-prior known hidden count: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- public-transfer adjustment count: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- public-transfer uncovered deficit count: count 4042, min 0, max 1, avg 0.016, p50 0, p90 0, p95 0
+- public-transfer incoherent count: count 4042, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+
+| Public-transfer reason | Count |
+|---|---:|
+| main_deck_attributable_public_transfer | 51 |
+
 ## Sample Counts
 
 - requested: count 4042, min 8, max 8, avg 8, p50 8, p90 8, p95 8
@@ -105,33 +130,33 @@
 
 ## Aggregate Sample Stats
 
-- hand unique average: count 4042, min 0, max 11.375, avg 4.504, p50 4.625, p90 8.625, p95 9
-- deck unique average: count 4042, min 0, max 19.625, avg 15.317, p50 15.75, p90 17.75, p95 18
+- hand unique average: count 4042, min 0, max 10.625, avg 4.506, p50 4.75, p90 8.625, p95 9
+- deck unique average: count 4042, min 0, max 19.375, avg 15.31, p50 15.75, p90 17.75, p95 18.125
 
 ### Hand Duplicate Pressure
 
 | Bucket | Count |
 |---|---:|
-| none | 20432 |
-| pair | 10574 |
-| triple_plus | 826 |
+| none | 20564 |
+| pair | 10399 |
+| triple_plus | 869 |
 
 ### Deck Duplicate Pressure
 
 | Bucket | Count |
 |---|---:|
-| none | 36 |
-| pair | 5811 |
-| triple_plus | 25985 |
+| none | 28 |
+| pair | 5829 |
+| triple_plus | 25975 |
 
 ### Hand Deck Overlap
 
 | Bucket | Count |
 |---|---:|
-| four_plus | 8699 |
-| none | 7124 |
-| one | 4264 |
-| two_to_three | 11745 |
+| four_plus | 8639 |
+| none | 7114 |
+| one | 4285 |
+| two_to_three | 11794 |
 
 ## Interpretation Warning
 

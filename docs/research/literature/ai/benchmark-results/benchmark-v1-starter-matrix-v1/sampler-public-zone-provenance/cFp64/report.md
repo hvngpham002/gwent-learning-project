@@ -184,6 +184,31 @@
 |---|---:|
 | side_deck_only_public | 2 |
 
+## Public Transfer Memory Diagnostics
+
+- provenance-root visible public-memory cards: 589
+- provenance-root known hidden hand cards: 0
+- provenance-root known hidden deck cards: 0
+- provenance-root main-deck-attributable known hidden cards: 0
+- provenance-root side-deck-only known hidden cards: 0
+- provenance-root off-prior known hidden cards: 0
+- provenance-root public-transfer adjustment count: 0
+- provenance-root public-transfer uncovered deficit count: 63
+- provenance-root public-transfer incoherent count: 0
+- provenance-root visible public-memory card count: count 63, min 4, max 16, avg 9.349, p50 9, p90 13, p95 15
+- provenance-root known hidden hand count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- provenance-root known hidden deck count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- provenance-root main-deck-attributable known hidden count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- provenance-root side-deck-only known hidden count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- provenance-root off-prior known hidden count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- provenance-root public-transfer adjustment count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- provenance-root public-transfer uncovered deficit count: count 63, min 1, max 1, avg 1, p50 1, p90 1, p95 1
+- provenance-root public-transfer incoherent count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+
+| Public-transfer reason | Count |
+|---|---:|
+| none | 0 |
+
 ## Hidden-Info Safety
 
 Sampler public-zone provenance artifacts contain only public metadata, scalar counts, deterministic buckets, and one safe provenance label per public-zone-deficit root. They exclude private card identity payloads, identity maps, sampled maps, engine logs, final payloads, action references, and debug payloads.
@@ -194,4 +219,4 @@ cFp64 sampler public-zone provenance artifacts are casebook infrastructure only.
 
 ## Recommendation For Next Phase
 
-A next non-search phase should add event-history/public-transfer memory for the remaining public-zone deficits before any determinized probe.
+After public-transfer memory, a next spec should either define explicit valid-root-only skip accounting or require deeper public-state reconstruction before any determinized probe.

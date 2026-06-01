@@ -69,12 +69,39 @@ export interface PublicKnownSourceSubtractionResult {
   invalidReasonCounts: Record<string, number>;
 }
 
+export interface SamplerPublicTransferMemoryState {
+  trackedCards: Record<
+    CardInstanceId,
+    {
+      ownerSeatId: SeatId;
+      sourceId: string;
+    }
+  >;
+}
+
+export interface SamplerPublicTransferMemoryCounts {
+  visibleCardCount: number;
+  knownHiddenHandSourceCounts: Record<string, number>;
+  knownHiddenDeckSourceCounts: Record<string, number>;
+  mainDeckAttributableKnownHiddenSourceCounts: Record<string, number>;
+  knownHiddenHandCount: number;
+  knownHiddenDeckCount: number;
+  knownHiddenMainDeckAttributableCount: number;
+  knownHiddenSideDeckOnlyCount: number;
+  knownHiddenOffPriorCount: number;
+  adjustmentCount: number;
+  incoherentCount: number;
+  reasonCounts: Record<string, number>;
+}
+
 export interface HiddenMultisetMaterializationInput {
   samplerRunId: string;
   rootPublicFingerprint: string;
   priorSourceCounts: Record<string, number>;
   remainingSourceCounts: Record<string, number>;
   fixedKnownHandSourceCounts?: Record<string, number>;
+  publicTransferKnownHiddenHandSourceCounts?: Record<string, number>;
+  publicTransferKnownHiddenDeckSourceCounts?: Record<string, number>;
   opponentHandCount: number;
   opponentDeckCount: number;
   sampleCount?: number;
@@ -147,6 +174,17 @@ export interface SamplerMaterializationRootRecord {
   publicAdjustmentCount: number;
   uncoveredPriorDeficitCount: number;
   publicAdjustmentReasonCounts: Record<string, number>;
+  publicTransferMemoryVisibleCardCount: number;
+  publicTransferKnownHiddenHandCount: number;
+  publicTransferKnownHiddenDeckCount: number;
+  publicTransferKnownHiddenMainDeckAttributableCount: number;
+  publicTransferKnownHiddenSideDeckOnlyCount: number;
+  publicTransferKnownHiddenOffPriorCount: number;
+  publicTransferAdjustmentCount: number;
+  publicTransferUncoveredDeficitCount: number;
+  publicTransferIncoherentCount: number;
+  publicTransferReasonCounts: Record<string, number>;
+  priorRemainingCardCount: number;
   availableHiddenPoolSizeBucket: string;
   publicKnownCardCountBucket: string;
   priorRemainingCardCountBucket: string;
@@ -187,6 +225,16 @@ export interface SamplerMaterializationSummary {
   publicAdjustmentTotal: number;
   uncoveredPriorDeficitTotal: number;
   publicAdjustmentReasonCounts: Record<string, number>;
+  publicTransferMemoryVisibleCardTotal: number;
+  publicTransferKnownHiddenHandTotal: number;
+  publicTransferKnownHiddenDeckTotal: number;
+  publicTransferKnownHiddenMainDeckAttributableTotal: number;
+  publicTransferKnownHiddenSideDeckOnlyTotal: number;
+  publicTransferKnownHiddenOffPriorTotal: number;
+  publicTransferAdjustmentTotal: number;
+  publicTransferUncoveredDeficitTotal: number;
+  publicTransferIncoherentTotal: number;
+  publicTransferReasonCounts: Record<string, number>;
   duplicatePublicReferenceCountStats: SamplerReadinessCountStats;
   duplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
   uniquePublicKnownCardCountStats: SamplerReadinessCountStats;
@@ -196,6 +244,15 @@ export interface SamplerMaterializationSummary {
   offPriorPublicCountStats: SamplerReadinessCountStats;
   publicAdjustmentCountStats: SamplerReadinessCountStats;
   uncoveredPriorDeficitCountStats: SamplerReadinessCountStats;
+  publicTransferMemoryVisibleCardCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenHandCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenDeckCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenMainDeckAttributableCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenSideDeckOnlyCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenOffPriorCountStats: SamplerReadinessCountStats;
+  publicTransferAdjustmentCountStats: SamplerReadinessCountStats;
+  publicTransferUncoveredDeficitCountStats: SamplerReadinessCountStats;
+  publicTransferIncoherentCountStats: SamplerReadinessCountStats;
   sampleCountStats: SamplerMaterializationSampleCountStats;
   handUniqueSourceCountAverageStats: SamplerReadinessCountStats;
   deckUniqueSourceCountAverageStats: SamplerReadinessCountStats;
@@ -228,6 +285,7 @@ export interface BuildSamplerMaterializationRootRecordInput
   extends BenchmarkRootObserverInput {
   samplerRunId: string;
   sampleCount?: number;
+  publicTransferMemory?: SamplerPublicTransferMemoryState;
 }
 
 type MutableCounts = Record<string, number>;
@@ -519,6 +577,280 @@ export const buildSamplerPublicZoneAccountingAdjustment = ({
   };
 };
 
+export const createSamplerPublicTransferMemoryState =
+  (): SamplerPublicTransferMemoryState => ({
+    trackedCards: {},
+  });
+
+const emptySamplerPublicTransferMemoryCounts =
+  (): SamplerPublicTransferMemoryCounts => ({
+    visibleCardCount: 0,
+    knownHiddenHandSourceCounts: {},
+    knownHiddenDeckSourceCounts: {},
+    mainDeckAttributableKnownHiddenSourceCounts: {},
+    knownHiddenHandCount: 0,
+    knownHiddenDeckCount: 0,
+    knownHiddenMainDeckAttributableCount: 0,
+    knownHiddenSideDeckOnlyCount: 0,
+    knownHiddenOffPriorCount: 0,
+    adjustmentCount: 0,
+    incoherentCount: 0,
+    reasonCounts: {},
+  });
+
+const addVisibleOpponentCard = ({
+  visibleCardIds,
+  cardId,
+  state,
+  opponentSeatId,
+}: {
+  visibleCardIds: Set<CardInstanceId>;
+  cardId: CardInstanceId | null | undefined;
+  state: MatchState;
+  opponentSeatId: SeatId;
+}) => {
+  if (!cardId) return;
+  const card = state.cardsById[cardId];
+  if (card?.owner === opponentSeatId) {
+    visibleCardIds.add(cardId);
+  }
+};
+
+const collectVisibleOpponentCardIdsForPerspective = ({
+  state,
+  perspectiveSeatId,
+  opponentSeatId,
+}: {
+  state: MatchState;
+  perspectiveSeatId: SeatId;
+  opponentSeatId: SeatId;
+}) => {
+  const visibleCardIds = new Set<CardInstanceId>();
+
+  (["seat_a", "seat_b"] as const).forEach((publicSeatId) => {
+    const publicSeat = state.seats[publicSeatId];
+    (["close", "ranged", "siege"] as const).forEach((row) => {
+      publicSeat.board[row].units.forEach((cardId) => {
+        addVisibleOpponentCard({
+          visibleCardIds,
+          cardId,
+          state,
+          opponentSeatId,
+        });
+      });
+      addVisibleOpponentCard({
+        visibleCardIds,
+        cardId: publicSeat.board[row].horn,
+        state,
+        opponentSeatId,
+      });
+    });
+
+    publicSeat.discard.forEach((cardId) => {
+      addVisibleOpponentCard({
+        visibleCardIds,
+        cardId,
+        state,
+        opponentSeatId,
+      });
+    });
+
+    publicSeat.removedFromGame.forEach((cardId) => {
+      addVisibleOpponentCard({
+        visibleCardIds,
+        cardId,
+        state,
+        opponentSeatId,
+      });
+    });
+  });
+
+  state.weather.entries.forEach((cardId) => {
+    addVisibleOpponentCard({
+      visibleCardIds,
+      cardId,
+      state,
+      opponentSeatId,
+    });
+  });
+
+  state.seats[perspectiveSeatId].hand.forEach((cardId) => {
+    addVisibleOpponentCard({
+      visibleCardIds,
+      cardId,
+      state,
+      opponentSeatId,
+    });
+  });
+
+  if (state.pendingPrompt?.seatId === perspectiveSeatId) {
+    state.pendingPrompt.context?.revealedCardIds?.forEach((cardId) => {
+      addVisibleOpponentCard({
+        visibleCardIds,
+        cardId,
+        state,
+        opponentSeatId,
+      });
+    });
+  }
+
+  return visibleCardIds;
+};
+
+const classifyPublicTransferKnownHiddenCard = ({
+  sourceId,
+  mainDeckSourceCounts,
+  sideDeckSourceCounts,
+  result,
+}: {
+  sourceId: string;
+  mainDeckSourceCounts: Record<string, number>;
+  sideDeckSourceCounts: Record<string, number>;
+  result: SamplerPublicTransferMemoryCounts;
+}) => {
+  if (Object.prototype.hasOwnProperty.call(mainDeckSourceCounts, sourceId)) {
+    addCount(result.mainDeckAttributableKnownHiddenSourceCounts, sourceId);
+    result.knownHiddenMainDeckAttributableCount += 1;
+    addCount(result.reasonCounts, "main_deck_attributable_public_transfer");
+    return;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(sideDeckSourceCounts, sourceId)) {
+    result.knownHiddenSideDeckOnlyCount += 1;
+    result.adjustmentCount += 1;
+    addCount(result.reasonCounts, "side_deck_only_public_transfer");
+    return;
+  }
+
+  result.knownHiddenOffPriorCount += 1;
+  result.adjustmentCount += 1;
+  addCount(result.reasonCounts, "off_prior_public_transfer");
+};
+
+export const buildSamplerPublicTransferMemoryUpdate = ({
+  memory,
+  state,
+  perspectiveSeatId,
+  opponentSeatId,
+  mainDeckSourceCounts,
+  sideDeckSourceCounts = {},
+}: {
+  memory: SamplerPublicTransferMemoryState;
+  state: MatchState;
+  perspectiveSeatId: SeatId;
+  opponentSeatId: SeatId;
+  mainDeckSourceCounts: Record<string, number>;
+  sideDeckSourceCounts?: Record<string, number>;
+}): SamplerPublicTransferMemoryCounts => {
+  const visibleCardIds = collectVisibleOpponentCardIdsForPerspective({
+    state,
+    perspectiveSeatId,
+    opponentSeatId,
+  });
+  const result = emptySamplerPublicTransferMemoryCounts();
+
+  Object.entries(memory.trackedCards).forEach(([cardId, tracked]) => {
+    if (tracked.ownerSeatId !== opponentSeatId) {
+      delete memory.trackedCards[cardId];
+      return;
+    }
+
+    const card = state.cardsById[cardId];
+    if (!card || card.owner !== opponentSeatId) {
+      delete memory.trackedCards[cardId];
+      return;
+    }
+
+    if (visibleCardIds.has(cardId)) {
+      result.visibleCardCount += 1;
+      return;
+    }
+
+    if (card.zone.kind === "hand" && card.zone.seat === opponentSeatId) {
+      addCount(result.knownHiddenHandSourceCounts, tracked.sourceId);
+      result.knownHiddenHandCount += 1;
+      classifyPublicTransferKnownHiddenCard({
+        sourceId: tracked.sourceId,
+        mainDeckSourceCounts,
+        sideDeckSourceCounts,
+        result,
+      });
+      return;
+    }
+
+    if (card.zone.kind === "deck" && card.zone.seat === opponentSeatId) {
+      addCount(result.knownHiddenDeckSourceCounts, tracked.sourceId);
+      result.knownHiddenDeckCount += 1;
+      classifyPublicTransferKnownHiddenCard({
+        sourceId: tracked.sourceId,
+        mainDeckSourceCounts,
+        sideDeckSourceCounts,
+        result,
+      });
+    }
+  });
+
+  visibleCardIds.forEach((cardId) => {
+    const card = state.cardsById[cardId];
+    if (card?.owner !== opponentSeatId) return;
+    memory.trackedCards[cardId] = {
+      ownerSeatId: opponentSeatId,
+      sourceId: card.sourceId,
+    };
+  });
+
+  return {
+    ...result,
+    visibleCardCount: visibleCardIds.size,
+    knownHiddenHandSourceCounts: sortEntries(result.knownHiddenHandSourceCounts),
+    knownHiddenDeckSourceCounts: sortEntries(result.knownHiddenDeckSourceCounts),
+    mainDeckAttributableKnownHiddenSourceCounts: sortEntries(
+      result.mainDeckAttributableKnownHiddenSourceCounts,
+    ),
+    reasonCounts: sortEntries(result.reasonCounts),
+  };
+};
+
+const buildSamplerPublicTransferMemoryKey = ({
+  suiteId,
+  matchupId,
+  seed,
+  mirrorGroupId,
+  mirrorIndex,
+  seatId,
+}: Pick<
+  BenchmarkRootObserverInput,
+  "suiteId" | "matchupId" | "seed" | "mirrorGroupId" | "mirrorIndex" | "seatId"
+>) =>
+  [
+    suiteId,
+    matchupId,
+    String(seed),
+    mirrorGroupId ?? "unmirrored",
+    mirrorIndex === undefined ? "mirror_none" : `mirror_${mirrorIndex}`,
+    seatId,
+  ].join("|");
+
+export const getSamplerPublicTransferMemoryForRoot = (
+  store: Map<string, SamplerPublicTransferMemoryState>,
+  input: Pick<
+    BenchmarkRootObserverInput,
+    | "suiteId"
+    | "matchupId"
+    | "seed"
+    | "mirrorGroupId"
+    | "mirrorIndex"
+    | "seatId"
+  >,
+) => {
+  const key = buildSamplerPublicTransferMemoryKey(input);
+  const existing = store.get(key);
+  if (existing) return existing;
+  const memory = createSamplerPublicTransferMemoryState();
+  store.set(key, memory);
+  return memory;
+};
+
 const collectPublicCard = ({
   cardId,
   state,
@@ -695,13 +1027,96 @@ export const buildPublicKnownSourceSubtraction = ({
   };
 };
 
+const buildAppliedPublicTransferAccounting = ({
+  publicKnown,
+  publicTransfer,
+  mainDeckSourceCounts,
+  opponentHandCount,
+  opponentDeckCount,
+}: {
+  publicKnown: PublicKnownSourceSubtractionResult;
+  publicTransfer: SamplerPublicTransferMemoryCounts;
+  mainDeckSourceCounts: Record<string, number>;
+  opponentHandCount: number;
+  opponentDeckCount: number;
+}) => {
+  const combinedMainDeckKnownSourceCounts = combineCounts(
+    publicKnown.publicKnownSourceCounts,
+    publicTransfer.mainDeckAttributableKnownHiddenSourceCounts,
+  );
+  const invalidReasonCounts: MutableCounts = {};
+  Object.entries(combinedMainDeckKnownSourceCounts).forEach(([source, count]) => {
+    const priorCount = mainDeckSourceCounts[source] ?? 0;
+    if (count > priorCount) {
+      addCount(invalidReasonCounts, "public_known_exceeds_prior_copy_count");
+    }
+  });
+
+  const publicTransferIncoherentReasonCounts: MutableCounts = {};
+  const knownHiddenHandCount = publicTransfer.knownHiddenHandCount;
+  const knownHiddenDeckCount = publicTransfer.knownHiddenDeckCount;
+  const knownHandCount =
+    publicKnown.fixedKnownHandCardCount + knownHiddenHandCount;
+  const hiddenHandDrawCount = opponentHandCount - knownHandCount;
+  const hiddenDeckDrawCount = opponentDeckCount - knownHiddenDeckCount;
+
+  if (hiddenHandDrawCount < 0) {
+    addCount(
+      invalidReasonCounts,
+      "public_transfer_known_hidden_exceeds_opponent_hand_count",
+    );
+    addCount(
+      publicTransferIncoherentReasonCounts,
+      "public_transfer_known_hidden_exceeds_opponent_hand_count",
+    );
+  }
+  if (hiddenDeckDrawCount < 0) {
+    addCount(
+      invalidReasonCounts,
+      "public_transfer_known_hidden_exceeds_opponent_deck_count",
+    );
+    addCount(
+      publicTransferIncoherentReasonCounts,
+      "public_transfer_known_hidden_exceeds_opponent_deck_count",
+    );
+  }
+
+  const remainingSourceCounts = subtractCounts(
+    mainDeckSourceCounts,
+    combinedMainDeckKnownSourceCounts,
+  );
+  const priorRemainingCardCount = sumCounts(remainingSourceCounts);
+  const requiredHiddenDrawCount =
+    Math.max(0, hiddenHandDrawCount) + Math.max(0, hiddenDeckDrawCount);
+
+  return {
+    remainingSourceCounts,
+    priorRemainingCardCount,
+    hiddenHandDrawCount,
+    hiddenDeckDrawCount,
+    requiredHiddenDrawCount,
+    invalidReasonCounts: sortEntries(invalidReasonCounts),
+    publicTransferUncoveredDeficitCount: Math.max(
+      0,
+      requiredHiddenDrawCount - priorRemainingCardCount,
+    ),
+    publicTransferIncoherentCount: sumCounts(publicTransferIncoherentReasonCounts),
+    publicTransferReasonCounts: sortEntries(
+      combineCounts(publicTransfer.reasonCounts, publicTransferIncoherentReasonCounts),
+    ),
+  };
+};
+
 export const materializeHiddenMultisetSample = ({
   sampleIndex,
   samplerRunId,
   rootPublicFingerprint,
   remainingSourceCounts,
   fixedKnownHandSourceCounts = {},
+  publicTransferKnownHiddenHandSourceCounts = {},
+  publicTransferKnownHiddenDeckSourceCounts = {},
   hiddenHandDrawCount,
+  hiddenDeckDrawCount,
   opponentDeckCount,
 }: {
   sampleIndex: number;
@@ -709,25 +1124,33 @@ export const materializeHiddenMultisetSample = ({
   rootPublicFingerprint: string;
   remainingSourceCounts: Record<string, number>;
   fixedKnownHandSourceCounts?: Record<string, number>;
+  publicTransferKnownHiddenHandSourceCounts?: Record<string, number>;
+  publicTransferKnownHiddenDeckSourceCounts?: Record<string, number>;
   hiddenHandDrawCount: number;
+  hiddenDeckDrawCount?: number;
   opponentDeckCount: number;
 }): MaterializedHiddenMultisetSample => {
   const pool = expandSourceCounts(remainingSourceCounts);
   const sampleSeed = `${samplerRunId}|${rootPublicFingerprint}|${sampleIndex}`;
   const shuffledPool = shuffled(pool, sampleSeed);
+  const deckDrawCount = hiddenDeckDrawCount ?? opponentDeckCount;
   const handDraw = shuffledPool.slice(0, hiddenHandDrawCount);
   const deckDraw = shuffledPool.slice(
     hiddenHandDrawCount,
-    hiddenHandDrawCount + opponentDeckCount,
+    hiddenHandDrawCount + deckDrawCount,
   );
 
   return {
     sampleIndex,
     handSourceCounts: combineCounts(
       fixedKnownHandSourceCounts,
+      publicTransferKnownHiddenHandSourceCounts,
       countsFromSources(handDraw),
     ),
-    deckSourceCounts: countsFromSources(deckDraw),
+    deckSourceCounts: combineCounts(
+      publicTransferKnownHiddenDeckSourceCounts,
+      countsFromSources(deckDraw),
+    ),
   };
 };
 
@@ -737,12 +1160,16 @@ const validateSample = ({
   opponentDeckCount,
   remainingSourceCounts,
   fixedKnownHandSourceCounts,
+  publicTransferKnownHiddenHandSourceCounts,
+  publicTransferKnownHiddenDeckSourceCounts,
 }: {
   sample: MaterializedHiddenMultisetSample;
   opponentHandCount: number;
   opponentDeckCount: number;
   remainingSourceCounts: Record<string, number>;
   fixedKnownHandSourceCounts: Record<string, number>;
+  publicTransferKnownHiddenHandSourceCounts: Record<string, number>;
+  publicTransferKnownHiddenDeckSourceCounts: Record<string, number>;
 }) => {
   const reasons: string[] = [];
   if (sumCounts(sample.handSourceCounts) !== opponentHandCount) {
@@ -760,7 +1187,11 @@ const validateSample = ({
 
   const drawnCounts = subtractCounts(
     combineCounts(sample.handSourceCounts, sample.deckSourceCounts),
-    fixedKnownHandSourceCounts,
+    combineCounts(
+      fixedKnownHandSourceCounts,
+      publicTransferKnownHiddenHandSourceCounts,
+      publicTransferKnownHiddenDeckSourceCounts,
+    ),
   );
   Object.entries(drawnCounts).forEach(([source, count]) => {
     const remainingCount = remainingSourceCounts[source] ?? 0;
@@ -821,10 +1252,23 @@ export const materializeHiddenMultisets = (
 ): HiddenMultisetMaterializationResult => {
   const sampleCountRequested = input.sampleCount ?? DEFAULT_SAMPLE_COUNT;
   const fixedKnownHandSourceCounts = input.fixedKnownHandSourceCounts ?? {};
+  const publicTransferKnownHiddenHandSourceCounts =
+    input.publicTransferKnownHiddenHandSourceCounts ?? {};
+  const publicTransferKnownHiddenDeckSourceCounts =
+    input.publicTransferKnownHiddenDeckSourceCounts ?? {};
   const invalidReasonCounts: MutableCounts = {};
-  const fixedKnownHandCardCount = sumCounts(fixedKnownHandSourceCounts);
-  const hiddenHandDrawCount = input.opponentHandCount - fixedKnownHandCardCount;
-  const requiredDrawCount = hiddenHandDrawCount + input.opponentDeckCount;
+  const knownHiddenHandCardCount = sumCounts(
+    combineCounts(
+      fixedKnownHandSourceCounts,
+      publicTransferKnownHiddenHandSourceCounts,
+    ),
+  );
+  const knownHiddenDeckCardCount = sumCounts(
+    publicTransferKnownHiddenDeckSourceCounts,
+  );
+  const hiddenHandDrawCount = input.opponentHandCount - knownHiddenHandCardCount;
+  const hiddenDeckDrawCount = input.opponentDeckCount - knownHiddenDeckCardCount;
+  const requiredDrawCount = hiddenHandDrawCount + hiddenDeckDrawCount;
   const remainingCount = sumCounts(input.remainingSourceCounts);
 
   if (input.opponentHandCount < 0) {
@@ -835,9 +1279,20 @@ export const materializeHiddenMultisets = (
   }
   if (hiddenHandDrawCount < 0) {
     addCount(invalidReasonCounts, "public_known_hand_exceeds_opponent_hand_count");
-  } else if (remainingCount < requiredDrawCount) {
+  }
+  if (hiddenDeckDrawCount < 0) {
+    addCount(
+      invalidReasonCounts,
+      "public_transfer_known_hidden_exceeds_opponent_deck_count",
+    );
+  }
+  if (hiddenHandDrawCount >= 0 && hiddenDeckDrawCount >= 0 && remainingCount < requiredDrawCount) {
     addCount(invalidReasonCounts, "insufficient_prior_remaining");
-  } else if (remainingCount > requiredDrawCount) {
+  } else if (
+    hiddenHandDrawCount >= 0 &&
+    hiddenDeckDrawCount >= 0 &&
+    remainingCount > requiredDrawCount
+  ) {
     addCount(invalidReasonCounts, "prior_remaining_exceeds_observed_hidden_count");
   }
 
@@ -859,11 +1314,14 @@ export const materializeHiddenMultisets = (
       sampleIndex,
       samplerRunId: input.samplerRunId,
       rootPublicFingerprint: input.rootPublicFingerprint,
-      remainingSourceCounts: input.remainingSourceCounts,
-      fixedKnownHandSourceCounts,
-      hiddenHandDrawCount,
-      opponentDeckCount: input.opponentDeckCount,
-    }),
+          remainingSourceCounts: input.remainingSourceCounts,
+          fixedKnownHandSourceCounts,
+          publicTransferKnownHiddenHandSourceCounts,
+          publicTransferKnownHiddenDeckSourceCounts,
+          hiddenHandDrawCount,
+          hiddenDeckDrawCount,
+          opponentDeckCount: input.opponentDeckCount,
+        }),
   );
 
   let sampleCountInvalid = 0;
@@ -874,6 +1332,8 @@ export const materializeHiddenMultisets = (
       opponentDeckCount: input.opponentDeckCount,
       remainingSourceCounts: input.remainingSourceCounts,
       fixedKnownHandSourceCounts,
+      publicTransferKnownHiddenHandSourceCounts,
+      publicTransferKnownHiddenDeckSourceCounts,
     });
     if (sampleReasons.length > 0) {
       sampleCountInvalid += 1;
@@ -923,6 +1383,7 @@ export const buildSamplerMaterializationRootRecord = ({
   policyId,
   seats,
   sampleCount = DEFAULT_SAMPLE_COUNT,
+  publicTransferMemory,
 }: BuildSamplerMaterializationRootRecordInput): SamplerMaterializationRootRecord => {
   const seat = seats[seatId];
   const opponentSeatId: SeatId = seatId === "seat_a" ? "seat_b" : "seat_a";
@@ -963,6 +1424,37 @@ export const buildSamplerMaterializationRootRecord = ({
           priorRemainingCardCount: 0,
           invalidReasonCounts: {},
         };
+  const publicTransfer =
+    prior.priorStatus === "prior_available" && publicTransferMemory
+      ? buildSamplerPublicTransferMemoryUpdate({
+          memory: publicTransferMemory,
+          state,
+          perspectiveSeatId: seatId,
+          opponentSeatId,
+          mainDeckSourceCounts: prior.mainDeckSourceCounts,
+          sideDeckSourceCounts: prior.sideDeckSourceCounts,
+        })
+      : emptySamplerPublicTransferMemoryCounts();
+  const appliedAccounting =
+    prior.priorStatus === "prior_available"
+      ? buildAppliedPublicTransferAccounting({
+          publicKnown,
+          publicTransfer,
+          mainDeckSourceCounts: prior.mainDeckSourceCounts,
+          opponentHandCount,
+          opponentDeckCount,
+        })
+      : {
+          remainingSourceCounts: {},
+          priorRemainingCardCount: 0,
+          hiddenHandDrawCount: 0,
+          hiddenDeckDrawCount: 0,
+          requiredHiddenDrawCount: 0,
+          invalidReasonCounts: {},
+          publicTransferUncoveredDeficitCount: 0,
+          publicTransferIncoherentCount: 0,
+          publicTransferReasonCounts: publicTransfer.reasonCounts,
+        };
 
   const rootPublicFingerprint = hashSamplerReadinessPublicValue({
     samplerRunId,
@@ -987,24 +1479,37 @@ export const buildSamplerMaterializationRootRecord = ({
     duplicatePublicReferenceCount: publicKnown.duplicatePublicReferenceCount,
     duplicateFixedKnownHandReferenceCount:
       publicKnown.duplicateFixedKnownHandReferenceCount,
-    priorRemainingCardCount: publicKnown.priorRemainingCardCount,
+    priorRemainingCardCount: appliedAccounting.priorRemainingCardCount,
+    publicTransferMemoryVisibleCardCount: publicTransfer.visibleCardCount,
+    publicTransferKnownHiddenHandCount: publicTransfer.knownHiddenHandCount,
+    publicTransferKnownHiddenDeckCount: publicTransfer.knownHiddenDeckCount,
   });
 
   const preMaterializationInvalidReasons: MutableCounts = {};
   if (prior.priorStatus === "prior_available") {
-    const unknownOpponentHandCount =
-      opponentHandCount - publicKnown.fixedKnownHandCardCount;
-    const expectedRemainingHiddenCount =
-      unknownOpponentHandCount + opponentDeckCount;
-
-    if (publicKnown.fixedKnownHandCardCount > opponentHandCount) {
+    if (appliedAccounting.hiddenHandDrawCount < 0) {
       addCount(
         preMaterializationInvalidReasons,
         "public_known_hand_exceeds_opponent_hand_count",
       );
-    } else if (publicKnown.priorRemainingCardCount < expectedRemainingHiddenCount) {
+    }
+    if (appliedAccounting.hiddenDeckDrawCount < 0) {
+      addCount(
+        preMaterializationInvalidReasons,
+        "public_transfer_known_hidden_exceeds_opponent_deck_count",
+      );
+    }
+    if (
+      Object.keys(preMaterializationInvalidReasons).length === 0 &&
+      appliedAccounting.priorRemainingCardCount <
+        appliedAccounting.requiredHiddenDrawCount
+    ) {
       addCount(preMaterializationInvalidReasons, "insufficient_prior_remaining");
-    } else if (publicKnown.priorRemainingCardCount > expectedRemainingHiddenCount) {
+    } else if (
+      Object.keys(preMaterializationInvalidReasons).length === 0 &&
+      appliedAccounting.priorRemainingCardCount >
+        appliedAccounting.requiredHiddenDrawCount
+    ) {
       addCount(
         preMaterializationInvalidReasons,
         "prior_remaining_exceeds_observed_hidden_count",
@@ -1014,13 +1519,18 @@ export const buildSamplerMaterializationRootRecord = ({
 
   const materialization =
     prior.priorStatus === "prior_available" &&
+    Object.keys(appliedAccounting.invalidReasonCounts).length === 0 &&
     Object.keys(preMaterializationInvalidReasons).length === 0
       ? materializeHiddenMultisets({
           samplerRunId,
           rootPublicFingerprint,
           priorSourceCounts: prior.mainDeckSourceCounts,
-          remainingSourceCounts: publicKnown.remainingSourceCounts,
+          remainingSourceCounts: appliedAccounting.remainingSourceCounts,
           fixedKnownHandSourceCounts: publicKnown.fixedKnownHandSourceCounts,
+          publicTransferKnownHiddenHandSourceCounts:
+            publicTransfer.knownHiddenHandSourceCounts,
+          publicTransferKnownHiddenDeckSourceCounts:
+            publicTransfer.knownHiddenDeckSourceCounts,
           opponentHandCount,
           opponentDeckCount,
           sampleCount,
@@ -1050,12 +1560,14 @@ export const buildSamplerMaterializationRootRecord = ({
   const invalidReasonCounts = sortEntries(
     combineCounts(
       publicKnown.invalidReasonCounts,
+      appliedAccounting.invalidReasonCounts,
       preMaterializationInvalidReasons,
       materialization.invalidReasonCounts,
     ),
   );
   const materializationStatus =
-    Object.keys(publicKnown.invalidReasonCounts).length > 0
+    Object.keys(publicKnown.invalidReasonCounts).length > 0 ||
+    Object.keys(appliedAccounting.invalidReasonCounts).length > 0
       ? "invalid"
       : materialization.materializationStatus;
 
@@ -1104,9 +1616,29 @@ export const buildSamplerMaterializationRootRecord = ({
     publicAdjustmentCount: publicKnown.publicAdjustmentCount,
     uncoveredPriorDeficitCount: publicKnown.uncoveredPriorDeficitCount,
     publicAdjustmentReasonCounts: publicKnown.publicAdjustmentReasonCounts,
-    availableHiddenPoolSizeBucket: bucketCardCount(publicKnown.priorRemainingCardCount),
+    publicTransferMemoryVisibleCardCount: publicTransfer.visibleCardCount,
+    publicTransferKnownHiddenHandCount: publicTransfer.knownHiddenHandCount,
+    publicTransferKnownHiddenDeckCount: publicTransfer.knownHiddenDeckCount,
+    publicTransferKnownHiddenMainDeckAttributableCount:
+      publicTransfer.knownHiddenMainDeckAttributableCount,
+    publicTransferKnownHiddenSideDeckOnlyCount:
+      publicTransfer.knownHiddenSideDeckOnlyCount,
+    publicTransferKnownHiddenOffPriorCount:
+      publicTransfer.knownHiddenOffPriorCount,
+    publicTransferAdjustmentCount: publicTransfer.adjustmentCount,
+    publicTransferUncoveredDeficitCount:
+      appliedAccounting.publicTransferUncoveredDeficitCount,
+    publicTransferIncoherentCount:
+      appliedAccounting.publicTransferIncoherentCount,
+    publicTransferReasonCounts: appliedAccounting.publicTransferReasonCounts,
+    priorRemainingCardCount: appliedAccounting.priorRemainingCardCount,
+    availableHiddenPoolSizeBucket: bucketCardCount(
+      appliedAccounting.priorRemainingCardCount,
+    ),
     publicKnownCardCountBucket: bucketCardCount(publicKnown.publicKnownCardCount),
-    priorRemainingCardCountBucket: bucketCardCount(publicKnown.priorRemainingCardCount),
+    priorRemainingCardCountBucket: bucketCardCount(
+      appliedAccounting.priorRemainingCardCount,
+    ),
     handUniqueSourceCountMin: aggregateStats.handUniqueSourceCountMin,
     handUniqueSourceCountMax: aggregateStats.handUniqueSourceCountMax,
     handUniqueSourceCountAverage: aggregateStats.handUniqueSourceCountAverage,
@@ -1137,6 +1669,7 @@ export const buildSamplerMaterializationSummary = ({
   const deckDuplicatePressureBucketCounts = emptyDuplicatePressureCounts();
   const handDeckOverlapBucketCounts = emptyOverlapCounts();
   const publicAdjustmentReasonCounts: MutableCounts = {};
+  const publicTransferReasonCounts: MutableCounts = {};
 
   roots.forEach((root) => {
     addRecordCounts(
@@ -1150,6 +1683,9 @@ export const buildSamplerMaterializationSummary = ({
     addRecordCounts(handDeckOverlapBucketCounts, root.handDeckOverlapBucketCounts);
     Object.entries(root.publicAdjustmentReasonCounts).forEach(([reason, count]) => {
       addCount(publicAdjustmentReasonCounts, reason, count);
+    });
+    Object.entries(root.publicTransferReasonCounts).forEach(([reason, count]) => {
+      addCount(publicTransferReasonCounts, reason, count);
     });
   });
 
@@ -1204,6 +1740,43 @@ export const buildSamplerMaterializationSummary = ({
       0,
     ),
     publicAdjustmentReasonCounts: sortEntries(publicAdjustmentReasonCounts),
+    publicTransferMemoryVisibleCardTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferMemoryVisibleCardCount,
+      0,
+    ),
+    publicTransferKnownHiddenHandTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenHandCount,
+      0,
+    ),
+    publicTransferKnownHiddenDeckTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenDeckCount,
+      0,
+    ),
+    publicTransferKnownHiddenMainDeckAttributableTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenMainDeckAttributableCount,
+      0,
+    ),
+    publicTransferKnownHiddenSideDeckOnlyTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenSideDeckOnlyCount,
+      0,
+    ),
+    publicTransferKnownHiddenOffPriorTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenOffPriorCount,
+      0,
+    ),
+    publicTransferAdjustmentTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferAdjustmentCount,
+      0,
+    ),
+    publicTransferUncoveredDeficitTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferUncoveredDeficitCount,
+      0,
+    ),
+    publicTransferIncoherentTotal: roots.reduce(
+      (sum, root) => sum + root.publicTransferIncoherentCount,
+      0,
+    ),
+    publicTransferReasonCounts: sortEntries(publicTransferReasonCounts),
     duplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
       roots.map((root) => root.duplicatePublicReferenceCount),
     ),
@@ -1230,6 +1803,35 @@ export const buildSamplerMaterializationSummary = ({
     ),
     uncoveredPriorDeficitCountStats: buildSamplerReadinessCountStats(
       roots.map((root) => root.uncoveredPriorDeficitCount),
+    ),
+    publicTransferMemoryVisibleCardCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.publicTransferMemoryVisibleCardCount),
+    ),
+    publicTransferKnownHiddenHandCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.publicTransferKnownHiddenHandCount),
+    ),
+    publicTransferKnownHiddenDeckCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.publicTransferKnownHiddenDeckCount),
+    ),
+    publicTransferKnownHiddenMainDeckAttributableCountStats:
+      buildSamplerReadinessCountStats(
+        roots.map((root) => root.publicTransferKnownHiddenMainDeckAttributableCount),
+      ),
+    publicTransferKnownHiddenSideDeckOnlyCountStats:
+      buildSamplerReadinessCountStats(
+        roots.map((root) => root.publicTransferKnownHiddenSideDeckOnlyCount),
+      ),
+    publicTransferKnownHiddenOffPriorCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.publicTransferKnownHiddenOffPriorCount),
+    ),
+    publicTransferAdjustmentCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.publicTransferAdjustmentCount),
+    ),
+    publicTransferUncoveredDeficitCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.publicTransferUncoveredDeficitCount),
+    ),
+    publicTransferIncoherentCountStats: buildSamplerReadinessCountStats(
+      roots.map((root) => root.publicTransferIncoherentCount),
     ),
     sampleCountStats: {
       requested: buildSamplerReadinessCountStats(
@@ -1269,6 +1871,10 @@ export const runSamplerMaterializationProfile = (
 ): SamplerMaterializationProfileResult => {
   const samplerRunId = input.samplerRunId ?? defaultSamplerRunId(input);
   const roots: SamplerMaterializationRootRecord[] = [];
+  const publicTransferMemoryStore = new Map<
+    string,
+    SamplerPublicTransferMemoryState
+  >();
 
   const benchmark = runBenchmarkSuite({
     suiteId: input.suiteId,
@@ -1277,11 +1883,16 @@ export const runSamplerMaterializationProfile = (
     maxSteps: input.maxSteps,
     policies: input.policies,
     rootObserver: (root) => {
+      const publicTransferMemory = getSamplerPublicTransferMemoryForRoot(
+        publicTransferMemoryStore,
+        root,
+      );
       roots.push(
         buildSamplerMaterializationRootRecord({
           ...root,
           samplerRunId,
           sampleCount: input.sampleCount,
+          publicTransferMemory,
         }),
       );
     },

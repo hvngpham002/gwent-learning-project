@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp65",
-        latestSpecPath: "docs/spec/2026-06-01-cFp65-specs.md",
-        latestReportPath: "audit/reports/2026-06-01-cFp65-report.md",
+        latestPhase: "cFp66",
+        latestSpecPath: "docs/spec/2026-06-01-cFp66-specs.md",
+        latestReportPath: "audit/reports/2026-06-01-cFp66-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp65",
-        latestSpecPath: "docs/spec/2026-06-01-cFp65-specs.md",
-        latestReportPath: "audit/reports/2026-06-01-cFp65-report.md",
+        latestPhase: "cFp66",
+        latestSpecPath: "docs/spec/2026-06-01-cFp66-specs.md",
+        latestReportPath: "audit/reports/2026-06-01-cFp66-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -94,12 +94,12 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp65");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-01-cFp65-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-01-cFp65-report.md");
-    expect(v1?.description).toContain("cFp65 change no policy behavior");
+    expect(v1?.latestPhase).toBe("cFp66");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-01-cFp66-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-01-cFp66-report.md");
+    expect(v1?.description).toContain("cFp66 change no policy behavior");
     expect(v1?.description).toContain(
-      "sampler public-zone accounting repair probe infrastructure, not search gameplay",
+      "sampler public-transfer memory infrastructure, not search gameplay",
     );
     expect(v1?.capabilities).toEqual(
       expect.arrayContaining([
@@ -140,6 +140,7 @@ describe("authentic AI Lab view model", () => {
         "sampler public-count de-duplication repair diagnostics with scalar-only evidence, not search gameplay (cFp63)",
         "sampler public-zone provenance casebook artifacts with scalar-only labels, not search gameplay (cFp64)",
         "sampler public-zone accounting repair probe diagnostics with scalar-only evidence, not search gameplay (cFp65)",
+        "sampler public-transfer memory diagnostics with scalar-only evidence, not search gameplay (cFp66)",
       ])
     );
   });

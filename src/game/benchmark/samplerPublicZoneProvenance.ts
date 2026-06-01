@@ -10,7 +10,11 @@ import {
   buildSamplerReadinessCountStats,
   type SamplerReadinessCountStats,
 } from "./samplerReadiness";
-import type { SamplerMaterializationRootRecord } from "./samplerMaterialization";
+import {
+  getSamplerPublicTransferMemoryForRoot,
+  type SamplerMaterializationRootRecord,
+  type SamplerPublicTransferMemoryState,
+} from "./samplerMaterialization";
 import { runBenchmarkSuite } from "./runBenchmark";
 import type {
   BenchmarkPolicyRegistry,
@@ -100,6 +104,16 @@ export interface SamplerPublicZoneProvenanceRecord {
   publicAdjustmentCount: number;
   uncoveredPriorDeficitCount: number;
   publicAdjustmentReasonCounts: Record<string, number>;
+  publicTransferMemoryVisibleCardCount: number;
+  publicTransferKnownHiddenHandCount: number;
+  publicTransferKnownHiddenDeckCount: number;
+  publicTransferKnownHiddenMainDeckAttributableCount: number;
+  publicTransferKnownHiddenSideDeckOnlyCount: number;
+  publicTransferKnownHiddenOffPriorCount: number;
+  publicTransferAdjustmentCount: number;
+  publicTransferUncoveredDeficitCount: number;
+  publicTransferIncoherentCount: number;
+  publicTransferReasonCounts: Record<string, number>;
   duplicatePublicReferenceCount: number;
   duplicateFixedKnownHandReferenceCount: number;
   publicZoneFamilyCounts: Record<PublicZoneFamily, number>;
@@ -150,6 +164,16 @@ export interface SamplerPublicZoneProvenanceSummary {
   publicAdjustmentTotal: number;
   uncoveredPriorDeficitTotal: number;
   publicAdjustmentReasonCounts: Record<string, number>;
+  publicTransferMemoryVisibleCardTotal: number;
+  publicTransferKnownHiddenHandTotal: number;
+  publicTransferKnownHiddenDeckTotal: number;
+  publicTransferKnownHiddenMainDeckAttributableTotal: number;
+  publicTransferKnownHiddenSideDeckOnlyTotal: number;
+  publicTransferKnownHiddenOffPriorTotal: number;
+  publicTransferAdjustmentTotal: number;
+  publicTransferUncoveredDeficitTotal: number;
+  publicTransferIncoherentTotal: number;
+  publicTransferReasonCounts: Record<string, number>;
   duplicatePublicReferenceCountStats: SamplerReadinessCountStats;
   duplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
   mainDeckAttributablePublicCountStats: SamplerReadinessCountStats;
@@ -157,6 +181,15 @@ export interface SamplerPublicZoneProvenanceSummary {
   offPriorPublicCountStats: SamplerReadinessCountStats;
   publicAdjustmentCountStats: SamplerReadinessCountStats;
   uncoveredPriorDeficitCountStats: SamplerReadinessCountStats;
+  publicTransferMemoryVisibleCardCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenHandCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenDeckCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenMainDeckAttributableCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenSideDeckOnlyCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenOffPriorCountStats: SamplerReadinessCountStats;
+  publicTransferAdjustmentCountStats: SamplerReadinessCountStats;
+  publicTransferUncoveredDeficitCountStats: SamplerReadinessCountStats;
+  publicTransferIncoherentCountStats: SamplerReadinessCountStats;
   hiddenInfoSafetyNote: string;
   explicitNonSearchWarning: string;
   recommendedNextStep: string;
@@ -186,6 +219,7 @@ export interface BuildSamplerPublicZoneProvenanceAnalysisInput
   extends BenchmarkRootObserverInput {
   samplerRunId: string;
   sampleCount?: number;
+  publicTransferMemory?: SamplerPublicTransferMemoryState;
 }
 
 export interface SamplerPublicZoneProvenanceAnalysis {
@@ -408,6 +442,23 @@ export const buildSamplerPublicZoneProvenanceRecord = ({
     publicAdjustmentCount: invalidRoot.publicAdjustmentCount,
     uncoveredPriorDeficitCount: invalidRoot.uncoveredPriorDeficitCount,
     publicAdjustmentReasonCounts: invalidRoot.publicAdjustmentReasonCounts,
+    publicTransferMemoryVisibleCardCount:
+      invalidRoot.publicTransferMemoryVisibleCardCount,
+    publicTransferKnownHiddenHandCount:
+      invalidRoot.publicTransferKnownHiddenHandCount,
+    publicTransferKnownHiddenDeckCount:
+      invalidRoot.publicTransferKnownHiddenDeckCount,
+    publicTransferKnownHiddenMainDeckAttributableCount:
+      invalidRoot.publicTransferKnownHiddenMainDeckAttributableCount,
+    publicTransferKnownHiddenSideDeckOnlyCount:
+      invalidRoot.publicTransferKnownHiddenSideDeckOnlyCount,
+    publicTransferKnownHiddenOffPriorCount:
+      invalidRoot.publicTransferKnownHiddenOffPriorCount,
+    publicTransferAdjustmentCount: invalidRoot.publicTransferAdjustmentCount,
+    publicTransferUncoveredDeficitCount:
+      invalidRoot.publicTransferUncoveredDeficitCount,
+    publicTransferIncoherentCount: invalidRoot.publicTransferIncoherentCount,
+    publicTransferReasonCounts: invalidRoot.publicTransferReasonCounts,
     duplicatePublicReferenceCount: invalidRoot.duplicatePublicReferenceCount,
     duplicateFixedKnownHandReferenceCount:
       invalidRoot.duplicateFixedKnownHandReferenceCount,
@@ -471,7 +522,7 @@ export const buildSamplerPublicZoneProvenanceRecommendation = (
     summary.duplicatePublicReferenceTotal === 0 &&
     summary.duplicateFixedKnownHandReferenceTotal === 0
   ) {
-    return "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone deficits before any determinized probe.";
+    return "After public-transfer memory, a next spec should either define explicit valid-root-only skip accounting or require deeper public-state reconstruction before any determinized probe.";
   }
 
   return "A next sampler repair phase should run before any benchmark-only search probe.";
@@ -516,10 +567,15 @@ export const buildSamplerPublicZoneProvenanceSummary = ({
     0,
   );
   const publicAdjustmentReasonCounts: Record<string, number> = {};
+  const publicTransferReasonCounts: Record<string, number> = {};
   provenanceRoots.forEach((root) => {
     Object.entries(root.publicAdjustmentReasonCounts).forEach(([reason, count]) => {
       publicAdjustmentReasonCounts[reason] =
         (publicAdjustmentReasonCounts[reason] ?? 0) + count;
+    });
+    Object.entries(root.publicTransferReasonCounts).forEach(([reason, count]) => {
+      publicTransferReasonCounts[reason] =
+        (publicTransferReasonCounts[reason] ?? 0) + count;
     });
   });
   const summaryBase = {
@@ -604,6 +660,43 @@ export const buildSamplerPublicZoneProvenanceSummary = ({
       0,
     ),
     publicAdjustmentReasonCounts: sortEntries(publicAdjustmentReasonCounts),
+    publicTransferMemoryVisibleCardTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferMemoryVisibleCardCount,
+      0,
+    ),
+    publicTransferKnownHiddenHandTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenHandCount,
+      0,
+    ),
+    publicTransferKnownHiddenDeckTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenDeckCount,
+      0,
+    ),
+    publicTransferKnownHiddenMainDeckAttributableTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenMainDeckAttributableCount,
+      0,
+    ),
+    publicTransferKnownHiddenSideDeckOnlyTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenSideDeckOnlyCount,
+      0,
+    ),
+    publicTransferKnownHiddenOffPriorTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenOffPriorCount,
+      0,
+    ),
+    publicTransferAdjustmentTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferAdjustmentCount,
+      0,
+    ),
+    publicTransferUncoveredDeficitTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferUncoveredDeficitCount,
+      0,
+    ),
+    publicTransferIncoherentTotal: provenanceRoots.reduce(
+      (sum, root) => sum + root.publicTransferIncoherentCount,
+      0,
+    ),
+    publicTransferReasonCounts: sortEntries(publicTransferReasonCounts),
     duplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
       materializationRoots.map((root) => root.duplicatePublicReferenceCount),
     ),
@@ -625,6 +718,39 @@ export const buildSamplerPublicZoneProvenanceSummary = ({
     uncoveredPriorDeficitCountStats: buildSamplerReadinessCountStats(
       provenanceRoots.map((root) => root.uncoveredPriorDeficitCount),
     ),
+    publicTransferMemoryVisibleCardCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.publicTransferMemoryVisibleCardCount),
+    ),
+    publicTransferKnownHiddenHandCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.publicTransferKnownHiddenHandCount),
+    ),
+    publicTransferKnownHiddenDeckCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.publicTransferKnownHiddenDeckCount),
+    ),
+    publicTransferKnownHiddenMainDeckAttributableCountStats:
+      buildSamplerReadinessCountStats(
+        provenanceRoots.map(
+          (root) => root.publicTransferKnownHiddenMainDeckAttributableCount,
+        ),
+      ),
+    publicTransferKnownHiddenSideDeckOnlyCountStats:
+      buildSamplerReadinessCountStats(
+        provenanceRoots.map(
+          (root) => root.publicTransferKnownHiddenSideDeckOnlyCount,
+        ),
+      ),
+    publicTransferKnownHiddenOffPriorCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.publicTransferKnownHiddenOffPriorCount),
+    ),
+    publicTransferAdjustmentCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.publicTransferAdjustmentCount),
+    ),
+    publicTransferUncoveredDeficitCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.publicTransferUncoveredDeficitCount),
+    ),
+    publicTransferIncoherentCountStats: buildSamplerReadinessCountStats(
+      provenanceRoots.map((root) => root.publicTransferIncoherentCount),
+    ),
     hiddenInfoSafetyNote:
       "Sampler public-zone provenance artifacts contain only public metadata, scalar counts, deterministic buckets, and one safe provenance label per public-zone-deficit root. They exclude private card identity payloads, identity maps, sampled maps, engine logs, final payloads, action references, and debug payloads.",
     explicitNonSearchWarning:
@@ -643,6 +769,10 @@ export const runSamplerPublicZoneProvenanceProfile = (
   const materializationRoots: SamplerMaterializationRootRecord[] = [];
   const invalidRoots: SamplerInvalidRootRecord[] = [];
   const provenanceRoots: SamplerPublicZoneProvenanceRecord[] = [];
+  const publicTransferMemoryStore = new Map<
+    string,
+    SamplerPublicTransferMemoryState
+  >();
 
   const benchmark = runBenchmarkSuite({
     suiteId: input.suiteId,
@@ -651,10 +781,15 @@ export const runSamplerPublicZoneProvenanceProfile = (
     maxSteps: input.maxSteps,
     policies: input.policies,
     rootObserver: (root) => {
+      const publicTransferMemory = getSamplerPublicTransferMemoryForRoot(
+        publicTransferMemoryStore,
+        root,
+      );
       const analysis = buildSamplerPublicZoneProvenanceAnalysis({
         ...root,
         samplerRunId,
         sampleCount: input.sampleCount,
+        publicTransferMemory,
       });
       materializationRoots.push(analysis.materializationRoot);
       if (analysis.invalidRoot) {

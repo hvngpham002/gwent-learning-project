@@ -88,6 +88,17 @@ const materializationRoot = (
   publicAdjustmentCount: 1,
   uncoveredPriorDeficitCount: 1,
   publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
+  publicTransferMemoryVisibleCardCount: 0,
+  publicTransferKnownHiddenHandCount: 0,
+  publicTransferKnownHiddenDeckCount: 0,
+  publicTransferKnownHiddenMainDeckAttributableCount: 0,
+  publicTransferKnownHiddenSideDeckOnlyCount: 0,
+  publicTransferKnownHiddenOffPriorCount: 0,
+  publicTransferAdjustmentCount: 0,
+  publicTransferUncoveredDeficitCount: 1,
+  publicTransferIncoherentCount: 0,
+  publicTransferReasonCounts: {},
+  priorRemainingCardCount: 24,
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "small",
   priorRemainingCardCountBucket: "large",
@@ -151,6 +162,16 @@ const invalidRoot = (
     publicAdjustmentCount: 1,
     uncoveredPriorDeficitCount: 1,
     publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
+    publicTransferMemoryVisibleCardCount: 0,
+    publicTransferKnownHiddenHandCount: 0,
+    publicTransferKnownHiddenDeckCount: 0,
+    publicTransferKnownHiddenMainDeckAttributableCount: 0,
+    publicTransferKnownHiddenSideDeckOnlyCount: 0,
+    publicTransferKnownHiddenOffPriorCount: 0,
+    publicTransferAdjustmentCount: 0,
+    publicTransferUncoveredDeficitCount: 1,
+    publicTransferIncoherentCount: 0,
+    publicTransferReasonCounts: {},
     hiddenHandDrawCount: 3,
     requiredHiddenDrawCount: 25,
     priorDeficitCount: 1,
@@ -390,7 +411,7 @@ describe("benchmark sampler public-zone provenance analyzer", () => {
       two_zones: 1,
     });
     expect(summary.recommendedNextStep).toContain(
-      "event-history/public-transfer memory",
+      "valid-root-only skip accounting",
     );
   });
 });

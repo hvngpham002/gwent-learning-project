@@ -1,8 +1,8 @@
 {
   "deckDuplicatePressureBucketCounts": {
-    "none": 887,
-    "pair": 50943,
-    "triple_plus": 205338
+    "none": 876,
+    "pair": 50883,
+    "triple_plus": 205417
   },
   "deckPresetIds": [
     "official-monsters-starter",
@@ -12,7 +12,7 @@
     "official-skellige-starter"
   ],
   "deckUniqueSourceCountAverageStats": {
-    "average": 15.556,
+    "average": 15.557,
     "count": 32487,
     "max": 20,
     "min": 0,
@@ -49,28 +49,28 @@
     "skellige"
   ],
   "handDeckOverlapBucketCounts": {
-    "four_plus": 71772,
-    "none": 54283,
-    "one": 36302,
-    "two_to_three": 94811
+    "four_plus": 71909,
+    "none": 54377,
+    "one": 36239,
+    "two_to_three": 94651
   },
   "handDuplicatePressureBucketCounts": {
-    "none": 162932,
-    "pair": 86872,
-    "triple_plus": 7364
+    "none": 163115,
+    "pair": 86724,
+    "triple_plus": 7337
   },
   "handUniqueSourceCountAverageStats": {
     "average": 4.7,
     "count": 32487,
-    "max": 11.125,
+    "max": 11.625,
     "min": 0,
     "p50": 4.75,
-    "p90": 8.75,
+    "p90": 8.625,
     "p95": 9
   },
   "hiddenInfoSafetyNote": "Sampler-materialization artifacts contain only public root metadata, scalar counts, status distributions, and aggregate sample statistics. They exclude sampled hand maps, sampled deck maps, deck order, raw state, raw moves, runtime card identifiers, and card identity strings.",
   "invalidReasonCounts": {
-    "insufficient_prior_remaining": 341
+    "insufficient_prior_remaining": 340
   },
   "mainDeckAttributablePublicCountStats": {
     "average": 7.093,
@@ -83,8 +83,8 @@
   },
   "matchCount": 1000,
   "materializationStatusCounts": {
-    "invalid": 341,
-    "valid": 32146
+    "invalid": 340,
+    "valid": 32147
   },
   "offPriorPublicCountStats": {
     "average": 0,
@@ -117,6 +117,100 @@
     "side_deck_only_public": 946
   },
   "publicAdjustmentTotal": 946,
+  "publicTransferAdjustmentCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 1,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferAdjustmentTotal": 1,
+  "publicTransferIncoherentCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferIncoherentTotal": 0,
+  "publicTransferKnownHiddenDeckCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenDeckTotal": 0,
+  "publicTransferKnownHiddenHandCountStats": {
+    "average": 0.016,
+    "count": 32487,
+    "max": 1,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenHandTotal": 524,
+  "publicTransferKnownHiddenMainDeckAttributableCountStats": {
+    "average": 0.016,
+    "count": 32487,
+    "max": 1,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenMainDeckAttributableTotal": 523,
+  "publicTransferKnownHiddenOffPriorCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenOffPriorTotal": 0,
+  "publicTransferKnownHiddenSideDeckOnlyCountStats": {
+    "average": 0,
+    "count": 32487,
+    "max": 1,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenSideDeckOnlyTotal": 1,
+  "publicTransferMemoryVisibleCardCountStats": {
+    "average": 7.122,
+    "count": 32487,
+    "max": 22,
+    "min": 0,
+    "p50": 7,
+    "p90": 13,
+    "p95": 15
+  },
+  "publicTransferMemoryVisibleCardTotal": 231369,
+  "publicTransferReasonCounts": {
+    "main_deck_attributable_public_transfer": 523,
+    "side_deck_only_public_transfer": 1
+  },
+  "publicTransferUncoveredDeficitCountStats": {
+    "average": 0.01,
+    "count": 32487,
+    "max": 2,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferUncoveredDeficitTotal": 341,
   "rootCountsByDeckPreset": {
     "official-monsters-starter": 5651,
     "official-nilfgaard-starter": 7555,

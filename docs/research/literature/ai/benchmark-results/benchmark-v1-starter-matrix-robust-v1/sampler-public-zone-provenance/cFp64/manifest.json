@@ -1,8 +1,8 @@
 {
   "artifactHashes": {
-    "provenance-roots.jsonl": "279b98417d0f1d3b6e020f93889f010a3104c55d14b4099cacca632ef714e247",
-    "report.md": "f98fe75bb080ecb5d7079fe017e74336cf04e21adbd48cdd56166760e1555cc0",
-    "summary.json": "5dc7e4202c27a4c8e68d4d01e079c4d993531e0f96df4bd131ead17673fd0286"
+    "provenance-roots.jsonl": "b76cf33b5c963aaa3fd237fb562f3cbb505b3b630d290eb60cd8a44696ce1323",
+    "report.md": "d16cd86327113a0b6c0ca6f4161b50e4b6d69afb8985324f320fbb8ddc499afd",
+    "summary.json": "630d0cdee1ea55c680e1a98427a068ecd3b69168cbbc6c0efbdc62f4ce0f3eae"
   },
   "explicitNonSearchWarning": "cFp64 sampler public-zone provenance artifacts are casebook infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.",
   "files": [
@@ -13,9 +13,9 @@
   ],
   "generatedAtTimestampPolicy": "omitted from committed artifacts so cFp64 hashes remain deterministic",
   "hiddenInfoSafetyNote": "Sampler public-zone provenance artifacts contain only public metadata, scalar counts, deterministic buckets, and one safe provenance label per public-zone-deficit root. They exclude private card identity payloads, identity maps, sampled maps, engine logs, final payloads, action references, and debug payloads.",
-  "invalidProvenanceRootCount": 341,
-  "invalidRootCount": 341,
-  "recommendedNextStep": "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone deficits before any determinized probe.",
+  "invalidProvenanceRootCount": 340,
+  "invalidRootCount": 340,
+  "recommendedNextStep": "After public-transfer memory, a next spec should either define explicit valid-root-only skip accounting or require deeper public-state reconstruction before any determinized probe.",
   "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/sampler-public-zone-provenance/cFp64",
   "rootSchemaVersion": "sampler-public-zone-provenance-root-v1",
   "samplerRunId": "benchmark-v1-starter-matrix-robust-v1:sampler-public-zone-provenance:cFp64",
@@ -24,5 +24,5 @@
   "suiteId": "benchmark-v1-starter-matrix-robust-v1",
   "summarySchemaVersion": "sampler-public-zone-provenance-summary-v1",
   "totalRootCount": 32487,
-  "validRootCount": 32146
+  "validRootCount": 32147
 }

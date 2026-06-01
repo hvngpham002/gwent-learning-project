@@ -178,6 +178,31 @@ ${formatCountRows(summary.invalidReasonCounts)}
 |---|---:|
 ${formatCountRows(summary.publicAdjustmentReasonCounts)}
 
+## Public Transfer Memory Diagnostics
+
+- visible public-memory cards: ${summary.publicTransferMemoryVisibleCardTotal}
+- known hidden hand cards: ${summary.publicTransferKnownHiddenHandTotal}
+- known hidden deck cards: ${summary.publicTransferKnownHiddenDeckTotal}
+- main-deck-attributable known hidden cards: ${summary.publicTransferKnownHiddenMainDeckAttributableTotal}
+- side-deck-only known hidden cards: ${summary.publicTransferKnownHiddenSideDeckOnlyTotal}
+- off-prior known hidden cards: ${summary.publicTransferKnownHiddenOffPriorTotal}
+- public-transfer adjustment count: ${summary.publicTransferAdjustmentTotal}
+- public-transfer uncovered deficit count: ${summary.publicTransferUncoveredDeficitTotal}
+- public-transfer incoherent count: ${summary.publicTransferIncoherentTotal}
+- visible public-memory card count: ${formatStats(summary.publicTransferMemoryVisibleCardCountStats)}
+- known hidden hand count: ${formatStats(summary.publicTransferKnownHiddenHandCountStats)}
+- known hidden deck count: ${formatStats(summary.publicTransferKnownHiddenDeckCountStats)}
+- main-deck-attributable known hidden count: ${formatStats(summary.publicTransferKnownHiddenMainDeckAttributableCountStats)}
+- side-deck-only known hidden count: ${formatStats(summary.publicTransferKnownHiddenSideDeckOnlyCountStats)}
+- off-prior known hidden count: ${formatStats(summary.publicTransferKnownHiddenOffPriorCountStats)}
+- public-transfer adjustment count: ${formatStats(summary.publicTransferAdjustmentCountStats)}
+- public-transfer uncovered deficit count: ${formatStats(summary.publicTransferUncoveredDeficitCountStats)}
+- public-transfer incoherent count: ${formatStats(summary.publicTransferIncoherentCountStats)}
+
+| Public-transfer reason | Count |
+|---|---:|
+${formatCountRows(summary.publicTransferReasonCounts)}
+
 ## Sample Counts
 
 - requested: ${formatStats(summary.sampleCountStats.requested)}
@@ -302,6 +327,7 @@ const hiddenInfoHazards: readonly { label: string; pattern: RegExp }[] = [
   { label: "finalState", pattern: /\bfinalState\b/ },
   { label: "commandLog", pattern: /\bcommandLog\b/ },
   { label: "eventLog", pattern: /\beventLog\b/ },
+  { label: "events", pattern: /\bevents\b/ },
   { label: "ownHand", pattern: /\bownHand\b/ },
   { label: "opponentHand", pattern: /\bopponentHand\b/ },
   { label: "unsafeDebugResults", pattern: /\bunsafeDebugResults\b/ },
@@ -313,6 +339,7 @@ const hiddenInfoHazards: readonly { label: string; pattern: RegExp }[] = [
   { label: "actionRef", pattern: /\bactionRef\b/ },
   { label: "rawMove", pattern: /\brawMove\b/ },
   { label: "rawLabel", pattern: /\brawLabel\b/ },
+  { label: "rawState", pattern: /\brawState\b/ },
   { label: "deckOrder", pattern: /\bdeckOrder\b/ },
   { label: "sampledHand", pattern: /\bsampledHand\b/ },
   { label: "sampledDeck", pattern: /\bsampledDeck\b/ },
@@ -325,6 +352,14 @@ const hiddenInfoHazards: readonly { label: string; pattern: RegExp }[] = [
   },
   { label: "remainingSourceCounts", pattern: /\bremainingSourceCounts\b/ },
   { label: "priorSourceCounts", pattern: /\bpriorSourceCounts\b/ },
+  {
+    label: "publicTransferKnownHiddenSourceCounts",
+    pattern: /\bpublicTransferKnownHiddenSourceCounts\b/,
+  },
+  {
+    label: "publicTransferTrackedCardIds",
+    pattern: /\bpublicTransferTrackedCardIds\b/,
+  },
   { label: "sampledSource", pattern: /\bsampledSource\b/ },
   { label: "materializedSource", pattern: /\bmaterializedSource\b/ },
   { label: "runtime seat_a prefix", pattern: /\bseat_a:/ },

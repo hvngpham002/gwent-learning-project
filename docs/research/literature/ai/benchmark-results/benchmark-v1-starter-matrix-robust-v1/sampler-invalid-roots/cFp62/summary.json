@@ -6,7 +6,7 @@
     "prior_remaining_excess": 0,
     "prompt_revealed_hand_deficit": 0,
     "public_known_exceeds_prior_copy_count": 0,
-    "public_zone_count_deficit": 341,
+    "public_zone_count_deficit": 340,
     "raw_hidden_count_exceeds_prior": 0
   },
   "duplicateFixedKnownHandReferenceCountStats": {
@@ -32,7 +32,7 @@
   "explicitNonSearchWarning": "cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.",
   "fixedKnownHandCardCountStats": {
     "average": 0,
-    "count": 341,
+    "count": 340,
     "max": 0,
     "min": 0,
     "p50": 0,
@@ -41,32 +41,31 @@
   },
   "hiddenInfoSafetyNote": "Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.",
   "invalidReasonCounts": {
-    "insufficient_prior_remaining": 341
+    "insufficient_prior_remaining": 340
   },
-  "invalidRootCount": 341,
+  "invalidRootCount": 340,
   "invalidRootCountsByDeckPreset": {
-    "official-monsters-starter": 27,
+    "official-monsters-starter": 26,
     "official-nilfgaard-starter": 102,
     "official-northern-realms-starter": 136,
     "official-scoiatael-starter": 37,
     "official-skellige-starter": 39
   },
   "invalidRootCountsByFaction": {
-    "monsters": 27,
+    "monsters": 26,
     "nilfgaard": 102,
     "northern_realms": 136,
     "scoiatael": 37,
     "skellige": 39
   },
   "invalidRootCountsByFixedKnownHandCountBucket": {
-    "none": 341
+    "none": 340
   },
   "invalidRootCountsByHiddenCountDeficitBucket": {
-    "one": 340,
+    "one": 339,
     "small": 1
   },
   "invalidRootCountsByMatchup": {
-    "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0": 1,
     "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 23,
     "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 17,
     "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 12,
@@ -83,27 +82,27 @@
     "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 8
   },
   "invalidRootCountsByPhase": {
-    "playing": 313,
+    "playing": 312,
     "round_end": 28
   },
   "invalidRootCountsByPolicy": {
     "headless-round-end-auto-resolver": 28,
     "legal-heuristic-v0": 246,
-    "legal-heuristic-v1": 67
+    "legal-heuristic-v1": 66
   },
   "invalidRootCountsByPublicKnownCountBucket": {
-    "large": 143,
+    "large": 142,
     "medium": 183,
     "small": 15
   },
   "invalidRootCountsByRound": {
     "1": 222,
-    "2": 97,
+    "2": 96,
     "3": 22
   },
   "invalidRootDuplicateFixedKnownHandReferenceCountStats": {
     "average": 0,
-    "count": 341,
+    "count": 340,
     "max": 0,
     "min": 0,
     "p50": 0,
@@ -112,7 +111,7 @@
   },
   "invalidRootDuplicatePublicReferenceCountStats": {
     "average": 0,
-    "count": 341,
+    "count": 340,
     "max": 0,
     "min": 0,
     "p50": 0,
@@ -120,8 +119,8 @@
     "p95": 0
   },
   "mainDeckAttributablePublicCountStats": {
-    "average": 8.067,
-    "count": 341,
+    "average": 8.053,
+    "count": 340,
     "max": 18,
     "min": 1,
     "p50": 8,
@@ -130,12 +129,12 @@
   },
   "matchCount": 1000,
   "materializationStatusCounts": {
-    "invalid": 341,
-    "valid": 32146
+    "invalid": 340,
+    "valid": 32147
   },
   "offPriorPublicCountStats": {
     "average": 0,
-    "count": 341,
+    "count": 340,
     "max": 0,
     "min": 0,
     "p50": 0,
@@ -144,8 +143,8 @@
   },
   "offPriorPublicTotal": 0,
   "opponentDeckCountStats": {
-    "average": 21.188,
-    "count": 341,
+    "average": 21.182,
+    "count": 340,
     "max": 26,
     "min": 14,
     "p50": 22,
@@ -153,8 +152,8 @@
     "p95": 25
   },
   "opponentHandCountStats": {
-    "average": 5.208,
-    "count": 341,
+    "average": 5.221,
+    "count": 340,
     "max": 13,
     "min": 1,
     "p50": 5,
@@ -162,8 +161,8 @@
     "p95": 10
   },
   "opponentHiddenCountStats": {
-    "average": 26.396,
-    "count": 341,
+    "average": 26.403,
+    "count": 340,
     "max": 34,
     "min": 17,
     "p50": 26,
@@ -172,7 +171,7 @@
   },
   "priorDeficitCountStats": {
     "average": 1.003,
-    "count": 341,
+    "count": 340,
     "max": 2,
     "min": 1,
     "p50": 1,
@@ -180,8 +179,8 @@
     "p95": 1
   },
   "priorRemainingCardCountStats": {
-    "average": 25.393,
-    "count": 341,
+    "average": 25.4,
+    "count": 340,
     "max": 33,
     "min": 16,
     "p50": 25,
@@ -193,7 +192,7 @@
   },
   "publicAdjustmentCountStats": {
     "average": 0.003,
-    "count": 341,
+    "count": 340,
     "max": 1,
     "min": 0,
     "p50": 0,
@@ -205,18 +204,109 @@
   },
   "publicAdjustmentTotal": 1,
   "publicKnownCardCountStats": {
-    "average": 8.067,
-    "count": 341,
+    "average": 8.053,
+    "count": 340,
     "max": 18,
     "min": 1,
     "p50": 8,
     "p90": 11,
     "p95": 12
   },
-  "recommendedNextStep": "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone count deficits before any determinized probe.",
+  "publicTransferAdjustmentCountStats": {
+    "average": 0,
+    "count": 340,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferAdjustmentTotal": 0,
+  "publicTransferIncoherentCountStats": {
+    "average": 0,
+    "count": 340,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferIncoherentTotal": 0,
+  "publicTransferKnownHiddenDeckCountStats": {
+    "average": 0,
+    "count": 340,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenDeckTotal": 0,
+  "publicTransferKnownHiddenHandCountStats": {
+    "average": 0,
+    "count": 340,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenHandTotal": 0,
+  "publicTransferKnownHiddenMainDeckAttributableCountStats": {
+    "average": 0,
+    "count": 340,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenMainDeckAttributableTotal": 0,
+  "publicTransferKnownHiddenOffPriorCountStats": {
+    "average": 0,
+    "count": 340,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenOffPriorTotal": 0,
+  "publicTransferKnownHiddenSideDeckOnlyCountStats": {
+    "average": 0,
+    "count": 340,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenSideDeckOnlyTotal": 0,
+  "publicTransferMemoryVisibleCardCountStats": {
+    "average": 8.056,
+    "count": 340,
+    "max": 18,
+    "min": 1,
+    "p50": 8,
+    "p90": 11,
+    "p95": 12
+  },
+  "publicTransferMemoryVisibleCardTotal": 2739,
+  "publicTransferReasonCounts": {},
+  "publicTransferUncoveredDeficitCountStats": {
+    "average": 1.003,
+    "count": 340,
+    "max": 2,
+    "min": 1,
+    "p50": 1,
+    "p90": 1,
+    "p95": 1
+  },
+  "publicTransferUncoveredDeficitTotal": 341,
+  "recommendedNextStep": "After public-transfer memory, a next spec should either define explicit valid-root-only skip accounting or require deeper public-state reconstruction before any determinized probe.",
   "requiredHiddenDrawCountStats": {
-    "average": 26.396,
-    "count": 341,
+    "average": 26.403,
+    "count": 340,
     "max": 34,
     "min": 17,
     "p50": 26,
@@ -227,7 +317,7 @@
   "schemaVersion": "sampler-invalid-root-summary-v1",
   "sideDeckOnlyPublicCountStats": {
     "average": 0.003,
-    "count": 341,
+    "count": 340,
     "max": 1,
     "min": 0,
     "p50": 0,
@@ -246,14 +336,14 @@
   "totalRootCount": 32487,
   "uncoveredPriorDeficitCountStats": {
     "average": 1.003,
-    "count": 341,
+    "count": 340,
     "max": 2,
     "min": 1,
     "p50": 1,
     "p90": 1,
     "p95": 1
   },
-  "uncoveredPriorDeficitTotal": 342,
+  "uncoveredPriorDeficitTotal": 341,
   "uniqueFixedKnownHandCardCountStats": {
     "average": 0,
     "count": 32487,
@@ -272,5 +362,5 @@
     "p90": 13,
     "p95": 15
   },
-  "validRootCount": 32146
+  "validRootCount": 32147
 }

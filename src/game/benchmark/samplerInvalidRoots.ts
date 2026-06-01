@@ -5,7 +5,8 @@ import {
   buildKnownPresetSourceMultisetPrior,
   buildPublicKnownSourceSubtraction,
   buildSamplerMaterializationRootRecord,
-  type PublicKnownSourceSubtractionResult,
+  getSamplerPublicTransferMemoryForRoot,
+  type SamplerPublicTransferMemoryState,
   type SamplerMaterializationRootRecord,
 } from "./samplerMaterialization";
 import { buildSamplerReadinessCountStats, type SamplerReadinessCountStats, type SamplerReadinessPriorStatus } from "./samplerReadiness";
@@ -38,6 +39,8 @@ export type SamplerInvalidRootReason =
   | "negative_opponent_hand_count"
   | "negative_opponent_deck_count"
   | "public_known_hand_exceeds_opponent_hand_count"
+  | "public_transfer_known_hidden_exceeds_opponent_hand_count"
+  | "public_transfer_known_hidden_exceeds_opponent_deck_count"
   | "other_invalid_root";
 
 export interface PublicKnownZoneCountSummary {
@@ -92,6 +95,16 @@ export interface SamplerInvalidRootRecord {
   publicAdjustmentCount: number;
   uncoveredPriorDeficitCount: number;
   publicAdjustmentReasonCounts: Record<string, number>;
+  publicTransferMemoryVisibleCardCount: number;
+  publicTransferKnownHiddenHandCount: number;
+  publicTransferKnownHiddenDeckCount: number;
+  publicTransferKnownHiddenMainDeckAttributableCount: number;
+  publicTransferKnownHiddenSideDeckOnlyCount: number;
+  publicTransferKnownHiddenOffPriorCount: number;
+  publicTransferAdjustmentCount: number;
+  publicTransferUncoveredDeficitCount: number;
+  publicTransferIncoherentCount: number;
+  publicTransferReasonCounts: Record<string, number>;
   hiddenHandDrawCount: number;
   requiredHiddenDrawCount: number;
   priorDeficitCount: number;
@@ -143,6 +156,16 @@ export interface SamplerInvalidRootSummary {
   publicAdjustmentTotal: number;
   uncoveredPriorDeficitTotal: number;
   publicAdjustmentReasonCounts: Record<string, number>;
+  publicTransferMemoryVisibleCardTotal: number;
+  publicTransferKnownHiddenHandTotal: number;
+  publicTransferKnownHiddenDeckTotal: number;
+  publicTransferKnownHiddenMainDeckAttributableTotal: number;
+  publicTransferKnownHiddenSideDeckOnlyTotal: number;
+  publicTransferKnownHiddenOffPriorTotal: number;
+  publicTransferAdjustmentTotal: number;
+  publicTransferUncoveredDeficitTotal: number;
+  publicTransferIncoherentTotal: number;
+  publicTransferReasonCounts: Record<string, number>;
   duplicatePublicReferenceCountStats: SamplerReadinessCountStats;
   duplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
   uniquePublicKnownCardCountStats: SamplerReadinessCountStats;
@@ -152,6 +175,15 @@ export interface SamplerInvalidRootSummary {
   offPriorPublicCountStats: SamplerReadinessCountStats;
   publicAdjustmentCountStats: SamplerReadinessCountStats;
   uncoveredPriorDeficitCountStats: SamplerReadinessCountStats;
+  publicTransferMemoryVisibleCardCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenHandCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenDeckCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenMainDeckAttributableCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenSideDeckOnlyCountStats: SamplerReadinessCountStats;
+  publicTransferKnownHiddenOffPriorCountStats: SamplerReadinessCountStats;
+  publicTransferAdjustmentCountStats: SamplerReadinessCountStats;
+  publicTransferUncoveredDeficitCountStats: SamplerReadinessCountStats;
+  publicTransferIncoherentCountStats: SamplerReadinessCountStats;
   invalidRootDuplicatePublicReferenceCountStats: SamplerReadinessCountStats;
   invalidRootDuplicateFixedKnownHandReferenceCountStats: SamplerReadinessCountStats;
   hiddenInfoSafetyNote: string;
@@ -182,6 +214,7 @@ export interface BuildSamplerInvalidRootAnalysisInput
   extends BenchmarkRootObserverInput {
   samplerRunId: string;
   sampleCount?: number;
+  publicTransferMemory?: SamplerPublicTransferMemoryState;
 }
 
 export interface SamplerInvalidRootClassificationInput {
@@ -259,6 +292,8 @@ const primaryInvalidReason = (
     "negative_opponent_hand_count",
     "negative_opponent_deck_count",
     "public_known_hand_exceeds_opponent_hand_count",
+    "public_transfer_known_hidden_exceeds_opponent_hand_count",
+    "public_transfer_known_hidden_exceeds_opponent_deck_count",
   ];
   return ordered.find((reason) => reasons.has(reason)) ?? "other_invalid_root";
 };
@@ -302,7 +337,9 @@ export const classifySamplerInvalidRoot = ({
   if (
     reasons.has("negative_opponent_hand_count") ||
     reasons.has("negative_opponent_deck_count") ||
-    reasons.has("public_known_hand_exceeds_opponent_hand_count")
+    reasons.has("public_known_hand_exceeds_opponent_hand_count") ||
+    reasons.has("public_transfer_known_hidden_exceeds_opponent_hand_count") ||
+    reasons.has("public_transfer_known_hidden_exceeds_opponent_deck_count")
   ) {
     return "negative_or_incoherent_public_count";
   }
@@ -432,11 +469,9 @@ export const buildPublicKnownZoneCountSummary = ({
 const buildInvalidRootRecord = ({
   input,
   materializationRoot,
-  publicKnown,
 }: {
   input: BuildSamplerInvalidRootAnalysisInput;
   materializationRoot: SamplerMaterializationRootRecord;
-  publicKnown: PublicKnownSourceSubtractionResult;
 }): SamplerInvalidRootRecord => {
   const { state, seatId, seats } = input;
   const seat = seats[seatId];
@@ -450,15 +485,19 @@ const buildInvalidRootRecord = ({
   const opponentDeckCount = state.seats[opponentSeatId].deck.length;
   const opponentHiddenCount = opponentHandCount + opponentDeckCount;
   const hiddenHandDrawCount =
-    opponentHandCount - publicKnown.fixedKnownHandCardCount;
-  const requiredHiddenDrawCount = hiddenHandDrawCount + opponentDeckCount;
+    opponentHandCount -
+    materializationRoot.uniqueFixedKnownHandCardCount -
+    materializationRoot.publicTransferKnownHiddenHandCount;
+  const hiddenDeckDrawCount =
+    opponentDeckCount - materializationRoot.publicTransferKnownHiddenDeckCount;
+  const requiredHiddenDrawCount = hiddenHandDrawCount + hiddenDeckDrawCount;
   const priorDeficitCount = Math.max(
     0,
-    requiredHiddenDrawCount - publicKnown.priorRemainingCardCount,
+    requiredHiddenDrawCount - materializationRoot.priorRemainingCardCount,
   );
   const priorExcessCount = Math.max(
     0,
-    publicKnown.priorRemainingCardCount - requiredHiddenDrawCount,
+    materializationRoot.priorRemainingCardCount - requiredHiddenDrawCount,
   );
   const publicKnownByZone = buildPublicKnownZoneCountSummary({
     state,
@@ -472,8 +511,8 @@ const buildInvalidRootRecord = ({
   const classification = classifySamplerInvalidRoot({
     invalidReasons,
     opponentHandCount,
-    publicKnownCardCount: publicKnown.publicKnownCardCount,
-    fixedKnownHandCardCount: publicKnown.fixedKnownHandCardCount,
+    publicKnownCardCount: materializationRoot.uniquePublicKnownCardCount,
+    fixedKnownHandCardCount: materializationRoot.uniqueFixedKnownHandCardCount,
     promptRevealKnownHandCount,
   });
 
@@ -501,21 +540,43 @@ const buildInvalidRootRecord = ({
     opponentDeckCount,
     opponentHiddenCount,
     priorMainDeckCardCount: prior.mainDeckCardCount,
-    priorRemainingCardCount: publicKnown.priorRemainingCardCount,
-    publicKnownCardCount: publicKnown.publicKnownCardCount,
-    fixedKnownHandCardCount: publicKnown.fixedKnownHandCardCount,
-    duplicatePublicReferenceCount: publicKnown.duplicatePublicReferenceCount,
+    priorRemainingCardCount: materializationRoot.priorRemainingCardCount,
+    publicKnownCardCount: materializationRoot.uniquePublicKnownCardCount,
+    fixedKnownHandCardCount: materializationRoot.uniqueFixedKnownHandCardCount,
+    duplicatePublicReferenceCount:
+      materializationRoot.duplicatePublicReferenceCount,
     duplicateFixedKnownHandReferenceCount:
-      publicKnown.duplicateFixedKnownHandReferenceCount,
-    uniquePublicKnownCardCount: publicKnown.publicKnownCardCount,
-    uniqueFixedKnownHandCardCount: publicKnown.fixedKnownHandCardCount,
+      materializationRoot.duplicateFixedKnownHandReferenceCount,
+    uniquePublicKnownCardCount: materializationRoot.uniquePublicKnownCardCount,
+    uniqueFixedKnownHandCardCount:
+      materializationRoot.uniqueFixedKnownHandCardCount,
     mainDeckAttributablePublicCount:
-      publicKnown.mainDeckAttributablePublicCount,
-    sideDeckOnlyPublicCount: publicKnown.sideDeckOnlyPublicCount,
-    offPriorPublicCount: publicKnown.offPriorPublicCount,
-    publicAdjustmentCount: publicKnown.publicAdjustmentCount,
-    uncoveredPriorDeficitCount: publicKnown.uncoveredPriorDeficitCount,
-    publicAdjustmentReasonCounts: publicKnown.publicAdjustmentReasonCounts,
+      materializationRoot.mainDeckAttributablePublicCount,
+    sideDeckOnlyPublicCount: materializationRoot.sideDeckOnlyPublicCount,
+    offPriorPublicCount: materializationRoot.offPriorPublicCount,
+    publicAdjustmentCount: materializationRoot.publicAdjustmentCount,
+    uncoveredPriorDeficitCount: materializationRoot.uncoveredPriorDeficitCount,
+    publicAdjustmentReasonCounts:
+      materializationRoot.publicAdjustmentReasonCounts,
+    publicTransferMemoryVisibleCardCount:
+      materializationRoot.publicTransferMemoryVisibleCardCount,
+    publicTransferKnownHiddenHandCount:
+      materializationRoot.publicTransferKnownHiddenHandCount,
+    publicTransferKnownHiddenDeckCount:
+      materializationRoot.publicTransferKnownHiddenDeckCount,
+    publicTransferKnownHiddenMainDeckAttributableCount:
+      materializationRoot.publicTransferKnownHiddenMainDeckAttributableCount,
+    publicTransferKnownHiddenSideDeckOnlyCount:
+      materializationRoot.publicTransferKnownHiddenSideDeckOnlyCount,
+    publicTransferKnownHiddenOffPriorCount:
+      materializationRoot.publicTransferKnownHiddenOffPriorCount,
+    publicTransferAdjustmentCount:
+      materializationRoot.publicTransferAdjustmentCount,
+    publicTransferUncoveredDeficitCount:
+      materializationRoot.publicTransferUncoveredDeficitCount,
+    publicTransferIncoherentCount:
+      materializationRoot.publicTransferIncoherentCount,
+    publicTransferReasonCounts: materializationRoot.publicTransferReasonCounts,
     hiddenHandDrawCount,
     requiredHiddenDrawCount,
     priorDeficitCount,
@@ -523,8 +584,12 @@ const buildInvalidRootRecord = ({
     publicKnownByZone,
     promptRevealKnownHandCount,
     hasPendingPromptForActingSeat: state.pendingPrompt?.seatId === seatId,
-    publicKnownCountBucket: bucketCount(publicKnown.publicKnownCardCount),
-    fixedKnownHandCountBucket: bucketCount(publicKnown.fixedKnownHandCardCount),
+    publicKnownCountBucket: bucketCount(
+      materializationRoot.uniquePublicKnownCardCount,
+    ),
+    fixedKnownHandCountBucket: bucketCount(
+      materializationRoot.uniqueFixedKnownHandCardCount,
+    ),
     hiddenCountDeficitBucket: bucketDeficit(priorDeficitCount),
     rootPublicFingerprint: materializationRoot.rootPublicFingerprint,
   };
@@ -534,40 +599,6 @@ export const buildSamplerInvalidRootAnalysis = (
   input: BuildSamplerInvalidRootAnalysisInput,
 ): SamplerInvalidRootAnalysis => {
   const materializationRoot = buildSamplerMaterializationRootRecord(input);
-  const opponentSeatId: SeatId = input.seatId === "seat_a" ? "seat_b" : "seat_a";
-  const opponentSeat = input.seats[opponentSeatId];
-  const prior = buildKnownPresetSourceMultisetPrior({
-    deckPresetId: opponentSeat.deckPresetId,
-    faction: opponentSeat.faction,
-  });
-  const publicKnown =
-    prior.priorStatus === "prior_available"
-      ? buildPublicKnownSourceSubtraction({
-          state: input.state,
-          actingSeatId: input.seatId,
-          opponentSeatId,
-          priorSourceCounts: prior.mainDeckSourceCounts,
-          sideDeckSourceCounts: prior.sideDeckSourceCounts,
-          opponentHandCount: input.state.seats[opponentSeatId].hand.length,
-          opponentDeckCount: input.state.seats[opponentSeatId].deck.length,
-        })
-      : {
-          publicKnownSourceCounts: {},
-          fixedKnownHandSourceCounts: {},
-          mainDeckAttributablePublicCount: 0,
-          sideDeckOnlyPublicCount: 0,
-          offPriorPublicCount: 0,
-          publicAdjustmentCount: 0,
-          uncoveredPriorDeficitCount: 0,
-          publicAdjustmentReasonCounts: {},
-          publicKnownCardCount: 0,
-          fixedKnownHandCardCount: 0,
-          duplicatePublicReferenceCount: 0,
-          duplicateFixedKnownHandReferenceCount: 0,
-          remainingSourceCounts: {},
-          priorRemainingCardCount: 0,
-          invalidReasonCounts: {},
-        };
 
   if (materializationRoot.materializationStatus !== "invalid") {
     return { materializationRoot, invalidRoot: null };
@@ -578,7 +609,6 @@ export const buildSamplerInvalidRootAnalysis = (
     invalidRoot: buildInvalidRootRecord({
       input,
       materializationRoot,
-      publicKnown,
     }),
   };
 };
@@ -601,7 +631,7 @@ export const buildSamplerInvalidRootsRecommendation = (
     summary.duplicatePublicReferenceTotal === 0 &&
     summary.duplicateFixedKnownHandReferenceTotal === 0
   ) {
-    return "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone count deficits before any determinized probe.";
+    return "After public-transfer memory, a next spec should either define explicit valid-root-only skip accounting or require deeper public-state reconstruction before any determinized probe.";
   }
 
   const repairClassifications: SamplerInvalidRootClassification[] = [
@@ -664,10 +694,15 @@ export const buildSamplerInvalidRootSummary = ({
     0,
   );
   const publicAdjustmentReasonCounts: Record<string, number> = {};
+  const publicTransferReasonCounts: Record<string, number> = {};
   invalidRoots.forEach((root) => {
     Object.entries(root.publicAdjustmentReasonCounts).forEach(([reason, count]) => {
       publicAdjustmentReasonCounts[reason] =
         (publicAdjustmentReasonCounts[reason] ?? 0) + count;
+    });
+    Object.entries(root.publicTransferReasonCounts).forEach(([reason, count]) => {
+      publicTransferReasonCounts[reason] =
+        (publicTransferReasonCounts[reason] ?? 0) + count;
     });
   });
   const summaryBase = {
@@ -751,6 +786,43 @@ export const buildSamplerInvalidRootSummary = ({
       0,
     ),
     publicAdjustmentReasonCounts: sortEntries(publicAdjustmentReasonCounts),
+    publicTransferMemoryVisibleCardTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferMemoryVisibleCardCount,
+      0,
+    ),
+    publicTransferKnownHiddenHandTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenHandCount,
+      0,
+    ),
+    publicTransferKnownHiddenDeckTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenDeckCount,
+      0,
+    ),
+    publicTransferKnownHiddenMainDeckAttributableTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenMainDeckAttributableCount,
+      0,
+    ),
+    publicTransferKnownHiddenSideDeckOnlyTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenSideDeckOnlyCount,
+      0,
+    ),
+    publicTransferKnownHiddenOffPriorTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferKnownHiddenOffPriorCount,
+      0,
+    ),
+    publicTransferAdjustmentTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferAdjustmentCount,
+      0,
+    ),
+    publicTransferUncoveredDeficitTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferUncoveredDeficitCount,
+      0,
+    ),
+    publicTransferIncoherentTotal: invalidRoots.reduce(
+      (sum, root) => sum + root.publicTransferIncoherentCount,
+      0,
+    ),
+    publicTransferReasonCounts: sortEntries(publicTransferReasonCounts),
     duplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
       materializationRoots.map((root) => root.duplicatePublicReferenceCount),
     ),
@@ -778,6 +850,37 @@ export const buildSamplerInvalidRootSummary = ({
     uncoveredPriorDeficitCountStats: buildSamplerReadinessCountStats(
       invalidRoots.map((root) => root.uncoveredPriorDeficitCount),
     ),
+    publicTransferMemoryVisibleCardCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.publicTransferMemoryVisibleCardCount),
+    ),
+    publicTransferKnownHiddenHandCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.publicTransferKnownHiddenHandCount),
+    ),
+    publicTransferKnownHiddenDeckCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.publicTransferKnownHiddenDeckCount),
+    ),
+    publicTransferKnownHiddenMainDeckAttributableCountStats:
+      buildSamplerReadinessCountStats(
+        invalidRoots.map(
+          (root) => root.publicTransferKnownHiddenMainDeckAttributableCount,
+        ),
+      ),
+    publicTransferKnownHiddenSideDeckOnlyCountStats:
+      buildSamplerReadinessCountStats(
+        invalidRoots.map((root) => root.publicTransferKnownHiddenSideDeckOnlyCount),
+      ),
+    publicTransferKnownHiddenOffPriorCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.publicTransferKnownHiddenOffPriorCount),
+    ),
+    publicTransferAdjustmentCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.publicTransferAdjustmentCount),
+    ),
+    publicTransferUncoveredDeficitCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.publicTransferUncoveredDeficitCount),
+    ),
+    publicTransferIncoherentCountStats: buildSamplerReadinessCountStats(
+      invalidRoots.map((root) => root.publicTransferIncoherentCount),
+    ),
     invalidRootDuplicatePublicReferenceCountStats: buildSamplerReadinessCountStats(
       invalidRoots.map((root) => root.duplicatePublicReferenceCount),
     ),
@@ -802,6 +905,10 @@ export const runSamplerInvalidRootsProfile = (
   const samplerRunId = input.samplerRunId ?? defaultSamplerRunId(input);
   const materializationRoots: SamplerMaterializationRootRecord[] = [];
   const invalidRoots: SamplerInvalidRootRecord[] = [];
+  const publicTransferMemoryStore = new Map<
+    string,
+    SamplerPublicTransferMemoryState
+  >();
 
   const benchmark = runBenchmarkSuite({
     suiteId: input.suiteId,
@@ -810,10 +917,15 @@ export const runSamplerInvalidRootsProfile = (
     maxSteps: input.maxSteps,
     policies: input.policies,
     rootObserver: (root) => {
+      const publicTransferMemory = getSamplerPublicTransferMemoryForRoot(
+        publicTransferMemoryStore,
+        root,
+      );
       const analysis = buildSamplerInvalidRootAnalysis({
         ...root,
         samplerRunId,
         sampleCount: input.sampleCount,
+        publicTransferMemory,
       });
       materializationRoots.push(analysis.materializationRoot);
       if (analysis.invalidRoot) {

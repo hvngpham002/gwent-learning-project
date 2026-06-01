@@ -167,6 +167,97 @@
     "p90": 13,
     "p95": 15
   },
+  "publicTransferAdjustmentCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferAdjustmentTotal": 0,
+  "publicTransferIncoherentCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferIncoherentTotal": 0,
+  "publicTransferKnownHiddenDeckCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenDeckTotal": 0,
+  "publicTransferKnownHiddenHandCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenHandTotal": 0,
+  "publicTransferKnownHiddenMainDeckAttributableCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenMainDeckAttributableTotal": 0,
+  "publicTransferKnownHiddenOffPriorCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenOffPriorTotal": 0,
+  "publicTransferKnownHiddenSideDeckOnlyCountStats": {
+    "average": 0,
+    "count": 63,
+    "max": 0,
+    "min": 0,
+    "p50": 0,
+    "p90": 0,
+    "p95": 0
+  },
+  "publicTransferKnownHiddenSideDeckOnlyTotal": 0,
+  "publicTransferMemoryVisibleCardCountStats": {
+    "average": 9.349,
+    "count": 63,
+    "max": 16,
+    "min": 4,
+    "p50": 9,
+    "p90": 13,
+    "p95": 15
+  },
+  "publicTransferMemoryVisibleCardTotal": 589,
+  "publicTransferReasonCounts": {},
+  "publicTransferUncoveredDeficitCountStats": {
+    "average": 1,
+    "count": 63,
+    "max": 1,
+    "min": 1,
+    "p50": 1,
+    "p90": 1,
+    "p95": 1
+  },
+  "publicTransferUncoveredDeficitTotal": 63,
   "publicZoneDiversityCountStats": {
     "average": 1.968,
     "count": 63,
@@ -190,7 +281,7 @@
     "three_plus_zones": 13,
     "two_zones": 35
   },
-  "recommendedNextStep": "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone deficits before any determinized probe.",
+  "recommendedNextStep": "After public-transfer memory, a next spec should either define explicit valid-root-only skip accounting or require deeper public-state reconstruction before any determinized probe.",
   "samplerRunId": "benchmark-v1-starter-matrix-v1:sampler-public-zone-provenance:cFp64",
   "schemaVersion": "sampler-public-zone-provenance-summary-v1",
   "sideDeckOnlyPublicCountStats": {

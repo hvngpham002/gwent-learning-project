@@ -241,6 +241,31 @@ ${formatCountRows(summary.publicZoneShapeCounts)}
 |---|---:|
 ${formatCountRows(summary.publicAdjustmentReasonCounts)}
 
+## Public Transfer Memory Diagnostics
+
+- provenance-root visible public-memory cards: ${summary.publicTransferMemoryVisibleCardTotal}
+- provenance-root known hidden hand cards: ${summary.publicTransferKnownHiddenHandTotal}
+- provenance-root known hidden deck cards: ${summary.publicTransferKnownHiddenDeckTotal}
+- provenance-root main-deck-attributable known hidden cards: ${summary.publicTransferKnownHiddenMainDeckAttributableTotal}
+- provenance-root side-deck-only known hidden cards: ${summary.publicTransferKnownHiddenSideDeckOnlyTotal}
+- provenance-root off-prior known hidden cards: ${summary.publicTransferKnownHiddenOffPriorTotal}
+- provenance-root public-transfer adjustment count: ${summary.publicTransferAdjustmentTotal}
+- provenance-root public-transfer uncovered deficit count: ${summary.publicTransferUncoveredDeficitTotal}
+- provenance-root public-transfer incoherent count: ${summary.publicTransferIncoherentTotal}
+- provenance-root visible public-memory card count: ${formatStats(summary.publicTransferMemoryVisibleCardCountStats)}
+- provenance-root known hidden hand count: ${formatStats(summary.publicTransferKnownHiddenHandCountStats)}
+- provenance-root known hidden deck count: ${formatStats(summary.publicTransferKnownHiddenDeckCountStats)}
+- provenance-root main-deck-attributable known hidden count: ${formatStats(summary.publicTransferKnownHiddenMainDeckAttributableCountStats)}
+- provenance-root side-deck-only known hidden count: ${formatStats(summary.publicTransferKnownHiddenSideDeckOnlyCountStats)}
+- provenance-root off-prior known hidden count: ${formatStats(summary.publicTransferKnownHiddenOffPriorCountStats)}
+- provenance-root public-transfer adjustment count: ${formatStats(summary.publicTransferAdjustmentCountStats)}
+- provenance-root public-transfer uncovered deficit count: ${formatStats(summary.publicTransferUncoveredDeficitCountStats)}
+- provenance-root public-transfer incoherent count: ${formatStats(summary.publicTransferIncoherentCountStats)}
+
+| Public-transfer reason | Count |
+|---|---:|
+${formatCountRows(summary.publicTransferReasonCounts)}
+
 ## Hidden-Info Safety
 
 ${summary.hiddenInfoSafetyNote}
@@ -346,6 +371,7 @@ const hiddenInfoHazards: readonly { label: string; pattern: RegExp }[] = [
   { label: "finalState", pattern: /\bfinalState\b/ },
   { label: "commandLog", pattern: /\bcommandLog\b/ },
   { label: "eventLog", pattern: /\beventLog\b/ },
+  { label: "events", pattern: /\bevents\b/ },
   { label: "ownHand", pattern: /\bownHand\b/ },
   { label: "opponentHand", pattern: /\bopponentHand\b/ },
   { label: "unsafeDebugResults", pattern: /\bunsafeDebugResults\b/ },
@@ -370,6 +396,14 @@ const hiddenInfoHazards: readonly { label: string; pattern: RegExp }[] = [
   },
   { label: "remainingSourceCounts", pattern: /\bremainingSourceCounts\b/ },
   { label: "priorSourceCounts", pattern: /\bpriorSourceCounts\b/ },
+  {
+    label: "publicTransferKnownHiddenSourceCounts",
+    pattern: /\bpublicTransferKnownHiddenSourceCounts\b/,
+  },
+  {
+    label: "publicTransferTrackedCardIds",
+    pattern: /\bpublicTransferTrackedCardIds\b/,
+  },
   { label: "sampledSource", pattern: /\bsampledSource\b/ },
   { label: "materializedSource", pattern: /\bmaterializedSource\b/ },
   { label: "runtime seat_a prefix", pattern: /\bseat_a:/ },

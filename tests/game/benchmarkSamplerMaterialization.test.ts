@@ -4,8 +4,10 @@ import {
   buildKnownPresetSourceMultisetPrior,
   buildOpponentKnownPresetSourceMultisetPrior,
   buildPublicKnownSourceSubtraction,
+  buildSamplerPublicTransferMemoryUpdate,
   buildSamplerPublicZoneAccountingAdjustment,
   buildSamplerMaterializationRootRecord,
+  createSamplerPublicTransferMemoryState,
   materializeHiddenMultisetSample,
   materializeHiddenMultisets,
   type MaterializedHiddenMultisetSample,
@@ -102,6 +104,54 @@ const maxCombinedCopyCount = (sample: MaterializedHiddenMultisetSample) => {
   });
   return combined;
 };
+
+const benchmarkSeats = ({
+  opponentFaction = "nilfgaard",
+  opponentDeckPresetId = "official-nilfgaard-starter",
+}: {
+  opponentFaction?: BenchmarkRootObserverInput["seats"]["seat_b"]["faction"];
+  opponentDeckPresetId?: string;
+} = {}): BenchmarkRootObserverInput["seats"] => ({
+  seat_a: {
+    seatId: "seat_a",
+    policyId: "legal-heuristic-v1",
+    playerId: "a",
+    faction: "northern_realms",
+    deckPresetId: "official-northern-realms-starter",
+  },
+  seat_b: {
+    seatId: "seat_b",
+    policyId: "legal-heuristic-v0",
+    playerId: "b",
+    faction: opponentFaction,
+    deckPresetId: opponentDeckPresetId,
+  },
+});
+
+const buildRoot = ({
+  state,
+  seats = benchmarkSeats(),
+  publicTransferMemory,
+}: {
+  state: MatchState;
+  seats?: BenchmarkRootObserverInput["seats"];
+  publicTransferMemory?: ReturnType<typeof createSamplerPublicTransferMemoryState>;
+}) =>
+  buildSamplerMaterializationRootRecord({
+    samplerRunId: "test-run",
+    suiteId: "benchmark-v1-starter-matrix-v1",
+    matchupId: "public-transfer-test",
+    seed: "public-transfer-seed",
+    step: 1,
+    decisionIndex: 0,
+    state,
+    seatId: "seat_a",
+    policyId: "legal-heuristic-v1",
+    legalMoves: [],
+    seats,
+    sampleCount: 8,
+    publicTransferMemory,
+  });
 
 describe("benchmark sampler materialization", () => {
   it("builds scalar public-zone prior accounting without exposing identities", () => {
@@ -266,6 +316,308 @@ describe("benchmark sampler materialization", () => {
     });
     expect(result.priorRemainingCardCount).toBe(prior.mainDeckCardCount);
     expect(result.invalidReasonCounts).toEqual({});
+  });
+
+  it("tracks a public discard card that later moves to opponent hand", () => {
+    const memory = createSamplerPublicTransferMemoryState();
+    const visibleState = baseState({
+      transfer: card("transfer", "test.main", {
+        kind: "discard",
+        seat: "seat_b",
+      }),
+    });
+    visibleState.seats.seat_b.discard = ["transfer"];
+
+    const first = buildSamplerPublicTransferMemoryUpdate({
+      memory,
+      state: visibleState,
+      perspectiveSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      mainDeckSourceCounts: { "test.main": 1 },
+    });
+
+    const hiddenState = baseState({
+      transfer: card("transfer", "test.main", { kind: "hand", seat: "seat_b" }),
+    });
+    hiddenState.seats.seat_b.hand = ["transfer"];
+    const second = buildSamplerPublicTransferMemoryUpdate({
+      memory,
+      state: hiddenState,
+      perspectiveSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      mainDeckSourceCounts: { "test.main": 1 },
+    });
+
+    expect(first.visibleCardCount).toBe(1);
+    expect(first.knownHiddenHandCount).toBe(0);
+    expect(second.knownHiddenHandCount).toBe(1);
+    expect(second.knownHiddenDeckCount).toBe(0);
+    expect(second.knownHiddenMainDeckAttributableCount).toBe(1);
+  });
+
+  it("tracks a public discard card that later moves to opponent deck", () => {
+    const memory = createSamplerPublicTransferMemoryState();
+    const visibleState = baseState({
+      transfer: card("transfer", "test.main", {
+        kind: "discard",
+        seat: "seat_b",
+      }),
+    });
+    visibleState.seats.seat_b.discard = ["transfer"];
+    buildSamplerPublicTransferMemoryUpdate({
+      memory,
+      state: visibleState,
+      perspectiveSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      mainDeckSourceCounts: { "test.main": 1 },
+    });
+
+    const hiddenState = baseState({
+      transfer: card("transfer", "test.main", { kind: "deck", seat: "seat_b" }),
+    });
+    hiddenState.seats.seat_b.deck = ["transfer"];
+    const result = buildSamplerPublicTransferMemoryUpdate({
+      memory,
+      state: hiddenState,
+      perspectiveSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      mainDeckSourceCounts: { "test.main": 1 },
+    });
+
+    expect(result.knownHiddenHandCount).toBe(0);
+    expect(result.knownHiddenDeckCount).toBe(1);
+    expect(result.knownHiddenMainDeckAttributableCount).toBe(1);
+  });
+
+  it("keeps prompt-revealed opponent hand memory perspective-specific", () => {
+    const memoryForA = createSamplerPublicTransferMemoryState();
+    const memoryForB = createSamplerPublicTransferMemoryState();
+    const promptState = baseState(
+      {
+        revealed: card("revealed", "test.main", {
+          kind: "hand",
+          seat: "seat_b",
+        }),
+      },
+      {
+        pendingPrompt: {
+          promptId: "prompt:reveal",
+          seatId: "seat_a",
+          kind: "choose_option",
+          abilityId: "look_three_cards",
+          stage: "opponent_hand_reveal",
+          context: { revealedCardIds: ["revealed"] },
+          options: [
+            {
+              optionId: "ack",
+              label: "acknowledge",
+              target: { kind: "none" },
+            },
+          ],
+        },
+      },
+    );
+    promptState.seats.seat_b.hand = ["revealed"];
+
+    buildSamplerPublicTransferMemoryUpdate({
+      memory: memoryForA,
+      state: promptState,
+      perspectiveSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      mainDeckSourceCounts: { "test.main": 1 },
+    });
+    buildSamplerPublicTransferMemoryUpdate({
+      memory: memoryForB,
+      state: promptState,
+      perspectiveSeatId: "seat_b",
+      opponentSeatId: "seat_a",
+      mainDeckSourceCounts: { "test.main": 1 },
+    });
+
+    const laterState = baseState({
+      revealed: card("revealed", "test.main", { kind: "hand", seat: "seat_b" }),
+    });
+    laterState.seats.seat_b.hand = ["revealed"];
+
+    const knownForA = buildSamplerPublicTransferMemoryUpdate({
+      memory: memoryForA,
+      state: laterState,
+      perspectiveSeatId: "seat_a",
+      opponentSeatId: "seat_b",
+      mainDeckSourceCounts: { "test.main": 1 },
+    });
+    const knownForB = buildSamplerPublicTransferMemoryUpdate({
+      memory: memoryForB,
+      state: laterState,
+      perspectiveSeatId: "seat_b",
+      opponentSeatId: "seat_a",
+      mainDeckSourceCounts: { "test.main": 1 },
+    });
+
+    expect(knownForA.knownHiddenHandCount).toBe(1);
+    expect(knownForB.knownHiddenHandCount).toBe(0);
+  });
+
+  it("does not inspect never-seen opponent hidden hand or deck identities for transfer memory", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-nilfgaard-starter",
+      faction: "nilfgaard",
+    });
+    const [hiddenSource] = Object.keys(prior.mainDeckSourceCounts);
+    const state = baseState({
+      unseenHand: card("unseenHand", hiddenSource, { kind: "hand", seat: "seat_b" }),
+      unseenDeck: card("unseenDeck", hiddenSource, { kind: "deck", seat: "seat_b" }),
+    });
+    state.seats.seat_b.hand = ["unseenHand"];
+    state.seats.seat_b.deck = [
+      "unseenDeck",
+      ...Array.from(
+        { length: prior.mainDeckCardCount },
+        (_, index) => `hidden-deck-extra-${index}`,
+      ),
+    ];
+
+    const root = buildRoot({
+      state,
+      publicTransferMemory: createSamplerPublicTransferMemoryState(),
+    });
+
+    expect(root.publicTransferKnownHiddenHandCount).toBe(0);
+    expect(root.publicTransferKnownHiddenDeckCount).toBe(0);
+    expect(root.materializationStatus).toBe("invalid");
+    expect(root.invalidReasonCounts).toEqual({
+      insufficient_prior_remaining: 1,
+    });
+  });
+
+  it("consumes main-deck prior for main-deck-attributable transfer cards", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-nilfgaard-starter",
+      faction: "nilfgaard",
+    });
+    const [mainSource] = Object.keys(prior.mainDeckSourceCounts);
+    const memory = createSamplerPublicTransferMemoryState();
+    memory.trackedCards.mainTransfer = {
+      ownerSeatId: "seat_b",
+      sourceId: mainSource,
+    };
+    const state = baseState({
+      mainTransfer: card("mainTransfer", mainSource, {
+        kind: "hand",
+        seat: "seat_b",
+      }),
+    });
+    state.seats.seat_b.hand = ["mainTransfer"];
+    state.seats.seat_b.deck = Array.from(
+      { length: prior.mainDeckCardCount - 1 },
+      (_, index) => `hidden-deck-${index}`,
+    );
+
+    const root = buildRoot({ state, publicTransferMemory: memory });
+
+    expect(root.materializationStatus).toBe("valid");
+    expect(root.publicTransferKnownHiddenMainDeckAttributableCount).toBe(1);
+    expect(root.publicTransferAdjustmentCount).toBe(0);
+    expect(root.priorRemainingCardCount).toBe(prior.mainDeckCardCount - 1);
+  });
+
+  it("lets side-deck-only transfer cards reduce hidden counts without consuming main-deck prior", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-skellige-starter",
+      faction: "skellige",
+    });
+    const sideDeckSource = "skellige.vildkaarl";
+    const memory = createSamplerPublicTransferMemoryState();
+    memory.trackedCards.sideTransfer = {
+      ownerSeatId: "seat_b",
+      sourceId: sideDeckSource,
+    };
+    const state = baseState({
+      sideTransfer: card("sideTransfer", sideDeckSource, {
+        kind: "hand",
+        seat: "seat_b",
+      }),
+    });
+    state.seats.seat_b.hand = ["sideTransfer"];
+    state.seats.seat_b.deck = Array.from(
+      { length: prior.mainDeckCardCount },
+      (_, index) => `hidden-deck-${index}`,
+    );
+
+    const root = buildRoot({
+      state,
+      seats: benchmarkSeats({
+        opponentFaction: "skellige",
+        opponentDeckPresetId: "official-skellige-starter",
+      }),
+      publicTransferMemory: memory,
+    });
+
+    expect(root.materializationStatus).toBe("valid");
+    expect(root.publicTransferKnownHiddenSideDeckOnlyCount).toBe(1);
+    expect(root.publicTransferAdjustmentCount).toBe(1);
+    expect(root.priorRemainingCardCount).toBe(prior.mainDeckCardCount);
+  });
+
+  it("lets off-prior transfer cards reduce hidden counts without consuming main-deck prior", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-nilfgaard-starter",
+      faction: "nilfgaard",
+    });
+    const memory = createSamplerPublicTransferMemoryState();
+    memory.trackedCards.offPriorTransfer = {
+      ownerSeatId: "seat_b",
+      sourceId: "external.public-memory",
+    };
+    const state = baseState({
+      offPriorTransfer: card("offPriorTransfer", "external.public-memory", {
+        kind: "hand",
+        seat: "seat_b",
+      }),
+    });
+    state.seats.seat_b.hand = ["offPriorTransfer"];
+    state.seats.seat_b.deck = Array.from(
+      { length: prior.mainDeckCardCount },
+      (_, index) => `hidden-deck-${index}`,
+    );
+
+    const root = buildRoot({ state, publicTransferMemory: memory });
+
+    expect(root.materializationStatus).toBe("valid");
+    expect(root.publicTransferKnownHiddenOffPriorCount).toBe(1);
+    expect(root.publicTransferAdjustmentCount).toBe(1);
+    expect(root.priorRemainingCardCount).toBe(prior.mainDeckCardCount);
+  });
+
+  it("keeps incoherent public-transfer memory invalid", () => {
+    const prior = buildKnownPresetSourceMultisetPrior({
+      deckPresetId: "official-nilfgaard-starter",
+      faction: "nilfgaard",
+    });
+    const [mainSource] = Object.keys(prior.mainDeckSourceCounts);
+    const memory = createSamplerPublicTransferMemoryState();
+    memory.trackedCards.one = { ownerSeatId: "seat_b", sourceId: mainSource };
+    memory.trackedCards.two = { ownerSeatId: "seat_b", sourceId: mainSource };
+    const state = baseState({
+      one: card("one", mainSource, { kind: "hand", seat: "seat_b" }),
+      two: card("two", mainSource, { kind: "hand", seat: "seat_b" }),
+    });
+    state.seats.seat_b.hand = ["one"];
+    state.seats.seat_b.deck = Array.from(
+      { length: prior.mainDeckCardCount - 2 },
+      (_, index) => `hidden-deck-${index}`,
+    );
+
+    const root = buildRoot({ state, publicTransferMemory: memory });
+
+    expect(root.materializationStatus).toBe("invalid");
+    expect(root.publicTransferKnownHiddenHandCount).toBe(2);
+    expect(root.publicTransferIncoherentCount).toBe(1);
+    expect(root.invalidReasonCounts).toEqual(
+      expect.objectContaining({
+        public_transfer_known_hidden_exceeds_opponent_hand_count: 1,
+      }),
+    );
   });
 
   it("marks public over-copy as invalid with a safe reason", () => {

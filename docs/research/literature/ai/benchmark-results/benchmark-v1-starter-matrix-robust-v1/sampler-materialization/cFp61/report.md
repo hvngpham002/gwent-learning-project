@@ -62,14 +62,14 @@
 
 | Materialization status | Count |
 |---|---:|
-| invalid | 341 |
-| valid | 32146 |
+| invalid | 340 |
+| valid | 32147 |
 
 ## Invalid Reason Counts
 
 | Reason | Count |
 |---|---:|
-| insufficient_prior_remaining | 341 |
+| insufficient_prior_remaining | 340 |
 
 ## Public Reference Diagnostics
 
@@ -96,6 +96,32 @@
 |---|---:|
 | side_deck_only_public | 946 |
 
+## Public Transfer Memory Diagnostics
+
+- visible public-memory cards: 231369
+- known hidden hand cards: 524
+- known hidden deck cards: 0
+- main-deck-attributable known hidden cards: 523
+- side-deck-only known hidden cards: 1
+- off-prior known hidden cards: 0
+- public-transfer adjustment count: 1
+- public-transfer uncovered deficit count: 341
+- public-transfer incoherent count: 0
+- visible public-memory card count: count 32487, min 0, max 22, avg 7.122, p50 7, p90 13, p95 15
+- known hidden hand count: count 32487, min 0, max 1, avg 0.016, p50 0, p90 0, p95 0
+- known hidden deck count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- main-deck-attributable known hidden count: count 32487, min 0, max 1, avg 0.016, p50 0, p90 0, p95 0
+- side-deck-only known hidden count: count 32487, min 0, max 1, avg 0, p50 0, p90 0, p95 0
+- off-prior known hidden count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- public-transfer adjustment count: count 32487, min 0, max 1, avg 0, p50 0, p90 0, p95 0
+- public-transfer uncovered deficit count: count 32487, min 0, max 2, avg 0.01, p50 0, p90 0, p95 0
+- public-transfer incoherent count: count 32487, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+
+| Public-transfer reason | Count |
+|---|---:|
+| main_deck_attributable_public_transfer | 523 |
+| side_deck_only_public_transfer | 1 |
+
 ## Sample Counts
 
 - requested: count 32487, min 8, max 8, avg 8, p50 8, p90 8, p95 8
@@ -105,33 +131,33 @@
 
 ## Aggregate Sample Stats
 
-- hand unique average: count 32487, min 0, max 11.125, avg 4.7, p50 4.75, p90 8.75, p95 9
-- deck unique average: count 32487, min 0, max 20, avg 15.556, p50 16, p90 17.625, p95 18
+- hand unique average: count 32487, min 0, max 11.625, avg 4.7, p50 4.75, p90 8.625, p95 9
+- deck unique average: count 32487, min 0, max 20, avg 15.557, p50 16, p90 17.625, p95 18
 
 ### Hand Duplicate Pressure
 
 | Bucket | Count |
 |---|---:|
-| none | 162932 |
-| pair | 86872 |
-| triple_plus | 7364 |
+| none | 163115 |
+| pair | 86724 |
+| triple_plus | 7337 |
 
 ### Deck Duplicate Pressure
 
 | Bucket | Count |
 |---|---:|
-| none | 887 |
-| pair | 50943 |
-| triple_plus | 205338 |
+| none | 876 |
+| pair | 50883 |
+| triple_plus | 205417 |
 
 ### Hand Deck Overlap
 
 | Bucket | Count |
 |---|---:|
-| four_plus | 71772 |
-| none | 54283 |
-| one | 36302 |
-| two_to_three | 94811 |
+| four_plus | 71909 |
+| none | 54377 |
+| one | 36239 |
+| two_to_three | 94651 |
 
 ## Interpretation Warning
 

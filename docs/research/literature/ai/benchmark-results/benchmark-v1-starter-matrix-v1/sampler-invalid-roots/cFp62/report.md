@@ -172,6 +172,31 @@
 |---|---:|
 | side_deck_only_public | 2 |
 
+## Public Transfer Memory Diagnostics
+
+- invalid-root visible public-memory cards: 589
+- invalid-root known hidden hand cards: 0
+- invalid-root known hidden deck cards: 0
+- invalid-root main-deck-attributable known hidden cards: 0
+- invalid-root side-deck-only known hidden cards: 0
+- invalid-root off-prior known hidden cards: 0
+- invalid-root public-transfer adjustment count: 0
+- invalid-root public-transfer uncovered deficit count: 63
+- invalid-root public-transfer incoherent count: 0
+- invalid-root visible public-memory card count: count 63, min 4, max 16, avg 9.349, p50 9, p90 13, p95 15
+- invalid-root known hidden hand count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root known hidden deck count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root main-deck-attributable known hidden count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root side-deck-only known hidden count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root off-prior known hidden count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root public-transfer adjustment count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+- invalid-root public-transfer uncovered deficit count: count 63, min 1, max 1, avg 1, p50 1, p90 1, p95 1
+- invalid-root public-transfer incoherent count: count 63, min 0, max 0, avg 0, p50 0, p90 0, p95 0
+
+| Public-transfer reason | Count |
+|---|---:|
+| none | 0 |
+
 ## Hidden-Info Safety
 
 Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.
@@ -182,4 +207,4 @@ cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do
 
 ## Recommendation For Next Phase
 
-A next non-search phase should add event-history/public-transfer memory for the remaining public-zone count deficits before any determinized probe.
+After public-transfer memory, a next spec should either define explicit valid-root-only skip accounting or require deeper public-state reconstruction before any determinized probe.

@@ -74,6 +74,17 @@ const materializationRoot = (
   publicAdjustmentCount: 1,
   uncoveredPriorDeficitCount: 1,
   publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
+  publicTransferMemoryVisibleCardCount: 0,
+  publicTransferKnownHiddenHandCount: 0,
+  publicTransferKnownHiddenDeckCount: 0,
+  publicTransferKnownHiddenMainDeckAttributableCount: 0,
+  publicTransferKnownHiddenSideDeckOnlyCount: 0,
+  publicTransferKnownHiddenOffPriorCount: 0,
+  publicTransferAdjustmentCount: 0,
+  publicTransferUncoveredDeficitCount: 1,
+  publicTransferIncoherentCount: 0,
+  publicTransferReasonCounts: {},
+  priorRemainingCardCount: 24,
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "small",
   priorRemainingCardCountBucket: "large",
@@ -126,6 +137,16 @@ const provenanceRoot = (
   publicAdjustmentCount: 1,
   uncoveredPriorDeficitCount: 1,
   publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
+  publicTransferMemoryVisibleCardCount: 0,
+  publicTransferKnownHiddenHandCount: 0,
+  publicTransferKnownHiddenDeckCount: 0,
+  publicTransferKnownHiddenMainDeckAttributableCount: 0,
+  publicTransferKnownHiddenSideDeckOnlyCount: 0,
+  publicTransferKnownHiddenOffPriorCount: 0,
+  publicTransferAdjustmentCount: 0,
+  publicTransferUncoveredDeficitCount: 1,
+  publicTransferIncoherentCount: 0,
+  publicTransferReasonCounts: {},
   duplicatePublicReferenceCount: 0,
   duplicateFixedKnownHandReferenceCount: 0,
   publicZoneFamilyCounts: {
@@ -332,7 +353,7 @@ describe("benchmark sampler public-zone provenance artifacts", () => {
     );
     const unsafeArtifacts = {
       ...artifacts,
-      provenanceRootsJsonl: `${artifacts.provenanceRootsJsonl}{"moveId":"x","sourceCardId":"seat_a:abc","sourceId":"hidden","cardId":"seat_b:def","actionRef":"raw","rawMove":true,"rawLabel":"bad","rawState":{},"deckOrder":[1],"sampledHand":["a"],"sampledDeck":["b"],"handSourceCounts":{},"deckSourceCounts":{},"publicKnownSourceCounts":{},"fixedKnownHandSourceCounts":{},"remainingSourceCounts":{},"priorSourceCounts":{},"sampledSource":"x","materializedSource":"y","card":"neutral.geralt-of-rivia"}\n`,
+      provenanceRootsJsonl: `${artifacts.provenanceRootsJsonl}{"moveId":"x","sourceCardId":"seat_a:abc","sourceId":"hidden","cardId":"seat_b:def","actionRef":"raw","rawMove":true,"rawLabel":"bad","rawState":{},"events":[],"deckOrder":[1],"sampledHand":["a"],"sampledDeck":["b"],"handSourceCounts":{},"deckSourceCounts":{},"publicKnownSourceCounts":{},"fixedKnownHandSourceCounts":{},"remainingSourceCounts":{},"priorSourceCounts":{},"publicTransferKnownHiddenSourceCounts":{},"publicTransferTrackedCardIds":["seat_b:ghi"],"sampledSource":"x","materializedSource":"y","card":"neutral.geralt-of-rivia"}\n`,
       reportMarkdown: `${artifacts.reportMarkdown}\ncardsById finalState commandLog eventLog ownHand opponentHand unsafeDebugResults decisionTrace Geralt of Rivia Gaunter O'Dimm: Darkness northern-realms.philippa-eilhart`,
     };
 
@@ -344,6 +365,7 @@ describe("benchmark sampler public-zone provenance artifacts", () => {
         "finalState",
         "commandLog",
         "eventLog",
+        "events",
         "ownHand",
         "opponentHand",
         "unsafeDebugResults",
@@ -365,6 +387,8 @@ describe("benchmark sampler public-zone provenance artifacts", () => {
         "fixedKnownHandSourceCounts",
         "remainingSourceCounts",
         "priorSourceCounts",
+        "publicTransferKnownHiddenSourceCounts",
+        "publicTransferTrackedCardIds",
         "sampledSource",
         "materializedSource",
         "runtime seat_a prefix",
@@ -388,8 +412,8 @@ describe("benchmark sampler public-zone provenance artifacts", () => {
       {
         suiteId: "benchmark-v1-starter-matrix-robust-v1",
         totalRoots: 32487,
-        validRoots: 32146,
-        invalidRoots: 341,
+        validRoots: 32147,
+        invalidRoots: 340,
       },
     ];
 

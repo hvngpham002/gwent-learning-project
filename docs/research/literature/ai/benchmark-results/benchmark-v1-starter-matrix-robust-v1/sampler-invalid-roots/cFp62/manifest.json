@@ -1,8 +1,8 @@
 {
   "artifactHashes": {
-    "invalid-roots.jsonl": "ff8cef1e0d508fe60f3f3ded49afca35360d3751adc4ae8648be7c51342780d4",
-    "report.md": "43b37d717974d136475c0d76f7152e90c5c832022fc648b6a28525d2122283c8",
-    "summary.json": "7560336492743c4c8c2f341908344d4b7a52284fb724d20f33b05542b0a13aae"
+    "invalid-roots.jsonl": "fbe36e8fee344e09bea5c35a1a5bdf9e66f255fa7d3f6810675b83d911cbe45a",
+    "report.md": "bfdf8225489c14e8d3aa74d16d789a82f3d4bf70349c47b73a1ee26b66fff6f7",
+    "summary.json": "e19702f8812120d9a1381ccfe25cc3c38427f4bf25cb595faf25a18800fed5c7"
   },
   "explicitNonSearchWarning": "cFp62 sampler invalid-root artifacts are evaluation infrastructure only. They do not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, or product difficulty.",
   "files": [
@@ -12,8 +12,8 @@
     "report.md"
   ],
   "hiddenInfoSafetyNote": "Sampler invalid-root artifacts contain only public root metadata, scalar counts, deterministic buckets, and one safe classification per invalid root. They exclude sampled cards, source maps, card names, raw moves, runtime card identifiers, raw state, command logs, event logs, final state, and hidden hand/deck identities.",
-  "invalidRootCount": 341,
-  "recommendedNextStep": "A next non-search phase should add event-history/public-transfer memory for the remaining public-zone count deficits before any determinized probe.",
+  "invalidRootCount": 340,
+  "recommendedNextStep": "After public-transfer memory, a next spec should either define explicit valid-root-only skip accounting or require deeper public-state reconstruction before any determinized probe.",
   "rootSchemaVersion": "sampler-invalid-root-v1",
   "samplerRunId": "benchmark-v1-starter-matrix-robust-v1:sampler-invalid-roots:cFp62",
   "schemaVersion": "sampler-invalid-root-artifact-v1",
@@ -21,5 +21,5 @@
   "suiteId": "benchmark-v1-starter-matrix-robust-v1",
   "summarySchemaVersion": "sampler-invalid-root-summary-v1",
   "totalRootCount": 32487,
-  "validRootCount": 32146
+  "validRootCount": 32147
 }

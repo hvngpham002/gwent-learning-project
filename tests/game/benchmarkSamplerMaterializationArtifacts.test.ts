@@ -75,6 +75,17 @@ const root = (
   publicAdjustmentCount: 1,
   uncoveredPriorDeficitCount: 0,
   publicAdjustmentReasonCounts: { side_deck_only_public: 1 },
+  publicTransferMemoryVisibleCardCount: 0,
+  publicTransferKnownHiddenHandCount: 0,
+  publicTransferKnownHiddenDeckCount: 0,
+  publicTransferKnownHiddenMainDeckAttributableCount: 0,
+  publicTransferKnownHiddenSideDeckOnlyCount: 0,
+  publicTransferKnownHiddenOffPriorCount: 0,
+  publicTransferAdjustmentCount: 0,
+  publicTransferUncoveredDeficitCount: 0,
+  publicTransferIncoherentCount: 0,
+  publicTransferReasonCounts: {},
+  priorRemainingCardCount: 30,
   availableHiddenPoolSizeBucket: "large",
   publicKnownCardCountBucket: "none",
   priorRemainingCardCountBucket: "large",
@@ -182,7 +193,7 @@ describe("benchmark sampler materialization artifacts", () => {
     const artifacts = serializeSamplerMaterializationArtifacts(profileResult([root()]));
     const unsafeArtifacts = {
       ...artifacts,
-      rootsJsonl: `${artifacts.rootsJsonl}{"moveId":"x","sourceCardId":"seat_a:abc","sourceId":"hidden","cardId":"seat_b:def","actionRef":"raw","rawMove":true,"rawLabel":"bad","deckOrder":[1],"sampledHand":["a"],"sampledDeck":["b"],"handSourceCounts":{},"deckSourceCounts":{},"publicKnownSourceCounts":{},"fixedKnownHandSourceCounts":{},"remainingSourceCounts":{},"priorSourceCounts":{},"sampledSource":"x","materializedSource":"y","card":"neutral.geralt-of-rivia"}\n`,
+      rootsJsonl: `${artifacts.rootsJsonl}{"moveId":"x","sourceCardId":"seat_a:abc","sourceId":"hidden","cardId":"seat_b:def","actionRef":"raw","rawMove":true,"rawLabel":"bad","rawState":{},"events":[],"deckOrder":[1],"sampledHand":["a"],"sampledDeck":["b"],"handSourceCounts":{},"deckSourceCounts":{},"publicKnownSourceCounts":{},"fixedKnownHandSourceCounts":{},"remainingSourceCounts":{},"priorSourceCounts":{},"publicTransferKnownHiddenSourceCounts":{},"publicTransferTrackedCardIds":["seat_b:ghi"],"sampledSource":"x","materializedSource":"y","card":"neutral.geralt-of-rivia"}\n`,
       reportMarkdown: `${artifacts.reportMarkdown}\ncardsById finalState commandLog eventLog ownHand opponentHand unsafeDebugResults decisionTrace Geralt of Rivia Gaunter O'Dimm: Darkness northern-realms.philippa-eilhart monsters.crone-brewess scoiatael.iorveth skellige.cerys`,
     };
 
@@ -192,6 +203,7 @@ describe("benchmark sampler materialization artifacts", () => {
         "finalState",
         "commandLog",
         "eventLog",
+        "events",
         "ownHand",
         "opponentHand",
         "unsafeDebugResults",
@@ -203,6 +215,7 @@ describe("benchmark sampler materialization artifacts", () => {
         "actionRef",
         "rawMove",
         "rawLabel",
+        "rawState",
         "deckOrder",
         "sampledHand",
         "sampledDeck",
@@ -212,6 +225,8 @@ describe("benchmark sampler materialization artifacts", () => {
         "fixedKnownHandSourceCounts",
         "remainingSourceCounts",
         "priorSourceCounts",
+        "publicTransferKnownHiddenSourceCounts",
+        "publicTransferTrackedCardIds",
         "sampledSource",
         "materializedSource",
         "runtime seat_a prefix",
@@ -238,8 +253,8 @@ describe("benchmark sampler materialization artifacts", () => {
       {
         suiteId: "benchmark-v1-starter-matrix-robust-v1",
         roots: 32487,
-        valid: 32146,
-        invalid: 341,
+        valid: 32147,
+        invalid: 340,
       },
     ];
 
