@@ -27,6 +27,8 @@ The latest sampler public-transfer memory phase is cFp66: Sampler
 Public-Transfer Memory.
 The latest post-cFp66 invalid-root casebook phase is cFp67: Post-cFp66
 Invalid-Root Casebook.
+The latest valid-root-only determinized probe contract phase is cFp68:
+Valid-Root-Only Determinized Probe Contract.
 The latest sampler public-zone accounting phase is cFp65: Sampler Public-Zone
 Accounting Repair Probe. The latest sampler public-zone provenance phase is
 cFp64: Sampler Public-Zone Provenance Casebook. The latest sampler public-count
@@ -78,14 +80,26 @@ All remaining invalid roots are `public_transfer_memory_not_applicable` and
 `persistent_public_zone_count_deficit`; current has 63 one-card deficits, while
 robust has 339 one-card and 1 multi-card deficit. cFp67 recommends cFp68
 proceed only with valid roots and explicit skip counters.
+cFp68 reads committed cFp61 sampler-materialization roots and cFp67 invalid-root
+casebook records, then writes deterministic contract artifacts under
+`determinized-probe-contract/cFp68/`. Current has 3,979 eligible valid roots,
+63 skipped invalid roots, and 1.559% skipped; robust has 32,147 eligible valid
+roots, 340 skipped invalid roots, and 1.047% skipped. Both suites are
+probe-ready: every cFp61 root maps to exactly one eligible or skipped record,
+every invalid root has a matching cFp67 skip record, no cFp67 records are extra,
+and duplicate root keys are 0. The eligible determinization budget is 31,832
+requested/valid samples for current and 257,176 requested/valid samples for
+robust, all at 8 samples per eligible root. All skipped roots use
+`sampler_invalid_public_zone_count_deficit`.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
 sampler-materialization infrastructure only. cFp62 is invalid-root casebook
 infrastructure only. cFp63 is sampler repair infrastructure only. cFp66 is
 sampler public-transfer memory infrastructure only. cFp67 is post-cFp66
-invalid-root casebook infrastructure only. cFp59, cFp60, cFp61,
-cFp62, cFp63, cFp64, cFp65, cFp66, and cFp67 do not change
+invalid-root casebook infrastructure only. cFp68 is valid-root-only determinized
+probe contract infrastructure only. cFp59, cFp60, cFp61,
+cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, and cFp68 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -135,7 +149,10 @@ family is not explained by duplicate public references. cFp66 public-transfer
 memory repairs one robust root but leaves current unchanged. cFp67 classifies
 the remaining 63 current and 340 robust invalid roots as valid-root-only skip
 candidates and requires explicit skip counters before any probe result is
-reported; cFp59, cFp60, cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, and cFp67
+reported. cFp68 implements that skip-accounting contract without running a
+probe: future probes can consume eligible roots while also reading skipped-root
+counts and percentages. cFp59, cFp60, cFp61, cFp62, cFp63, cFp64, cFp65,
+cFp66, cFp67, and cFp68
 are evaluation infrastructure only and do not make search available in product
 play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
@@ -253,6 +270,13 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   root is classified exactly once as `candidate_valid_root_only_skip`, with no
   deeper-reconstruction or unavailable classifications. cFp68 should proceed
   only with valid roots and explicit skip counters.
+- cFp68: evaluation-only valid-root-only determinized probe contract; reads
+  committed cFp61 sampler-materialization roots and cFp67 invalid-root casebook
+  records, then writes deterministic contract artifacts for current and robust
+  suites. Current has 3,979 eligible / 63 skipped roots; robust has 32,147
+  eligible / 340 skipped roots. Skip counters cover suite, phase, round,
+  matchup, policy, faction, deck preset, provenance label, invalid reason, and
+  skip reason. cFp68 does not run search or change policy behavior.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

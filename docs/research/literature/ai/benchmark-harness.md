@@ -147,6 +147,14 @@ Search-readiness:
   `<suiteId>/sampler-post-cfp66-invalid-root-casebook/cFp67/`. It reads the
   committed cFp61/cFp62/cFp64 artifacts, classifies every remaining invalid root
   exactly once, and recommends valid-root-only skip accounting for cFp68.
+- cFp68 adds that benchmark-only valid-root-only determinized probe contract
+  under `<suiteId>/determinized-probe-contract/cFp68/`. It reads committed
+  cFp61 sampler-materialization roots and cFp67 invalid-root casebook records,
+  emits one eligible or skipped contract record for every cFp61 root, reports
+  skipped-root counts and percentages, and defines the future probe requirement
+  to consume skipped-root counters beside every result. It does not run search,
+  evaluate actions, rank actions, change policy behavior, or wire product
+  gameplay.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -316,6 +324,13 @@ Write cFp67 post-cFp66 invalid-root decision casebook artifact sets:
 ```bash
 npm run benchmark:sampler-post-cfp66-invalid-root-casebook:v1-starter-matrix
 npm run benchmark:sampler-post-cfp66-invalid-root-casebook:v1-robust
+```
+
+Write cFp68 valid-root-only determinized probe contract artifact sets:
+
+```bash
+npm run benchmark:determinized-probe-contract:v1-starter-matrix
+npm run benchmark:determinized-probe-contract:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the

@@ -1,0 +1,32 @@
+{
+  "artifactHashes": {
+    "eligible-roots.jsonl": "43c0dffc9742df50c18418eaa93e83effd429b37b53b36d56b92adb76e2d4d87",
+    "report.md": "7baabcfe6b440e0a7f14a21eb72666e95abb2bc65abeb4be9b5140d57a3ddd0b",
+    "skipped-roots.jsonl": "b2b8dda27d7f61437aee50f4d0d3bae16f4b2c6595352e638c041edfbd2e2406",
+    "summary.json": "3b52cb515229480cb22725492c925f1e2ccc8099bd5c0b10de851a802201a029"
+  },
+  "cFp69Recommendation": "cFp69 should implement the first benchmark-only determinized-pimc-probe-v0 sanity probe over cFp68 eligible roots only, with shallow/no-op or one-ply public-action scaffolding before any strength claims. It must consume cFp68 skip artifacts and report skipped-root counts and percentages beside every probe result.",
+  "contractRunId": "benchmark-v1-starter-matrix-v1:determinized-probe-contract:cFp68",
+  "contractStatus": "probe_ready",
+  "eligibleRootCount": 3979,
+  "explicitNonSearchWarning": "cFp68 is benchmark/evaluation contract infrastructure only. It does not run PIMC, ISMCTS, MCTS, rollouts, action evaluation, action ranking, search move selection, product search AI, sampler behavior changes, engine rule changes, legal move changes, or product difficulty changes.",
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "eligible-roots.jsonl",
+    "skipped-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "omitted from committed artifacts so cFp68 hashes remain deterministic",
+  "hiddenInfoSafetyNote": "cFp68 determinized-probe contract artifacts contain only public benchmark root metadata, scalar counts, enum-like eligibility/skip classifications, source artifact hashes, and aggregate counters. They exclude private card identities, sampled private payloads, engine logs, terminal payloads, action references, and debug payloads.",
+  "invalidRootCountFromCfp67": 63,
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68",
+  "rootSchemaVersion": "determinized-probe-contract-root-v1",
+  "schemaVersion": "determinized-probe-contract-artifact-v1",
+  "skippedRootCount": 63,
+  "skippedRootPercentage": 1.559,
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "determinized-probe-contract-summary-v1",
+  "totalCfp61RootCount": 4042
+}

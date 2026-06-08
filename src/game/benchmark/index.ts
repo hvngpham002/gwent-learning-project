@@ -25,3 +25,5 @@ export * from './samplerPublicZoneProvenance';
 export * from './samplerPublicZoneProvenanceArtifacts';
 export * from './samplerPostCfp66InvalidRootCasebook';
 export * from './samplerPostCfp66InvalidRootCasebookArtifacts';
+export * from './determinizedProbeContract';
+export * from './determinizedProbeContractArtifacts';
