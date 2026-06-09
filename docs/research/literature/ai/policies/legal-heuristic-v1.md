@@ -31,6 +31,8 @@ The latest valid-root-only determinized probe contract phase is cFp68:
 Valid-Root-Only Determinized Probe Contract.
 The latest determinized-pimc-probe-v0 scaffold phase is cFp69:
 Determinized PIMC Probe v0 Sanity.
+The latest sampled-world action availability phase is cFp70:
+Sampled-World Action Availability Probe v0.
 The latest sampler public-zone accounting phase is cFp65: Sampler Public-Zone
 Accounting Repair Probe. The latest sampler public-zone provenance phase is
 cFp64: Sampler Public-Zone Provenance Casebook. The latest sampler public-count
@@ -103,6 +105,16 @@ with 0 invalid samples. The public-action scaffold records legal move, public
 action, collision, and largest-bucket scalar stats only. It does not run
 rollouts, compute action values, rank actions, choose moves, make strength
 claims, or change product AI behavior.
+cFp70 consumes the cFp68 eligible/skipped contract artifacts and cFp69
+public-action scaffold artifacts, regenerates cFp61 hidden multiset samples in
+memory, rebuilds sampled legal-action surfaces, and writes deterministic
+`determinized-pimc-action-availability-v0/cFp70/` artifacts. Current has 3,979
+availability roots, 63 skipped roots, and 1.559% skipped; robust has 32,147
+availability roots, 340 skipped roots, and 1.047% skipped. Sample budgets match
+cFp68/cFp69: 31,832 requested/generated/checked samples for current and 257,176
+for robust, with 0 failed samples and 0 availability disagreements in both
+suites. It does not run rollouts, compute action values, rank actions, choose
+moves, make strength claims, or change product AI behavior.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
@@ -111,8 +123,9 @@ infrastructure only. cFp63 is sampler repair infrastructure only. cFp66 is
 sampler public-transfer memory infrastructure only. cFp67 is post-cFp66
 invalid-root casebook infrastructure only. cFp68 is valid-root-only determinized
 probe contract infrastructure only. cFp69 is public-action probe scaffold
-infrastructure only. cFp59, cFp60, cFp61,
-cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, and cFp69 do not change
+infrastructure only. cFp70 is sampled-world action availability infrastructure
+only. cFp59, cFp60, cFp61,
+cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, and cFp70 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -167,8 +180,11 @@ probe: future probes can consume eligible roots while also reading skipped-root
 counts and percentages. cFp69 implements the first benchmark-only
 determinized-pimc-probe-v0 scaffold over those eligible roots, carrying skipped
 roots into cFp69 skip accounting and emitting public-action scalar counts only.
+cFp70 implements a benchmark-only sampled-world action availability probe over
+the same roots, carrying skipped roots forward and reporting zero availability
+disagreements in both current and robust suites.
 cFp59, cFp60, cFp61, cFp62, cFp63, cFp64, cFp65,
-cFp66, cFp67, cFp68, and cFp69
+cFp66, cFp67, cFp68, cFp69, and cFp70
 are evaluation infrastructure only and do not make search available in product
 play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
@@ -300,6 +316,14 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   probe / 340 skipped roots. cFp69 records only zero/one-ply public-action
   scaffold counts and does not run rollouts, rank actions, choose moves, make
   strength claims, or change policy behavior.
+- cFp70: evaluation-only sampled-world action availability probe; consumes
+  cFp68 eligible/skipped artifacts and cFp69 public-action scaffold artifacts,
+  regenerates cFp61 hidden multiset samples in memory, and emits scalar/public
+  bucket availability artifacts. Current has 3,979 availability / 63 skipped
+  roots; robust has 32,147 availability / 340 skipped roots. Both suites have
+  0 failed samples and 0 availability disagreements. cFp70 does not run
+  rollouts, rank actions, choose moves, make strength claims, or change policy
+  behavior.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

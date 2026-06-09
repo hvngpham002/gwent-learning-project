@@ -43,6 +43,8 @@
     "benchmark:determinized-probe-contract:v1-robust": "tsx scripts/run-benchmark-determinized-probe-contract-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
     "benchmark:determinized-pimc-probe-v0:v1-starter-matrix": "tsx scripts/run-benchmark-determinized-pimc-probe-v0-report.ts --suite benchmark-v1-starter-matrix-v1",
     "benchmark:determinized-pimc-probe-v0:v1-robust": "tsx scripts/run-benchmark-determinized-pimc-probe-v0-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
+    "benchmark:determinized-action-availability:v1-starter-matrix": "tsx scripts/run-benchmark-determinized-pimc-action-availability-v0-report.ts --suite benchmark-v1-starter-matrix-v1",
+    "benchmark:determinized-action-availability:v1-robust": "tsx scripts/run-benchmark-determinized-pimc-action-availability-v0-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
     "benchmark:long": "node scripts/run-long-benchmark.mjs",
     "check:forbidden-imports": "node scripts/check-forbidden-imports.mjs",
     "check:project-state": "node scripts/check-project-state-update.mjs",

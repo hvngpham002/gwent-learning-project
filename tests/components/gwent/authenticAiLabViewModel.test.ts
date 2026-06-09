@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp69",
-        latestSpecPath: "docs/spec/2026-06-08-cFp69-specs.md",
-        latestReportPath: "audit/reports/2026-06-08-cFp69-report.md",
+        latestPhase: "cFp70",
+        latestSpecPath: "docs/spec/2026-06-09-cFp70-specs.md",
+        latestReportPath: "audit/reports/2026-06-09-cFp70-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp69",
-        latestSpecPath: "docs/spec/2026-06-08-cFp69-specs.md",
-        latestReportPath: "audit/reports/2026-06-08-cFp69-report.md",
+        latestPhase: "cFp70",
+        latestSpecPath: "docs/spec/2026-06-09-cFp70-specs.md",
+        latestReportPath: "audit/reports/2026-06-09-cFp70-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -94,12 +94,12 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp69");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-08-cFp69-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-08-cFp69-report.md");
-    expect(v1?.description).toContain("cFp69 change no policy behavior");
+    expect(v1?.latestPhase).toBe("cFp70");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-09-cFp70-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-09-cFp70-report.md");
+    expect(v1?.description).toContain("cFp70 change no policy behavior");
     expect(v1?.description).toContain(
-      "public-action probe scaffolding, not search gameplay",
+      "action-availability infrastructure, not search gameplay",
     );
     expect(v1?.capabilities).toEqual(
       expect.arrayContaining([
@@ -144,6 +144,7 @@ describe("authentic AI Lab view model", () => {
         "post-cFp66 invalid-root decision casebook and valid-root-only skip-counter requirements, not search gameplay (cFp67)",
         "valid-root-only determinized probe contract with explicit skip counters, not search gameplay (cFp68)",
         "determinized-pimc-probe-v0 public-action scaffold with cFp68 skip accounting, not search gameplay (cFp69)",
+        "sampled-world action availability probe with cFp68/cFp69 skip accounting, not search gameplay (cFp70)",
       ])
     );
   });

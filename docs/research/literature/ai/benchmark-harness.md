@@ -162,6 +162,14 @@ Search-readiness:
   skip accounting, and records only zero/one-ply public-action scalar counts.
   It does not run rollouts, compute action values, rank actions, choose moves,
   make strength claims, change policy behavior, or wire product gameplay.
+- cFp70 adds the first benchmark-only sampled-world action-availability probe
+  under `<suiteId>/determinized-pimc-action-availability-v0/cFp70/`. It
+  consumes cFp68 eligible/skipped artifacts and cFp69 public-action scaffold
+  artifacts, regenerates cFp61 hidden multiset samples in memory, checks
+  sampled legal-action availability, writes only scalar/public-bucket
+  availability artifacts, and carries skipped-root accounting forward. It does
+  not run rollouts, compute action values, rank actions, choose moves, make
+  strength claims, change policy behavior, or wire product gameplay.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -345,6 +353,13 @@ Write cFp69 determinized-pimc-probe-v0 sanity scaffold artifact sets:
 ```bash
 npm run benchmark:determinized-pimc-probe-v0:v1-starter-matrix
 npm run benchmark:determinized-pimc-probe-v0:v1-robust
+```
+
+Write cFp70 sampled-world action-availability artifact sets:
+
+```bash
+npm run benchmark:determinized-action-availability:v1-starter-matrix
+npm run benchmark:determinized-action-availability:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the
@@ -715,7 +730,14 @@ artifacts and writes `determinized-pimc-probe-v0/cFp69/` scaffold artifacts:
 current has 3,979 probe / 63 skipped roots, robust has 32,147 probe / 340
 skipped roots, source consistency is probe-ready, sample budgets match cFp68,
 and only public-action scalar counts are emitted. cFp69 is not search gameplay
-and makes no strength claim.
+and makes no strength claim. cFp70 consumes cFp68 and cFp69 artifacts and writes
+`determinized-pimc-action-availability-v0/cFp70/` availability artifacts:
+current has 3,979 availability / 63 skipped roots, robust has 32,147
+availability / 340 skipped roots, source consistency is probe-ready, sample
+budgets match cFp68/cFp69, 31,832 current and 257,176 robust samples are
+generated and checked, failed samples are 0, and availability disagreement is
+0 in both suites. cFp70 is still not search gameplay and makes no strength
+claim.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

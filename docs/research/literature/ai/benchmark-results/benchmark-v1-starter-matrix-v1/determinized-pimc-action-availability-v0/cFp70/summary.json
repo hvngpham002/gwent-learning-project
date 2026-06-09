@@ -1,0 +1,489 @@
+{
+  "actionBucketAggregates": {
+    "aggregateExtraByPublicActionKind": {
+      "choose_mulligan": 0,
+      "choose_prompt_option": 0,
+      "pass": 0,
+      "play_card": 0,
+      "resolve_round_end": 0,
+      "use_leader": 0
+    },
+    "aggregateExtraByTargetKind": {
+      "board_row": 0,
+      "card": 0,
+      "card_instance_set": 0,
+      "deck_card_instance": 0,
+      "deck_card_source": 0,
+      "none": 0,
+      "row_horn": 0,
+      "weather": 0
+    },
+    "aggregateExtraByTargetSide": {
+      "none": 0,
+      "opponent": 0,
+      "own": 0,
+      "public": 0
+    },
+    "aggregateMissingByPublicActionKind": {
+      "choose_mulligan": 0,
+      "choose_prompt_option": 0,
+      "pass": 0,
+      "play_card": 0,
+      "resolve_round_end": 0,
+      "use_leader": 0
+    },
+    "aggregateMissingByTargetKind": {
+      "board_row": 0,
+      "card": 0,
+      "card_instance_set": 0,
+      "deck_card_instance": 0,
+      "deck_card_source": 0,
+      "none": 0,
+      "row_horn": 0,
+      "weather": 0
+    },
+    "aggregateMissingByTargetSide": {
+      "none": 0,
+      "opponent": 0,
+      "own": 0,
+      "public": 0
+    },
+    "disagreementStats": {
+      "average": 0,
+      "count": 3979,
+      "max": 0,
+      "min": 0,
+      "p50": 0,
+      "p90": 0,
+      "p95": 0
+    },
+    "extraSampledActionBucketStats": {
+      "average": 0,
+      "count": 3979,
+      "max": 0,
+      "min": 0,
+      "p50": 0,
+      "p90": 0,
+      "p95": 0
+    },
+    "missingRootActionBucketStats": {
+      "average": 0,
+      "count": 3979,
+      "max": 0,
+      "min": 0,
+      "p50": 0,
+      "p90": 0,
+      "p95": 0
+    },
+    "rootPublicActionCountStats": {
+      "average": 4.73,
+      "count": 3979,
+      "max": 13,
+      "min": 1,
+      "p50": 5,
+      "p90": 9,
+      "p95": 10
+    },
+    "sampledPublicActionCountStats": {
+      "average": 4.73,
+      "count": 31832,
+      "max": 13,
+      "min": 1,
+      "p50": 5,
+      "p90": 9,
+      "p95": 10
+    }
+  },
+  "availabilityRootCount": 3979,
+  "availabilityStatus": {
+    "allActionsAvailableRootCount": 3979,
+    "availabilityRiskBucketCounts": {
+      "deferred": 0,
+      "failed": 0,
+      "high": 0,
+      "low": 0,
+      "medium": 0,
+      "none": 3979
+    },
+    "disagreementBucketCounts": {
+      "four_plus": 0,
+      "none": 3979,
+      "one": 0,
+      "two_to_three": 0
+    },
+    "probeStatusCounts": {
+      "cfp68_contract_mismatch": 0,
+      "cfp69_contract_mismatch": 0,
+      "completed": 3979,
+      "eligible_root_not_observed": 0,
+      "exact_state_rebuild_deferred": 0,
+      "public_action_abstraction_failed": 0,
+      "sample_materialization_failed": 0,
+      "sampled_legal_move_generation_failed": 0,
+      "sampled_world_rebuild_failed": 0
+    },
+    "rootsWithAnyDisagreement": 0,
+    "rootsWithExtraSampledActions": 0,
+    "rootsWithMissingRootActions": 0,
+    "sampleAvailabilityStatusCounts": {
+      "all_root_actions_available": 31832,
+      "availability_disagreement": 0,
+      "public_action_abstraction_failed": 0,
+      "sampled_legal_move_generation_failed": 0,
+      "sampled_world_rebuild_failed": 0
+    }
+  },
+  "cFp71Recommendation": "cFp71 should choose between a benchmark-only one-ply public action outcome skeleton or a repair casebook based on cFp70 disagreement and rebuild-failure counts. It should still avoid rollout, value, ranking, move recommendation, and product AI wiring.",
+  "eligibleRootCount": 3979,
+  "explicitNonClaims": [
+    "No rollout was run.",
+    "No action value was computed.",
+    "No action ranking was produced.",
+    "No move was selected by search.",
+    "No strength claim is made.",
+    "No product AI behavior changed.",
+    "Skipped roots were excluded from probe work and reported separately."
+  ],
+  "hiddenInfoSafetyNote": "cFp70 artifacts contain only public benchmark root metadata, scalar sample availability counts, public action bucket aggregates, skipped-root accounting, and source artifact hashes. They exclude private card identities, raw move payloads, private sampled payloads, engine logs, debug traces, action ranking, value estimates, rollout results, and product AI wiring.",
+  "matchCount": 120,
+  "probeMode": "one_ply_sampled_world_action_availability",
+  "probeReadinessStatus": "probe_ready",
+  "probeRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-action-availability-v0:cFp70",
+  "probeVariant": "determinized-pimc-action-availability-v0",
+  "sampleBudget": {
+    "availabilityRootCount": 3979,
+    "requestedSamplesPerRootDistribution": {
+      "8": 3979
+    },
+    "totalCheckedSampleCount": 31832,
+    "totalFailedSampleCount": 0,
+    "totalGeneratedSampleCount": 31832,
+    "totalRequestedSampleCount": 31832
+  },
+  "schemaVersion": "determinized-pimc-action-availability-v0-summary-v1",
+  "skipCounterPercentages": {
+    "byDeckPreset": {
+      "official-monsters-starter": {
+        "count": 4,
+        "percentageOfSkippedRoots": 6.349
+      },
+      "official-nilfgaard-starter": {
+        "count": 11,
+        "percentageOfSkippedRoots": 17.46
+      },
+      "official-northern-realms-starter": {
+        "count": 39,
+        "percentageOfSkippedRoots": 61.905
+      },
+      "official-scoiatael-starter": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "official-skellige-starter": {
+        "count": 3,
+        "percentageOfSkippedRoots": 4.762
+      }
+    },
+    "byFaction": {
+      "monsters": {
+        "count": 4,
+        "percentageOfSkippedRoots": 6.349
+      },
+      "nilfgaard": {
+        "count": 11,
+        "percentageOfSkippedRoots": 17.46
+      },
+      "northern_realms": {
+        "count": 39,
+        "percentageOfSkippedRoots": 61.905
+      },
+      "scoiatael": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "skellige": {
+        "count": 3,
+        "percentageOfSkippedRoots": 4.762
+      }
+    },
+    "byInvalidReason": {
+      "insufficient_prior_remaining": {
+        "count": 63,
+        "percentageOfSkippedRoots": 100
+      }
+    },
+    "byMatchup": {
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": {
+        "count": 2,
+        "percentageOfSkippedRoots": 3.175
+      },
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": {
+        "count": 1,
+        "percentageOfSkippedRoots": 1.587
+      },
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": {
+        "count": 1,
+        "percentageOfSkippedRoots": 1.587
+      },
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": {
+        "count": 7,
+        "percentageOfSkippedRoots": 11.111
+      },
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": {
+        "count": 4,
+        "percentageOfSkippedRoots": 6.349
+      },
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": {
+        "count": 24,
+        "percentageOfSkippedRoots": 38.095
+      },
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": {
+        "count": 3,
+        "percentageOfSkippedRoots": 4.762
+      },
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": {
+        "count": 2,
+        "percentageOfSkippedRoots": 3.175
+      },
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": {
+        "count": 1,
+        "percentageOfSkippedRoots": 1.587
+      },
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": {
+        "count": 3,
+        "percentageOfSkippedRoots": 4.762
+      },
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": {
+        "count": 2,
+        "percentageOfSkippedRoots": 3.175
+      },
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": {
+        "count": 1,
+        "percentageOfSkippedRoots": 1.587
+      }
+    },
+    "byPhase": {
+      "playing": {
+        "count": 57,
+        "percentageOfSkippedRoots": 90.476
+      },
+      "round_end": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      }
+    },
+    "byPolicy": {
+      "headless-round-end-auto-resolver": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "legal-heuristic-v0": {
+        "count": 47,
+        "percentageOfSkippedRoots": 74.603
+      },
+      "legal-heuristic-v1": {
+        "count": 10,
+        "percentageOfSkippedRoots": 15.873
+      }
+    },
+    "byProvenanceLabel": {
+      "mixed_public_zones": {
+        "count": 42,
+        "percentageOfSkippedRoots": 66.667
+      },
+      "round_end_public_zone": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "single_zone_board": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "single_zone_discard": {
+        "count": 9,
+        "percentageOfSkippedRoots": 14.286
+      }
+    },
+    "byRound": {
+      "1": {
+        "count": 28,
+        "percentageOfSkippedRoots": 44.444
+      },
+      "2": {
+        "count": 28,
+        "percentageOfSkippedRoots": 44.444
+      },
+      "3": {
+        "count": 7,
+        "percentageOfSkippedRoots": 11.111
+      }
+    },
+    "bySkipReason": {
+      "sampler_invalid_public_zone_count_deficit": {
+        "count": 63,
+        "percentageOfSkippedRoots": 100
+      }
+    },
+    "bySuite": {
+      "benchmark-v1-starter-matrix-v1": {
+        "count": 63,
+        "percentageOfSkippedRoots": 100
+      }
+    }
+  },
+  "skipCounters": {
+    "byDeckPreset": {
+      "official-monsters-starter": 4,
+      "official-nilfgaard-starter": 11,
+      "official-northern-realms-starter": 39,
+      "official-scoiatael-starter": 6,
+      "official-skellige-starter": 3
+    },
+    "byFaction": {
+      "monsters": 4,
+      "nilfgaard": 11,
+      "northern_realms": 39,
+      "scoiatael": 6,
+      "skellige": 3
+    },
+    "byInvalidReason": {
+      "insufficient_prior_remaining": 63
+    },
+    "byMatchup": {
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 2,
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 1,
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 1,
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 6,
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 7,
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 4,
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 6,
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 24,
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 3,
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 2,
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 1,
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 3,
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 2,
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 1
+    },
+    "byPhase": {
+      "playing": 57,
+      "round_end": 6
+    },
+    "byPolicy": {
+      "headless-round-end-auto-resolver": 6,
+      "legal-heuristic-v0": 47,
+      "legal-heuristic-v1": 10
+    },
+    "byProvenanceLabel": {
+      "mixed_public_zones": 42,
+      "round_end_public_zone": 6,
+      "single_zone_board": 6,
+      "single_zone_discard": 9
+    },
+    "byRound": {
+      "1": 28,
+      "2": 28,
+      "3": 7
+    },
+    "bySkipReason": {
+      "sampler_invalid_public_zone_count_deficit": 63
+    },
+    "bySuite": {
+      "benchmark-v1-starter-matrix-v1": 63
+    }
+  },
+  "skippedRootCount": 63,
+  "skippedRootPercentage": 1.559,
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "sourceCfp68ArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/manifest.json",
+      "sha256": "4555bb2d7a4357e0eff3db189c36a9837eb3ae569a55c0ad6cd254457272d558"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/summary.json",
+      "sha256": "3b52cb515229480cb22725492c925f1e2ccc8099bd5c0b10de851a802201a029"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/eligible-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/eligible-roots.jsonl",
+      "sha256": "43c0dffc9742df50c18418eaa93e83effd429b37b53b36d56b92adb76e2d4d87"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/skipped-roots.jsonl",
+      "sha256": "b2b8dda27d7f61437aee50f4d0d3bae16f4b2c6595352e638c041edfbd2e2406"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/report.md",
+      "sha256": "7baabcfe6b440e0a7f14a21eb72666e95abb2bc65abeb4be9b5140d57a3ddd0b"
+    }
+  ],
+  "sourceCfp68ContractRunId": "benchmark-v1-starter-matrix-v1:determinized-probe-contract:cFp68",
+  "sourceCfp69ArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/manifest.json",
+      "sha256": "46234a57bd57b1d0da7b2af6d2437fc5cd75d4b8096b058d1a72d76e024a8d14"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/summary.json",
+      "sha256": "d5be37fa882ae443029653c1b80854af74fb18a54aeeb026dcf0a40195ffbfc6"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/probe-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/probe-roots.jsonl",
+      "sha256": "fd1bdf4048231ffca218fa934aef7e4ed6452f258bb0f4b125cd994491277a9f"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/skipped-roots.jsonl",
+      "sha256": "63de4c0f60b8aeb56ea6a9dbc59643b9dabf931862683ba53ff08396ba29535c"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/report.md",
+      "sha256": "3558f3c7bc46bff48505ebb5759d46721ec7c0f00183b12b7673676b82c67ed6"
+    }
+  ],
+  "sourceCfp69ProbeRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-probe-v0:cFp69",
+  "sourceConsistency": {
+    "benchmarkObservedRootsRead": 4042,
+    "cfp68Cfp69EligibleRootCountDelta": 0,
+    "cfp68Cfp69PublicActionCountMismatchRoots": 0,
+    "cfp68Cfp69SampleCountMismatchRoots": 0,
+    "cfp68Cfp69SkippedRootCountDelta": 0,
+    "cFp68ContractNotProbeReady": 0,
+    "cFp68ContractStatus": "probe_ready",
+    "cFp68EligibleRootsRead": 3979,
+    "cfp68FingerprintMismatchObservedRoots": 0,
+    "cFp68SkippedRootsRead": 63,
+    "cFp68TotalRootCount": 4042,
+    "cfp69ProbeRootsMissingCfp68EligibleRoot": 0,
+    "cFp69ProbeRootsRead": 3979,
+    "cfp69SkippedRootsMissingCfp68SkippedRoot": 0,
+    "cFp69SkippedRootsRead": 63,
+    "duplicateCfp68EligibleRootKeys": 0,
+    "duplicateCfp69ProbeRootKeys": 0,
+    "duplicateObservedRootKeys": 0,
+    "duplicateSkippedRootKeys": 0,
+    "eligibleRootsNotObserved": 0,
+    "observedRootsNotInCfp68Cfp69Contract": 0,
+    "skippedRootsIncorrectlyProbed": 0,
+    "status": "probe_ready"
+  },
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "totalCfp68RootCount": 4042
+}

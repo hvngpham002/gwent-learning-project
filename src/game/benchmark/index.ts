@@ -29,3 +29,5 @@ export * from './determinizedProbeContract';
 export * from './determinizedProbeContractArtifacts';
 export * from './determinizedPimcProbeV0';
 export * from './determinizedPimcProbeV0Artifacts';
+export * from './determinizedPimcActionAvailabilityV0';
+export * from './determinizedPimcActionAvailabilityV0Artifacts';

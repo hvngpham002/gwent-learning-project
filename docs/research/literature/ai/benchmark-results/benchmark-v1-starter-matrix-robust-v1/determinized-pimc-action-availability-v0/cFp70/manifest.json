@@ -1,0 +1,43 @@
+{
+  "artifactHashes": {
+    "availability-roots.jsonl": "df1d076896cc951cb5796cff654cdd17502415be459e95e5f511ff4a3c1cbd17",
+    "report.md": "1e3dfe908bc03323c6037b2f017a26af2a8da503f4c61095841ac88d363ea309",
+    "skipped-roots.jsonl": "7561662c2837616d8849757c6ebef64c96a4e75edb300c946b18d04b814d494a",
+    "summary.json": "4bda20dc523efe895ece1bab4242d985d8f1759878bd0c7a0cb6748f4c7beabc"
+  },
+  "availabilityRootCount": 32147,
+  "cFp71Recommendation": "cFp71 should choose between a benchmark-only one-ply public action outcome skeleton or a repair casebook based on cFp70 disagreement and rebuild-failure counts. It should still avoid rollout, value, ranking, move recommendation, and product AI wiring.",
+  "eligibleRootCount": 32147,
+  "explicitNonClaims": [
+    "No rollout was run.",
+    "No action value was computed.",
+    "No action ranking was produced.",
+    "No move was selected by search.",
+    "No strength claim is made.",
+    "No product AI behavior changed.",
+    "Skipped roots were excluded from probe work and reported separately."
+  ],
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "availability-roots.jsonl",
+    "skipped-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "omitted from committed artifacts so cFp70 hashes remain deterministic",
+  "hiddenInfoSafetyNote": "cFp70 artifacts contain only public benchmark root metadata, scalar sample availability counts, public action bucket aggregates, skipped-root accounting, and source artifact hashes. They exclude private card identities, raw move payloads, private sampled payloads, engine logs, debug traces, action ranking, value estimates, rollout results, and product AI wiring.",
+  "probeReadinessStatus": "probe_ready",
+  "probeRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-action-availability-v0:cFp70",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70",
+  "rootSchemaVersion": "determinized-pimc-action-availability-v0-root-v1",
+  "schemaVersion": "determinized-pimc-action-availability-v0-artifact-v1",
+  "skippedRootCount": 340,
+  "skippedRootPercentage": 1.047,
+  "skippedRootSchemaVersion": "determinized-pimc-action-availability-v0-skipped-root-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "sourceCfp68ContractRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-probe-contract:cFp68",
+  "sourceCfp69ProbeRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-probe-v0:cFp69",
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "summarySchemaVersion": "determinized-pimc-action-availability-v0-summary-v1",
+  "totalCfp68RootCount": 32487
+}
