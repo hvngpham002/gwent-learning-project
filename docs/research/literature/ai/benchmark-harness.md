@@ -155,6 +155,13 @@ Search-readiness:
   to consume skipped-root counters beside every result. It does not run search,
   evaluate actions, rank actions, change policy behavior, or wire product
   gameplay.
+- cFp69 adds the first benchmark-only `determinized-pimc-probe-v0` sanity
+  scaffold under `<suiteId>/determinized-pimc-probe-v0/cFp69/`. It consumes
+  cFp68 eligible/skipped artifacts, re-observes matching benchmark roots,
+  emits one probe record per eligible root, carries skipped roots into cFp69
+  skip accounting, and records only zero/one-ply public-action scalar counts.
+  It does not run rollouts, compute action values, rank actions, choose moves,
+  make strength claims, change policy behavior, or wire product gameplay.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -331,6 +338,13 @@ Write cFp68 valid-root-only determinized probe contract artifact sets:
 ```bash
 npm run benchmark:determinized-probe-contract:v1-starter-matrix
 npm run benchmark:determinized-probe-contract:v1-robust
+```
+
+Write cFp69 determinized-pimc-probe-v0 sanity scaffold artifact sets:
+
+```bash
+npm run benchmark:determinized-pimc-probe-v0:v1-starter-matrix
+npm run benchmark:determinized-pimc-probe-v0:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the
@@ -692,6 +706,16 @@ unavailable classifications are 0. Current has 63 one-card deficits. Robust has
 valid roots and explicit skip counters by suite, phase, round, matchup, policy,
 faction, deck preset, provenance label, invalid reason, and skipped-root
 percentage.
+
+cFp68 implements that valid-root-only contract under
+`<suiteId>/determinized-probe-contract/cFp68/`: every cFp61 root maps to one
+eligible or skipped record, current has 3,979 eligible / 63 skipped roots, and
+robust has 32,147 eligible / 340 skipped roots. cFp69 consumes those cFp68
+artifacts and writes `determinized-pimc-probe-v0/cFp69/` scaffold artifacts:
+current has 3,979 probe / 63 skipped roots, robust has 32,147 probe / 340
+skipped roots, source consistency is probe-ready, sample budgets match cFp68,
+and only public-action scalar counts are emitted. cFp69 is not search gameplay
+and makes no strength claim.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

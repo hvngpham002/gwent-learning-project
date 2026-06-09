@@ -27,3 +27,5 @@ export * from './samplerPostCfp66InvalidRootCasebook';
 export * from './samplerPostCfp66InvalidRootCasebookArtifacts';
 export * from './determinizedProbeContract';
 export * from './determinizedProbeContractArtifacts';
+export * from './determinizedPimcProbeV0';
+export * from './determinizedPimcProbeV0Artifacts';

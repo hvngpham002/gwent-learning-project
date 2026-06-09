@@ -29,6 +29,8 @@ The latest post-cFp66 invalid-root casebook phase is cFp67: Post-cFp66
 Invalid-Root Casebook.
 The latest valid-root-only determinized probe contract phase is cFp68:
 Valid-Root-Only Determinized Probe Contract.
+The latest determinized-pimc-probe-v0 scaffold phase is cFp69:
+Determinized PIMC Probe v0 Sanity.
 The latest sampler public-zone accounting phase is cFp65: Sampler Public-Zone
 Accounting Repair Probe. The latest sampler public-zone provenance phase is
 cFp64: Sampler Public-Zone Provenance Casebook. The latest sampler public-count
@@ -91,6 +93,16 @@ and duplicate root keys are 0. The eligible determinization budget is 31,832
 requested/valid samples for current and 257,176 requested/valid samples for
 robust, all at 8 samples per eligible root. All skipped roots use
 `sampler_invalid_public_zone_count_deficit`.
+cFp69 consumes the cFp68 eligible and skipped contract artifacts, re-observes
+the matching benchmark roots, filters probe work to eligible roots only, and
+writes deterministic `determinized-pimc-probe-v0/cFp69/` artifacts. Current has
+3,979 probe roots, 63 skipped roots, and 1.559% skipped; robust has 32,147
+probe roots, 340 skipped roots, and 1.047% skipped. Sample budgets match cFp68:
+31,832 requested/consumed/valid samples for current and 257,176 for robust,
+with 0 invalid samples. The public-action scaffold records legal move, public
+action, collision, and largest-bucket scalar stats only. It does not run
+rollouts, compute action values, rank actions, choose moves, make strength
+claims, or change product AI behavior.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
@@ -98,8 +110,9 @@ sampler-materialization infrastructure only. cFp62 is invalid-root casebook
 infrastructure only. cFp63 is sampler repair infrastructure only. cFp66 is
 sampler public-transfer memory infrastructure only. cFp67 is post-cFp66
 invalid-root casebook infrastructure only. cFp68 is valid-root-only determinized
-probe contract infrastructure only. cFp59, cFp60, cFp61,
-cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, and cFp68 do not change
+probe contract infrastructure only. cFp69 is public-action probe scaffold
+infrastructure only. cFp59, cFp60, cFp61,
+cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, and cFp69 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -151,8 +164,11 @@ the remaining 63 current and 340 robust invalid roots as valid-root-only skip
 candidates and requires explicit skip counters before any probe result is
 reported. cFp68 implements that skip-accounting contract without running a
 probe: future probes can consume eligible roots while also reading skipped-root
-counts and percentages. cFp59, cFp60, cFp61, cFp62, cFp63, cFp64, cFp65,
-cFp66, cFp67, and cFp68
+counts and percentages. cFp69 implements the first benchmark-only
+determinized-pimc-probe-v0 scaffold over those eligible roots, carrying skipped
+roots into cFp69 skip accounting and emitting public-action scalar counts only.
+cFp59, cFp60, cFp61, cFp62, cFp63, cFp64, cFp65,
+cFp66, cFp67, cFp68, and cFp69
 are evaluation infrastructure only and do not make search available in product
 play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
@@ -277,6 +293,13 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   eligible / 340 skipped roots. Skip counters cover suite, phase, round,
   matchup, policy, faction, deck preset, provenance label, invalid reason, and
   skip reason. cFp68 does not run search or change policy behavior.
+- cFp69: evaluation-only determinized-pimc-probe-v0 sanity scaffold; consumes
+  cFp68 eligible/skipped artifacts, re-observes benchmark roots, emits one
+  probe record per eligible root, and carries skipped roots into cFp69 skip
+  accounting. Current has 3,979 probe / 63 skipped roots; robust has 32,147
+  probe / 340 skipped roots. cFp69 records only zero/one-ply public-action
+  scaffold counts and does not run rollouts, rank actions, choose moves, make
+  strength claims, or change policy behavior.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

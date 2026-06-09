@@ -1,0 +1,42 @@
+{
+  "artifactHashes": {
+    "probe-roots.jsonl": "fd1bdf4048231ffca218fa934aef7e4ed6452f258bb0f4b125cd994491277a9f",
+    "report.md": "3558f3c7bc46bff48505ebb5759d46721ec7c0f00183b12b7673676b82c67ed6",
+    "skipped-roots.jsonl": "63de4c0f60b8aeb56ea6a9dbc59643b9dabf931862683ba53ff08396ba29535c",
+    "summary.json": "d5be37fa882ae443029653c1b80854af74fb18a54aeeb026dcf0a40195ffbfc6"
+  },
+  "cFp70Recommendation": "cFp70 should add the first one-ply sampled-world action-availability probe over the same cFp68 eligible roots, still without rollout/value/strength claims. It should measure whether public action buckets remain available across sampled worlds and report action-availability disagreement/risk, with cFp68/cFp69 skip accounting attached.",
+  "eligibleRootCount": 3979,
+  "explicitNonClaims": [
+    "No rollout was run.",
+    "No action value was computed.",
+    "No action ranking was produced.",
+    "No move was selected by search.",
+    "No strength claim is made.",
+    "No product AI behavior changed.",
+    "Skipped roots were excluded from probe work and reported separately."
+  ],
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "probe-roots.jsonl",
+    "skipped-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "omitted from committed artifacts so cFp69 hashes remain deterministic",
+  "hiddenInfoSafetyNote": "cFp69 determinized-pimc-probe-v0 artifacts contain only public benchmark root metadata, scalar sampler budget counts inherited from cFp68, public legal-action bucket counts, skipped-root accounting, source artifact hashes, and aggregate counters. They exclude private card identities, raw move payloads, sampled hidden worlds, engine logs, debug traces, action ranking, value estimates, rollout results, and product AI wiring.",
+  "probeReadinessStatus": "probe_ready",
+  "probeRootCount": 3979,
+  "probeRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-probe-v0:cFp69",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69",
+  "rootSchemaVersion": "determinized-pimc-probe-v0-root-v1",
+  "schemaVersion": "determinized-pimc-probe-v0-artifact-v1",
+  "skippedRootCount": 63,
+  "skippedRootPercentage": 1.559,
+  "skippedRootSchemaVersion": "determinized-pimc-probe-v0-skipped-root-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "sourceCfp68ContractRunId": "benchmark-v1-starter-matrix-v1:determinized-probe-contract:cFp68",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "determinized-pimc-probe-v0-summary-v1",
+  "totalCfp68RootCount": 4042
+}
