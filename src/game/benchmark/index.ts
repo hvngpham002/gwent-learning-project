@@ -31,3 +31,5 @@ export * from './determinizedPimcProbeV0';
 export * from './determinizedPimcProbeV0Artifacts';
 export * from './determinizedPimcActionAvailabilityV0';
 export * from './determinizedPimcActionAvailabilityV0Artifacts';
+export * from './determinizedPimcOnePlyOutcomeSkeletonV0';
+export * from './determinizedPimcOnePlyOutcomeSkeletonV0Artifacts';

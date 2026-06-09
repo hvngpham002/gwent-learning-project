@@ -1,0 +1,45 @@
+{
+  "artifactHashes": {
+    "outcome-roots.jsonl": "e8ac6be8baa9df749f77684eed929268a79bf0b7bb9758b81ac1ed16c9323e6d",
+    "report.md": "d36dbcd99eca9c60d872b5ef7801075cb52b9a1bd0a501481399936e9d7cbf95",
+    "skipped-roots.jsonl": "d3cd88f01a80ef4c9b1f26baae8f71dc3049878538b43dd499dfad6c5bc773fe",
+    "summary.json": "b86ddada1a32b29a7ed0d869a0e9ecf10d90a22714429301e1eb4bdac5cd5493"
+  },
+  "cFp72Recommendation": "cFp72 should inspect cFp71 one-ply failure, deferred, and divergence counts before choosing a repair casebook or a deeper benchmark-only branching probe. It should still avoid rollout, value, ranking, move recommendation, and product AI wiring.",
+  "eligibleRootCount": 3979,
+  "explicitNonClaims": [
+    "No rollout was run.",
+    "No action value was computed.",
+    "No action ranking was produced.",
+    "No move was selected by search.",
+    "No win probability was estimated.",
+    "No reward target was produced.",
+    "No product AI behavior changed.",
+    "Skipped roots were excluded from probe work and reported separately."
+  ],
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "outcome-roots.jsonl",
+    "skipped-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "omitted from committed artifacts so cFp71 hashes remain deterministic",
+  "hiddenInfoSafetyNote": "cFp71 artifacts contain only public benchmark root metadata, scalar one-ply status counts, public transition-shape counts, skipped-root accounting, and source artifact hashes. They exclude private card identities, raw action payloads, sampled payloads, engine trace payloads, ranking fields, estimates, rollout results, and product AI wiring.",
+  "outcomeRootCount": 3979,
+  "probeReadinessStatus": "probe_ready",
+  "probeRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-one-ply-outcome-skeleton-v0:cFp71",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71",
+  "rootSchemaVersion": "determinized-pimc-one-ply-outcome-skeleton-v0-root-v1",
+  "schemaVersion": "determinized-pimc-one-ply-outcome-skeleton-v0-artifact-v1",
+  "skippedRootCount": 63,
+  "skippedRootPercentage": 1.559,
+  "skippedRootSchemaVersion": "determinized-pimc-one-ply-outcome-skeleton-v0-skipped-root-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "sourceCfp68ContractRunId": "benchmark-v1-starter-matrix-v1:determinized-probe-contract:cFp68",
+  "sourceCfp69ProbeRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-probe-v0:cFp69",
+  "sourceCfp70AvailabilityRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-action-availability-v0:cFp70",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "determinized-pimc-one-ply-outcome-skeleton-v0-summary-v1",
+  "totalCfp68RootCount": 4042
+}

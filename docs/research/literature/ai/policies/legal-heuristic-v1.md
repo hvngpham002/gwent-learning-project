@@ -33,6 +33,8 @@ The latest determinized-pimc-probe-v0 scaffold phase is cFp69:
 Determinized PIMC Probe v0 Sanity.
 The latest sampled-world action availability phase is cFp70:
 Sampled-World Action Availability Probe v0.
+The latest one-ply public action outcome skeleton phase is cFp71:
+One-Ply Public Action Outcome Skeleton.
 The latest sampler public-zone accounting phase is cFp65: Sampler Public-Zone
 Accounting Repair Probe. The latest sampler public-zone provenance phase is
 cFp64: Sampler Public-Zone Provenance Casebook. The latest sampler public-count
@@ -115,6 +117,17 @@ cFp68/cFp69: 31,832 requested/generated/checked samples for current and 257,176
 for robust, with 0 failed samples and 0 availability disagreements in both
 suites. It does not run rollouts, compute action values, rank actions, choose
 moves, make strength claims, or change product AI behavior.
+cFp71 consumes cFp68/cFp69/cFp70 artifacts, regenerates the same in-memory
+samples through the cFp70 sampled-root rebuild path, executes deterministic
+representative public buckets only on cloned sampled roots, and writes
+deterministic `determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/` artifacts.
+Current has 3,979 outcome roots, 63 skipped roots, 31,832 checked samples,
+150,560 completed public action/sample pairs, 0 failed or deferred pairs, and 0
+public outcome divergence roots. Robust has 32,147 outcome roots, 340 skipped
+roots, 257,176 checked samples, 1,230,736 completed public action/sample pairs,
+0 failed or deferred pairs, and 0 public outcome divergence roots. It does not
+run rollouts, compute action values, rank actions, choose moves, estimate win
+probability, make strength claims, or change product AI behavior.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
@@ -124,8 +137,9 @@ sampler public-transfer memory infrastructure only. cFp67 is post-cFp66
 invalid-root casebook infrastructure only. cFp68 is valid-root-only determinized
 probe contract infrastructure only. cFp69 is public-action probe scaffold
 infrastructure only. cFp70 is sampled-world action availability infrastructure
-only. cFp59, cFp60, cFp61,
-cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, and cFp70 do not change
+only. cFp71 is one-ply outcome skeleton infrastructure only. cFp59, cFp60,
+cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, cFp70, and
+cFp71 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -183,8 +197,12 @@ roots into cFp69 skip accounting and emitting public-action scalar counts only.
 cFp70 implements a benchmark-only sampled-world action availability probe over
 the same roots, carrying skipped roots forward and reporting zero availability
 disagreements in both current and robust suites.
+cFp71 implements a benchmark-only one-ply public action outcome skeleton over
+the same roots, carrying skipped roots forward and reporting zero failed or
+deferred pairs plus zero public outcome divergence roots in both current and
+robust suites.
 cFp59, cFp60, cFp61, cFp62, cFp63, cFp64, cFp65,
-cFp66, cFp67, cFp68, cFp69, and cFp70
+cFp66, cFp67, cFp68, cFp69, cFp70, and cFp71
 are evaluation infrastructure only and do not make search available in product
 play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix

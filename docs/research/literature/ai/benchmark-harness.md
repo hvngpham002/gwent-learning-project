@@ -170,6 +170,15 @@ Search-readiness:
   availability artifacts, and carries skipped-root accounting forward. It does
   not run rollouts, compute action values, rank actions, choose moves, make
   strength claims, change policy behavior, or wire product gameplay.
+- cFp71 adds a benchmark-only one-ply public action outcome skeleton under
+  `<suiteId>/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/`. It
+  consumes cFp68, cFp69, and cFp70 artifacts, regenerates the same in-memory
+  samples through the cFp70 rebuild path, executes deterministic representative
+  sampled public buckets only on cloned sampled roots, writes root-level scalar
+  public transition-shape aggregates, and carries skipped-root accounting
+  forward. It does not run rollouts, compute action values, rank actions,
+  choose moves, estimate win probability, change policy behavior, or wire
+  product gameplay.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 

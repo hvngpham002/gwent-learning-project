@@ -376,12 +376,12 @@ export interface RunDeterminizedPimcActionAvailabilityV0Input {
   sourceCfp69ArtifactReferences?: readonly DeterminizedProbeContractSourceArtifactReference[];
 }
 
-interface PublicActionBucket {
+export interface DeterminizedPimcActionAvailabilityV0PublicActionBucket {
   key: string;
   action: PublicSearchActionAbstraction;
 }
 
-interface InMemoryMaterializationResult {
+export interface DeterminizedPimcActionAvailabilityV0InMemoryMaterializationResult {
   rootPublicFingerprint: string;
   materializationStatus: "valid" | "invalid" | "prior_unavailable";
   sampleCountRequested: number;
@@ -391,7 +391,7 @@ interface InMemoryMaterializationResult {
   samples: MaterializedHiddenMultisetSample[];
 }
 
-interface PreservedHiddenAssignments {
+export interface DeterminizedPimcActionAvailabilityV0PreservedHiddenAssignments {
   hand: Record<CardInstanceId, string>;
   deck: Record<CardInstanceId, string>;
 }
@@ -583,7 +583,9 @@ const emptyRiskBucketCounts = (): Record<
   failed: 0,
 });
 
-const publicActionBucketKey = (action: PublicSearchActionAbstraction) =>
+export const buildDeterminizedPimcActionAvailabilityV0PublicActionBucketKey = (
+  action: PublicSearchActionAbstraction,
+) =>
   [
     action.kind,
     action.targetKind,
@@ -600,12 +602,14 @@ export const buildDeterminizedPimcActionAvailabilityV0PublicActionBuckets = (
   legalMoves: readonly LegalMove[],
   phase: MatchPhase,
   round: number,
-): PublicActionBucket[] =>
+): DeterminizedPimcActionAvailabilityV0PublicActionBucket[] =>
   collapsePublicActions(
     legalMoves.map((move) => buildPublicActionAbstraction(move, phase, round)),
   )
     .map((action) => ({
-      key: publicActionBucketKey(action),
+      key: buildDeterminizedPimcActionAvailabilityV0PublicActionBucketKey(
+        action,
+      ),
       action,
     }))
     .sort((left, right) => left.key.localeCompare(right.key));
@@ -661,7 +665,7 @@ const visibleOpponentHandCardIds = ({
   return visible;
 };
 
-const collectPreservedHiddenAssignments = ({
+export const collectDeterminizedPimcActionAvailabilityV0PreservedHiddenAssignments = ({
   state,
   actingSeatId,
   memory,
@@ -669,7 +673,7 @@ const collectPreservedHiddenAssignments = ({
   state: MatchState;
   actingSeatId: SeatId;
   memory?: SamplerPublicTransferMemoryState;
-}): PreservedHiddenAssignments => {
+}): DeterminizedPimcActionAvailabilityV0PreservedHiddenAssignments => {
   const opponentSeatId = otherSeat(actingSeatId);
   const visibleHandIds = visibleOpponentHandCardIds({
     state,
@@ -752,13 +756,16 @@ export const rebuildDeterminizedPimcActionAvailabilityV0SampledRootState = ({
   state: MatchState;
   actingSeatId: SeatId;
   sample: MaterializedHiddenMultisetSample;
-  preservedAssignments?: PreservedHiddenAssignments;
+  preservedAssignments?: DeterminizedPimcActionAvailabilityV0PreservedHiddenAssignments;
 }): SampledRootStateRebuildResult => {
   const opponentSeatId = otherSeat(actingSeatId);
   const clone = structuredClone(state) as MatchState;
   const preserved =
     preservedAssignments ??
-    collectPreservedHiddenAssignments({ state, actingSeatId });
+    collectDeterminizedPimcActionAvailabilityV0PreservedHiddenAssignments({
+      state,
+      actingSeatId,
+    });
 
   const handOk = assignSampledSourcesToZone({
     clone,
@@ -871,7 +878,7 @@ const emptyPublicTransferCounts = (): SamplerPublicTransferMemoryCounts => ({
   reasonCounts: {},
 });
 
-const buildInMemoryMaterializationForRoot = ({
+export const buildDeterminizedPimcActionAvailabilityV0InMemoryMaterializationForRoot = ({
   input,
   samplerRunId,
   memory,
@@ -879,7 +886,7 @@ const buildInMemoryMaterializationForRoot = ({
   input: BenchmarkRootObserverInput;
   samplerRunId: string;
   memory: SamplerPublicTransferMemoryState;
-}): InMemoryMaterializationResult => {
+}): DeterminizedPimcActionAvailabilityV0InMemoryMaterializationResult => {
   const opponentSeatId = otherSeat(input.seatId);
   const seat = input.seats[input.seatId];
   const opponentHandCount = input.state.seats[opponentSeatId].hand.length;
@@ -1051,7 +1058,7 @@ const baseObservedIdentity = (
 
 const addActionCounts = (
   target: Record<string, number>,
-  buckets: readonly PublicActionBucket[],
+  buckets: readonly DeterminizedPimcActionAvailabilityV0PublicActionBucket[],
   field: "kind" | "targetKind" | "targetSide",
 ) => {
   buckets.forEach(({ action }) => {
@@ -1072,7 +1079,8 @@ export const buildDeterminizedPimcActionAvailabilityV0ObservedRoot = ({
   cFp68EligibleRoot?: DeterminizedProbeContractEligibleRootRecord;
   cFp69ProbeRoot?: DeterminizedPimcProbeV0RootRecord;
 }): DeterminizedPimcActionAvailabilityV0ObservedRoot => {
-  const materialization = buildInMemoryMaterializationForRoot({
+  const materialization =
+    buildDeterminizedPimcActionAvailabilityV0InMemoryMaterializationForRoot({
     input,
     samplerRunId,
     memory,
@@ -1089,8 +1097,10 @@ export const buildDeterminizedPimcActionAvailabilityV0ObservedRoot = ({
   const rootKeys = new Set(rootBuckets.map((bucket) => bucket.key));
   const sampleAvailabilityStatusCounts = emptySampleAvailabilityCounts();
   const sampledActionBucketCounts: number[] = [];
-  const missingByKey = new Map<string, PublicActionBucket>();
-  const extraByKey = new Map<string, PublicActionBucket>();
+  const missingByKey =
+    new Map<string, DeterminizedPimcActionAvailabilityV0PublicActionBucket>();
+  const extraByKey =
+    new Map<string, DeterminizedPimcActionAvailabilityV0PublicActionBucket>();
   let sampleCountChecked = 0;
   let sampleCountAvailabilityFailed = 0;
   let probeStatus: DeterminizedPimcActionAvailabilityV0ProbeStatus = "completed";
@@ -1122,11 +1132,12 @@ export const buildDeterminizedPimcActionAvailabilityV0ObservedRoot = ({
     ) {
       probeStatus = "sample_materialization_failed";
     } else {
-      const preservedAssignments = collectPreservedHiddenAssignments({
-        state: input.state,
-        actingSeatId: input.seatId,
-        memory,
-      });
+      const preservedAssignments =
+        collectDeterminizedPimcActionAvailabilityV0PreservedHiddenAssignments({
+          state: input.state,
+          actingSeatId: input.seatId,
+          memory,
+        });
 
       for (const sample of materialization.samples) {
         const rebuilt =
@@ -1163,7 +1174,7 @@ export const buildDeterminizedPimcActionAvailabilityV0ObservedRoot = ({
           continue;
         }
 
-        let sampleBuckets: PublicActionBucket[];
+        let sampleBuckets: DeterminizedPimcActionAvailabilityV0PublicActionBucket[];
         try {
           sampleBuckets =
             buildDeterminizedPimcActionAvailabilityV0PublicActionBuckets(
