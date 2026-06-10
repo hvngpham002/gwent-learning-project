@@ -1,0 +1,676 @@
+{
+  "branchingAggregates": {
+    "aggregateActorCountsByFirstPlyPublicActionKind": {
+      "choose_mulligan": {
+        "policy_actor": 20384
+      },
+      "choose_prompt_option": {
+        "policy_actor": 16384
+      },
+      "pass": {
+        "policy_actor": 157968,
+        "system_round_end_resolver": 46600
+      },
+      "play_card": {
+        "policy_actor": 877560
+      },
+      "resolve_round_end": {
+        "policy_actor": 13248,
+        "terminal_game_end": 7912
+      },
+      "use_leader": {
+        "policy_actor": 90680
+      }
+    },
+    "aggregateBranchingStatusCountsByFirstPlyPublicActionKind": {
+      "choose_mulligan": {
+        "completed": 20384
+      },
+      "choose_prompt_option": {
+        "completed": 16384
+      },
+      "pass": {
+        "completed": 204568
+      },
+      "play_card": {
+        "completed": 877560
+      },
+      "resolve_round_end": {
+        "completed": 21160
+      },
+      "use_leader": {
+        "completed": 90680
+      }
+    },
+    "aggregateBudgetBucketCountsByFirstPlyPublicActionKind": {
+      "choose_mulligan": {
+        "large": 130,
+        "medium": 1007,
+        "small": 151,
+        "tiny": 19096
+      },
+      "choose_prompt_option": {
+        "large": 67,
+        "medium": 4950,
+        "small": 5293,
+        "tiny": 6074
+      },
+      "pass": {
+        "large": 5450,
+        "medium": 87215,
+        "small": 49014,
+        "tiny": 62889
+      },
+      "play_card": {
+        "large": 34731,
+        "medium": 510956,
+        "small": 261815,
+        "tiny": 70058
+      },
+      "resolve_round_end": {
+        "large": 6,
+        "medium": 2942,
+        "small": 7690,
+        "tiny": 2610,
+        "zero": 7912
+      },
+      "use_leader": {
+        "large": 1993,
+        "medium": 38190,
+        "small": 23660,
+        "tiny": 26837
+      }
+    },
+    "completedBranchingPairCountStats": {
+      "average": 38.285,
+      "count": 32147,
+      "max": 112,
+      "min": 8,
+      "p50": 40,
+      "p90": 72,
+      "p95": 80
+    },
+    "failedOrDeferredBranchingPairCountStats": {
+      "average": 0,
+      "count": 32147,
+      "max": 0,
+      "min": 0,
+      "p50": 0,
+      "p90": 0,
+      "p95": 0
+    },
+    "firstPlyPublicActionSamplePairCountStats": {
+      "average": 38.285,
+      "count": 32147,
+      "max": 112,
+      "min": 8,
+      "p50": 40,
+      "p90": 72,
+      "p95": 80
+    },
+    "largestNextPublicActionBucketSizeStats": {
+      "average": 4.27,
+      "count": 32147,
+      "max": 30,
+      "min": 0,
+      "p50": 4,
+      "p90": 10,
+      "p95": 11
+    },
+    "nextLegalMoveCountStats": {
+      "average": 7.561,
+      "count": 64294,
+      "max": 34,
+      "min": 0,
+      "p50": 8,
+      "p90": 14,
+      "p95": 16
+    },
+    "nextPublicActionCollisionCountStats": {
+      "average": 2.935,
+      "count": 64294,
+      "max": 30,
+      "min": 0,
+      "p50": 2,
+      "p90": 9,
+      "p95": 10
+    },
+    "nextPublicActionCountStats": {
+      "average": 4.704,
+      "count": 64294,
+      "max": 15,
+      "min": 0,
+      "p50": 4,
+      "p90": 10,
+      "p95": 11
+    },
+    "nextPublicActionTargetExpansionCountStats": {
+      "average": 3.323,
+      "count": 64294,
+      "max": 14,
+      "min": 0,
+      "p50": 3,
+      "p90": 8,
+      "p95": 9
+    },
+    "postOnePlyPublicActionBudgetAverage": 5.765,
+    "postOnePlyPublicActionBudgetTotal": 7095113,
+    "rootPublicActionCountStats": {
+      "average": 4.786,
+      "count": 32147,
+      "max": 14,
+      "min": 1,
+      "p50": 5,
+      "p90": 9,
+      "p95": 10
+    }
+  },
+  "branchingRootCount": 32147,
+  "branchingStatus": {
+    "actorResolutionFailedPairCount": 0,
+    "branchingBudgetBucketCounts": {
+      "deferred": 0,
+      "extreme": 0,
+      "failed": 0,
+      "large": 3915,
+      "medium": 15786,
+      "small": 5279,
+      "tiny": 6178,
+      "very_large": 0,
+      "zero": 989
+    },
+    "branchingRiskBucketCounts": {
+      "deferred": 0,
+      "extreme": 0,
+      "failed": 0,
+      "large": 3915,
+      "medium": 15786,
+      "small": 5279,
+      "tiny": 6178,
+      "very_large": 0,
+      "zero": 989
+    },
+    "branchingStatusCounts": {
+      "completed": 1230736,
+      "engine_command_exception": 0,
+      "engine_command_rejected": 0,
+      "move_command_conversion_failed": 0,
+      "one_ply_execution_deferred": 0,
+      "post_one_ply_actor_resolution_failed": 0,
+      "post_one_ply_legal_move_generation_failed": 0,
+      "post_one_ply_public_action_abstraction_failed": 0,
+      "sample_action_missing": 0
+    },
+    "completedBranchingPairCount": 1230736,
+    "engineCommandExceptionPairCount": 0,
+    "engineCommandRejectedPairCount": 0,
+    "failedOrDeferredBranchingPairCount": 0,
+    "firstPlyPublicActionSamplePairTotal": 1230736,
+    "legalMoveGenerationFailedPairCount": 0,
+    "moveCommandConversionFailedPairCount": 0,
+    "onePlyExecutionDeferredPairCount": 0,
+    "postOnePlyActorCounts": {
+      "actor_resolution_failed": 0,
+      "no_actor": 0,
+      "policy_actor": 1176224,
+      "system_round_end_resolver": 46600,
+      "terminal_game_end": 7912
+    },
+    "postOnePlyPhaseCounts": {
+      "game_end": 7912,
+      "mulligan": 19096,
+      "playing": 1157128,
+      "round_end": 46600
+    },
+    "probeStatusCounts": {
+      "completed": 32147,
+      "engine_command_exception": 0,
+      "engine_command_rejected": 0,
+      "move_command_conversion_failed": 0,
+      "one_ply_execution_deferred": 0,
+      "post_one_ply_actor_resolution_failed": 0,
+      "post_one_ply_legal_move_generation_failed": 0,
+      "post_one_ply_public_action_abstraction_failed": 0,
+      "sample_action_missing": 0
+    },
+    "publicActionAbstractionFailedPairCount": 0,
+    "rootsWithAnyFailedOrDeferredPair": 0,
+    "sampleActionMissingPairCount": 0
+  },
+  "cFp73Recommendation": "cFp73 should choose a benchmark-only high-branching casebook, budget-threshold summary, or another artifact-only infrastructure probe after checking cFp72 failure, deferred, determinism, and hidden-info results. It should still avoid rollout, search-strength estimates, action ordering, search recommendations, and product AI wiring.",
+  "eligibleRootCount": 32147,
+  "explicitNonClaims": [
+    "No second ply was executed.",
+    "No rollout was run.",
+    "No action-strength estimate was computed.",
+    "No action ordering was produced.",
+    "No move was selected by search.",
+    "No win probability was estimated.",
+    "No reward target was produced.",
+    "No product AI behavior changed.",
+    "Skipped roots were excluded from probe work and reported separately."
+  ],
+  "hiddenInfoSafetyNote": "cFp72 artifacts contain only public benchmark root metadata, scalar branching counts, next-surface public-action aggregates, skipped-root accounting, and source artifact hashes. They exclude private identities, concrete action payloads, sampled payloads, engine trace payloads, ordering outputs, estimates, rollout results, and product AI wiring.",
+  "matchCount": 1000,
+  "probeMode": "post_one_ply_branching_budget_probe",
+  "probeReadinessStatus": "probe_ready",
+  "probeRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-post-one-ply-branching-budget-v0:cFp72",
+  "probeVariant": "determinized-pimc-post-one-ply-branching-budget-v0",
+  "sampleBudget": {
+    "branchingRootCount": 32147,
+    "requestedSamplesPerRootDistribution": {
+      "8": 32147
+    },
+    "totalCheckedSampleCount": 257176,
+    "totalFailedSampleCount": 0,
+    "totalGeneratedSampleCount": 257176,
+    "totalRequestedSampleCount": 257176
+  },
+  "schemaVersion": "determinized-pimc-post-one-ply-branching-budget-v0-summary-v1",
+  "skipCounterPercentages": {
+    "byDeckPreset": {
+      "official-monsters-starter": {
+        "count": 26,
+        "percentageOfSkippedRoots": 7.647
+      },
+      "official-nilfgaard-starter": {
+        "count": 102,
+        "percentageOfSkippedRoots": 30
+      },
+      "official-northern-realms-starter": {
+        "count": 136,
+        "percentageOfSkippedRoots": 40
+      },
+      "official-scoiatael-starter": {
+        "count": 37,
+        "percentageOfSkippedRoots": 10.882
+      },
+      "official-skellige-starter": {
+        "count": 39,
+        "percentageOfSkippedRoots": 11.471
+      }
+    },
+    "byFaction": {
+      "monsters": {
+        "count": 26,
+        "percentageOfSkippedRoots": 7.647
+      },
+      "nilfgaard": {
+        "count": 102,
+        "percentageOfSkippedRoots": 30
+      },
+      "northern_realms": {
+        "count": 136,
+        "percentageOfSkippedRoots": 40
+      },
+      "scoiatael": {
+        "count": 37,
+        "percentageOfSkippedRoots": 10.882
+      },
+      "skellige": {
+        "count": 39,
+        "percentageOfSkippedRoots": 11.471
+      }
+    },
+    "byInvalidReason": {
+      "insufficient_prior_remaining": {
+        "count": 340,
+        "percentageOfSkippedRoots": 100
+      }
+    },
+    "byMatchup": {
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": {
+        "count": 23,
+        "percentageOfSkippedRoots": 6.765
+      },
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": {
+        "count": 17,
+        "percentageOfSkippedRoots": 5
+      },
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": {
+        "count": 12,
+        "percentageOfSkippedRoots": 3.529
+      },
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": {
+        "count": 31,
+        "percentageOfSkippedRoots": 9.118
+      },
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": {
+        "count": 42,
+        "percentageOfSkippedRoots": 12.353
+      },
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": {
+        "count": 44,
+        "percentageOfSkippedRoots": 12.941
+      },
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": {
+        "count": 14,
+        "percentageOfSkippedRoots": 4.118
+      },
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": {
+        "count": 59,
+        "percentageOfSkippedRoots": 17.353
+      },
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": {
+        "count": 18,
+        "percentageOfSkippedRoots": 5.294
+      },
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": {
+        "count": 16,
+        "percentageOfSkippedRoots": 4.706
+      },
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": {
+        "count": 6,
+        "percentageOfSkippedRoots": 1.765
+      },
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": {
+        "count": 37,
+        "percentageOfSkippedRoots": 10.882
+      },
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": {
+        "count": 13,
+        "percentageOfSkippedRoots": 3.824
+      },
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": {
+        "count": 8,
+        "percentageOfSkippedRoots": 2.353
+      }
+    },
+    "byPhase": {
+      "playing": {
+        "count": 312,
+        "percentageOfSkippedRoots": 91.765
+      },
+      "round_end": {
+        "count": 28,
+        "percentageOfSkippedRoots": 8.235
+      }
+    },
+    "byPolicy": {
+      "headless-round-end-auto-resolver": {
+        "count": 28,
+        "percentageOfSkippedRoots": 8.235
+      },
+      "legal-heuristic-v0": {
+        "count": 246,
+        "percentageOfSkippedRoots": 72.353
+      },
+      "legal-heuristic-v1": {
+        "count": 66,
+        "percentageOfSkippedRoots": 19.412
+      }
+    },
+    "byProvenanceLabel": {
+      "mixed_public_zones": {
+        "count": 229,
+        "percentageOfSkippedRoots": 67.353
+      },
+      "round_end_public_zone": {
+        "count": 28,
+        "percentageOfSkippedRoots": 8.235
+      },
+      "single_zone_board": {
+        "count": 54,
+        "percentageOfSkippedRoots": 15.882
+      },
+      "single_zone_discard": {
+        "count": 29,
+        "percentageOfSkippedRoots": 8.529
+      }
+    },
+    "byRound": {
+      "1": {
+        "count": 222,
+        "percentageOfSkippedRoots": 65.294
+      },
+      "2": {
+        "count": 96,
+        "percentageOfSkippedRoots": 28.235
+      },
+      "3": {
+        "count": 22,
+        "percentageOfSkippedRoots": 6.471
+      }
+    },
+    "bySkipReason": {
+      "sampler_invalid_public_zone_count_deficit": {
+        "count": 340,
+        "percentageOfSkippedRoots": 100
+      }
+    },
+    "bySuite": {
+      "benchmark-v1-starter-matrix-robust-v1": {
+        "count": 340,
+        "percentageOfSkippedRoots": 100
+      }
+    }
+  },
+  "skipCounters": {
+    "byDeckPreset": {
+      "official-monsters-starter": 26,
+      "official-nilfgaard-starter": 102,
+      "official-northern-realms-starter": 136,
+      "official-scoiatael-starter": 37,
+      "official-skellige-starter": 39
+    },
+    "byFaction": {
+      "monsters": 26,
+      "nilfgaard": 102,
+      "northern_realms": 136,
+      "scoiatael": 37,
+      "skellige": 39
+    },
+    "byInvalidReason": {
+      "insufficient_prior_remaining": 340
+    },
+    "byMatchup": {
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 23,
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 17,
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 12,
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 31,
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 42,
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 44,
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 14,
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 59,
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 18,
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 16,
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 6,
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 37,
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 13,
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 8
+    },
+    "byPhase": {
+      "playing": 312,
+      "round_end": 28
+    },
+    "byPolicy": {
+      "headless-round-end-auto-resolver": 28,
+      "legal-heuristic-v0": 246,
+      "legal-heuristic-v1": 66
+    },
+    "byProvenanceLabel": {
+      "mixed_public_zones": 229,
+      "round_end_public_zone": 28,
+      "single_zone_board": 54,
+      "single_zone_discard": 29
+    },
+    "byRound": {
+      "1": 222,
+      "2": 96,
+      "3": 22
+    },
+    "bySkipReason": {
+      "sampler_invalid_public_zone_count_deficit": 340
+    },
+    "bySuite": {
+      "benchmark-v1-starter-matrix-robust-v1": 340
+    }
+  },
+  "skippedRootCount": 340,
+  "skippedRootPercentage": 1.047,
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "sourceCfp68ArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/manifest.json",
+      "sha256": "735a87e2dea500878eaec01823dae886f14e11448d7c83cd87ea7490da7f7cfd"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/summary.json",
+      "sha256": "2ade0597b1f3f4edf11047846d31cb2d281df50b21e9c374010fda71530d03db"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/eligible-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/eligible-roots.jsonl",
+      "sha256": "7396adbf22084b0ab0515fdc6fb239bcd2e32c72404bfc5d800eebff62f5d97f"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/skipped-roots.jsonl",
+      "sha256": "91353f4a302cf755f7c2bb3196df5bf5643c31fa590287074531dccf5af0dd50"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/report.md",
+      "sha256": "a70d26e484c303cfa5dfc9f12d2ad16e71c8f8bc31acea008e4132cd0795f9d4"
+    }
+  ],
+  "sourceCfp68ContractRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-probe-contract:cFp68",
+  "sourceCfp69ArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/manifest.json",
+      "sha256": "63725e400a6d8ae1ab6361d93ddabea8ab3c1fc4338a9b92d57dbf17435471f7"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/summary.json",
+      "sha256": "8c8ceb1dfd2ffaa2d8910c22f7fb6ee167fafcd0ff5ac5fe6a4d6ed6fdf52039"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/probe-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/probe-roots.jsonl",
+      "sha256": "c6688e88f8341e260254eef8bb7d6bb65a0bd9c78daceae35663232449878627"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/skipped-roots.jsonl",
+      "sha256": "5d51db39d4c7170b38f1789e139744b3b2b1f22b96fb418b800ffad2c12e2cad"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/report.md",
+      "sha256": "bf90d61f71c42436ba5be43b44bd0437930a8acdd738f0a1ae06e8051d5b4981"
+    }
+  ],
+  "sourceCfp69ProbeRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-probe-v0:cFp69",
+  "sourceCfp70ArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/manifest.json",
+      "sha256": "029a033c3648a233146730ab020c36622d19f48517f2c8c0c1a024acb4343c26"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/summary.json",
+      "sha256": "4bda20dc523efe895ece1bab4242d985d8f1759878bd0c7a0cb6748f4c7beabc"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/availability-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/availability-roots.jsonl",
+      "sha256": "df1d076896cc951cb5796cff654cdd17502415be459e95e5f511ff4a3c1cbd17"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/skipped-roots.jsonl",
+      "sha256": "7561662c2837616d8849757c6ebef64c96a4e75edb300c946b18d04b814d494a"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/report.md",
+      "sha256": "1e3dfe908bc03323c6037b2f017a26af2a8da503f4c61095841ac88d363ea309"
+    }
+  ],
+  "sourceCfp70AvailabilityRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-action-availability-v0:cFp70",
+  "sourceCfp71ArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/manifest.json",
+      "sha256": "6b6bbabc4daa57f70f8fba604cdaec0397391bec1ae2b8c98ac32d2eb4dc4f3a"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/summary.json",
+      "sha256": "2fd2ba14c2f69cbaa05734376f7be4f5ea1d97aedb7db661c4002d80132f6a29"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/outcome-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/outcome-roots.jsonl",
+      "sha256": "f85a2083263b0cc60d983a7fa856fdaed76013e5e1a2a3ba0191db793c950728"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/skipped-roots.jsonl",
+      "sha256": "34137ead3b5768c3796628e1c0ec2511fcb75d05b27c881931165d465c59da2e"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/report.md",
+      "sha256": "b7538b417e6cdbbddafbb738c83729ace54f87b88210c18154c278bbe8e2c163"
+    }
+  ],
+  "sourceCfp71OutcomeRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-one-ply-outcome-skeleton-v0:cFp71",
+  "sourceConsistency": {
+    "benchmarkObservedRootsRead": 32487,
+    "cfp68Cfp69EligibleRootCountDelta": 0,
+    "cfp68Cfp69SampleCountMismatchRoots": 0,
+    "cfp68Cfp69SkippedRootCountDelta": 0,
+    "cfp68Cfp70AvailabilityRootCountDelta": 0,
+    "cfp68Cfp70SampleCountMismatchRoots": 0,
+    "cfp68Cfp70SkippedRootCountDelta": 0,
+    "cfp68Cfp71OutcomeRootCountDelta": 0,
+    "cfp68Cfp71SampleCountMismatchRoots": 0,
+    "cfp68Cfp71SkippedRootCountDelta": 0,
+    "cFp68ContractNotProbeReady": 0,
+    "cFp68ContractStatus": "probe_ready",
+    "cFp68EligibleRootsRead": 32147,
+    "cfp68FingerprintMismatchObservedRoots": 0,
+    "cFp68SkippedRootsRead": 340,
+    "cFp68TotalRootCount": 32487,
+    "cfp69Cfp70AvailabilityRootCountDelta": 0,
+    "cfp69Cfp70Cfp71PublicActionCountMismatchRoots": 0,
+    "cfp69Cfp70SkippedRootCountDelta": 0,
+    "cfp69Cfp71OutcomeRootCountDelta": 0,
+    "cfp69Cfp71SkippedRootCountDelta": 0,
+    "cfp69ProbeRootsMissingCfp68EligibleRoot": 0,
+    "cFp69ProbeRootsRead": 32147,
+    "cfp69SkippedRootsMissingCfp68SkippedRoot": 0,
+    "cFp69SkippedRootsRead": 340,
+    "cfp70AvailabilityRootsMissingCfp68EligibleRoot": 0,
+    "cFp70AvailabilityRootsRead": 32147,
+    "cfp70Cfp71OutcomeRootCountDelta": 0,
+    "cfp70Cfp71SkippedRootCountDelta": 0,
+    "cfp70RootsWithAvailabilityDisagreement": 0,
+    "cfp70SkippedRootsMissingCfp68SkippedRoot": 0,
+    "cFp70SkippedRootsRead": 340,
+    "cfp71OutcomeRootsMissingCfp68EligibleRoot": 0,
+    "cFp71OutcomeRootsRead": 32147,
+    "cfp71RootsWithFailedOrDeferredPairs": 0,
+    "cfp71RootsWithOutcomeDivergence": 0,
+    "cfp71SkippedRootsMissingCfp68SkippedRoot": 0,
+    "cFp71SkippedRootsRead": 340,
+    "duplicateCfp68EligibleRootKeys": 0,
+    "duplicateCfp69ProbeRootKeys": 0,
+    "duplicateCfp70AvailabilityRootKeys": 0,
+    "duplicateCfp71OutcomeRootKeys": 0,
+    "duplicateObservedRootKeys": 0,
+    "duplicateSkippedRootKeys": 0,
+    "eligibleRootsNotObserved": 0,
+    "observedRootsNotInCfp68Cfp69Cfp70Cfp71Contract": 0,
+    "skippedRootsIncorrectlyProbed": 0,
+    "status": "probe_ready"
+  },
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "totalCfp68RootCount": 32487
+}

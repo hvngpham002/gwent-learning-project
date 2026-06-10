@@ -35,6 +35,8 @@ The latest sampled-world action availability phase is cFp70:
 Sampled-World Action Availability Probe v0.
 The latest one-ply public action outcome skeleton phase is cFp71:
 One-Ply Public Action Outcome Skeleton.
+The latest post-one-ply branching budget phase is cFp72:
+Post-One-Ply Branching Budget Probe v0.
 The latest sampler public-zone accounting phase is cFp65: Sampler Public-Zone
 Accounting Repair Probe. The latest sampler public-zone provenance phase is
 cFp64: Sampler Public-Zone Provenance Casebook. The latest sampler public-count
@@ -128,6 +130,20 @@ roots, 257,176 checked samples, 1,230,736 completed public action/sample pairs,
 0 failed or deferred pairs, and 0 public outcome divergence roots. It does not
 run rollouts, compute action values, rank actions, choose moves, estimate win
 probability, make strength claims, or change product AI behavior.
+cFp72 consumes cFp68/cFp69/cFp70/cFp71 artifacts, regenerates the same
+in-memory samples through the cFp70 sampled-root rebuild path, executes only the
+first-ply representative sampled public bucket on cloned sampled roots, and
+writes deterministic
+`determinized-pimc-post-one-ply-branching-budget-v0/cFp72/` artifacts. Current
+has 3,979 branching roots, 63 skipped roots, 31,832 checked samples, 150,560
+completed first-ply public action/sample pairs, 0 failed or deferred pairs, and
+an average post-one-ply public action budget of 5.735. Robust has 32,147
+branching roots, 340 skipped roots, 257,176 checked samples, 1,230,736 completed
+first-ply public action/sample pairs, 0 failed or deferred pairs, and an average
+post-one-ply public action budget of 5.765. It counts only the next legal/public
+action surface after first-ply execution and does not run rollouts, compute
+action values, rank actions, choose moves, estimate win probability, make
+strength claims, or change product AI behavior.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
@@ -137,9 +153,10 @@ sampler public-transfer memory infrastructure only. cFp67 is post-cFp66
 invalid-root casebook infrastructure only. cFp68 is valid-root-only determinized
 probe contract infrastructure only. cFp69 is public-action probe scaffold
 infrastructure only. cFp70 is sampled-world action availability infrastructure
-only. cFp71 is one-ply outcome skeleton infrastructure only. cFp59, cFp60,
+only. cFp71 is one-ply outcome skeleton infrastructure only. cFp72 is
+post-one-ply branching budget infrastructure only. cFp59, cFp60,
 cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, cFp70, and
-cFp71 do not change
+cFp71, and cFp72 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -201,8 +218,12 @@ cFp71 implements a benchmark-only one-ply public action outcome skeleton over
 the same roots, carrying skipped roots forward and reporting zero failed or
 deferred pairs plus zero public outcome divergence roots in both current and
 robust suites.
+cFp72 implements a benchmark-only post-one-ply branching budget probe over the
+same roots, carrying skipped roots forward and reporting 150,560 current and
+1,230,736 robust completed first-ply pairs, 0 failed/deferred pairs, and
+post-one-ply public action budget averages of 5.735 current and 5.765 robust.
 cFp59, cFp60, cFp61, cFp62, cFp63, cFp64, cFp65,
-cFp66, cFp67, cFp68, cFp69, cFp70, and cFp71
+cFp66, cFp67, cFp68, cFp69, cFp70, cFp71, and cFp72
 are evaluation infrastructure only and do not make search available in product
 play.
 The latest suite infrastructure phase is cFp48: Robust Starter Matrix
@@ -342,6 +363,15 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   0 failed samples and 0 availability disagreements. cFp70 does not run
   rollouts, rank actions, choose moves, make strength claims, or change policy
   behavior.
+- cFp72: evaluation-only post-one-ply branching budget probe; consumes
+  cFp68/cFp69/cFp70/cFp71 artifacts, regenerates samples in memory through the
+  cFp70 rebuild path, executes only the first-ply representative public bucket
+  on cloned sampled roots, then counts the next legal/public action surface.
+  Current has 3,979 branching / 63 skipped roots and 150,560 completed
+  first-ply pairs; robust has 32,147 branching / 340 skipped roots and
+  1,230,736 completed first-ply pairs. Both suites have 0 failed/deferred pairs.
+  cFp72 does not run rollouts, rank actions, choose moves, make strength claims,
+  or change policy behavior.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

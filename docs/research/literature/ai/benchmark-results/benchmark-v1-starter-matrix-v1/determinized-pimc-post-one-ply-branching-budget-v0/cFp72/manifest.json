@@ -1,0 +1,47 @@
+{
+  "artifactHashes": {
+    "branching-roots.jsonl": "f8d8ba394d1167d4001934fbb0b06fe4dfaa80fe418e6833da6cd4d480255e9e",
+    "report.md": "c8dd3a4f0f42bf8de1c8ed676fb75703c4e427db94474bfe3c45841852bf8b92",
+    "skipped-roots.jsonl": "9310f67d43c2e367e2eb1e3aadba678b380c39b74f7bbd1941af30133aaddfc0",
+    "summary.json": "a698f09752bca8f29150771e2f4126edee4ed5f505c50e59f458cfdc05f03d59"
+  },
+  "branchingRootCount": 3979,
+  "cFp73Recommendation": "cFp73 should choose a benchmark-only high-branching casebook, budget-threshold summary, or another artifact-only infrastructure probe after checking cFp72 failure, deferred, determinism, and hidden-info results. It should still avoid rollout, search-strength estimates, action ordering, search recommendations, and product AI wiring.",
+  "eligibleRootCount": 3979,
+  "explicitNonClaims": [
+    "No second ply was executed.",
+    "No rollout was run.",
+    "No action-strength estimate was computed.",
+    "No action ordering was produced.",
+    "No move was selected by search.",
+    "No win probability was estimated.",
+    "No reward target was produced.",
+    "No product AI behavior changed.",
+    "Skipped roots were excluded from probe work and reported separately."
+  ],
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "branching-roots.jsonl",
+    "skipped-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "omitted from committed artifacts so cFp72 hashes remain deterministic",
+  "hiddenInfoSafetyNote": "cFp72 artifacts contain only public benchmark root metadata, scalar branching counts, next-surface public-action aggregates, skipped-root accounting, and source artifact hashes. They exclude private identities, concrete action payloads, sampled payloads, engine trace payloads, ordering outputs, estimates, rollout results, and product AI wiring.",
+  "probeReadinessStatus": "probe_ready",
+  "probeRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-post-one-ply-branching-budget-v0:cFp72",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72",
+  "rootSchemaVersion": "determinized-pimc-post-one-ply-branching-budget-v0-root-v1",
+  "schemaVersion": "determinized-pimc-post-one-ply-branching-budget-v0-artifact-v1",
+  "skippedRootCount": 63,
+  "skippedRootPercentage": 1.559,
+  "skippedRootSchemaVersion": "determinized-pimc-post-one-ply-branching-budget-v0-skipped-root-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "sourceCfp68ContractRunId": "benchmark-v1-starter-matrix-v1:determinized-probe-contract:cFp68",
+  "sourceCfp69ProbeRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-probe-v0:cFp69",
+  "sourceCfp70AvailabilityRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-action-availability-v0:cFp70",
+  "sourceCfp71OutcomeRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-one-ply-outcome-skeleton-v0:cFp71",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "determinized-pimc-post-one-ply-branching-budget-v0-summary-v1",
+  "totalCfp68RootCount": 4042
+}

@@ -179,6 +179,16 @@ Search-readiness:
   forward. It does not run rollouts, compute action values, rank actions,
   choose moves, estimate win probability, change policy behavior, or wire
   product gameplay.
+- cFp72 adds a benchmark-only post-one-ply branching budget probe under
+  `<suiteId>/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/`.
+  It consumes cFp68, cFp69, cFp70, and cFp71 artifacts, regenerates the same
+  in-memory samples through the cFp70 rebuild path, executes only the first-ply
+  representative sampled public bucket on cloned sampled roots, then counts the
+  next legal/public action surface without executing any next move. It writes
+  only root-level scalar branching/budget aggregates and skipped-root scalar
+  accounting. It does not run rollouts, compute action values, rank actions,
+  choose moves, estimate win probability, change policy behavior, or wire
+  product gameplay.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -369,6 +379,13 @@ Write cFp70 sampled-world action-availability artifact sets:
 ```bash
 npm run benchmark:determinized-action-availability:v1-starter-matrix
 npm run benchmark:determinized-action-availability:v1-robust
+```
+
+Write cFp72 post-one-ply branching budget artifact sets:
+
+```bash
+npm run benchmark:determinized-branching-budget:v1-starter-matrix
+npm run benchmark:determinized-branching-budget:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the
@@ -746,7 +763,14 @@ availability / 340 skipped roots, source consistency is probe-ready, sample
 budgets match cFp68/cFp69, 31,832 current and 257,176 robust samples are
 generated and checked, failed samples are 0, and availability disagreement is
 0 in both suites. cFp70 is still not search gameplay and makes no strength
-claim.
+claim. cFp72 consumes cFp68/cFp69/cFp70/cFp71 artifacts and writes
+`determinized-pimc-post-one-ply-branching-budget-v0/cFp72/` branching budget
+artifacts: current has 3,979 branching roots / 63 skipped roots / 150,560
+completed first-ply pairs, robust has 32,147 branching roots / 340 skipped
+roots / 1,230,736 completed first-ply pairs, failed and deferred pairs are 0,
+post-one-ply public action budget averages are 5.735 current and 5.765 robust,
+and only the next legal/public action surface is counted after first-ply
+execution. cFp72 is still not search gameplay and makes no strength claim.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

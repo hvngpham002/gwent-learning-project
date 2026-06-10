@@ -33,3 +33,5 @@ export * from './determinizedPimcActionAvailabilityV0';
 export * from './determinizedPimcActionAvailabilityV0Artifacts';
 export * from './determinizedPimcOnePlyOutcomeSkeletonV0';
 export * from './determinizedPimcOnePlyOutcomeSkeletonV0Artifacts';
+export * from './determinizedPimcPostOnePlyBranchingBudgetV0';
+export * from './determinizedPimcPostOnePlyBranchingBudgetV0Artifacts';
