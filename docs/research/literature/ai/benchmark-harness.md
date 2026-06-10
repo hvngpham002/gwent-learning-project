@@ -189,6 +189,14 @@ Search-readiness:
   accounting. It does not run rollouts, compute action values, rank actions,
   choose moves, estimate win probability, change policy behavior, or wire
   product gameplay.
+- cFp73 adds a benchmark-only post-one-ply branching budget casebook under
+  `<suiteId>/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/`.
+  It reads committed cFp72 scalar artifacts only, emits selected scalar
+  casebook rows plus skipped-root scalar rows, and classifies budget pressure
+  by threshold, phase, round, policy, faction, deck preset, matchup, actor
+  label, and phase label. It does not re-run root observation, rebuild samples,
+  execute a second ply, run rollouts, compute action values, rank actions,
+  choose moves, change policy behavior, or wire product gameplay.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 
@@ -386,6 +394,13 @@ Write cFp72 post-one-ply branching budget artifact sets:
 ```bash
 npm run benchmark:determinized-branching-budget:v1-starter-matrix
 npm run benchmark:determinized-branching-budget:v1-robust
+```
+
+Write cFp73 post-one-ply branching budget casebook artifact sets:
+
+```bash
+npm run benchmark:determinized-branching-budget-casebook:v1-starter-matrix
+npm run benchmark:determinized-branching-budget-casebook:v1-robust
 ```
 
 For longer local runs that should not be tied to an agent turn, use the
@@ -771,6 +786,15 @@ roots / 1,230,736 completed first-ply pairs, failed and deferred pairs are 0,
 post-one-ply public action budget averages are 5.735 current and 5.765 robust,
 and only the next legal/public action surface is counted after first-ply
 execution. cFp72 is still not search gameplay and makes no strength claim.
+cFp73 reads those committed scalar artifacts and writes
+`determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/` casebook
+artifacts: current has 1,291 casebook rows / 63 skipped rows, robust has 10,721
+casebook rows / 340 skipped rows, readiness is casebook-ready in both suites,
+status anomalies are 0, very-large/extreme buckets are 0, and the robust
+casebook JSONL is 27 MB. cFp73 recommends a bounded benchmark-only second-ply
+public-action scaffold with explicit budget caps and skipped-over-budget
+counters, still without rollout, action quality, ranking, move choice, product
+AI wiring, or strength claims.
 
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product

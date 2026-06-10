@@ -1,0 +1,611 @@
+{
+  "branchingRootCount": 3979,
+  "budgetPressureLabelCounts": {
+    "high_threshold": 243,
+    "large": 227,
+    "moderate": 821
+  },
+  "casebookCounters": {
+    "byDeckPreset": {
+      "official-monsters-starter": 213,
+      "official-nilfgaard-starter": 304,
+      "official-northern-realms-starter": 301,
+      "official-scoiatael-starter": 247,
+      "official-skellige-starter": 226
+    },
+    "byFaction": {
+      "monsters": 213,
+      "nilfgaard": 304,
+      "northern_realms": 301,
+      "scoiatael": 247,
+      "skellige": 226
+    },
+    "byMatchup": {
+      "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1": 58,
+      "starter-monsters-heuristic-v0-vs-skellige-heuristic-v1": 49,
+      "starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0": 35,
+      "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0": 58,
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 60,
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 65,
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 81,
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 64,
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 62,
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 66,
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 72,
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 74,
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 88,
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 90,
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 51,
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 79,
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 56,
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 71,
+      "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1": 53,
+      "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0": 59
+    },
+    "byPhase": {
+      "mulligan": 1,
+      "playing": 1174,
+      "round_end": 116
+    },
+    "byPolicy": {
+      "headless-round-end-auto-resolver": 116,
+      "legal-heuristic-v0": 697,
+      "legal-heuristic-v1": 478
+    },
+    "byRound": {
+      "1": 887,
+      "2": 192,
+      "3": 212
+    },
+    "bySuite": {
+      "benchmark-v1-starter-matrix-v1": 1291
+    }
+  },
+  "casebookLabelCounts": {
+    "high_next_public_action_count": 172,
+    "high_target_expansion": 179,
+    "large_budget_root": 455,
+    "large_collision_bucket": 15,
+    "round_end_context": 717,
+    "terminal_context": 116
+  },
+  "casebookReadinessStatus": "casebook_ready",
+  "casebookRootCount": 1291,
+  "casebookRootPercentageOfBranchingRoots": 32.445,
+  "casebookRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-post-one-ply-branching-budget-casebook:cFp73",
+  "cFp74ReadinessHintCounts": {
+    "casebook_first": 243,
+    "second_ply_scaffold_candidate": 1048
+  },
+  "cFp74Recommendation": "cFp74 can be a benchmark-only bounded second-ply public-action scaffold with explicit budget caps and skipped-over-budget counters; it should still avoid rollout, action quality, ranking, move choice, and product AI wiring.",
+  "explicitNonClaims": [
+    "cFp73 classifies branching and transition shape only.",
+    "No second ply was run.",
+    "No rollout was run.",
+    "No action quality estimate was computed.",
+    "No ordering or selection output was produced.",
+    "No outcome-probability estimate was produced.",
+    "No product AI behavior changed.",
+    "Skipped roots are carried beside the casebook rows."
+  ],
+  "hiddenInfoSafetyNote": "cFp73 reads committed cFp72 scalar artifacts and writes root metadata, counters, bucket labels, source hashes, and skip counters only. It excludes private identities, sampled payloads, engine traces, concrete move payloads, ranking outputs, estimates, and product AI wiring.",
+  "highNextPublicActionCountRootCount": 172,
+  "highTargetExpansionRootCount": 179,
+  "largeBudgetRootCount": 455,
+  "largeCollisionBucketRootCount": 15,
+  "primaryCasebookLabelCounts": {
+    "large_budget_root": 455,
+    "large_collision_bucket": 15,
+    "round_end_context": 705,
+    "terminal_context": 116
+  },
+  "primaryCasebookLabelCrossCounts": {
+    "byFaction": {
+      "large_budget_root": {
+        "monsters": 87,
+        "nilfgaard": 81,
+        "northern_realms": 95,
+        "scoiatael": 114,
+        "skellige": 78
+      },
+      "large_collision_bucket": {
+        "monsters": 2,
+        "nilfgaard": 8,
+        "northern_realms": 3,
+        "scoiatael": 1,
+        "skellige": 1
+      },
+      "round_end_context": {
+        "monsters": 101,
+        "nilfgaard": 191,
+        "northern_realms": 181,
+        "scoiatael": 109,
+        "skellige": 123
+      },
+      "terminal_context": {
+        "monsters": 23,
+        "nilfgaard": 24,
+        "northern_realms": 22,
+        "scoiatael": 23,
+        "skellige": 24
+      }
+    },
+    "byFirstPlyPublicActionKind": {},
+    "byPhase": {
+      "large_budget_root": {
+        "mulligan": 1,
+        "playing": 454
+      },
+      "large_collision_bucket": {
+        "playing": 15
+      },
+      "round_end_context": {
+        "playing": 705
+      },
+      "terminal_context": {
+        "round_end": 116
+      }
+    },
+    "byPolicy": {
+      "large_budget_root": {
+        "legal-heuristic-v0": 249,
+        "legal-heuristic-v1": 206
+      },
+      "large_collision_bucket": {
+        "legal-heuristic-v0": 6,
+        "legal-heuristic-v1": 9
+      },
+      "round_end_context": {
+        "legal-heuristic-v0": 442,
+        "legal-heuristic-v1": 263
+      },
+      "terminal_context": {
+        "headless-round-end-auto-resolver": 116
+      }
+    },
+    "byPostOnePlyActorLabel": {
+      "large_budget_root": {
+        "mixed": 7,
+        "policy_actor": 448
+      },
+      "large_collision_bucket": {
+        "mixed": 5,
+        "policy_actor": 10
+      },
+      "round_end_context": {
+        "mixed": 663,
+        "system_round_end_resolver": 42
+      },
+      "terminal_context": {
+        "terminal_game_end": 116
+      }
+    },
+    "byPostOnePlyPhaseLabel": {
+      "large_budget_root": {
+        "mixed": 7,
+        "playing": 448
+      },
+      "large_collision_bucket": {
+        "mixed": 5,
+        "playing": 10
+      },
+      "round_end_context": {
+        "mixed": 663,
+        "round_end": 42
+      },
+      "terminal_context": {
+        "game_end": 116
+      }
+    },
+    "byRound": {
+      "large_budget_root": {
+        "1": 451,
+        "2": 4
+      },
+      "large_collision_bucket": {
+        "1": 9,
+        "2": 4,
+        "3": 2
+      },
+      "round_end_context": {
+        "1": 427,
+        "2": 163,
+        "3": 115
+      },
+      "terminal_context": {
+        "2": 21,
+        "3": 95
+      }
+    }
+  },
+  "roundEndContextRootCount": 717,
+  "schemaVersion": "determinized-pimc-post-one-ply-branching-budget-casebook-summary-v1",
+  "skipCounterPercentages": {
+    "byDeckPreset": {
+      "official-monsters-starter": {
+        "count": 4,
+        "percentageOfSkippedRoots": 6.349
+      },
+      "official-nilfgaard-starter": {
+        "count": 11,
+        "percentageOfSkippedRoots": 17.46
+      },
+      "official-northern-realms-starter": {
+        "count": 39,
+        "percentageOfSkippedRoots": 61.905
+      },
+      "official-scoiatael-starter": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "official-skellige-starter": {
+        "count": 3,
+        "percentageOfSkippedRoots": 4.762
+      }
+    },
+    "byFaction": {
+      "monsters": {
+        "count": 4,
+        "percentageOfSkippedRoots": 6.349
+      },
+      "nilfgaard": {
+        "count": 11,
+        "percentageOfSkippedRoots": 17.46
+      },
+      "northern_realms": {
+        "count": 39,
+        "percentageOfSkippedRoots": 61.905
+      },
+      "scoiatael": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "skellige": {
+        "count": 3,
+        "percentageOfSkippedRoots": 4.762
+      }
+    },
+    "byInvalidReason": {
+      "insufficient_prior_remaining": {
+        "count": 63,
+        "percentageOfSkippedRoots": 100
+      }
+    },
+    "byMatchup": {
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": {
+        "count": 2,
+        "percentageOfSkippedRoots": 3.175
+      },
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": {
+        "count": 1,
+        "percentageOfSkippedRoots": 1.587
+      },
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": {
+        "count": 1,
+        "percentageOfSkippedRoots": 1.587
+      },
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": {
+        "count": 7,
+        "percentageOfSkippedRoots": 11.111
+      },
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": {
+        "count": 4,
+        "percentageOfSkippedRoots": 6.349
+      },
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": {
+        "count": 24,
+        "percentageOfSkippedRoots": 38.095
+      },
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": {
+        "count": 3,
+        "percentageOfSkippedRoots": 4.762
+      },
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": {
+        "count": 2,
+        "percentageOfSkippedRoots": 3.175
+      },
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": {
+        "count": 1,
+        "percentageOfSkippedRoots": 1.587
+      },
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": {
+        "count": 3,
+        "percentageOfSkippedRoots": 4.762
+      },
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": {
+        "count": 2,
+        "percentageOfSkippedRoots": 3.175
+      },
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": {
+        "count": 1,
+        "percentageOfSkippedRoots": 1.587
+      }
+    },
+    "byPhase": {
+      "playing": {
+        "count": 57,
+        "percentageOfSkippedRoots": 90.476
+      },
+      "round_end": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      }
+    },
+    "byPolicy": {
+      "headless-round-end-auto-resolver": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "legal-heuristic-v0": {
+        "count": 47,
+        "percentageOfSkippedRoots": 74.603
+      },
+      "legal-heuristic-v1": {
+        "count": 10,
+        "percentageOfSkippedRoots": 15.873
+      }
+    },
+    "byProvenanceLabel": {
+      "mixed_public_zones": {
+        "count": 42,
+        "percentageOfSkippedRoots": 66.667
+      },
+      "round_end_public_zone": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "single_zone_board": {
+        "count": 6,
+        "percentageOfSkippedRoots": 9.524
+      },
+      "single_zone_discard": {
+        "count": 9,
+        "percentageOfSkippedRoots": 14.286
+      }
+    },
+    "byRound": {
+      "1": {
+        "count": 28,
+        "percentageOfSkippedRoots": 44.444
+      },
+      "2": {
+        "count": 28,
+        "percentageOfSkippedRoots": 44.444
+      },
+      "3": {
+        "count": 7,
+        "percentageOfSkippedRoots": 11.111
+      }
+    },
+    "bySkipReason": {
+      "sampler_invalid_public_zone_count_deficit": {
+        "count": 63,
+        "percentageOfSkippedRoots": 100
+      }
+    },
+    "bySuite": {
+      "benchmark-v1-starter-matrix-v1": {
+        "count": 63,
+        "percentageOfSkippedRoots": 100
+      }
+    }
+  },
+  "skipCounters": {
+    "byDeckPreset": {
+      "official-monsters-starter": 4,
+      "official-nilfgaard-starter": 11,
+      "official-northern-realms-starter": 39,
+      "official-scoiatael-starter": 6,
+      "official-skellige-starter": 3
+    },
+    "byFaction": {
+      "monsters": 4,
+      "nilfgaard": 11,
+      "northern_realms": 39,
+      "scoiatael": 6,
+      "skellige": 3
+    },
+    "byInvalidReason": {
+      "insufficient_prior_remaining": 63
+    },
+    "byMatchup": {
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 2,
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 1,
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 1,
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 6,
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 7,
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 4,
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 6,
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 24,
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 3,
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 2,
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 1,
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 3,
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 2,
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 1
+    },
+    "byPhase": {
+      "playing": 57,
+      "round_end": 6
+    },
+    "byPolicy": {
+      "headless-round-end-auto-resolver": 6,
+      "legal-heuristic-v0": 47,
+      "legal-heuristic-v1": 10
+    },
+    "byProvenanceLabel": {
+      "mixed_public_zones": 42,
+      "round_end_public_zone": 6,
+      "single_zone_board": 6,
+      "single_zone_discard": 9
+    },
+    "byRound": {
+      "1": 28,
+      "2": 28,
+      "3": 7
+    },
+    "bySkipReason": {
+      "sampler_invalid_public_zone_count_deficit": 63
+    },
+    "bySuite": {
+      "benchmark-v1-starter-matrix-v1": 63
+    }
+  },
+  "skippedRootCount": 63,
+  "skippedRootPercentage": 1.559,
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "sourceCfp72ArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/manifest.json",
+      "sha256": "f3dc87c3f54bb49ca4b813edc8ce4397ab85270d5e264e62803d648771480038"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/summary.json",
+      "sha256": "a698f09752bca8f29150771e2f4126edee4ed5f505c50e59f458cfdc05f03d59"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/branching-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/branching-roots.jsonl",
+      "sha256": "f8d8ba394d1167d4001934fbb0b06fe4dfaa80fe418e6833da6cd4d480255e9e"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/skipped-roots.jsonl",
+      "sha256": "9310f67d43c2e367e2eb1e3aadba678b380c39b74f7bbd1941af30133aaddfc0"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/report.md",
+      "sha256": "c8dd3a4f0f42bf8de1c8ed676fb75703c4e427db94474bfe3c45841852bf8b92"
+    }
+  ],
+  "sourceCfp72FirstPlyPublicActionKindAggregates": {
+    "aggregateActorCountsByKind": {
+      "choose_mulligan": {
+        "policy_actor": 2400
+      },
+      "choose_prompt_option": {
+        "policy_actor": 2320
+      },
+      "pass": {
+        "policy_actor": 19560,
+        "system_round_end_resolver": 5736
+      },
+      "play_card": {
+        "policy_actor": 105992
+      },
+      "resolve_round_end": {
+        "policy_actor": 1720,
+        "terminal_game_end": 928
+      },
+      "use_leader": {
+        "policy_actor": 11904
+      }
+    },
+    "aggregateBranchingStatusCountsByKind": {
+      "choose_mulligan": {
+        "completed": 2400
+      },
+      "choose_prompt_option": {
+        "completed": 2320
+      },
+      "pass": {
+        "completed": 25296
+      },
+      "play_card": {
+        "completed": 105992
+      },
+      "resolve_round_end": {
+        "completed": 2648
+      },
+      "use_leader": {
+        "completed": 11904
+      }
+    },
+    "aggregateBudgetBucketCountsByKind": {
+      "choose_mulligan": {
+        "large": 3,
+        "medium": 104,
+        "small": 5,
+        "tiny": 2288
+      },
+      "choose_prompt_option": {
+        "large": 1,
+        "medium": 758,
+        "small": 863,
+        "tiny": 698
+      },
+      "pass": {
+        "large": 658,
+        "medium": 10747,
+        "small": 5891,
+        "tiny": 8000
+      },
+      "play_card": {
+        "large": 4029,
+        "medium": 61454,
+        "small": 31307,
+        "tiny": 9202
+      },
+      "resolve_round_end": {
+        "medium": 304,
+        "small": 1081,
+        "tiny": 335,
+        "zero": 928
+      },
+      "use_leader": {
+        "large": 237,
+        "medium": 5123,
+        "small": 3127,
+        "tiny": 3417
+      }
+    },
+    "perRootAttribution": "not_available_in_cfp72_compact_root_rows"
+  },
+  "sourceCfp72RunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-post-one-ply-branching-budget-v0:cFp72",
+  "sourceConsistency": {
+    "branchingRootCountDelta": 0,
+    "branchingRootsRead": 3979,
+    "branchingRootsWithBlockedBudgetBucket": 0,
+    "branchingRootsWithFailedOrDeferredPairs": 0,
+    "branchingRootsWithProbeStatusAnomaly": 0,
+    "duplicateBranchingRootKeys": 0,
+    "duplicateSkippedRootKeys": 0,
+    "missingSourceArtifactHashCount": 0,
+    "observedRootDeferredBucketCount": 0,
+    "observedRootExtremeBucketCount": 0,
+    "observedRootFailedBucketCount": 0,
+    "observedRootLargeBucketCount": 455,
+    "observedRootVeryLargeBucketCount": 0,
+    "skippedRootCountDelta": 0,
+    "skippedRootsRead": 63,
+    "sourceCfp72ProbeReadinessStatus": "probe_ready",
+    "sourceCfp72SummaryNotReady": 0,
+    "status": "casebook_ready",
+    "summaryBucketMismatchCount": 0,
+    "summaryRootDeferredBucketCount": 0,
+    "summaryRootExtremeBucketCount": 0,
+    "summaryRootFailedBucketCount": 0,
+    "summaryRootLargeBucketCount": 455,
+    "summaryRootVeryLargeBucketCount": 0
+  },
+  "statusAnomalyRootCount": 0,
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "terminalContextRootCount": 116,
+  "totalCfp72RootCount": 4042,
+  "transitionContextLabelCounts": {
+    "ordinary_policy_actor": 458,
+    "round_end_resolver_present": 717,
+    "terminal_present": 116
+  }
+}

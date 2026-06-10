@@ -37,6 +37,8 @@ The latest one-ply public action outcome skeleton phase is cFp71:
 One-Ply Public Action Outcome Skeleton.
 The latest post-one-ply branching budget phase is cFp72:
 Post-One-Ply Branching Budget Probe v0.
+The latest post-one-ply branching budget casebook phase is cFp73:
+Post-One-Ply Branching Budget Casebook.
 The latest sampler public-zone accounting phase is cFp65: Sampler Public-Zone
 Accounting Repair Probe. The latest sampler public-zone provenance phase is
 cFp64: Sampler Public-Zone Provenance Casebook. The latest sampler public-count
@@ -144,6 +146,19 @@ post-one-ply public action budget of 5.765. It counts only the next legal/public
 action surface after first-ply execution and does not run rollouts, compute
 action values, rank actions, choose moves, estimate win probability, make
 strength claims, or change product AI behavior.
+cFp73 reads only the committed cFp72 scalar artifacts and writes deterministic
+`determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/` artifacts.
+Current has 1,291 casebook roots, 63 skipped roots, and 32.445% casebook share
+of branching roots. Robust has 10,721 casebook roots, 340 skipped roots, and
+33.350% casebook share. Both suites are casebook-ready with 0 status anomalies,
+0 very-large/extreme bucket roots, 0 duplicate keys, and 0 source count
+mismatches. Robust pressure labels are 2,073 high-threshold, 1,939 large, and
+6,709 transition-context-only moderate rows. cFp73 recommends a bounded
+benchmark-only second-ply public-action scaffold with explicit budget caps and
+skipped-over-budget counters. It does not re-run root observation, rebuild
+samples, execute a second ply, run rollouts, compute action values, rank
+actions, choose moves, make strength claims, expose an AI Lab runner, or change
+product AI behavior.
 cFp59 adds benchmark-only hidden-info-safe root-profiler artifacts and AI Lab
 metadata. cFp60 adds `known_preset_decklist_prior`, sampled-world validation,
 and public action abstraction as sampler-readiness infrastructure only. cFp61 is
@@ -154,9 +169,10 @@ invalid-root casebook infrastructure only. cFp68 is valid-root-only determinized
 probe contract infrastructure only. cFp69 is public-action probe scaffold
 infrastructure only. cFp70 is sampled-world action availability infrastructure
 only. cFp71 is one-ply outcome skeleton infrastructure only. cFp72 is
-post-one-ply branching budget infrastructure only. cFp59, cFp60,
+post-one-ply branching budget infrastructure only. cFp73 is post-one-ply
+branching budget casebook infrastructure only. cFp59, cFp60,
 cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, cFp70, and
-cFp71, and cFp72 do not change
+cFp71, cFp72, and cFp73 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
@@ -372,6 +388,13 @@ diagnostics stack builds on the cFp27 through cFp56 chain:
   1,230,736 completed first-ply pairs. Both suites have 0 failed/deferred pairs.
   cFp72 does not run rollouts, rank actions, choose moves, make strength claims,
   or change policy behavior.
+- cFp73: evaluation-only post-one-ply branching budget casebook; reads
+  committed cFp72 scalar artifacts and emits selected scalar casebook rows plus
+  skipped-root scalar rows. Current has 1,291 casebook / 63 skipped rows; robust
+  has 10,721 casebook / 340 skipped rows. Both suites are casebook-ready with
+  0 status anomalies and 0 very-large/extreme bucket roots. cFp73 recommends a
+  bounded benchmark-only second-ply public-action scaffold with explicit caps
+  and skipped-over-budget counters, not product AI wiring or a search policy.
 
 Current cFp55 artifact totals, unchanged in finding counts from cFp53/cFp54:
 

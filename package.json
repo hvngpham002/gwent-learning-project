@@ -49,6 +49,8 @@
     "benchmark:determinized-one-ply-outcome:v1-robust": "tsx scripts/run-benchmark-determinized-pimc-one-ply-outcome-skeleton-v0-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
     "benchmark:determinized-branching-budget:v1-starter-matrix": "tsx scripts/run-benchmark-determinized-pimc-post-one-ply-branching-budget-v0-report.ts --suite benchmark-v1-starter-matrix-v1",
     "benchmark:determinized-branching-budget:v1-robust": "tsx scripts/run-benchmark-determinized-pimc-post-one-ply-branching-budget-v0-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
+    "benchmark:determinized-branching-budget-casebook:v1-starter-matrix": "tsx scripts/run-benchmark-determinized-pimc-post-one-ply-branching-budget-casebook-report.ts --suite benchmark-v1-starter-matrix-v1",
+    "benchmark:determinized-branching-budget-casebook:v1-robust": "tsx scripts/run-benchmark-determinized-pimc-post-one-ply-branching-budget-casebook-report.ts --suite benchmark-v1-starter-matrix-robust-v1",
     "benchmark:long": "node scripts/run-long-benchmark.mjs",
     "check:forbidden-imports": "node scripts/check-forbidden-imports.mjs",
     "check:project-state": "node scripts/check-project-state-update.mjs",

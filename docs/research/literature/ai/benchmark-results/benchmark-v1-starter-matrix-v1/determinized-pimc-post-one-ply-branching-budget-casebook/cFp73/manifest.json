@@ -1,0 +1,41 @@
+{
+  "artifactHashes": {
+    "casebook-roots.jsonl": "74bfcb069b3aef3d5865600e943530ce019755f01a3997a3bc0dec7095f75c61",
+    "report.md": "69d9dfd5130d47ab5e969c9b1fb8750e917a344621f3fc72ec8430e5b6a90d9d",
+    "skipped-roots.jsonl": "1cb3c499d13b16f51217f77116cb3f75817142124c53e889878f94746b22b37e",
+    "summary.json": "d641b62fde5bba375cf88621b860094fda114903ad94f55823983622a6b2550f"
+  },
+  "branchingRootCount": 3979,
+  "casebookReadinessStatus": "casebook_ready",
+  "casebookRootCount": 1291,
+  "casebookRunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-post-one-ply-branching-budget-casebook:cFp73",
+  "cFp74Recommendation": "cFp74 can be a benchmark-only bounded second-ply public-action scaffold with explicit budget caps and skipped-over-budget counters; it should still avoid rollout, action quality, ranking, move choice, and product AI wiring.",
+  "explicitNonClaims": [
+    "cFp73 classifies branching and transition shape only.",
+    "No second ply was run.",
+    "No rollout was run.",
+    "No action quality estimate was computed.",
+    "No ordering or selection output was produced.",
+    "No outcome-probability estimate was produced.",
+    "No product AI behavior changed.",
+    "Skipped roots are carried beside the casebook rows."
+  ],
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "casebook-roots.jsonl",
+    "skipped-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "omitted from committed artifacts so cFp73 hashes remain deterministic",
+  "hiddenInfoSafetyNote": "cFp73 reads committed cFp72 scalar artifacts and writes root metadata, counters, bucket labels, source hashes, and skip counters only. It excludes private identities, sampled payloads, engine traces, concrete move payloads, ranking outputs, estimates, and product AI wiring.",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73",
+  "rootSchemaVersion": "determinized-pimc-post-one-ply-branching-budget-casebook-root-v1",
+  "schemaVersion": "determinized-pimc-post-one-ply-branching-budget-casebook-artifact-v1",
+  "skippedRootCount": 63,
+  "skippedRootSchemaVersion": "determinized-pimc-post-one-ply-branching-budget-casebook-skipped-root-v1",
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "sourceCfp72RunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-post-one-ply-branching-budget-v0:cFp72",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "determinized-pimc-post-one-ply-branching-budget-casebook-summary-v1"
+}

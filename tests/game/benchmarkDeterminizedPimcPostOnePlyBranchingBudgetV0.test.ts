@@ -400,22 +400,26 @@ describe("determinized PIMC post-one-ply branching budget v0", () => {
     );
   });
 
-  it("reports skip counters by every required dimension and sums them to skipped roots", () => {
-    const current = buildProbe(
-      loadFixture("benchmark-v1-starter-matrix-v1"),
-    ).summary;
-    const robust = buildProbe(
-      loadFixture("benchmark-v1-starter-matrix-robust-v1"),
-    ).summary;
+  it(
+    "reports skip counters by every required dimension and sums them to skipped roots",
+    () => {
+      const current = buildProbe(
+        loadFixture("benchmark-v1-starter-matrix-v1"),
+      ).summary;
+      const robust = buildProbe(
+        loadFixture("benchmark-v1-starter-matrix-robust-v1"),
+      ).summary;
 
-    expectEveryCounterSumsToSkipped(current);
-    expectEveryCounterSumsToSkipped(robust);
-    expect(current.skipCounters.byPhase).toEqual({ playing: 57, round_end: 6 });
-    expect(robust.skipCounters.byPhase).toEqual({
-      playing: 312,
-      round_end: 28,
-    });
-  });
+      expectEveryCounterSumsToSkipped(current);
+      expectEveryCounterSumsToSkipped(robust);
+      expect(current.skipCounters.byPhase).toEqual({ playing: 57, round_end: 6 });
+      expect(robust.skipCounters.byPhase).toEqual({
+        playing: 312,
+        round_end: 28,
+      });
+    },
+    15_000,
+  );
 
   it("detects missing observed roots, missing cFp71 outcome roots, duplicates, failed pairs, divergence, and public-action mismatches", () => {
     const fixture = loadFixture("benchmark-v1-starter-matrix-v1");

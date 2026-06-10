@@ -35,3 +35,5 @@ export * from './determinizedPimcOnePlyOutcomeSkeletonV0';
 export * from './determinizedPimcOnePlyOutcomeSkeletonV0Artifacts';
 export * from './determinizedPimcPostOnePlyBranchingBudgetV0';
 export * from './determinizedPimcPostOnePlyBranchingBudgetV0Artifacts';
+export * from './determinizedPimcPostOnePlyBranchingBudgetCasebook';
+export * from './determinizedPimcPostOnePlyBranchingBudgetCasebookArtifacts';
