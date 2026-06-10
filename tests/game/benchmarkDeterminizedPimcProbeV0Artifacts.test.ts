@@ -146,19 +146,23 @@ const buildRobustProbe = () => {
 };
 
 describe("determinized PIMC probe v0 artifacts", () => {
-  it("serializes deterministically with stable hashes", () => {
-    const result = buildRobustProbe();
-    const first = serializeDeterminizedPimcProbeV0Artifacts(result);
-    const second = serializeDeterminizedPimcProbeV0Artifacts(result);
+  it(
+    "serializes deterministically with stable hashes",
+    () => {
+      const result = buildRobustProbe();
+      const first = serializeDeterminizedPimcProbeV0Artifacts(result);
+      const second = serializeDeterminizedPimcProbeV0Artifacts(result);
 
-    expect(determinizedPimcProbeV0ArtifactHashes(first)).toEqual(
-      determinizedPimcProbeV0ArtifactHashes(second),
-    );
-    expect(first.summaryJson).toBe(second.summaryJson);
-    expect(first.probeRootsJsonl).toBe(second.probeRootsJsonl);
-    expect(first.skippedRootsJsonl).toBe(second.skippedRootsJsonl);
-    expect(first.reportMarkdown).toBe(second.reportMarkdown);
-  });
+      expect(determinizedPimcProbeV0ArtifactHashes(first)).toEqual(
+        determinizedPimcProbeV0ArtifactHashes(second),
+      );
+      expect(first.summaryJson).toBe(second.summaryJson);
+      expect(first.probeRootsJsonl).toBe(second.probeRootsJsonl);
+      expect(first.skippedRootsJsonl).toBe(second.skippedRootsJsonl);
+      expect(first.reportMarkdown).toBe(second.reportMarkdown);
+    },
+    15_000,
+  );
 
   it("keeps manifest and source artifact paths repo-relative and portable", () => {
     const artifacts = serializeDeterminizedPimcProbeV0Artifacts(

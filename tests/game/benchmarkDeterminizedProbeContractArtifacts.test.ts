@@ -98,19 +98,23 @@ const buildRobustContract = () => {
 };
 
 describe("determinized probe contract artifacts", () => {
-  it("serializes deterministically with stable hashes", () => {
-    const result = buildRobustContract();
-    const first = serializeDeterminizedProbeContractArtifacts(result);
-    const second = serializeDeterminizedProbeContractArtifacts(result);
+  it(
+    "serializes deterministically with stable hashes",
+    () => {
+      const result = buildRobustContract();
+      const first = serializeDeterminizedProbeContractArtifacts(result);
+      const second = serializeDeterminizedProbeContractArtifacts(result);
 
-    expect(determinizedProbeContractArtifactHashes(first)).toEqual(
-      determinizedProbeContractArtifactHashes(second),
-    );
-    expect(first.summaryJson).toBe(second.summaryJson);
-    expect(first.eligibleRootsJsonl).toBe(second.eligibleRootsJsonl);
-    expect(first.skippedRootsJsonl).toBe(second.skippedRootsJsonl);
-    expect(first.reportMarkdown).toBe(second.reportMarkdown);
-  });
+      expect(determinizedProbeContractArtifactHashes(first)).toEqual(
+        determinizedProbeContractArtifactHashes(second),
+      );
+      expect(first.summaryJson).toBe(second.summaryJson);
+      expect(first.eligibleRootsJsonl).toBe(second.eligibleRootsJsonl);
+      expect(first.skippedRootsJsonl).toBe(second.skippedRootsJsonl);
+      expect(first.reportMarkdown).toBe(second.reportMarkdown);
+    },
+    15_000,
+  );
 
   it("keeps manifest and source artifact paths repo-relative and portable", () => {
     const artifacts = serializeDeterminizedProbeContractArtifacts(

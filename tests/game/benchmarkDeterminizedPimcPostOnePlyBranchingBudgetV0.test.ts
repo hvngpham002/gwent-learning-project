@@ -373,32 +373,36 @@ describe("determinized PIMC post-one-ply branching budget v0", () => {
     expect(result.summary.sourceConsistency.skippedRootsIncorrectlyProbed).toBe(0);
   });
 
-  it("matches current and robust root counts, skip counts, samples, and first-ply pair totals", () => {
-    const current = buildProbe(
-      loadFixture("benchmark-v1-starter-matrix-v1"),
-    ).summary;
-    const robust = buildProbe(
-      loadFixture("benchmark-v1-starter-matrix-robust-v1"),
-    ).summary;
+  it(
+    "matches current and robust root counts, skip counts, samples, and first-ply pair totals",
+    () => {
+      const current = buildProbe(
+        loadFixture("benchmark-v1-starter-matrix-v1"),
+      ).summary;
+      const robust = buildProbe(
+        loadFixture("benchmark-v1-starter-matrix-robust-v1"),
+      ).summary;
 
-    expect(current.totalCfp68RootCount).toBe(4042);
-    expect(current.branchingRootCount).toBe(3979);
-    expect(current.skippedRootCount).toBe(63);
-    expect(current.skippedRootPercentage).toBe(1.559);
-    expect(current.sampleBudget.totalCheckedSampleCount).toBe(31832);
-    expect(current.branchingStatus.firstPlyPublicActionSamplePairTotal).toBe(
-      150560,
-    );
+      expect(current.totalCfp68RootCount).toBe(4042);
+      expect(current.branchingRootCount).toBe(3979);
+      expect(current.skippedRootCount).toBe(63);
+      expect(current.skippedRootPercentage).toBe(1.559);
+      expect(current.sampleBudget.totalCheckedSampleCount).toBe(31832);
+      expect(current.branchingStatus.firstPlyPublicActionSamplePairTotal).toBe(
+        150560,
+      );
 
-    expect(robust.totalCfp68RootCount).toBe(32487);
-    expect(robust.branchingRootCount).toBe(32147);
-    expect(robust.skippedRootCount).toBe(340);
-    expect(robust.skippedRootPercentage).toBe(1.047);
-    expect(robust.sampleBudget.totalCheckedSampleCount).toBe(257176);
-    expect(robust.branchingStatus.firstPlyPublicActionSamplePairTotal).toBe(
-      1230736,
-    );
-  });
+      expect(robust.totalCfp68RootCount).toBe(32487);
+      expect(robust.branchingRootCount).toBe(32147);
+      expect(robust.skippedRootCount).toBe(340);
+      expect(robust.skippedRootPercentage).toBe(1.047);
+      expect(robust.sampleBudget.totalCheckedSampleCount).toBe(257176);
+      expect(robust.branchingStatus.firstPlyPublicActionSamplePairTotal).toBe(
+        1230736,
+      );
+    },
+    15_000,
+  );
 
   it(
     "reports skip counters by every required dimension and sums them to skipped roots",

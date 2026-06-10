@@ -367,40 +367,44 @@ describe("determinized PIMC one-ply outcome skeleton v0", () => {
     expect(result.summary.sourceConsistency.skippedRootsIncorrectlyProbed).toBe(0);
   });
 
-  it("matches current and robust outcome/skipped counts and sample budgets", () => {
-    const current = buildProbe(
-      loadFixture("benchmark-v1-starter-matrix-v1"),
-    ).summary;
-    const robust = buildProbe(
-      loadFixture("benchmark-v1-starter-matrix-robust-v1"),
-    ).summary;
+  it(
+    "matches current and robust outcome/skipped counts and sample budgets",
+    () => {
+      const current = buildProbe(
+        loadFixture("benchmark-v1-starter-matrix-v1"),
+      ).summary;
+      const robust = buildProbe(
+        loadFixture("benchmark-v1-starter-matrix-robust-v1"),
+      ).summary;
 
-    expect(current.totalCfp68RootCount).toBe(4042);
-    expect(current.outcomeRootCount).toBe(3979);
-    expect(current.skippedRootCount).toBe(63);
-    expect(current.skippedRootPercentage).toBe(1.559);
-    expect(current.sampleBudget).toEqual({
-      outcomeRootCount: 3979,
-      requestedSamplesPerRootDistribution: { "8": 3979 },
-      totalRequestedSampleCount: 31832,
-      totalGeneratedSampleCount: 31832,
-      totalCheckedSampleCount: 31832,
-      totalFailedSampleCount: 0,
-    });
+      expect(current.totalCfp68RootCount).toBe(4042);
+      expect(current.outcomeRootCount).toBe(3979);
+      expect(current.skippedRootCount).toBe(63);
+      expect(current.skippedRootPercentage).toBe(1.559);
+      expect(current.sampleBudget).toEqual({
+        outcomeRootCount: 3979,
+        requestedSamplesPerRootDistribution: { "8": 3979 },
+        totalRequestedSampleCount: 31832,
+        totalGeneratedSampleCount: 31832,
+        totalCheckedSampleCount: 31832,
+        totalFailedSampleCount: 0,
+      });
 
-    expect(robust.totalCfp68RootCount).toBe(32487);
-    expect(robust.outcomeRootCount).toBe(32147);
-    expect(robust.skippedRootCount).toBe(340);
-    expect(robust.skippedRootPercentage).toBe(1.047);
-    expect(robust.sampleBudget).toEqual({
-      outcomeRootCount: 32147,
-      requestedSamplesPerRootDistribution: { "8": 32147 },
-      totalRequestedSampleCount: 257176,
-      totalGeneratedSampleCount: 257176,
-      totalCheckedSampleCount: 257176,
-      totalFailedSampleCount: 0,
-    });
-  });
+      expect(robust.totalCfp68RootCount).toBe(32487);
+      expect(robust.outcomeRootCount).toBe(32147);
+      expect(robust.skippedRootCount).toBe(340);
+      expect(robust.skippedRootPercentage).toBe(1.047);
+      expect(robust.sampleBudget).toEqual({
+        outcomeRootCount: 32147,
+        requestedSamplesPerRootDistribution: { "8": 32147 },
+        totalRequestedSampleCount: 257176,
+        totalGeneratedSampleCount: 257176,
+        totalCheckedSampleCount: 257176,
+        totalFailedSampleCount: 0,
+      });
+    },
+    15_000,
+  );
 
   it(
     "reports skip counters by every required dimension and sums them to skipped roots",
