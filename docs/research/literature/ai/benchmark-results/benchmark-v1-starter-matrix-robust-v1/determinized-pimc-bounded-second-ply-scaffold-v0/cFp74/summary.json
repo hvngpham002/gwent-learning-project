@@ -1,0 +1,555 @@
+{
+  "branchingRootCount": 32147,
+  "budgetPressureLabelCounts": {
+    "high_threshold": 2073,
+    "large": 1939,
+    "low": 21426,
+    "moderate": 6709
+  },
+  "capPolicy": {
+    "postOnePlyPublicActionCapPerState": 16,
+    "robustTotalPlannedSecondPlyPairSoftCap": 7500000,
+    "rootPublicActionCap": 16,
+    "sampleCountCapPerRoot": 8,
+    "secondPlyPairCapPerRoot": 512,
+    "version": "cfp74-default-root-bounded-v1"
+  },
+  "capStatusCounts": {
+    "in_cap": 28915,
+    "over_budget": 3232
+  },
+  "casebookPresenceCounts": {
+    "in_casebook": 10721,
+    "not_in_casebook": 21426
+  },
+  "cFp74ReadinessHintCounts": {
+    "casebook_first": 2073,
+    "second_ply_scaffold_candidate": 30074
+  },
+  "cFp75Recommendation": "cFp75 should use the cFp74 in-cap versus over-budget split to decide between a cap-targeted casebook, a cap calibration repair, or a third-surface budget probe for in-cap roots. It should still avoid rollout, quality, strength, and product-wiring claims.",
+  "completedSecondPlyPairCount": 5101445,
+  "countsByDeckPreset": {
+    "official-monsters-starter": 5625,
+    "official-nilfgaard-starter": 7453,
+    "official-northern-realms-starter": 7084,
+    "official-scoiatael-starter": 6396,
+    "official-skellige-starter": 5589
+  },
+  "countsByFaction": {
+    "monsters": 5625,
+    "nilfgaard": 7453,
+    "northern_realms": 7084,
+    "scoiatael": 6396,
+    "skellige": 5589
+  },
+  "countsByMatchup": {
+    "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1": 1469,
+    "starter-monsters-heuristic-v0-vs-skellige-heuristic-v1": 1339,
+    "starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0": 1483,
+    "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0": 1412,
+    "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 1595,
+    "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 1658,
+    "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 1552,
+    "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 1671,
+    "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 1752,
+    "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 1678,
+    "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 1600,
+    "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 2100,
+    "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 1763,
+    "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 1569,
+    "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 1549,
+    "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 1808,
+    "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 1671,
+    "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 1556,
+    "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1": 1412,
+    "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0": 1510
+  },
+  "countsByPhase": {
+    "mulligan": 2948,
+    "playing": 26554,
+    "round_end": 2645
+  },
+  "countsByPolicy": {
+    "headless-round-end-auto-resolver": 2645,
+    "legal-heuristic-v0": 15123,
+    "legal-heuristic-v1": 14379
+  },
+  "countsByRound": {
+    "1": 22242,
+    "2": 7043,
+    "3": 2862
+  },
+  "countsBySuite": {
+    "benchmark-v1-starter-matrix-robust-v1": 32147
+  },
+  "explicitNonClaims": [
+    "cFp74 is execution-scaffold evidence only.",
+    "No rollout was run.",
+    "No quality estimate was computed.",
+    "No ordering output was produced.",
+    "No best option was selected.",
+    "No outcome-probability estimate was produced.",
+    "No reward target was produced.",
+    "No product AI behavior changed.",
+    "No third layer was counted."
+  ],
+  "failedOrDeferredSecondPlyPairCount": 0,
+  "hiddenInfoSafetyNote": "cFp74 artifacts contain public root metadata, scalar cap accounting, scalar second-layer completion counts, transition-shape counts, and source artifact hashes only. They exclude private identities, sampled payloads, trace payloads, raw action payloads, ordering outputs, estimates, rollout results, and product AI wiring.",
+  "inCapRootCount": 28915,
+  "inheritedSkipCounters": {
+    "byDeckPreset": {
+      "official-monsters-starter": 26,
+      "official-nilfgaard-starter": 102,
+      "official-northern-realms-starter": 136,
+      "official-scoiatael-starter": 37,
+      "official-skellige-starter": 39
+    },
+    "byFaction": {
+      "monsters": 26,
+      "nilfgaard": 102,
+      "northern_realms": 136,
+      "scoiatael": 37,
+      "skellige": 39
+    },
+    "byInvalidReason": {
+      "insufficient_prior_remaining": 340
+    },
+    "byMatchup": {
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 23,
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 17,
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 12,
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 31,
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 42,
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 44,
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 14,
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 59,
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 18,
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 16,
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 6,
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 37,
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 13,
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 8
+    },
+    "byPhase": {
+      "playing": 312,
+      "round_end": 28
+    },
+    "byPolicy": {
+      "headless-round-end-auto-resolver": 28,
+      "legal-heuristic-v0": 246,
+      "legal-heuristic-v1": 66
+    },
+    "byRound": {
+      "1": 222,
+      "2": 96,
+      "3": 22
+    },
+    "bySkipReason": {
+      "sampler_invalid_public_zone_count_deficit": 340
+    },
+    "bySuite": {
+      "benchmark-v1-starter-matrix-robust-v1": 340
+    }
+  },
+  "inheritedSkippedRootCount": 340,
+  "inheritedSkippedRootPercentage": 1.047,
+  "labelCountsByCapStatus": {
+    "in_cap": {
+      "large_budget_root": 2142,
+      "large_collision_bucket": 94,
+      "not_in_casebook": 20119,
+      "round_end_context": 5571,
+      "terminal_context": 989
+    },
+    "over_budget": {
+      "large_budget_root": 1773,
+      "large_collision_bucket": 3,
+      "not_in_casebook": 1307,
+      "round_end_context": 149
+    }
+  },
+  "overBudgetCounters": {
+    "byBudgetPressure": {
+      "high_threshold": 955,
+      "large": 821,
+      "low": 1307,
+      "moderate": 149
+    },
+    "byCasebookLabel": {
+      "large_budget_root": 1773,
+      "large_collision_bucket": 3,
+      "not_in_casebook": 1307,
+      "round_end_context": 149
+    },
+    "byDeckPreset": {
+      "official-monsters-starter": 437,
+      "official-nilfgaard-starter": 688,
+      "official-northern-realms-starter": 1104,
+      "official-scoiatael-starter": 327,
+      "official-skellige-starter": 676
+    },
+    "byFaction": {
+      "monsters": 437,
+      "nilfgaard": 688,
+      "northern_realms": 1104,
+      "scoiatael": 327,
+      "skellige": 676
+    },
+    "byMatchup": {
+      "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1": 30,
+      "starter-monsters-heuristic-v0-vs-skellige-heuristic-v1": 98,
+      "starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0": 24,
+      "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0": 115,
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 106,
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 90,
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 185,
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 126,
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 92,
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 219,
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 187,
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 370,
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 189,
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 291,
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 177,
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 352,
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 151,
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 280,
+      "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1": 74,
+      "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0": 76
+    },
+    "byPhase": {
+      "playing": 3232
+    },
+    "byPolicy": {
+      "legal-heuristic-v0": 1774,
+      "legal-heuristic-v1": 1458
+    },
+    "byRound": {
+      "1": 3217,
+      "2": 14,
+      "3": 1
+    },
+    "byTransitionContext": {
+      "ordinary_policy_actor": 3004,
+      "round_end_resolver_present": 228
+    }
+  },
+  "overBudgetReasonCounts": {
+    "root_second_ply_pair_cap_exceeded": 3232
+  },
+  "overBudgetRootCount": 3232,
+  "overBudgetRootPercentageOfBranchingRoots": 10.054,
+  "plannedSecondPlyPairCountInCap": 5101445,
+  "plannedSecondPlyPairCountOverBudget": 1993668,
+  "plannedSecondPlyPairCountTotal": 7095113,
+  "postSecondPlyActorCounts": {
+    "actor_resolution_failed": 0,
+    "no_actor": 0,
+    "policy_actor": 4799725,
+    "system_round_end_resolver": 290864,
+    "terminal_game_end": 10856
+  },
+  "postSecondPlyPhaseCounts": {
+    "game_end": 10856,
+    "mulligan": 13408,
+    "playing": 4786317,
+    "round_end": 290864
+  },
+  "primaryCasebookLabelCounts": {
+    "large_budget_root": 3915,
+    "large_collision_bucket": 97,
+    "not_in_casebook": 21426,
+    "round_end_context": 5720,
+    "terminal_context": 989
+  },
+  "scaffoldReadinessStatus": "ready_with_over_budget_skips",
+  "scaffoldRunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-bounded-second-ply-scaffold-v0:cFp74",
+  "schemaVersion": "determinized-pimc-bounded-second-ply-scaffold-v0-summary-v1",
+  "secondPlyExecutionStatusCounts": {
+    "completed": 28915
+  },
+  "secondPlyFailureReasonCounts": {
+    "first_ply_engine_exception": 0,
+    "first_ply_engine_rejected": 0,
+    "first_ply_move_conversion_failed": 0,
+    "first_ply_sample_action_missing": 0,
+    "sampled_root_rebuild_deferred": 0,
+    "second_ply_actor_resolution_failed": 0,
+    "second_ply_engine_exception": 0,
+    "second_ply_engine_rejected": 0,
+    "second_ply_legal_move_generation_failed": 0,
+    "second_ply_move_conversion_failed": 0,
+    "second_ply_public_action_abstraction_failed": 0
+  },
+  "secondPlyOutcomeRiskBucketCounts": {
+    "none": 28915
+  },
+  "secondPlyPublicActionKindCounts": {
+    "choose_mulligan": 18208,
+    "choose_prompt_option": 37408,
+    "pass": 883648,
+    "play_card": 3727731,
+    "resolve_round_end": 44776,
+    "use_leader": 389674
+  },
+  "secondPlyTargetKindCounts": {
+    "board_row": 2103394,
+    "card": 350333,
+    "card_instance_set": 0,
+    "deck_card_instance": 0,
+    "deck_card_source": 142074,
+    "none": 1476263,
+    "row_horn": 723014,
+    "weather": 306367
+  },
+  "secondPlyTargetSideCounts": {
+    "none": 1476263,
+    "opponent": 144409,
+    "own": 3174406,
+    "public": 306367
+  },
+  "secondPlyTransitionKindCounts": {
+    "match_completed": 10856,
+    "phase_changed_same_round": 296552,
+    "round_advanced": 33920,
+    "same_phase_same_round": 4760117,
+    "transition_unknown": 0
+  },
+  "sourceArtifactReferences": {
+    "cFp68": [
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/manifest.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/manifest.json",
+        "sha256": "735a87e2dea500878eaec01823dae886f14e11448d7c83cd87ea7490da7f7cfd"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/summary.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/summary.json",
+        "sha256": "2ade0597b1f3f4edf11047846d31cb2d281df50b21e9c374010fda71530d03db"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/eligible-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/eligible-roots.jsonl",
+        "sha256": "7396adbf22084b0ab0515fdc6fb239bcd2e32c72404bfc5d800eebff62f5d97f"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/skipped-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/skipped-roots.jsonl",
+        "sha256": "91353f4a302cf755f7c2bb3196df5bf5643c31fa590287074531dccf5af0dd50"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/report.md",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-probe-contract/cFp68/report.md",
+        "sha256": "a70d26e484c303cfa5dfc9f12d2ad16e71c8f8bc31acea008e4132cd0795f9d4"
+      }
+    ],
+    "cFp69": [
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/manifest.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/manifest.json",
+        "sha256": "63725e400a6d8ae1ab6361d93ddabea8ab3c1fc4338a9b92d57dbf17435471f7"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/summary.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/summary.json",
+        "sha256": "8c8ceb1dfd2ffaa2d8910c22f7fb6ee167fafcd0ff5ac5fe6a4d6ed6fdf52039"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/probe-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/probe-roots.jsonl",
+        "sha256": "c6688e88f8341e260254eef8bb7d6bb65a0bd9c78daceae35663232449878627"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/skipped-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/skipped-roots.jsonl",
+        "sha256": "5d51db39d4c7170b38f1789e139744b3b2b1f22b96fb418b800ffad2c12e2cad"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/report.md",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/report.md",
+        "sha256": "bf90d61f71c42436ba5be43b44bd0437930a8acdd738f0a1ae06e8051d5b4981"
+      }
+    ],
+    "cFp70": [
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/manifest.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/manifest.json",
+        "sha256": "029a033c3648a233146730ab020c36622d19f48517f2c8c0c1a024acb4343c26"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/summary.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/summary.json",
+        "sha256": "4bda20dc523efe895ece1bab4242d985d8f1759878bd0c7a0cb6748f4c7beabc"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/availability-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/availability-roots.jsonl",
+        "sha256": "df1d076896cc951cb5796cff654cdd17502415be459e95e5f511ff4a3c1cbd17"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/skipped-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/skipped-roots.jsonl",
+        "sha256": "7561662c2837616d8849757c6ebef64c96a4e75edb300c946b18d04b814d494a"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/report.md",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-action-availability-v0/cFp70/report.md",
+        "sha256": "1e3dfe908bc03323c6037b2f017a26af2a8da503f4c61095841ac88d363ea309"
+      }
+    ],
+    "cFp71": [
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/manifest.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/manifest.json",
+        "sha256": "6b6bbabc4daa57f70f8fba604cdaec0397391bec1ae2b8c98ac32d2eb4dc4f3a"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/summary.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/summary.json",
+        "sha256": "2fd2ba14c2f69cbaa05734376f7be4f5ea1d97aedb7db661c4002d80132f6a29"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/outcome-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/outcome-roots.jsonl",
+        "sha256": "f85a2083263b0cc60d983a7fa856fdaed76013e5e1a2a3ba0191db793c950728"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/skipped-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/skipped-roots.jsonl",
+        "sha256": "34137ead3b5768c3796628e1c0ec2511fcb75d05b27c881931165d465c59da2e"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/report.md",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-one-ply-outcome-skeleton-v0/cFp71/report.md",
+        "sha256": "b7538b417e6cdbbddafbb738c83729ace54f87b88210c18154c278bbe8e2c163"
+      }
+    ],
+    "cFp72": [
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/manifest.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/manifest.json",
+        "sha256": "bc6c0fc8518615f21624cb578a4eaf0f4c59648395dadbbcf1899f5e396d06ae"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/summary.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/summary.json",
+        "sha256": "3f2280c11ab792c9b3bba3a6b79d852e756d8d614c33beeb4b99edbf911dfc9e"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/branching-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/branching-roots.jsonl",
+        "sha256": "4234daf3f6d07105b618caa44f866d8b5991a02f129e51bc60efae88d0aad738"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/skipped-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/skipped-roots.jsonl",
+        "sha256": "51d87c2f55a719908fab8afab01071c6369b8b03428778ad669233b048cf72bf"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/report.md",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-v0/cFp72/report.md",
+        "sha256": "6bf8bab9e4b769cec73b9707294c59a9d70e07ef97e8d1c69e31aacee748589a"
+      }
+    ],
+    "cFp73": [
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/manifest.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/manifest.json",
+        "sha256": "b18f0326c16fd5fd97d9013482e4b00f3582381c3b7e4caad2cb303e2c9dd67e"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/summary.json",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/summary.json",
+        "sha256": "4e343289e74e65af4b3285dbf3cba62a6fcc3d203d561b0749ac1258aaf2c0a9"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/casebook-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/casebook-roots.jsonl",
+        "sha256": "c47a9bb379176afab76933ac78b7db5b2c49a6085708c6060216f90519c542cf"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/skipped-roots.jsonl",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/skipped-roots.jsonl",
+        "sha256": "6bcf4f8f696bc677db20c31a0c6686ccbf8755df769555a7224858c5ba8e2ffd"
+      },
+      {
+        "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/report.md",
+        "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-post-one-ply-branching-budget-casebook/cFp73/report.md",
+        "sha256": "9d2865843698537fed110f4c15ba4d8720795f9fee6e174f815148f11f2031c0"
+      }
+    ]
+  },
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "sourceCfp68RunId": "benchmark-v1-starter-matrix-robust-v1:determinized-probe-contract:cFp68",
+  "sourceCfp69RunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-probe-v0:cFp69",
+  "sourceCfp70RunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-action-availability-v0:cFp70",
+  "sourceCfp71RunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-one-ply-outcome-skeleton-v0:cFp71",
+  "sourceCfp72RunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-post-one-ply-branching-budget-v0:cFp72",
+  "sourceCfp73RunId": "benchmark-v1-starter-matrix-robust-v1:determinized-pimc-post-one-ply-branching-budget-casebook:cFp73",
+  "sourceConsistency": {
+    "cfp68Cfp69EligibleRootCountDelta": 0,
+    "cfp68Cfp69SkippedRootCountDelta": 0,
+    "cfp68Cfp70AvailabilityRootCountDelta": 0,
+    "cfp68Cfp70SkippedRootCountDelta": 0,
+    "cfp68Cfp71OutcomeRootCountDelta": 0,
+    "cfp68Cfp71SkippedRootCountDelta": 0,
+    "cfp68Cfp72BranchingRootCountDelta": 0,
+    "cfp68Cfp72SkippedRootCountDelta": 0,
+    "cFp68ContractStatus": "probe_ready",
+    "cfp68EligibleRootsMissingCfp72BranchingRoot": 0,
+    "cFp68EligibleRootsRead": 32147,
+    "cFp68SkippedRootsRead": 340,
+    "cfp69ProbeRootsMissingCfp68EligibleRoot": 0,
+    "cFp69ProbeRootsRead": 32147,
+    "cfp69SkippedRootsMissingCfp68SkippedRoot": 0,
+    "cFp69SkippedRootsRead": 340,
+    "cfp70AvailabilityRootsMissingCfp68EligibleRoot": 0,
+    "cFp70AvailabilityRootsRead": 32147,
+    "cfp70SkippedRootsMissingCfp68SkippedRoot": 0,
+    "cFp70SkippedRootsRead": 340,
+    "cfp71OutcomeRootsMissingCfp68EligibleRoot": 0,
+    "cFp71OutcomeRootsRead": 32147,
+    "cfp71SkippedRootsMissingCfp68SkippedRoot": 0,
+    "cFp71SkippedRootsRead": 340,
+    "cfp72BranchingRootCountDeltaFromSummary": 0,
+    "cfp72BranchingRootsMissingCfp68EligibleRoot": 0,
+    "cFp72BranchingRootsRead": 32147,
+    "cFp72ProbeReadinessStatus": "probe_ready",
+    "cfp72RootsWithFailedOrDeferredPairs": 0,
+    "cfp72RootsWithPlannedPairScalarMismatch": 0,
+    "cfp72RootsWithProbeStatusAnomaly": 0,
+    "cfp72SkippedRootCountDeltaFromSummary": 0,
+    "cfp72SkippedRootsMissingCfp68SkippedRoot": 0,
+    "cFp72SkippedRootsRead": 340,
+    "cFp73CasebookReadinessStatus": "casebook_ready",
+    "cfp73CasebookRootCountDeltaFromSummary": 0,
+    "cfp73CasebookRootsMissingCfp72BranchingRoot": 0,
+    "cFp73CasebookRootsRead": 10721,
+    "cfp73SkippedRootCountDeltaFromSummary": 0,
+    "cfp73SkippedRootsMissingCfp72SkippedRoot": 0,
+    "cFp73SkippedRootsRead": 340,
+    "duplicateCfp68EligibleRootKeys": 0,
+    "duplicateCfp68SkippedRootKeys": 0,
+    "duplicateCfp69ProbeRootKeys": 0,
+    "duplicateCfp69SkippedRootKeys": 0,
+    "duplicateCfp70AvailabilityRootKeys": 0,
+    "duplicateCfp70SkippedRootKeys": 0,
+    "duplicateCfp71OutcomeRootKeys": 0,
+    "duplicateCfp71SkippedRootKeys": 0,
+    "duplicateCfp72BranchingRootKeys": 0,
+    "duplicateCfp72SkippedRootKeys": 0,
+    "duplicateCfp73CasebookRootKeys": 0,
+    "duplicateCfp73SkippedRootKeys": 0,
+    "inCapRootsNotObserved": 0,
+    "inheritedSkippedRootsProbed": 0,
+    "sourceArtifactHashMisses": 0,
+    "status": "ready"
+  },
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "totalCfp72RootCount": 32487,
+  "transitionContextLabelCounts": {
+    "ordinary_policy_actor": 25333,
+    "round_end_resolver_present": 5825,
+    "terminal_present": 989
+  }
+}

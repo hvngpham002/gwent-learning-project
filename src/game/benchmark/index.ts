@@ -37,3 +37,5 @@ export * from './determinizedPimcPostOnePlyBranchingBudgetV0';
 export * from './determinizedPimcPostOnePlyBranchingBudgetV0Artifacts';
 export * from './determinizedPimcPostOnePlyBranchingBudgetCasebook';
 export * from './determinizedPimcPostOnePlyBranchingBudgetCasebookArtifacts';
+export * from './determinizedPimcBoundedSecondPlyScaffoldV0';
+export * from './determinizedPimcBoundedSecondPlyScaffoldV0Artifacts';

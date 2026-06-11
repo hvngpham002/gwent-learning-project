@@ -197,6 +197,16 @@ Search-readiness:
   label, and phase label. It does not re-run root observation, rebuild samples,
   execute a second ply, run rollouts, compute action values, rank actions,
   choose moves, change policy behavior, or wire product gameplay.
+- cFp74 adds a benchmark-only bounded second-ply public-action scaffold under
+  `<suiteId>/determinized-pimc-bounded-second-ply-scaffold-v0/cFp74/`. It
+  consumes cFp68/cFp69/cFp70/cFp71 artifacts plus cFp72 branching budgets and
+  cFp73 casebook labels, reuses the established cFp70/cFp71/cFp72 sampled-root
+  materialization path, primes public-transfer memory for eligible over-budget
+  roots, executes only representative second-ply public actions for in-cap
+  roots inside cloned sampled benchmark states, and emits compact scalar JSONL
+  rows plus separate over-budget and inherited skipped-root artifacts. It does
+  not count third-ply legal surfaces, run rollouts, compute values, rank or
+  choose actions, change policy behavior, or wire product gameplay.
   These phases do not evaluate actions, run rollouts/search, change policy
   behavior, or wire product gameplay.
 

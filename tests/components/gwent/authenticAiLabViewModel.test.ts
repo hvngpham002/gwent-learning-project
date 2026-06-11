@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
       expect.objectContaining({
         role: "experimental product playtest",
         status: "implemented · experimental/playtest",
-        latestPhase: "cFp73",
-        latestSpecPath: "docs/spec/2026-06-10-cFp73-specs.md",
-        latestReportPath: "audit/reports/2026-06-10-cFp73-report.md",
+        latestPhase: "cFp74",
+        latestSpecPath: "docs/spec/2026-06-10-cFp74-specs.md",
+        latestReportPath: "audit/reports/2026-06-10-cFp74-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
     expect(v1).toEqual(
       expect.objectContaining({
-        latestPhase: "cFp73",
-        latestSpecPath: "docs/spec/2026-06-10-cFp73-specs.md",
-        latestReportPath: "audit/reports/2026-06-10-cFp73-report.md",
+        latestPhase: "cFp74",
+        latestSpecPath: "docs/spec/2026-06-10-cFp74-specs.md",
+        latestReportPath: "audit/reports/2026-06-10-cFp74-report.md",
         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
       })
     );
@@ -94,12 +94,12 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp73");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-10-cFp73-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-10-cFp73-report.md");
-    expect(v1?.description).toContain("cFp73 change no policy behavior");
+    expect(v1?.latestPhase).toBe("cFp74");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-10-cFp74-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-10-cFp74-report.md");
+    expect(v1?.description).toContain("cFp74 change no policy behavior");
     expect(v1?.description).toContain(
-      "cFp73 is analysis infrastructure, not search gameplay",
+      "cFp74 is benchmark infrastructure, not search gameplay",
     );
     expect(v1?.description).toContain("exposes no runner");
     expect(v1?.capabilities).toEqual(
@@ -149,6 +149,7 @@ describe("authentic AI Lab view model", () => {
         "one-ply public action outcome skeleton with cFp68/cFp69/cFp70 skip accounting, not search gameplay (cFp71)",
         "post-one-ply branching budget probe with cFp68/cFp69/cFp70/cFp71 skip accounting, not search gameplay (cFp72)",
         "post-one-ply branching budget casebook over committed cFp72 scalar artifacts, no runner and not search gameplay (cFp73)",
+        "bounded second-ply public-action scaffold with cFp74 cap accounting, no runner and not search gameplay (cFp74)",
       ])
     );
   });
