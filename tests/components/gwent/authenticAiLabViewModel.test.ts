@@ -47,15 +47,15 @@ describe("authentic AI Lab view model", () => {
       })
     );
     expect(viewModel.policies.find((policy) => policy.id === "legal-heuristic-v1")).toEqual(
-      expect.objectContaining({
-        role: "experimental product playtest",
-        status: "implemented · experimental/playtest",
-        latestPhase: "cFp74",
-        latestSpecPath: "docs/spec/2026-06-10-cFp74-specs.md",
-        latestReportPath: "audit/reports/2026-06-10-cFp74-report.md",
-        latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
-      })
-    );
+       expect.objectContaining({
+         role: "experimental product playtest",
+         status: "implemented · experimental/playtest",
+         latestPhase: "cFp75",
+         latestSpecPath: "docs/spec/2026-06-14-cFp75-specs.md",
+         latestReportPath: "audit/reports/2026-06-14-cFp75-report.md",
+         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
+       })
+     );
     expect(viewModel.policies.find((policy) => policy.id === "legal-first-v0")).toEqual(
       expect.objectContaining({ role: "benchmark-only comparator", productSelectable: false })
     );
@@ -66,14 +66,14 @@ describe("authentic AI Lab view model", () => {
     const viewModel = buildAuthenticAiLabViewModel();
     const v1 = viewModel.policies.find((policy) => policy.id === "legal-heuristic-v1");
 
-    expect(v1).toEqual(
-      expect.objectContaining({
-        latestPhase: "cFp74",
-        latestSpecPath: "docs/spec/2026-06-10-cFp74-specs.md",
-        latestReportPath: "audit/reports/2026-06-10-cFp74-report.md",
-        latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
-      })
-    );
+   expect(v1).toEqual(
+       expect.objectContaining({
+         latestPhase: "cFp75",
+         latestSpecPath: "docs/spec/2026-06-14-cFp75-specs.md",
+         latestReportPath: "audit/reports/2026-06-14-cFp75-report.md",
+         latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
+       })
+     );
     expect(v1?.latestBenchmarkSummaries).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -94,14 +94,14 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp74");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-10-cFp74-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-10-cFp74-report.md");
-    expect(v1?.description).toContain("cFp74 change no policy behavior");
+    expect(v1?.latestPhase).toBe("cFp75");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-14-cFp75-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-14-cFp75-report.md");
+  expect(v1?.description).toContain("cFp74 and cFp75");
     expect(v1?.description).toContain(
-      "cFp74 is benchmark infrastructure, not search gameplay",
-    );
-    expect(v1?.description).toContain("exposes no runner");
+       "cFp74 and cFp75 are benchmark infrastructure, not search gameplay",
+     );
+    expect(v1?.description).toContain("expose no runner");
     expect(v1?.capabilities).toEqual(
       expect.arrayContaining([
         "linked-card mulligan diagnostics",
@@ -150,6 +150,7 @@ describe("authentic AI Lab view model", () => {
         "post-one-ply branching budget probe with cFp68/cFp69/cFp70/cFp71 skip accounting, not search gameplay (cFp72)",
         "post-one-ply branching budget casebook over committed cFp72 scalar artifacts, no runner and not search gameplay (cFp73)",
         "bounded second-ply public-action scaffold with cFp74 cap accounting, no runner and not search gameplay (cFp74)",
+       "search-consumer contract planning — pauses third-ply execution, defines `search-consumer-action-features-v0` as cFp76 target, defines cFp76 artifact contract, feature schema, budgets, hidden-info restrictions, and non-claims; benchmark infrastructure, not search gameplay (cFp75)",
       ])
     );
   });

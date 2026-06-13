@@ -198,17 +198,25 @@ Search-readiness:
   execute a second ply, run rollouts, compute action values, rank actions,
   choose moves, change policy behavior, or wire product gameplay.
 - cFp74 adds a benchmark-only bounded second-ply public-action scaffold under
-  `<suiteId>/determinized-pimc-bounded-second-ply-scaffold-v0/cFp74/`. It
-  consumes cFp68/cFp69/cFp70/cFp71 artifacts plus cFp72 branching budgets and
-  cFp73 casebook labels, reuses the established cFp70/cFp71/cFp72 sampled-root
-  materialization path, primes public-transfer memory for eligible over-budget
-  roots, executes only representative second-ply public actions for in-cap
-  roots inside cloned sampled benchmark states, and emits compact scalar JSONL
-  rows plus separate over-budget and inherited skipped-root artifacts. It does
-  not count third-ply legal surfaces, run rollouts, compute values, rank or
-  choose actions, change policy behavior, or wire product gameplay.
-  These phases do not evaluate actions, run rollouts/search, change policy
-  behavior, or wire product gameplay.
+   `<suiteId>/determinized-pimc-bounded-second-ply-scaffold-v0/cFp74/`. It
+   consumes cFp68/cFp69/cFp70/cFp71 artifacts plus cFp72 branching budgets and
+   cFp73 casebook labels, reuses the established cFp70/cFp71/cFp72 sampled-root
+   materialization path, primes public-transfer memory for eligible over-budget
+   roots, executes only representative second-ply public actions for in-cap
+   roots inside cloned sampled benchmark states, and emits compact scalar JSONL
+   rows plus separate over-budget and inherited skipped-root artifacts. It does
+   not count third-ply legal surfaces, run rollouts, compute values, rank or
+   choose actions, change policy behavior, or wire product gameplay.
+- cFp75 is a search-consumer contract decision phase. It pauses blind third-ply
+   execution, defines `search-consumer-action-features-v0` as the recommended
+   cFp76 target, specifies the cFp76 artifact contract, feature schema, source
+   consistency checks, budget limits, hidden-info restrictions, non-claims,
+   and stop conditions. cFp75 writes only a decision note and audit report,
+   updates AI Lab metadata, and updates project state. It does not execute
+   benchmarks, run command probes, generate artifacts, or change policy
+   behavior.
+   These phases do not evaluate actions, run rollouts/search, change policy
+   behavior, or wire product gameplay.
 
 Robustness probe:
 
@@ -809,3 +817,17 @@ AI wiring, or strength claims.
 Search policies, v1.1/v2 policy tuning, ML exports, Python notebooks,
 mechanics/competitive deck suites, browser benchmark execution, and product
 difficulty tiers remain future work.
+
+Search-consumer contract phase (cFp75):
+
+cFp75 is a search-consumer contract decision phase. It pauses blind
+third-ply execution and defines `search-consumer-action-features-v0` as
+the recommended cFp76 target. It specifies the cFp76 artifact contract
+(artifact family, suites, required files, recommended source artifacts,
+source consistency checks), the cFp76 feature schema (root-level and
+action-level rows), the cFp76 hidden-info restrictions, the cFp76 budget
+guidance (50 MB target, 90 MB hard stop), and the cFp76 non-claims and
+stop conditions. cFp75 writes only a decision note and audit report,
+updates AI Lab metadata, and updates project state. It does not execute
+benchmarks, run command probes, generate JSONL artifacts, or change policy
+behavior. cFp76 should follow as a benchmark-only feature consumer phase.

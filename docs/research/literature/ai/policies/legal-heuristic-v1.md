@@ -182,14 +182,15 @@ sampler-materialization infrastructure only. cFp62 is invalid-root casebook
 infrastructure only. cFp63 is sampler repair infrastructure only. cFp66 is
 sampler public-transfer memory infrastructure only. cFp67 is post-cFp66
 invalid-root casebook infrastructure only. cFp68 is valid-root-only determinized
-probe contract infrastructure only. cFp69 is public-action probe scaffold
+  probe contract infrastructure only. cFp69 is public-action probe scaffold
 infrastructure only. cFp70 is sampled-world action availability infrastructure
 only. cFp71 is one-ply outcome skeleton infrastructure only. cFp72 is
 post-one-ply branching budget infrastructure only. cFp73 is post-one-ply
 branching budget casebook infrastructure only. cFp74 is bounded second-ply
-public-action scaffold infrastructure only. cFp59, cFp60,
+public-action scaffold infrastructure only. cFp75 is search-consumer
+contract planning infrastructure only. cFp59, cFp60,
 cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, cFp70, and
-cFp71, cFp72, cFp73, and cFp74 do not change
+cFp71, cFp72, cFp73, cFp74, and cFp75 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
