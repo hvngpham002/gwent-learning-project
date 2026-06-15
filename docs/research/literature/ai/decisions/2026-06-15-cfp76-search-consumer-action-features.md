@@ -226,19 +226,17 @@ runtime terminal state, command/event logs, own/opponent hand arrays,
 unsafe debug results, decision traces, raw move/label identifiers, source
 card/instance identifiers, deterministic action references, sampled
 hand/deck/world payloads, hidden hand/deck payloads, hand/deck source
-counts, and search-strength fields (`bestAction`, `selectedAction`,
-`actionValue`, `expectedValue`, `valueEstimate`, `rewardTarget`,
-`payoffTable`, `payoffMatrix`, `rolloutReward`, `winProbability`,
-`principalVariation`), plus the colon-suffixed seat-instance runtime
-prefixes (seat A / seat B forms) and catalog card/leader names derived from
-`currentCatalogCards`/
-`currentCatalogLeaders`.
+counts, and search-strength fields (best-action labels, selected-action
+labels, action/value estimates, reward targets, payoff matrices, rollout
+rewards, win-probability estimates, and principal-variation lines), plus the
+colon-suffixed seat-instance runtime prefixes (seat A / seat B forms) and
+catalog card/leader names derived from the current catalog.
 
 Both the current and robust artifact sets scan clean (`hiddenInfoScanStatus:
 "clean"`, 0 hazards). The word "payoff" appears only in `report.md`'s
 non-claims prose ("cFp76 does not compute payoff tables or principal
 variations."), which is explicitly outside the scanned machine-readable set
-and does not match the `payoffTable`/`payoffMatrix` hazard tokens.
+and does not match the exact payoff hazard tokens.
 
 The direct exact-token `rg --pcre2` scan (cFp75 pattern, extended with the
 search-strength tokens above) over both cFp76 artifact directories, this
