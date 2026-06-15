@@ -49,7 +49,7 @@
 | action identity row count delta | 0 |
 | duplicate action identity keys | 0 |
 | skipped root key mismatch count | 0 |
-| source artifact reference count | 14 |
+| source artifact reference count | 15 |
 | source artifact empty hash count | 0 |
 
 ## Row Counts
@@ -212,6 +212,7 @@ All rows in action-identities.jsonl, root-summaries.jsonl, and skipped-roots.jso
 | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/report.md | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/determinized-pimc-probe-v0/cFp69/report.md | bf90d61f71c42436ba5be43b44bd0437930a8acdd738f0a1ae06e8051d5b4981 |
 | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/manifest.json | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/manifest.json | f674e8132487567e3ddcb7d09e449961ca82d6431bb84d416159f5a60cc71423 |
 | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/summary.json | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/summary.json | ef09b4f457e128bfdca04273b1bab233b2e65310a96d77c3cc2c9f6b642d7012 |
+| docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl | 2c5bf4b543d6dbc918dc094bd2f60a2a8da82d108153f4d6467a9a1bf53940a3 |
 | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl | 98e129647b77149c474ce3c27f8cb6c99a3fefaf1aa889bb7a33f21c17030eb0 |
 | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/report.md | docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/report.md | 436de2671d8ebf1fc4f3b530d4e7e2057330018e0ff50c5b534619b372712545 |
 

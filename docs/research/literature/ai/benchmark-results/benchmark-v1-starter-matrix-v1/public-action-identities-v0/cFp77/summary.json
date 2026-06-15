@@ -178,6 +178,11 @@
       "sha256": "66294d4759ff4bc5dc49576fa5c62311615ed87306df136887eac7551576f9d1"
     },
     {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "sha256": "83875d13214b3f01df55542695b49490826f78962719db442d9af023424de776"
+    },
+    {
       "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
       "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
       "sha256": "5331f1a9268fef8aec251a5fbae2e1226acea2619f5f6675ae23577aee69920e"
@@ -228,7 +233,7 @@
     "publicActionCountMismatchRootCount": 0,
     "skippedRootKeyMismatchCount": 0,
     "sourceArtifactEmptyHashCount": 0,
-    "sourceArtifactReferenceCount": 14,
+    "sourceArtifactReferenceCount": 15,
     "status": "ready"
   },
   "suiteId": "benchmark-v1-starter-matrix-v1"

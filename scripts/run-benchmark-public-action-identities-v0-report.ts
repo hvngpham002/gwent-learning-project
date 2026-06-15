@@ -153,6 +153,11 @@ const readJsonl = async <T>(path: string): Promise<T[]> => {
         .map((line) => JSON.parse(line) as T);
 };
 
+const countJsonlRows = (text: string): number => {
+  if (text.trim().length === 0) return 0;
+  return text.endsWith("\n") ? text.split("\n").length - 1 : text.split("\n").length;
+};
+
 const sha256Text = (value: string) => createHash("sha256").update(value, "utf8").digest("hex");
 
 const EMPTY_SHA256 = sha256Text("");
@@ -193,6 +198,7 @@ const sourceArtifactReferencesForSuite = async (suiteId: string) => {
     artifactReferencesForSuite(suiteId, [
       "search-consumer-action-features-v0/cFp76/manifest.json",
       "search-consumer-action-features-v0/cFp76/summary.json",
+      "search-consumer-action-features-v0/cFp76/root-features.jsonl",
       "search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
       "search-consumer-action-features-v0/cFp76/report.md",
     ]),
@@ -222,6 +228,7 @@ const readSourceArtifacts = async (suiteId: string) => {
     cfp69ProbeRoots,
     cfp69SkippedRoots,
     cfp76Summary,
+    cfp76RootFeaturesText,
     sourceArtifactReferences,
   ] = await Promise.all([
     readJson<Cfp68SummaryFile>(
@@ -245,6 +252,7 @@ const readSourceArtifacts = async (suiteId: string) => {
     readJson<Cfp76SummaryFile>(
       artifactPath(suiteId, "search-consumer-action-features-v0/cFp76/summary.json"),
     ),
+    readText(artifactPath(suiteId, "search-consumer-action-features-v0/cFp76/root-features.jsonl")),
     sourceArtifactReferencesForSuite(suiteId),
   ]);
 
@@ -266,6 +274,7 @@ const readSourceArtifacts = async (suiteId: string) => {
     cfp69ProbeRoots,
     cfp69SkippedRoots,
     cfp76Summary,
+    cfp76RootFeatureRowCount: countJsonlRows(cfp76RootFeaturesText),
     sourceArtifactReferences,
     sourceArtifactEmptyHashCount,
     sourceRunIds,
@@ -291,7 +300,7 @@ const run = async () => {
     cfp68SkippedRoots: sourceArtifacts.cfp68SkippedRoots,
     cfp69ProbeRoots: sourceArtifacts.cfp69ProbeRoots,
     cfp69SkippedRoots: sourceArtifacts.cfp69SkippedRoots,
-    cfp76RootFeatureRowCount: sourceArtifacts.cfp76Summary.rootFeatureRowCount,
+    cfp76RootFeatureRowCount: sourceArtifacts.cfp76RootFeatureRowCount,
     sourceArtifactReferenceCount: sourceArtifacts.sourceArtifactReferences.length,
     sourceArtifactEmptyHashCount: sourceArtifacts.sourceArtifactEmptyHashCount,
   });

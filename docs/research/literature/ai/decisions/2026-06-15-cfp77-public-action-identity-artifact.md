@@ -191,7 +191,8 @@ including:
   0;
 - 0 duplicate action identity keys;
 - 0 skipped root key mismatches between cFp68 and cFp69;
-- source artifact reference count 14 with 0 empty hashes.
+- source artifact reference count 15 with 0 empty hashes, including the
+  cFp76 root-feature row artifact used for actual-row-count validation.
 
 All 27 checks are `true`/0 for both suites, so `sourceConsistency.status` is
 `ready` and `identityReadinessStatus` is `identity_ready`.

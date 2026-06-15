@@ -2,10 +2,10 @@
   "actionIdentitySchemaVersion": "public-action-identities-v0-action-identity-v1",
   "artifactHashes": {
     "action-identities.jsonl": "0ce2354d971a821d1a810deae798c994c96db4374963420ed5d1bb4186a79962",
-    "report.md": "cd02dee4c2a0c4ea0f142e7bc6e71f14927d4006006cff59cbb1a620bd26522c",
+    "report.md": "99dc2eb1cadef2378d70374075d05fc524759559e4a18ec87ce46df3cf5a4907",
     "root-summaries.jsonl": "af8611cc348e61383254d67fba671811cb917417f8f1bdda7688a6a20867a52f",
     "skipped-roots.jsonl": "6d2e63db3b821dc73ffffc93047bc5b24f92cdf926b23568304d98c8a6e0512a",
-    "summary.json": "6123ff1e4fa8342a907595d9b1a157a5441b3601669df0a318c60f46968b84e9"
+    "summary.json": "3045565dac0d7bbf8a867426668a5b55b6c648f4e8f17a2d71c4d58b08303dd3"
   },
   "cFp78Recommendation": "cFp78 should repair search-consumer-action-features-v0 by joining cFp76 root features to cFp77 public-action identities, producing nonempty action feature rows without action values or ranking.",
   "explicitNonClaims": [
@@ -99,6 +99,11 @@
       "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/summary.json",
       "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/summary.json",
       "sha256": "66294d4759ff4bc5dc49576fa5c62311615ed87306df136887eac7551576f9d1"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "sha256": "83875d13214b3f01df55542695b49490826f78962719db442d9af023424de776"
     },
     {
       "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",

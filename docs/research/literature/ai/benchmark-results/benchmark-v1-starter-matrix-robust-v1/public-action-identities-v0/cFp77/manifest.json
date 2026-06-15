@@ -2,10 +2,10 @@
   "actionIdentitySchemaVersion": "public-action-identities-v0-action-identity-v1",
   "artifactHashes": {
     "action-identities.jsonl": "227fde1e964b6a53ccca0cf862b62da4385a77ed2f223fe7f1e2ead77bd617ad",
-    "report.md": "8f19c53266757a40edd3f06c270ca140651091987dbb2f04d1e7d30425c58de6",
+    "report.md": "04059c0becf798f137b1ff9695ce832778b667bfccd1e815c2ea867971ddc0bd",
     "root-summaries.jsonl": "69fe5a221055c2e9b684a4535e9b62eb610462885af0388558d713a9c8506b23",
     "skipped-roots.jsonl": "77a8d444d1600b5c6fd1963cff527b52c8272f692cb050a51ba956d8d579f415",
-    "summary.json": "a866f88cd9eb8573ac6870d5a4531b7467afd973488f685b8931992004053b5b"
+    "summary.json": "bd457574ef368fc41c7ee061823fea3e6cd2ceb5b33a42c282f095d6a52c584f"
   },
   "cFp78Recommendation": "cFp78 should compact the cFp77 action row projection or create a deterministic casebook subset before consumer work.",
   "explicitNonClaims": [
@@ -99,6 +99,11 @@
       "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/summary.json",
       "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/summary.json",
       "sha256": "ef09b4f457e128bfdca04273b1bab233b2e65310a96d77c3cc2c9f6b642d7012"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "sha256": "2c5bf4b543d6dbc918dc094bd2f60a2a8da82d108153f4d6467a9a1bf53940a3"
     },
     {
       "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
