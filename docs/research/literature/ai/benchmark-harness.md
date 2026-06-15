@@ -215,6 +215,20 @@ Search-readiness:
    updates AI Lab metadata, and updates project state. It does not execute
    benchmarks, run command probes, generate artifacts, or change policy
    behavior.
+- cFp76 implements `search-consumer-action-features-v0` under
+   `<suiteId>/search-consumer-action-features-v0/cFp76/`. It is a read-only
+   consumer of committed cFp68-cFp74 artifacts: it performs the cFp75 source
+   consistency checks, emits one hidden-info-safe root feature row per cFp68
+   eligible root, carries cFp68 skipped roots into skipped-root rows, and
+   audits whether per-root-public-action feature rows are derivable from
+   committed cFp69-cFp74 scalar count maps. Because those artifacts expose
+   only aggregate per-root count maps and no durable per-public-action
+   identity, cFp76 reports `action_feature_source_gap`: it writes an empty
+   `action-features.jsonl` and a populated `action-feature-gaps.jsonl` (one
+   row per cFp69/cFp70/cFp71/cFp72/cFp74) rather than fabricating a
+   `publicActionRef`. It does not re-observe roots, rebuild sampled states,
+   execute commands, count third-ply surfaces, run rollouts, compute values,
+   rank or choose actions, change policy behavior, or wire product gameplay.
    These phases do not evaluate actions, run rollouts/search, change policy
    behavior, or wire product gameplay.
 
@@ -831,3 +845,30 @@ stop conditions. cFp75 writes only a decision note and audit report,
 updates AI Lab metadata, and updates project state. It does not execute
 benchmarks, run command probes, generate JSONL artifacts, or change policy
 behavior. cFp76 should follow as a benchmark-only feature consumer phase.
+
+Search-consumer action features phase (cFp76):
+
+cFp76 implements `search-consumer-action-features-v0` as a read-only
+consumer of committed cFp68-cFp74 artifacts under
+`<suiteId>/search-consumer-action-features-v0/cFp76/`. Source consistency is
+`ready` for both suites. cFp76 emits one root feature row per cFp68 eligible
+root (current 3,979, robust 32,147), joining cFp69 public-action counts,
+cFp70 availability data, cFp71 outcome/transition counts, cFp72 branching
+budgets, cFp73 casebook labels, and cFp74 second-ply/over-budget status, and
+carries cFp68 skipped roots into skipped-root rows (current 63, robust 340).
+cFp76 audits whether per-root-public-action feature rows are derivable from
+committed cFp69-cFp74 artifacts. Because those artifacts expose only
+aggregate per-root count maps and not a durable per-public-action identity,
+cFp76 does not fabricate a `publicActionRef`: `consumerReadinessStatus` is
+`action_feature_source_gap`, `action-features.jsonl` is empty (0 bytes), and
+`action-feature-gaps.jsonl` carries 5 rows (one per cFp69/cFp70/cFp71/cFp72/
+cFp74), with the cFp69 row carrying an `affectedActionFeatureCountEstimate`
+(current 18,820). Robust `root-features.jsonl` is 79,683,914 bytes, below
+the 90 MB hard stop; the 50 MB robust target applies only to
+`action-features.jsonl`. Robust repeat hashes matched exactly across two
+runs. cFp76 does not re-observe roots, rebuild sampled states, execute
+commands, count third-ply surfaces, run rollouts, compute values, rank or
+choose actions, change policy behavior, or wire product gameplay. cFp77
+should add a narrow public-action-identity artifact derived from
+cFp69/cFp70 sources before any future cFp76-style action-feature row can be
+populated.

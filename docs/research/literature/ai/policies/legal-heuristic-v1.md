@@ -188,9 +188,12 @@ only. cFp71 is one-ply outcome skeleton infrastructure only. cFp72 is
 post-one-ply branching budget infrastructure only. cFp73 is post-one-ply
 branching budget casebook infrastructure only. cFp74 is bounded second-ply
 public-action scaffold infrastructure only. cFp75 is search-consumer
-contract planning infrastructure only. cFp59, cFp60,
+contract planning infrastructure only. cFp76 is a read-only
+search-consumer-action-features-v0 feature consumer over committed
+cFp68-cFp74 artifacts, reporting `action_feature_source_gap` infrastructure
+only. cFp59, cFp60,
 cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, cFp70, and
-cFp71, cFp72, cFp73, cFp74, and cFp75 do not change
+cFp71, cFp72, cFp73, cFp74, cFp75, and cFp76 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play

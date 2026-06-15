@@ -39,3 +39,5 @@ export * from './determinizedPimcPostOnePlyBranchingBudgetCasebook';
 export * from './determinizedPimcPostOnePlyBranchingBudgetCasebookArtifacts';
 export * from './determinizedPimcBoundedSecondPlyScaffoldV0';
 export * from './determinizedPimcBoundedSecondPlyScaffoldV0Artifacts';
+export * from './searchConsumerActionFeaturesV0';
+export * from './searchConsumerActionFeaturesV0Artifacts';
