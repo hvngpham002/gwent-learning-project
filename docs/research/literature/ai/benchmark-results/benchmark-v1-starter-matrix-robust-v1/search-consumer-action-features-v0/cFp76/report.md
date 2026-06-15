@@ -64,6 +64,15 @@
 | cFp74 in-cap roots not observed | 0 |
 | source artifact reference count | 36 |
 | source artifact empty hash count | 0 |
+| cFp68 eligible root count vs actual cFp68 eligible rows delta | 0 |
+| cFp68 skipped root count vs actual cFp74 skipped rows delta | 0 |
+| cFp69 probe root count vs actual cFp69 probe rows delta | 0 |
+| cFp70 availability root count vs actual cFp70 availability rows delta | 0 |
+| cFp71 outcome root count vs actual cFp71 outcome rows delta | 0 |
+| cFp72 branching root count vs actual cFp72 branching rows delta | 0 |
+| cFp74 in-cap root count vs actual cFp74 second-ply rows delta | 0 |
+| cFp74 over-budget root count vs actual cFp74 over-budget rows delta | 0 |
+| cFp74 inherited skipped root count vs actual cFp74 skipped rows delta | 0 |
 
 ## Row Counts
 

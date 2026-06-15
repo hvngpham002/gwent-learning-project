@@ -248,6 +248,15 @@ const buildSourceConsistencySection = (consistency: SearchConsumerActionFeatures
 | cFp74 in-cap roots not observed | ${consistency.cFp74InCapRootsNotObserved} |
 | source artifact reference count | ${consistency.sourceArtifactReferenceCount} |
 | source artifact empty hash count | ${consistency.sourceArtifactEmptyHashCount} |
+| cFp68 eligible root count vs actual cFp68 eligible rows delta | ${consistency.cfp68EligibleRootCountActualDelta} |
+| cFp68 skipped root count vs actual cFp74 skipped rows delta | ${consistency.cfp68SkippedRootCountActualDelta} |
+| cFp69 probe root count vs actual cFp69 probe rows delta | ${consistency.cfp69ProbeRootCountActualDelta} |
+| cFp70 availability root count vs actual cFp70 availability rows delta | ${consistency.cfp70AvailabilityRootCountActualDelta} |
+| cFp71 outcome root count vs actual cFp71 outcome rows delta | ${consistency.cfp71OutcomeRootCountActualDelta} |
+| cFp72 branching root count vs actual cFp72 branching rows delta | ${consistency.cfp72BranchingRootCountActualDelta} |
+| cFp74 in-cap root count vs actual cFp74 second-ply rows delta | ${consistency.cfp74InCapRootCountActualDelta} |
+| cFp74 over-budget root count vs actual cFp74 over-budget rows delta | ${consistency.cfp74OverBudgetRootCountActualDelta} |
+| cFp74 inherited skipped root count vs actual cFp74 skipped rows delta | ${consistency.cfp74InheritedSkippedRootCountActualDelta} |
 `;
 
 const buildSourceArtifactSection = (

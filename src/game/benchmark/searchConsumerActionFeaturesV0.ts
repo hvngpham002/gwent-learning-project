@@ -257,6 +257,15 @@ export interface SearchConsumerActionFeaturesV0SourceConsistency {
   cFp74InCapRootsNotObserved: number;
   sourceArtifactReferenceCount: number;
   sourceArtifactEmptyHashCount: number;
+  cfp68EligibleRootCountActualDelta: number;
+  cfp68SkippedRootCountActualDelta: number;
+  cfp69ProbeRootCountActualDelta: number;
+  cfp70AvailabilityRootCountActualDelta: number;
+  cfp71OutcomeRootCountActualDelta: number;
+  cfp72BranchingRootCountActualDelta: number;
+  cfp74InCapRootCountActualDelta: number;
+  cfp74OverBudgetRootCountActualDelta: number;
+  cfp74InheritedSkippedRootCountActualDelta: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -530,6 +539,29 @@ export const buildSearchConsumerActionFeaturesV0SourceConsistency = (
   const cfp68Cfp74SkippedRootCountDelta =
     input.cfp68Summary.invalidRootCountFromCfp67 - input.cfp74Summary.inheritedSkippedRootCount;
 
+  // Explicit summary-vs-actual-row-array checks: a summary that claims rows
+  // exist but whose corresponding loaded array is truncated or empty (or
+  // vice versa) must fail source consistency rather than silently producing
+  // fewer rows than the summary advertises.
+  const cfp68EligibleRootCountActualDelta =
+    input.cfp68Summary.eligibleRootCount - input.cfp68EligibleRoots.length;
+  const cfp68SkippedRootCountActualDelta =
+    input.cfp68Summary.invalidRootCountFromCfp67 - input.cfp74SkippedRoots.length;
+  const cfp69ProbeRootCountActualDelta =
+    input.cfp69Summary.probeRootCount - input.cfp69ProbeRoots.length;
+  const cfp70AvailabilityRootCountActualDelta =
+    input.cfp70Summary.availabilityRootCount - input.cfp70AvailabilityRoots.length;
+  const cfp71OutcomeRootCountActualDelta =
+    input.cfp71Summary.outcomeRootCount - input.cfp71OutcomeRoots.length;
+  const cfp72BranchingRootCountActualDelta =
+    input.cfp72Summary.branchingRootCount - input.cfp72BranchingRoots.length;
+  const cfp74InCapRootCountActualDelta =
+    input.cfp74Summary.inCapRootCount - input.cfp74SecondPlyRoots.length;
+  const cfp74OverBudgetRootCountActualDelta =
+    input.cfp74Summary.overBudgetRootCount - input.cfp74OverBudgetRoots.length;
+  const cfp74InheritedSkippedRootCountActualDelta =
+    input.cfp74Summary.inheritedSkippedRootCount - input.cfp74SkippedRoots.length;
+
   const checks: boolean[] = [
     input.cfp68Summary.contractStatus === "probe_ready",
     input.cfp69Summary.probeReadinessStatus === "probe_ready",
@@ -571,6 +603,15 @@ export const buildSearchConsumerActionFeaturesV0SourceConsistency = (
     input.cfp74Summary.sourceConsistency.inCapRootsNotObserved === 0,
     input.sourceArtifactReferenceCount > 0,
     input.sourceArtifactEmptyHashCount === 0,
+    cfp68EligibleRootCountActualDelta === 0,
+    cfp68SkippedRootCountActualDelta === 0,
+    cfp69ProbeRootCountActualDelta === 0,
+    cfp70AvailabilityRootCountActualDelta === 0,
+    cfp71OutcomeRootCountActualDelta === 0,
+    cfp72BranchingRootCountActualDelta === 0,
+    cfp74InCapRootCountActualDelta === 0,
+    cfp74OverBudgetRootCountActualDelta === 0,
+    cfp74InheritedSkippedRootCountActualDelta === 0,
   ];
 
   return {
@@ -655,6 +696,15 @@ export const buildSearchConsumerActionFeaturesV0SourceConsistency = (
     cFp74InCapRootsNotObserved: input.cfp74Summary.sourceConsistency.inCapRootsNotObserved,
     sourceArtifactReferenceCount: input.sourceArtifactReferenceCount,
     sourceArtifactEmptyHashCount: input.sourceArtifactEmptyHashCount,
+    cfp68EligibleRootCountActualDelta,
+    cfp68SkippedRootCountActualDelta,
+    cfp69ProbeRootCountActualDelta,
+    cfp70AvailabilityRootCountActualDelta,
+    cfp71OutcomeRootCountActualDelta,
+    cfp72BranchingRootCountActualDelta,
+    cfp74InCapRootCountActualDelta,
+    cfp74OverBudgetRootCountActualDelta,
+    cfp74InheritedSkippedRootCountActualDelta,
   };
 };
 

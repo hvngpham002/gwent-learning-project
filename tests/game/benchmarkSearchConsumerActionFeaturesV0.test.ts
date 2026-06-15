@@ -314,6 +314,87 @@ describe("search consumer action features v0", () => {
     expect(result.consumerReadinessStatus).toBe("source_consistency_failed");
   });
 
+  it("reports zero actual-row-count deltas when summaries match actual loaded rows", () => {
+    const result = buildSearchConsumerActionFeaturesV0Result(baseInput());
+
+    expect(result.sourceConsistency.status).toBe("ready");
+    expect(result.sourceConsistency.cfp68EligibleRootCountActualDelta).toBe(0);
+    expect(result.sourceConsistency.cfp68SkippedRootCountActualDelta).toBe(0);
+    expect(result.sourceConsistency.cfp69ProbeRootCountActualDelta).toBe(0);
+    expect(result.sourceConsistency.cfp70AvailabilityRootCountActualDelta).toBe(0);
+    expect(result.sourceConsistency.cfp71OutcomeRootCountActualDelta).toBe(0);
+    expect(result.sourceConsistency.cfp72BranchingRootCountActualDelta).toBe(0);
+    expect(result.sourceConsistency.cfp74InCapRootCountActualDelta).toBe(0);
+    expect(result.sourceConsistency.cfp74OverBudgetRootCountActualDelta).toBe(0);
+    expect(result.sourceConsistency.cfp74InheritedSkippedRootCountActualDelta).toBe(0);
+  });
+
+  it.each<{
+    name: string;
+    overrides: Partial<SearchConsumerActionFeaturesV0BuildInput>;
+    deltaField: keyof ReturnType<
+      typeof buildSearchConsumerActionFeaturesV0Result
+    >["sourceConsistency"];
+  }>([
+    {
+      name: "cFp68 eligible root count claims more rows than cfp68EligibleRoots holds",
+      overrides: { cfp68Summary: { ...baseInput().cfp68Summary, eligibleRootCount: 2 } },
+      deltaField: "cfp68EligibleRootCountActualDelta",
+    },
+    {
+      name: "cFp68 skipped root count claims more rows than cfp74SkippedRoots holds",
+      overrides: { cfp68Summary: { ...baseInput().cfp68Summary, invalidRootCountFromCfp67: 2 } },
+      deltaField: "cfp68SkippedRootCountActualDelta",
+    },
+    {
+      name: "cFp69 probe root count claims more rows than cfp69ProbeRoots holds",
+      overrides: { cfp69Summary: { ...baseInput().cfp69Summary, probeRootCount: 2 } },
+      deltaField: "cfp69ProbeRootCountActualDelta",
+    },
+    {
+      name: "cFp70 availability root count claims more rows than cfp70AvailabilityRoots holds",
+      overrides: { cfp70Summary: { ...baseInput().cfp70Summary, availabilityRootCount: 2 } },
+      deltaField: "cfp70AvailabilityRootCountActualDelta",
+    },
+    {
+      name: "cFp71 outcome root count claims more rows than cfp71OutcomeRoots holds",
+      overrides: { cfp71Summary: { ...baseInput().cfp71Summary, outcomeRootCount: 2 } },
+      deltaField: "cfp71OutcomeRootCountActualDelta",
+    },
+    {
+      name: "cFp72 branching root count claims more rows than cfp72BranchingRoots holds",
+      overrides: { cfp72Summary: { ...baseInput().cfp72Summary, branchingRootCount: 2 } },
+      deltaField: "cfp72BranchingRootCountActualDelta",
+    },
+    {
+      name: "cFp74 in-cap root count claims more rows than cfp74SecondPlyRoots holds",
+      overrides: { cfp74Summary: { ...baseInput().cfp74Summary, inCapRootCount: 2 } },
+      deltaField: "cfp74InCapRootCountActualDelta",
+    },
+    {
+      name: "cFp74 over-budget root count claims a row that cfp74OverBudgetRoots does not hold",
+      overrides: { cfp74Summary: { ...baseInput().cfp74Summary, overBudgetRootCount: 1 } },
+      deltaField: "cfp74OverBudgetRootCountActualDelta",
+    },
+    {
+      name: "cFp74 inherited skipped root count claims more rows than cfp74SkippedRoots holds",
+      overrides: { cfp74Summary: { ...baseInput().cfp74Summary, inheritedSkippedRootCount: 2 } },
+      deltaField: "cfp74InheritedSkippedRootCountActualDelta",
+    },
+  ])(
+    "marks source consistency not_ready when $name",
+    ({ overrides, deltaField }) => {
+      const result = buildSearchConsumerActionFeaturesV0Result(baseInput(overrides));
+
+      expect(result.sourceConsistency[deltaField]).not.toBe(0);
+      expect(result.sourceConsistency.status).toBe("not_ready");
+      expect(result.consumerReadinessStatus).toBe("source_consistency_failed");
+      expect(result.rootFeatures).toHaveLength(0);
+      expect(result.skippedRoots).toHaveLength(0);
+      expect(result.actionFeatureGaps).toHaveLength(0);
+    },
+  );
+
   it("flags cFp73 casebook roots missing a cFp72 branching root", () => {
     const otherRoot = cfp73CasebookRoot({
       rootPublicFingerprint: "other-fingerprint",

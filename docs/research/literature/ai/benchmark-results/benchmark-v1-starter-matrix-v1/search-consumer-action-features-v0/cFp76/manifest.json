@@ -4,10 +4,10 @@
   "artifactHashes": {
     "action-feature-gaps.jsonl": "5331f1a9268fef8aec251a5fbae2e1226acea2619f5f6675ae23577aee69920e",
     "action-features.jsonl": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "report.md": "260fef28074daeb5deb06e3e1fd7e58233475fec6205f67e2be7762826deae0f",
+    "report.md": "18b5bd9ac425fddbd3eed23a796eb57604cdec93d650dd16e30cbe9e6cb0fc96",
     "root-features.jsonl": "83875d13214b3f01df55542695b49490826f78962719db442d9af023424de776",
     "skipped-roots.jsonl": "91b706a78ad1c81781faac56ffbc8e181420f8f850e478cf3ad11219c189d7d9",
-    "summary.json": "891bbb7af76f0b375103e8fc4c8cd4a6c79b8e7fb8dcf81d10e72b083403c594"
+    "summary.json": "66294d4759ff4bc5dc49576fa5c62311615ed87306df136887eac7551576f9d1"
   },
   "cFp77Recommendation": "cFp77 should add a narrow public-action-identity artifact derived from cFp69/cFp70 sources, without new command execution or product AI wiring.",
   "consumerReadinessStatus": "action_feature_source_gap",
