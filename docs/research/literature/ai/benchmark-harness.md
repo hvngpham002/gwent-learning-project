@@ -229,6 +229,20 @@ Search-readiness:
    `publicActionRef`. It does not re-observe roots, rebuild sampled states,
    execute commands, count third-ply surfaces, run rollouts, compute values,
    rank or choose actions, change policy behavior, or wire product gameplay.
+- cFp77 implements `public-action-identity-artifact-v0` under
+   `<suiteId>/public-action-identities-v0/cFp77/`. It observes benchmark roots
+   at the same root-observer position as cFp69, builds public action buckets
+   from legal moves with the existing `buildPublicActionAbstraction` /
+   `buildDeterminizedPimcActionAvailabilityV0PublicActionBucketKey` contract,
+   and emits one hidden-info-safe action identity row per collapsed public
+   action bucket per cFp68 eligible root, plus one root summary row per
+   eligible root and skipped-root rows carried from cFp68/cFp69. It validates
+   row counts and source consistency against committed cFp68/cFp69/cFp76
+   artifacts and reports `identityReadinessStatus`. It does not execute
+   candidate actions, rebuild sampled states, materialize hidden worlds, run
+   rollouts, compute action values/rewards/win probabilities/payoff
+   tables/principal variations/action rankings, change policy behavior, or
+   wire product gameplay.
    These phases do not evaluate actions, run rollouts/search, change policy
    behavior, or wire product gameplay.
 
