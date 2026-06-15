@@ -41,3 +41,5 @@ export * from './determinizedPimcBoundedSecondPlyScaffoldV0';
 export * from './determinizedPimcBoundedSecondPlyScaffoldV0Artifacts';
 export * from './searchConsumerActionFeaturesV0';
 export * from './searchConsumerActionFeaturesV0Artifacts';
+export * from './publicActionIdentitiesV0';
+export * from './publicActionIdentitiesV0Artifacts';

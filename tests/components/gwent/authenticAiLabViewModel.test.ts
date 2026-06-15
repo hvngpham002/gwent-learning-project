@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
        expect.objectContaining({
          role: "experimental product playtest",
          status: "implemented · experimental/playtest",
-         latestPhase: "cFp76",
-         latestSpecPath: "docs/spec/2026-06-15-cFp76-specs.md",
-         latestReportPath: "audit/reports/2026-06-15-cFp76-report.md",
+         latestPhase: "cFp77",
+         latestSpecPath: "docs/spec/2026-06-15-cFp77-specs.md",
+         latestReportPath: "audit/reports/2026-06-15-cFp77-report.md",
          latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
        })
      );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
    expect(v1).toEqual(
        expect.objectContaining({
-         latestPhase: "cFp76",
-         latestSpecPath: "docs/spec/2026-06-15-cFp76-specs.md",
-         latestReportPath: "audit/reports/2026-06-15-cFp76-report.md",
+         latestPhase: "cFp77",
+         latestSpecPath: "docs/spec/2026-06-15-cFp77-specs.md",
+         latestReportPath: "audit/reports/2026-06-15-cFp77-report.md",
          latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
        })
      );
@@ -94,12 +94,12 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp76");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-15-cFp76-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-15-cFp76-report.md");
-  expect(v1?.description).toContain("cFp74, cFp75, and cFp76");
+    expect(v1?.latestPhase).toBe("cFp77");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-15-cFp77-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-15-cFp77-report.md");
+  expect(v1?.description).toContain("cFp74, cFp75, cFp76, and cFp77");
     expect(v1?.description).toContain(
-       "cFp74, cFp75, and cFp76 are benchmark infrastructure, not search gameplay",
+       "cFp74, cFp75, cFp76, and cFp77 are benchmark infrastructure, not search gameplay",
      );
     expect(v1?.description).toContain("expose no runner");
     expect(v1?.capabilities).toEqual(
@@ -152,6 +152,7 @@ describe("authentic AI Lab view model", () => {
         "bounded second-ply public-action scaffold with cFp74 cap accounting, no runner and not search gameplay (cFp74)",
        "search-consumer contract planning — pauses third-ply execution, defines `search-consumer-action-features-v0` as cFp76 target, defines cFp76 artifact contract, feature schema, budgets, hidden-info restrictions, and non-claims; benchmark infrastructure, not search gameplay (cFp75)",
        "search-consumer-action-features-v0 read-only feature consumer over committed cFp68-cFp74 artifacts, emitting per-root feature rows and skipped-root rows with `action_feature_source_gap` reporting when durable per-action identities are absent; benchmark infrastructure, not search gameplay (cFp76)",
+       "public-action-identity-artifact-v0 read-only derivation over committed cFp68/cFp69/cFp76 artifacts, emitting per-bucket action identity rows, root summary rows, and skipped-root rows from the existing safe public action abstraction; benchmark infrastructure, not search gameplay (cFp77)",
       ])
     );
   });

@@ -1,0 +1,125 @@
+{
+  "actionIdentitySchemaVersion": "public-action-identities-v0-action-identity-v1",
+  "artifactHashes": {
+    "action-identities.jsonl": "0ce2354d971a821d1a810deae798c994c96db4374963420ed5d1bb4186a79962",
+    "report.md": "99dc2eb1cadef2378d70374075d05fc524759559e4a18ec87ce46df3cf5a4907",
+    "root-summaries.jsonl": "af8611cc348e61383254d67fba671811cb917417f8f1bdda7688a6a20867a52f",
+    "skipped-roots.jsonl": "6d2e63db3b821dc73ffffc93047bc5b24f92cdf926b23568304d98c8a6e0512a",
+    "summary.json": "3045565dac0d7bbf8a867426668a5b55b6c648f4e8f17a2d71c4d58b08303dd3"
+  },
+  "cFp78Recommendation": "cFp78 should repair search-consumer-action-features-v0 by joining cFp76 root features to cFp77 public-action identities, producing nonempty action feature rows without action values or ranking.",
+  "explicitNonClaims": [
+    "cFp77 does not choose actions or recommend best actions.",
+    "cFp77 does not rank actions or compute action ordering.",
+    "cFp77 does not estimate action values or expected values.",
+    "cFp77 does not estimate win probability or reward targets.",
+    "cFp77 does not compute payoff tables or principal variations.",
+    "cFp77 does not run rollout search, PIMC evaluation, or ISMCTS/MCTS.",
+    "cFp77 does not execute candidate actions, rebuild sampled states, or materialize hidden worlds.",
+    "cFp77 does not select moves for product AI.",
+    "cFp77 does not change legal-heuristic-v1 or legal-heuristic-v0 behavior.",
+    "cFp77 does not change engine rules, legal moves, sampler behavior, deck/catalog data, benchmark suite definitions, or rating artifacts.",
+    "cFp77 does not add AI Lab runner buttons or execute benchmarks from the browser.",
+    "cFp77 does not add difficulty tiers, export training data, or add Python tooling.",
+    "cFp77 does not expose raw move IDs, card/source identities, deck order, sampled hands/decks, or hidden payloads."
+  ],
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "action-identities.jsonl",
+    "root-summaries.jsonl",
+    "skipped-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "deterministic-no-wall-clock",
+  "hiddenInfoSafetyNote": "All rows in action-identities.jsonl, root-summaries.jsonl, and skipped-roots.jsonl are derived from the existing safe public action abstraction (collapsed public action buckets) plus scalar/count-map derivations of committed cFp68/cFp69 artifacts. No raw move IDs, card instance IDs, card source IDs, source IDs, card/leader names, deck order, sampled hand/deck contents, final match state, command/event logs, decision traces, action values, or rollout results appear in machine-readable rows.",
+  "identityReadinessStatus": "identity_ready",
+  "identityRunId": "benchmark-v1-starter-matrix-v1:public-action-identities-v0:cFp77",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-v0/cFp77",
+  "rootSummarySchemaVersion": "public-action-identities-v0-root-summary-v1",
+  "schemaVersion": "public-action-identities-v0-artifact-v1",
+  "skippedRootSchemaVersion": "public-action-identities-v0-skipped-root-v1",
+  "sourceArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/manifest.json",
+      "sha256": "4555bb2d7a4357e0eff3db189c36a9837eb3ae569a55c0ad6cd254457272d558"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/summary.json",
+      "sha256": "3b52cb515229480cb22725492c925f1e2ccc8099bd5c0b10de851a802201a029"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/eligible-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/eligible-roots.jsonl",
+      "sha256": "43c0dffc9742df50c18418eaa93e83effd429b37b53b36d56b92adb76e2d4d87"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/skipped-roots.jsonl",
+      "sha256": "b2b8dda27d7f61437aee50f4d0d3bae16f4b2c6595352e638c041edfbd2e2406"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-probe-contract/cFp68/report.md",
+      "sha256": "7baabcfe6b440e0a7f14a21eb72666e95abb2bc65abeb4be9b5140d57a3ddd0b"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/manifest.json",
+      "sha256": "46234a57bd57b1d0da7b2af6d2437fc5cd75d4b8096b058d1a72d76e024a8d14"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/summary.json",
+      "sha256": "d5be37fa882ae443029653c1b80854af74fb18a54aeeb026dcf0a40195ffbfc6"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/probe-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/probe-roots.jsonl",
+      "sha256": "fd1bdf4048231ffca218fa934aef7e4ed6452f258bb0f4b125cd994491277a9f"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/skipped-roots.jsonl",
+      "sha256": "63de4c0f60b8aeb56ea6a9dbc59643b9dabf931862683ba53ff08396ba29535c"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/determinized-pimc-probe-v0/cFp69/report.md",
+      "sha256": "3558f3c7bc46bff48505ebb5759d46721ec7c0f00183b12b7673676b82c67ed6"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/manifest.json",
+      "sha256": "8eeccfbbac23cc9192cc9264c58a93e8e808779654ec4b0bec3e6c9b5470db6d"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/summary.json",
+      "sha256": "66294d4759ff4bc5dc49576fa5c62311615ed87306df136887eac7551576f9d1"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "sha256": "83875d13214b3f01df55542695b49490826f78962719db442d9af023424de776"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
+      "sha256": "5331f1a9268fef8aec251a5fbae2e1226acea2619f5f6675ae23577aee69920e"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/report.md",
+      "sha256": "18b5bd9ac425fddbd3eed23a796eb57604cdec93d650dd16e30cbe9e6cb0fc96"
+    }
+  ],
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "sourceCfp68RunId": "benchmark-v1-starter-matrix-v1:determinized-probe-contract:cFp68",
+  "sourceCfp69RunId": "benchmark-v1-starter-matrix-v1:determinized-pimc-probe-v0:cFp69",
+  "sourceCfp76RunId": "benchmark-v1-starter-matrix-v1:search-consumer-action-features-v0:cFp76",
+  "suiteId": "benchmark-v1-starter-matrix-v1",
+  "summarySchemaVersion": "public-action-identities-v0-summary-v1"
+}
