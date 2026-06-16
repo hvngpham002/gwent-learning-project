@@ -43,3 +43,5 @@ export * from './searchConsumerActionFeaturesV0';
 export * from './searchConsumerActionFeaturesV0Artifacts';
 export * from './publicActionIdentitiesV0';
 export * from './publicActionIdentitiesV0Artifacts';
+export * from './publicActionIdentitiesCompactV0';
+export * from './publicActionIdentitiesCompactV0Artifacts';
