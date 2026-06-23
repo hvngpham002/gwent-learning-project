@@ -1,0 +1,263 @@
+{
+  "actionFeatureRowCount": 18820,
+  "actionFeaturesSizeLabel": "below 50 MB robust target, below 90 MB hard stop",
+  "artifactByteSizes": {
+    "actionFeaturesJsonlBytes": 10518156,
+    "rootFeaturesJsonlBytes": 9548373,
+    "skippedRootsJsonlBytes": 108675
+  },
+  "cFp80Recommendation": "cFp80 may define a strictly benchmark-only action-feature casebook or consumer-readiness report over populated cFp79 action features; it must not add rollout, value, ranking, best-action, win-probability, reward-target, or product-AI behavior.",
+  "consumerReadinessStatus": "features_ready",
+  "countSummaries": {
+    "cFp70AvailabilityRiskBucketCounts": {
+      "none": 18820
+    },
+    "cFp71OutcomeRiskBucketCounts": {
+      "none": 18820
+    },
+    "cFp72BranchingRiskBucketCounts": {
+      "large": 3382,
+      "medium": 11207,
+      "small": 2385,
+      "tiny": 1730,
+      "zero": 116
+    },
+    "cFp73BudgetPressureLabelCounts": {
+      "high_threshold": 1794,
+      "large": 1677,
+      "low": 11887,
+      "moderate": 3462
+    },
+    "cFp74CapStatusCounts": {
+      "in_cap": 15139,
+      "over_budget": 3681
+    },
+    "countsByCollisionFlag": {
+      "collision": 5163,
+      "no_collision": 13657
+    },
+    "countsByDeckPreset": {
+      "official-monsters-starter": 3134,
+      "official-nilfgaard-starter": 4140,
+      "official-northern-realms-starter": 5071,
+      "official-scoiatael-starter": 3120,
+      "official-skellige-starter": 3355
+    },
+    "countsByFaction": {
+      "monsters": 3134,
+      "nilfgaard": 4140,
+      "northern_realms": 5071,
+      "scoiatael": 3120,
+      "skellige": 3355
+    },
+    "countsByMatchup": {
+      "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1": 775,
+      "starter-monsters-heuristic-v0-vs-skellige-heuristic-v1": 840,
+      "starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0": 718,
+      "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0": 789,
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 822,
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 879,
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 941,
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 956,
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 872,
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 866,
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 1047,
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 1230,
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 1206,
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 1092,
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 1056,
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 1257,
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 975,
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 1054,
+      "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1": 742,
+      "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0": 703
+    },
+    "countsByMoveCountBucket": {
+      "large_collision": 1119,
+      "single": 13657,
+      "small_collision": 4044
+    },
+    "countsByPhase": {
+      "mulligan": 348,
+      "playing": 18141,
+      "round_end": 331
+    },
+    "countsByPolicy": {
+      "headless-round-end-auto-resolver": 331,
+      "legal-heuristic-v0": 9302,
+      "legal-heuristic-v1": 9187
+    },
+    "countsByRound": {
+      "1": 14624,
+      "2": 3188,
+      "3": 1008
+    },
+    "countsBySourceClass": {
+      "hero": 1124,
+      "leader": 1488,
+      "none": 3793,
+      "prompt": 290,
+      "special": 7177,
+      "unit": 4948
+    },
+    "countsByTargetToken": {
+      "board_row|opponent|close": 206,
+      "board_row|opponent|siege": 163,
+      "board_row|own|close": 2949,
+      "board_row|own|ranged": 2225,
+      "board_row|own|siege": 1039,
+      "card|opponent": 23,
+      "card|own|close": 817,
+      "card|own|ranged": 427,
+      "card|own|siege": 291,
+      "deck_card_source|own": 512,
+      "none": 6084,
+      "row_horn|own|close": 832,
+      "row_horn|own|ranged": 880,
+      "row_horn|own|siege": 880,
+      "weather|public": 1492
+    },
+    "publicActionKindCounts": {
+      "choose_mulligan": 300,
+      "choose_prompt_option": 290,
+      "pass": 3162,
+      "play_card": 13249,
+      "resolve_round_end": 331,
+      "use_leader": 1488
+    }
+  },
+  "explicitNonClaims": [
+    "cFp79 does not choose actions or recommend best actions.",
+    "cFp79 does not rank actions or compute action ordering.",
+    "cFp79 does not estimate action values or expected values.",
+    "cFp79 does not estimate win probability or reward targets.",
+    "cFp79 does not compute payoff tables or principal variations.",
+    "cFp79 does not run rollout search, PIMC evaluation, or ISMCTS/MCTS.",
+    "cFp79 does not execute candidate actions, rebuild sampled states, or materialize hidden worlds.",
+    "cFp79 does not select moves for product AI.",
+    "cFp79 does not re-observe benchmark roots or run the benchmark suite.",
+    "cFp79 does not change legal-heuristic-v1 or legal-heuristic-v0 behavior.",
+    "cFp79 does not change engine rules, legal moves, sampler behavior, deck/catalog data, benchmark suite definitions, or rating artifacts.",
+    "cFp79 does not add AI Lab runner buttons or execute benchmarks from the browser.",
+    "cFp79 does not add difficulty tiers, export training data, or add Python tooling.",
+    "cFp79 does not modify cFp76 or cFp78 artifacts."
+  ],
+  "featureRunId": "cFp79",
+  "hiddenInfoScanHazards": [],
+  "hiddenInfoScanStatus": "clean",
+  "isActionFeaturesBelowHardStop": true,
+  "isActionFeaturesBelowTarget": true,
+  "phaseId": "cFp79",
+  "rootFeatureRowCount": 3979,
+  "schemaVersion": "search-consumer-action-features-v1-summary-v1",
+  "skippedRootRowCount": 63,
+  "sourceArtifactEmptyHashCount": 0,
+  "sourceArtifactReferenceCount": 12,
+  "sourceArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/manifest.json",
+      "sha256": "8eeccfbbac23cc9192cc9264c58a93e8e808779654ec4b0bec3e6c9b5470db6d"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/summary.json",
+      "sha256": "66294d4759ff4bc5dc49576fa5c62311615ed87306df136887eac7551576f9d1"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "sha256": "83875d13214b3f01df55542695b49490826f78962719db442d9af023424de776"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
+      "sha256": "5331f1a9268fef8aec251a5fbae2e1226acea2619f5f6675ae23577aee69920e"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/skipped-roots.jsonl",
+      "sha256": "91b706a78ad1c81781faac56ffbc8e181420f8f850e478cf3ad11219c189d7d9"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-v0/cFp76/report.md",
+      "sha256": "18b5bd9ac425fddbd3eed23a796eb57604cdec93d650dd16e30cbe9e6cb0fc96"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/manifest.json",
+      "sha256": "be36b9ff3131d3d0eb398fd595aab29d602df7099b6bf4d7e259997451860fea"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/summary.json",
+      "sha256": "863672b612a86a7f486e9626a9c7548eb86b372e15de69dcc6c2711ae91233dd"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/action-identities-compact.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/action-identities-compact.jsonl",
+      "sha256": "336d36cded71f38a6d6b03520713dca49c9b61fd5065a6fc0bd3232f314f50d7"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/root-index.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/root-index.jsonl",
+      "sha256": "d64ead0bf4b30297b898d55e535b059fae78be8e14d23b524243e7bb9632c705"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/skipped-roots.jsonl",
+      "sha256": "1482689e75a631acded884a01fe46e8abe1ee6f9581863ad5862b9818cafbbc2"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/public-action-identities-compact-v0/cFp78/report.md",
+      "sha256": "622e6403330ec7713f07cf594bbb1d5a1ce7920da0cb8b734900618e58dd9ed3"
+    }
+  ],
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-v1",
+  "sourceCfp76RunId": "benchmark-v1-starter-matrix-v1:search-consumer-action-features-v0:cFp76",
+  "sourceCfp78RunId": "benchmark-v1-starter-matrix-v1:public-action-identities-compact-v0:cFp78",
+  "sourceConsistency": {
+    "cfp76ConsumerReadinessStatus": "action_feature_source_gap",
+    "cfp76RootFeatureActualCount": 3979,
+    "cfp76RootFeatureCountActualDelta": 0,
+    "cfp76RootFeatureSummaryCount": 3979,
+    "cfp76RootFeaturesWithoutCfp78RootIndex": 0,
+    "cfp76SkippedRootActualCount": 63,
+    "cfp76SkippedRootCountActualDelta": 0,
+    "cfp76SkippedRootSummaryCount": 63,
+    "cfp76SkippedRootsWithoutCfp78SkippedRoot": 0,
+    "cfp76SourceConsistencyStatus": "ready",
+    "cfp78ActionIdentitiesMissingCfp79ActionFeatures": 0,
+    "cfp78CompactActionActualCount": 18820,
+    "cfp78CompactActionCountActualDelta": 0,
+    "cfp78CompactActionSummaryCount": 18820,
+    "cfp78CompactReadinessStatus": "compact_ready",
+    "cfp78RootIndexActualCount": 3979,
+    "cfp78RootIndexCountActualDelta": 0,
+    "cfp78RootIndexRowsWithoutCfp76RootFeature": 0,
+    "cfp78RootIndexSummaryCount": 3979,
+    "cfp78SkippedRootActualCount": 63,
+    "cfp78SkippedRootCountActualDelta": 0,
+    "cfp78SkippedRootSummaryCount": 63,
+    "cfp78SkippedRootsWithoutCfp76SkippedRoot": 0,
+    "cfp78SourceConsistencyStatus": "ready",
+    "cfp79ActionFeatureRowCount": 18820,
+    "cfp79ActionFeatureVsCfp78Delta": 0,
+    "cfp79ActionRowsMissingRootFeature": 0,
+    "cfp79RootFeatureRowCount": 3979,
+    "cfp79RootFeatureVsCfp76Delta": 0,
+    "cfp79SkippedRootRowCount": 63,
+    "cfp79SkippedRootVsCfp76Delta": 0,
+    "cfp79SkippedRootVsCfp78Delta": 0,
+    "duplicateCfp76RootIdentityKeys": 0,
+    "duplicateCfp78RootIdentityKeys": 0,
+    "duplicateCfp79ActionIdentityRefs": 0,
+    "duplicateCfp79RootRefs": 0,
+    "sourceArtifactEmptyHashCount": 0,
+    "sourceArtifactReferenceCount": 12,
+    "status": "ready"
+  },
+  "suiteId": "benchmark-v1-starter-matrix-v1"
+}
