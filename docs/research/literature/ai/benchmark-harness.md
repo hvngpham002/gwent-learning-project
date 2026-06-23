@@ -243,6 +243,19 @@ Search-readiness:
    rollouts, compute action values/rewards/win probabilities/payoff
    tables/principal variations/action rankings, change policy behavior, or
    wire product gameplay.
+- cFp78 implements `public-action-identities-compact-v0` under
+   `<suiteId>/public-action-identities-compact-v0/cFp78/`. It reads committed
+   cFp77 artifacts as immutable source data and emits slim compact action rows
+   (dropping `actionPhase`/`actionRound`/`collisionCountWithinBucket`, renaming
+   `publicActionKind → kind` / `publicActionOrdinal → ordinal`, compacting
+   target fields into a `target` token), compact root-index join rows (retaining
+   only fields needed for cFp79 consumer joins), and cFp77 skipped-root rows
+   forwarded verbatim. The robust `action-identities-compact.jsonl` is 46.86 MB,
+   below the 50 MB soft target, enabling cFp79 consumer feature joins. It does
+   not re-observe benchmark roots, execute candidate actions, rebuild sampled
+   states, materialize hidden worlds, run rollouts, compute action
+   values/rewards/win probabilities/payoff tables/principal variations/action
+   rankings, change policy behavior, or wire product gameplay.
    These phases do not evaluate actions, run rollouts/search, change policy
    behavior, or wire product gameplay.
 
