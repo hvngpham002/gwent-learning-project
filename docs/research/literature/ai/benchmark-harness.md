@@ -256,6 +256,20 @@ Search-readiness:
    states, materialize hidden worlds, run rollouts, compute action
    values/rewards/win probabilities/payoff tables/principal variations/action
    rankings, change policy behavior, or wire product gameplay.
+- cFp79 implements `search-consumer-action-features-v1` under
+   `<suiteId>/search-consumer-action-features-v1/cFp79/`. It reads committed
+   cFp76 and cFp78 artifacts as immutable source data, validates both source
+   chains, joins cFp76 root features to cFp78 root-index rows by public root
+   identity, emits one normalized root-feature row per eligible root, emits
+   one action-feature row per compact public action identity, and carries
+   skipped-root classifications forward with cFp79 metadata. Current emits
+   3,979 root rows, 18,820 action rows, and 63 skipped rows. Robust emits
+   32,147 root rows, 153,842 action rows, and 340 skipped rows. Robust
+   `action-features.jsonl` is 86,029,163 bytes: below the 90 MB hard stop but
+   above the 50 MB soft target, so cFp80 should compact or dictionary-encode
+   before any consumer casebook. cFp79 does not execute actions, rebuild
+   sampled states, materialize hidden worlds, run rollouts, compute values,
+   rank or choose actions, change policy behavior, or wire product gameplay.
    These phases do not evaluate actions, run rollouts/search, change policy
    behavior, or wire product gameplay.
 

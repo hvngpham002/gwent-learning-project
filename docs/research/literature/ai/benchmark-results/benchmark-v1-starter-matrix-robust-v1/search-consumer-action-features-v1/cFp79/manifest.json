@@ -1,0 +1,111 @@
+{
+  "actionFeatureSchemaVersion": "search-consumer-action-features-v1-action-feature-v1",
+  "artifactHashes": {
+    "action-features.jsonl": "749fb2828c9c4419e1091f06cdff0bc2d0c7ecfd3e24e4be22811b948c64c5df",
+    "report.md": "b91f03b37f231baa5d684fa5de221daf3421d86f00f6070447b9514d49cef6c1",
+    "root-features.jsonl": "3c92b9ad317f1b2031a672cfab5588ad6cd9f5fa8b9174061d25c42f5a2e68b3",
+    "skipped-roots.jsonl": "8ba5c854c1bfceed63d47e0259a78a8f4a2c6e769070d9cdff86c394a8805872",
+    "summary.json": "8ba1ce9b11fb00f642355fd136dc91b0edec217ed4e743e1a326e09ba67ab456"
+  },
+  "cFp80Recommendation": "cFp80 should first compact or dictionary-encode the cFp79 action-feature projection before any consumer casebook work.",
+  "consumerReadinessStatus": "features_ready",
+  "explicitNonClaims": [
+    "cFp79 does not choose actions or recommend best actions.",
+    "cFp79 does not rank actions or compute action ordering.",
+    "cFp79 does not estimate action values or expected values.",
+    "cFp79 does not estimate win probability or reward targets.",
+    "cFp79 does not compute payoff tables or principal variations.",
+    "cFp79 does not run rollout search, PIMC evaluation, or ISMCTS/MCTS.",
+    "cFp79 does not execute candidate actions, rebuild sampled states, or materialize hidden worlds.",
+    "cFp79 does not select moves for product AI.",
+    "cFp79 does not re-observe benchmark roots or run the benchmark suite.",
+    "cFp79 does not change legal-heuristic-v1 or legal-heuristic-v0 behavior.",
+    "cFp79 does not change engine rules, legal moves, sampler behavior, deck/catalog data, benchmark suite definitions, or rating artifacts.",
+    "cFp79 does not add AI Lab runner buttons or execute benchmarks from the browser.",
+    "cFp79 does not add difficulty tiers, export training data, or add Python tooling.",
+    "cFp79 does not modify cFp76 or cFp78 artifacts."
+  ],
+  "featureRunId": "cFp79",
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "root-features.jsonl",
+    "action-features.jsonl",
+    "skipped-roots.jsonl",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "deterministic-no-wall-clock",
+  "hiddenInfoSafetyNote": "All cFp79 machine-readable rows are deterministic scalar joins over committed cFp76 root features and cFp78 compact public action identities. Action rows carry compact public action-local fields plus rootRef joins only; they do not duplicate cFp76 root payloads or carry raw move, card, private hand/deck, sampled-world, value, ranking, or rollout payloads.",
+  "phaseId": "cFp79",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v1/cFp79",
+  "rootFeatureSchemaVersion": "search-consumer-action-features-v1-root-feature-v1",
+  "schemaVersion": "search-consumer-action-features-v1-artifact-v1",
+  "skippedRootSchemaVersion": "search-consumer-action-features-v1-skipped-root-v1",
+  "sourceArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/manifest.json",
+      "sha256": "f674e8132487567e3ddcb7d09e449961ca82d6431bb84d416159f5a60cc71423"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/summary.json",
+      "sha256": "ef09b4f457e128bfdca04273b1bab233b2e65310a96d77c3cc2c9f6b642d7012"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/root-features.jsonl",
+      "sha256": "2c5bf4b543d6dbc918dc094bd2f60a2a8da82d108153f4d6467a9a1bf53940a3"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/action-feature-gaps.jsonl",
+      "sha256": "98e129647b77149c474ce3c27f8cb6c99a3fefaf1aa889bb7a33f21c17030eb0"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/skipped-roots.jsonl",
+      "sha256": "e5c9f61c998ce15890f5609c81b1e24bf12b6604d481c02307e4332df0d5304d"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/search-consumer-action-features-v0/cFp76/report.md",
+      "sha256": "436de2671d8ebf1fc4f3b530d4e7e2057330018e0ff50c5b534619b372712545"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/manifest.json",
+      "sha256": "676dd5984f35f1ee788cf99285be785a444e73cfeec04014345251364d606193"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/summary.json",
+      "sha256": "9c8d30827d1ffe435aa2a05bfb244c01495257457bfc149eeb50e8d6891ba8a8"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/action-identities-compact.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/action-identities-compact.jsonl",
+      "sha256": "f0d88b47024953583422fc3da10752c990ed035b292db28b3345d7dc276a0886"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/root-index.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/root-index.jsonl",
+      "sha256": "ec53c3a4933cef77a19f07ed39f6c7fec304cd2134cdea205466f40e076f9d0d"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/skipped-roots.jsonl",
+      "sha256": "39c560f502f4b05e8e292179e60664ab3ec89553efa7b45fa47c52b80d5267fd"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-robust-v1/public-action-identities-compact-v0/cFp78/report.md",
+      "sha256": "168e8e7011ec3862b28d37369f0f434adf6e52d10bab4f1ab5373e01c4d701bd"
+    }
+  ],
+  "sourceBenchmarkSuiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "sourceCfp76RunId": "benchmark-v1-starter-matrix-robust-v1:search-consumer-action-features-v0:cFp76",
+  "sourceCfp78RunId": "benchmark-v1-starter-matrix-robust-v1:public-action-identities-compact-v0:cFp78",
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "summarySchemaVersion": "search-consumer-action-features-v1-summary-v1"
+}
