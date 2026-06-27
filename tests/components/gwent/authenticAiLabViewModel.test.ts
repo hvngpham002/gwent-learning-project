@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
        expect.objectContaining({
          role: "experimental product playtest",
          status: "implemented · experimental/playtest",
-         latestPhase: "cFp80",
-         latestSpecPath: "docs/spec/2026-06-26-cFp80-specs.md",
-         latestReportPath: "audit/reports/2026-06-26-cFp80-report.md",
+         latestPhase: "cFp81",
+         latestSpecPath: "docs/spec/2026-06-27-cFp81-specs.md",
+         latestReportPath: "audit/reports/2026-06-27-cFp81-report.md",
          latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
        })
      );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
    expect(v1).toEqual(
        expect.objectContaining({
-         latestPhase: "cFp80",
-         latestSpecPath: "docs/spec/2026-06-26-cFp80-specs.md",
-         latestReportPath: "audit/reports/2026-06-26-cFp80-report.md",
+         latestPhase: "cFp81",
+         latestSpecPath: "docs/spec/2026-06-27-cFp81-specs.md",
+         latestReportPath: "audit/reports/2026-06-27-cFp81-report.md",
          latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
        })
      );
@@ -94,12 +94,12 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp80");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-26-cFp80-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-26-cFp80-report.md");
-  expect(v1?.description).toContain("cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, and cFp80");
+    expect(v1?.latestPhase).toBe("cFp81");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-27-cFp81-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-27-cFp81-report.md");
+  expect(v1?.description).toContain("cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, and cFp81");
     expect(v1?.description).toContain(
-       "cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, and cFp80 are benchmark infrastructure, not search gameplay",
+       "cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, and cFp81 are benchmark infrastructure, not search gameplay",
      );
     expect(v1?.description).toContain("expose no runner");
     expect(v1?.capabilities).toEqual(
@@ -156,6 +156,7 @@ describe("authentic AI Lab view model", () => {
        "public-action-identities-compact-v0 compact projection over committed cFp77 artifacts, emitting slim compact action rows, compact root-index join rows, and forwarded skipped-root rows without re-observing benchmark roots or executing candidate actions; benchmark infrastructure, not search gameplay (cFp78)",
        "search-consumer-action-features-v1 read-only feature join over committed cFp76 and cFp78 artifacts, emitting normalized root-feature rows and populated action-feature rows without action ranking, rollout, or product AI wiring; benchmark infrastructure, not search gameplay (cFp79)",
        "search-consumer-action-features-dictionary-v0 dictionary projection over committed cFp79 artifacts, preserving cFp79 row counts and reconstructing cFp79 action rows while reducing robust compact actions below the 50 MB target; benchmark infrastructure, not search gameplay (cFp80)",
+       "search-consumer-action-feature-casebook-v0 aggregate casebook over committed cFp80 compact artifacts, emitting bounded slice summaries and consumer-readiness labels without action ranking, rollout, or product AI wiring; benchmark infrastructure, not search gameplay (cFp81)",
       ])
     );
   });
