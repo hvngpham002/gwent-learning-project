@@ -1,0 +1,57 @@
+{
+  "casebookRunId": "cFp81",
+  "compactActionFeatureRowCount": 18820,
+  "countsByDeckPreset": {
+    "official-monsters-starter": 4,
+    "official-nilfgaard-starter": 11,
+    "official-northern-realms-starter": 39,
+    "official-scoiatael-starter": 6,
+    "official-skellige-starter": 3
+  },
+  "countsByFaction": {
+    "monsters": 4,
+    "nilfgaard": 11,
+    "northern_realms": 39,
+    "scoiatael": 6,
+    "skellige": 3
+  },
+  "countsByMatchup": {
+    "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 2,
+    "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 1,
+    "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 1,
+    "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 6,
+    "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 7,
+    "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 4,
+    "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 6,
+    "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 24,
+    "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 3,
+    "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 2,
+    "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 1,
+    "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 3,
+    "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 2,
+    "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 1
+  },
+  "countsByPhase": {
+    "playing": 57,
+    "round_end": 6
+  },
+  "countsByPolicy": {
+    "headless-round-end-auto-resolver": 6,
+    "legal-heuristic-v0": 47,
+    "legal-heuristic-v1": 10
+  },
+  "countsByRound": {
+    "1": 28,
+    "2": 28,
+    "3": 7
+  },
+  "countsBySkipReason": {
+    "sampler_invalid_public_zone_count_deficit": 63
+  },
+  "inheritedSkippedRootContext": "present",
+  "rootFeatureRowCount": 3979,
+  "schemaVersion": "search-consumer-action-feature-casebook-v0-skipped-root-summary-v1",
+  "skippedRootPercent": 1.56,
+  "skippedRootRowCount": 63,
+  "suiteId": "benchmark-v1-starter-matrix-v1"
+}

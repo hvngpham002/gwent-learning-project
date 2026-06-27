@@ -285,6 +285,22 @@ Search-readiness:
    execute actions, rebuild sampled states, materialize hidden worlds, run
    rollouts, compute values, rank or choose actions, change policy behavior,
    or wire product gameplay.
+- cFp81 implements `search-consumer-action-feature-casebook-v0` under
+   `<suiteId>/search-consumer-action-feature-casebook-v0/cFp81/`. It reads
+   committed cFp80 compact artifacts as immutable source data, validates
+   `dictionary_ready`, ready source consistency, passed reconstruction, actual
+   row counts, dictionary group counts, root-reference resolution, and the
+   robust compact-action file below the 50 MB target. It expands dictionary ids
+   only in memory for grouping and emits bounded aggregate rows:
+   `casebook-rows.jsonl`, `slice-summaries.jsonl`, and
+   `skipped-root-summary.json`. Current emits 80 casebook rows, 95 slice
+   summaries, and carries 63 inherited skipped roots (1.56%). Robust emits 80
+   casebook rows, 95 slice summaries, and carries 340 inherited skipped roots
+   (1.05%); robust `casebook-rows.jsonl` is 42,703 bytes and
+   `slice-summaries.jsonl` is 41,906 bytes. cFp81 does not execute actions,
+   rebuild sampled states, materialize hidden worlds, run rollouts, compute
+   values, rank or choose actions, change policy behavior, or wire product
+   gameplay.
    These phases do not evaluate actions, run rollouts/search, change policy
    behavior, or wire product gameplay.
 

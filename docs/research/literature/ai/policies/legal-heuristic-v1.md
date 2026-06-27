@@ -206,9 +206,13 @@ stop but above the 50 MB soft target. cFp80 is a read-only
 search-consumer-action-features-dictionary-v0 projection over committed cFp79
 artifacts, preserving cFp79 row counts, proving 0 reconstruction mismatches,
 and reducing robust compact actions to 46,044,793 bytes as infrastructure only.
+cFp81 is a read-only search-consumer-action-feature-casebook-v0 aggregate over
+committed cFp80 compact artifacts, emitting bounded casebook rows, slice
+summaries, skipped-root context, and consumer-readiness labels as
+infrastructure only.
 cFp59, cFp60,
 cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, cFp70, and
-cFp71, cFp72, cFp73, cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, and cFp80 do not change
+cFp71, cFp72, cFp73, cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, and cFp81 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play

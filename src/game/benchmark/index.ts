@@ -49,3 +49,5 @@ export * from './searchConsumerActionFeaturesV1';
 export * from './searchConsumerActionFeaturesV1Artifacts';
 export * from './searchConsumerActionFeatureDictionaryV0';
 export * from './searchConsumerActionFeatureDictionaryV0Artifacts';
+export * from './searchConsumerActionFeatureCasebookV0';
+export * from './searchConsumerActionFeatureCasebookV0Artifacts';

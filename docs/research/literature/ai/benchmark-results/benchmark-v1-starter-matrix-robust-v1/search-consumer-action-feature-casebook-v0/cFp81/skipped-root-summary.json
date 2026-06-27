@@ -1,0 +1,57 @@
+{
+  "casebookRunId": "cFp81",
+  "compactActionFeatureRowCount": 153842,
+  "countsByDeckPreset": {
+    "official-monsters-starter": 26,
+    "official-nilfgaard-starter": 102,
+    "official-northern-realms-starter": 136,
+    "official-scoiatael-starter": 37,
+    "official-skellige-starter": 39
+  },
+  "countsByFaction": {
+    "monsters": 26,
+    "nilfgaard": 102,
+    "northern_realms": 136,
+    "scoiatael": 37,
+    "skellige": 39
+  },
+  "countsByMatchup": {
+    "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 23,
+    "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 17,
+    "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 12,
+    "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 31,
+    "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 42,
+    "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 44,
+    "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 14,
+    "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 59,
+    "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 18,
+    "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 16,
+    "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 6,
+    "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 37,
+    "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 13,
+    "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 8
+  },
+  "countsByPhase": {
+    "playing": 312,
+    "round_end": 28
+  },
+  "countsByPolicy": {
+    "headless-round-end-auto-resolver": 28,
+    "legal-heuristic-v0": 246,
+    "legal-heuristic-v1": 66
+  },
+  "countsByRound": {
+    "1": 222,
+    "2": 96,
+    "3": 22
+  },
+  "countsBySkipReason": {
+    "sampler_invalid_public_zone_count_deficit": 340
+  },
+  "inheritedSkippedRootContext": "present",
+  "rootFeatureRowCount": 32147,
+  "schemaVersion": "search-consumer-action-feature-casebook-v0-skipped-root-summary-v1",
+  "skippedRootPercent": 1.05,
+  "skippedRootRowCount": 340,
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1"
+}
