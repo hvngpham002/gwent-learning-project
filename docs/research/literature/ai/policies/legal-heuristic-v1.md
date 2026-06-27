@@ -202,10 +202,13 @@ executing candidate actions, infrastructure only. cFp79 is a read-only
 search-consumer-action-features-v1 join over committed cFp76 and cFp78
 artifacts, emitting normalized root-feature rows and populated action-feature
 rows as infrastructure only; robust action features are below the 90 MB hard
-stop but above the 50 MB soft target, so cFp80 should compact before consumer
-casebook work. cFp59, cFp60,
+stop but above the 50 MB soft target. cFp80 is a read-only
+search-consumer-action-features-dictionary-v0 projection over committed cFp79
+artifacts, preserving cFp79 row counts, proving 0 reconstruction mismatches,
+and reducing robust compact actions to 46,044,793 bytes as infrastructure only.
+cFp59, cFp60,
 cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, cFp70, and
-cFp71, cFp72, cFp73, cFp74, cFp75, cFp76, cFp77, cFp78, and cFp79 do not change
+cFp71, cFp72, cFp73, cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, and cFp80 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play

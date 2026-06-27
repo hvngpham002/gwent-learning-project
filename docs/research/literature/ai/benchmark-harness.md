@@ -270,6 +270,21 @@ Search-readiness:
    before any consumer casebook. cFp79 does not execute actions, rebuild
    sampled states, materialize hidden worlds, run rollouts, compute values,
    rank or choose actions, change policy behavior, or wire product gameplay.
+- cFp80 implements `search-consumer-action-features-dictionary-v0` under
+   `<suiteId>/search-consumer-action-features-dictionary-v0/cFp80/`. It reads
+   committed cFp79 artifacts as immutable source data, validates cFp79
+   `features_ready` and ready source consistency, dictionary-encodes repeated
+   action-feature strings, emits one compact action row per cFp79 action row,
+   forwards root and skipped rows with cFp80 metadata, and proves lossless
+   reconstruction for preserved public/scalar action fields. Current emits
+   3,979 root rows, 18,820 compact action rows, and 63 skipped rows; compact
+   actions are 5,615,464 bytes versus cFp79's 10,518,156 bytes. Robust emits
+   32,147 root rows, 153,842 compact action rows, and 340 skipped rows;
+   compact actions are 46,044,793 bytes versus cFp79's 86,029,163 bytes, below
+   the 50 MB soft target. Reconstruction mismatch count is 0. cFp80 does not
+   execute actions, rebuild sampled states, materialize hidden worlds, run
+   rollouts, compute values, rank or choose actions, change policy behavior,
+   or wire product gameplay.
    These phases do not evaluate actions, run rollouts/search, change policy
    behavior, or wire product gameplay.
 
