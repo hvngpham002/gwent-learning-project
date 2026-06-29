@@ -210,9 +210,15 @@ cFp81 is a read-only search-consumer-action-feature-casebook-v0 aggregate over
 committed cFp80 compact artifacts, emitting bounded casebook rows, slice
 summaries, skipped-root context, and consumer-readiness labels as
 infrastructure only.
+cFp82 is a docs/metadata-only search-consumer casebook decision phase over
+committed cFp81 evidence. It recommends cFp83
+`search-consumer-small-subset-contract-v0` because cFp81 has a usable ordinary
+ready slice but the broader robust surface is dominated by high-branching and
+high-collision pressure. It creates no runner or artifact family and remains
+infrastructure only.
 cFp59, cFp60,
 cFp61, cFp62, cFp63, cFp64, cFp65, cFp66, cFp67, cFp68, cFp69, cFp70, and
-cFp71, cFp72, cFp73, cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, and cFp81 do not change
+cFp71, cFp72, cFp73, cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, cFp81, and cFp82 do not change
 `legal-heuristic-v1`
 gameplay, search behavior, engine rules, legal moves, or product difficulty.
 cFp53 repairs the selected-play
