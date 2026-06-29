@@ -97,9 +97,9 @@ describe("authentic AI Lab view model", () => {
     expect(v1?.latestPhase).toBe("cFp82");
     expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-27-cFp82-specs.md");
     expect(v1?.latestReportPath).toBe("audit/reports/2026-06-27-cFp82-report.md");
-  expect(v1?.description).toContain("cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, and cFp81");
+  expect(v1?.description).toContain("cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, cFp81, and cFp82");
     expect(v1?.description).toContain(
-       "cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, and cFp81 are benchmark infrastructure, not search gameplay",
+       "cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, cFp81, and cFp82 are benchmark infrastructure, not search gameplay",
      );
     expect(v1?.description).toContain("expose no runner");
     expect(v1?.capabilities).toEqual(
