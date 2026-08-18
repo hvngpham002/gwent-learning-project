@@ -8,15 +8,17 @@
 
 Before running experiments for this project, read:
 
-1. `docs/compute/hardware-spec.md`
-2. `docs/compute/slurm-workflow.md`
+1. `docs/compute/experiment-status-ledger.md`
+2. `docs/compute/hardware-spec.md` only when the ledger authorizes its
+   historical environment again
 3. `docs/compute/experiment-workflow.md`
 
 Use `docs/compute/templates/experiment-card.md` for new experiment runs.
 
 ## Project-Specific Scope
 
-Compute status: `INACTIVE / PLANNED / ACTIVE`
+Compute status: `INACTIVE / PLANNED / ACTIVE` (copy the active setup from the
+experiment status ledger)
 
 `<State whether this project currently uses compute. If inactive, state what
 would make compute relevant.>`
@@ -45,7 +47,7 @@ Expected resource needs:
 
 ## Recommended Result Pattern
 
-Use for transient local or cluster outputs:
+Use for transient local outputs:
 
 ```text
 .local/compute-results/<experiment-id>/<run-id>/
@@ -56,7 +58,7 @@ If the project uses a different result path, state it here.
 Each kept run directory should contain:
 
 - `run-metadata.txt`;
-- Slurm or local logs;
+- local logs (or a future setup explicitly enabled in the status ledger);
 - configuration files;
 - output data summaries;
 - generated figures if relevant;

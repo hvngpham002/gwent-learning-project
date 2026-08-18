@@ -679,8 +679,9 @@ through by cFp36 through cFp43: round-resource/pass-priority, weathered-row
 low-tempo, Medic timing, expanded failure-mining, the cFp42 casebook, and the
 cFp43 round-one overinvestment guard are all now recorded as completed phases.
 `leader_underuse` remains deferred until a safe public leader-availability
-summary exists. H100/Slurm is still not involved; the command is CPU/Node
-benchmark infrastructure.
+summary exists. The command is CPU/Node benchmark infrastructure and runs
+locally under the active setup recorded in
+`docs/compute/experiment-status-ledger.md`.
 
 ## Known Limitations
 

@@ -4,15 +4,13 @@
 > This directory describes shared compute access, run discipline, and reusable
 > templates. It is not evidence for thesis or paper claims.
 
-This directory is the compute operations layer for this repository. It exists so
-future agents can use local GPUs, remote desktop GPUs, or the lab Slurm/H100
-cluster without guessing at access patterns, storage rules, or artifact
-boundaries.
+This directory is the compute operations layer for this repository. The active
+experiment setup is defined only in [the experiment status ledger](experiment-status-ledger.md).
 
 Use it for:
 
-- recording observed hardware and scheduler facts;
-- keeping Slurm usage consistent across agents;
+- recording experiment setup and observed hardware facts;
+- keeping local execution consistent across agents;
 - standardizing experiment execution hygiene;
 - providing reusable job and experiment-card templates.
 
@@ -23,33 +21,37 @@ execution guide.
 
 ## Quick Start For Future Agents
 
-1. Read `hardware-spec.md` to understand the observed H100 cluster and the
-   fact that availability is not guaranteed.
-2. Read `slurm-workflow.md` before opening any Slurm allocation.
-3. Read `experiment-workflow.md` before any run that may become benchmark,
+1. Read `experiment-status-ledger.md` to confirm the currently authorized
+   setup.
+2. Read `experiment-workflow.md` before any run that may become benchmark,
    paper, or policy evidence.
-4. For Gwent AI work, read
+3. For Gwent AI work, read
    `docs/research/literature/ai/compute-plan.md` next.
-5. Create an experiment card from `templates/experiment-card.md` before any
+4. Create an experiment card from `templates/experiment-card.md` before any
    expensive run.
 
-Default rule: current TypeScript benchmark commands are CPU/Node workloads and
-do not need an H100. Use H100 only for GPU-specific pilots such as future neural
-policy inference/training, search/evaluator model experiments, embedding
-pipelines, or CUDA smoke tests.
+Default rule: all experiment code runs locally. The remote H100/Slurm setup is
+currently unavailable; its historical details must not be treated as an active
+execution option. See the ledger for the current status.
+
+Expected runs longer than 15 minutes are handed to the user as a copy-ready
+local terminal command. The agent reviews the durable result afterward rather
+than running or waiting on the job interactively.
 
 ## Files
 
 | File | Purpose |
 |---|---|
+| `experiment-status-ledger.md` | **Authoritative active experiment setup and status** |
 | `hardware-spec.md` | Observed lab-server hardware, software, storage, and refresh protocol |
-| `slurm-workflow.md` | How to use login nodes, worker nodes, `srun`, `sbatch`, storage, and caches |
+| `slurm-workflow.md` | Archived Slurm workflow; not an active execution path |
 | `experiment-workflow.md` | Standard lifecycle for running reproducible experiments across projects |
 | `templates/experiment-card.md` | Per-run planning template |
 | `templates/project-compute-plan.md` | Per-project compute-plan template |
-| `templates/slurm-interactive.sh` | Short interactive allocation template |
-| `templates/slurm-batch.sh` | Batch-job template |
-| `templates/smoke-test.py` | Minimal PyTorch/CUDA smoke test |
+| `templates/local-batch.sh` | Local benchmark execution wrapper |
+| `templates/slurm-interactive.sh` | Archived, disabled Slurm allocation template |
+| `templates/slurm-batch.sh` | Archived, disabled Slurm batch template |
+| `templates/smoke-test.py` | Archived CUDA diagnostic script |
 | `../research/literature/ai/compute-plan.md` | Gwent AI-specific compute plan and allowed workloads |
 
 ## Project Integration Pattern
@@ -69,7 +71,8 @@ That file should state:
 - which project-specific scripts and result directories are authoritative.
 
 For now, use compute for bounded benchmark/failure-mining pilots and future GPU
-research experiments. Do not treat H100 access as a product dependency.
+research experiments. Do not treat remote H100 access as a product dependency;
+consult the ledger for current availability.
 
 ## Claim Audit
 
