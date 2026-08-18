@@ -301,6 +301,17 @@ Search-readiness:
    rebuild sampled states, materialize hidden worlds, run rollouts, compute
    values, rank or choose actions, change policy behavior, or wire product
    gameplay.
+- cFp82 is a docs/metadata-only search-consumer casebook decision phase. It
+   reads the committed cFp81 summaries, casebook rows, slice summaries, report,
+   and decision note, then selects cFp83
+   `search-consumer-small-subset-contract-v0` as the next safe benchmark-only
+   step. The decision is based on the usable ordinary ready slice in cFp81
+   plus dominant high-branching and high-collision pressure in the broader
+   robust surface. cFp82 creates no benchmark artifact family, adds no runner,
+   modifies no cFp81/cFp80/cFp79/cFp78/cFp76 artifacts, and does not execute
+   actions, rebuild sampled states, materialize hidden worlds, run rollouts,
+   compute values, rank or choose actions, change policy behavior, or wire
+   product gameplay.
    These phases do not evaluate actions, run rollouts/search, change policy
    behavior, or wire product gameplay.
 
@@ -506,6 +517,9 @@ Write cFp73 post-one-ply branching budget casebook artifact sets:
 npm run benchmark:determinized-branching-budget-casebook:v1-starter-matrix
 npm run benchmark:determinized-branching-budget-casebook:v1-robust
 ```
+
+cFp82 has no benchmark command. It is a docs/metadata decision phase over
+committed cFp81 evidence and does not write a new artifact family.
 
 For longer local runs that should not be tied to an agent turn, use the
 cFp40 progress runner. It orchestrates existing npm commands, writes a
