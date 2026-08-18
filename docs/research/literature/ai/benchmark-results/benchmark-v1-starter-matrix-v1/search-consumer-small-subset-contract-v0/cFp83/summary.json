@@ -90,13 +90,20 @@
     }
   ],
   "sourceConsistency": {
+    "cfp80DeclaredCountsMatch": true,
     "cfp80Ready": true,
-    "cfp81HashesMatch": true,
+    "cfp81CasebookRowCountMatch": true,
+    "cfp81DeclaredRootActionSkipCountsMatch": true,
     "cfp81Ready": true,
-    "countsMatch": true,
+    "cfp81RecordedCfp80HashesMatch": true,
+    "cfp81RecordedCfp80TotalsMatch": true,
+    "cfp81SkippedRootSummaryCountMatch": true,
+    "cfp81SliceSummaryRowCountMatch": true,
     "emptySourceHashCount": 0,
-    "invalidIds": 0,
+    "invalidSourceDictionaryIdCount": 0,
     "labelParity": true,
+    "reconstructionValueMismatchCount": 0,
+    "remappedActionIdOutOfRangeCount": 0,
     "sourceReferenceCount": 13
   },
   "subsetRunId": "cFp83",

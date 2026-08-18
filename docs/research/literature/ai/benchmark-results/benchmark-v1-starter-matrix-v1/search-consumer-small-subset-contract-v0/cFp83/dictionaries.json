@@ -35,15 +35,6 @@
         "public_action_007"
       ]
     },
-    "readinessStatuses": {
-      "count": 4,
-      "values": [
-        "dictionary_ready",
-        "features_ready",
-        "ready",
-        "skipped_invalid_root"
-      ]
-    },
     "rootRefs": {
       "count": 663,
       "values": [
@@ -712,19 +703,6 @@
         "root_003971"
       ]
     },
-    "schemaVersions": {
-      "count": 8,
-      "values": [
-        "search-consumer-action-features-dictionary-v0-action-v1",
-        "search-consumer-action-features-dictionary-v0-dictionaries-v1",
-        "search-consumer-action-features-dictionary-v0-root-feature-v1",
-        "search-consumer-action-features-dictionary-v0-skipped-root-v1",
-        "search-consumer-action-features-dictionary-v0-summary-v1",
-        "search-consumer-action-features-v1-action-feature-v1",
-        "search-consumer-action-features-v1-root-feature-v1",
-        "search-consumer-action-features-v1-skipped-root-v1"
-      ]
-    },
     "sourceClasses": {
       "count": 6,
       "values": [
@@ -764,6 +742,8 @@
   "phaseId": "cFp83",
   "reconstructionChecks": {
     "closureMismatchCount": 0,
+    "reconstructionMismatchCount": 0,
+    "remappedActionIdOutOfRangeCount": 0,
     "selectedActionCount": 1488,
     "selectedRootCount": 663
   },
