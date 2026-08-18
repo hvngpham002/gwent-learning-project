@@ -1,5 +1,9 @@
 # Legal Heuristic v1
 
+## cFp83 benchmark boundary
+
+cFp83 adds a read-only closed-root public subset artifact contract over cFp80/cFp81. It does not change legal-heuristic-v1 behavior, select actions, or provide search gameplay.
+
 Date: 2026-05-22
 
 ## Purpose

@@ -393,7 +393,7 @@ const isOverBudgetContext = ({
   budgetPressureLabel.includes("over") ||
   capStatus !== "in_cap";
 
-const combinedReadinessForAction = ({
+export const classifySearchConsumerActionFeatureCasebookV0ActionReadiness = ({
   action,
   root,
 }: {
@@ -704,7 +704,7 @@ const buildAggregates = (input: SearchConsumerActionFeatureCasebookV0BuildInput)
       budgetPressureLabel: root.cFp73BudgetPressureLabel,
       capStatus: root.cFp74CapStatus,
     });
-    const combinedReadiness = combinedReadinessForAction({ action, root });
+    const combinedReadiness = classifySearchConsumerActionFeatureCasebookV0ActionReadiness({ action, root });
 
     const dimensions: readonly [SearchConsumerActionFeatureCasebookV0Dimension, string][] = [
       ["action_kind", kind],
