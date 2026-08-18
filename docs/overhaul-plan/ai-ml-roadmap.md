@@ -1,5 +1,9 @@
 # AI And Machine Learning Roadmap
 
+## cFp83
+
+cFp83 completed deterministic closed-root public subset infrastructure from immutable cFp80/cFp81 benchmark artifacts. The next permitted step is a bounded benchmark-only action-evaluation signal over these complete roots; product AI remains out of scope.
+
 The ML goal should be treated as a product of a correct deterministic engine. A model cannot learn a reliable game if the game has duplicate rule paths, hidden non-determinism, or illegal action side effects.
 
 ## Literature-Grounded Workflow

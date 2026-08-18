@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
        expect.objectContaining({
          role: "experimental product playtest",
          status: "implemented · experimental/playtest",
-         latestPhase: "cFp82",
-         latestSpecPath: "docs/spec/2026-06-27-cFp82-specs.md",
-         latestReportPath: "audit/reports/2026-06-27-cFp82-report.md",
+         latestPhase: "cFp83",
+         latestSpecPath: "docs/spec/2026-08-18-cFp83-specs.md",
+         latestReportPath: "audit/reports/2026-08-18-cFp83-report.md",
          latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
        })
      );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
    expect(v1).toEqual(
        expect.objectContaining({
-         latestPhase: "cFp82",
-         latestSpecPath: "docs/spec/2026-06-27-cFp82-specs.md",
-         latestReportPath: "audit/reports/2026-06-27-cFp82-report.md",
+         latestPhase: "cFp83",
+         latestSpecPath: "docs/spec/2026-08-18-cFp83-specs.md",
+         latestReportPath: "audit/reports/2026-08-18-cFp83-report.md",
          latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
        })
      );
@@ -94,9 +94,9 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp82");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-06-27-cFp82-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-06-27-cFp82-report.md");
+    expect(v1?.latestPhase).toBe("cFp83");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-08-18-cFp83-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-08-18-cFp83-report.md");
   expect(v1?.description).toContain("cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, cFp81, and cFp82");
     expect(v1?.description).toContain(
        "cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, cFp81, and cFp82 are benchmark infrastructure, not search gameplay",
@@ -158,6 +158,7 @@ describe("authentic AI Lab view model", () => {
        "search-consumer-action-features-dictionary-v0 dictionary projection over committed cFp79 artifacts, preserving cFp79 row counts and reconstructing cFp79 action rows while reducing robust compact actions below the 50 MB target; benchmark infrastructure, not search gameplay (cFp80)",
        "search-consumer-action-feature-casebook-v0 aggregate casebook over committed cFp80 compact artifacts, emitting bounded slice summaries and consumer-readiness labels without action ranking, rollout, or product AI wiring; benchmark infrastructure, not search gameplay (cFp81)",
        "search-consumer casebook decision over committed cFp81 evidence, recommending cFp83 search-consumer-small-subset-contract-v0 as a bounded benchmark-only subset contract before search gameplay, values, rankings, rewards, rollouts, or product AI wiring (cFp82)",
+       "search-consumer-small-subset-contract-v0 creates a deterministic closed-root public subset over committed cFp80/cFp81 artifacts; benchmark-only infrastructure, not search gameplay (cFp83)",
       ])
     );
   });

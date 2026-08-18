@@ -1,0 +1,100 @@
+{
+  "artifactHashes": {
+    "dictionaries.json": "59388e7a2d5acebb8a17339bdd3cefd4c79c2e6740f85ffae6328361ca634a72",
+    "exclusions-summary.json": "3f04388ee15f656a1d59dcced3165d9abf47815acb0852ea0c771efd05578df9",
+    "report.md": "4c66f90335f5cca05c2ee8896c0fc4925218520fab6c0593f0482fec5123c393",
+    "skipped-roots.jsonl": "cc84f9eb7fe0c523ca26267ca81ff4cb451f21cc30b5be11992dcca1cf20ad8e",
+    "subset-actions.jsonl": "cf7ee8346a5811eb3878df6e117855fbd9fe460b7ef1e115da6513404636b6a0",
+    "subset-roots.jsonl": "3ff7e051e0cd6b56792d3da7b8a26b8f1860ba42e09a06827bc128237db2464d",
+    "summary.json": "1d99135550f5d1288ac500beb54f0c9ed1fe04e1e40caa39b9b702ea5bdd0428"
+  },
+  "explicitNonClaims": [
+    "cFp83 is benchmark-only subset-contract infrastructure.",
+    "cFp83 does not evaluate, rank, choose, or execute actions.",
+    "cFp83 does not run search, rollouts, values, rewards, or product AI."
+  ],
+  "files": [
+    "manifest.json",
+    "summary.json",
+    "dictionaries.json",
+    "subset-roots.jsonl",
+    "subset-actions.jsonl",
+    "skipped-roots.jsonl",
+    "exclusions-summary.json",
+    "report.md"
+  ],
+  "generatedAtTimestampPolicy": "omitted for determinism",
+  "phaseId": "cFp83",
+  "relativeOutputPath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83",
+  "schemaVersion": "search-consumer-small-subset-contract-v0-artifact-v1",
+  "sourceArtifactReferences": [
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/manifest.json",
+      "sha256": "456dcc4550ecd99b5329154c651ce5df1a29f289d06fbb013e8c9b8360577738"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/summary.json",
+      "sha256": "b16fad0de68a3f4be3af6519d0c1bf0377259b378aeb4247adc4f9f2812fb91d"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/dictionaries.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/dictionaries.json",
+      "sha256": "8cf734cccfa665a0f8050084dd1aaf029d685a4074cb78ae864ffec21ed6b457"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/root-features.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/root-features.jsonl",
+      "sha256": "2cce3a74f6d486b8d0d0a83f799891daeddf54d2502c44d0f10661203061f1e1"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/action-features-compact.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/action-features-compact.jsonl",
+      "sha256": "b3e8b855184b1d8247b87aaac57aed7797818343d8670ccc6e927092d5e9cd37"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/skipped-roots.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/skipped-roots.jsonl",
+      "sha256": "304c119cfbf66cc19f414830e8370492c21ba53437f89ac592a4b5271c3d17b3"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/report.md",
+      "sha256": "3bba07ed33aee730cc2875bf394b64d087ff5ef84b0e846754fc92f45bf61cd2"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/manifest.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/manifest.json",
+      "sha256": "a411f56d3e378accfaf23d189c875e568049568ca88a3cd2ab15f847a04c4f71"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/summary.json",
+      "sha256": "f31b54ee390a2b606d8c73b7712d9cab07718611ea5599dbcdae52bffd4f124c"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/casebook-rows.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/casebook-rows.jsonl",
+      "sha256": "1983db7d5f63b01272e9930fe2f1c878e27086387c0042e8b3551b0a60e28899"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/slice-summaries.jsonl",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/slice-summaries.jsonl",
+      "sha256": "6ec22f98ef9d59e77c1cf83659b4a29c45c4973d9cedbbf2e91ee4a8bd193f38"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/skipped-root-summary.json",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/skipped-root-summary.json",
+      "sha256": "35a35b5559ab035d5f8e473cfbc79923166b52ab15bc0463a4989b6c25b917da"
+    },
+    {
+      "label": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/report.md",
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-feature-casebook-v0/cFp81/report.md",
+      "sha256": "0b4b74146672957f61ad1319e71eeaaacd79c217f0ecded38485733ab79d2039"
+    }
+  ],
+  "subsetRunId": "cFp83",
+  "subsetStatus": "subset_ready",
+  "suiteId": "benchmark-v1-starter-matrix-v1"
+}

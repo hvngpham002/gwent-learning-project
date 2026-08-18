@@ -1,0 +1,77 @@
+{
+  "exclusionCounts": {
+    "high_branching_context": 475,
+    "high_collision_action": 2840,
+    "over_budget_context": 1
+  },
+  "observedNonReadyActionLabelCounts": {
+    "consumer_ready_high_branching": 10552,
+    "consumer_ready_high_collision": 5163,
+    "consumer_ready_over_budget_context": 19
+  },
+  "schemaVersion": "search-consumer-small-subset-contract-v0-exclusions-v1",
+  "slices": {
+    "deckPreset": {
+      "official-monsters-starter": 594,
+      "official-nilfgaard-starter": 782,
+      "official-northern-realms-starter": 726,
+      "official-scoiatael-starter": 663,
+      "official-skellige-starter": 551
+    },
+    "faction": {
+      "monsters": 594,
+      "nilfgaard": 782,
+      "northern_realms": 726,
+      "scoiatael": 663,
+      "skellige": 551
+    },
+    "matchup": {
+      "starter-monsters-heuristic-v0-vs-scoiatael-heuristic-v1": 144,
+      "starter-monsters-heuristic-v0-vs-skellige-heuristic-v1": 140,
+      "starter-monsters-heuristic-v1-vs-scoiatael-heuristic-v0": 146,
+      "starter-monsters-heuristic-v1-vs-skellige-heuristic-v0": 137,
+      "starter-nilfgaard-heuristic-v0-vs-monsters-heuristic-v1": 152,
+      "starter-nilfgaard-heuristic-v0-vs-scoiatael-heuristic-v1": 170,
+      "starter-nilfgaard-heuristic-v0-vs-skellige-heuristic-v1": 163,
+      "starter-nilfgaard-heuristic-v1-vs-monsters-heuristic-v0": 195,
+      "starter-nilfgaard-heuristic-v1-vs-scoiatael-heuristic-v0": 180,
+      "starter-nilfgaard-heuristic-v1-vs-skellige-heuristic-v0": 165,
+      "starter-northern-realms-heuristic-v0-vs-monsters-heuristic-v1": 167,
+      "starter-northern-realms-heuristic-v0-vs-nilfgaard-heuristic-v1": 227,
+      "starter-northern-realms-heuristic-v0-vs-scoiatael-heuristic-v1": 204,
+      "starter-northern-realms-heuristic-v0-vs-skellige-heuristic-v1": 153,
+      "starter-northern-realms-heuristic-v1-vs-monsters-heuristic-v0": 167,
+      "starter-northern-realms-heuristic-v1-vs-nilfgaard-heuristic-v0": 183,
+      "starter-northern-realms-heuristic-v1-vs-scoiatael-heuristic-v0": 178,
+      "starter-northern-realms-heuristic-v1-vs-skellige-heuristic-v0": 157,
+      "starter-scoiatael-heuristic-v0-vs-skellige-heuristic-v1": 144,
+      "starter-scoiatael-heuristic-v1-vs-skellige-heuristic-v0": 144
+    },
+    "nonReadyLabel": {
+      "consumer_ready_high_branching": 10552,
+      "consumer_ready_high_collision": 5163,
+      "consumer_ready_over_budget_context": 19
+    },
+    "phase": {
+      "mulligan": 348,
+      "playing": 2892,
+      "round_end": 76
+    },
+    "policy": {
+      "headless-round-end-auto-resolver": 76,
+      "legal-heuristic-v0": 1583,
+      "legal-heuristic-v1": 1657
+    },
+    "reason": {
+      "high_branching_context": 475,
+      "high_collision_action": 2840,
+      "over_budget_context": 1
+    },
+    "round": {
+      "1": 2395,
+      "2": 728,
+      "3": 193
+    }
+  },
+  "subsetRunId": "cFp83"
+}
