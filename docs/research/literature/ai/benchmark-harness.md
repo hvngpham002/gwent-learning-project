@@ -46,7 +46,8 @@ cFp35 calibrates that failure-mining layer. It narrows the
 noise as aggregate counts, and adds a deterministic `tuning-queue.md`
 artifact for cFp36 scoping. It does not change `legal-heuristic-v1`,
 v0, engine rules, legal moves, UI behavior, catalog data, deck presets,
-or H100/Slurm workflow.
+or the experiment setup recorded in
+`docs/compute/experiment-status-ledger.md`.
 
 The harness is implementation support for the Batch A and Batch B
 decision notes:

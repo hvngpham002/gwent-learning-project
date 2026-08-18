@@ -22,10 +22,13 @@ Read these before contributing:
 
 The app currently has two UI paths:
 
-- Legacy UI remains the default route.
-- Engine UI is opt-in with `?engine=1`, for example `http://127.0.0.1:5173/?engine=1`.
+- `/` is the default, authentic engine-backed pre-game and match flow.
+- `/legacy` is the retained legacy Redux UI route.
 
-The pure engine migration is in progress. Current engine-backed work routes game rules through `src/game/core/`, Redux engine adapter state, and engine legal moves. The legacy UI still exists while the migration continues.
+Older `?engine=1` query aliases remain compatible, but new links, playtests, and
+documentation should use the canonical paths above. The engine-backed flow routes
+game rules through `src/game/core/`, Redux engine adapter state, and engine legal
+moves. The legacy UI remains only as a temporary compatibility surface.
 
 ## Commands
 
@@ -77,7 +80,7 @@ npm run ci
 - `src/game/catalog/` and `src/data/catalog/`: catalog schemas, validators, card data, leaders, and deck presets.
 - `src/store/slices/engineSlice.ts`: Redux adapter state for engine matches, locks, command/event history, errors, and UI-only selections.
 - `src/store/thunks/engineThunks.ts`: dispatches engine commands without reimplementing rules.
-- `src/components/game/EngineGameManager.tsx`: opt-in engine UI shell.
+- `src/components/game/EngineGameManager.tsx`: engine-backed match UI shell.
 - Legacy UI paths remain in place until a future spec explicitly removes or replaces them.
 
 ## License

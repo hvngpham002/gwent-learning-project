@@ -6,23 +6,22 @@
 
 ## Shared Compute Entry Points
 
-Read these files before using remote or lab compute:
+Read these files before running an experiment:
 
 1. `docs/compute/README.md`
-2. `docs/compute/hardware-spec.md`
-3. `docs/compute/slurm-workflow.md`
-4. `docs/compute/experiment-workflow.md`
+2. `docs/compute/experiment-status-ledger.md`
+3. `docs/compute/experiment-workflow.md`
 
 Use `docs/compute/templates/experiment-card.md` before any run that may become
 benchmark, paper, policy, or training evidence.
 
 ## Current Scope
 
-Compute status: `PLANNED`
+Compute status: `ACTIVE — LOCAL ONLY`
 
 Current Gwent AI benchmark commands are deterministic TypeScript/Node workloads.
-They do not need an H100. Use local hardware, the RTX desktop, or a CPU-only
-Slurm allocation for:
+Run them locally. The H100/Slurm server is unavailable; the status ledger is
+the single source of truth for any future setup change. Local commands include:
 
 - `npm run benchmark:smoke`
 - `npm run benchmark:starter-matrix`
@@ -36,15 +35,15 @@ public artifact bundle under `docs/research/literature/ai/benchmark-results/`.
 It does not require H100, Slurm, Python, internet access, model inference, or
 training infrastructure.
 
-Use the H100 cluster only for bounded future experiments that explicitly need a
-GPU, such as:
+Future GPU-specific experiments, such as the following, remain planned and
+blocked until the status ledger authorizes a setup:
 
 - neural evaluator or policy pilots;
 - model inference over large generated match-state corpora;
 - embedding/retrieval experiments over decision traces;
 - future self-play or search pipelines that combine simulation with GPU models.
 
-Do not use H100 access as a product dependency. The browser product, engine,
+Do not use remote compute access as a product dependency. The browser product, engine,
 benchmark harness, and AI Lab must continue to work without the lab cluster.
 
 ## Authoritative Repo Paths
@@ -57,7 +56,8 @@ benchmark harness, and AI Lab must continue to work without the lab cluster.
 | AI policy docs | `docs/research/literature/ai/policies/` |
 | Decision notes | `docs/research/literature/ai/decisions/` |
 | Compute operations docs | `docs/compute/` |
-| Transient local/cluster outputs | `.local/compute-results/` |
+| Active setup authority | `docs/compute/experiment-status-ledger.md` |
+| Transient local outputs | `.local/compute-results/` |
 
 Only commit benchmark artifacts that are intentionally part of the public
 hidden-info-safe artifact contract. Keep exploratory logs, raw generated state
@@ -72,56 +72,38 @@ Git unless a later spec explicitly defines a safe artifact boundary.
 | Benchmark failure-mining findings | `DERIVED-PUBLIC` | Commit only through the cFp34 failure-mining artifact path after hidden-info scan/review |
 | Product playtest diagnostic exports | `DERIVED-PUBLIC` by default, review required | Keep local unless a spec asks to copy sanitized examples |
 | Raw engine states, command logs with hidden state, hand/deck arrays | `CONTROLLED` for this project | Do not commit; only use in explicit debug contexts |
-| Model checkpoints / downloaded models | `DERIVED-PUBLIC` or license-specific | Keep in job scratch or external model registry; do not commit |
+| Model checkpoints / downloaded models | `DERIVED-PUBLIC` or license-specific | Keep local or in an external model registry; do not commit |
 | Credentials, tokens, private URLs | `SECRET` | Never place in scripts, job logs, or committed docs |
 
-## Safe Slurm Patterns
+## Local Execution Pattern
 
-CPU-only benchmark allocation:
-
-```bash
-srun -p main --cpus-per-task=16 --mem=64G --time=01:00:00 --pty bash -l
-```
-
-H100 allocation for GPU-specific experiment cards:
+Run repository benchmarks locally, recording the run with the local wrapper:
 
 ```bash
-srun -p main --cpus-per-task=16 --mem=256G --gres=gpu:1 --time=01:00:00 --pty bash -l
+EXPERIMENT_ID=benchmark-v1-starter-matrix \
+  docs/compute/templates/local-batch.sh
 ```
 
-Inside any allocation:
+The wrapper writes transient results under `.local/compute-results/`. Copy or
+commit only reviewed, public-safe artifacts where a project spec permits it.
+
+## Long Local Runs
+
+Do not start or wait on a run expected to exceed 15 minutes from an agent
+session. Give the user a copy-ready local terminal command instead, including
+the expected output path and the exact summary or log to return. Registered
+benchmark profiles use the durable progress-enabled runner:
 
 ```bash
-export JOB_SCRATCH="/tmp/$USER/${SLURM_JOB_ID:-manual}"
-mkdir -p "$JOB_SCRATCH"/{repo,npm,outputs,hf,torch}
-export npm_config_cache="$JOB_SCRATCH/npm"
-export HF_HOME="$JOB_SCRATCH/hf"
-export TRANSFORMERS_CACHE="$JOB_SCRATCH/hf/transformers"
-export TORCH_HOME="$JOB_SCRATCH/torch"
+npm run benchmark:long -- --profile <profile>
 ```
 
-Run repository benchmarks from an allocated worker:
-
-```bash
-cd "$JOB_SCRATCH/repo/gwent-learning-project"
-git status --short
-npm ci
-npm run benchmark:v1-starter-matrix -- \
-  --out "$JOB_SCRATCH/outputs/benchmark-v1-starter-matrix-v1/latest"
-npm run benchmark:v1-failure-mining -- \
-  --out "$JOB_SCRATCH/outputs/benchmark-v1-starter-matrix-v1/failure-mining/latest"
-```
-
-Copy back only reviewed outputs:
-
-```bash
-mkdir -p "$RESULT_DIR"
-cp -r "$JOB_SCRATCH/outputs/." "$RESULT_DIR/"
-```
+It writes run metadata and a summary under `.local/benchmark-runs/`. The user
+runs the command locally and supplies the final result path for review.
 
 ## Minimum Experiment Card For cFp34+
 
-Before automated failure mining or any H100-backed experiment, create a card
+Before automated failure mining or any non-trivial local experiment, create a card
 from `docs/compute/templates/experiment-card.md` with:
 
 - suite or generated-workload ID;

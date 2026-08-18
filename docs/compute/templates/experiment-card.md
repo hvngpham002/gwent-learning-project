@@ -13,6 +13,7 @@
 | Owner / agent | `<name>` |
 | Date planned | `<YYYY-MM-DD>` |
 | Status | `PLANNED` |
+| Active setup ledger | `docs/compute/experiment-status-ledger.md` |
 
 ## Purpose
 
@@ -46,11 +47,13 @@ This run cannot establish:
 
 | Resource | Value |
 |---|---|
-| Partition | `main` |
-| GPUs | `<0/1/...>` |
+| Execution setup | `Local workstation` |
+| GPUs | `0 unless the active ledger changes` |
 | CPUs | `<count>` |
 | Memory | `<amount>` |
 | Time limit | `<HH:MM:SS>` |
+| Expected runtime exceeds 15 minutes | `<yes / no>` |
+| Long-run owner | `<user / not applicable>` |
 
 ## Command
 
@@ -58,12 +61,16 @@ This run cannot establish:
 <command>
 ```
 
+For an expected run over 15 minutes, this must be a copy-ready user terminal
+command. Record the durable result path the user should return for review.
+
 ## Reproducibility
 
 | Item | Value |
 |---|---|
 | Git commit | `<sha or status>` |
 | Random seed(s) | `<seed list>` |
+| Local runtime / machine | `<Node/Python version and machine summary>` |
 | Output directory | `<path>` |
 | Log path | `<path>` |
 

@@ -1,9 +1,13 @@
 # Lab Compute Hardware Spec
 
-> **CLAIM STATUS: INFRASTRUCTURE / OBSERVED COMPUTE INVENTORY**
+> **CLAIM STATUS: INFRASTRUCTURE / HISTORICAL COMPUTE INVENTORY**
 > This file records a point-in-time diagnostic snapshot of available compute.
 > It is not a manuscript claim. Refresh before reporting hardware in any paper,
 > proposal, or reproducibility appendix.
+
+> **Current availability:** This is not the active setup. Consult the
+> [experiment status ledger](experiment-status-ledger.md) before any experiment;
+> it is the single source of truth for the currently authorized environment.
 
 Last observed: 2026-05-12
 Observed by: user-provided terminal diagnostics
@@ -21,8 +25,9 @@ Cluster scheduler: Slurm
 | Job ID observed | `13628` |
 | GPU visibility inside job | `CUDA_VISIBLE_DEVICES=0` |
 
-Use the login node for SSH, file management, and job submission. Use allocated
-worker nodes for GPU or heavy CPU work.
+This describes the 2026-05-12 observation only. Do not use it as an instruction
+to access or submit work to the server while the experiment status ledger marks
+the remote setup unavailable.
 
 ## Node Snapshot
 
@@ -76,8 +81,8 @@ This compute is strong enough for future Gwent AI work such as:
 - future search/self-play experiments that need many parallel simulations.
 
 Current TypeScript benchmark commands (`npm run benchmark:*`) are CPU/Node
-workloads and should not consume an H100 unless paired with a GPU-specific
-experiment. Use a CPU-only Slurm allocation or local hardware for those runs.
+workloads. Run them using the setup recorded in the experiment status ledger,
+which currently requires local execution.
 
 This compute does not solve:
 

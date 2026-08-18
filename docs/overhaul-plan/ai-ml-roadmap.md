@@ -24,7 +24,7 @@ The active literature sweep prompt lives at `docs/research/literature/ai/prompts
 
 | Stage | Name | Goal |
 |---|---|---|
-| 0 | Literature foundation | Annotation workflow, sweep prompt, multi-model triage, and source-grounded notes for AI/ML claims (Cluster F starting point). cFp0 created the workflow; cFp1 triaged the first ChatGPT/Claude/DeepSeek/Gemini/Qwen sweep. Annotation has not started yet. |
+| 0 | Literature foundation | Annotation workflow, sweep prompt, multi-model triage, and source-grounded notes for AI/ML claims (Cluster F starting point). cFp0 created the workflow; cFp1 triaged the first ChatGPT/Claude/DeepSeek/Gemini/Qwen sweep. The first 15 Tier 1-3 annotations are complete; their source-grounded decisions now inform the evaluation and search-readiness work. |
 | 1 | Legal heuristic AI | Current AI rebuilt as a policy over legal moves and shared scoring. `legal-heuristic-v0` remains the product default; cFp24 adds `legal-heuristic-v1` with muster-aware mulligan, prompt, pass, card, and leader scoring; cFp24.1 exposes v1 through a compact pre-game `AI policy` playtest selector and `?ai=legal-heuristic-v1` deep link. |
 | 2 | AI vs AI simulation | Headless games for policy evaluation and regression. Implemented under `cDp8` / `cDp9`. |
 | 3 | Replay and metrics | Event logs, deterministic seeds, win-rate and strategy metrics. Implemented as deterministic command replay, batch diagnostics, and fingerprints under `cDp9`. |
