@@ -6,6 +6,12 @@ import type { SearchConsumerActionFeatureDictionaryV0SourceArtifactReference } f
 import type { SearchConsumerSmallSubsetContractV0Result } from "./searchConsumerSmallSubsetContractV0";
 
 export const searchConsumerSmallSubsetContractV0ArtifactFiles = ["manifest.json", "summary.json", "dictionaries.json", "subset-roots.jsonl", "subset-actions.jsonl", "skipped-roots.jsonl", "exclusions-summary.json", "report.md"] as const;
+export const validateSearchConsumerSmallSubsetContractV0ArtifactSizeLimits = (sizes: Record<string, number>) => {
+  const actionBytes = sizes.subsetActionsJsonl ?? 0;
+  const otherTooLarge = Object.entries(sizes).some(([name, bytes]) => name !== "subsetActionsJsonl" && bytes >= 25 * 1024 * 1024);
+  const bundleBytes = Object.values(sizes).reduce((total, bytes) => total + bytes, 0);
+  return { actionBytes, otherTooLarge, bundleBytes, passes: actionBytes < 50 * 1024 * 1024 && !otherTooLarge && bundleBytes < 60 * 1024 * 1024 };
+};
 export interface SerializedSearchConsumerSmallSubsetContractV0Artifacts { manifestJson: string; summaryJson: string; dictionariesJson: string; subsetRootsJsonl: string; subsetActionsJsonl: string; skippedRootsJsonl: string; exclusionsSummaryJson: string; reportMarkdown: string; }
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 const clean = (value: unknown): JsonValue => { if (value === null || ["boolean", "number", "string"].includes(typeof value)) return value as JsonValue; if (Array.isArray(value)) return value.map(clean); if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).filter(([,v]) => v !== undefined).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => [k,clean(v)])); return null; };
@@ -28,6 +34,8 @@ export const serializeSearchConsumerSmallSubsetContractV0Artifacts = ({ result, 
   const manifestJson = json({ schemaVersion: "search-consumer-small-subset-contract-v0-artifact-v1", phaseId: "cFp83", subsetRunId: runId, suiteId, relativeOutputPath: relativeOutputPath(suiteId), generatedAtTimestampPolicy: "omitted for determinism", files: [...searchConsumerSmallSubsetContractV0ArtifactFiles], subsetStatus: result.status, sourceArtifactReferences, artifactHashes: hashes, explicitNonClaims: CFP83_EXPLICIT_NON_CLAIMS });
   return { manifestJson, summaryJson, dictionariesJson, subsetRootsJsonl, subsetActionsJsonl, skippedRootsJsonl, exclusionsSummaryJson, reportMarkdown };
 };
-export const searchConsumerSmallSubsetContractV0ArtifactHashes = (a: SerializedSearchConsumerSmallSubsetContractV0Artifacts) => Object.fromEntries(Object.entries(a).map(([key, value]) => [key.replace(/([A-Z])/g, "-$1").toLowerCase().replace("markdown", "md").replace("jsonl", ".jsonl").replace("json", ".json"), sha(value)]));
+export const searchConsumerSmallSubsetContractV0ArtifactHashes = (a: SerializedSearchConsumerSmallSubsetContractV0Artifacts) => ({
+  "manifest.json": sha(a.manifestJson), "summary.json": sha(a.summaryJson), "dictionaries.json": sha(a.dictionariesJson), "subset-roots.jsonl": sha(a.subsetRootsJsonl), "subset-actions.jsonl": sha(a.subsetActionsJsonl), "skipped-roots.jsonl": sha(a.skippedRootsJsonl), "exclusions-summary.json": sha(a.exclusionsSummaryJson), "report.md": sha(a.reportMarkdown),
+});
 export const scanSearchConsumerSmallSubsetContractV0ArtifactsForHiddenInfo = (a: SerializedSearchConsumerSmallSubsetContractV0Artifacts) => scanSearchConsumerActionFeaturesV0TextForHiddenInfo(Object.values(a).join("\n"));
 export const writeSearchConsumerSmallSubsetContractV0Artifacts = async ({ outDir, artifacts }: { outDir: string; artifacts: SerializedSearchConsumerSmallSubsetContractV0Artifacts }) => { await mkdir(outDir, { recursive: true }); const files = [["manifest.json", artifacts.manifestJson], ["summary.json", artifacts.summaryJson], ["dictionaries.json", artifacts.dictionariesJson], ["subset-roots.jsonl", artifacts.subsetRootsJsonl], ["subset-actions.jsonl", artifacts.subsetActionsJsonl], ["skipped-roots.jsonl", artifacts.skippedRootsJsonl], ["exclusions-summary.json", artifacts.exclusionsSummaryJson], ["report.md", artifacts.reportMarkdown]] as const; await Promise.all(files.map(([file,text]) => writeFile(resolve(outDir,file), text, "utf8"))); return { outDir, files: files.map(([file]) => file) }; };
