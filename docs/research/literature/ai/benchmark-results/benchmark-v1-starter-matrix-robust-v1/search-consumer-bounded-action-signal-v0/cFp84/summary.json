@@ -1,5 +1,6 @@
 {
   "completedPairCount": 96872,
+  "duplicateCompletedPairCount": 0,
   "expectedPairCount": 96872,
   "explicitNonClaims": [
     "Immediate signal is not expected value, win probability, a reward target, or a rollout or continuation value.",
@@ -80,5 +81,6 @@
   },
   "sourceDictionaryHash": "ae12cea5046276092bbc2002bc843ca7a1d92be91b445596ec52e38b6190e236",
   "status": "signal_ready",
-  "suiteId": "benchmark-v1-starter-matrix-robust-v1"
+  "suiteId": "benchmark-v1-starter-matrix-robust-v1",
+  "unaccountedPairCount": 0
 }

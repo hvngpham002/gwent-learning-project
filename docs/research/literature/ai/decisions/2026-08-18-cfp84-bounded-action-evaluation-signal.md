@@ -6,4 +6,4 @@ Current completed 11,904 of 11,904 pairs; robust completed 96,872 of 96,872 pair
 
 Immediate signal is not expected value, win probability, a reward target, rollout or continuation value, calibrated human-play evidence, action-quality proof, or policy-strength evidence. cFp84 does not rank, recommend, select, or execute product moves, and does not implement PIMC, ISMCTS/MCTS, self-play, training, or product AI behavior.
 
-Outcome: signal_ready: cFp85 may create a benchmark-only calibration/diagnostic casebook comparing immediate-signal behavior across action kinds, phases, factions, policies, and sample-sensitivity buckets. It must still not rank or select actions.
+Repair status: regenerated evidence is available for independent review. This repair does not authorize cFp85 work.

@@ -1,12 +1,12 @@
 {
   "artifactHashes": {
-    "action-signals.jsonl": "2d7089d19281b659387d3d9cf4e077a7df9c05690f75dff9e0af64d3c6fb9051",
+    "action-signals.jsonl": "8dada679f6e2bc7e45d2f62aa5b410945cfba7da9ceafee1386f8557e2068bb2",
     "failures-summary.json": "8f0bef8afa9d2ffcc891aa550d688b003a1b84d6599a25ae16ec80210b7f9912",
-    "report.md": "f6635f47406be627155313b5f1f4427ff30c04e0961105a2c0898f2148b2fd8e",
-    "root-evaluations.jsonl": "1a5bb87d887a6109307e70a8df6a500487571b7fcbb6262e6df88e1a762f7625",
-    "signal-config.json": "90966ca433a8a9987d217f144a2169dd7448700d09a7f4a4ce432ea59b105eb5",
+    "report.md": "f84161b9650579f40ef98b587dd4bd32c7e545312b4763f0882888a95ef68691",
+    "root-evaluations.jsonl": "a9f48ecb8e177ca1e66d652138c698daaaa2287e90ddcbd3f0af61cd337359fb",
+    "signal-config.json": "cf4416f1c3148ac912b7cc9be6490ad2813c8b8d4b71375b40a72660769c9d71",
     "skipped-roots.jsonl": "c7bab44557a33ae99f186e21c68ee3b60b12c04558bf7d4554c0d2f10030780c",
-    "summary.json": "e865c10a1b12160ea70469fad2eb1f837ce13f143b3f54595850349afcc3dc1a"
+    "summary.json": "ddb116c758ca3a44d6dd0b07e3c00f8059d42e8209650d83f4abcd39a8e06e8c"
   },
   "explicitNonClaims": [
     "Immediate signal is not expected value, win probability, a reward target, or a rollout or continuation value.",
