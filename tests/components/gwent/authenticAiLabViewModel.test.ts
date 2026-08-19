@@ -50,9 +50,9 @@ describe("authentic AI Lab view model", () => {
        expect.objectContaining({
          role: "experimental product playtest",
          status: "implemented · experimental/playtest",
-         latestPhase: "cFp83",
-         latestSpecPath: "docs/spec/2026-08-18-cFp83-specs.md",
-         latestReportPath: "audit/reports/2026-08-18-cFp83-report.md",
+         latestPhase: "cFp84",
+         latestSpecPath: "docs/spec/2026-08-18-cFp84-specs.md",
+         latestReportPath: "audit/reports/2026-08-18-cFp84-report.md",
          latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
        })
      );
@@ -68,9 +68,9 @@ describe("authentic AI Lab view model", () => {
 
    expect(v1).toEqual(
        expect.objectContaining({
-         latestPhase: "cFp83",
-         latestSpecPath: "docs/spec/2026-08-18-cFp83-specs.md",
-         latestReportPath: "audit/reports/2026-08-18-cFp83-report.md",
+         latestPhase: "cFp84",
+         latestSpecPath: "docs/spec/2026-08-18-cFp84-specs.md",
+         latestReportPath: "audit/reports/2026-08-18-cFp84-report.md",
          latestPolicyDocPath: "docs/research/literature/ai/policies/legal-heuristic-v1.md",
        })
      );
@@ -94,9 +94,9 @@ describe("authentic AI Lab view model", () => {
         }),
       ])
     );
-    expect(v1?.latestPhase).toBe("cFp83");
-    expect(v1?.latestSpecPath).toBe("docs/spec/2026-08-18-cFp83-specs.md");
-    expect(v1?.latestReportPath).toBe("audit/reports/2026-08-18-cFp83-report.md");
+    expect(v1?.latestPhase).toBe("cFp84");
+    expect(v1?.latestSpecPath).toBe("docs/spec/2026-08-18-cFp84-specs.md");
+    expect(v1?.latestReportPath).toBe("audit/reports/2026-08-18-cFp84-report.md");
   expect(v1?.description).toContain("cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, cFp81, and cFp82");
     expect(v1?.description).toContain(
        "cFp74, cFp75, cFp76, cFp77, cFp78, cFp79, cFp80, cFp81, and cFp82 are benchmark infrastructure, not search gameplay",

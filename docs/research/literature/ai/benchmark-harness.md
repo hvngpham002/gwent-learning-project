@@ -1,5 +1,9 @@
 # Benchmark Harness
 
+## cFp84 bounded action signal
+
+cFp84 consumes the immutable cFp83 complete-root subset and executes exactly one matched public action independently in eight in-memory sampled worlds. It writes only bounded aggregate public score, hand, gem, and terminal components. It is not expected value, a win probability, reward, rollout, ranking, recommendation, selection, or product AI.
+
 ## cFp83 closed-root subset contract
 
 cFp83 reads committed cFp80/cFp81 artifacts only and emits a deterministic complete-root public subset under `<suiteId>/search-consumer-small-subset-contract-v0/cFp83/`. A root is included only when every compact public action is `consumer_ready`; non-selected roots and inherited skips remain aggregate-accounted. It is subset-contract infrastructure only, not action evaluation, ranking, search, or gameplay.

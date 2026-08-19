@@ -1,0 +1,31 @@
+{
+  "explicitNonClaims": [
+    "Immediate signal is not expected value, win probability, a reward target, or a rollout or continuation value.",
+    "Immediate signal is not calibrated against human play and does not prove action quality or policy strength.",
+    "cFp84 does not rank, recommend, select, or execute a product move, or implement PIMC, ISMCTS/MCTS, self-play, training, or product AI behavior."
+  ],
+  "formula": {
+    "gemSwing": "clamp(gemDiffDelta*25,-50,50)",
+    "handSwing": "clamp(handDiffDelta*8,-24,24)",
+    "immediateSignal": "clamp(sum,-200,200)",
+    "scoreSwing": "clamp(afterScoreDiff-beforeScoreDiff,-60,60) when phase and round unchanged; otherwise 0",
+    "terminalComponent": {
+      "draw": 0,
+      "incomplete": 0,
+      "loss": -100,
+      "win": 100
+    }
+  },
+  "phaseId": "cFp84",
+  "publicMetricAllowlist": [
+    "score",
+    "hand count",
+    "gem count",
+    "phase",
+    "round",
+    "match result"
+  ],
+  "roundingPolicy": "integer half-away-from-zero meanMilli",
+  "sampleCount": 8,
+  "schemaVersion": "search-consumer-bounded-action-signal-v0-config-v1"
+}

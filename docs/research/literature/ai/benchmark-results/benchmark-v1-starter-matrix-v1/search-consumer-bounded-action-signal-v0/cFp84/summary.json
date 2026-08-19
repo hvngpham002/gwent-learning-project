@@ -1,0 +1,84 @@
+{
+  "completedPairCount": 11904,
+  "expectedPairCount": 11904,
+  "explicitNonClaims": [
+    "Immediate signal is not expected value, win probability, a reward target, or a rollout or continuation value.",
+    "Immediate signal is not calibrated against human play and does not prove action quality or policy strength.",
+    "cFp84 does not rank, recommend, select, or execute a product move, or implement PIMC, ISMCTS/MCTS, self-play, training, or product AI behavior."
+  ],
+  "failedPairCount": 0,
+  "hiddenInfoScanStatus": "clean",
+  "inheritedSkippedRootCount": 63,
+  "phaseId": "cFp84",
+  "sampleSensitivityCounts": {
+    "incomplete": 0,
+    "sample_sensitive": 0,
+    "stable": 1488
+  },
+  "schemaVersion": "search-consumer-bounded-action-signal-v0-summary-v1",
+  "selectedActionCount": 1488,
+  "selectedRootCount": 663,
+  "signalRange": {
+    "maximum": 125,
+    "minimum": -125
+  },
+  "sourceArtifactReferences": [
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83/manifest.json",
+      "sha256": "e82d4cbc0c860404219b8f0213b8384eaa4224158f38d6c6031f4bcd1c4b1fc2"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83/summary.json",
+      "sha256": "1d99135550f5d1288ac500beb54f0c9ed1fe04e1e40caa39b9b702ea5bdd0428"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83/dictionaries.json",
+      "sha256": "59388e7a2d5acebb8a17339bdd3cefd4c79c2e6740f85ffae6328361ca634a72"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83/subset-roots.jsonl",
+      "sha256": "3ff7e051e0cd6b56792d3da7b8a26b8f1860ba42e09a06827bc128237db2464d"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83/subset-actions.jsonl",
+      "sha256": "cf7ee8346a5811eb3878df6e117855fbd9fe460b7ef1e115da6513404636b6a0"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83/skipped-roots.jsonl",
+      "sha256": "cc84f9eb7fe0c523ca26267ca81ff4cb451f21cc30b5be11992dcca1cf20ad8e"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83/exclusions-summary.json",
+      "sha256": "3f04388ee15f656a1d59dcced3165d9abf47815acb0852ea0c771efd05578df9"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-small-subset-contract-v0/cFp83/report.md",
+      "sha256": "4c66f90335f5cca05c2ee8896c0fc4925218520fab6c0593f0482fec5123c393"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/manifest.json",
+      "sha256": "456dcc4550ecd99b5329154c651ce5df1a29f289d06fbb013e8c9b8360577738"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/summary.json",
+      "sha256": "b16fad0de68a3f4be3af6519d0c1bf0377259b378aeb4247adc4f9f2812fb91d"
+    },
+    {
+      "relativePath": "docs/research/literature/ai/benchmark-results/benchmark-v1-starter-matrix-v1/search-consumer-action-features-dictionary-v0/cFp80/root-features.jsonl",
+      "sha256": "2cce3a74f6d486b8d0d0a83f799891daeddf54d2502c44d0f10661203061f1e1"
+    }
+  ],
+  "sourceConsistency": {
+    "cfp80Ready": true,
+    "cfp80RootResolution": true,
+    "cfp83ClosureZero": true,
+    "cfp83HashesMatch": true,
+    "cfp83ReconstructionZero": true,
+    "cfp83Status": true,
+    "dictionaryIdsInRange": true,
+    "portableSourceReferences": true
+  },
+  "sourceDictionaryHash": "59388e7a2d5acebb8a17339bdd3cefd4c79c2e6740f85ffae6328361ca634a72",
+  "status": "signal_ready",
+  "suiteId": "benchmark-v1-starter-matrix-v1"
+}

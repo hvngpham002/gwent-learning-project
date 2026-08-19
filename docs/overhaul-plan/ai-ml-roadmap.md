@@ -1,5 +1,9 @@
 # AI And Machine Learning Roadmap
 
+## cFp84
+
+cFp84 completed a deterministic benchmark-only bounded immediate public-state signal over cFp83 complete roots. It provides no action ranking, selection, rollout, or product AI behavior. A future benchmark-only diagnostic casebook may compare aggregate signal behavior without selecting actions.
+
 ## cFp83
 
 cFp83 completed deterministic closed-root public subset infrastructure from immutable cFp80/cFp81 benchmark artifacts. The next permitted step is a bounded benchmark-only action-evaluation signal over these complete roots; product AI remains out of scope.

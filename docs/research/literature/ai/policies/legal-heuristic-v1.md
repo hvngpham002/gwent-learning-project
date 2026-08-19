@@ -1,5 +1,9 @@
 # Legal Heuristic v1
 
+## cFp84 benchmark boundary
+
+cFp84 adds only a benchmark-only bounded immediate public-state signal over cFp83 selected roots. It does not change legal-heuristic-v1 behavior, select actions, or provide search gameplay.
+
 ## cFp83 benchmark boundary
 
 cFp83 adds a read-only closed-root public subset artifact contract over cFp80/cFp81. It does not change legal-heuristic-v1 behavior, select actions, or provide search gameplay.

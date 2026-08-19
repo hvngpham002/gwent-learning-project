@@ -53,3 +53,5 @@ export * from './searchConsumerActionFeatureCasebookV0';
 export * from './searchConsumerActionFeatureCasebookV0Artifacts';
 export * from './searchConsumerSmallSubsetContractV0';
 export * from './searchConsumerSmallSubsetContractV0Artifacts';
+export * from './searchConsumerBoundedActionSignalV0';
+export * from './searchConsumerBoundedActionSignalV0Artifacts';
